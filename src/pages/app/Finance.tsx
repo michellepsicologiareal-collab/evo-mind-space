@@ -134,25 +134,31 @@ const Finance = () => {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("reminder_enabled, reminder_window_hours")
+        .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient")
         .eq("id", user.id)
         .maybeSingle();
       if (data) {
         setReminderEnabled(data.reminder_enabled ?? true);
         setReminderWindow(data.reminder_window_hours ?? 24);
+        setGroupByPatient(data.reminder_group_by_patient ?? false);
       }
       setPrefsLoaded(true);
     })();
   }, [user]);
 
-  const savePrefs = async (next: { enabled?: boolean; window?: number }) => {
+  const savePrefs = async (next: { enabled?: boolean; window?: number; group?: boolean }) => {
     if (!user) return;
     const enabled = next.enabled ?? reminderEnabled;
     const windowH = next.window ?? reminderWindow;
+    const group = next.group ?? groupByPatient;
     setSavingPrefs(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ reminder_enabled: enabled, reminder_window_hours: windowH })
+      .update({
+        reminder_enabled: enabled,
+        reminder_window_hours: windowH,
+        reminder_group_by_patient: group,
+      })
       .eq("id", user.id);
     setSavingPrefs(false);
     if (error) {
