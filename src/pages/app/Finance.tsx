@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ import {
   CreditCard,
   Banknote,
   AlertTriangle,
+  BellRing,
 } from "lucide-react";
 import {
   startOfMonth,
@@ -44,6 +45,7 @@ import {
   addMonths,
   subMonths,
   format,
+  formatDistanceToNow,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -83,6 +85,8 @@ const Finance = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
+  const notifiedIdsRef = useRef<Set<string>>(new Set());
+  const recentAlertRef = useRef<HTMLDivElement | null>(null);
 
   const monthStart = useMemo(() => startOfMonth(monthCursor), [monthCursor]);
   const monthEnd = useMemo(() => endOfMonth(monthCursor), [monthCursor]);
@@ -111,7 +115,7 @@ const Finance = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, monthCursor]);
 
-  const billable = rows.filter((r) => r.status === "completed");
+  const billable = useMemo(() => rows.filter((r) => r.status === "completed"), [rows]);
   const totalFaturado = billable.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const totalRecebido = billable
     .filter((r) => r.payment_status === "paid")
@@ -120,12 +124,60 @@ const Finance = () => {
   const sessoesPagas = billable.filter((r) => r.payment_status === "paid").length;
   const sessoesPendentes = billable.filter((r) => r.payment_status === "pending").length;
 
-  const missingReference = billable.filter(
-    (r) =>
-      r.payment_status === "paid" &&
-      (r.payment_method === "pix" || r.payment_method === "card") &&
-      (!r.payment_reference || r.payment_reference.trim().length === 0)
+  const missingReference = useMemo(
+    () =>
+      billable.filter(
+        (r) =>
+          r.payment_status === "paid" &&
+          (r.payment_method === "pix" || r.payment_method === "card") &&
+          (!r.payment_reference || r.payment_reference.trim().length === 0)
+      ),
+    [billable]
   );
+
+  const recentMissing = useMemo(() => {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    return missingReference.filter((r) => {
+      const ref = r.paid_at ?? r.scheduled_at;
+      return ref ? new Date(ref).getTime() >= cutoff : false;
+    });
+  }, [missingReference]);
+
+  const olderMissing = useMemo(() => {
+    const recentIds = new Set(recentMissing.map((r) => r.id));
+    return missingReference.filter((r) => !recentIds.has(r.id));
+  }, [missingReference, recentMissing]);
+
+  // Auto-reminder toast for paid PIX/card sessions in the last 24h missing reference
+  useEffect(() => {
+    if (loading) return;
+    const newOnes = recentMissing.filter((r) => !notifiedIdsRef.current.has(r.id));
+    if (newOnes.length === 0) return;
+
+    newOnes.forEach((r) => notifiedIdsRef.current.add(r.id));
+
+    const names = newOnes
+      .slice(0, 2)
+      .map((r) => r.patient?.full_name ?? "Paciente")
+      .join(", ");
+    const extra = newOnes.length > 2 ? ` e mais ${newOnes.length - 2}` : "";
+
+    toast.warning(
+      newOnes.length === 1
+        ? "Pagamento recente sem referência"
+        : `${newOnes.length} pagamentos recentes sem referência`,
+      {
+        description: `${names}${extra} · marcado(s) como pago(s) nas últimas 24h via PIX/cartão.`,
+        duration: 8000,
+        action: {
+          label: "Revisar",
+          onClick: () =>
+            recentAlertRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+        },
+      }
+    );
+  }, [recentMissing, loading]);
+
 
   const updatePayment = async (id: string, value: PaymentStatus) => {
     const { error } = await supabase
@@ -173,20 +225,65 @@ const Finance = () => {
         <KpiCard icon={CheckCircle2} label="Sessões realizadas" value={billable.length.toString()} />
       </section>
 
-      {missingReference.length > 0 && (
+      {recentMissing.length > 0 && (
+        <Alert
+          ref={recentAlertRef}
+          variant="destructive"
+          className="border-destructive bg-destructive/10 shadow-soft"
+        >
+          <BellRing className="h-4 w-4 animate-pulse" />
+          <AlertTitle>Lembrete: pagamentos recentes sem referência</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>
+              {recentMissing.length === 1
+                ? "1 sessão foi marcada como paga via PIX/cartão nas últimas 24h sem referência. Adicione o comprovante enquanto a transação ainda está fresca:"
+                : `${recentMissing.length} sessões foram marcadas como pagas via PIX/cartão nas últimas 24h sem referência. Adicione os comprovantes enquanto as transações ainda estão frescas:`}
+            </p>
+            <ul className="text-sm space-y-1 mt-2">
+              {recentMissing.slice(0, 5).map((r) => {
+                const when = r.paid_at ?? r.scheduled_at;
+                return (
+                  <li key={r.id} className="flex items-center justify-between gap-3">
+                    <span className="truncate">
+                      <span className="font-medium">{r.patient?.full_name ?? "—"}</span>
+                      {" · "}
+                      {r.payment_method === "pix" ? "PIX" : "Cartão"}
+                      {" · há "}
+                      {formatDistanceToNow(new Date(when), { locale: ptBR })}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0"
+                      onClick={() => setEditing(r)}
+                    >
+                      Adicionar referência
+                    </Button>
+                  </li>
+                );
+              })}
+              {recentMissing.length > 5 && (
+                <li className="text-xs opacity-80">+ {recentMissing.length - 5} outras…</li>
+              )}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {olderMissing.length > 0 && (
         <Alert variant="destructive" className="border-destructive/40 bg-destructive/5">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>
-            {missingReference.length === 1
+            {olderMissing.length === 1
               ? "1 sessão paga sem referência"
-              : `${missingReference.length} sessões pagas sem referência`}
+              : `${olderMissing.length} sessões pagas sem referência`}
           </AlertTitle>
           <AlertDescription className="space-y-2">
             <p>
               Pagamentos via PIX ou cartão precisam ter a referência preenchida (ex.: comprovante, NSU). Edite cada sessão para regularizar:
             </p>
             <ul className="text-sm space-y-1 mt-2">
-              {missingReference.slice(0, 5).map((r) => (
+              {olderMissing.slice(0, 5).map((r) => (
                 <li key={r.id} className="flex items-center justify-between gap-3">
                   <span className="truncate">
                     <span className="font-medium">{r.patient?.full_name ?? "—"}</span>
@@ -205,8 +302,8 @@ const Finance = () => {
                   </Button>
                 </li>
               ))}
-              {missingReference.length > 5 && (
-                <li className="text-xs opacity-80">+ {missingReference.length - 5} outras…</li>
+              {olderMissing.length > 5 && (
+                <li className="text-xs opacity-80">+ {olderMissing.length - 5} outras…</li>
               )}
             </ul>
           </AlertDescription>
