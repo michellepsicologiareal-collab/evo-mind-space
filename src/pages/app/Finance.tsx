@@ -115,7 +115,7 @@ const Finance = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, monthCursor]);
 
-  const billable = rows.filter((r) => r.status === "completed");
+  const billable = useMemo(() => rows.filter((r) => r.status === "completed"), [rows]);
   const totalFaturado = billable.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const totalRecebido = billable
     .filter((r) => r.payment_status === "paid")
