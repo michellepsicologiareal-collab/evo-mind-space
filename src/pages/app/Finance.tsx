@@ -296,6 +296,14 @@ const SessionsTable = ({
               {s.payment_reference && (
                 <span className="text-muted-foreground truncate max-w-[280px]">· {s.payment_reference}</span>
               )}
+              {s.payment_status === "paid" &&
+                (s.payment_method === "pix" || s.payment_method === "card") &&
+                (!s.payment_reference || s.payment_reference.trim().length === 0) && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium">
+                    <AlertTriangle className="h-3 w-3" />
+                    Sem referência
+                  </span>
+                )}
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
