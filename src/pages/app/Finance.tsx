@@ -281,19 +281,33 @@ const PaymentDetailsDialog = ({
   const [method, setMethod] = useState<PaymentMethod | "none">("none");
   const [reference, setReference] = useState("");
   const [saving, setSaving] = useState(false);
+  const [refError, setRefError] = useState<string | null>(null);
 
   useEffect(() => {
     if (row) {
       setMethod((row.payment_method as PaymentMethod | null) ?? "none");
       setReference(row.payment_reference ?? "");
+      setRefError(null);
     }
   }, [row]);
 
   if (!row) return null;
 
+  const requiresReference = method === "pix" || method === "card";
+  const trimmedRef = reference.trim();
+
   const save = async () => {
+    if (requiresReference && trimmedRef.length === 0) {
+      setRefError(
+        method === "pix"
+          ? "Informe a referência do PIX (ex.: comprovante, ID da transação)."
+          : "Informe a referência do cartão (ex.: últimos 4 dígitos, NSU)."
+      );
+      return;
+    }
+    setRefError(null);
     setSaving(true);
-    const ref = reference.trim().slice(0, 500);
+    const ref = trimmedRef.slice(0, 500);
     const { error } = await supabase
       .from("sessions")
       .update({
@@ -341,15 +355,31 @@ const PaymentDetailsDialog = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reference">Referência / nota</Label>
+            <Label htmlFor="reference">
+              Referência / nota
+              {requiresReference && <span className="text-destructive ml-1">*</span>}
+            </Label>
             <Input
               id="reference"
               maxLength={500}
               placeholder="Ex.: comprovante #1234, pago via Nubank"
               value={reference}
-              onChange={(e) => setReference(e.target.value)}
+              onChange={(e) => {
+                setReference(e.target.value);
+                if (refError) setRefError(null);
+              }}
+              aria-invalid={!!refError}
+              className={refError ? "border-destructive focus-visible:ring-destructive" : ""}
             />
+            {refError ? (
+              <p className="text-xs text-destructive">{refError}</p>
+            ) : requiresReference ? (
+              <p className="text-xs text-muted-foreground">
+                Obrigatório para {method === "pix" ? "PIX" : "cartão"}.
+              </p>
+            ) : null}
           </div>
+
         </div>
 
         <DialogFooter>
