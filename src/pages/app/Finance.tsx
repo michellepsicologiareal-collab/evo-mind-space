@@ -438,6 +438,32 @@ const Finance = () => {
                     }}
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reminder-group-sort" className="text-sm">
+                    Ordenar pacientes por
+                  </Label>
+                  <Select
+                    value={groupSort}
+                    disabled={!prefsLoaded || !reminderEnabled || !groupByPatient || savingPrefs}
+                    onValueChange={(v) => {
+                      const next = v as typeof groupSort;
+                      setGroupSort(next);
+                      savePrefs({ sort: next });
+                    }}
+                  >
+                    <SelectTrigger id="reminder-group-sort">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recent">Mais recente primeiro</SelectItem>
+                      <SelectItem value="oldest">Mais antigo primeiro</SelectItem>
+                      <SelectItem value="value">Maior valor total</SelectItem>
+                      <SelectItem value="count">Mais sessões pendentes</SelectItem>
+                      <SelectItem value="name">Nome (A–Z)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </PopoverContent>
           </Popover>
