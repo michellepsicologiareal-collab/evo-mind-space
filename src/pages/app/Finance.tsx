@@ -24,6 +24,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   TrendingUp,
   Wallet,
@@ -35,6 +36,7 @@ import {
   Smartphone,
   CreditCard,
   Banknote,
+  AlertTriangle,
 } from "lucide-react";
 import {
   startOfMonth,
@@ -117,6 +119,13 @@ const Finance = () => {
   const totalPendente = totalFaturado - totalRecebido;
   const sessoesPagas = billable.filter((r) => r.payment_status === "paid").length;
   const sessoesPendentes = billable.filter((r) => r.payment_status === "pending").length;
+
+  const missingReference = billable.filter(
+    (r) =>
+      r.payment_status === "paid" &&
+      (r.payment_method === "pix" || r.payment_method === "card") &&
+      (!r.payment_reference || r.payment_reference.trim().length === 0)
+  );
 
   const updatePayment = async (id: string, value: PaymentStatus) => {
     const { error } = await supabase
