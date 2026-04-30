@@ -94,8 +94,10 @@ const Finance = () => {
   const [editing, setEditing] = useState<Row | null>(null);
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderWindow, setReminderWindow] = useState(24);
+  const [groupByPatient, setGroupByPatient] = useState(false);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
+  const [expandedPatients, setExpandedPatients] = useState<Set<string>>(new Set());
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const recentAlertRef = useRef<HTMLDivElement | null>(null);
 
