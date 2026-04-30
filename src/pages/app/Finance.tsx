@@ -25,6 +25,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   TrendingUp,
   Wallet,
@@ -38,6 +44,7 @@ import {
   Banknote,
   AlertTriangle,
   BellRing,
+  Settings2,
 } from "lucide-react";
 import {
   startOfMonth,
