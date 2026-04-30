@@ -85,6 +85,8 @@ const Finance = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
+  const notifiedIdsRef = useRef<Set<string>>(new Set());
+  const recentAlertRef = useRef<HTMLDivElement | null>(null);
 
   const monthStart = useMemo(() => startOfMonth(monthCursor), [monthCursor]);
   const monthEnd = useMemo(() => endOfMonth(monthCursor), [monthCursor]);
