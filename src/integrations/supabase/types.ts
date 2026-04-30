@@ -64,6 +64,8 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          reminder_enabled: boolean
+          reminder_window_hours: number
           specialty: string | null
           updated_at: string
         }
@@ -74,6 +76,8 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
+          reminder_enabled?: boolean
+          reminder_window_hours?: number
           specialty?: string | null
           updated_at?: string
         }
@@ -84,6 +88,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          reminder_enabled?: boolean
+          reminder_window_hours?: number
           specialty?: string | null
           updated_at?: string
         }

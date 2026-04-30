@@ -25,6 +25,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   TrendingUp,
   Wallet,
@@ -38,6 +44,7 @@ import {
   Banknote,
   AlertTriangle,
   BellRing,
+  Settings2,
 } from "lucide-react";
 import {
   startOfMonth,
@@ -85,6 +92,10 @@ const Finance = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
+  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [reminderWindow, setReminderWindow] = useState(24);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+  const [savingPrefs, setSavingPrefs] = useState(false);
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const recentAlertRef = useRef<HTMLDivElement | null>(null);
 
@@ -115,6 +126,41 @@ const Finance = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, monthCursor]);
 
+  // Load reminder preferences from profile
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("reminder_enabled, reminder_window_hours")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (data) {
+        setReminderEnabled(data.reminder_enabled ?? true);
+        setReminderWindow(data.reminder_window_hours ?? 24);
+      }
+      setPrefsLoaded(true);
+    })();
+  }, [user]);
+
+  const savePrefs = async (next: { enabled?: boolean; window?: number }) => {
+    if (!user) return;
+    const enabled = next.enabled ?? reminderEnabled;
+    const windowH = next.window ?? reminderWindow;
+    setSavingPrefs(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ reminder_enabled: enabled, reminder_window_hours: windowH })
+      .eq("id", user.id);
+    setSavingPrefs(false);
+    if (error) {
+      toast.error("Não foi possível salvar a preferência.");
+      return;
+    }
+    // Reset notified set so toggling/changing window can re-notify
+    notifiedIdsRef.current.clear();
+  };
+
   const billable = useMemo(() => rows.filter((r) => r.status === "completed"), [rows]);
   const totalFaturado = billable.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const totalRecebido = billable
@@ -136,21 +182,22 @@ const Finance = () => {
   );
 
   const recentMissing = useMemo(() => {
-    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    if (!reminderEnabled) return [];
+    const cutoff = Date.now() - reminderWindow * 60 * 60 * 1000;
     return missingReference.filter((r) => {
       const ref = r.paid_at ?? r.scheduled_at;
       return ref ? new Date(ref).getTime() >= cutoff : false;
     });
-  }, [missingReference]);
+  }, [missingReference, reminderEnabled, reminderWindow]);
 
   const olderMissing = useMemo(() => {
     const recentIds = new Set(recentMissing.map((r) => r.id));
     return missingReference.filter((r) => !recentIds.has(r.id));
   }, [missingReference, recentMissing]);
 
-  // Auto-reminder toast for paid PIX/card sessions in the last 24h missing reference
+  // Auto-reminder toast for paid PIX/card sessions in the configured window missing reference
   useEffect(() => {
-    if (loading) return;
+    if (loading || !prefsLoaded || !reminderEnabled) return;
     const newOnes = recentMissing.filter((r) => !notifiedIdsRef.current.has(r.id));
     if (newOnes.length === 0) return;
 
@@ -161,13 +208,19 @@ const Finance = () => {
       .map((r) => r.patient?.full_name ?? "Paciente")
       .join(", ");
     const extra = newOnes.length > 2 ? ` e mais ${newOnes.length - 2}` : "";
+    const windowLabel =
+      reminderWindow === 24
+        ? "24h"
+        : reminderWindow < 24
+        ? `${reminderWindow}h`
+        : `${Math.round(reminderWindow / 24)}d`;
 
     toast.warning(
       newOnes.length === 1
         ? "Pagamento recente sem referência"
         : `${newOnes.length} pagamentos recentes sem referência`,
       {
-        description: `${names}${extra} · marcado(s) como pago(s) nas últimas 24h via PIX/cartão.`,
+        description: `${names}${extra} · marcado(s) como pago(s) nas últimas ${windowLabel} via PIX/cartão.`,
         duration: 8000,
         action: {
           label: "Revisar",
@@ -176,7 +229,7 @@ const Finance = () => {
         },
       }
     );
-  }, [recentMissing, loading]);
+  }, [recentMissing, loading, prefsLoaded, reminderEnabled, reminderWindow]);
 
 
   const updatePayment = async (id: string, value: PaymentStatus) => {
@@ -205,16 +258,85 @@ const Finance = () => {
             Acompanhe sessões pagas, pendentes e seu faturamento mensal.
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-card border border-border rounded-full p-1">
-          <Button variant="ghost" size="icon" onClick={() => setMonthCursor(subMonths(monthCursor, 1))}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm font-medium px-3 capitalize min-w-[140px] text-center">
-            {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
-          </span>
-          <Button variant="ghost" size="icon" onClick={() => setMonthCursor(addMonths(monthCursor, 1))}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon" title="Preferências do lembrete">
+                <Settings2 className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium text-sm">Lembrete automático</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Avisa sobre pagamentos PIX/cartão sem referência.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="reminder-enabled" className="text-sm">Ativar toast e banner</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Mostra notificação ao abrir e destaca no topo.
+                    </p>
+                  </div>
+                  <Switch
+                    id="reminder-enabled"
+                    checked={reminderEnabled}
+                    disabled={!prefsLoaded || savingPrefs}
+                    onCheckedChange={(v) => {
+                      setReminderEnabled(v);
+                      savePrefs({ enabled: v });
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reminder-window" className="text-sm">
+                    Janela considerada recente
+                  </Label>
+                  <Select
+                    value={String(reminderWindow)}
+                    disabled={!prefsLoaded || !reminderEnabled || savingPrefs}
+                    onValueChange={(v) => {
+                      const n = Number(v);
+                      setReminderWindow(n);
+                      savePrefs({ window: n });
+                    }}
+                  >
+                    <SelectTrigger id="reminder-window">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Última hora</SelectItem>
+                      <SelectItem value="6">Últimas 6 horas</SelectItem>
+                      <SelectItem value="12">Últimas 12 horas</SelectItem>
+                      <SelectItem value="24">Últimas 24 horas</SelectItem>
+                      <SelectItem value="48">Últimos 2 dias</SelectItem>
+                      <SelectItem value="72">Últimos 3 dias</SelectItem>
+                      <SelectItem value="168">Últimos 7 dias</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Pagamentos mais antigos continuam no alerta secundário.
+                  </p>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <div className="flex items-center gap-2 bg-card border border-border rounded-full p-1">
+            <Button variant="ghost" size="icon" onClick={() => setMonthCursor(subMonths(monthCursor, 1))}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-medium px-3 capitalize min-w-[140px] text-center">
+              {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
+            </span>
+            <Button variant="ghost" size="icon" onClick={() => setMonthCursor(addMonths(monthCursor, 1))}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -236,8 +358,8 @@ const Finance = () => {
           <AlertDescription className="space-y-2">
             <p>
               {recentMissing.length === 1
-                ? "1 sessão foi marcada como paga via PIX/cartão nas últimas 24h sem referência. Adicione o comprovante enquanto a transação ainda está fresca:"
-                : `${recentMissing.length} sessões foram marcadas como pagas via PIX/cartão nas últimas 24h sem referência. Adicione os comprovantes enquanto as transações ainda estão frescas:`}
+                ? `1 sessão foi marcada como paga via PIX/cartão nas últimas ${reminderWindow}h sem referência. Adicione o comprovante enquanto a transação ainda está fresca:`
+                : `${recentMissing.length} sessões foram marcadas como pagas via PIX/cartão nas últimas ${reminderWindow}h sem referência. Adicione os comprovantes enquanto as transações ainda estão frescas:`}
             </p>
             <ul className="text-sm space-y-1 mt-2">
               {recentMissing.slice(0, 5).map((r) => {
