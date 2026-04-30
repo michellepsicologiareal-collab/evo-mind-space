@@ -258,16 +258,85 @@ const Finance = () => {
             Acompanhe sessões pagas, pendentes e seu faturamento mensal.
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-card border border-border rounded-full p-1">
-          <Button variant="ghost" size="icon" onClick={() => setMonthCursor(subMonths(monthCursor, 1))}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm font-medium px-3 capitalize min-w-[140px] text-center">
-            {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
-          </span>
-          <Button variant="ghost" size="icon" onClick={() => setMonthCursor(addMonths(monthCursor, 1))}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon" title="Preferências do lembrete">
+                <Settings2 className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium text-sm">Lembrete automático</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Avisa sobre pagamentos PIX/cartão sem referência.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="reminder-enabled" className="text-sm">Ativar toast e banner</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Mostra notificação ao abrir e destaca no topo.
+                    </p>
+                  </div>
+                  <Switch
+                    id="reminder-enabled"
+                    checked={reminderEnabled}
+                    disabled={!prefsLoaded || savingPrefs}
+                    onCheckedChange={(v) => {
+                      setReminderEnabled(v);
+                      savePrefs({ enabled: v });
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reminder-window" className="text-sm">
+                    Janela considerada recente
+                  </Label>
+                  <Select
+                    value={String(reminderWindow)}
+                    disabled={!prefsLoaded || !reminderEnabled || savingPrefs}
+                    onValueChange={(v) => {
+                      const n = Number(v);
+                      setReminderWindow(n);
+                      savePrefs({ window: n });
+                    }}
+                  >
+                    <SelectTrigger id="reminder-window">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Última hora</SelectItem>
+                      <SelectItem value="6">Últimas 6 horas</SelectItem>
+                      <SelectItem value="12">Últimas 12 horas</SelectItem>
+                      <SelectItem value="24">Últimas 24 horas</SelectItem>
+                      <SelectItem value="48">Últimos 2 dias</SelectItem>
+                      <SelectItem value="72">Últimos 3 dias</SelectItem>
+                      <SelectItem value="168">Últimos 7 dias</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Pagamentos mais antigos continuam no alerta secundário.
+                  </p>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <div className="flex items-center gap-2 bg-card border border-border rounded-full p-1">
+            <Button variant="ghost" size="icon" onClick={() => setMonthCursor(subMonths(monthCursor, 1))}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-medium px-3 capitalize min-w-[140px] text-center">
+              {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
+            </span>
+            <Button variant="ghost" size="icon" onClick={() => setMonthCursor(addMonths(monthCursor, 1))}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
