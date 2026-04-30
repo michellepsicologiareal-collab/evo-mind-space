@@ -282,8 +282,8 @@ const Finance = () => {
           <AlertDescription className="space-y-2">
             <p>
               {recentMissing.length === 1
-                ? "1 sessão foi marcada como paga via PIX/cartão nas últimas 24h sem referência. Adicione o comprovante enquanto a transação ainda está fresca:"
-                : `${recentMissing.length} sessões foram marcadas como pagas via PIX/cartão nas últimas 24h sem referência. Adicione os comprovantes enquanto as transações ainda estão frescas:`}
+                ? `1 sessão foi marcada como paga via PIX/cartão nas últimas ${reminderWindow}h sem referência. Adicione o comprovante enquanto a transação ainda está fresca:`
+                : `${recentMissing.length} sessões foram marcadas como pagas via PIX/cartão nas últimas ${reminderWindow}h sem referência. Adicione os comprovantes enquanto as transações ainda estão frescas:`}
             </p>
             <ul className="text-sm space-y-1 mt-2">
               {recentMissing.slice(0, 5).map((r) => {
