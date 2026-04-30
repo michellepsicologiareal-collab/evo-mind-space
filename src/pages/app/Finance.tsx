@@ -173,6 +173,46 @@ const Finance = () => {
         <KpiCard icon={CheckCircle2} label="Sessões realizadas" value={billable.length.toString()} />
       </section>
 
+      {missingReference.length > 0 && (
+        <Alert variant="destructive" className="border-destructive/40 bg-destructive/5">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>
+            {missingReference.length === 1
+              ? "1 sessão paga sem referência"
+              : `${missingReference.length} sessões pagas sem referência`}
+          </AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>
+              Pagamentos via PIX ou cartão precisam ter a referência preenchida (ex.: comprovante, NSU). Edite cada sessão para regularizar:
+            </p>
+            <ul className="text-sm space-y-1 mt-2">
+              {missingReference.slice(0, 5).map((r) => (
+                <li key={r.id} className="flex items-center justify-between gap-3">
+                  <span className="truncate">
+                    <span className="font-medium">{r.patient?.full_name ?? "—"}</span>
+                    {" · "}
+                    {format(new Date(r.scheduled_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                    {" · "}
+                    {r.payment_method === "pix" ? "PIX" : "Cartão"}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => setEditing(r)}
+                  >
+                    Corrigir
+                  </Button>
+                </li>
+              ))}
+              {missingReference.length > 5 && (
+                <li className="text-xs opacity-80">+ {missingReference.length - 5} outras…</li>
+              )}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <section className="rounded-3xl bg-card border border-border p-6 lg:p-8">
         <Tabs defaultValue="all">
           <div className="flex items-center justify-between mb-6">
@@ -195,6 +235,7 @@ const Finance = () => {
           </TabsContent>
         </Tabs>
       </section>
+
 
       <PaymentDetailsDialog
         row={editing}
