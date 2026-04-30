@@ -119,6 +119,41 @@ const Finance = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, monthCursor]);
 
+  // Load reminder preferences from profile
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("reminder_enabled, reminder_window_hours")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (data) {
+        setReminderEnabled(data.reminder_enabled ?? true);
+        setReminderWindow(data.reminder_window_hours ?? 24);
+      }
+      setPrefsLoaded(true);
+    })();
+  }, [user]);
+
+  const savePrefs = async (next: { enabled?: boolean; window?: number }) => {
+    if (!user) return;
+    const enabled = next.enabled ?? reminderEnabled;
+    const windowH = next.window ?? reminderWindow;
+    setSavingPrefs(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ reminder_enabled: enabled, reminder_window_hours: windowH })
+      .eq("id", user.id);
+    setSavingPrefs(false);
+    if (error) {
+      toast.error("Não foi possível salvar a preferência.");
+      return;
+    }
+    // Reset notified set so toggling/changing window can re-notify
+    notifiedIdsRef.current.clear();
+  };
+
   const billable = useMemo(() => rows.filter((r) => r.status === "completed"), [rows]);
   const totalFaturado = billable.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const totalRecebido = billable
