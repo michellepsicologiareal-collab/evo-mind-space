@@ -124,12 +124,60 @@ const Finance = () => {
   const sessoesPagas = billable.filter((r) => r.payment_status === "paid").length;
   const sessoesPendentes = billable.filter((r) => r.payment_status === "pending").length;
 
-  const missingReference = billable.filter(
-    (r) =>
-      r.payment_status === "paid" &&
-      (r.payment_method === "pix" || r.payment_method === "card") &&
-      (!r.payment_reference || r.payment_reference.trim().length === 0)
+  const missingReference = useMemo(
+    () =>
+      billable.filter(
+        (r) =>
+          r.payment_status === "paid" &&
+          (r.payment_method === "pix" || r.payment_method === "card") &&
+          (!r.payment_reference || r.payment_reference.trim().length === 0)
+      ),
+    [billable]
   );
+
+  const recentMissing = useMemo(() => {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    return missingReference.filter((r) => {
+      const ref = r.paid_at ?? r.scheduled_at;
+      return ref ? new Date(ref).getTime() >= cutoff : false;
+    });
+  }, [missingReference]);
+
+  const olderMissing = useMemo(() => {
+    const recentIds = new Set(recentMissing.map((r) => r.id));
+    return missingReference.filter((r) => !recentIds.has(r.id));
+  }, [missingReference, recentMissing]);
+
+  // Auto-reminder toast for paid PIX/card sessions in the last 24h missing reference
+  useEffect(() => {
+    if (loading) return;
+    const newOnes = recentMissing.filter((r) => !notifiedIdsRef.current.has(r.id));
+    if (newOnes.length === 0) return;
+
+    newOnes.forEach((r) => notifiedIdsRef.current.add(r.id));
+
+    const names = newOnes
+      .slice(0, 2)
+      .map((r) => r.patient?.full_name ?? "Paciente")
+      .join(", ");
+    const extra = newOnes.length > 2 ? ` e mais ${newOnes.length - 2}` : "";
+
+    toast.warning(
+      newOnes.length === 1
+        ? "Pagamento recente sem referência"
+        : `${newOnes.length} pagamentos recentes sem referência`,
+      {
+        description: `${names}${extra} · marcado(s) como pago(s) nas últimas 24h via PIX/cartão.`,
+        duration: 8000,
+        action: {
+          label: "Revisar",
+          onClick: () =>
+            recentAlertRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+        },
+      }
+    );
+  }, [recentMissing, loading]);
+
 
   const updatePayment = async (id: string, value: PaymentStatus) => {
     const { error } = await supabase
