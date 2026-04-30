@@ -203,6 +203,27 @@ const Finance = () => {
     return missingReference.filter((r) => !recentIds.has(r.id));
   }, [missingReference, recentMissing]);
 
+  // Group recent missing by patient (preserves order: most recent first)
+  const recentGrouped = useMemo(() => {
+    const map = new Map<string, { name: string; rows: Row[] }>();
+    for (const r of recentMissing) {
+      const key = r.patient?.full_name ?? "—";
+      const entry = map.get(key);
+      if (entry) entry.rows.push(r);
+      else map.set(key, { name: key, rows: [r] });
+    }
+    return Array.from(map.entries()).map(([key, v]) => ({ key, ...v }));
+  }, [recentMissing]);
+
+  const togglePatientExpanded = (key: string) => {
+    setExpandedPatients((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
   // Auto-reminder toast for paid PIX/card sessions in the configured window missing reference
   useEffect(() => {
     if (loading || !prefsLoaded || !reminderEnabled) return;
@@ -211,11 +232,6 @@ const Finance = () => {
 
     newOnes.forEach((r) => notifiedIdsRef.current.add(r.id));
 
-    const names = newOnes
-      .slice(0, 2)
-      .map((r) => r.patient?.full_name ?? "Paciente")
-      .join(", ");
-    const extra = newOnes.length > 2 ? ` e mais ${newOnes.length - 2}` : "";
     const windowLabel =
       reminderWindow === 24
         ? "24h"
@@ -223,21 +239,56 @@ const Finance = () => {
         ? `${reminderWindow}h`
         : `${Math.round(reminderWindow / 24)}d`;
 
-    toast.warning(
-      newOnes.length === 1
-        ? "Pagamento recente sem referência"
-        : `${newOnes.length} pagamentos recentes sem referência`,
-      {
-        description: `${names}${extra} · marcado(s) como pago(s) nas últimas ${windowLabel} via PIX/cartão.`,
-        duration: 8000,
-        action: {
-          label: "Revisar",
-          onClick: () =>
-            recentAlertRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
-        },
+    if (groupByPatient) {
+      // Group new ones by patient for the toast description
+      const byPatient = new Map<string, number>();
+      for (const r of newOnes) {
+        const name = r.patient?.full_name ?? "Paciente";
+        byPatient.set(name, (byPatient.get(name) ?? 0) + 1);
       }
-    );
-  }, [recentMissing, loading, prefsLoaded, reminderEnabled, reminderWindow]);
+      const summary = Array.from(byPatient.entries())
+        .slice(0, 3)
+        .map(([n, c]) => (c > 1 ? `${n} (${c})` : n))
+        .join(", ");
+      const extra = byPatient.size > 3 ? ` e mais ${byPatient.size - 3} paciente(s)` : "";
+
+      toast.warning(
+        byPatient.size === 1
+          ? `Pagamentos sem referência: ${Array.from(byPatient.keys())[0]}`
+          : `${byPatient.size} pacientes com pagamentos sem referência`,
+        {
+          description: `${summary}${extra} · ${newOnes.length} sessão(ões) nas últimas ${windowLabel} via PIX/cartão.`,
+          duration: 8000,
+          action: {
+            label: "Revisar",
+            onClick: () =>
+              recentAlertRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+          },
+        }
+      );
+    } else {
+      const names = newOnes
+        .slice(0, 2)
+        .map((r) => r.patient?.full_name ?? "Paciente")
+        .join(", ");
+      const extra = newOnes.length > 2 ? ` e mais ${newOnes.length - 2}` : "";
+
+      toast.warning(
+        newOnes.length === 1
+          ? "Pagamento recente sem referência"
+          : `${newOnes.length} pagamentos recentes sem referência`,
+        {
+          description: `${names}${extra} · marcado(s) como pago(s) nas últimas ${windowLabel} via PIX/cartão.`,
+          duration: 8000,
+          action: {
+            label: "Revisar",
+            onClick: () =>
+              recentAlertRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+          },
+        }
+      );
+    }
+  }, [recentMissing, loading, prefsLoaded, reminderEnabled, reminderWindow, groupByPatient]);
 
 
   const updatePayment = async (id: string, value: PaymentStatus) => {
