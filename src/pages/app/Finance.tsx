@@ -24,6 +24,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   TrendingUp,
   Wallet,
@@ -35,6 +36,7 @@ import {
   Smartphone,
   CreditCard,
   Banknote,
+  AlertTriangle,
 } from "lucide-react";
 import {
   startOfMonth,
@@ -118,6 +120,13 @@ const Finance = () => {
   const sessoesPagas = billable.filter((r) => r.payment_status === "paid").length;
   const sessoesPendentes = billable.filter((r) => r.payment_status === "pending").length;
 
+  const missingReference = billable.filter(
+    (r) =>
+      r.payment_status === "paid" &&
+      (r.payment_method === "pix" || r.payment_method === "card") &&
+      (!r.payment_reference || r.payment_reference.trim().length === 0)
+  );
+
   const updatePayment = async (id: string, value: PaymentStatus) => {
     const { error } = await supabase
       .from("sessions")
@@ -164,6 +173,46 @@ const Finance = () => {
         <KpiCard icon={CheckCircle2} label="Sessões realizadas" value={billable.length.toString()} />
       </section>
 
+      {missingReference.length > 0 && (
+        <Alert variant="destructive" className="border-destructive/40 bg-destructive/5">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>
+            {missingReference.length === 1
+              ? "1 sessão paga sem referência"
+              : `${missingReference.length} sessões pagas sem referência`}
+          </AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>
+              Pagamentos via PIX ou cartão precisam ter a referência preenchida (ex.: comprovante, NSU). Edite cada sessão para regularizar:
+            </p>
+            <ul className="text-sm space-y-1 mt-2">
+              {missingReference.slice(0, 5).map((r) => (
+                <li key={r.id} className="flex items-center justify-between gap-3">
+                  <span className="truncate">
+                    <span className="font-medium">{r.patient?.full_name ?? "—"}</span>
+                    {" · "}
+                    {format(new Date(r.scheduled_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                    {" · "}
+                    {r.payment_method === "pix" ? "PIX" : "Cartão"}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => setEditing(r)}
+                  >
+                    Corrigir
+                  </Button>
+                </li>
+              ))}
+              {missingReference.length > 5 && (
+                <li className="text-xs opacity-80">+ {missingReference.length - 5} outras…</li>
+              )}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <section className="rounded-3xl bg-card border border-border p-6 lg:p-8">
         <Tabs defaultValue="all">
           <div className="flex items-center justify-between mb-6">
@@ -186,6 +235,7 @@ const Finance = () => {
           </TabsContent>
         </Tabs>
       </section>
+
 
       <PaymentDetailsDialog
         row={editing}
@@ -246,6 +296,14 @@ const SessionsTable = ({
               {s.payment_reference && (
                 <span className="text-muted-foreground truncate max-w-[280px]">· {s.payment_reference}</span>
               )}
+              {s.payment_status === "paid" &&
+                (s.payment_method === "pix" || s.payment_method === "card") &&
+                (!s.payment_reference || s.payment_reference.trim().length === 0) && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium">
+                    <AlertTriangle className="h-3 w-3" />
+                    Sem referência
+                  </span>
+                )}
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
