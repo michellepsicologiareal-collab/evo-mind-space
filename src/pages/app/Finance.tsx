@@ -137,13 +137,15 @@ const Finance = () => {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient")
+        .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient, reminder_group_sort")
         .eq("id", user.id)
         .maybeSingle();
       if (data) {
         setReminderEnabled(data.reminder_enabled ?? true);
         setReminderWindow(data.reminder_window_hours ?? 24);
         setGroupByPatient(data.reminder_group_by_patient ?? false);
+        const sort = data.reminder_group_sort as typeof groupSort | null;
+        if (sort) setGroupSort(sort);
       }
       setPrefsLoaded(true);
     })();
