@@ -85,6 +85,10 @@ const Finance = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
+  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [reminderWindow, setReminderWindow] = useState(24);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+  const [savingPrefs, setSavingPrefs] = useState(false);
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const recentAlertRef = useRef<HTMLDivElement | null>(null);
 
