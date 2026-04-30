@@ -97,6 +97,8 @@ export type Database = {
           notes: string | null
           paid_at: string | null
           patient_id: string
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
+          payment_reference: string | null
           payment_status: Database["public"]["Enums"]["payment_status"]
           price: number | null
           scheduled_at: string
@@ -111,6 +113,8 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           patient_id: string
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_reference?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           price?: number | null
           scheduled_at: string
@@ -125,6 +129,8 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           patient_id?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_reference?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           price?: number | null
           scheduled_at?: string
@@ -150,6 +156,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      payment_method: "pix" | "card" | "cash"
       payment_status: "pending" | "paid"
       session_status:
         | "scheduled"
@@ -284,6 +291,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      payment_method: ["pix", "card", "cash"],
       payment_status: ["pending", "paid"],
       session_status: [
         "scheduled",

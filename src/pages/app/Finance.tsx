@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -16,12 +18,23 @@ import {
   TabsContent,
 } from "@/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   TrendingUp,
   Wallet,
   Clock,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Pencil,
+  Smartphone,
+  CreditCard,
+  Banknote,
 } from "lucide-react";
 import {
   startOfMonth,
@@ -34,25 +47,40 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 
 type PaymentStatus = "pending" | "paid";
+type PaymentMethod = "pix" | "card" | "cash";
 
 interface Row {
   id: string;
   scheduled_at: string;
   status: string;
   payment_status: PaymentStatus;
+  payment_method: PaymentMethod | null;
+  payment_reference: string | null;
   price: number | null;
   paid_at: string | null;
   patient: { full_name: string } | null;
 }
 
-const formatBRL = (n: number) =>
-  `R$ ${n.toFixed(2).replace(".", ",")}`;
+const formatBRL = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
+
+const METHOD_LABEL: Record<PaymentMethod, string> = {
+  pix: "PIX",
+  card: "Cartão",
+  cash: "Dinheiro",
+};
+
+const MethodIcon = ({ method, className }: { method: PaymentMethod; className?: string }) => {
+  if (method === "pix") return <Smartphone className={className} />;
+  if (method === "card") return <CreditCard className={className} />;
+  return <Banknote className={className} />;
+};
 
 const Finance = () => {
   const { user } = useAuth();
   const [monthCursor, setMonthCursor] = useState<Date>(new Date());
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Row | null>(null);
 
   const monthStart = useMemo(() => startOfMonth(monthCursor), [monthCursor]);
   const monthEnd = useMemo(() => endOfMonth(monthCursor), [monthCursor]);
@@ -62,7 +90,7 @@ const Finance = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("sessions")
-      .select("id, scheduled_at, status, payment_status, price, paid_at, patient:patients(full_name)")
+      .select("id, scheduled_at, status, payment_status, payment_method, payment_reference, price, paid_at, patient:patients(full_name)")
       .gte("scheduled_at", monthStart.toISOString())
       .lte("scheduled_at", monthEnd.toISOString())
       .order("scheduled_at", { ascending: false });
@@ -148,16 +176,25 @@ const Finance = () => {
           </div>
 
           <TabsContent value="all">
-            <SessionsTable rows={billable} loading={loading} onChange={updatePayment} />
+            <SessionsTable rows={billable} loading={loading} onChange={updatePayment} onEdit={setEditing} />
           </TabsContent>
           <TabsContent value="pending">
-            <SessionsTable rows={billable.filter((r) => r.payment_status === "pending")} loading={loading} onChange={updatePayment} />
+            <SessionsTable rows={billable.filter((r) => r.payment_status === "pending")} loading={loading} onChange={updatePayment} onEdit={setEditing} />
           </TabsContent>
           <TabsContent value="paid">
-            <SessionsTable rows={billable.filter((r) => r.payment_status === "paid")} loading={loading} onChange={updatePayment} />
+            <SessionsTable rows={billable.filter((r) => r.payment_status === "paid")} loading={loading} onChange={updatePayment} onEdit={setEditing} />
           </TabsContent>
         </Tabs>
       </section>
+
+      <PaymentDetailsDialog
+        row={editing}
+        onClose={() => setEditing(null)}
+        onSaved={() => {
+          setEditing(null);
+          load();
+        }}
+      />
     </div>
   );
 };
@@ -166,10 +203,12 @@ const SessionsTable = ({
   rows,
   loading,
   onChange,
+  onEdit,
 }: {
   rows: Row[];
   loading: boolean;
   onChange: (id: string, v: PaymentStatus) => void;
+  onEdit: (r: Row) => void;
 }) => {
   if (loading) {
     return <p className="text-center py-12 text-muted-foreground">Carregando…</p>;
@@ -186,8 +225,8 @@ const SessionsTable = ({
   return (
     <ul className="divide-y divide-border">
       {rows.map((s) => (
-        <li key={s.id} className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="min-w-0">
+        <li key={s.id} className="py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          <div className="min-w-0 flex-1">
             <p className="font-medium text-foreground truncate">{s.patient?.full_name ?? "—"}</p>
             <p className="text-sm text-muted-foreground capitalize">
               {format(new Date(s.scheduled_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
@@ -195,11 +234,24 @@ const SessionsTable = ({
                 <span className="ml-2 text-xs">· pago em {format(new Date(s.paid_at), "dd/MM")}</span>
               )}
             </p>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+              {s.payment_method ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                  <MethodIcon method={s.payment_method} className="h-3 w-3" />
+                  {METHOD_LABEL[s.payment_method]}
+                </span>
+              ) : (
+                <span className="text-muted-foreground italic">Sem método</span>
+              )}
+              {s.payment_reference && (
+                <span className="text-muted-foreground truncate max-w-[280px]">· {s.payment_reference}</span>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             <span className="font-display text-lg font-semibold">{formatBRL(Number(s.price ?? 0))}</span>
             <Select value={s.payment_status} onValueChange={(v) => onChange(s.id, v as PaymentStatus)}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[130px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -207,10 +259,107 @@ const SessionsTable = ({
                 <SelectItem value="paid">Pago</SelectItem>
               </SelectContent>
             </Select>
+            <Button variant="ghost" size="icon" onClick={() => onEdit(s)} title="Editar pagamento">
+              <Pencil className="h-4 w-4" />
+            </Button>
           </div>
         </li>
       ))}
     </ul>
+  );
+};
+
+const PaymentDetailsDialog = ({
+  row,
+  onClose,
+  onSaved,
+}: {
+  row: Row | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) => {
+  const [method, setMethod] = useState<PaymentMethod | "none">("none");
+  const [reference, setReference] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (row) {
+      setMethod((row.payment_method as PaymentMethod | null) ?? "none");
+      setReference(row.payment_reference ?? "");
+    }
+  }, [row]);
+
+  if (!row) return null;
+
+  const save = async () => {
+    setSaving(true);
+    const ref = reference.trim().slice(0, 500);
+    const { error } = await supabase
+      .from("sessions")
+      .update({
+        payment_method: method === "none" ? null : method,
+        payment_reference: ref.length > 0 ? ref : null,
+      })
+      .eq("id", row.id);
+    setSaving(false);
+    if (error) {
+      toast.error("Não foi possível salvar.");
+      return;
+    }
+    toast.success("Pagamento atualizado.");
+    onSaved();
+  };
+
+  return (
+    <Dialog open={!!row} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Detalhes do pagamento</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium">{row.patient?.full_name ?? "—"}</p>
+            <p className="text-xs text-muted-foreground">
+              {format(new Date(row.scheduled_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} · {formatBRL(Number(row.price ?? 0))}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Método de pagamento</Label>
+            <Select value={method} onValueChange={(v) => setMethod(v as PaymentMethod | "none")}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Não informado</SelectItem>
+                <SelectItem value="pix">PIX</SelectItem>
+                <SelectItem value="card">Cartão</SelectItem>
+                <SelectItem value="cash">Dinheiro</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="reference">Referência / nota</Label>
+            <Input
+              id="reference"
+              maxLength={500}
+              placeholder="Ex.: comprovante #1234, pago via Nubank"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button variant="hero" onClick={save} disabled={saving}>
+            {saving ? "Salvando…" : "Salvar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
