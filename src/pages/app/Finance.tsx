@@ -97,6 +97,7 @@ const Finance = () => {
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderWindow, setReminderWindow] = useState(24);
   const [groupByPatient, setGroupByPatient] = useState(false);
+  const [groupSort, setGroupSort] = useState<"recent" | "oldest" | "value" | "count" | "name">("recent");
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [expandedPatients, setExpandedPatients] = useState<Set<string>>(new Set());
