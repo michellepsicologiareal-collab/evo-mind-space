@@ -45,6 +45,8 @@ import {
   AlertTriangle,
   BellRing,
   Settings2,
+  Users,
+  ChevronDown,
 } from "lucide-react";
 import {
   startOfMonth,
@@ -94,8 +96,10 @@ const Finance = () => {
   const [editing, setEditing] = useState<Row | null>(null);
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderWindow, setReminderWindow] = useState(24);
+  const [groupByPatient, setGroupByPatient] = useState(false);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
+  const [expandedPatients, setExpandedPatients] = useState<Set<string>>(new Set());
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const recentAlertRef = useRef<HTMLDivElement | null>(null);
 
@@ -132,25 +136,31 @@ const Finance = () => {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("reminder_enabled, reminder_window_hours")
+        .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient")
         .eq("id", user.id)
         .maybeSingle();
       if (data) {
         setReminderEnabled(data.reminder_enabled ?? true);
         setReminderWindow(data.reminder_window_hours ?? 24);
+        setGroupByPatient(data.reminder_group_by_patient ?? false);
       }
       setPrefsLoaded(true);
     })();
   }, [user]);
 
-  const savePrefs = async (next: { enabled?: boolean; window?: number }) => {
+  const savePrefs = async (next: { enabled?: boolean; window?: number; group?: boolean }) => {
     if (!user) return;
     const enabled = next.enabled ?? reminderEnabled;
     const windowH = next.window ?? reminderWindow;
+    const group = next.group ?? groupByPatient;
     setSavingPrefs(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ reminder_enabled: enabled, reminder_window_hours: windowH })
+      .update({
+        reminder_enabled: enabled,
+        reminder_window_hours: windowH,
+        reminder_group_by_patient: group,
+      })
       .eq("id", user.id);
     setSavingPrefs(false);
     if (error) {
@@ -195,6 +205,27 @@ const Finance = () => {
     return missingReference.filter((r) => !recentIds.has(r.id));
   }, [missingReference, recentMissing]);
 
+  // Group recent missing by patient (preserves order: most recent first)
+  const recentGrouped = useMemo(() => {
+    const map = new Map<string, { name: string; rows: Row[] }>();
+    for (const r of recentMissing) {
+      const key = r.patient?.full_name ?? "—";
+      const entry = map.get(key);
+      if (entry) entry.rows.push(r);
+      else map.set(key, { name: key, rows: [r] });
+    }
+    return Array.from(map.entries()).map(([key, v]) => ({ key, ...v }));
+  }, [recentMissing]);
+
+  const togglePatientExpanded = (key: string) => {
+    setExpandedPatients((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
   // Auto-reminder toast for paid PIX/card sessions in the configured window missing reference
   useEffect(() => {
     if (loading || !prefsLoaded || !reminderEnabled) return;
@@ -203,11 +234,6 @@ const Finance = () => {
 
     newOnes.forEach((r) => notifiedIdsRef.current.add(r.id));
 
-    const names = newOnes
-      .slice(0, 2)
-      .map((r) => r.patient?.full_name ?? "Paciente")
-      .join(", ");
-    const extra = newOnes.length > 2 ? ` e mais ${newOnes.length - 2}` : "";
     const windowLabel =
       reminderWindow === 24
         ? "24h"
@@ -215,21 +241,56 @@ const Finance = () => {
         ? `${reminderWindow}h`
         : `${Math.round(reminderWindow / 24)}d`;
 
-    toast.warning(
-      newOnes.length === 1
-        ? "Pagamento recente sem referência"
-        : `${newOnes.length} pagamentos recentes sem referência`,
-      {
-        description: `${names}${extra} · marcado(s) como pago(s) nas últimas ${windowLabel} via PIX/cartão.`,
-        duration: 8000,
-        action: {
-          label: "Revisar",
-          onClick: () =>
-            recentAlertRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
-        },
+    if (groupByPatient) {
+      // Group new ones by patient for the toast description
+      const byPatient = new Map<string, number>();
+      for (const r of newOnes) {
+        const name = r.patient?.full_name ?? "Paciente";
+        byPatient.set(name, (byPatient.get(name) ?? 0) + 1);
       }
-    );
-  }, [recentMissing, loading, prefsLoaded, reminderEnabled, reminderWindow]);
+      const summary = Array.from(byPatient.entries())
+        .slice(0, 3)
+        .map(([n, c]) => (c > 1 ? `${n} (${c})` : n))
+        .join(", ");
+      const extra = byPatient.size > 3 ? ` e mais ${byPatient.size - 3} paciente(s)` : "";
+
+      toast.warning(
+        byPatient.size === 1
+          ? `Pagamentos sem referência: ${Array.from(byPatient.keys())[0]}`
+          : `${byPatient.size} pacientes com pagamentos sem referência`,
+        {
+          description: `${summary}${extra} · ${newOnes.length} sessão(ões) nas últimas ${windowLabel} via PIX/cartão.`,
+          duration: 8000,
+          action: {
+            label: "Revisar",
+            onClick: () =>
+              recentAlertRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+          },
+        }
+      );
+    } else {
+      const names = newOnes
+        .slice(0, 2)
+        .map((r) => r.patient?.full_name ?? "Paciente")
+        .join(", ");
+      const extra = newOnes.length > 2 ? ` e mais ${newOnes.length - 2}` : "";
+
+      toast.warning(
+        newOnes.length === 1
+          ? "Pagamento recente sem referência"
+          : `${newOnes.length} pagamentos recentes sem referência`,
+        {
+          description: `${names}${extra} · marcado(s) como pago(s) nas últimas ${windowLabel} via PIX/cartão.`,
+          duration: 8000,
+          action: {
+            label: "Revisar",
+            onClick: () =>
+              recentAlertRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+          },
+        }
+      );
+    }
+  }, [recentMissing, loading, prefsLoaded, reminderEnabled, reminderWindow, groupByPatient]);
 
 
   const updatePayment = async (id: string, value: PaymentStatus) => {
@@ -322,6 +383,25 @@ const Finance = () => {
                     Pagamentos mais antigos continuam no alerta secundário.
                   </p>
                 </div>
+
+                <div className="flex items-center justify-between gap-3 pt-1 border-t border-border">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="reminder-group" className="text-sm">Agrupar por paciente</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Junta sessões do mesmo paciente em uma linha.
+                    </p>
+                  </div>
+                  <Switch
+                    id="reminder-group"
+                    checked={groupByPatient}
+                    disabled={!prefsLoaded || !reminderEnabled || savingPrefs}
+                    onCheckedChange={(v) => {
+                      setGroupByPatient(v);
+                      setExpandedPatients(new Set());
+                      savePrefs({ group: v });
+                    }}
+                  />
+                </div>
               </div>
             </PopoverContent>
           </Popover>
@@ -361,33 +441,120 @@ const Finance = () => {
                 ? `1 sessão foi marcada como paga via PIX/cartão nas últimas ${reminderWindow}h sem referência. Adicione o comprovante enquanto a transação ainda está fresca:`
                 : `${recentMissing.length} sessões foram marcadas como pagas via PIX/cartão nas últimas ${reminderWindow}h sem referência. Adicione os comprovantes enquanto as transações ainda estão frescas:`}
             </p>
-            <ul className="text-sm space-y-1 mt-2">
-              {recentMissing.slice(0, 5).map((r) => {
-                const when = r.paid_at ?? r.scheduled_at;
-                return (
-                  <li key={r.id} className="flex items-center justify-between gap-3">
-                    <span className="truncate">
-                      <span className="font-medium">{r.patient?.full_name ?? "—"}</span>
-                      {" · "}
-                      {r.payment_method === "pix" ? "PIX" : "Cartão"}
-                      {" · há "}
-                      {formatDistanceToNow(new Date(when), { locale: ptBR })}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="shrink-0"
-                      onClick={() => setEditing(r)}
-                    >
-                      Adicionar referência
-                    </Button>
-                  </li>
-                );
-              })}
-              {recentMissing.length > 5 && (
-                <li className="text-xs opacity-80">+ {recentMissing.length - 5} outras…</li>
-              )}
-            </ul>
+            {groupByPatient ? (
+              <ul className="text-sm space-y-1 mt-2">
+                {recentGrouped.slice(0, 5).map((g) => {
+                  const expanded = expandedPatients.has(g.key);
+                  const first = g.rows[0];
+                  const totalValue = g.rows.reduce((s, r) => s + Number(r.price ?? 0), 0);
+                  return (
+                    <li key={g.key} className="rounded-md border border-destructive/30 bg-background/40">
+                      <div className="flex items-center justify-between gap-3 p-2">
+                        <button
+                          type="button"
+                          onClick={() => g.rows.length > 1 && togglePatientExpanded(g.key)}
+                          className={`flex items-center gap-2 min-w-0 text-left ${g.rows.length > 1 ? "cursor-pointer" : "cursor-default"}`}
+                          aria-expanded={expanded}
+                        >
+                          <Users className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                          <span className="truncate">
+                            <span className="font-medium">{g.name}</span>
+                            <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full bg-destructive/15 text-[10px] font-semibold">
+                              {g.rows.length}
+                            </span>
+                            <span className="ml-2 text-xs opacity-80">
+                              {formatBRL(totalValue)} · há {formatDistanceToNow(new Date(first.paid_at ?? first.scheduled_at), { locale: ptBR })}
+                            </span>
+                          </span>
+                          {g.rows.length > 1 && (
+                            <ChevronDown
+                              className={`h-3.5 w-3.5 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
+                            />
+                          )}
+                        </button>
+                        {g.rows.length === 1 ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() => setEditing(first)}
+                          >
+                            Adicionar referência
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() => setEditing(first)}
+                            title="Corrigir a primeira sessão deste paciente"
+                          >
+                            Corrigir 1ª
+                          </Button>
+                        )}
+                      </div>
+                      {expanded && g.rows.length > 1 && (
+                        <ul className="border-t border-destructive/20 divide-y divide-destructive/10">
+                          {g.rows.map((r) => {
+                            const when = r.paid_at ?? r.scheduled_at;
+                            return (
+                              <li key={r.id} className="flex items-center justify-between gap-3 px-3 py-1.5 text-xs">
+                                <span className="truncate">
+                                  {r.payment_method === "pix" ? "PIX" : "Cartão"}
+                                  {" · "}
+                                  {formatBRL(Number(r.price ?? 0))}
+                                  {" · há "}
+                                  {formatDistanceToNow(new Date(when), { locale: ptBR })}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="shrink-0 h-7"
+                                  onClick={() => setEditing(r)}
+                                >
+                                  Corrigir
+                                </Button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+                {recentGrouped.length > 5 && (
+                  <li className="text-xs opacity-80">+ {recentGrouped.length - 5} paciente(s)…</li>
+                )}
+              </ul>
+            ) : (
+              <ul className="text-sm space-y-1 mt-2">
+                {recentMissing.slice(0, 5).map((r) => {
+                  const when = r.paid_at ?? r.scheduled_at;
+                  return (
+                    <li key={r.id} className="flex items-center justify-between gap-3">
+                      <span className="truncate">
+                        <span className="font-medium">{r.patient?.full_name ?? "—"}</span>
+                        {" · "}
+                        {r.payment_method === "pix" ? "PIX" : "Cartão"}
+                        {" · há "}
+                        {formatDistanceToNow(new Date(when), { locale: ptBR })}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0"
+                        onClick={() => setEditing(r)}
+                      >
+                        Adicionar referência
+                      </Button>
+                    </li>
+                  );
+                })}
+                {recentMissing.length > 5 && (
+                  <li className="text-xs opacity-80">+ {recentMissing.length - 5} outras…</li>
+                )}
+              </ul>
+            )}
           </AlertDescription>
         </Alert>
       )}
