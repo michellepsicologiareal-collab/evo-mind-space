@@ -210,7 +210,7 @@ const Finance = () => {
     return missingReference.filter((r) => !recentIds.has(r.id));
   }, [missingReference, recentMissing]);
 
-  // Group recent missing by patient (preserves order: most recent first)
+  // Group recent missing by patient + sort according to user preference
   const recentGrouped = useMemo(() => {
     const map = new Map<string, { name: string; rows: Row[] }>();
     for (const r of recentMissing) {
@@ -219,8 +219,39 @@ const Finance = () => {
       if (entry) entry.rows.push(r);
       else map.set(key, { name: key, rows: [r] });
     }
-    return Array.from(map.entries()).map(([key, v]) => ({ key, ...v }));
-  }, [recentMissing]);
+    const enriched = Array.from(map.entries()).map(([key, v]) => {
+      const totalValue = v.rows.reduce((s, r) => s + Number(r.price ?? 0), 0);
+      const timestamps = v.rows.map((r) => new Date(r.paid_at ?? r.scheduled_at).getTime());
+      return {
+        key,
+        name: v.name,
+        rows: v.rows,
+        totalValue,
+        count: v.rows.length,
+        latest: Math.max(...timestamps),
+        earliest: Math.min(...timestamps),
+      };
+    });
+    const sorted = [...enriched];
+    switch (groupSort) {
+      case "oldest":
+        sorted.sort((a, b) => a.earliest - b.earliest);
+        break;
+      case "value":
+        sorted.sort((a, b) => b.totalValue - a.totalValue || b.latest - a.latest);
+        break;
+      case "count":
+        sorted.sort((a, b) => b.count - a.count || b.latest - a.latest);
+        break;
+      case "name":
+        sorted.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+        break;
+      case "recent":
+      default:
+        sorted.sort((a, b) => b.latest - a.latest);
+    }
+    return sorted;
+  }, [recentMissing, groupSort]);
 
   const togglePatientExpanded = (key: string) => {
     setExpandedPatients((prev) => {
