@@ -47,6 +47,7 @@ import {
   Settings2,
   Users,
   ChevronDown,
+  Sparkles,
 } from "lucide-react";
 import {
   startOfMonth,
@@ -505,12 +506,30 @@ const Finance = () => {
             </p>
             {groupByPatient ? (
               <ul className="text-sm space-y-1 mt-2">
-                {recentGrouped.slice(0, 5).map((g) => {
+                {recentGrouped.slice(0, 5).map((g, idx) => {
                   const expanded = expandedPatients.has(g.key);
                   const first = g.rows[0];
                   const totalValue = g.rows.reduce((s, r) => s + Number(r.price ?? 0), 0);
+                  const isPriority = idx === 0 && recentGrouped.length > 1;
+                  const priorityReason =
+                    groupSort === "value"
+                      ? "Maior valor"
+                      : groupSort === "count"
+                      ? "Mais sessões"
+                      : groupSort === "oldest"
+                      ? "Mais antigo"
+                      : groupSort === "name"
+                      ? "Próximo na lista"
+                      : "Mais recente";
                   return (
-                    <li key={g.key} className="rounded-md border border-destructive/30 bg-background/40">
+                    <li
+                      key={g.key}
+                      className={
+                        isPriority
+                          ? "rounded-md border-2 border-destructive bg-destructive/15 ring-2 ring-destructive/30 shadow-sm animate-fade-up"
+                          : "rounded-md border border-destructive/30 bg-background/40"
+                      }
+                    >
                       <div className="flex items-center justify-between gap-3 p-2">
                         <button
                           type="button"
@@ -518,15 +537,29 @@ const Finance = () => {
                           className={`flex items-center gap-2 min-w-0 text-left ${g.rows.length > 1 ? "cursor-pointer" : "cursor-default"}`}
                           aria-expanded={expanded}
                         >
-                          <Users className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                          {isPriority ? (
+                            <Sparkles className="h-3.5 w-3.5 shrink-0 text-destructive animate-pulse" />
+                          ) : (
+                            <Users className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                          )}
                           <span className="truncate">
-                            <span className="font-medium">{g.name}</span>
+                            <span className={isPriority ? "font-semibold" : "font-medium"}>{g.name}</span>
+                            {isPriority && (
+                              <span className="ml-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold uppercase tracking-wide">
+                                Prioridade
+                              </span>
+                            )}
                             <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full bg-destructive/15 text-[10px] font-semibold">
                               {g.rows.length}
                             </span>
                             <span className="ml-2 text-xs opacity-80">
                               {formatBRL(totalValue)} · há {formatDistanceToNow(new Date(first.paid_at ?? first.scheduled_at), { locale: ptBR })}
                             </span>
+                            {isPriority && (
+                              <span className="block text-[11px] text-destructive/90 mt-0.5">
+                                {priorityReason} · comece por aqui
+                              </span>
+                            )}
                           </span>
                           {g.rows.length > 1 && (
                             <ChevronDown
@@ -536,7 +569,7 @@ const Finance = () => {
                         </button>
                         {g.rows.length === 1 ? (
                           <Button
-                            variant="outline"
+                            variant={isPriority ? "hero" : "outline"}
                             size="sm"
                             className="shrink-0"
                             onClick={() => setEditing(first)}
@@ -545,7 +578,7 @@ const Finance = () => {
                           </Button>
                         ) : (
                           <Button
-                            variant="outline"
+                            variant={isPriority ? "hero" : "outline"}
                             size="sm"
                             className="shrink-0"
                             onClick={() => setEditing(first)}
