@@ -34,14 +34,27 @@ interface Patient {
   session_price: number | null;
 }
 
-const sessionSchema = z.object({
-  patient_id: z.string().uuid("Selecione um paciente"),
-  date: z.string().min(1, "Selecione a data"),
-  time: z.string().min(1, "Selecione o horário"),
-  duration_minutes: z.number().int().positive().max(480),
-  price: z.string().optional(),
-  notes: z.string().max(2000).optional(),
-});
+const sessionSchema = z
+  .object({
+    patient_id: z.string().uuid("Selecione um paciente"),
+    date: z.string().min(1, "Selecione a data"),
+    time: z.string().min(1, "Selecione o horário"),
+    duration_minutes: z.number().int().positive().max(480),
+    price: z.string().optional(),
+    notes: z.string().max(2000).optional(),
+    payment_method: z.enum(["none", "pix", "card", "cash"]).default("none"),
+    payment_reference: z.string().max(500).optional(),
+  })
+  .refine(
+    (d) =>
+      !(d.payment_method === "pix" || d.payment_method === "card") ||
+      (d.payment_reference?.trim().length ?? 0) > 0,
+    {
+      path: ["payment_reference"],
+      message: "Informe a referência do pagamento (obrigatório para PIX e cartão).",
+    }
+  );
+
 
 const statusLabel: Record<Status, string> = {
   scheduled: "Agendada",
@@ -75,7 +88,10 @@ const Agenda = () => {
     duration_minutes: 50,
     price: "",
     notes: "",
+    payment_method: "none" as "none" | "pix" | "card" | "cash",
+    payment_reference: "",
   });
+
 
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
 
@@ -110,9 +126,12 @@ const Agenda = () => {
       duration_minutes: 50,
       price: "",
       notes: "",
+      payment_method: "none",
+      payment_reference: "",
     });
     setOpen(true);
   };
+
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,6 +146,7 @@ const Agenda = () => {
     const patient = patients.find((p) => p.id === parsed.data.patient_id);
     const price = parsed.data.price ? Number(parsed.data.price) : patient?.session_price ?? null;
 
+    const ref = parsed.data.payment_reference?.trim() ?? "";
     const { error } = await supabase.from("sessions").insert({
       user_id: user.id,
       patient_id: parsed.data.patient_id,
@@ -134,6 +154,8 @@ const Agenda = () => {
       duration_minutes: parsed.data.duration_minutes,
       price,
       notes: parsed.data.notes || null,
+      payment_method: parsed.data.payment_method === "none" ? null : parsed.data.payment_method,
+      payment_reference: ref.length > 0 ? ref : null,
     });
     setSaving(false);
     if (error) {
