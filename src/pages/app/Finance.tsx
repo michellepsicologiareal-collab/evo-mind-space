@@ -383,6 +383,25 @@ const Finance = () => {
                     Pagamentos mais antigos continuam no alerta secundário.
                   </p>
                 </div>
+
+                <div className="flex items-center justify-between gap-3 pt-1 border-t border-border">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="reminder-group" className="text-sm">Agrupar por paciente</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Junta sessões do mesmo paciente em uma linha.
+                    </p>
+                  </div>
+                  <Switch
+                    id="reminder-group"
+                    checked={groupByPatient}
+                    disabled={!prefsLoaded || !reminderEnabled || savingPrefs}
+                    onCheckedChange={(v) => {
+                      setGroupByPatient(v);
+                      setExpandedPatients(new Set());
+                      savePrefs({ group: v });
+                    }}
+                  />
+                </div>
               </div>
             </PopoverContent>
           </Popover>
