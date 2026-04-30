@@ -151,11 +151,12 @@ const Finance = () => {
     })();
   }, [user]);
 
-  const savePrefs = async (next: { enabled?: boolean; window?: number; group?: boolean }) => {
+  const savePrefs = async (next: { enabled?: boolean; window?: number; group?: boolean; sort?: typeof groupSort }) => {
     if (!user) return;
     const enabled = next.enabled ?? reminderEnabled;
     const windowH = next.window ?? reminderWindow;
     const group = next.group ?? groupByPatient;
+    const sort = next.sort ?? groupSort;
     setSavingPrefs(true);
     const { error } = await supabase
       .from("profiles")
@@ -163,6 +164,7 @@ const Finance = () => {
         reminder_enabled: enabled,
         reminder_window_hours: windowH,
         reminder_group_by_patient: group,
+        reminder_group_sort: sort,
       })
       .eq("id", user.id);
     setSavingPrefs(false);
