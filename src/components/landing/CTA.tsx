@@ -20,8 +20,8 @@ export const CTA = () => {
               Comece gratuitamente. Sem cartão de crédito. Em poucos minutos seu consultório passa a operar com clareza.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
-              <Button variant="accent" size="xl">
-                Criar minha conta <ArrowRight />
+              <Button variant="accent" size="xl" asChild>
+                <a href="/auth">Criar minha conta <ArrowRight /></a>
               </Button>
               <Button
                 variant="outline"

@@ -20,10 +20,10 @@ export const Navbar = () => {
           <a href="#para-quem" className="hover:text-foreground transition-colors">Para quem</a>
         </nav>
         <a
-          href="#cta"
+          href="/auth"
           className="inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground shadow-soft hover:-translate-y-0.5 transition-transform"
         >
-          Começar agora
+          Entrar
         </a>
       </div>
     </header>
