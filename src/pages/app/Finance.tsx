@@ -97,6 +97,7 @@ const Finance = () => {
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderWindow, setReminderWindow] = useState(24);
   const [groupByPatient, setGroupByPatient] = useState(false);
+  const [groupSort, setGroupSort] = useState<"recent" | "oldest" | "value" | "count" | "name">("recent");
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [expandedPatients, setExpandedPatients] = useState<Set<string>>(new Set());
@@ -136,23 +137,26 @@ const Finance = () => {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient")
+        .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient, reminder_group_sort")
         .eq("id", user.id)
         .maybeSingle();
       if (data) {
         setReminderEnabled(data.reminder_enabled ?? true);
         setReminderWindow(data.reminder_window_hours ?? 24);
         setGroupByPatient(data.reminder_group_by_patient ?? false);
+        const sort = data.reminder_group_sort as typeof groupSort | null;
+        if (sort) setGroupSort(sort);
       }
       setPrefsLoaded(true);
     })();
   }, [user]);
 
-  const savePrefs = async (next: { enabled?: boolean; window?: number; group?: boolean }) => {
+  const savePrefs = async (next: { enabled?: boolean; window?: number; group?: boolean; sort?: typeof groupSort }) => {
     if (!user) return;
     const enabled = next.enabled ?? reminderEnabled;
     const windowH = next.window ?? reminderWindow;
     const group = next.group ?? groupByPatient;
+    const sort = next.sort ?? groupSort;
     setSavingPrefs(true);
     const { error } = await supabase
       .from("profiles")
@@ -160,6 +164,7 @@ const Finance = () => {
         reminder_enabled: enabled,
         reminder_window_hours: windowH,
         reminder_group_by_patient: group,
+        reminder_group_sort: sort,
       })
       .eq("id", user.id);
     setSavingPrefs(false);
@@ -205,7 +210,7 @@ const Finance = () => {
     return missingReference.filter((r) => !recentIds.has(r.id));
   }, [missingReference, recentMissing]);
 
-  // Group recent missing by patient (preserves order: most recent first)
+  // Group recent missing by patient + sort according to user preference
   const recentGrouped = useMemo(() => {
     const map = new Map<string, { name: string; rows: Row[] }>();
     for (const r of recentMissing) {
@@ -214,8 +219,39 @@ const Finance = () => {
       if (entry) entry.rows.push(r);
       else map.set(key, { name: key, rows: [r] });
     }
-    return Array.from(map.entries()).map(([key, v]) => ({ key, ...v }));
-  }, [recentMissing]);
+    const enriched = Array.from(map.entries()).map(([key, v]) => {
+      const totalValue = v.rows.reduce((s, r) => s + Number(r.price ?? 0), 0);
+      const timestamps = v.rows.map((r) => new Date(r.paid_at ?? r.scheduled_at).getTime());
+      return {
+        key,
+        name: v.name,
+        rows: v.rows,
+        totalValue,
+        count: v.rows.length,
+        latest: Math.max(...timestamps),
+        earliest: Math.min(...timestamps),
+      };
+    });
+    const sorted = [...enriched];
+    switch (groupSort) {
+      case "oldest":
+        sorted.sort((a, b) => a.earliest - b.earliest);
+        break;
+      case "value":
+        sorted.sort((a, b) => b.totalValue - a.totalValue || b.latest - a.latest);
+        break;
+      case "count":
+        sorted.sort((a, b) => b.count - a.count || b.latest - a.latest);
+        break;
+      case "name":
+        sorted.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+        break;
+      case "recent":
+      default:
+        sorted.sort((a, b) => b.latest - a.latest);
+    }
+    return sorted;
+  }, [recentMissing, groupSort]);
 
   const togglePatientExpanded = (key: string) => {
     setExpandedPatients((prev) => {
@@ -401,6 +437,32 @@ const Finance = () => {
                       savePrefs({ group: v });
                     }}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reminder-group-sort" className="text-sm">
+                    Ordenar pacientes por
+                  </Label>
+                  <Select
+                    value={groupSort}
+                    disabled={!prefsLoaded || !reminderEnabled || !groupByPatient || savingPrefs}
+                    onValueChange={(v) => {
+                      const next = v as typeof groupSort;
+                      setGroupSort(next);
+                      savePrefs({ sort: next });
+                    }}
+                  >
+                    <SelectTrigger id="reminder-group-sort">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recent">Mais recente primeiro</SelectItem>
+                      <SelectItem value="oldest">Mais antigo primeiro</SelectItem>
+                      <SelectItem value="value">Maior valor total</SelectItem>
+                      <SelectItem value="count">Mais sessões pendentes</SelectItem>
+                      <SelectItem value="name">Nome (A–Z)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </PopoverContent>
