@@ -441,33 +441,120 @@ const Finance = () => {
                 ? `1 sessão foi marcada como paga via PIX/cartão nas últimas ${reminderWindow}h sem referência. Adicione o comprovante enquanto a transação ainda está fresca:`
                 : `${recentMissing.length} sessões foram marcadas como pagas via PIX/cartão nas últimas ${reminderWindow}h sem referência. Adicione os comprovantes enquanto as transações ainda estão frescas:`}
             </p>
-            <ul className="text-sm space-y-1 mt-2">
-              {recentMissing.slice(0, 5).map((r) => {
-                const when = r.paid_at ?? r.scheduled_at;
-                return (
-                  <li key={r.id} className="flex items-center justify-between gap-3">
-                    <span className="truncate">
-                      <span className="font-medium">{r.patient?.full_name ?? "—"}</span>
-                      {" · "}
-                      {r.payment_method === "pix" ? "PIX" : "Cartão"}
-                      {" · há "}
-                      {formatDistanceToNow(new Date(when), { locale: ptBR })}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="shrink-0"
-                      onClick={() => setEditing(r)}
-                    >
-                      Adicionar referência
-                    </Button>
-                  </li>
-                );
-              })}
-              {recentMissing.length > 5 && (
-                <li className="text-xs opacity-80">+ {recentMissing.length - 5} outras…</li>
-              )}
-            </ul>
+            {groupByPatient ? (
+              <ul className="text-sm space-y-1 mt-2">
+                {recentGrouped.slice(0, 5).map((g) => {
+                  const expanded = expandedPatients.has(g.key);
+                  const first = g.rows[0];
+                  const totalValue = g.rows.reduce((s, r) => s + Number(r.price ?? 0), 0);
+                  return (
+                    <li key={g.key} className="rounded-md border border-destructive/30 bg-background/40">
+                      <div className="flex items-center justify-between gap-3 p-2">
+                        <button
+                          type="button"
+                          onClick={() => g.rows.length > 1 && togglePatientExpanded(g.key)}
+                          className={`flex items-center gap-2 min-w-0 text-left ${g.rows.length > 1 ? "cursor-pointer" : "cursor-default"}`}
+                          aria-expanded={expanded}
+                        >
+                          <Users className="h-3.5 w-3.5 shrink-0 opacity-70" />
+                          <span className="truncate">
+                            <span className="font-medium">{g.name}</span>
+                            <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full bg-destructive/15 text-[10px] font-semibold">
+                              {g.rows.length}
+                            </span>
+                            <span className="ml-2 text-xs opacity-80">
+                              {formatBRL(totalValue)} · há {formatDistanceToNow(new Date(first.paid_at ?? first.scheduled_at), { locale: ptBR })}
+                            </span>
+                          </span>
+                          {g.rows.length > 1 && (
+                            <ChevronDown
+                              className={`h-3.5 w-3.5 shrink-0 transition-transform ${expanded ? "rotate-180" : ""}`}
+                            />
+                          )}
+                        </button>
+                        {g.rows.length === 1 ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() => setEditing(first)}
+                          >
+                            Adicionar referência
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="shrink-0"
+                            onClick={() => setEditing(first)}
+                            title="Corrigir a primeira sessão deste paciente"
+                          >
+                            Corrigir 1ª
+                          </Button>
+                        )}
+                      </div>
+                      {expanded && g.rows.length > 1 && (
+                        <ul className="border-t border-destructive/20 divide-y divide-destructive/10">
+                          {g.rows.map((r) => {
+                            const when = r.paid_at ?? r.scheduled_at;
+                            return (
+                              <li key={r.id} className="flex items-center justify-between gap-3 px-3 py-1.5 text-xs">
+                                <span className="truncate">
+                                  {r.payment_method === "pix" ? "PIX" : "Cartão"}
+                                  {" · "}
+                                  {formatBRL(Number(r.price ?? 0))}
+                                  {" · há "}
+                                  {formatDistanceToNow(new Date(when), { locale: ptBR })}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="shrink-0 h-7"
+                                  onClick={() => setEditing(r)}
+                                >
+                                  Corrigir
+                                </Button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+                {recentGrouped.length > 5 && (
+                  <li className="text-xs opacity-80">+ {recentGrouped.length - 5} paciente(s)…</li>
+                )}
+              </ul>
+            ) : (
+              <ul className="text-sm space-y-1 mt-2">
+                {recentMissing.slice(0, 5).map((r) => {
+                  const when = r.paid_at ?? r.scheduled_at;
+                  return (
+                    <li key={r.id} className="flex items-center justify-between gap-3">
+                      <span className="truncate">
+                        <span className="font-medium">{r.patient?.full_name ?? "—"}</span>
+                        {" · "}
+                        {r.payment_method === "pix" ? "PIX" : "Cartão"}
+                        {" · há "}
+                        {formatDistanceToNow(new Date(when), { locale: ptBR })}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0"
+                        onClick={() => setEditing(r)}
+                      >
+                        Adicionar referência
+                      </Button>
+                    </li>
+                  );
+                })}
+                {recentMissing.length > 5 && (
+                  <li className="text-xs opacity-80">+ {recentMissing.length - 5} outras…</li>
+                )}
+              </ul>
+            )}
           </AlertDescription>
         </Alert>
       )}
