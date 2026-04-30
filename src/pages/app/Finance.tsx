@@ -47,6 +47,7 @@ import {
   Settings2,
   Users,
   ChevronDown,
+  Sparkles,
 } from "lucide-react";
 import {
   startOfMonth,
