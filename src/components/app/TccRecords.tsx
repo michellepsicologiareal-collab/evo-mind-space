@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { logClinicalAccess } from "@/utils/auditLog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
