@@ -142,6 +142,19 @@ const ResetPassword = () => {
                 Por favor, volte ao login e solicite um novo link clicando em{" "}
                 <strong>"Esqueci minha senha"</strong>.
               </p>
+              {!countdownCancelled ? (
+                <p className="text-muted-foreground text-xs">
+                  Redirecionando para o login em{" "}
+                  <span className="font-semibold text-foreground">{countdown}s</span>…{" "}
+                  <button
+                    type="button"
+                    onClick={() => setCountdownCancelled(true)}
+                    className="underline hover:text-foreground transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </p>
+              ) : null}
               <Link to="/auth">
                 <Button variant="accent" className="mt-2 gap-2">
                   <ArrowLeft className="h-4 w-4" /> Solicitar novo link
