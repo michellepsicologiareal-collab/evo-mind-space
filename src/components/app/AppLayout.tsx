@@ -62,7 +62,8 @@ export const AppLayout = () => {
     });
   }, [profileType, isAdmin]);
 
-  const mobileNavItems = navItems.slice(0, 5);
+  // Mobile: show key items in bottom bar, rest accessible via "Mais" or scrollable
+  const mobileNavItems = navItems;
 
   const handleSignOut = async () => {
     await signOut();
@@ -183,7 +184,7 @@ export const AppLayout = () => {
 
       {/* ── Mobile bottom nav ── */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
-        <div className="flex justify-around py-1">
+        <div className="flex overflow-x-auto no-scrollbar py-1 px-1 gap-0.5">
           {mobileNavItems.map((item) => (
             <NavLink
               key={item.to}
@@ -192,13 +193,13 @@ export const AppLayout = () => {
               onClick={(e) => handleNavClick(e, item)}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] px-2 py-2 text-[10px] font-medium transition-colors rounded-lg",
+                  "flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] px-1.5 py-2 text-[10px] font-medium transition-colors rounded-lg shrink-0",
                   isActive ? "text-accent" : "text-muted-foreground"
                 )
               }
             >
               <item.icon className="h-5 w-5" />
-              {item.label}
+              <span className="truncate max-w-[56px]">{item.label}</span>
             </NavLink>
           ))}
         </div>

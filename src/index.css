@@ -183,3 +183,7 @@
   .animate-fade-up { animation: fade-up 0.9s var(--ease-smooth) both; }
   .animate-pulse-ring { animation: pulse-ring 2.4s ease-out infinite; }
 }
+
+/* Hide scrollbar but keep scroll functionality */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
