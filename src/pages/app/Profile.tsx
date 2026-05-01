@@ -529,6 +529,28 @@ const Profile = () => {
           <span className="text-xs text-muted-foreground">Ler</span>
         </button>
 
+        <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <Download className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Exportar meus dados</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Baixe todos os seus pacientes, sessões e registros de humor/progresso. Apenas seus próprios dados são incluídos.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={exporting}>
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Exportar CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={exporting}>
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Exportar PDF
+            </Button>
+          </div>
+        </div>
+
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3">
           <div className="flex items-start gap-3">
             <Trash2 className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
