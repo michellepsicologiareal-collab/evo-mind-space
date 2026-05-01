@@ -120,6 +120,7 @@ const Patients = () => {
       chief_complaint: p.chief_complaint ?? "",
       treatment_plan: p.treatment_plan ?? "",
       anamnesis: p.anamnesis ?? "",
+      category: p.category ?? "individual",
     });
     setOpen(true);
   };
