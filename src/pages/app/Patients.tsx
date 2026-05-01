@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain } from "lucide-react";
 import { TccRecords } from "@/components/app/TccRecords";
+import { CaseFormulation } from "@/components/app/CaseFormulation";
 import { CardSkeleton } from "@/components/app/Skeletons";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
@@ -76,6 +77,7 @@ const Patients = () => {
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
   const [tccPatient, setTccPatient] = useState<Patient | null>(null);
+  const [padeksyPatient, setPadeksyPatient] = useState<Patient | null>(null);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
 
@@ -346,6 +348,7 @@ const Patients = () => {
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTccPatient(p)}><ClipboardList className="h-4 w-4" /> Prontuário TCC</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><Brain className="h-4 w-4" /> Formulação Padesky</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate(`/app/supervisao-caso?paciente=${encodeURIComponent(p.full_name)}`)}>
                       <Stethoscope className="h-4 w-4" /> Pedir Supervisão deste Caso
                     </DropdownMenuItem>
@@ -402,6 +405,18 @@ const Patients = () => {
           {tccPatient && <TccRecords patientId={tccPatient.id} />}
         </DialogContent>
       </Dialog>
+
+      {/* Padesky Formulation Dialog */}
+      <Dialog open={!!padeksyPatient} onOpenChange={(o) => !o && setPadeksyPatient(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto [&_textarea]:scroll-mt-24 [&_input]:scroll-mt-24">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{padeksyPatient?.full_name}</DialogTitle>
+            <DialogDescription>Formulação de Caso — Modelo Padesky</DialogDescription>
+          </DialogHeader>
+          {padeksyPatient && <CaseFormulation patientId={padeksyPatient.id} />}
+        </DialogContent>
+      </Dialog>
+
       <PremiumGate open={gateOpen} onOpenChange={setGateOpen} />
     </div>
   );

@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      case_formulations: {
+        Row: {
+          behaviors: string | null
+          core_beliefs: string | null
+          created_at: string
+          emotions: string | null
+          environment: string | null
+          id: string
+          patient_id: string
+          physical_reactions: string | null
+          thoughts: string | null
+          treatment_goals: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          behaviors?: string | null
+          core_beliefs?: string | null
+          created_at?: string
+          emotions?: string | null
+          environment?: string | null
+          id?: string
+          patient_id: string
+          physical_reactions?: string | null
+          thoughts?: string | null
+          treatment_goals?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          behaviors?: string | null
+          core_beliefs?: string | null
+          created_at?: string
+          emotions?: string | null
+          environment?: string | null
+          id?: string
+          patient_id?: string
+          physical_reactions?: string | null
+          thoughts?: string | null
+          treatment_goals?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       library_materials: {
         Row: {
           category: Database["public"]["Enums"]["library_category"]
@@ -266,6 +311,39 @@ export type Database = {
           is_active?: boolean
           name?: string
           price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      session_evolutions: {
+        Row: {
+          created_at: string
+          homework: string | null
+          id: string
+          patient_id: string
+          session_id: string | null
+          session_summary: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          homework?: string | null
+          id?: string
+          patient_id: string
+          session_id?: string | null
+          session_summary?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          homework?: string | null
+          id?: string
+          patient_id?: string
+          session_id?: string | null
+          session_summary?: string | null
           updated_at?: string
           user_id?: string
         }
