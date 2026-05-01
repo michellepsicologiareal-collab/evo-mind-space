@@ -58,13 +58,24 @@ const Library = () => {
     if (user) load();
   }, [user]);
 
-  const handleAccess = (m: Material) => {
+  const handleAccess = async (m: Material) => {
     if (m.is_premium && !isPremium) {
       setGateOpen(true);
       return;
     }
     if (m.file_url) {
-      window.open(m.file_url, "_blank");
+      // Extract bucket path from full URL or use as-is
+      const path = m.file_url.includes("/storage/v1/object/public/library/")
+        ? m.file_url.split("/storage/v1/object/public/library/")[1]
+        : m.file_url;
+      const { data, error } = await supabase.storage
+        .from("library")
+        .createSignedUrl(path, 3600); // 1 hour
+      if (error || !data?.signedUrl) {
+        toast.error("Erro ao gerar link de acesso.");
+        return;
+      }
+      window.open(data.signedUrl, "_blank");
     } else {
       toast.info("Arquivo ainda não disponível.");
     }
