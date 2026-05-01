@@ -86,7 +86,7 @@ export const ServiceCatalog = () => {
   const formatBRL = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
 
   return (
-    <section className="rounded-3xl bg-card border border-border p-8 space-y-5">
+    <section className="rounded-3xl bg-card border border-border shadow-card p-8 space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">

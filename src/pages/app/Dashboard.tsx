@@ -101,7 +101,7 @@ const Dashboard = () => {
         <StatCard icon={AlertCircle} label="Faltas no mês" value={stats.monthNoShows.toString()} loading={loading} />
       </section>
 
-      <section className="rounded-2xl bg-card border border-border p-8">
+      <section className="rounded-2xl bg-card border border-border shadow-card p-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-2xl font-semibold">Próximas sessões</h2>
           <Button variant="ghost" size="sm" asChild>
