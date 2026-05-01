@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -6,23 +7,32 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/app/AppLayout";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import Auth from "./pages/Auth.tsx";
-import Dashboard from "./pages/app/Dashboard.tsx";
-import Patients from "./pages/app/Patients.tsx";
-import Agenda from "./pages/app/Agenda.tsx";
-import Profile from "./pages/app/Profile.tsx";
-import Finance from "./pages/app/Finance.tsx";
-import Supervisees from "./pages/app/Supervisees.tsx";
-import Supervision from "./pages/app/Supervision.tsx";
-import SupervisaoCaso from "./pages/app/SupervisaoCaso.tsx";
-import Library from "./pages/app/Library.tsx";
-import Autocuidado from "./pages/app/Autocuidado.tsx";
-import Admin from "./pages/Admin.tsx";
-import ConfirmarSessao from "./pages/ConfirmarSessao.tsx";
+import { Loader2 } from "lucide-react";
+
+/* ── Lazy-loaded pages ── */
+const Index = lazy(() => import("./pages/Index"));
+const Auth = lazy(() => import("./pages/Auth"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Admin = lazy(() => import("./pages/Admin"));
+const ConfirmarSessao = lazy(() => import("./pages/ConfirmarSessao"));
+const Dashboard = lazy(() => import("./pages/app/Dashboard"));
+const Patients = lazy(() => import("./pages/app/Patients"));
+const Agenda = lazy(() => import("./pages/app/Agenda"));
+const Profile = lazy(() => import("./pages/app/Profile"));
+const Finance = lazy(() => import("./pages/app/Finance"));
+const Supervisees = lazy(() => import("./pages/app/Supervisees"));
+const Supervision = lazy(() => import("./pages/app/Supervision"));
+const SupervisaoCaso = lazy(() => import("./pages/app/SupervisaoCaso"));
+const Library = lazy(() => import("./pages/app/Library"));
+const Autocuidado = lazy(() => import("./pages/app/Autocuidado"));
 
 const queryClient = new QueryClient();
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -31,32 +41,34 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/confirmar-sessao/:token" element={<ConfirmarSessao />} />
-            <Route
-              path="/app"
-              element={
-                <ProtectedRoute>
-                  <AppLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Dashboard />} />
-              <Route path="pacientes" element={<Patients />} />
-              <Route path="agenda" element={<Agenda />} />
-              <Route path="financeiro" element={<Finance />} />
-              <Route path="supervisionandos" element={<Supervisees />} />
-              <Route path="supervisao" element={<Supervision />} />
-              <Route path="supervisao-caso" element={<SupervisaoCaso />} />
-              <Route path="biblioteca" element={<Library />} />
-              <Route path="autocuidado" element={<Autocuidado />} />
-              <Route path="perfil" element={<Profile />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/confirmar-sessao/:token" element={<ConfirmarSessao />} />
+              <Route
+                path="/app"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="pacientes" element={<Patients />} />
+                <Route path="agenda" element={<Agenda />} />
+                <Route path="financeiro" element={<Finance />} />
+                <Route path="supervisionandos" element={<Supervisees />} />
+                <Route path="supervisao" element={<Supervision />} />
+                <Route path="supervisao-caso" element={<SupervisaoCaso />} />
+                <Route path="biblioteca" element={<Library />} />
+                <Route path="autocuidado" element={<Autocuidado />} />
+                <Route path="perfil" element={<Profile />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
