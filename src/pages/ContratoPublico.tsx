@@ -191,7 +191,7 @@ export default function ContratoPublico() {
                 <p className="font-semibold text-sm">
                   {index + 1}) {clause.title}
                 </p>
-                <p className="text-sm text-muted-foreground">{clause.description}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-line">{clause.description}</p>
 
                 {clause.type === "agree" && (
                   <label className="flex items-center gap-2 mt-2 cursor-pointer">
@@ -221,6 +221,8 @@ export default function ContratoPublico() {
                     ))}
                   </RadioGroup>
                 )}
+
+                {/* "text" type = display only, no interaction needed */}
               </div>
             ))}
           </div>
