@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
         profile_type: profile?.profile_type ?? null,
         clinic_name: profile?.clinic_name ?? null,
         subscription_status: profile?.subscription_status ?? "free",
+        is_approved: profile?.is_approved ?? false,
       };
     });
 
