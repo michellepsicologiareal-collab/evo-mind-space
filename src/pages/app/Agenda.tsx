@@ -93,13 +93,11 @@ const statusClass: Record<Status, string> = {
 const paymentStatusLabel: Record<PaymentStatus, string> = {
   pending: "Pendente",
   paid: "Pago",
-  cancelled: "Cancelado",
 };
 
 const paymentStatusClass: Record<PaymentStatus, string> = {
   pending: "bg-accent/15 text-accent border-accent/30",
   paid: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  cancelled: "bg-muted text-muted-foreground border-border",
 };
 
 const Agenda = () => {
