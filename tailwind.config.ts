@@ -55,6 +55,14 @@ export default {
           foreground: "hsl(var(--sand-foreground))",
         },
         gold: "hsl(var(--gold))",
+        sage: {
+          DEFAULT: "hsl(var(--sage))",
+          foreground: "hsl(var(--sage-foreground))",
+        },
+        serene: {
+          DEFAULT: "hsl(var(--serene))",
+          foreground: "hsl(var(--serene-foreground))",
+        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
