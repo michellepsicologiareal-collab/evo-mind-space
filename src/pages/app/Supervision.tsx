@@ -232,16 +232,28 @@ const Supervision = () => {
         <header>
           <h1 className="font-display text-4xl font-medium">Supervisão</h1>
         </header>
-        <div className="rounded-3xl bg-card border border-border shadow-card p-8 sm:p-12 text-center space-y-4">
+        <div className="rounded-3xl bg-card border border-border shadow-card p-8 sm:p-12 text-center space-y-5">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
             <Users className="h-8 w-8 text-accent" />
           </div>
           <h2 className="text-xl font-bold">Acesso exclusivo para supervisores</h2>
           <p className="text-muted-foreground max-w-md mx-auto">
             Esta área é destinada a profissionais com perfil de <strong>Supervisor(a)</strong>. 
-            Para ativar, acesse seu <strong>Perfil</strong> e altere o tipo para "Supervisor(a)", 
-            ou peça ao administrador para ajustar.
+            Solicite a liberação ao administrador clicando no botão abaixo.
           </p>
+          <Button
+            variant="accent"
+            className="mt-2"
+            onClick={() => {
+              const msg = encodeURIComponent(
+                `Olá! Sou ${user?.email ?? "usuário(a)"} e gostaria de solicitar a liberação do perfil de Supervisor(a) no Psi Real. Poderia me ajudar?`
+              );
+              window.open(`https://wa.me/5511947388423?text=${msg}`, "_blank");
+              toast.success("Redirecionando para o WhatsApp do administrador…");
+            }}
+          >
+            <Mail className="h-4 w-4" /> Solicitar liberação
+          </Button>
         </div>
       </div>
     );
