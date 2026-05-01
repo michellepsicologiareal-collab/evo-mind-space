@@ -237,8 +237,20 @@ const Patients = () => {
                 <Input id="price" type="number" step="0.01" min="0" value={form.session_price} onChange={(e) => setForm({ ...form, session_price: e.target.value })} />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="chief_complaint">Queixa Principal</Label>
+                <Textarea id="chief_complaint" rows={3} className="min-h-[80px]" placeholder="Descreva a queixa principal do paciente..." value={form.chief_complaint} onChange={(e) => setForm({ ...form, chief_complaint: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="treatment_plan">Plano de Tratamento</Label>
+                <Textarea id="treatment_plan" rows={4} className="min-h-[100px]" placeholder="Objetivos terapêuticos, intervenções planejadas..." value={form.treatment_plan} onChange={(e) => setForm({ ...form, treatment_plan: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="anamnesis">Histórico / Anamnese</Label>
+                <Textarea id="anamnesis" rows={5} className="min-h-[120px]" placeholder="Histórico pessoal, familiar, médico..." value={form.anamnesis} onChange={(e) => setForm({ ...form, anamnesis: e.target.value })} />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="notes">Observações</Label>
-                <Textarea id="notes" rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
