@@ -107,6 +107,9 @@ const Patients = () => {
       phone: p.phone ?? "",
       notes: p.notes ?? "",
       session_price: p.session_price?.toString() ?? "",
+      chief_complaint: p.chief_complaint ?? "",
+      treatment_plan: p.treatment_plan ?? "",
+      anamnesis: p.anamnesis ?? "",
     });
     setOpen(true);
   };
