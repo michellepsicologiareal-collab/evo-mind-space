@@ -179,28 +179,68 @@ const Auth = () => {
             </TabsList>
 
             <TabsContent value="signin" className="mt-6">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="si-email">Email</Label>
-                  <Input id="si-email" type="email" autoComplete="email" required value={siEmail} onChange={(e) => setSiEmail(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="si-password">Senha</Label>
-                  <Input id="si-password" type="password" autoComplete="current-password" required value={siPassword} onChange={(e) => setSiPassword(e.target.value)} />
-                </div>
-                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Entrar
-                </Button>
-                {loginError && (
-                  <div className="text-center space-y-2">
-                    <p className="text-sm text-destructive">Email ou senha incorretos.</p>
-                    <Button type="button" variant="outline" size="sm" onClick={handleRetry} className="mx-auto">
-                      Tentar novamente
+              {forgotMode ? (
+                forgotSent ? (
+                  <div className="text-center space-y-4 py-4">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sage/10">
+                      <ArrowLeft className="h-6 w-6 text-sage" />
+                    </div>
+                    <h3 className="font-display text-lg font-semibold">Email enviado!</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Verifique sua caixa de entrada (e spam) e clique no link de recuperação.
+                    </p>
+                    <Button variant="outline" size="sm" onClick={() => { setForgotMode(false); setForgotSent(false); setForgotEmail(""); }}>
+                      Voltar ao login
                     </Button>
                   </div>
-                )}
-              </form>
+                ) : (
+                  <form onSubmit={handleForgotPassword} className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Informe seu email e enviaremos um link para redefinir sua senha.
+                    </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="forgot-email">Email</Label>
+                      <Input id="forgot-email" type="email" required value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} />
+                    </div>
+                    <Button type="submit" variant="accent" size="lg" className="w-full" disabled={forgotLoading}>
+                      {forgotLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Enviar link de recuperação
+                    </Button>
+                    <button type="button" onClick={() => setForgotMode(false)} className="block mx-auto text-sm text-muted-foreground hover:text-foreground">
+                      <ArrowLeft className="inline h-3.5 w-3.5 mr-1" />
+                      Voltar ao login
+                    </button>
+                  </form>
+                )
+              ) : (
+                <form onSubmit={handleSignIn} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="si-email">Email</Label>
+                    <Input id="si-email" type="email" autoComplete="email" required value={siEmail} onChange={(e) => setSiEmail(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="si-password">Senha</Label>
+                      <button type="button" onClick={() => setForgotMode(true)} className="text-xs text-accent hover:underline">
+                        Esqueci minha senha
+                      </button>
+                    </div>
+                    <Input id="si-password" type="password" autoComplete="current-password" required value={siPassword} onChange={(e) => setSiPassword(e.target.value)} />
+                  </div>
+                  <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
+                    {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Entrar
+                  </Button>
+                  {loginError && (
+                    <div className="text-center space-y-2">
+                      <p className="text-sm text-destructive">Email ou senha incorretos.</p>
+                      <Button type="button" variant="outline" size="sm" onClick={handleRetry} className="mx-auto">
+                        Tentar novamente
+                      </Button>
+                    </div>
+                  )}
+                </form>
+              )}
             </TabsContent>
 
             <TabsContent value="signup" className="mt-6">
