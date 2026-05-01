@@ -6,7 +6,9 @@ import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Penci
 import { TccRecords } from "@/components/app/TccRecords";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
+import { PremiumGate } from "@/components/app/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,9 +45,13 @@ interface Patient {
   shared_with_supervisor: boolean;
 }
 
+const FREE_PATIENT_LIMIT = 5;
+
 const Patients = () => {
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [gateOpen, setGateOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -77,6 +83,10 @@ const Patients = () => {
   }, [user]);
 
   const openNew = () => {
+    if (!isPremium && patients.length >= FREE_PATIENT_LIMIT) {
+      setGateOpen(true);
+      return;
+    }
     setEditing(null);
     setForm({ full_name: "", email: "", phone: "", notes: "", session_price: "" });
     setOpen(true);
@@ -336,6 +346,7 @@ const Patients = () => {
           {tccPatient && <TccRecords patientId={tccPatient.id} />}
         </DialogContent>
       </Dialog>
+      <PremiumGate open={gateOpen} onOpenChange={setGateOpen} />
     </div>
   );
 };

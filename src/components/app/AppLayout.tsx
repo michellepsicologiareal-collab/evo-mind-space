@@ -1,19 +1,23 @@
 import { useState } from "react";
-import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
-import { Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut, GraduationCap, ShieldCheck, Crown } from "lucide-react";
+import { NavLink, Outlet, useNavigate, Link, useLocation } from "react-router-dom";
+import { Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut, GraduationCap, ShieldCheck, Crown, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { PlanModal } from "@/components/app/PlanModal";
+import { PremiumGate } from "@/components/app/PremiumGate";
+
+const PREMIUM_ROUTES = new Set(["/app/financeiro", "/app/supervisionandos", "/app/supervisao"]);
 
 const navItems = [
   { to: "/app", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "/app/pacientes", label: "Pacientes", icon: Users },
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
-  { to: "/app/financeiro", label: "Financeiro", icon: Wallet },
-  { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap },
-  { to: "/app/supervisao", label: "Supervisão", icon: ShieldCheck },
+  { to: "/app/financeiro", label: "Financeiro", icon: Wallet, premium: true },
+  { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap, premium: true },
+  { to: "/app/supervisao", label: "Supervisão", icon: ShieldCheck, premium: true },
   { to: "/app/perfil", label: "Perfil", icon: Settings },
 ];
 
@@ -23,13 +27,26 @@ const mobileNavItems = navItems.slice(0, 5);
 export const AppLayout = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isPremium } = useSubscription();
   const [planOpen, setPlanOpen] = useState(false);
+  const [gateOpen, setGateOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     toast.success("Sessão encerrada.");
     navigate("/auth", { replace: true });
   };
+
+  const handleNavClick = (e: React.MouseEvent, item: typeof navItems[0]) => {
+    if (item.premium && !isPremium) {
+      e.preventDefault();
+      setGateOpen(true);
+    }
+  };
+
+  // If user navigated directly to a premium route without active sub, show gate
+  const showGateOverlay = !isPremium && PREMIUM_ROUTES.has(location.pathname);
 
   return (
     <div className="min-h-screen bg-gradient-soft flex">
@@ -50,6 +67,7 @@ export const AppLayout = () => {
               key={item.to}
               to={item.to}
               end={item.end}
+              onClick={(e) => handleNavClick(e, item)}
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
@@ -61,6 +79,7 @@ export const AppLayout = () => {
             >
               <item.icon className="h-4 w-4" />
               {item.label}
+              {item.premium && !isPremium && <Lock className="h-3 w-3 ml-auto opacity-50" />}
             </NavLink>
           ))}
         </nav>
@@ -103,6 +122,7 @@ export const AppLayout = () => {
               key={item.to}
               to={item.to}
               end={item.end}
+              onClick={(e) => handleNavClick(e, item)}
               className={({ isActive }) =>
                 cn(
                   "flex flex-col items-center gap-0.5 px-2 py-2 text-[10px] font-medium transition-colors rounded-lg",
@@ -120,10 +140,32 @@ export const AppLayout = () => {
       {/* ── Main content ── */}
       <main className="flex-1 md:ml-64 lg:ml-72 pt-16 pb-20 md:pt-0 md:pb-0">
         <div className="p-6 lg:p-10 max-w-6xl mx-auto">
-          <Outlet />
+          {showGateOverlay ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-6">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent/10">
+                <Lock className="h-10 w-10 text-accent" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Recurso Exclusivo do Plano Premium</h2>
+                <p className="text-muted-foreground max-w-md">
+                  Assine o Psi Real Pro para desbloquear esta funcionalidade e organizar sua clínica de forma completa.
+                </p>
+              </div>
+              <p className="text-3xl font-extrabold">
+                R$ 39,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
+              </p>
+              <Button variant="accent" size="lg" onClick={() => setPlanOpen(true)}>
+                <Crown className="h-4 w-4" /> Ver Planos
+              </Button>
+            </div>
+          ) : (
+            <Outlet />
+          )}
         </div>
       </main>
+
       <PlanModal open={planOpen} onOpenChange={setPlanOpen} />
+      <PremiumGate open={gateOpen} onOpenChange={setGateOpen} />
     </div>
   );
 };
