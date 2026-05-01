@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Loader2, Shield, Users, Mail, Calendar, Building2, ArrowLeft,
   ChevronDown, CheckCircle2, XCircle, Search, FileText, UserCheck,
-  Eye, Activity, Phone,
+  Eye, Activity, Heart, ClipboardList, Stethoscope,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 type SubStatus = "free" | "pending" | "active";
 type ProfileType = "standard" | "supervisee" | "supervisor";
@@ -51,6 +52,14 @@ const PROFILE_STYLES: Record<ProfileType, string> = {
   supervisor: "bg-lilac/20 text-lilac-foreground",
 };
 
+const SESSION_STATUS_LABELS: Record<string, string> = {
+  scheduled: "Agendada",
+  confirmed: "Confirmada",
+  completed: "Realizada",
+  cancelled: "Cancelada",
+  no_show: "Faltou",
+};
+
 interface AdminUser {
   id: string;
   email: string;
@@ -70,6 +79,28 @@ interface AdminUser {
   session_count: number;
 }
 
+interface AdminPatient {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  is_active: boolean;
+  category: string;
+  shared_with_supervisor: boolean;
+  chief_complaint: string | null;
+  session_price: number | null;
+  created_at: string;
+  therapist_id: string;
+  therapist_name: string;
+  therapist_type: string;
+  supervisor_id: string | null;
+  supervisor_name: string | null;
+  session_count: number;
+  evolution_count: number;
+  last_session_at: string | null;
+  last_session_status: string | null;
+}
+
 interface AuditLog {
   id: string;
   user_id: string;
@@ -84,12 +115,17 @@ const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [patients, setPatients] = useState<AdminPatient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [patientsLoading, setPatientsLoading] = useState(false);
+  const [patientsLoaded, setPatientsLoaded] = useState(false);
   const [authorized, setAuthorized] = useState(false);
   const [search, setSearch] = useState("");
   const [logUserId, setLogUserId] = useState<string | null>(null);
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [patientFilter, setPatientFilter] = useState<"all" | "active" | "inactive">("all");
+  const [supervisorFilter, setSupervisorFilter] = useState<string>("all");
 
   useEffect(() => {
     if (authLoading) return;
@@ -97,11 +133,8 @@ const Admin = () => {
 
     const checkAndLoad = async () => {
       const { data: role } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
+        .from("user_roles").select("role")
+        .eq("user_id", user.id).eq("role", "admin").maybeSingle();
 
       if (!role) { toast.error("Acesso negado"); navigate("/app"); return; }
       setAuthorized(true);
@@ -115,11 +148,19 @@ const Admin = () => {
     checkAndLoad();
   }, [user, authLoading, navigate]);
 
+  const loadPatients = async () => {
+    if (patientsLoaded || patientsLoading) return;
+    setPatientsLoading(true);
+    const { data, error } = await supabase.functions.invoke("admin-list-patients");
+    if (error) { toast.error("Erro ao carregar pacientes"); }
+    setPatients(data ?? []);
+    setPatientsLoaded(true);
+    setPatientsLoading(false);
+  };
+
   const handleStatusChange = async (userId: string, newStatus: SubStatus) => {
     const { error } = await supabase
-      .from("profiles")
-      .update({ subscription_status: newStatus } as any)
-      .eq("id", userId);
+      .from("profiles").update({ subscription_status: newStatus } as any).eq("id", userId);
     if (error) { toast.error("Erro ao atualizar status"); return; }
     setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, subscription_status: newStatus } : u)));
     toast.success(`Status alterado para ${STATUS_LABELS[newStatus]}`);
@@ -127,9 +168,7 @@ const Admin = () => {
 
   const handleApproval = async (userId: string, approve: boolean) => {
     const { error } = await supabase
-      .from("profiles")
-      .update({ is_approved: approve } as any)
-      .eq("id", userId);
+      .from("profiles").update({ is_approved: approve } as any).eq("id", userId);
     if (error) { toast.error("Erro ao atualizar aprovação"); return; }
     setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_approved: approve } : u)));
     toast.success(approve ? "Usuário aprovado!" : "Acesso revogado");
@@ -137,9 +176,7 @@ const Admin = () => {
 
   const handleProfileTypeChange = async (userId: string, newType: ProfileType) => {
     const { error } = await supabase
-      .from("profiles")
-      .update({ profile_type: newType } as any)
-      .eq("id", userId);
+      .from("profiles").update({ profile_type: newType } as any).eq("id", userId);
     if (error) { toast.error("Erro ao atualizar tipo de perfil"); return; }
     setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, profile_type: newType } : u)));
     toast.success(`Perfil alterado para ${PROFILE_LABELS[newType]}`);
@@ -170,10 +207,50 @@ const Admin = () => {
     );
   }, [users, search]);
 
+  const filteredPatients = useMemo(() => {
+    let list = patients;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (p) =>
+          p.full_name.toLowerCase().includes(q) ||
+          (p.email ?? "").toLowerCase().includes(q) ||
+          p.therapist_name.toLowerCase().includes(q) ||
+          (p.supervisor_name ?? "").toLowerCase().includes(q)
+      );
+    }
+    if (patientFilter === "active") list = list.filter((p) => p.is_active);
+    if (patientFilter === "inactive") list = list.filter((p) => !p.is_active);
+    if (supervisorFilter !== "all") {
+      list = list.filter((p) => p.supervisor_id === supervisorFilter || p.therapist_id === supervisorFilter);
+    }
+    return list;
+  }, [patients, search, patientFilter, supervisorFilter]);
+
+  // Group patients by supervisor
+  const patientsBySupervisor = useMemo(() => {
+    const groups = new Map<string, { name: string; patients: AdminPatient[] }>();
+    filteredPatients.forEach((p) => {
+      const key = p.supervisor_name ?? "Sem supervisor";
+      if (!groups.has(key)) groups.set(key, { name: key, patients: [] });
+      groups.get(key)!.patients.push(p);
+    });
+    return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [filteredPatients]);
+
   const pendingUsers = useMemo(() => filtered.filter((u) => !u.is_approved), [filtered]);
   const approvedUsers = useMemo(() => filtered.filter((u) => u.is_approved), [filtered]);
   const supervisors = useMemo(() => filtered.filter((u) => u.profile_type === "supervisor"), [filtered]);
   const supervisees = useMemo(() => filtered.filter((u) => u.profile_type === "supervisee"), [filtered]);
+
+  // Unique supervisors for filter dropdown
+  const supervisorOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    patients.forEach((p) => {
+      if (p.supervisor_id && p.supervisor_name) map.set(p.supervisor_id, p.supervisor_name);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [patients]);
 
   if (authLoading || loading) {
     return (
@@ -187,7 +264,6 @@ const Admin = () => {
 
   const logUser = users.find((u) => u.id === logUserId);
 
-  // Shared user row renderer
   const UserRow = ({ u, showSupervisor = false }: { u: AdminUser; showSupervisor?: boolean }) => (
     <tr className="border-b border-border/50 hover:bg-muted/30 transition-colors">
       <td className="py-3 pr-4 font-medium text-foreground whitespace-nowrap">{u.full_name || "—"}</td>
@@ -296,12 +372,13 @@ const Admin = () => {
         </header>
 
         {/* KPI cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           {[
             { label: "Total usuários", value: users.length, icon: Users },
             { label: "Aguardando aprovação", value: users.filter((u) => !u.is_approved).length, icon: XCircle },
             { label: "Supervisores", value: users.filter((u) => u.profile_type === "supervisor").length, icon: UserCheck },
             { label: "Supervisionandos", value: users.filter((u) => u.profile_type === "supervisee").length, icon: Activity },
+            { label: "Total pacientes", value: patientsLoaded ? patients.length : "—", icon: Heart },
           ].map((kpi) => (
             <div key={kpi.label} className="rounded-2xl bg-card border border-border shadow-card p-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
@@ -369,13 +446,17 @@ const Admin = () => {
         )}
 
         {/* Tabs */}
-        <Tabs defaultValue="all" className="space-y-4">
+        <Tabs defaultValue="all" className="space-y-4" onValueChange={(v) => { if (v === "patients") loadPatients(); }}>
           <TabsList>
             <TabsTrigger value="all">Todos ({approvedUsers.length})</TabsTrigger>
             <TabsTrigger value="supervisors">Supervisores ({supervisors.length})</TabsTrigger>
             <TabsTrigger value="supervisees">Supervisionandos ({supervisees.length})</TabsTrigger>
+            <TabsTrigger value="patients" className="gap-1">
+              <Stethoscope className="h-3.5 w-3.5" /> Pacientes
+            </TabsTrigger>
           </TabsList>
 
+          {/* --- ALL USERS --- */}
           <TabsContent value="all">
             <section className="rounded-2xl bg-card border border-border shadow-card p-5 overflow-x-auto">
               {approvedUsers.length === 0 ? (
@@ -391,6 +472,7 @@ const Admin = () => {
             </section>
           </TabsContent>
 
+          {/* --- SUPERVISORS --- */}
           <TabsContent value="supervisors">
             <section className="rounded-2xl bg-card border border-border shadow-card p-5 overflow-x-auto">
               {supervisors.length === 0 ? (
@@ -406,6 +488,7 @@ const Admin = () => {
             </section>
           </TabsContent>
 
+          {/* --- SUPERVISEES --- */}
           <TabsContent value="supervisees">
             <section className="rounded-2xl bg-card border border-border shadow-card p-5 overflow-x-auto">
               {supervisees.length === 0 ? (
@@ -419,6 +502,139 @@ const Admin = () => {
                 </table>
               )}
             </section>
+          </TabsContent>
+
+          {/* --- PATIENTS --- */}
+          <TabsContent value="patients">
+            {patientsLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Filters */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-muted-foreground font-medium">Status:</span>
+                    {(["all", "active", "inactive"] as const).map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setPatientFilter(f)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                          patientFilter === f
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {f === "all" ? "Todos" : f === "active" ? "Ativos" : "Inativos"}
+                      </button>
+                    ))}
+                  </div>
+                  {supervisorOptions.length > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-muted-foreground font-medium">Supervisor:</span>
+                      <select
+                        value={supervisorFilter}
+                        onChange={(e) => setSupervisorFilter(e.target.value)}
+                        className="text-xs rounded-lg border border-border bg-card px-2 py-1"
+                      >
+                        <option value="all">Todos</option>
+                        {supervisorOptions.map(([id, name]) => (
+                          <option key={id} value={id}>{name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    {filteredPatients.length} paciente{filteredPatients.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+
+                {/* Grouped by supervisor */}
+                {patientsBySupervisor.length === 0 ? (
+                  <EmptyState msg="Nenhum paciente encontrado." />
+                ) : (
+                  patientsBySupervisor.map((group) => (
+                    <section key={group.name} className="rounded-2xl bg-card border border-border shadow-card p-5 overflow-x-auto">
+                      <div className="flex items-center gap-2 mb-4">
+                        <UserCheck className="h-4 w-4 text-primary" />
+                        <h3 className="font-display text-base font-medium">{group.name}</h3>
+                        <Badge variant="secondary" className="text-xs">{group.patients.length}</Badge>
+                      </div>
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border text-left text-muted-foreground text-xs">
+                            <th className="pb-2 pr-3 font-medium">Paciente</th>
+                            <th className="pb-2 pr-3 font-medium">Terapeuta</th>
+                            <th className="pb-2 pr-3 font-medium">Categoria</th>
+                            <th className="pb-2 pr-3 font-medium text-center">Sessões</th>
+                            <th className="pb-2 pr-3 font-medium text-center">Evoluções</th>
+                            <th className="pb-2 pr-3 font-medium">Última sessão</th>
+                            <th className="pb-2 pr-3 font-medium">Status sessão</th>
+                            <th className="pb-2 pr-3 font-medium">Queixa</th>
+                            <th className="pb-2 pr-3 font-medium">Compartilhado</th>
+                            <th className="pb-2 font-medium">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {group.patients.map((p) => (
+                            <tr key={p.id} className="border-b border-border/30 hover:bg-muted/30 transition-colors">
+                              <td className="py-2.5 pr-3 font-medium text-foreground whitespace-nowrap">{p.full_name}</td>
+                              <td className="py-2.5 pr-3 text-sm text-muted-foreground whitespace-nowrap">{p.therapist_name}</td>
+                              <td className="py-2.5 pr-3">
+                                <span className="px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground capitalize">
+                                  {p.category === "individual" ? "Individual" : p.category === "couple" ? "Casal" : p.category === "group" ? "Grupo" : p.category}
+                                </span>
+                              </td>
+                              <td className="py-2.5 pr-3 text-center text-sm">{p.session_count}</td>
+                              <td className="py-2.5 pr-3 text-center text-sm">
+                                <span className="flex items-center justify-center gap-1">
+                                  <ClipboardList className="h-3.5 w-3.5 text-muted-foreground" />
+                                  {p.evolution_count}
+                                </span>
+                              </td>
+                              <td className="py-2.5 pr-3 text-xs text-muted-foreground whitespace-nowrap">
+                                {p.last_session_at
+                                  ? new Date(p.last_session_at).toLocaleDateString("pt-BR")
+                                  : "—"}
+                              </td>
+                              <td className="py-2.5 pr-3">
+                                {p.last_session_status ? (
+                                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    p.last_session_status === "completed"
+                                      ? "bg-green-100 text-green-800"
+                                      : p.last_session_status === "cancelled" || p.last_session_status === "no_show"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-yellow-100 text-yellow-800"
+                                  }`}>
+                                    {SESSION_STATUS_LABELS[p.last_session_status] ?? p.last_session_status}
+                                  </span>
+                                ) : "—"}
+                              </td>
+                              <td className="py-2.5 pr-3 text-xs text-muted-foreground max-w-[160px] truncate" title={p.chief_complaint ?? ""}>
+                                {p.chief_complaint || "—"}
+                              </td>
+                              <td className="py-2.5 pr-3 text-center">
+                                {p.shared_with_supervisor ? (
+                                  <CheckCircle2 className="h-4 w-4 text-green-600 mx-auto" />
+                                ) : (
+                                  <XCircle className="h-4 w-4 text-muted-foreground/40 mx-auto" />
+                                )}
+                              </td>
+                              <td className="py-2.5">
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${p.is_active ? "bg-green-100 text-green-800" : "bg-muted text-muted-foreground"}`}>
+                                  {p.is_active ? "Ativo" : "Inativo"}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </section>
+                  ))
+                )}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 
