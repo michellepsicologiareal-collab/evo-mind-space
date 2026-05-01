@@ -20,7 +20,9 @@ const ResetPassword = () => {
   const [countdownCancelled, setCountdownCancelled] = useState(false);
 
   useEffect(() => {
-    const markRecoveryFromUrl = () => {
+    let cancelled = false;
+
+    const validateRecoveryLink = async () => {
       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
       const queryParams = new URLSearchParams(window.location.search);
 
@@ -28,41 +30,50 @@ const ResetPassword = () => {
       const errorDescription = hashParams.get("error_description") || queryParams.get("error_description");
       const errorCode = hashParams.get("error") || queryParams.get("error");
       if (errorDescription || errorCode) {
-        setLinkExpired(true);
+        if (!cancelled) setLinkExpired(true);
         return;
       }
 
       if (hashParams.get("type") === "recovery" || queryParams.get("type") === "recovery" || hashParams.has("access_token")) {
-        setIsRecovery(true);
+        if (!cancelled) setIsRecovery(true);
+        return;
       }
+
+      const recoveryCode = queryParams.get("code");
+      if (recoveryCode) {
+        const { error } = await supabase.auth.exchangeCodeForSession(recoveryCode);
+        if (cancelled) return;
+
+        if (!error) {
+          setIsRecovery(true);
+          return;
+        }
+
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+        setIsRecovery(Boolean(data.session));
+        setLinkExpired(!data.session);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.getSession();
+      if (cancelled) return;
+      setIsRecovery(Boolean(data.session && window.location.pathname === "/reset-password"));
+      setLinkExpired(Boolean(error) || !data.session);
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
         setIsRecovery(true);
+        setLinkExpired(false);
       }
     });
 
-    markRecoveryFromUrl();
-    supabase.auth.getSession().then(({ error }) => {
-      if (error) {
-        setLinkExpired(true);
-      } else {
-        markRecoveryFromUrl();
-      }
-    });
-
-    // If after 5 seconds we still don't have recovery, mark as expired
-    const timeout = setTimeout(() => {
-      setLinkExpired((prev) => {
-        // Only expire if not already in recovery mode or done
-        return prev;
-      });
-    }, 5000);
+    validateRecoveryLink();
 
     return () => {
+      cancelled = true;
       subscription.unsubscribe();
-      clearTimeout(timeout);
     };
   }, []);
 
