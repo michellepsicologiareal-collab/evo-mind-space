@@ -47,7 +47,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (searchParams.get("forceLogin") === "1") {
-      supabase.auth.signOut({ scope: "local" }).finally(() => setSearchParams({}, { replace: true }));
+      setSearchParams({}, { replace: true });
       return;
     }
 
