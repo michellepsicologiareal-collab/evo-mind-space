@@ -15,22 +15,96 @@ interface Clause {
   key: string;
   title: string;
   description: string;
-  type: "agree" | "radio";
+  type: "agree" | "radio" | "text";
   options?: string[];
 }
 
 const DEFAULT_CLAUSES: Clause[] = [
-  { key: "local", title: "Local do Atendimento", description: "Terapia on-line ou presencial.", type: "radio", options: ["Terapia on-line", "Terapia presencial"] },
-  { key: "honorarios", title: "Honorários", description: "Pagamento antecipado até o dia 5, reajuste anual e envio de comprovante.", type: "agree" },
-  { key: "duracao", title: "Duração", description: "Sessões de 50 minutos e política de atrasos.", type: "agree" },
-  { key: "contatos_sessoes", title: "Contatos entre as Sessões", description: "Dúvidas pontuais respondidas em até 24h.", type: "agree" },
-  { key: "urgencias", title: "Contatos de Urgências", description: "Procedimento para sinalização de urgência via mensagem ou ligação.", type: "agree" },
-  { key: "sigilo", title: "Sigilo", description: "Manutenção do sigilo, exceto em situações de risco. Conforme LGPD (Lei 13.709/2018), seus dados pessoais serão tratados exclusivamente para fins de tratamento clínico.", type: "agree" },
-  { key: "duracao_tratamento", title: "Duração do Tratamento", description: "Tempo variável conforme a demanda.", type: "agree" },
-  { key: "dia_horario", title: "Dia e Horário", description: "Acordo mútuo sobre agenda.", type: "agree" },
-  { key: "desmarcacoes", title: "Desmarcações ou Mudanças de Horário", description: "Aviso prévio de 24h e limite de uma remarcação mensal.", type: "agree" },
-  { key: "faltas", title: "Faltas", description: "Cobrança de falta sem aviso e possível interrupção após duas faltas consecutivas.", type: "agree" },
-  { key: "rescisao", title: "Rescisão", description: "Direito de interrupção por ambas as partes mediante comunicação prévia.", type: "agree" },
+  {
+    key: "cabecalho",
+    title: "Considerações Iniciais",
+    description: "Prezado(a) paciente, você está dando início a um acompanhamento psicoterápico na abordagem Cognitivo-Comportamental. Este tratamento será realizado 1 vez por semana e cada sessão terá duração de até 50 minutos. Havendo necessidade, a frequência de encontros semanais poderá ser aumentada ou espaçada, sendo isso previamente combinado entre você e sua terapeuta.\nO tempo de duração do acompanhamento psicoterápico é variável e dependerá dos seus objetivos, mas é importante destacar que esta modalidade de atendimento percorre determinados estágios visando a alta.\nÉ reservado ao paciente o direito de interromper o tratamento, por quaisquer razões, caso julgue necessário, sendo de sua inteira responsabilidade tal ato, bastando a comunicação prévia à terapeuta ou ao administrativo responsável.",
+    type: "text",
+  },
+  {
+    key: "local",
+    title: "Local do Atendimento",
+    description: "Consultório localizado na R. Júlio Zanoni, 67 - sala 9 ou atendimentos realizados por sistema online através de plataforma previamente combinada e respeitando as qualidades mínimas de sigilo (exemplo: local reservado, uso de fones de ouvido) e condições técnicas (câmera e conexão adequadas de internet).",
+    type: "radio",
+    options: ["Terapia on-line", "Terapia presencial"],
+  },
+  {
+    key: "honorarios",
+    title: "Honorários",
+    description: "O valor da sessão será de acordo com o Plano de atendimento escolhido e o pagamento pode ser realizado através de pix.\nOs planos de atendimento compõem 4 sessões por mês. Em meses com mais de 5 semanas, será dividido o valor do pacote mensal por 4 e o resultado será acrescentado como uma sessão a mais no pacote mensal.\nO pagamento das sessões do mês deve ser efetuado de forma única e antecipada, antes do início das sessões do mês em questão. O valor total das sessões do mês corrente deve ser pago até o dia 5 do mês vigente.\nO valor da sessão sofrerá um reajuste anual, realizado no mês que iniciou a terapia, de acordo com os investimentos realizados pela terapeuta, informado com 30 dias de antecedência.\nPix: michelledonegas@gmail.com — Enviar comprovante a cada pagamento.",
+    type: "agree",
+  },
+  {
+    key: "duracao",
+    title: "Duração",
+    description: "Cada atendimento terá a duração de 50 (cinquenta) minutos em média, no horário combinado previamente. Em caso de atraso do paciente, não será possível estender esse período. Em caso de atraso do Terapeuta, esse tempo será compensado no mesmo dia ou outro a combinar.",
+    type: "agree",
+  },
+  {
+    key: "contatos_sessoes",
+    title: "Contatos Entre as Sessões",
+    description: "O paciente poderá enviar mensagens entre as consultas para tratar de dúvidas do tratamento, reservando-se o Terapeuta ao direito de responder em até 24 horas, desde que as dúvidas sejam pontuais e não se revistam de nova sessão de atendimento.",
+    type: "agree",
+  },
+  {
+    key: "urgencias",
+    title: "Contatos de Urgências",
+    description: "Em caso de urgência, o paciente poderá enviar mensagem (de texto) sinalizando a urgência ou ligar imediatamente para o número (11) 94738-8423. O Terapeuta irá responder com a máxima brevidade possível.",
+    type: "agree",
+  },
+  {
+    key: "sigilo",
+    title: "Sigilo",
+    description: "As informações trazidas às consultas serão mantidas em sigilo, com exceção das situações em que houver algum risco para si ou outros e haja a necessidade de informar um familiar ou responsável indicado pelo próprio paciente.",
+    type: "agree",
+  },
+  {
+    key: "duracao_tratamento",
+    title: "Duração do Tratamento",
+    description: "O tempo de tratamento irá variar dependendo do paciente e da natureza das questões a serem trabalhadas.",
+    type: "agree",
+  },
+  {
+    key: "dia_horario",
+    title: "Dia e Horário",
+    description: "Os dias e horários das sessões serão combinados com o paciente, podendo variar de acordo com as necessidades de adequação da agenda do psicólogo e demanda do paciente.",
+    type: "agree",
+  },
+  {
+    key: "desmarcacoes",
+    title: "Desmarcações ou Mudanças de Horário",
+    description: "Desmarcações ou mudanças de horário devem ser avisadas pelo paciente com 24h de antecedência. Caso não haja comparecimento sem aviso prévio, a sessão será cobrada. Quando avisadas com antecedência de 24h, a sessão poderá ser remarcada, desde que haja disponibilidade na agenda. Caso não haja disponibilidade, a sessão NÃO será cobrada. É possível remarcar no máximo uma sessão por mês.",
+    type: "agree",
+  },
+  {
+    key: "faltas",
+    title: "Faltas",
+    description: "Caso não haja comparecimento sem aviso prévio, a sessão será cobrada. A partir de duas faltas consecutivas sem aviso, o atendimento será considerado interrompido e o cliente poderá perder sua vaga preferencial de horário.",
+    type: "agree",
+  },
+  {
+    key: "rescisao",
+    title: "Rescisão",
+    description: "Fica assegurado ao paciente o direito de interromper o tratamento, por quaisquer razões, bastando a comunicação prévia à terapeuta. Fica assegurado também ao Terapeuta o direito de interromper o tratamento, bastando a comunicação prévia ao paciente e a indicação de um profissional para dar continuidade. Caso ocorram faltas injustificadas conforme previsto no item 10, o contrato restará rescindido.",
+    type: "agree",
+  },
+  {
+    key: "contato_emergencia",
+    title: "Contato de Emergência",
+    description: "O paciente concorda em fornecer as informações de contato de uma pessoa de confiança para ser contatada em caso de emergência. As informações incluirão nome completo, relacionamento com o cliente, número de telefone e e-mail. Essas informações serão mantidas estritamente confidenciais e utilizadas apenas em situações de emergência, não sendo divulgadas a terceiros exceto quando necessário para proteger a segurança e o bem-estar do paciente.",
+    type: "agree",
+  },
+  {
+    key: "consideracoes_finais",
+    title: "Considerações Finais",
+    description: "O paciente, neste ato, aceita todas as condições acima expostas, reiterando que o início do tratamento pelo paciente também pressupõe o aceite a todas as condições acima.\nPsicóloga Michelle Donegá dos Santos — CPF 310.461.838-00 — CRP 06/93008",
+    type: "agree",
+  },
 ];
 
 const DEFAULT_LGPD = "Conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), autorizo o(a) profissional a coletar, armazenar e tratar meus dados pessoais e de saúde exclusivamente para fins de acompanhamento psicológico. Os dados serão mantidos em sigilo, armazenados de forma segura, e não serão compartilhados com terceiros sem meu consentimento expresso, salvo em situações de risco previstas pelo Código de Ética do Psicólogo.";
@@ -217,7 +291,7 @@ export default function ContratoModelo() {
                         setClauses((prev) =>
                           prev.map((c, i) =>
                             i === index
-                              ? { ...c, type: v as "agree" | "radio", ...(v === "radio" && !c.options ? { options: ["Opção 1", "Opção 2"] } : {}) }
+                              ? { ...c, type: v as "agree" | "radio" | "text", ...(v === "radio" && !c.options ? { options: ["Opção 1", "Opção 2"] } : {}) }
                               : c
                           )
                         );
@@ -227,6 +301,7 @@ export default function ContratoModelo() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="text">Texto</SelectItem>
                         <SelectItem value="agree">Aceite</SelectItem>
                         <SelectItem value="radio">Escolha</SelectItem>
                       </SelectContent>

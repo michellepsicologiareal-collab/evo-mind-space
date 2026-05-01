@@ -13,7 +13,7 @@ interface Clause {
   key: string;
   title: string;
   description: string;
-  type: "agree" | "radio";
+  type: "agree" | "radio" | "text";
   options?: string[];
 }
 
@@ -63,6 +63,7 @@ export default function ContratoPublico() {
         // Initialize responses
         const init: Record<string, string | boolean> = {};
         t.clauses.forEach((c) => {
+          if (c.type === "text") return; // display-only, no response needed
           init[c.key] = c.type === "agree" ? false : "";
         });
         setResponses(init);
@@ -77,6 +78,7 @@ export default function ContratoPublico() {
 
     // Validate all agree clauses are checked
     const allAgreed = template.clauses.every((c) => {
+      if (c.type === "text") return true;
       if (c.type === "agree") return responses[c.key] === true;
       if (c.type === "radio") return !!responses[c.key];
       return true;
@@ -102,6 +104,7 @@ export default function ContratoPublico() {
     // Build human-readable clause responses
     const readableResponses: Record<string, string> = {};
     template.clauses.forEach((c) => {
+      if (c.type === "text") return;
       const val = responses[c.key];
       readableResponses[c.title] = c.type === "agree" ? "Aceito" : String(val);
     });
@@ -188,7 +191,7 @@ export default function ContratoPublico() {
                 <p className="font-semibold text-sm">
                   {index + 1}) {clause.title}
                 </p>
-                <p className="text-sm text-muted-foreground">{clause.description}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-line">{clause.description}</p>
 
                 {clause.type === "agree" && (
                   <label className="flex items-center gap-2 mt-2 cursor-pointer">
@@ -218,6 +221,8 @@ export default function ContratoPublico() {
                     ))}
                   </RadioGroup>
                 )}
+
+                {/* "text" type = display only, no interaction needed */}
               </div>
             ))}
           </div>
