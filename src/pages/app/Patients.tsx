@@ -83,6 +83,10 @@ const Patients = () => {
   }, [user]);
 
   const openNew = () => {
+    if (!isPremium && patients.length >= FREE_PATIENT_LIMIT) {
+      setGateOpen(true);
+      return;
+    }
     setEditing(null);
     setForm({ full_name: "", email: "", phone: "", notes: "", session_price: "" });
     setOpen(true);
