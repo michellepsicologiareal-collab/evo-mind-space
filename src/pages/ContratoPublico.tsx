@@ -78,6 +78,7 @@ export default function ContratoPublico() {
 
     // Validate all agree clauses are checked
     const allAgreed = template.clauses.every((c) => {
+      if (c.type === "text") return true;
       if (c.type === "agree") return responses[c.key] === true;
       if (c.type === "radio") return !!responses[c.key];
       return true;
