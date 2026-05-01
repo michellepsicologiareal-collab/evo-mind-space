@@ -190,6 +190,10 @@ const Agenda = () => {
       payment_reference: "",
       mood_score: "",
       progress_note: "",
+      recurrence: "single",
+      recurrence_count: 4,
+      recurrence_interval: "weekly",
+      payment_plan: "per_session",
     });
     setOpen(true);
   };
