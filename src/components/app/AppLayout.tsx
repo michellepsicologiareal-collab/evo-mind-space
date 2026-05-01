@@ -184,7 +184,7 @@ export const AppLayout = () => {
 
       {/* ── Mobile bottom nav ── */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
-        <div className="flex overflow-x-auto no-scrollbar py-1 px-1 gap-0.5">
+        <div className="grid grid-cols-5 xs:grid-cols-6 py-1 px-1">
           {mobileNavItems.map((item) => (
             <NavLink
               key={item.to}
@@ -193,20 +193,20 @@ export const AppLayout = () => {
               onClick={(e) => handleNavClick(e, item)}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[44px] px-1.5 py-2 text-[10px] font-medium transition-colors rounded-lg shrink-0",
-                  isActive ? "text-accent" : "text-muted-foreground"
+                  "flex flex-col items-center justify-center gap-0.5 min-h-[40px] py-1.5 text-[9px] leading-tight font-medium transition-colors rounded-lg",
+                  isActive ? "text-accent bg-accent/10" : "text-muted-foreground"
                 )
               }
             >
-              <item.icon className="h-5 w-5" />
-              <span className="truncate max-w-[56px]">{item.label}</span>
+              <item.icon className="h-4 w-4" />
+              <span className="text-center line-clamp-1 px-0.5">{item.label}</span>
             </NavLink>
           ))}
         </div>
       </nav>
 
       {/* ── Main content ── */}
-      <main className="flex-1 md:ml-64 lg:ml-72 pt-16 pb-20 md:pt-0 md:pb-0">
+      <main className="flex-1 md:ml-64 lg:ml-72 pt-16 pb-28 md:pt-0 md:pb-0">
         <div className="p-6 lg:p-10 max-w-6xl mx-auto">
           {showGateOverlay ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-6">
