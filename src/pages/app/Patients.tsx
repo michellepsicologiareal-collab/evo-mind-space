@@ -209,7 +209,7 @@ const Patients = () => {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button variant="accent" onClick={openNew}>
+            <Button variant="accent" className="min-h-[44px]" onClick={openNew}>
               <Plus className="h-4 w-4" /> Novo paciente
             </Button>
           </DialogTrigger>
