@@ -11,13 +11,13 @@
 @layer base {
   :root {
     /* Surfaces */
-    --background: 37 42% 94%;              /* bege areia #F6F1E9 */
+    --background: 33 30% 88%;              /* areia quente / fendi — mais escuro para contraste */
     --foreground: 190 35% 12%;             /* deep teal ink */
 
-    --card: 37 40% 98%;
+    --card: 37 50% 98%;                    /* branco quente — destaque sobre o fundo */
     --card-foreground: 190 35% 12%;
 
-    --popover: 37 40% 98%;
+    --popover: 37 50% 98%;
     --popover-foreground: 190 35% 12%;
 
     /* Brand — Verde Musgo */
@@ -28,11 +28,11 @@
     --secondary: 37 30% 90%;              /* bege claro */
     --secondary-foreground: 108 27% 28%;
 
-    --muted: 37 25% 90%;
+    --muted: 33 22% 85%;
     --muted-foreground: 190 12% 42%;
 
-    /* Terracota — CTAs, salvar, novo */
-    --accent: 19 51% 53%;                 /* terracota #C4714A */
+    /* Terracota — CTAs, salvar, novo — mais vibrante */
+    --accent: 19 58% 50%;                 /* terracota vibrante */
     --accent-foreground: 0 0% 100%;
 
     /* Lilás — badges concluídas, supervisão */
@@ -49,8 +49,8 @@
     --destructive: 0 65% 48%;
     --destructive-foreground: 37 42% 96%;
 
-    --border: 37 20% 86%;
-    --input: 37 20% 86%;
+    --border: 33 22% 80%;                 /* borda mais definida */
+    --input: 33 22% 82%;
     --ring: 108 27% 28%;
 
     --radius: 1rem;
