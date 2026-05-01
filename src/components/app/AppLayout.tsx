@@ -1,6 +1,10 @@
 import { useState, useMemo } from "react";
 import { NavLink, Outlet, useNavigate, Link, useLocation } from "react-router-dom";
-import { Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut, GraduationCap, ShieldCheck, Crown, Lock, BookOpen, Flower2, FileText, FileCheck } from "lucide-react";
+import {
+  Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut,
+  GraduationCap, ShieldCheck, Crown, Lock, BookOpen, Flower2, FileText,
+  FileCheck, Shield, UserCog,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
@@ -18,10 +22,10 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   end?: boolean;
   premium?: boolean;
-  /** Which profile types can see this item. undefined = everyone */
   visibleTo?: Array<"standard" | "supervisee" | "supervisor">;
 }
 
+/* ── Navigation items for ALL users (including admin as regular user) ── */
 const allNavItems: NavItem[] = [
   { to: "/app", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "/app/pacientes", label: "Pacientes", icon: Users },
@@ -36,6 +40,11 @@ const allNavItems: NavItem[] = [
   { to: "/app/perfil", label: "Perfil", icon: Settings },
 ];
 
+/* ── Admin-only items (shown in a separate section) ── */
+const adminNavItems: NavItem[] = [
+  { to: "/admin", label: "Painel Admin", icon: Shield },
+];
+
 export const AppLayout = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
@@ -44,7 +53,6 @@ export const AppLayout = () => {
   const [planOpen, setPlanOpen] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
 
-  // Filter nav items based on profile type (admins see everything)
   const navItems = useMemo(() => {
     return allNavItems.filter((item) => {
       if (!item.visibleTo) return true;
@@ -53,7 +61,6 @@ export const AppLayout = () => {
     });
   }, [profileType, isAdmin]);
 
-  /* Mobile bottom bar — show first 5 visible items */
   const mobileNavItems = navItems.slice(0, 5);
 
   const handleSignOut = async () => {
@@ -69,8 +76,32 @@ export const AppLayout = () => {
     }
   };
 
-  // If user navigated directly to a premium route without active sub, show gate
   const showGateOverlay = !isPremium && PREMIUM_ROUTES.has(location.pathname);
+
+  const renderNavLink = (item: NavItem, isAdminSection = false) => (
+    <NavLink
+      key={item.to}
+      to={item.to}
+      end={item.end}
+      onClick={(e) => handleNavClick(e, item)}
+      className={({ isActive }) =>
+        cn(
+          "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
+          isActive
+            ? isAdminSection
+              ? "bg-[hsl(var(--admin-accent))] text-white shadow-soft"
+              : "bg-primary text-primary-foreground shadow-soft"
+            : isAdminSection
+            ? "text-[hsl(var(--admin-accent))]/80 hover:bg-[hsl(var(--admin-accent))]/10 hover:text-[hsl(var(--admin-accent))]"
+            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+        )
+      }
+    >
+      <item.icon className="h-4 w-4" />
+      {item.label}
+      {item.premium && !isPremium && <Lock className="h-3 w-3 ml-auto opacity-50" />}
+    </NavLink>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-soft flex">
@@ -89,26 +120,23 @@ export const AppLayout = () => {
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              onClick={(e) => handleNavClick(e, item)}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-soft"
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                )
-              }
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-              {item.premium && !isPremium && <Lock className="h-3 w-3 ml-auto opacity-50" />}
-            </NavLink>
-          ))}
+          {navItems.map((item) => renderNavLink(item))}
+
+          {/* ── Admin section (visually separated, different color) ── */}
+          {isAdmin && (
+            <>
+              <div className="pt-4 pb-2">
+                <div className="flex items-center gap-2 px-4">
+                  <div className="h-px flex-1 bg-[hsl(var(--admin-accent))]/20" />
+                  <span className="text-[10px] uppercase tracking-widest font-semibold text-[hsl(var(--admin-accent))]/60">
+                    Administração
+                  </span>
+                  <div className="h-px flex-1 bg-[hsl(var(--admin-accent))]/20" />
+                </div>
+              </div>
+              {adminNavItems.map((item) => renderNavLink(item, true))}
+            </>
+          )}
         </nav>
 
         <div className="p-4 border-t border-border">
@@ -137,6 +165,11 @@ export const AppLayout = () => {
           </Link>
           <div className="flex items-center gap-1">
             <NotificationBell />
+            {isAdmin && (
+              <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} className="text-[hsl(var(--admin-accent))]">
+                <Shield className="h-4 w-4" />
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={handleSignOut}>
               <LogOut className="h-4 w-4" />
             </Button>
@@ -144,7 +177,7 @@ export const AppLayout = () => {
         </div>
       </div>
 
-      {/* ── Mobile bottom nav (fixed, app-native feel) ── */}
+      {/* ── Mobile bottom nav ── */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
         <div className="flex justify-around py-1">
           {mobileNavItems.map((item) => (
