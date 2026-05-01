@@ -108,7 +108,7 @@ const Dashboard = () => {
           supabase.from("sessions").select("price, status").eq("user_id", user.id).gte("scheduled_at", monthStart).lte("scheduled_at", monthEnd),
           supabase
             .from("sessions")
-            .select("id, scheduled_at, status, patient_id, patients(full_name)")
+            .select("id, scheduled_at, status, patient_id, session_type, patient:patients!sessions_patient_id_fkey(full_name)")
             .eq("user_id", user.id)
             .gte("scheduled_at", now.toISOString())
             .eq("status", "scheduled")
@@ -164,8 +164,8 @@ const Dashboard = () => {
       const mapped = sessionsData.map((s: any) => ({
         id: s.id,
         scheduled_at: s.scheduled_at,
-        patient_name: s.patients?.full_name ?? "—",
-        patient_initials: getInitials(s.patients?.full_name ?? "?"),
+        patient_name: s.session_type === "supervision" ? "Supervisão" : (s.patient?.full_name ?? "—"),
+        patient_initials: s.session_type === "supervision" ? "SV" : getInitials(s.patient?.full_name ?? "?"),
         status: s.status ?? "scheduled",
         session_number: patientSessionCounts[s.patient_id] ?? 1,
       }));

@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon, Check, X, RotateCcw, Trash2, Link2, CheckCircle2 } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon, Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap } from "lucide-react";
 import { addDays, addWeeks, format, isSameDay, startOfWeek, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,17 +16,22 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from "@/lib/utils";
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
+type SessionType = "clinical" | "supervision";
 
 interface Session {
   id: string;
-  patient_id: string;
+  patient_id: string | null;
   scheduled_at: string;
   duration_minutes: number;
   status: Status;
   price: number | null;
   notes: string | null;
   confirmation_token: string | null;
-  patients?: { full_name: string } | null;
+  session_type: SessionType;
+  discussed_patient_id: string | null;
+  is_expense: boolean;
+  patient_name?: string | null;
+  discussed_patient_name?: string | null;
 }
 
 interface Patient {
@@ -37,7 +42,9 @@ interface Patient {
 
 const sessionSchema = z
   .object({
-    patient_id: z.string().uuid("Selecione um paciente"),
+    session_type: z.enum(["clinical", "supervision"]).default("clinical"),
+    patient_id: z.string().optional(),
+    discussed_patient_id: z.string().optional(),
     date: z.string().min(1, "Selecione a data"),
     time: z.string().min(1, "Selecione o horário"),
     duration_minutes: z.number().int().positive().max(480),
@@ -48,6 +55,10 @@ const sessionSchema = z
     mood_score: z.string().optional(),
     progress_note: z.string().max(2000).optional(),
   })
+  .refine(
+    (d) => d.session_type === "supervision" || (d.patient_id && d.patient_id.length > 0),
+    { path: ["patient_id"], message: "Selecione um paciente" }
+  )
   .refine(
     (d) =>
       !(d.payment_method === "pix" || d.payment_method === "card") ||
@@ -87,7 +98,9 @@ const Agenda = () => {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
+    session_type: "clinical" as SessionType,
     patient_id: "",
+    discussed_patient_id: "",
     date: format(new Date(), "yyyy-MM-dd"),
     time: "09:00",
     duration_minutes: 50,
@@ -109,7 +122,7 @@ const Agenda = () => {
     const [sRes, pRes] = await Promise.all([
       supabase
         .from("sessions")
-        .select("*, patients(full_name)")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .gte("scheduled_at", weekStart.toISOString())
         .lt("scheduled_at", weekEnd.toISOString())
@@ -117,7 +130,12 @@ const Agenda = () => {
       supabase.from("patients").select("id, full_name, session_price").eq("user_id", user.id).eq("is_active", true).order("full_name"),
     ]);
     if (sRes.error) toast.error("Erro ao carregar sessões");
-    setSessions((sRes.data as Session[]) ?? []);
+    const mapped = (sRes.data ?? []).map((s: any) => ({
+      ...s,
+      patient_name: s.patient?.full_name ?? null,
+      discussed_patient_name: s.discussed_patient?.full_name ?? null,
+    }));
+    setSessions(mapped as Session[]);
     setPatients((pRes.data as Patient[]) ?? []);
     setLoading(false);
   };
@@ -129,7 +147,9 @@ const Agenda = () => {
 
   const openNew = (date?: Date) => {
     setForm({
+      session_type: "clinical",
       patient_id: "",
+      discussed_patient_id: "",
       date: format(date ?? new Date(), "yyyy-MM-dd"),
       time: "09:00",
       duration_minutes: 50,
@@ -153,22 +173,26 @@ const Agenda = () => {
       return;
     }
     setSaving(true);
+    const isSupervision = parsed.data.session_type === "supervision";
     const scheduledAt = parse(`${parsed.data.date} ${parsed.data.time}`, "yyyy-MM-dd HH:mm", new Date());
     const patient = patients.find((p) => p.id === parsed.data.patient_id);
-    const price = parsed.data.price ? Number(parsed.data.price) : patient?.session_price ?? null;
+    const price = parsed.data.price ? Number(parsed.data.price) : (isSupervision ? null : patient?.session_price ?? null);
 
     const ref = parsed.data.payment_reference?.trim() ?? "";
     const { data: created, error } = await supabase
       .from("sessions")
       .insert({
         user_id: user.id,
-        patient_id: parsed.data.patient_id,
+        patient_id: isSupervision ? null : (parsed.data.patient_id || null),
         scheduled_at: scheduledAt.toISOString(),
         duration_minutes: parsed.data.duration_minutes,
         price,
         notes: parsed.data.notes || null,
         payment_method: parsed.data.payment_method === "none" ? null : parsed.data.payment_method,
         payment_reference: ref.length > 0 ? ref : null,
+        session_type: parsed.data.session_type,
+        discussed_patient_id: isSupervision && parsed.data.discussed_patient_id ? parsed.data.discussed_patient_id : null,
+        is_expense: isSupervision,
       })
       .select("id")
       .single();
@@ -180,7 +204,7 @@ const Agenda = () => {
 
     const moodNum = parsed.data.mood_score ? Number(parsed.data.mood_score) : null;
     const progressNote = parsed.data.progress_note?.trim() || null;
-    if ((moodNum && moodNum >= 1 && moodNum <= 10) || progressNote) {
+    if (!isSupervision && parsed.data.patient_id && ((moodNum && moodNum >= 1 && moodNum <= 10) || progressNote)) {
       await supabase.from("patient_progress").insert({
         user_id: user.id,
         patient_id: parsed.data.patient_id,
@@ -253,14 +277,38 @@ const Agenda = () => {
             ) : (
               <form onSubmit={handleSave} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Paciente *</Label>
-                  <Select value={form.patient_id} onValueChange={(v) => setForm({ ...form, patient_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <Label>Tipo de compromisso</Label>
+                  <Select value={form.session_type} onValueChange={(v) => setForm({ ...form, session_type: v as SessionType })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {patients.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+                      <SelectItem value="clinical">Atendimento Clínico</SelectItem>
+                      <SelectItem value="supervision">Supervisão Técnica</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+                {form.session_type === "clinical" && (
+                  <div className="space-y-2">
+                    <Label>Paciente *</Label>
+                    <Select value={form.patient_id} onValueChange={(v) => setForm({ ...form, patient_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {patients.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {form.session_type === "supervision" && (
+                  <div className="space-y-2">
+                    <Label>Paciente discutido (opcional)</Label>
+                    <Select value={form.discussed_patient_id} onValueChange={(v) => setForm({ ...form, discussed_patient_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Nenhum</SelectItem>
+                        {patients.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="date">Data *</Label>
@@ -324,6 +372,7 @@ const Agenda = () => {
                   <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
                 </div>
 
+                {form.session_type === "clinical" && (
                 <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground">Humor / Progresso (opcional)</p>
                   <div className="grid grid-cols-3 gap-3">
@@ -351,6 +400,7 @@ const Agenda = () => {
                     </div>
                   </div>
                 </div>
+                )}
 
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
@@ -406,11 +456,21 @@ const Agenda = () => {
                       + adicionar
                     </button>
                   ) : (
-                    items.map((s) => (
-                      <div key={s.id} className={cn("rounded-xl border p-3 group transition-colors", s.status === "confirmed" ? "bg-emerald-50 border-emerald-200" : "bg-background border-border")}>
+                    items.map((s) => {
+                      const isSupervisionCard = s.session_type === "supervision";
+                      return (
+                      <div key={s.id} className={cn(
+                        "rounded-xl border p-3 group transition-colors",
+                        isSupervisionCard
+                          ? "bg-serene/10 border-serene/40"
+                          : s.status === "confirmed"
+                          ? "bg-emerald-50 border-emerald-200"
+                          : "bg-background border-border"
+                      )}>
                         <div className="flex items-start justify-between gap-1">
                           <div className="flex items-center gap-1.5">
                             {s.status === "confirmed" && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />}
+                            {isSupervisionCard && <GraduationCap className="h-3.5 w-3.5 text-serene shrink-0" />}
                             <p className="font-display text-sm text-primary">{format(new Date(s.scheduled_at), "HH:mm")}</p>
                           </div>
                           <DropdownMenu>
@@ -418,7 +478,9 @@ const Agenda = () => {
                               <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">⋯</Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar link de confirmação</DropdownMenuItem>
+                              {!isSupervisionCard && (
+                                <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar link de confirmação</DropdownMenuItem>
+                              )}
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => updateStatus(s.id, "completed")}><Check className="h-4 w-4" /> Realizada</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => updateStatus(s.id, "no_show")}><X className="h-4 w-4" /> Falta</DropdownMenuItem>
@@ -431,10 +493,16 @@ const Agenda = () => {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                        <p className="text-xs text-foreground mt-1 truncate">{s.patients?.full_name}</p>
-                        <span className={cn("inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full", statusClass[s.status])}>{statusLabel[s.status]}</span>
+                        <p className="text-xs text-foreground mt-1 truncate">
+                          {isSupervisionCard ? "Supervisão" : s.patient_name}
+                          {isSupervisionCard && s.discussed_patient_name && (
+                            <span className="text-muted-foreground"> · {s.discussed_patient_name}</span>
+                          )}
+                        </p>
+                        <span className={cn("inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full", isSupervisionCard ? "bg-serene/20 text-serene" : statusClass[s.status])}>{isSupervisionCard ? "Supervisão" : statusLabel[s.status]}</span>
                       </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>
