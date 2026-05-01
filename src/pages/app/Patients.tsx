@@ -19,7 +19,15 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 const patientSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(120),
   email: z.string().trim().email("Email inválido").max(255).optional().or(z.literal("")),
-  phone: z.string().trim().max(40).optional().or(z.literal("")),
+  phone: z.string().trim().max(40).optional().or(z.literal(""))
+    .refine(
+      (val) => {
+        if (!val) return true; // optional field
+        const digits = val.replace(/\D/g, "");
+        return digits.length >= 10 && digits.length <= 13;
+      },
+      { message: "Telefone inválido. Use DDD + número (ex: 11999887766)" }
+    ),
   notes: z.string().trim().max(2000).optional().or(z.literal("")),
   session_price: z.string().optional(),
 });
