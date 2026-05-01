@@ -49,8 +49,11 @@ export const NotificationBell = () => {
     if (!user) return;
     load();
 
-    // Channel scoped to user: notifications:{user_id}
-    const channelName = `notifications:${user.id}`;
+    const channelName = `realtime:notifications:${user.id}`;
+    // Remove any stale channel with the same name first (handles React strict mode double-mount)
+    const existing = supabase.getChannels().find((c) => c.topic === channelName);
+    if (existing) supabase.removeChannel(existing);
+
     const channel = supabase
       .channel(channelName)
       .on(

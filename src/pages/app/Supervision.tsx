@@ -67,6 +67,7 @@ interface ProgressEntry {
 const Supervision = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [profileType, setProfileType] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -119,6 +120,21 @@ const Supervision = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
+
+    // Check profile type first
+    const { data: myProfile } = await supabase
+      .from("profiles")
+      .select("profile_type")
+      .eq("id", user.id)
+      .maybeSingle();
+    const pt = myProfile?.profile_type ?? "standard";
+    setProfileType(pt);
+
+    if (pt !== "supervisor") {
+      setLoading(false);
+      return;
+    }
+
     const { data: profs, error } = await supabase
       .from("profiles")
       .select("id, full_name")
@@ -201,6 +217,35 @@ const Supervision = () => {
     list.filter((p) => (f === "all" ? true : f === "active" ? p.is_active : !p.is_active));
 
   const totalShared = supervisees.reduce((s, r) => s + r.patients.length, 0);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (profileType !== "supervisor") {
+    return (
+      <div className="space-y-8 animate-fade-up max-w-3xl">
+        <header>
+          <h1 className="font-display text-4xl font-medium">Supervisão</h1>
+        </header>
+        <div className="rounded-3xl bg-card border border-border shadow-card p-8 sm:p-12 text-center space-y-4">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
+            <Users className="h-8 w-8 text-accent" />
+          </div>
+          <h2 className="text-xl font-bold">Acesso exclusivo para supervisores</h2>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            Esta área é destinada a profissionais com perfil de <strong>Supervisor(a)</strong>. 
+            Para ativar, acesse seu <strong>Perfil</strong> e altere o tipo para "Supervisor(a)", 
+            ou peça ao administrador para ajustar.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-up max-w-3xl">
