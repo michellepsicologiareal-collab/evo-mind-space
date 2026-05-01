@@ -186,9 +186,18 @@ const Patients = () => {
         </Dialog>
       </header>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Buscar paciente..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input className="pl-9" placeholder="Buscar paciente..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+        <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
+          <TabsList>
+            <TabsTrigger value="active">Ativos ({activeCount})</TabsTrigger>
+            <TabsTrigger value="inactive">Inativos ({inactiveCount})</TabsTrigger>
+            <TabsTrigger value="all">Todos ({patients.length})</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {loading ? (
