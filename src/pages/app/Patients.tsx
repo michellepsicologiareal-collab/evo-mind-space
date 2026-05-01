@@ -19,6 +19,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+const PATIENT_CATEGORIES = [
+  { value: "individual", label: "Individual" },
+  { value: "crianca", label: "Criança" },
+  { value: "grupo", label: "Grupo" },
+  { value: "casal", label: "Casal" },
+] as const;
+
 const patientSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(120),
   email: z.string().trim().email("Email inválido").max(255).optional().or(z.literal("")),
@@ -36,6 +43,7 @@ const patientSchema = z.object({
   chief_complaint: z.string().trim().max(2000).optional().or(z.literal("")),
   treatment_plan: z.string().trim().max(4000).optional().or(z.literal("")),
   anamnesis: z.string().trim().max(6000).optional().or(z.literal("")),
+  category: z.enum(["individual", "crianca", "grupo", "casal"]).optional(),
 });
 
 interface Patient {
