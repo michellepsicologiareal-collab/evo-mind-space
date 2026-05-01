@@ -396,13 +396,92 @@ const Agenda = () => {
                     <Input id="time" type="time" required value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} />
                   </div>
                 </div>
+
+                {/* Recurrence options */}
+                <div className="space-y-2">
+                  <Label>Tipo de agendamento</Label>
+                  <Select value={form.recurrence} onValueChange={(v) => setForm({ ...form, recurrence: v as "single" | "recurring" })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single">Sessão única</SelectItem>
+                      <SelectItem value="recurring">Sessões recorrentes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {form.recurrence === "recurring" && (
+                  <div className="rounded-xl bg-muted/50 border border-border p-3 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="rec_count">Quantidade de sessões</Label>
+                        <Input
+                          id="rec_count"
+                          type="number"
+                          min="2"
+                          max="52"
+                          value={form.recurrence_count}
+                          onChange={(e) => setForm({ ...form, recurrence_count: Math.max(2, Number(e.target.value)) })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Intervalo</Label>
+                        <Select value={form.recurrence_interval} onValueChange={(v) => setForm({ ...form, recurrence_interval: v as "weekly" | "biweekly" })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weekly">Semanal</SelectItem>
+                            <SelectItem value="biweekly">Quinzenal</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Forma de pagamento do plano</Label>
+                      <Select value={form.payment_plan} onValueChange={(v) => setForm({ ...form, payment_plan: v as "per_session" | "single_payment" })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="per_session">Pagamento por sessão</SelectItem>
+                          <SelectItem value="single_payment">Pagamento único (todas as sessões)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {(() => {
+                      const patient = patients.find((p) => p.id === form.patient_id);
+                      const unitPrice = form.price ? Number(form.price) : (patient?.session_price ?? 0);
+                      const total = unitPrice * form.recurrence_count;
+                      const dates = Array.from({ length: form.recurrence_count }, (_, i) => {
+                        const d = addDays(parse(`${form.date} ${form.time}`, "yyyy-MM-dd HH:mm", new Date()), i * (form.recurrence_interval === "biweekly" ? 14 : 7));
+                        return format(d, "dd/MM");
+                      });
+                      return (
+                        <div className="rounded-lg bg-card border border-border p-3 text-sm space-y-1.5">
+                          <p className="font-medium text-foreground">
+                            📋 {form.recurrence_count} sessões — Total previsto: <span className="text-accent font-bold">R$ {total.toFixed(2)}</span>
+                          </p>
+                          {form.payment_plan === "per_session" ? (
+                            <p className="text-xs text-muted-foreground">
+                              💰 {form.recurrence_count}x de R$ {unitPrice.toFixed(2)} por sessão
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">
+                              💰 Pagamento único de R$ {total.toFixed(2)}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            📅 Datas: {dates.join(", ")}
+                          </p>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="dur">Duração (min)</Label>
                     <Input id="dur" type="number" min="10" max="480" value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="price">Valor (R$)</Label>
+                    <Label htmlFor="price">Valor por sessão (R$)</Label>
                     <Input id="price" type="number" step="0.01" min="0" placeholder="Auto" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
                   </div>
                 </div>
