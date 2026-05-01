@@ -61,6 +61,7 @@ export type Database = {
           notes: string | null
           phone: string | null
           session_price: number | null
+          shared_with_supervisor: boolean
           updated_at: string
           user_id: string
         }
@@ -74,6 +75,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           session_price?: number | null
+          shared_with_supervisor?: boolean
           updated_at?: string
           user_id: string
         }
@@ -87,6 +89,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           session_price?: number | null
+          shared_with_supervisor?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -218,6 +221,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_supervisor_see_patient: {
+        Args: { _patient_id: string }
+        Returns: boolean
+      }
       get_profile_id_by_email: { Args: { _email: string }; Returns: string }
       is_supervisor_of: { Args: { _supervisee_id: string }; Returns: boolean }
       link_supervisee_by_email: { Args: { _email: string }; Returns: string }
@@ -229,7 +236,7 @@ export type Database = {
     Enums: {
       payment_method: "pix" | "card" | "cash"
       payment_status: "pending" | "paid"
-      profile_type: "standard" | "supervisee"
+      profile_type: "standard" | "supervisee" | "supervisor"
       session_status:
         | "scheduled"
         | "completed"
@@ -365,7 +372,7 @@ export const Constants = {
     Enums: {
       payment_method: ["pix", "card", "cash"],
       payment_status: ["pending", "paid"],
-      profile_type: ["standard", "supervisee"],
+      profile_type: ["standard", "supervisee", "supervisor"],
       session_status: [
         "scheduled",
         "completed",

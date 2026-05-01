@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,6 +30,7 @@ interface Patient {
   notes: string | null;
   is_active: boolean;
   session_price: number | null;
+  shared_with_supervisor: boolean;
 }
 
 const Patients = () => {
@@ -124,6 +126,17 @@ const Patients = () => {
     const { error } = await supabase.from("patients").update({ is_active: !p.is_active }).eq("id", p.id);
     if (error) return toast.error("Erro ao atualizar");
     load();
+  };
+
+  const toggleSharing = async (p: Patient) => {
+    const { error } = await supabase
+      .from("patients")
+      .update({ shared_with_supervisor: !p.shared_with_supervisor } as any)
+      .eq("id", p.id);
+    if (error) return toast.error("Erro ao atualizar compartilhamento");
+    setPatients((prev) =>
+      prev.map((x) => (x.id === p.id ? { ...x, shared_with_supervisor: !x.shared_with_supervisor } : x))
+    );
   };
 
   const activeCount = patients.filter((p) => p.is_active).length;
@@ -252,6 +265,17 @@ const Patients = () => {
                 {p.email && <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> {p.email}</p>}
                 {p.phone && <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> {p.phone}</p>}
                 {p.session_price != null && <p className="text-foreground font-medium">R$ {Number(p.session_price).toFixed(2).replace(".", ",")} <span className="text-muted-foreground font-normal">/ sessão</span></p>}
+              </div>
+              <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Eye className="h-3.5 w-3.5" />
+                  Visível ao supervisor
+                </div>
+                <Switch
+                  checked={p.shared_with_supervisor}
+                  onCheckedChange={() => toggleSharing(p)}
+                  aria-label="Compartilhar com supervisor"
+                />
               </div>
             </li>
           ))}

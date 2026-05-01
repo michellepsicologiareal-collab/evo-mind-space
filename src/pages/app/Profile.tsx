@@ -31,7 +31,7 @@ const profileSchema = z.object({
   specialty: z.string().trim().max(120).optional().or(z.literal("")),
 });
 
-type ProfileType = "standard" | "supervisee";
+type ProfileType = "standard" | "supervisee" | "supervisor";
 
 const Profile = () => {
   const { user } = useAuth();
@@ -420,10 +420,11 @@ const Profile = () => {
             <SelectContent>
               <SelectItem value="standard">Padrão</SelectItem>
               <SelectItem value="supervisee">Membro Parceiro / Supervisionando</SelectItem>
+              <SelectItem value="supervisor">Supervisor</SelectItem>
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            Supervisionandos podem vincular um supervisor que terá acesso somente leitura aos seus pacientes e sessões.
+            <strong>Supervisionandos</strong> podem vincular um supervisor. <strong>Supervisores</strong> gerenciam supervisionandos e veem apenas pacientes compartilhados explicitamente.
           </p>
         </div>
 
