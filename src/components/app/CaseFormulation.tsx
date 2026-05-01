@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { logClinicalAccess } from "@/utils/auditLog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Save, Plus, Check, Trash2, Brain, MessageSquare, ListChecks, BookOpen } from "lucide-react";
+import { Loader2, Save, Plus, Check, Trash2, Brain, MessageSquare, ListChecks, BookOpen, Sparkles, Copy } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -54,6 +55,10 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
   const [evoSummary, setEvoSummary] = useState("");
   const [evoHomework, setEvoHomework] = useState("");
   const [savingEvo, setSavingEvo] = useState(false);
+
+  // AI organize state
+  const [organizing, setOrganizing] = useState(false);
+  const [aiResult, setAiResult] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -152,6 +157,36 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
     setEvoSummary("");
     setEvoHomework("");
     toast.success("Evolução registrada");
+  };
+
+  const organizeNotes = async () => {
+    const notes = evoSummary.trim();
+    if (!notes) {
+      toast.error("Escreva suas anotações antes de organizar.");
+      return;
+    }
+    setOrganizing(true);
+    setAiResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("organize-notes", {
+        body: { notes },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      setAiResult(data.result);
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Erro ao organizar notas. Tente novamente.");
+    } finally {
+      setOrganizing(false);
+    }
+  };
+
+  const copyToEvolution = () => {
+    if (!aiResult) return;
+    setEvoSummary(aiResult);
+    setAiResult(null);
+    toast.success("Texto copiado para a evolução!");
   };
 
   if (loading) {
@@ -292,11 +327,11 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
 
         <div className="space-y-3 rounded-xl border border-border p-4">
           <div className="space-y-1.5">
-            <Label className="font-semibold text-sm">Resumo da Sessão</Label>
+            <Label className="font-semibold text-sm">Anotações da Sessão</Label>
             <Textarea
-              rows={3}
-              className="min-h-[72px] scroll-mt-24"
-              placeholder="O que foi abordado nesta sessão..."
+              rows={5}
+              className="min-h-[100px] scroll-mt-24"
+              placeholder="Escreva suas anotações brutas da sessão aqui... temas abordados, observações, combinados, etc."
               value={evoSummary}
               onChange={(e) => setEvoSummary(e.target.value)}
             />
@@ -311,11 +346,45 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
               onChange={(e) => setEvoHomework(e.target.value)}
             />
           </div>
-          <Button variant="accent" className="min-h-[44px] w-full" onClick={saveEvolution} disabled={savingEvo}>
-            {savingEvo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            Registrar Evolução
-          </Button>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="min-h-[44px] flex-1 border-primary/30 text-primary hover:bg-primary/10"
+              onClick={organizeNotes}
+              disabled={organizing || !evoSummary.trim()}
+            >
+              {organizing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+              ✨ Organizar Notas
+            </Button>
+            <Button variant="accent" className="min-h-[44px] flex-1" onClick={saveEvolution} disabled={savingEvo}>
+              {savingEvo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Registrar Evolução
+            </Button>
+          </div>
         </div>
+
+        {/* AI Result */}
+        {aiResult && (
+          <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" /> Notas Organizadas
+              </h4>
+              <Button
+                size="sm"
+                variant="accent"
+                className="min-h-[36px]"
+                onClick={copyToEvolution}
+              >
+                <Copy className="h-3.5 w-3.5 mr-1" /> Copiar para a Evolução
+              </Button>
+            </div>
+            <div className="prose prose-sm max-w-none text-foreground [&_h2]:text-sm [&_h2]:font-display [&_h2]:font-bold [&_h2]:text-primary [&_h2]:mt-3 [&_h2]:mb-1 [&_p]:text-sm [&_p]:leading-relaxed [&_ul]:text-sm [&_li]:text-sm">
+              <ReactMarkdown>{aiResult}</ReactMarkdown>
+            </div>
+          </div>
+        )}
 
         {evolutions.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground py-6">Nenhuma evolução registrada.</p>
