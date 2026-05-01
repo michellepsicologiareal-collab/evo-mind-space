@@ -2,7 +2,7 @@ import { ArrowLeft, Award, Brain, CheckCircle, Heart, Lock, Mail, MapPin, Messag
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
-const WHATSAPP_NUMBER = "5511999999999"; // placeholder
+const WHATSAPP_NUMBER = "5511947388423";
 
 const SupervisaoCaso = () => {
   const navigate = useNavigate();
