@@ -1,3 +1,4 @@
+import { Instagram, MapPin } from "lucide-react";
 import logoSrc from "@/assets/logo-psireal.png";
 
 export const Footer = () => {
@@ -12,13 +13,32 @@ export const Footer = () => {
             Psi <span className="font-extrabold text-accent">Real</span>
           </span>
         </div>
-        <p className="text-sm text-muted-foreground text-center">
-          © {new Date().getFullYear()} Psi Real · Estrutura para a sua clínica.
-        </p>
-        <nav className="flex gap-6 text-sm text-muted-foreground">
-          <a href="#funcionalidades" className="hover:text-foreground">Funcionalidades</a>
-          <a href="#cta" className="hover:text-foreground">Começar</a>
-        </nav>
+
+        <div className="flex flex-col items-center gap-1 text-sm text-muted-foreground">
+          <p className="flex items-center gap-1.5">
+            <MapPin className="h-3.5 w-3.5" />
+            Presencial em Jarinu · Online
+          </p>
+          <a
+            href="https://instagram.com/psimichelledonega"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 hover:text-accent transition-colors"
+          >
+            <Instagram className="h-3.5 w-3.5" />
+            @psimichelledonega
+          </a>
+        </div>
+
+        <div className="flex flex-col items-center md:items-end gap-2">
+          <nav className="flex gap-6 text-sm text-muted-foreground">
+            <a href="#funcionalidades" className="hover:text-foreground">Funcionalidades</a>
+            <a href="#cta" className="hover:text-foreground">Começar</a>
+          </nav>
+          <p className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} Psi Real · Estrutura para a sua clínica.
+          </p>
+        </div>
       </div>
     </footer>
   );
