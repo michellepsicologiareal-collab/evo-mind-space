@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { NavLink, Outlet, useNavigate, Link, useLocation } from "react-router-dom";
+import logoSrc from "@/assets/logo-psireal.png";
 import {
-  Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut,
+  LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut,
   GraduationCap, ShieldCheck, Crown, Lock, BookOpen, Flower2, FileText,
   FileCheck, Shield, UserCog,
 } from "lucide-react";
@@ -109,9 +110,7 @@ export const AppLayout = () => {
       <aside className="hidden md:flex md:w-64 lg:w-72 fixed inset-y-0 left-0 z-30 bg-card border-r border-border flex-col">
         <div className="p-6 flex items-center justify-between border-b border-border">
           <Link to="/app" className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground">
-              <Brain className="h-4 w-4" />
-            </span>
+            <img src={logoSrc} alt="Psicologia Real" className="h-9 w-9 rounded-full object-cover" />
             <span className="font-display text-xl font-semibold">
               Psi <span className="font-extrabold text-accent">Real</span>
             </span>
@@ -165,9 +164,7 @@ export const AppLayout = () => {
       <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-card/95 backdrop-blur-lg border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <Link to="/app" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground">
-              <Brain className="h-4 w-4" />
-            </span>
+            <img src={logoSrc} alt="Psicologia Real" className="h-8 w-8 rounded-full object-cover" />
             <span className="font-display text-lg font-semibold">Psi <span className="font-extrabold text-accent">Real</span></span>
           </Link>
           <div className="flex items-center gap-1">

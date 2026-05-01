@@ -1,13 +1,12 @@
-import { Brain } from "lucide-react";
+import logoSrc from "@/assets/logo-psireal.png";
 
 export const Navbar = () => {
   return (
     <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-background/70 border-b border-border/50">
       <div className="container flex h-16 items-center justify-between">
         <a href="#top" className="flex items-center gap-2 group">
-          <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground shadow-soft">
-            <Brain className="h-4 w-4" strokeWidth={2.2} />
-            <span className="absolute inset-0 rounded-full animate-pulse-ring" />
+          <span className="relative flex h-9 w-9 items-center justify-center rounded-full overflow-hidden shadow-soft">
+            <img src={logoSrc} alt="Psicologia Real" className="h-9 w-9 object-cover" />
           </span>
           <span className="font-display text-xl font-semibold tracking-tight">
             Psi <span className="font-extrabold text-accent">Real</span>

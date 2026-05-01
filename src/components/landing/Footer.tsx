@@ -1,12 +1,12 @@
-import { Brain } from "lucide-react";
+import logoSrc from "@/assets/logo-psireal.png";
 
 export const Footer = () => {
   return (
     <footer className="border-t border-border bg-background">
       <div className="container py-12 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground">
-            <Brain className="h-4 w-4" />
+          <span className="flex h-8 w-8 items-center justify-center rounded-full overflow-hidden">
+            <img src={logoSrc} alt="Psicologia Real" className="h-8 w-8 object-cover" />
           </span>
           <span className="font-display text-lg font-semibold">
             Psi <span className="font-extrabold text-accent">Real</span>
