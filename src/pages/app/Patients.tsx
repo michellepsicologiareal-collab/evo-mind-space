@@ -280,7 +280,7 @@ const Patients = () => {
       </div>
 
       {loading ? (
-        <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+        <CardSkeleton count={4} />
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card p-14 text-center">
           <User className="h-12 w-12 mx-auto text-muted-foreground/40" />
