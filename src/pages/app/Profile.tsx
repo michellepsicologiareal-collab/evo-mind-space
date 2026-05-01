@@ -124,31 +124,20 @@ const Profile = () => {
     }
 
     setLinkingSupervisor(true);
-    // Find supervisor by email via auth metadata isn't possible from client.
-    // Instead we look up a profile whose linked auth user's email matches.
-    // Since profiles don't store email, we use an RPC-style approach:
-    // we look for profiles where the id matches an auth.users row with that email.
-    // That requires an edge function OR we expose an email column. Simpler:
-    // use a security definer RPC. For now: search by full_name fallback isn't safe.
-    // We'll instead look up via the auth-protected RPC endpoint.
-    // Pragmatic: fetch profiles list filtered by an exact email match isn't allowed.
-    // So we ask the supervisor to share their user ID OR we use a lookup function.
-    // Implement by matching against the profile's full_name as fallback is bad.
-    //
-    // Real approach: create a security definer function get_profile_id_by_email(email).
-    // That isn't created yet in this iteration — provide guidance to the user instead.
-    const { data: lookup, error: lookupErr } = await supabase.rpc(
+    // Look up the supervisor's profile id by their auth email (security definer RPC).
+    const { data: lookup, error: lookupErr } = await (supabase.rpc as any)(
       "get_profile_id_by_email",
       { _email: email },
     );
+    const supervisorUuid = lookup as string | null;
 
-    if (lookupErr || !lookup) {
+    if (lookupErr || !supervisorUuid) {
       setLinkingSupervisor(false);
       toast.error("Supervisor não encontrado. Confirme o email cadastrado.");
       return;
     }
 
-    if (lookup === user.id) {
+    if (supervisorUuid === user.id) {
       setLinkingSupervisor(false);
       toast.error("Você não pode ser seu próprio supervisor.");
       return;
@@ -156,7 +145,7 @@ const Profile = () => {
 
     const { error } = await supabase
       .from("profiles")
-      .update({ supervisor_id: lookup })
+      .update({ supervisor_id: supervisorUuid })
       .eq("id", user.id);
     setLinkingSupervisor(false);
 
