@@ -67,6 +67,7 @@ interface ProgressEntry {
 const Supervision = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [profileType, setProfileType] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
