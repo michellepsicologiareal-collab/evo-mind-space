@@ -18,6 +18,7 @@ const navItems = [
   { to: "/app/financeiro", label: "Financeiro", icon: Wallet, premium: true },
   { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap, premium: true },
   { to: "/app/supervisao", label: "Supervisão", icon: ShieldCheck, premium: true },
+  { to: "/app/biblioteca", label: "Biblioteca", icon: BookOpen },
   { to: "/app/perfil", label: "Perfil", icon: Settings },
 ];
 
