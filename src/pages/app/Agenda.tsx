@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled";
+type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
 
 interface Session {
   id: string;
