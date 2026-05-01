@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon, Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap } from "lucide-react";
-import { addDays, addWeeks, format, isSameDay, startOfWeek, parse } from "date-fns";
+import { addDays, addWeeks, format, isSameDay, startOfWeek, startOfMonth, endOfMonth, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -97,6 +97,7 @@ const Agenda = () => {
 
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [patientMonthCount, setPatientMonthCount] = useState<{ count: number; dates: string[] } | null>(null);
   const [form, setForm] = useState({
     session_type: "clinical" as SessionType,
     patient_id: "",
@@ -145,7 +146,33 @@ const Agenda = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, weekStart]);
 
+  // Fetch patient session count for the selected month
+  useEffect(() => {
+    if (!user || !form.patient_id || form.session_type !== "clinical" || !form.date) {
+      setPatientMonthCount(null);
+      return;
+    }
+    const selectedDate = new Date(form.date + "T12:00:00");
+    const mStart = startOfMonth(selectedDate);
+    const mEnd = endOfMonth(selectedDate);
+    supabase
+      .from("sessions")
+      .select("scheduled_at")
+      .eq("user_id", user.id)
+      .eq("patient_id", form.patient_id)
+      .eq("session_type", "clinical")
+      .gte("scheduled_at", mStart.toISOString())
+      .lte("scheduled_at", mEnd.toISOString())
+      .not("status", "eq", "cancelled")
+      .order("scheduled_at")
+      .then(({ data }) => {
+        const dates = (data ?? []).map((d: any) => format(new Date(d.scheduled_at), "dd/MM"));
+        setPatientMonthCount({ count: dates.length, dates });
+      });
+  }, [user, form.patient_id, form.date, form.session_type]);
+
   const openNew = (date?: Date) => {
+    setPatientMonthCount(null);
     setForm({
       session_type: "clinical",
       patient_id: "",
@@ -295,6 +322,23 @@ const Agenda = () => {
                         {patients.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    {patientMonthCount && (
+                      <div className="rounded-xl bg-muted/50 border border-border p-3 text-sm space-y-1">
+                        <p className="font-medium text-foreground">
+                          {patientMonthCount.count === 0
+                            ? "Nenhuma sessão neste mês — sessão única"
+                            : `${patientMonthCount.count} ${patientMonthCount.count === 1 ? "sessão" : "sessões"} neste mês`}
+                          {patientMonthCount.count > 0 && (
+                            <span className="text-muted-foreground font-normal"> (esta será a {patientMonthCount.count + 1}ª)</span>
+                          )}
+                        </p>
+                        {patientMonthCount.dates.length > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            Dias: {patientMonthCount.dates.join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
                 {form.session_type === "supervision" && (
