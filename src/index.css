@@ -56,14 +56,15 @@
     --radius: 1rem;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(108 27% 28%) 0%, hsl(108 22% 38%) 60%, hsl(19 51% 53%) 130%);
-    --gradient-soft: linear-gradient(180deg, hsl(37 42% 94%) 0%, hsl(37 30% 90%) 100%);
-    --gradient-card: linear-gradient(160deg, hsl(37 40% 98%) 0%, hsl(37 25% 95%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(108 27% 28%) 0%, hsl(108 22% 38%) 60%, hsl(19 58% 50%) 130%);
+    --gradient-soft: linear-gradient(180deg, hsl(33 30% 88%) 0%, hsl(33 22% 85%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(37 50% 99%) 0%, hsl(37 40% 96%) 100%);
 
-    /* Shadows */
+    /* Shadows — card elevation */
     --shadow-elegant: 0 30px 60px -30px hsl(108 27% 28% / 0.2);
-    --shadow-soft: 0 8px 24px -12px hsl(108 27% 28% / 0.1);
+    --shadow-soft: 0 4px 16px -4px hsl(33 20% 40% / 0.10), 0 1px 3px 0 hsl(33 20% 40% / 0.06);
     --shadow-glow: 0 0 80px -20px hsl(108 22% 38% / 0.35);
+    --shadow-card: 0 2px 12px -3px hsl(33 20% 30% / 0.08), 0 1px 2px 0 hsl(33 20% 30% / 0.04);
 
     /* Motion */
     --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
