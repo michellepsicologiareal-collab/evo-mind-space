@@ -12,7 +12,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Playfair Display", "ui-serif", "Georgia", "serif"],
+        display: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
