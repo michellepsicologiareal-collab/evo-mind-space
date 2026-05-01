@@ -4,6 +4,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope } from "lucide-react";
 import { TccRecords } from "@/components/app/TccRecords";
+import { CardSkeleton } from "@/components/app/Skeletons";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -208,11 +209,11 @@ const Patients = () => {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button variant="accent" onClick={openNew}>
+            <Button variant="accent" className="min-h-[44px]" onClick={openNew}>
               <Plus className="h-4 w-4" /> Novo paciente
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto [&_input]:scroll-mt-24 [&_textarea]:scroll-mt-24">
             <DialogHeader>
               <DialogTitle className="font-display text-2xl">{editing ? "Editar paciente" : "Novo paciente"}</DialogTitle>
               <DialogDescription>Cadastre as informações do paciente.</DialogDescription>
@@ -252,9 +253,9 @@ const Patients = () => {
                 <Label htmlFor="notes">Observações</Label>
                 <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button type="submit" variant="accent" disabled={saving}>
+              <DialogFooter className="gap-2">
+                <Button type="button" variant="outline" className="min-h-[44px]" onClick={() => setOpen(false)}>Cancelar</Button>
+                <Button type="submit" variant="accent" className="min-h-[44px]" disabled={saving}>
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                   {editing ? "Salvar" : "Cadastrar"}
                 </Button>
@@ -279,7 +280,7 @@ const Patients = () => {
       </div>
 
       {loading ? (
-        <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+        <CardSkeleton count={4} />
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card p-14 text-center">
           <User className="h-12 w-12 mx-auto text-muted-foreground/40" />

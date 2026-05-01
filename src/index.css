@@ -148,6 +148,16 @@
   .text-balance { text-wrap: balance; }
   .text-pretty { text-wrap: pretty; }
 
+  /* Safe area for bottom nav on notched devices */
+  .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
+
+  /* Mobile form scroll: prevent keyboard from covering focused field */
+  @media (max-width: 768px) {
+    input:focus, textarea:focus {
+      scroll-margin-bottom: 120px;
+    }
+  }
+
   @keyframes float-slow {
     0%, 100% { transform: translateY(0) rotate(0deg); }
     50% { transform: translateY(-14px) rotate(1.5deg); }

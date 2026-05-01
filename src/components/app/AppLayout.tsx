@@ -126,7 +126,7 @@ export const AppLayout = () => {
               onClick={(e) => handleNavClick(e, item)}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-col items-center gap-0.5 px-2 py-2 text-[10px] font-medium transition-colors rounded-lg",
+                  "flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] px-2 py-2 text-[10px] font-medium transition-colors rounded-lg",
                   isActive ? "text-accent" : "text-muted-foreground"
                 )
               }

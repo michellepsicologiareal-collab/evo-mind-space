@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Loader2, Download, Eye, Lock, FileText, BookOpen, Scale } from "lucide-react";
+import { Download, Eye, Lock, FileText, BookOpen, Scale } from "lucide-react";
+import { ListSkeleton } from "@/components/app/Skeletons";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -73,8 +74,12 @@ const Library = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-8 animate-fade-up">
+        <header>
+          <div className="h-10 w-56 rounded bg-muted animate-pulse" />
+          <div className="h-4 w-80 rounded bg-muted animate-pulse mt-3" />
+        </header>
+        <ListSkeleton count={6} />
       </div>
     );
   }
@@ -148,8 +153,8 @@ const Library = () => {
 
                       <Button
                         variant={m.is_premium && !isPremium ? "outline" : "accent"}
-                        size="sm"
-                        className="w-full mt-auto"
+                        size="default"
+                        className="w-full mt-auto min-h-[44px]"
                         onClick={() => handleAccess(m)}
                       >
                         {m.is_premium && !isPremium ? (
