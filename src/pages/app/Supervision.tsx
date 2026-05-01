@@ -120,6 +120,21 @@ const Supervision = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
+
+    // Check profile type first
+    const { data: myProfile } = await supabase
+      .from("profiles")
+      .select("profile_type")
+      .eq("id", user.id)
+      .maybeSingle();
+    const pt = myProfile?.profile_type ?? "standard";
+    setProfileType(pt);
+
+    if (pt !== "supervisor") {
+      setLoading(false);
+      return;
+    }
+
     const { data: profs, error } = await supabase
       .from("profiles")
       .select("id, full_name")
