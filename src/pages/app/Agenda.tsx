@@ -122,7 +122,7 @@ const Agenda = () => {
     const [sRes, pRes] = await Promise.all([
       supabase
         .from("sessions")
-        .select("*, patients(full_name)")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .gte("scheduled_at", weekStart.toISOString())
         .lt("scheduled_at", weekEnd.toISOString())
@@ -130,7 +130,12 @@ const Agenda = () => {
       supabase.from("patients").select("id, full_name, session_price").eq("user_id", user.id).eq("is_active", true).order("full_name"),
     ]);
     if (sRes.error) toast.error("Erro ao carregar sessões");
-    setSessions((sRes.data as Session[]) ?? []);
+    const mapped = (sRes.data ?? []).map((s: any) => ({
+      ...s,
+      patient_name: s.patient?.full_name ?? null,
+      discussed_patient_name: s.discussed_patient?.full_name ?? null,
+    }));
+    setSessions(mapped as Session[]);
     setPatients((pRes.data as Patient[]) ?? []);
     setLoading(false);
   };
