@@ -118,6 +118,23 @@ const ResetPassword = () => {
                 Você será redirecionado para o login em instantes…
               </p>
             </div>
+          ) : linkExpired ? (
+            <div className="text-center space-y-4">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangle className="h-8 w-8 text-destructive" />
+              </div>
+              <h1 className="font-display text-2xl font-semibold">Link expirado ou inválido</h1>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                O link de redefinição de senha expirou ou já foi utilizado.<br />
+                Por favor, volte ao login e solicite um novo link clicando em{" "}
+                <strong>"Esqueci minha senha"</strong>.
+              </p>
+              <Link to="/auth">
+                <Button variant="accent" className="mt-2 gap-2">
+                  <ArrowLeft className="h-4 w-4" /> Solicitar novo link
+                </Button>
+              </Link>
+            </div>
           ) : !isRecovery ? (
             <div className="text-center space-y-4">
               <h1 className="font-display text-2xl font-semibold">Redefinir senha</h1>
