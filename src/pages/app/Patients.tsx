@@ -372,7 +372,17 @@ const Patients = () => {
                   {(() => {
                     const url = buildWhatsAppUrl(p);
                     return url ? (
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors">
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
+                        onClick={() => {
+                          if (!pixKey) {
+                            toast.info("Dica: cadastre sua chave Pix no Perfil para incluí-la automaticamente na mensagem de cobrança.");
+                          }
+                        }}
+                      >
                         <MessageCircle className="h-3.5 w-3.5" /> Cobrar via WhatsApp
                       </a>
                     ) : null;
