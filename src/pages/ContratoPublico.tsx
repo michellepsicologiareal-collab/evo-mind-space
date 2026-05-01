@@ -104,6 +104,7 @@ export default function ContratoPublico() {
     // Build human-readable clause responses
     const readableResponses: Record<string, string> = {};
     template.clauses.forEach((c) => {
+      if (c.type === "text") return;
       const val = responses[c.key];
       readableResponses[c.title] = c.type === "agree" ? "Aceito" : String(val);
     });
