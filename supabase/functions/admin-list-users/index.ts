@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
     if (error) throw error;
 
     // Get profiles for enrichment
-    const { data: profiles } = await adminClient.from("profiles").select("id, full_name, crp, profile_type, clinic_name, subscription_status, created_at");
+    const { data: profiles } = await adminClient.from("profiles").select("id, full_name, crp, profile_type, clinic_name, subscription_status, is_approved, created_at");
 
     const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
 
@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
         profile_type: profile?.profile_type ?? null,
         clinic_name: profile?.clinic_name ?? null,
         subscription_status: profile?.subscription_status ?? "free",
+        is_approved: profile?.is_approved ?? false,
       };
     });
 

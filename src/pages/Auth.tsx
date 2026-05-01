@@ -89,7 +89,7 @@ const Auth = () => {
       toast.error(error.message.includes("already") ? "Este email já está cadastrado" : error.message);
       return;
     }
-    toast.success("Conta criada! Você já pode entrar.");
+    toast.success("Conta criada! Aguarde a aprovação da administradora para acessar o sistema.");
   };
 
   return (
