@@ -765,13 +765,13 @@ const Finance = () => {
           </div>
 
           <TabsContent value="all">
-            <SessionsTable rows={fortnightBillable} loading={loading} onChange={updatePayment} onEdit={setEditing} />
+            <SessionsTable rows={fortnightBillable} loading={loading} onChange={updatePayment} onEdit={setEditing} allRows={fortnightBillable} />
           </TabsContent>
           <TabsContent value="pending">
-            <SessionsTable rows={fortnightBillable.filter((r) => r.payment_status === "pending")} loading={loading} onChange={updatePayment} onEdit={setEditing} />
+            <SessionsTable rows={fortnightBillable.filter((r) => r.payment_status === "pending")} loading={loading} onChange={updatePayment} onEdit={setEditing} allRows={fortnightBillable} />
           </TabsContent>
           <TabsContent value="paid">
-            <SessionsTable rows={fortnightBillable.filter((r) => r.payment_status === "paid")} loading={loading} onChange={updatePayment} onEdit={setEditing} />
+            <SessionsTable rows={fortnightBillable.filter((r) => r.payment_status === "paid")} loading={loading} onChange={updatePayment} onEdit={setEditing} allRows={fortnightBillable} />
           </TabsContent>
         </Tabs>
       </section>
