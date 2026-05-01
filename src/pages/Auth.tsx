@@ -36,6 +36,7 @@ const Auth = () => {
   const [suName, setSuName] = useState("");
   const [suEmail, setSuEmail] = useState("");
   const [suPassword, setSuPassword] = useState("");
+  const [suProfileType, setSuProfileType] = useState<"standard" | "supervisee">("standard");
 
   useEffect(() => {
     if (user) navigate("/app", { replace: true });
