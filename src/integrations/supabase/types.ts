@@ -111,6 +111,7 @@ export type Database = {
           reminder_group_sort: string
           reminder_window_hours: number
           specialty: string | null
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
           supervisor_id: string | null
           updated_at: string
         }
@@ -129,6 +130,7 @@ export type Database = {
           reminder_group_sort?: string
           reminder_window_hours?: number
           specialty?: string | null
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
           supervisor_id?: string | null
           updated_at?: string
         }
@@ -147,6 +149,7 @@ export type Database = {
           reminder_group_sort?: string
           reminder_window_hours?: number
           specialty?: string | null
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
           supervisor_id?: string | null
           updated_at?: string
         }
@@ -375,6 +378,7 @@ export type Database = {
         | "no_show"
         | "rescheduled"
         | "cancelled"
+      subscription_status: "free" | "pending" | "active"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -513,6 +517,7 @@ export const Constants = {
         "rescheduled",
         "cancelled",
       ],
+      subscription_status: ["free", "pending", "active"],
     },
   },
 } as const
