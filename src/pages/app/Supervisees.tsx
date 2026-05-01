@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   Loader2,
   UserPlus,
@@ -11,6 +13,9 @@ import {
   ChevronRight,
   Phone,
   StickyNote,
+  CalendarDays,
+  Smile,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
