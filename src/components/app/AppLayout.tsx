@@ -134,6 +134,13 @@ export const AppLayout = () => {
                   <div className="h-px flex-1 bg-[hsl(var(--admin-accent))]/20" />
                 </div>
               </div>
+              <div className="mx-4 mb-2 flex items-center gap-2 rounded-lg bg-[hsl(var(--admin-accent))]/10 px-3 py-2 border border-[hsl(var(--admin-accent))]/20">
+                <ShieldCheck className="h-4 w-4 text-[hsl(var(--admin-accent))]" />
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-semibold text-[hsl(var(--admin-accent))]">Admin Master</span>
+                  <span className="text-[10px] text-[hsl(var(--admin-accent))]/60">Permissão verificada ✓</span>
+                </div>
+              </div>
               {adminNavItems.map((item) => renderNavLink(item, true))}
             </>
           )}
