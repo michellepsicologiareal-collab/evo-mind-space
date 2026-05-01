@@ -45,6 +45,7 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError(false);
     const parsed = signInSchema.safeParse({ email: siEmail, password: siPassword });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
@@ -54,11 +55,17 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
     setLoading(false);
     if (error) {
+      setLoginError(true);
       toast.error(error.message === "Invalid login credentials" ? "Email ou senha incorretos" : error.message);
       return;
     }
     toast.success("Bem-vindo de volta!");
     navigate("/app", { replace: true });
+  };
+
+  const handleRetry = () => {
+    setLoginError(false);
+    setSiPassword("");
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
