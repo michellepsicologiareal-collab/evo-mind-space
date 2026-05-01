@@ -121,10 +121,17 @@ const Patients = () => {
     load();
   };
 
-  const filtered = patients.filter((p) =>
-    p.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.email ?? "").toLowerCase().includes(search.toLowerCase())
-  );
+  const activeCount = patients.filter((p) => p.is_active).length;
+  const inactiveCount = patients.length - activeCount;
+
+  const filtered = patients
+    .filter((p) =>
+      statusFilter === "all" ? true : statusFilter === "active" ? p.is_active : !p.is_active
+    )
+    .filter((p) =>
+      p.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      (p.email ?? "").toLowerCase().includes(search.toLowerCase())
+    );
 
   return (
     <div className="space-y-8 animate-fade-up">
