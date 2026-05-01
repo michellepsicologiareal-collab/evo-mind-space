@@ -240,6 +240,7 @@ export type Database = {
       }
       sessions: {
         Row: {
+          confirmation_token: string | null
           created_at: string
           duration_minutes: number
           id: string
@@ -257,6 +258,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          confirmation_token?: string | null
           created_at?: string
           duration_minutes?: number
           id?: string
@@ -274,6 +276,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          confirmation_token?: string | null
           created_at?: string
           duration_minutes?: number
           id?: string
@@ -398,6 +401,16 @@ export type Database = {
         Returns: boolean
       }
       get_profile_id_by_email: { Args: { _email: string }; Returns: string }
+      get_session_by_token: {
+        Args: { _token: string }
+        Returns: {
+          duration_minutes: number
+          id: string
+          patient_name: string
+          scheduled_at: string
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -407,6 +420,10 @@ export type Database = {
       }
       is_supervisor_of: { Args: { _supervisee_id: string }; Returns: boolean }
       link_supervisee_by_email: { Args: { _email: string }; Returns: string }
+      respond_to_confirmation: {
+        Args: { _confirm: boolean; _token: string }
+        Returns: string
+      }
       unlink_supervisee: {
         Args: { _supervisee_id: string }
         Returns: undefined
@@ -428,6 +445,7 @@ export type Database = {
         | "no_show"
         | "rescheduled"
         | "cancelled"
+        | "confirmed"
       subscription_status: "free" | "pending" | "active"
     }
     CompositeTypes: {
@@ -572,6 +590,7 @@ export const Constants = {
         "no_show",
         "rescheduled",
         "cancelled",
+        "confirmed",
       ],
       subscription_status: ["free", "pending", "active"],
     },

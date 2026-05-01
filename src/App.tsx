@@ -19,6 +19,7 @@ import Supervision from "./pages/app/Supervision.tsx";
 import SupervisaoCaso from "./pages/app/SupervisaoCaso.tsx";
 import Library from "./pages/app/Library.tsx";
 import Admin from "./pages/Admin.tsx";
+import ConfirmarSessao from "./pages/ConfirmarSessao.tsx";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/confirmar-sessao/:token" element={<ConfirmarSessao />} />
             <Route
               path="/app"
               element={

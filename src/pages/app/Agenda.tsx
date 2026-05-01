@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon, Check, X, RotateCcw, Trash2 } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon, Check, X, RotateCcw, Trash2, Link2, CheckCircle2 } from "lucide-react";
 import { addDays, addWeeks, format, isSameDay, startOfWeek, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled";
+type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
 
 interface Session {
   id: string;
@@ -25,6 +25,7 @@ interface Session {
   status: Status;
   price: number | null;
   notes: string | null;
+  confirmation_token: string | null;
   patients?: { full_name: string } | null;
 }
 
@@ -60,6 +61,7 @@ const sessionSchema = z
 
 const statusLabel: Record<Status, string> = {
   scheduled: "Agendada",
+  confirmed: "Confirmada",
   completed: "Realizada",
   no_show: "Falta",
   rescheduled: "Remarcada",
@@ -68,6 +70,7 @@ const statusLabel: Record<Status, string> = {
 
 const statusClass: Record<Status, string> = {
   scheduled: "bg-secondary text-secondary-foreground",
+  confirmed: "bg-emerald-100 text-emerald-700",
   completed: "bg-lilac text-lilac-foreground",
   no_show: "bg-destructive/15 text-destructive",
   rescheduled: "bg-sand text-sand-foreground",
@@ -206,6 +209,23 @@ const Agenda = () => {
     const { error } = await supabase.from("sessions").delete().eq("id", id);
     if (error) return toast.error("Erro ao excluir");
     toast.success("Sessão excluída");
+    load();
+  };
+
+  const copyConfirmationLink = async (s: Session) => {
+    let token = s.confirmation_token;
+    if (!token) {
+      // Generate a token
+      token = crypto.randomUUID();
+      const { error } = await supabase
+        .from("sessions")
+        .update({ confirmation_token: token })
+        .eq("id", s.id);
+      if (error) { toast.error("Erro ao gerar link"); return; }
+    }
+    const url = `${window.location.origin}/confirmar-sessao/${token}`;
+    await navigator.clipboard.writeText(url);
+    toast.success("Link de confirmação copiado!");
     load();
   };
 
@@ -387,14 +407,19 @@ const Agenda = () => {
                     </button>
                   ) : (
                     items.map((s) => (
-                      <div key={s.id} className="rounded-xl bg-background border border-border p-3 group">
+                      <div key={s.id} className={cn("rounded-xl border p-3 group transition-colors", s.status === "confirmed" ? "bg-emerald-50 border-emerald-200" : "bg-background border-border")}>
                         <div className="flex items-start justify-between gap-1">
-                          <p className="font-display text-sm text-primary">{format(new Date(s.scheduled_at), "HH:mm")}</p>
+                          <div className="flex items-center gap-1.5">
+                            {s.status === "confirmed" && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />}
+                            <p className="font-display text-sm text-primary">{format(new Date(s.scheduled_at), "HH:mm")}</p>
+                          </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">⋯</Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar link de confirmação</DropdownMenuItem>
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => updateStatus(s.id, "completed")}><Check className="h-4 w-4" /> Realizada</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => updateStatus(s.id, "no_show")}><X className="h-4 w-4" /> Falta</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => updateStatus(s.id, "rescheduled")}><RotateCcw className="h-4 w-4" /> Remarcada</DropdownMenuItem>
