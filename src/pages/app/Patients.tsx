@@ -213,7 +213,7 @@ const Patients = () => {
               <Plus className="h-4 w-4" /> Novo paciente
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto [&_input]:scroll-mt-24 [&_textarea]:scroll-mt-24">
             <DialogHeader>
               <DialogTitle className="font-display text-2xl">{editing ? "Editar paciente" : "Novo paciente"}</DialogTitle>
               <DialogDescription>Cadastre as informações do paciente.</DialogDescription>
