@@ -147,6 +147,16 @@ const Patients = () => {
   const activeCount = patients.filter((p) => p.is_active).length;
   const inactiveCount = patients.length - activeCount;
 
+  const buildWhatsAppUrl = (p: Patient) => {
+    const phone = (p.phone ?? "").replace(/\D/g, "");
+    if (!phone) return null;
+    const valor = p.session_price != null ? `R$ ${Number(p.session_price).toFixed(2).replace(".", ",")}` : "";
+    let msg = `Olá, ${p.full_name.split(" ")[0]}! 😊\n\nSegue o valor da sua sessão: ${valor}.\n`;
+    if (pixKey) msg += `\nChave Pix para pagamento:\n${pixKey}\n`;
+    msg += `\nQualquer dúvida, estou à disposição.\n${profName ? `— ${profName}` : ""}`;
+    return `https://wa.me/${phone.startsWith("55") ? phone : "55" + phone}?text=${encodeURIComponent(msg)}`;
+  };
+
   const filtered = patients
     .filter((p) =>
       statusFilter === "all" ? true : statusFilter === "active" ? p.is_active : !p.is_active
