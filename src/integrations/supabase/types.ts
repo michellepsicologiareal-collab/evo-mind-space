@@ -353,17 +353,20 @@ export type Database = {
         Row: {
           confirmation_token: string | null
           created_at: string
+          discussed_patient_id: string | null
           duration_minutes: number
           id: string
+          is_expense: boolean
           notes: string | null
           paid_at: string | null
-          patient_id: string
+          patient_id: string | null
           payment_method: Database["public"]["Enums"]["payment_method"] | null
           payment_reference: string | null
           payment_status: Database["public"]["Enums"]["payment_status"]
           price: number | null
           scheduled_at: string
           service_id: string | null
+          session_type: Database["public"]["Enums"]["session_type"]
           status: Database["public"]["Enums"]["session_status"]
           updated_at: string
           user_id: string
@@ -371,17 +374,20 @@ export type Database = {
         Insert: {
           confirmation_token?: string | null
           created_at?: string
+          discussed_patient_id?: string | null
           duration_minutes?: number
           id?: string
+          is_expense?: boolean
           notes?: string | null
           paid_at?: string | null
-          patient_id: string
+          patient_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_reference?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           price?: number | null
           scheduled_at: string
           service_id?: string | null
+          session_type?: Database["public"]["Enums"]["session_type"]
           status?: Database["public"]["Enums"]["session_status"]
           updated_at?: string
           user_id: string
@@ -389,22 +395,32 @@ export type Database = {
         Update: {
           confirmation_token?: string | null
           created_at?: string
+          discussed_patient_id?: string | null
           duration_minutes?: number
           id?: string
+          is_expense?: boolean
           notes?: string | null
           paid_at?: string | null
-          patient_id?: string
+          patient_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_reference?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           price?: number | null
           scheduled_at?: string
           service_id?: string | null
+          session_type?: Database["public"]["Enums"]["session_type"]
           status?: Database["public"]["Enums"]["session_status"]
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sessions_discussed_patient_id_fkey"
+            columns: ["discussed_patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sessions_patient_id_fkey"
             columns: ["patient_id"]
@@ -558,6 +574,7 @@ export type Database = {
         | "rescheduled"
         | "cancelled"
         | "confirmed"
+      session_type: "clinical" | "supervision"
       subscription_status: "free" | "pending" | "active"
     }
     CompositeTypes: {
@@ -705,6 +722,7 @@ export const Constants = {
         "cancelled",
         "confirmed",
       ],
+      session_type: ["clinical", "supervision"],
       subscription_status: ["free", "pending", "active"],
     },
   },
