@@ -22,7 +22,7 @@ const freePlan = {
 
 const proPlan = {
   name: "Psi Real Pro",
-  price: "R$ 49,90",
+  price: "R$ 39,90",
   period: "/mês",
   description: "Tudo que você precisa para escalar",
   features: [
