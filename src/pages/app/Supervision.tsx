@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { logSupervisionAccess } from "@/utils/auditLog";
+import michellePhoto from "@/assets/michelle-photo.png";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -232,14 +233,29 @@ const Supervision = () => {
         <header>
           <h1 className="font-display text-4xl font-medium">Supervisão</h1>
         </header>
-        <div className="rounded-3xl bg-card border border-border shadow-card p-8 sm:p-12 text-center space-y-5">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/10">
-            <Users className="h-8 w-8 text-accent" />
-          </div>
-          <h2 className="text-xl font-bold">Acesso exclusivo para supervisores</h2>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Esta área é destinada a profissionais com perfil de <strong>Supervisor(a)</strong>. 
-            Solicite a liberação ao administrador clicando no botão abaixo.
+        <div className="rounded-3xl bg-card border border-border shadow-card p-8 sm:p-12 text-center space-y-6">
+          <img
+            src={michellePhoto}
+            alt="Michelle Donegá — Supervisora"
+            className="mx-auto h-28 w-28 rounded-full object-cover ring-4 ring-accent/20 shadow-lg"
+            width={112}
+            height={112}
+          />
+          <h2 className="text-xl font-bold">Supervisão com Michelle Donegá</h2>
+          <p className="text-muted-foreground max-w-md mx-auto text-sm leading-relaxed">
+            Psicóloga clínica especialista em TCC. Atendimento <strong>presencial em Jarinu</strong> e <strong>online</strong>.<br />
+            <a
+              href="https://instagram.com/psimichelledonega"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent hover:underline font-medium"
+            >
+              @psimichelledonega
+            </a>
+          </p>
+          <p className="text-muted-foreground max-w-md mx-auto text-sm">
+            Esta área é destinada a profissionais com perfil de <strong>Supervisor(a)</strong>.
+            Solicite a liberação clicando no botão abaixo.
           </p>
           <Button
             variant="accent"
