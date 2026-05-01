@@ -21,12 +21,20 @@ const ResetPassword = () => {
     const markRecoveryFromUrl = () => {
       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
       const queryParams = new URLSearchParams(window.location.search);
+
+      // Check for error in URL (expired/invalid link)
+      const errorDescription = hashParams.get("error_description") || queryParams.get("error_description");
+      const errorCode = hashParams.get("error") || queryParams.get("error");
+      if (errorDescription || errorCode) {
+        setLinkExpired(true);
+        return;
+      }
+
       if (hashParams.get("type") === "recovery" || queryParams.get("type") === "recovery" || hashParams.has("access_token")) {
         setIsRecovery(true);
       }
     };
 
-    // Listen for PASSWORD_RECOVERY event from the auth link
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
@@ -34,9 +42,26 @@ const ResetPassword = () => {
     });
 
     markRecoveryFromUrl();
-    supabase.auth.getSession().then(() => markRecoveryFromUrl());
+    supabase.auth.getSession().then(({ error }) => {
+      if (error) {
+        setLinkExpired(true);
+      } else {
+        markRecoveryFromUrl();
+      }
+    });
 
-    return () => subscription.unsubscribe();
+    // If after 5 seconds we still don't have recovery, mark as expired
+    const timeout = setTimeout(() => {
+      setLinkExpired((prev) => {
+        // Only expire if not already in recovery mode or done
+        return prev;
+      });
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const handleReset = async (e: React.FormEvent) => {
