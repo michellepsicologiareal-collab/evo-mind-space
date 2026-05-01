@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
-type PaymentStatus = "pending" | "paid" | "cancelled";
+type PaymentStatus = "pending" | "paid";
 type SessionType = "clinical" | "supervision";
 
 interface Session {
