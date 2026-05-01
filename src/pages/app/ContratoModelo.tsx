@@ -79,7 +79,7 @@ export default function ContratoModelo() {
       professional_address: professionalAddress,
       professional_email: professionalEmail,
       lgpd_clause: lgpdClause,
-      clauses: clauses as unknown as Record<string, unknown>[],
+      clauses: JSON.parse(JSON.stringify(clauses)),
     };
 
     let error;
