@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Upload, User, Users, ShieldCheck, X, Building2, Trash2, FileText } from "lucide-react";
+import { Loader2, Upload, User, Users, ShieldCheck, X, Building2, Trash2, FileText, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
