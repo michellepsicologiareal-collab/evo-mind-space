@@ -223,11 +223,16 @@ const Patients = () => {
       {loading ? (
         <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
-          <User className="h-10 w-10 mx-auto text-muted-foreground/50" />
-          <p className="mt-3 text-muted-foreground">{patients.length === 0 ? "Nenhum paciente ainda." : "Nenhum paciente encontrado."}</p>
+        <div className="rounded-2xl border border-dashed border-border bg-card p-14 text-center">
+          <User className="h-12 w-12 mx-auto text-muted-foreground/40" />
+          <p className="mt-4 font-display text-lg font-medium text-foreground/70">
+            {patients.length === 0 ? "Pronto para começar?" : "Nenhum resultado encontrado."}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {patients.length === 0 ? "Cadastre seu primeiro paciente e organize seu consultório." : "Tente outra busca ou limpe o filtro."}
+          </p>
           {patients.length === 0 && (
-            <Button variant="accent" className="mt-4" onClick={openNew}>
+            <Button variant="accent" className="mt-5" onClick={openNew}>
               <Plus className="h-4 w-4" /> Cadastrar primeiro paciente
             </Button>
           )}

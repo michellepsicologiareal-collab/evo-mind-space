@@ -805,10 +805,10 @@ const SessionsTable = ({
   }
   if (rows.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <Wallet className="h-10 w-10 mx-auto mb-3 opacity-40" />
-        <p>Nenhuma sessão neste período.</p>
-        <p className="text-xs mt-2">Apenas sessões marcadas como realizadas entram no financeiro.</p>
+      <div className="rounded-2xl border border-dashed border-border bg-card p-14 text-center">
+        <Wallet className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
+        <p className="font-display text-lg font-medium text-foreground/70">Nenhum movimento ainda</p>
+        <p className="text-sm mt-1 text-muted-foreground">Sessões marcadas como realizadas aparecerão aqui automaticamente.</p>
       </div>
     );
   }
