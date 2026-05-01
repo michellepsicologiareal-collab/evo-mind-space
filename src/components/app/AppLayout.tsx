@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
-import { Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut, GraduationCap, ShieldCheck } from "lucide-react";
+import { Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut, GraduationCap, ShieldCheck, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { PlanModal } from "@/components/app/PlanModal";
 
 const navItems = [
   { to: "/app", label: "Painel", icon: LayoutDashboard, end: true },
