@@ -25,6 +25,7 @@ interface Session {
   status: Status;
   price: number | null;
   notes: string | null;
+  confirmation_token: string | null;
   patients?: { full_name: string } | null;
 }
 
