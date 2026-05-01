@@ -419,11 +419,72 @@ const Supervisees = () => {
                 </div>
               )}
 
-              {!selectedPatient.email && !selectedPatient.phone && !selectedPatient.notes && selectedPatient.session_price == null && (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Sem informações adicionais cadastradas.
-                </p>
-              )}
+              <div className="border-t border-border pt-4 space-y-4">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-medium mb-2">
+                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                    Sessões recentes
+                  </div>
+                  {detailLoading ? (
+                    <div className="py-3 text-center"><Loader2 className="h-4 w-4 animate-spin mx-auto text-primary" /></div>
+                  ) : recentSessions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground rounded-lg bg-secondary/40 p-3">
+                      Nenhuma sessão registrada ainda.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {recentSessions.map((s) => (
+                        <li key={s.id} className="rounded-lg bg-secondary/40 p-3 text-sm">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-medium">
+                              {format(new Date(s.scheduled_at), "dd 'de' MMM, HH:mm", { locale: ptBR })}
+                            </span>
+                            <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-background text-muted-foreground">
+                              {s.status}
+                            </span>
+                          </div>
+                          {s.notes && (
+                            <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{s.notes}</p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-medium mb-2">
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                    Último humor / progresso
+                  </div>
+                  {detailLoading ? null : !latestProgress ? (
+                    <p className="text-sm text-muted-foreground rounded-lg bg-secondary/40 p-3">
+                      Nenhum registro de humor/progresso ainda.
+                    </p>
+                  ) : (
+                    <div className="rounded-lg bg-secondary/40 p-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Smile className="h-4 w-4 text-primary" />
+                          <span className="font-medium">
+                            {latestProgress.mood_score != null
+                              ? `Humor ${latestProgress.mood_score}/10`
+                              : "Sem humor"}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(latestProgress.recorded_at), "dd/MM/yyyy", { locale: ptBR })}
+                        </span>
+                      </div>
+                      {latestProgress.note && (
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {latestProgress.note}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>
