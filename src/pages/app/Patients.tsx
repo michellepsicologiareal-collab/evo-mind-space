@@ -45,9 +45,13 @@ interface Patient {
   shared_with_supervisor: boolean;
 }
 
+const FREE_PATIENT_LIMIT = 5;
+
 const Patients = () => {
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [gateOpen, setGateOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
