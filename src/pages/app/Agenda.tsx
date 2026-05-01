@@ -212,6 +212,23 @@ const Agenda = () => {
     load();
   };
 
+  const copyConfirmationLink = async (s: Session) => {
+    let token = s.confirmation_token;
+    if (!token) {
+      // Generate a token
+      token = crypto.randomUUID();
+      const { error } = await supabase
+        .from("sessions")
+        .update({ confirmation_token: token })
+        .eq("id", s.id);
+      if (error) { toast.error("Erro ao gerar link"); return; }
+    }
+    const url = `${window.location.origin}/confirmar-sessao/${token}`;
+    await navigator.clipboard.writeText(url);
+    toast.success("Link de confirmação copiado!");
+    load();
+  };
+
   const sessionsByDay = (date: Date) => sessions.filter((s) => isSameDay(new Date(s.scheduled_at), date));
 
   return (
