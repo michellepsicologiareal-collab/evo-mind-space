@@ -101,7 +101,7 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
       user_id: user.id,
       ...systems,
       core_beliefs: coreBeliefs,
-      treatment_goals: goals,
+      treatment_goals: goals as unknown as Record<string, unknown>[],
     };
 
     if (formId) {
