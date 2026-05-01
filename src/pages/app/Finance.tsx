@@ -817,7 +817,12 @@ const SessionsTable = ({
       {rows.map((s) => (
         <li key={s.id} className="py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <p className="font-medium text-foreground truncate">{s.patient?.full_name ?? "—"}</p>
+            <p className="font-medium text-foreground truncate">
+              {s.patient?.full_name ?? "—"}
+              {(s.service as any)?.name && (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">· {(s.service as any).name}</span>
+              )}
+            </p>
             <p className="text-sm text-muted-foreground capitalize">
               {format(new Date(s.scheduled_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
               {s.payment_status === "paid" && s.paid_at && (
