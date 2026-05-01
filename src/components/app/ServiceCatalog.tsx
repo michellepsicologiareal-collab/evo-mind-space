@@ -99,7 +99,7 @@ export const ServiceCatalog = () => {
             </p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={openNew}>
+        <Button variant="accent" size="sm" onClick={openNew}>
           <Plus className="h-4 w-4" /> Novo
         </Button>
       </div>
@@ -168,7 +168,7 @@ export const ServiceCatalog = () => {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button variant="hero" onClick={handleSave} disabled={saving}>
+            <Button variant="accent" onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               {editing ? "Salvar" : "Criar"}
             </Button>

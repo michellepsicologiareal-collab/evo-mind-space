@@ -42,6 +42,10 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
+        lilac: {
+          DEFAULT: "hsl(var(--lilac))",
+          foreground: "hsl(var(--lilac-foreground))",
+        },
         sand: {
           DEFAULT: "hsl(var(--sand))",
           foreground: "hsl(var(--sand-foreground))",

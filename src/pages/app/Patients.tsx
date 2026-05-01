@@ -162,7 +162,7 @@ const Patients = () => {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button variant="hero" onClick={openNew}>
+            <Button variant="accent" onClick={openNew}>
               <Plus className="h-4 w-4" /> Novo paciente
             </Button>
           </DialogTrigger>
@@ -196,7 +196,7 @@ const Patients = () => {
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button type="submit" variant="hero" disabled={saving}>
+                <Button type="submit" variant="accent" disabled={saving}>
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                   {editing ? "Salvar" : "Cadastrar"}
                 </Button>
@@ -227,7 +227,7 @@ const Patients = () => {
           <User className="h-10 w-10 mx-auto text-muted-foreground/50" />
           <p className="mt-3 text-muted-foreground">{patients.length === 0 ? "Nenhum paciente ainda." : "Nenhum paciente encontrado."}</p>
           {patients.length === 0 && (
-            <Button variant="hero" className="mt-4" onClick={openNew}>
+            <Button variant="accent" className="mt-4" onClick={openNew}>
               <Plus className="h-4 w-4" /> Cadastrar primeiro paciente
             </Button>
           )}

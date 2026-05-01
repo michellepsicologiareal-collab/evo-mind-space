@@ -10,45 +10,48 @@
 @layer base {
   :root {
     /* Surfaces */
-    --background: 40 33% 97%;            /* warm bone */
+    --background: 35 30% 94%;            /* bege areia sutil */
     --foreground: 190 35% 12%;           /* deep teal ink */
 
-    --card: 0 0% 100%;
+    --card: 38 25% 98%;
     --card-foreground: 190 35% 12%;
 
-    --popover: 0 0% 100%;
+    --popover: 38 25% 98%;
     --popover-foreground: 190 35% 12%;
 
     /* Brand */
     --primary: 185 55% 18%;              /* deep teal */
-    --primary-foreground: 40 33% 97%;
+    --primary-foreground: 35 30% 96%;
     --primary-glow: 170 38% 42%;         /* sage glow */
 
     --secondary: 90 18% 90%;             /* pale sage */
     --secondary-foreground: 185 55% 18%;
 
-    --muted: 40 25% 93%;
+    --muted: 35 20% 90%;
     --muted-foreground: 190 15% 38%;
 
-    --accent: 18 62% 58%;                /* warm terracotta */
-    --accent-foreground: 40 33% 97%;
+    --accent: 16 65% 52%;                /* terracotta forte — botões CTA */
+    --accent-foreground: 0 0% 100%;
+
+    --lilac: 270 40% 72%;                /* lilás — badges concluídas */
+    --lilac-foreground: 270 45% 20%;
 
     --sand: 32 45% 86%;
     --sand-foreground: 190 35% 12%;
 
     --destructive: 0 70% 48%;
-    --destructive-foreground: 40 33% 97%;
+    --destructive-foreground: 35 30% 96%;
 
-    --border: 40 18% 86%;
-    --input: 40 18% 86%;
+    --border: 35 18% 86%;
+    --input: 35 18% 86%;
     --ring: 185 55% 18%;
 
     --radius: 1rem;
 
     /* Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(185 55% 18%) 0%, hsl(170 38% 28%) 60%, hsl(18 62% 58%) 130%);
-    --gradient-soft: linear-gradient(180deg, hsl(40 33% 97%) 0%, hsl(90 18% 92%) 100%);
-    --gradient-card: linear-gradient(160deg, hsl(0 0% 100%) 0%, hsl(40 25% 96%) 100%);
+    --gradient-soft: linear-gradient(180deg, hsl(35 30% 94%) 0%, hsl(90 18% 92%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(38 25% 98%) 0%, hsl(35 20% 95%) 100%);
 
     /* Shadows */
     --shadow-elegant: 0 30px 60px -30px hsl(185 55% 18% / 0.25);
@@ -77,8 +80,10 @@
     --secondary-foreground: 40 33% 95%;
     --muted: 190 25% 14%;
     --muted-foreground: 40 12% 70%;
-    --accent: 18 62% 58%;
-    --accent-foreground: 40 33% 95%;
+    --accent: 16 65% 52%;
+    --accent-foreground: 0 0% 100%;
+    --lilac: 270 35% 65%;
+    --lilac-foreground: 270 50% 15%;
     --sand: 32 25% 25%;
     --sand-foreground: 40 33% 95%;
     --border: 190 25% 18%;
