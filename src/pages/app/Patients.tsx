@@ -46,6 +46,9 @@ interface Patient {
   is_active: boolean;
   session_price: number | null;
   shared_with_supervisor: boolean;
+  chief_complaint: string | null;
+  treatment_plan: string | null;
+  anamnesis: string | null;
 }
 
 const FREE_PATIENT_LIMIT = 5;
