@@ -240,6 +240,7 @@ export type Database = {
       }
       sessions: {
         Row: {
+          confirmation_token: string | null
           created_at: string
           duration_minutes: number
           id: string
@@ -257,6 +258,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          confirmation_token?: string | null
           created_at?: string
           duration_minutes?: number
           id?: string
@@ -274,6 +276,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          confirmation_token?: string | null
           created_at?: string
           duration_minutes?: number
           id?: string
@@ -428,6 +431,7 @@ export type Database = {
         | "no_show"
         | "rescheduled"
         | "cancelled"
+        | "confirmed"
       subscription_status: "free" | "pending" | "active"
     }
     CompositeTypes: {
@@ -572,6 +576,7 @@ export const Constants = {
         "no_show",
         "rescheduled",
         "cancelled",
+        "confirmed",
       ],
       subscription_status: ["free", "pending", "active"],
     },
