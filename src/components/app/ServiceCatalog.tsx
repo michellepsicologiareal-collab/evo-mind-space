@@ -99,7 +99,7 @@ export const ServiceCatalog = () => {
             </p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={openNew}>
+        <Button variant="accent" size="sm" onClick={openNew}>
           <Plus className="h-4 w-4" /> Novo
         </Button>
       </div>

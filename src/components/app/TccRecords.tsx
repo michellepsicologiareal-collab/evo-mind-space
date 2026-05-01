@@ -108,7 +108,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
           Prontuário TCC
         </div>
         {!readOnly && (
-          <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+          <Button variant="accent" size="sm" onClick={() => setOpen(true)}>
             <Plus className="h-3.5 w-3.5" /> Novo registro
           </Button>
         )}
