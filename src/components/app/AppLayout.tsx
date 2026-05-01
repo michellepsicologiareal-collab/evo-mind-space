@@ -206,7 +206,7 @@ export const AppLayout = () => {
       </nav>
 
       {/* ── Main content ── */}
-      <main className="flex-1 md:ml-64 lg:ml-72 pt-16 pb-20 md:pt-0 md:pb-0">
+      <main className="flex-1 md:ml-64 lg:ml-72 pt-16 pb-28 md:pt-0 md:pb-0">
         <div className="p-6 lg:p-10 max-w-6xl mx-auto">
           {showGateOverlay ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-6">
