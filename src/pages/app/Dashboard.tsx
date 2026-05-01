@@ -150,22 +150,20 @@ const Dashboard = () => {
         recordsGoal: 20,
       });
 
-      // Count sessions per patient for numbering
+      // Count sessions per patient for numbering (parallel)
       const sessionsData = (upcomingRes.data ?? []) as any[];
-      const patientSessionCounts: Record<string, number> = {};
-      
-      // Get total sessions per patient for numbering
-      for (const s of sessionsData) {
-        if (!patientSessionCounts[s.patient_id]) {
-          const { count } = await supabase
+      const uniquePatientIds = [...new Set(sessionsData.map((s: any) => s.patient_id).filter(Boolean))];
+      const countResults = await Promise.all(
+        uniquePatientIds.map((pid) =>
+          supabase
             .from("sessions")
             .select("id", { count: "exact", head: true })
-            .eq("patient_id", s.patient_id)
+            .eq("patient_id", pid)
             .eq("user_id", user.id)
-            .lte("scheduled_at", s.scheduled_at);
-          patientSessionCounts[s.patient_id] = count ?? 1;
-        }
-      }
+            .then(({ count }) => [pid, count ?? 0] as const)
+        )
+      );
+      const patientSessionCounts = Object.fromEntries(countResults);
 
       const mapped = sessionsData.map((s: any) => ({
         id: s.id,
