@@ -97,8 +97,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     supabase.auth.getSession().then(({ data: { session: existing }, error }) => {
       if (error) {
-        console.warn("Sessão salva inválida; limpando para novo login:", error.message);
-        supabase.auth.signOut({ scope: "local" }).finally(clearSession);
+        console.warn("Sessão salva inválida; mostrando login novamente:", error.message);
+        clearSession();
         return;
       }
 
