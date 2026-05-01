@@ -73,7 +73,10 @@ interface Row {
   price: number | null;
   paid_at: string | null;
   patient: { full_name: string } | null;
+  service: { name: string } | null;
 }
+
+type FortnightFilter = "all" | "first" | "second";
 
 const formatBRL = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
 
@@ -95,6 +98,7 @@ const Finance = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
+  const [fortnightFilter, setFortnightFilter] = useState<FortnightFilter>("all");
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderWindow, setReminderWindow] = useState(24);
   const [groupByPatient, setGroupByPatient] = useState(false);
@@ -113,7 +117,7 @@ const Finance = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("sessions")
-      .select("id, scheduled_at, status, payment_status, payment_method, payment_reference, price, paid_at, patient:patients(full_name)")
+      .select("id, scheduled_at, status, payment_status, payment_method, payment_reference, price, paid_at, patient:patients(full_name), service:services(name)")
       .eq("user_id", user.id)
       .gte("scheduled_at", monthStart.toISOString())
       .lte("scheduled_at", monthEnd.toISOString())
@@ -179,13 +183,38 @@ const Finance = () => {
   };
 
   const billable = useMemo(() => rows.filter((r) => r.status === "completed"), [rows]);
-  const totalFaturado = billable.reduce((s, r) => s + Number(r.price ?? 0), 0);
-  const totalRecebido = billable
+
+  const fortnightBillable = useMemo(() => {
+    if (fortnightFilter === "all") return billable;
+    return billable.filter((r) => {
+      const day = new Date(r.scheduled_at).getDate();
+      return fortnightFilter === "first" ? day <= 15 : day > 15;
+    });
+  }, [billable, fortnightFilter]);
+
+  const totalFaturado = fortnightBillable.reduce((s, r) => s + Number(r.price ?? 0), 0);
+  const totalRecebido = fortnightBillable
     .filter((r) => r.payment_status === "paid")
     .reduce((s, r) => s + Number(r.price ?? 0), 0);
   const totalPendente = totalFaturado - totalRecebido;
-  const sessoesPagas = billable.filter((r) => r.payment_status === "paid").length;
-  const sessoesPendentes = billable.filter((r) => r.payment_status === "pending").length;
+  const sessoesPagas = fortnightBillable.filter((r) => r.payment_status === "paid").length;
+  const sessoesPendentes = fortnightBillable.filter((r) => r.payment_status === "pending").length;
+
+  // Service breakdown
+  const serviceBreakdown = useMemo(() => {
+    const map = new Map<string, { name: string; total: number; count: number }>();
+    fortnightBillable.filter((r) => r.payment_status === "paid").forEach((r) => {
+      const name = (r.service as any)?.name ?? "Sem serviço";
+      const entry = map.get(name);
+      if (entry) {
+        entry.total += Number(r.price ?? 0);
+        entry.count++;
+      } else {
+        map.set(name, { name, total: Number(r.price ?? 0), count: 1 });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => b.total - a.total);
+  }, [fortnightBillable]);
 
   const missingReference = useMemo(
     () =>
@@ -484,11 +513,22 @@ const Finance = () => {
         </div>
       </header>
 
+      {/* Fortnight filter */}
+      <div className="flex items-center gap-3">
+        <Tabs value={fortnightFilter} onValueChange={(v) => setFortnightFilter(v as FortnightFilter)}>
+          <TabsList>
+            <TabsTrigger value="all">Mês todo</TabsTrigger>
+            <TabsTrigger value="first">1ª Quinzena (1–15)</TabsTrigger>
+            <TabsTrigger value="second">2ª Quinzena (16–fim)</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
       <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={TrendingUp} label="Faturado no mês" value={formatBRL(totalFaturado)} accent />
+        <KpiCard icon={TrendingUp} label="Faturado" value={formatBRL(totalFaturado)} accent />
         <KpiCard icon={Wallet} label="Recebido" value={formatBRL(totalRecebido)} hint={`${sessoesPagas} sessões`} />
         <KpiCard icon={Clock} label="A receber" value={formatBRL(totalPendente)} hint={`${sessoesPendentes} sessões`} />
-        <KpiCard icon={CheckCircle2} label="Sessões realizadas" value={billable.length.toString()} />
+        <KpiCard icon={CheckCircle2} label="Sessões realizadas" value={fortnightBillable.length.toString()} />
       </section>
 
       {recentMissing.length > 0 && (
@@ -695,10 +735,28 @@ const Finance = () => {
         </Alert>
       )}
 
+      {/* Service breakdown */}
+      {serviceBreakdown.length > 0 && (
+        <section className="rounded-3xl bg-card border border-border p-6 lg:p-8">
+          <h2 className="font-display text-lg font-semibold mb-4">Recebido por serviço</h2>
+          <ul className="space-y-2">
+            {serviceBreakdown.map((s) => (
+              <li key={s.name} className="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 p-3">
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{s.name}</p>
+                  <p className="text-xs text-muted-foreground">{s.count} {s.count === 1 ? "sessão" : "sessões"}</p>
+                </div>
+                <span className="font-display font-semibold shrink-0">{formatBRL(s.total)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="rounded-3xl bg-card border border-border p-6 lg:p-8">
         <Tabs defaultValue="all">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-display text-2xl font-semibold">Sessões do mês</h2>
+            <h2 className="font-display text-2xl font-semibold">Sessões</h2>
             <TabsList>
               <TabsTrigger value="all">Todas</TabsTrigger>
               <TabsTrigger value="pending">Pendentes</TabsTrigger>
@@ -707,13 +765,13 @@ const Finance = () => {
           </div>
 
           <TabsContent value="all">
-            <SessionsTable rows={billable} loading={loading} onChange={updatePayment} onEdit={setEditing} />
+            <SessionsTable rows={fortnightBillable} loading={loading} onChange={updatePayment} onEdit={setEditing} />
           </TabsContent>
           <TabsContent value="pending">
-            <SessionsTable rows={billable.filter((r) => r.payment_status === "pending")} loading={loading} onChange={updatePayment} onEdit={setEditing} />
+            <SessionsTable rows={fortnightBillable.filter((r) => r.payment_status === "pending")} loading={loading} onChange={updatePayment} onEdit={setEditing} />
           </TabsContent>
           <TabsContent value="paid">
-            <SessionsTable rows={billable.filter((r) => r.payment_status === "paid")} loading={loading} onChange={updatePayment} onEdit={setEditing} />
+            <SessionsTable rows={fortnightBillable.filter((r) => r.payment_status === "paid")} loading={loading} onChange={updatePayment} onEdit={setEditing} />
           </TabsContent>
         </Tabs>
       </section>
@@ -759,7 +817,12 @@ const SessionsTable = ({
       {rows.map((s) => (
         <li key={s.id} className="py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <p className="font-medium text-foreground truncate">{s.patient?.full_name ?? "—"}</p>
+            <p className="font-medium text-foreground truncate">
+              {s.patient?.full_name ?? "—"}
+              {(s.service as any)?.name && (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">· {(s.service as any).name}</span>
+              )}
+            </p>
             <p className="text-sm text-muted-foreground capitalize">
               {format(new Date(s.scheduled_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
               {s.payment_status === "paid" && s.paid_at && (

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Loader2, Upload, User, Users, ShieldCheck, X, Building2, Trash2, FileText, Download } from "lucide-react";
+import { ServiceCatalog } from "@/components/app/ServiceCatalog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -453,6 +454,8 @@ const Profile = () => {
           </Button>
         </div>
       </form>
+
+      <ServiceCatalog />
 
       {profileType === "supervisee" && (
         <section className="rounded-3xl bg-card border border-border p-8 space-y-4">

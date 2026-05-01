@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList } from "lucide-react";
+import { TccRecords } from "@/components/app/TccRecords";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ const Patients = () => {
   const [editing, setEditing] = useState<Patient | null>(null);
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
+  const [tccPatient, setTccPatient] = useState<Patient | null>(null);
 
   const [form, setForm] = useState({ full_name: "", email: "", phone: "", notes: "", session_price: "" });
 
@@ -252,6 +254,7 @@ const Patients = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setTccPatient(p)}><ClipboardList className="h-4 w-4" /> Prontuário TCC</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => toggleActive(p)}>
                       {p.is_active ? "Marcar inativo" : "Reativar"}
                     </DropdownMenuItem>
@@ -281,6 +284,17 @@ const Patients = () => {
           ))}
         </ul>
       )}
+
+      {/* TCC Record Dialog */}
+      <Dialog open={!!tccPatient} onOpenChange={(o) => !o && setTccPatient(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{tccPatient?.full_name}</DialogTitle>
+            <DialogDescription>Prontuário TCC — Registro de Pensamento</DialogDescription>
+          </DialogHeader>
+          {tccPatient && <TccRecords patientId={tccPatient.id} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
