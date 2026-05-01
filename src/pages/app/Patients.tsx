@@ -30,6 +30,7 @@ interface Patient {
   notes: string | null;
   is_active: boolean;
   session_price: number | null;
+  shared_with_supervisor: boolean;
 }
 
 const Patients = () => {
