@@ -128,6 +128,17 @@ const Patients = () => {
     load();
   };
 
+  const toggleSharing = async (p: Patient) => {
+    const { error } = await supabase
+      .from("patients")
+      .update({ shared_with_supervisor: !p.shared_with_supervisor } as any)
+      .eq("id", p.id);
+    if (error) return toast.error("Erro ao atualizar compartilhamento");
+    setPatients((prev) =>
+      prev.map((x) => (x.id === p.id ? { ...x, shared_with_supervisor: !x.shared_with_supervisor } : x))
+    );
+  };
+
   const activeCount = patients.filter((p) => p.is_active).length;
   const inactiveCount = patients.length - activeCount;
 
