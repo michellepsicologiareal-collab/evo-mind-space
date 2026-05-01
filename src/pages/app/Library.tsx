@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Loader2, Download, Eye, Lock, FileText, BookOpen, Scale } from "lucide-react";
+import { Download, Eye, Lock, FileText, BookOpen, Scale } from "lucide-react";
+import { ListSkeleton } from "@/components/app/Skeletons";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
