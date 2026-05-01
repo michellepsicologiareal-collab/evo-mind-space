@@ -31,8 +31,8 @@
     --muted: 214 15% 90%;
     --muted-foreground: 215 10% 46%;
 
-    /* Terracota — CTAs, salvar, novo — mais vibrante */
-    --accent: 19 58% 50%;                 /* terracota vibrante */
+    /* Terracota Apagado — CTAs, salvar, novo — acolhimento & maturidade */
+    --accent: 8 28% 52%;                  /* rose wood #A57164 */
     --accent-foreground: 0 0% 100%;
 
     /* Lilás — badges concluídas, supervisão */
