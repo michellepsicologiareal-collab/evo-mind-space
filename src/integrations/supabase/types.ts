@@ -319,6 +319,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -329,6 +350,13 @@ export type Database = {
         Returns: boolean
       }
       get_profile_id_by_email: { Args: { _email: string }; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_supervisor_of: { Args: { _supervisee_id: string }; Returns: boolean }
       link_supervisee_by_email: { Args: { _email: string }; Returns: string }
       unlink_supervisee: {
@@ -337,6 +365,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       payment_method: "pix" | "card" | "cash"
       payment_status: "pending" | "paid"
       profile_type: "standard" | "supervisee" | "supervisor"
@@ -473,6 +502,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       payment_method: ["pix", "card", "cash"],
       payment_status: ["pending", "paid"],
       profile_type: ["standard", "supervisee", "supervisor"],

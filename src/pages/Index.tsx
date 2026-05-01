@@ -5,6 +5,7 @@ import { Features } from "@/components/landing/Features";
 import { Differential } from "@/components/landing/Differential";
 import { ForWhom } from "@/components/landing/ForWhom";
 import { CTA } from "@/components/landing/CTA";
+import { Pricing } from "@/components/landing/Pricing";
 import { Footer } from "@/components/landing/Footer";
 
 const Index = () => {
@@ -17,6 +18,7 @@ const Index = () => {
         <Features />
         <Differential />
         <ForWhom />
+        <Pricing />
         <CTA />
       </main>
       <Footer />

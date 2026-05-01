@@ -18,6 +18,7 @@ export const Navbar = () => {
           <a href="#funcionalidades" className="hover:text-foreground transition-colors">Funcionalidades</a>
           <a href="#diferencial" className="hover:text-foreground transition-colors">Diferencial</a>
           <a href="#para-quem" className="hover:text-foreground transition-colors">Para quem</a>
+          <a href="#planos" className="hover:text-foreground transition-colors">Planos</a>
         </nav>
         <a
           href="/auth"

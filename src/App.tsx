@@ -16,6 +16,7 @@ import Profile from "./pages/app/Profile.tsx";
 import Finance from "./pages/app/Finance.tsx";
 import Supervisees from "./pages/app/Supervisees.tsx";
 import Supervision from "./pages/app/Supervision.tsx";
+import Admin from "./pages/Admin.tsx";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/admin" element={<Admin />} />
             <Route
               path="/app"
               element={
