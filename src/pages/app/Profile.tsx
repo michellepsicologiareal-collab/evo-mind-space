@@ -220,6 +220,28 @@ const Profile = () => {
     toast.success("Foto atualizada");
   };
 
+  const handleWipeData = async () => {
+    if (!user) return;
+    if (wipeConfirm.trim().toUpperCase() !== "LIMPAR") {
+      toast.error("Digite LIMPAR para confirmar.");
+      return;
+    }
+    setWiping(true);
+    const [pr, se, pa] = await Promise.all([
+      (supabase as any).from("patient_progress").delete().eq("user_id", user.id),
+      supabase.from("sessions").delete().eq("user_id", user.id),
+      supabase.from("patients").delete().eq("user_id", user.id),
+    ]);
+    setWiping(false);
+    if (pr.error || se.error || pa.error) {
+      toast.error("Não foi possível limpar todos os dados.");
+      return;
+    }
+    setWipeOpen(false);
+    setWipeConfirm("");
+    toast.success("Pacientes, sessões e registros foram apagados.");
+  };
+
   if (loading) {
     return (
       <div className="text-center py-12">
