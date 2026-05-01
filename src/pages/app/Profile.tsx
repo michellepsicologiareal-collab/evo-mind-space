@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Upload, User, Users, ShieldCheck, X } from "lucide-react";
+import { Loader2, Upload, User, Users, ShieldCheck, X, Building2, Trash2, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const profileSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(120),
+  clinic_name: z.string().trim().max(120).optional().or(z.literal("")),
   crp: z.string().trim().max(40).optional().or(z.literal("")),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   specialty: z.string().trim().max(120).optional().or(z.literal("")),
