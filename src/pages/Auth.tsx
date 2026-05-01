@@ -62,7 +62,12 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = signUpSchema.safeParse({ fullName: suName, email: suEmail, password: suPassword });
+    const parsed = signUpSchema.safeParse({
+      fullName: suName,
+      email: suEmail,
+      password: suPassword,
+      profileType: suProfileType,
+    });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
       return;
@@ -73,7 +78,10 @@ const Auth = () => {
       password: parsed.data.password,
       options: {
         emailRedirectTo: `${window.location.origin}/app`,
-        data: { full_name: parsed.data.fullName },
+        data: {
+          full_name: parsed.data.fullName,
+          profile_type: parsed.data.profileType,
+        },
       },
     });
     setLoading(false);
