@@ -91,6 +91,11 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [hideRevenue, setHideRevenue] = useState(false);
   const [nextSessionMin, setNextSessionMin] = useState<number | null>(null);
+  const [moodData, setMoodData] = useState<{ name: string; score: number }[]>([]);
+  const [avgMood, setAvgMood] = useState<number | null>(null);
+  const [topMoodPatient, setTopMoodPatient] = useState("");
+  const [prevMonthRevenue, setPrevMonthRevenue] = useState(0);
+  const [weeklyRevenue, setWeeklyRevenue] = useState<{ week: string; value: number }[]>([]);
 
   useEffect(() => {
     if (!user) return;
