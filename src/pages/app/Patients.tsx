@@ -148,13 +148,26 @@ const Patients = () => {
   const inactiveCount = patients.length - activeCount;
 
   const buildWhatsAppUrl = (p: Patient) => {
-    const phone = (p.phone ?? "").replace(/\D/g, "");
-    if (!phone) return null;
+    let digits = (p.phone ?? "").replace(/\D/g, "");
+    if (!digits) return null;
+
+    // Remove leading zero (common in local formats like 011...)
+    if (digits.startsWith("0")) digits = digits.replace(/^0+/, "");
+
+    // Add country code if not present
+    if (!digits.startsWith("55")) digits = "55" + digits;
+
+    // Ensure mobile numbers have 9th digit: 55 + 2-digit DDD + 9 digits = 13 digits
+    // If we have 12 digits (55 + DDD + 8-digit number), insert the leading 9
+    if (digits.length === 12) {
+      digits = digits.slice(0, 4) + "9" + digits.slice(4);
+    }
+
     const valor = p.session_price != null ? `R$ ${Number(p.session_price).toFixed(2).replace(".", ",")}` : "";
     let msg = `Olá, ${p.full_name.split(" ")[0]}! 😊\n\nSegue o valor da sua sessão: ${valor}.\n`;
     if (pixKey) msg += `\nChave Pix para pagamento:\n${pixKey}\n`;
     msg += `\nQualquer dúvida, estou à disposição.\n${profName ? `— ${profName}` : ""}`;
-    return `https://wa.me/${phone.startsWith("55") ? phone : "55" + phone}?text=${encodeURIComponent(msg)}`;
+    return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
   };
 
   const filtered = patients
