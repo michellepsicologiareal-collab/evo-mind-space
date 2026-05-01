@@ -15,9 +15,10 @@ import {
   Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes } from "date-fns";
+import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CardSkeleton } from "@/components/app/Skeletons";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 
 /* ── types ── */
 interface Stats {
@@ -90,6 +91,11 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [hideRevenue, setHideRevenue] = useState(false);
   const [nextSessionMin, setNextSessionMin] = useState<number | null>(null);
+  const [moodData, setMoodData] = useState<{ name: string; score: number }[]>([]);
+  const [avgMood, setAvgMood] = useState<number | null>(null);
+  const [topMoodPatient, setTopMoodPatient] = useState("");
+  const [prevMonthRevenue, setPrevMonthRevenue] = useState(0);
+  const [weeklyRevenue, setWeeklyRevenue] = useState<{ week: string; value: number }[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -105,7 +111,7 @@ const Dashboard = () => {
           supabase.from("profiles").select("full_name, clinic_name").eq("id", user.id).maybeSingle(),
           supabase.from("patients").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
           supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", dayStart).lte("scheduled_at", dayEnd),
-          supabase.from("sessions").select("price, status").eq("user_id", user.id).gte("scheduled_at", monthStart).lte("scheduled_at", monthEnd),
+          supabase.from("sessions").select("price, status, scheduled_at").eq("user_id", user.id).gte("scheduled_at", monthStart).lte("scheduled_at", monthEnd),
           supabase
             .from("sessions")
             .select("id, scheduled_at, status, patient_id, session_type, patient:patients!sessions_patient_id_fkey(full_name)")
@@ -177,6 +183,69 @@ const Dashboard = () => {
         const diff = differenceInMinutes(new Date(mapped[0].scheduled_at), now);
         setNextSessionMin(diff > 0 ? diff : null);
       }
+
+      // ── Mood chart data ──
+      const { data: moodRows } = await supabase
+        .from("patient_progress")
+        .select("mood_score, recorded_at, patient_id")
+        .eq("user_id", user.id)
+        .not("mood_score", "is", null)
+        .order("recorded_at", { ascending: true })
+        .limit(30);
+
+      if (moodRows && moodRows.length > 0) {
+        const moodChartData = moodRows.map((m: any) => ({
+          name: format(new Date(m.recorded_at), "dd/MM"),
+          score: Number(m.mood_score),
+        }));
+        setMoodData(moodChartData);
+        const avg = moodChartData.reduce((s, d) => s + d.score, 0) / moodChartData.length;
+        setAvgMood(Math.round(avg * 10) / 10);
+
+        // Find patient with most mood entries
+        const patientCounts: Record<string, number> = {};
+        moodRows.forEach((m: any) => { patientCounts[m.patient_id] = (patientCounts[m.patient_id] ?? 0) + 1; });
+        const topPatientId = Object.entries(patientCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+        if (topPatientId) {
+          const { data: pat } = await supabase.from("patients").select("full_name").eq("id", topPatientId).maybeSingle();
+          if (pat) {
+            const parts = pat.full_name.split(" ");
+            setTopMoodPatient(parts[0] + (parts[1] ? ` ${parts[1][0]}.` : ""));
+          }
+        }
+      }
+
+      // ── Previous month revenue ──
+      const prevStart = startOfMonth(subMonths(now, 1)).toISOString();
+      const prevEnd = endOfMonth(subMonths(now, 1)).toISOString();
+      const { data: prevSessions } = await supabase
+        .from("sessions")
+        .select("price, status")
+        .eq("user_id", user.id)
+        .gte("scheduled_at", prevStart)
+        .lte("scheduled_at", prevEnd);
+
+      const prevRev = (prevSessions ?? [])
+        .filter((s) => s.status === "completed")
+        .reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+      setPrevMonthRevenue(prevRev);
+
+      // ── Weekly revenue sparkline ──
+      const weekData: { week: string; value: number }[] = [];
+      const monthSess = monthSessions.filter((s) => s.status === "completed");
+      for (let w = 0; w < 4; w++) {
+        const wStart = w * 7 + 1;
+        const wEnd = w === 3 ? 31 : (w + 1) * 7;
+        const label = `S${w + 1}`;
+        const val = monthSess
+          .filter((s: any) => {
+            const day = new Date(s.scheduled_at ?? now).getDate();
+            return day >= wStart && day <= wEnd;
+          })
+          .reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+        weekData.push({ week: label, value: val });
+      }
+      setWeeklyRevenue(weekData);
 
       setLoading(false);
     };
@@ -278,6 +347,113 @@ const Dashboard = () => {
           highlight
         />
         <KPICard icon={Briefcase} label="Casos em Supervisão" value={stats.supervisionCases.toString()} />
+      </section>
+
+      {/* ── Insight Charts (floating card style) ── */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Mood Chart Card */}
+        <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-serene via-serene/60 to-transparent" />
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+            Humor médio{topMoodPatient ? ` · ${topMoodPatient}` : ""}
+          </p>
+          <p className="font-display text-3xl font-bold text-foreground">
+            {avgMood !== null ? avgMood.toFixed(1).replace(".", ",") : "—"}
+            <span className="text-lg text-muted-foreground font-normal"> / 10</span>
+          </p>
+          {moodData.length > 1 ? (
+            <div className="mt-3 h-[80px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={moodData}>
+                  <defs>
+                    <linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--serene))" stopOpacity={0.4} />
+                      <stop offset="100%" stopColor="hsl(var(--serene))" stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+                    formatter={(v: number) => [`${v}/10`, "Humor"]}
+                    labelFormatter={(l) => `Dia ${l}`}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="score"
+                    stroke="hsl(var(--serene))"
+                    strokeWidth={2.5}
+                    fill="url(#moodGrad)"
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground">Registre o humor dos pacientes para ver o gráfico aqui ✨</p>
+          )}
+          {moodData.length > 1 && (
+            <div className="flex gap-1 mt-2">
+              {moodData.slice(-7).map((d, i) => (
+                <div
+                  key={i}
+                  className="h-2 w-2 rounded-full"
+                  style={{
+                    backgroundColor: d.score >= 7 ? "hsl(var(--serene))" : d.score >= 4 ? "hsl(var(--sand))" : "hsl(var(--destructive))",
+                    opacity: 0.5 + (i / 10),
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Revenue Chart Card */}
+        <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent" />
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+            Faturamento — {format(new Date(), "MMMM", { locale: ptBR })}
+          </p>
+          <p className="font-display text-3xl font-bold text-foreground">
+            {hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`}
+          </p>
+          {prevMonthRevenue > 0 && !hideRevenue && (() => {
+            const pctChange = ((stats.monthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100;
+            const isUp = pctChange >= 0;
+            return (
+              <p className={`text-sm font-medium mt-1 ${isUp ? "text-emerald-600" : "text-destructive"}`}>
+                {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(0)}% vs. {format(subMonths(new Date(), 1), "MMMM", { locale: ptBR })}
+              </p>
+            );
+          })()}
+          {weeklyRevenue.some((w) => w.value > 0) ? (
+            <div className="mt-3 h-[80px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={weeklyRevenue}>
+                  <defs>
+                    <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.4} />
+                      <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="week" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+                    formatter={(v: number) => [`R$ ${v.toFixed(0)}`, "Receita"]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke="hsl(var(--accent))"
+                    strokeWidth={2.5}
+                    fill="url(#revGrad)"
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground">Complete sessões para ver seu faturamento semanal 📊</p>
+          )}
+        </div>
       </section>
 
       {/* ── Upcoming Sessions ── */}
