@@ -12,7 +12,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Fraunces", "ui-serif", "Georgia", "serif"],
+        display: ["Playfair Display", "ui-serif", "Georgia", "serif"],
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
@@ -45,6 +45,10 @@ export default {
         lilac: {
           DEFAULT: "hsl(var(--lilac))",
           foreground: "hsl(var(--lilac-foreground))",
+        },
+        moss: {
+          DEFAULT: "hsl(var(--moss))",
+          foreground: "hsl(var(--moss-foreground))",
         },
         sand: {
           DEFAULT: "hsl(var(--sand))",

@@ -419,9 +419,10 @@ const Agenda = () => {
       )}
 
       {!loading && sessions.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center">
-          <CalendarIcon className="h-10 w-10 mx-auto text-muted-foreground/50" />
-          <p className="mt-3 text-muted-foreground">Nenhuma sessão nesta semana.</p>
+        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-14 text-center">
+          <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/40" />
+          <p className="mt-4 font-display text-lg font-medium text-foreground/70">Semana livre</p>
+          <p className="mt-1 text-sm text-muted-foreground">Nenhuma sessão agendada para esta semana. Aproveite para planejar!</p>
         </div>
       )}
     </div>

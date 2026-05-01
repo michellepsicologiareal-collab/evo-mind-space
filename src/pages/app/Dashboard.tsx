@@ -101,7 +101,7 @@ const Dashboard = () => {
         <StatCard icon={AlertCircle} label="Faltas no mês" value={stats.monthNoShows.toString()} loading={loading} />
       </section>
 
-      <section className="rounded-3xl bg-card border border-border p-8">
+      <section className="rounded-2xl bg-card border border-border p-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-2xl font-semibold">Próximas sessões</h2>
           <Button variant="ghost" size="sm" asChild>
@@ -110,10 +110,11 @@ const Dashboard = () => {
         </div>
 
         {upcoming.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <Calendar className="h-10 w-10 mx-auto mb-3 opacity-40" />
-            <p>Nenhuma sessão agendada.</p>
-            <Button variant="hero" size="sm" className="mt-4" asChild>
+          <div className="text-center py-14 text-muted-foreground">
+            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-30" />
+            <p className="font-display text-lg font-medium text-foreground/70">Sua agenda está tranquila</p>
+            <p className="mt-1 text-sm">Que tal agendar a próxima sessão?</p>
+            <Button variant="accent" size="sm" className="mt-5" asChild>
               <Link to="/app/agenda">Agendar uma sessão</Link>
             </Button>
           </div>

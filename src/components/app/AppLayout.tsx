@@ -15,6 +15,9 @@ const navItems = [
   { to: "/app/perfil", label: "Perfil", icon: Settings },
 ];
 
+/* Mobile bottom bar — show first 5 items */
+const mobileNavItems = navItems.slice(0, 5);
+
 export const AppLayout = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
@@ -27,8 +30,8 @@ export const AppLayout = () => {
 
   return (
     <div className="min-h-screen bg-gradient-soft flex">
-      {/* Sidebar */}
-      <aside className="hidden md:flex md:w-64 lg:w-72 bg-card border-r border-border flex-col">
+      {/* ── Desktop sidebar (fixed) ── */}
+      <aside className="hidden md:flex md:w-64 lg:w-72 fixed inset-y-0 left-0 z-30 bg-card border-r border-border flex-col">
         <Link to="/app" className="p-6 flex items-center gap-2 border-b border-border">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground">
             <Brain className="h-4 w-4" />
@@ -38,7 +41,7 @@ export const AppLayout = () => {
           </span>
         </Link>
 
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -67,9 +70,9 @@ export const AppLayout = () => {
         </div>
       </aside>
 
-      {/* Mobile top bar */}
-      <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-card/90 backdrop-blur border-b border-border">
-        <div className="flex items-center justify-between p-4">
+      {/* ── Mobile top header ── */}
+      <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-card/95 backdrop-blur-lg border-b border-border">
+        <div className="flex items-center justify-between px-4 py-3">
           <Link to="/app" className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground">
               <Brain className="h-4 w-4" />
@@ -80,28 +83,32 @@ export const AppLayout = () => {
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
-        <nav className="flex border-t border-border overflow-x-auto">
-          {navItems.map((item) => (
+      </div>
+
+      {/* ── Mobile bottom nav (fixed, app-native feel) ── */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
+        <div className="flex justify-around py-1">
+          {mobileNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
                 cn(
-                  "flex-1 min-w-[80px] flex flex-col items-center gap-1 px-3 py-2 text-xs",
-                  isActive ? "text-primary border-b-2 border-primary" : "text-muted-foreground"
+                  "flex flex-col items-center gap-0.5 px-2 py-2 text-[10px] font-medium transition-colors rounded-lg",
+                  isActive ? "text-accent" : "text-muted-foreground"
                 )
               }
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon className="h-5 w-5" />
               {item.label}
             </NavLink>
           ))}
-        </nav>
-      </div>
+        </div>
+      </nav>
 
-      {/* Main */}
-      <main className="flex-1 md:overflow-x-hidden pt-32 md:pt-0">
+      {/* ── Main content ── */}
+      <main className="flex-1 md:ml-64 lg:ml-72 pt-16 pb-20 md:pt-0 md:pb-0">
         <div className="p-6 lg:p-10 max-w-6xl mx-auto">
           <Outlet />
         </div>
