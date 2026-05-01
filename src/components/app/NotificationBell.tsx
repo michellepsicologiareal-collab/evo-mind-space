@@ -49,8 +49,8 @@ export const NotificationBell = () => {
     if (!user) return;
     load();
 
-    // Realtime subscription — unique name to avoid Strict Mode collision
-    const channelName = `notifications-bell-${Date.now()}`;
+    // Realtime subscription scoped to user to prevent cross-user channel access
+    const channelName = `notifications-user-${user.id}-${Date.now()}`;
     const channel = supabase
       .channel(channelName)
       .on(
