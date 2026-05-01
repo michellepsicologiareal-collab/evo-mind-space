@@ -14,6 +14,7 @@ import Patients from "./pages/app/Patients.tsx";
 import Agenda from "./pages/app/Agenda.tsx";
 import Profile from "./pages/app/Profile.tsx";
 import Finance from "./pages/app/Finance.tsx";
+import Supervisees from "./pages/app/Supervisees.tsx";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="pacientes" element={<Patients />} />
               <Route path="agenda" element={<Agenda />} />
               <Route path="financeiro" element={<Finance />} />
+              <Route path="supervisionandos" element={<Supervisees />} />
               <Route path="perfil" element={<Profile />} />
             </Route>
             <Route path="*" element={<NotFound />} />

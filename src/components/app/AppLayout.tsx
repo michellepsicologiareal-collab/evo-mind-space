@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
-import { Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut } from "lucide-react";
+import { Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut, GraduationCap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ const navItems = [
   { to: "/app/pacientes", label: "Pacientes", icon: Users },
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
   { to: "/app/financeiro", label: "Financeiro", icon: Wallet },
+  { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap },
   { to: "/app/perfil", label: "Perfil", icon: Settings },
 ];
 
