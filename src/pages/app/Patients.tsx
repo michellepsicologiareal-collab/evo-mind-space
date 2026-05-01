@@ -44,6 +44,8 @@ const Patients = () => {
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
   const [tccPatient, setTccPatient] = useState<Patient | null>(null);
+  const [pixKey, setPixKey] = useState<string>("");
+  const [profName, setProfName] = useState<string>("");
 
   const [form, setForm] = useState({ full_name: "", email: "", phone: "", notes: "", session_price: "" });
 
