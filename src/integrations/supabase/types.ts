@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      library_materials: {
+        Row: {
+          category: Database["public"]["Enums"]["library_category"]
+          created_at: string
+          description: string | null
+          file_url: string | null
+          id: string
+          is_premium: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["library_category"]
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_premium?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["library_category"]
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_premium?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patient_progress: {
         Row: {
           created_at: string
@@ -378,6 +411,10 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      library_category:
+        | "documentos_legais"
+        | "materiais_pacientes"
+        | "guias_tcc"
       payment_method: "pix" | "card" | "cash"
       payment_status: "pending" | "paid"
       profile_type: "standard" | "supervisee" | "supervisor"
@@ -516,6 +553,11 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      library_category: [
+        "documentos_legais",
+        "materiais_pacientes",
+        "guias_tcc",
+      ],
       payment_method: ["pix", "card", "cash"],
       payment_status: ["pending", "paid"],
       profile_type: ["standard", "supervisee", "supervisor"],

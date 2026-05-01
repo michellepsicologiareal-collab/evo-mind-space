@@ -17,6 +17,7 @@ import Finance from "./pages/app/Finance.tsx";
 import Supervisees from "./pages/app/Supervisees.tsx";
 import Supervision from "./pages/app/Supervision.tsx";
 import SupervisaoCaso from "./pages/app/SupervisaoCaso.tsx";
+import Library from "./pages/app/Library.tsx";
 import Admin from "./pages/Admin.tsx";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
               <Route path="supervisionandos" element={<Supervisees />} />
               <Route path="supervisao" element={<Supervision />} />
               <Route path="supervisao-caso" element={<SupervisaoCaso />} />
+              <Route path="biblioteca" element={<Library />} />
               <Route path="perfil" element={<Profile />} />
             </Route>
             <Route path="*" element={<NotFound />} />
