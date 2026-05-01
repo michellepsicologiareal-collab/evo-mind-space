@@ -448,7 +448,7 @@ const Profile = () => {
           <Input value={user?.email ?? ""} disabled />
         </div>
         <div className="flex justify-end">
-          <Button type="submit" variant="hero" disabled={saving}>
+          <Button type="submit" variant="accent" disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             Salvar alterações
           </Button>

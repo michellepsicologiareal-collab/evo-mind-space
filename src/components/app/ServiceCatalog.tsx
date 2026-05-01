@@ -168,7 +168,7 @@ export const ServiceCatalog = () => {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button variant="hero" onClick={handleSave} disabled={saving}>
+            <Button variant="accent" onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               {editing ? "Salvar" : "Criar"}
             </Button>

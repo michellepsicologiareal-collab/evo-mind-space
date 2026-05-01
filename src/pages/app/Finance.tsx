@@ -987,7 +987,7 @@ const PaymentDetailsDialog = ({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={saving}>Cancelar</Button>
-          <Button variant="hero" onClick={save} disabled={saving}>
+          <Button variant="accent" onClick={save} disabled={saving}>
             {saving ? "Salvando…" : "Salvar"}
           </Button>
         </DialogFooter>
