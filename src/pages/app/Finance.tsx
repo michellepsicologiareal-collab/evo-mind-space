@@ -73,7 +73,10 @@ interface Row {
   price: number | null;
   paid_at: string | null;
   patient: { full_name: string } | null;
+  service: { name: string } | null;
 }
+
+type FortnightFilter = "all" | "first" | "second";
 
 const formatBRL = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
 
