@@ -322,6 +322,23 @@ const Agenda = () => {
                         {patients.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    {patientMonthCount && (
+                      <div className="rounded-xl bg-muted/50 border border-border p-3 text-sm space-y-1">
+                        <p className="font-medium text-foreground">
+                          {patientMonthCount.count === 0
+                            ? "Nenhuma sessão neste mês — sessão única"
+                            : `${patientMonthCount.count} ${patientMonthCount.count === 1 ? "sessão" : "sessões"} neste mês`}
+                          {patientMonthCount.count > 0 && (
+                            <span className="text-muted-foreground font-normal"> (esta será a {patientMonthCount.count + 1}ª)</span>
+                          )}
+                        </p>
+                        {patientMonthCount.dates.length > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            Dias: {patientMonthCount.dates.join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
                 {form.session_type === "supervision" && (
