@@ -44,6 +44,8 @@ const sessionSchema = z
     notes: z.string().max(2000).optional(),
     payment_method: z.enum(["none", "pix", "card", "cash"]).default("none"),
     payment_reference: z.string().max(500).optional(),
+    mood_score: z.string().optional(),
+    progress_note: z.string().max(2000).optional(),
   })
   .refine(
     (d) =>
@@ -90,6 +92,8 @@ const Agenda = () => {
     notes: "",
     payment_method: "none" as "none" | "pix" | "card" | "cash",
     payment_reference: "",
+    mood_score: "",
+    progress_note: "",
   });
 
 
@@ -128,6 +132,8 @@ const Agenda = () => {
       notes: "",
       payment_method: "none",
       payment_reference: "",
+      mood_score: "",
+      progress_note: "",
     });
     setOpen(true);
   };
@@ -147,21 +153,40 @@ const Agenda = () => {
     const price = parsed.data.price ? Number(parsed.data.price) : patient?.session_price ?? null;
 
     const ref = parsed.data.payment_reference?.trim() ?? "";
-    const { error } = await supabase.from("sessions").insert({
-      user_id: user.id,
-      patient_id: parsed.data.patient_id,
-      scheduled_at: scheduledAt.toISOString(),
-      duration_minutes: parsed.data.duration_minutes,
-      price,
-      notes: parsed.data.notes || null,
-      payment_method: parsed.data.payment_method === "none" ? null : parsed.data.payment_method,
-      payment_reference: ref.length > 0 ? ref : null,
-    });
-    setSaving(false);
+    const { data: created, error } = await supabase
+      .from("sessions")
+      .insert({
+        user_id: user.id,
+        patient_id: parsed.data.patient_id,
+        scheduled_at: scheduledAt.toISOString(),
+        duration_minutes: parsed.data.duration_minutes,
+        price,
+        notes: parsed.data.notes || null,
+        payment_method: parsed.data.payment_method === "none" ? null : parsed.data.payment_method,
+        payment_reference: ref.length > 0 ? ref : null,
+      })
+      .select("id")
+      .single();
     if (error) {
+      setSaving(false);
       toast.error("Erro ao agendar sessão");
       return;
     }
+
+    const moodNum = parsed.data.mood_score ? Number(parsed.data.mood_score) : null;
+    const progressNote = parsed.data.progress_note?.trim() || null;
+    if ((moodNum && moodNum >= 1 && moodNum <= 10) || progressNote) {
+      await supabase.from("patient_progress").insert({
+        user_id: user.id,
+        patient_id: parsed.data.patient_id,
+        session_id: created?.id ?? null,
+        mood_score: moodNum,
+        note: progressNote,
+        recorded_at: scheduledAt.toISOString(),
+      });
+    }
+
+    setSaving(false);
     toast.success("Sessão agendada");
     setOpen(false);
     load();
@@ -275,6 +300,34 @@ const Agenda = () => {
                 <div className="space-y-2">
                   <Label htmlFor="notes">Observações</Label>
                   <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                </div>
+
+                <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Humor / Progresso (opcional)</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="mood">Humor (1-10)</Label>
+                      <Input
+                        id="mood"
+                        type="number"
+                        min="1"
+                        max="10"
+                        placeholder="—"
+                        value={form.mood_score}
+                        onChange={(e) => setForm({ ...form, mood_score: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <Label htmlFor="prog">Nota de progresso</Label>
+                      <Input
+                        id="prog"
+                        maxLength={2000}
+                        placeholder="Ex.: melhora no sono"
+                        value={form.progress_note}
+                        onChange={(e) => setForm({ ...form, progress_note: e.target.value })}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <DialogFooter>
