@@ -19,6 +19,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
 
   const checkApproval = async (userId: string) => {
+    const { data: ensuredProfile, error: ensureError } = await (supabase as any)
+      .rpc("ensure_current_profile");
+
+    if (!ensureError && ensuredProfile?.[0]) {
+      setIsApproved(Boolean(ensuredProfile[0].is_approved));
+      return;
+    }
+
     const { data, error } = await supabase
       .from("profiles")
       .select("is_approved")
@@ -46,8 +54,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      if (!mounted) return;
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      if (newSession?.user) {
+        setLoading(true);
+      }
 
       // defer to avoid deadlock with Supabase client
       setTimeout(() => {
@@ -68,10 +80,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      if (!mounted) return;
       setSession(existing);
       setUser(existing?.user ?? null);
       if (existing?.user) {
-        checkApproval(existing.user.id).then(() => setLoading(false));
+        checkApproval(existing.user.id).finally(() => mounted && setLoading(false));
       } else {
         setLoading(false);
       }
