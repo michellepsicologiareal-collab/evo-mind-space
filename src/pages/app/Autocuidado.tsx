@@ -4,21 +4,25 @@ import {
   Wind, Eye, Shield, Heart, Flower2, Users,
   Pause, Save, Calendar, ChevronLeft, ChevronRight,
   TrendingDown, TrendingUp, Download, AlertTriangle,
+  SmilePlus,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   BarChart, Bar, Cell,
 } from "recharts";
+
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 /* ── Constants ── */
 const pleaseItems = [
@@ -39,12 +43,13 @@ const moodEmojis = [
 ];
 
 const triggerOptions = [
-  "História pessoal",
   "Impotência",
   "Raiva",
+  "Gatilho Pessoal",
   "Ansiedade",
   "Identificação",
   "Tristeza",
+  "História pessoal",
   "Outro",
 ];
 
@@ -153,7 +158,10 @@ const Autocuidado = () => {
   const [todayId, setTodayId] = useState<string | null>(null);
 
   // Mood / trigger state
+  const [moodOpen, setMoodOpen] = useState(false);
+  const [moodDate, setMoodDate] = useState<Date>(new Date());
   const [moodEmoji, setMoodEmoji] = useState("😐");
+  const [hadTriggerSession, setHadTriggerSession] = useState(false);
   const [selectedTriggers, setSelectedTriggers] = useState<string[]>([]);
   const [reflectiveNote, setReflectiveNote] = useState("");
   const [triggerPatientId, setTriggerPatientId] = useState<string | null>(null);
@@ -251,6 +259,21 @@ const Autocuidado = () => {
       .sort((a, b) => b.count - a.count);
   }, [triggerHistory]);
 
+  const patientTriggerFrequency = useMemo(() => {
+    const counts: Record<string, number> = {};
+    triggerHistory.forEach((t) => {
+      if (t.patient_id) {
+        const patient = patients.find((p) => p.id === t.patient_id);
+        const name = patient?.full_name ?? "Paciente";
+        counts[name] = (counts[name] || 0) + 1;
+      }
+    });
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 7);
+  }, [triggerHistory, patients]);
+
   const avgStress = useMemo(() => {
     if (history.length === 0) return null;
     return (history.reduce((s, h) => s + h.stress_level, 0) / history.length).toFixed(1);
@@ -288,26 +311,28 @@ const Autocuidado = () => {
     setSavingTrigger(true);
     const payload = {
       user_id: user.id,
-      checked_at: format(new Date(), "yyyy-MM-dd"),
+      checked_at: format(moodDate, "yyyy-MM-dd"),
       mood_emoji: moodEmoji,
-      triggers: selectedTriggers,
+      triggers: hadTriggerSession ? selectedTriggers : [],
       reflective_note: reflectiveNote,
-      patient_id: triggerPatientId,
+      patient_id: hadTriggerSession ? triggerPatientId : null,
     };
     const { error } = await (supabase as any).from("therapist_triggers").insert(payload);
     setSavingTrigger(false);
     if (error) { toast.error("Erro ao salvar registro emocional."); return; }
     toast.success("Registro emocional salvo! 🌿");
+    setMoodOpen(false);
     setSelectedTriggers([]);
     setReflectiveNote("");
     setTriggerPatientId(null);
+    setHadTriggerSession(false);
+    setMoodEmoji("😐");
+    setMoodDate(new Date());
     refreshHistory();
   };
 
   const refreshHistory = async () => {
     if (!user) return;
-    const now = new Date();
-    if (monthCursor.getMonth() !== now.getMonth() || monthCursor.getFullYear() !== now.getFullYear()) return;
     const start = format(startOfMonth(monthCursor), "yyyy-MM-dd");
     const end = format(endOfMonth(monthCursor), "yyyy-MM-dd");
     const [c, t] = await Promise.all([
@@ -341,6 +366,9 @@ const Autocuidado = () => {
       "── FREQUÊNCIA DE GATILHOS ──",
       ...triggerFrequency.map((f) => `${f.name}: ${f.count}x`),
       "",
+      "── PACIENTES QUE MAIS ATIVARAM ──",
+      ...patientTriggerFrequency.map((f) => `${f.name}: ${f.count}x`),
+      "",
       "── CHECK-INS DE AUTOCUIDADO ──",
       ...history.map((h) =>
         `${format(new Date(h.checked_at + "T12:00:00"), "dd/MM/yyyy")} | Estresse: ${h.stress_level}/10 | Atendimentos: ${h.sessions_count} | Pausas: ${h.pauses_count}`
@@ -366,7 +394,7 @@ const Autocuidado = () => {
 
   const activeCard = regulationCards.find((c) => c.key === openCard);
 
-  const barColors = ["#3D5C35", "#A57164", "#9B8DB8", "#D4A853", "#6B8E5A", "#B07D6A", "#7B6FA0"];
+  const sageShades = ["#3D5C35", "#4A6B40", "#5A7D4E", "#6B8E5A", "#7DA068", "#8FB278", "#A0C488"];
 
   return (
     <div className="space-y-8 animate-fade-up">
@@ -380,98 +408,346 @@ const Autocuidado = () => {
         <p className="mt-4 text-lg text-foreground/80 font-medium">Como você está hoje?</p>
       </header>
 
-      {/* ── Mood Emoji Check-in ── */}
-      <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8">
-        <h2 className="font-display text-xl font-bold text-foreground mb-2">Check-in Emocional</h2>
-        <p className="text-sm text-muted-foreground mb-5">Como está seu humor geral agora?</p>
-        <div className="flex justify-center gap-3 sm:gap-5 mb-6">
-          {moodEmojis.map((m) => (
-            <button
-              key={m.emoji}
-              onClick={() => setMoodEmoji(m.emoji)}
-              className={cn(
-                "flex flex-col items-center gap-1.5 rounded-2xl p-3 sm:p-4 transition-all border-2",
-                moodEmoji === m.emoji
-                  ? "border-sage bg-sage/10 scale-110 shadow-soft"
-                  : "border-transparent hover:border-border hover:bg-muted/50"
-              )}
-            >
-              <span className="text-3xl sm:text-4xl">{m.emoji}</span>
-              <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">{m.label}</span>
-            </button>
-          ))}
-        </div>
+      {/* ── Big "Registrar Meu Humor" Button ── */}
+      <section className="flex justify-center">
+        <Button
+          variant="accent"
+          size="lg"
+          onClick={() => { setMoodOpen(true); setMoodDate(new Date()); }}
+          className="gap-3 text-lg px-10 py-7 rounded-2xl shadow-elegant hover:scale-[1.02] transition-all"
+        >
+          <SmilePlus className="h-6 w-6" />
+          Registrar Meu Humor Agora
+        </Button>
+      </section>
 
-        {/* Trigger form */}
-        <div className="border-t border-border pt-6 space-y-5">
-          <div>
-            <h3 className="font-display font-semibold text-foreground mb-1 flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              Sessões que me ativaram
-            </h3>
-            <p className="text-xs text-muted-foreground mb-3">O que "pegou" em você hoje?</p>
-            <div className="flex flex-wrap gap-2">
-              {triggerOptions.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => toggleTrigger(t)}
-                  className={cn(
-                    "rounded-full px-4 py-1.5 text-sm font-medium transition-all border",
-                    selectedTriggers.includes(t)
-                      ? "bg-accent text-accent-foreground border-accent shadow-sm"
-                      : "bg-muted/50 text-muted-foreground border-border hover:border-accent/50"
-                  )}
+      {/* ── Mood Registration Dialog ── */}
+      <Dialog open={moodOpen} onOpenChange={setMoodOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl flex items-center gap-2">
+              <SmilePlus className="h-6 w-6 text-sage" />
+              Registrar Humor
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6 py-2">
+            {/* Date picker */}
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">Data do registro</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start gap-2 text-left">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    {format(moodDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarPicker
+                    mode="single"
+                    selected={moodDate}
+                    onSelect={(d) => d && setMoodDate(d)}
+                    disabled={(d) => d > new Date()}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Mood selector */}
+            <div>
+              <label className="text-sm font-medium text-foreground mb-3 block">Como você está se sentindo?</label>
+              <div className="flex justify-center gap-3 sm:gap-4">
+                {moodEmojis.map((m) => (
+                  <button
+                    key={m.emoji}
+                    onClick={() => setMoodEmoji(m.emoji)}
+                    className={cn(
+                      "flex flex-col items-center gap-1.5 rounded-2xl p-3 transition-all border-2",
+                      moodEmoji === m.emoji
+                        ? "border-sage bg-sage/10 scale-110 shadow-soft"
+                        : "border-transparent hover:border-border hover:bg-muted/50"
+                    )}
+                  >
+                    <span className="text-3xl">{m.emoji}</span>
+                    <span className="text-[10px] text-muted-foreground font-medium">{m.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Trigger session question */}
+            <div className="border-t border-border pt-5">
+              <label className="text-sm font-medium text-foreground mb-3 block flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                Teve alguma sessão que te ativou hoje?
+              </label>
+              <div className="flex gap-3">
+                <Button
+                  variant={hadTriggerSession ? "accent" : "outline"}
+                  size="sm"
+                  onClick={() => setHadTriggerSession(true)}
                 >
-                  {t}
-                </button>
-              ))}
+                  Sim
+                </Button>
+                <Button
+                  variant={!hadTriggerSession ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => { setHadTriggerSession(false); setSelectedTriggers([]); setTriggerPatientId(null); }}
+                  className={!hadTriggerSession ? "bg-sage text-white hover:bg-sage/90" : ""}
+                >
+                  Não
+                </Button>
+              </div>
+            </div>
+
+            {/* Conditional trigger details */}
+            {hadTriggerSession && (
+              <div className="space-y-4 pl-2 border-l-2 border-sage/30 ml-1">
+                {/* Patient dropdown */}
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1 block">Qual paciente?</label>
+                  <select
+                    value={triggerPatientId ?? ""}
+                    onChange={(e) => setTriggerPatientId(e.target.value || null)}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-sage/40"
+                  >
+                    <option value="">Selecionar paciente...</option>
+                    {patients.map((p) => (
+                      <option key={p.id} value={p.id}>{p.full_name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Trigger chips */}
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">O que sentiu?</label>
+                  <div className="flex flex-wrap gap-2">
+                    {triggerOptions.map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => toggleTrigger(t)}
+                        className={cn(
+                          "rounded-full px-4 py-1.5 text-sm font-medium transition-all border",
+                          selectedTriggers.includes(t)
+                            ? "bg-accent text-accent-foreground border-accent shadow-sm"
+                            : "bg-muted/50 text-muted-foreground border-border hover:border-accent/50"
+                        )}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Reflective note */}
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1 block">Nota reflexiva (opcional)</label>
+              <Textarea
+                value={reflectiveNote}
+                onChange={(e) => setReflectiveNote(e.target.value)}
+                placeholder="O que você observou sobre si durante a sessão?"
+                className="resize-none min-h-[80px]"
+                maxLength={500}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setMoodOpen(false)}>Cancelar</Button>
+              <Button
+                variant="accent"
+                onClick={saveTriggerCheckin}
+                disabled={savingTrigger}
+                className="gap-2"
+              >
+                <Save className="h-4 w-4" />
+                Salvar registro
+              </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          {/* Patient dropdown */}
+      {/* ── Emotional Climate Charts ── */}
+      <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <label className="text-sm font-medium text-foreground mb-1 block">Paciente relacionado (opcional)</label>
-            <select
-              value={triggerPatientId ?? ""}
-              onChange={(e) => setTriggerPatientId(e.target.value || null)}
-              className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-sage/40"
-            >
-              <option value="">Selecionar paciente...</option>
-              {patients.map((p) => (
-                <option key={p.id} value={p.id}>{p.full_name}</option>
-              ))}
-            </select>
+            <h2 className="font-display text-xl font-bold text-foreground">📊 Clima Emocional</h2>
+            <p className="text-sm text-muted-foreground">Seus padrões de humor e gatilhos ao longo do mês.</p>
           </div>
-
-          {/* Reflective note */}
-          <div>
-            <label className="text-sm font-medium text-foreground mb-1 block">Nota reflexiva</label>
-            <Textarea
-              value={reflectiveNote}
-              onChange={(e) => setReflectiveNote(e.target.value)}
-              placeholder="O que você observou sobre si durante a sessão?"
-              className="resize-none min-h-[80px]"
-              maxLength={500}
-            />
-          </div>
-
-          <div className="flex justify-end">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-muted rounded-full p-1">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthCursor(subMonths(monthCursor, 1))}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium px-2 capitalize min-w-[120px] text-center">
+                {format(monthCursor, "MMMM yyyy", { locale: ptBR })}
+              </span>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthCursor(addMonths(monthCursor, 1))}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
             <Button
-              variant="accent"
-              onClick={saveTriggerCheckin}
-              disabled={savingTrigger}
-              className="gap-2"
+              variant="outline"
+              size="sm"
+              onClick={exportEmotionalReport}
+              disabled={history.length === 0 && triggerHistory.length === 0}
+              className="gap-1.5 border-sage/30 text-sage hover:bg-sage/10"
             >
-              <Save className="h-4 w-4" />
-              Salvar registro emocional
+              <Download className="h-4 w-4" />
+              Exportar
             </Button>
           </div>
         </div>
+
+        {/* Stats */}
+        {(history.length > 0 || triggerHistory.length > 0) && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="rounded-xl bg-sage/5 border border-sage/15 p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">{history.length}</p>
+              <p className="text-xs text-muted-foreground">Check-ins</p>
+            </div>
+            <div className="rounded-xl bg-sage/5 border border-sage/15 p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">{avgStress ?? "—"}</p>
+              <p className="text-xs text-muted-foreground">Estresse médio</p>
+            </div>
+            <div className="rounded-xl bg-sage/5 border border-sage/15 p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">
+                {history.reduce((s, h) => s + h.sessions_count, 0)}
+              </p>
+              <p className="text-xs text-muted-foreground">Atendimentos</p>
+            </div>
+            <div className="rounded-xl bg-sage/5 border border-sage/15 p-4 text-center">
+              <p className="text-2xl font-bold text-foreground">{triggerHistory.length}</p>
+              <p className="text-xs text-muted-foreground">Registros emocionais</p>
+            </div>
+          </div>
+        )}
+
+        {/* Two-column chart layout */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Mood line chart */}
+          <div className="rounded-2xl border border-sage/15 bg-sage/5 p-5">
+            <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-sage" />
+              Variação do Humor
+            </h3>
+            {moodChartData.length >= 2 ? (
+              <div className="h-52">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={moodChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis domain={[1, 5]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))"
+                      tickFormatter={(v) => ["", "😫", "😔", "😐", "🙂", "🤩"][v] || ""} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }}
+                      formatter={(value: number) => [["", "😫", "😔", "😐", "🙂", "🤩"][value] || value, "Humor"]}
+                    />
+                    <Line type="monotone" dataKey="humor" stroke="#3D5C35" strokeWidth={2.5} dot={{ r: 5, fill: "#3D5C35" }} name="Humor" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-10">
+                Registre ao menos 2 dias de humor para ver o gráfico. 🌿
+              </p>
+            )}
+          </div>
+
+          {/* Patient / trigger bar chart */}
+          <div className="rounded-2xl border border-sage/15 bg-sage/5 p-5">
+            <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-sage" />
+              Pacientes que mais ativaram
+            </h3>
+            {patientTriggerFrequency.length > 0 ? (
+              <div className="h-52">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={patientTriggerFrequency} layout="vertical" margin={{ left: 10, right: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={100} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }}
+                      formatter={(value: number) => [`${value}x`, "Ativações"]}
+                    />
+                    <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={20}>
+                      {patientTriggerFrequency.map((_, i) => (
+                        <Cell key={i} fill={sageShades[i % sageShades.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-10">
+                Associe pacientes aos registros para ver o gráfico. 🌱
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Trigger frequency bar chart */}
+        {triggerFrequency.length > 0 && (
+          <div className="rounded-2xl border border-sage/15 bg-sage/5 p-5">
+            <h3 className="font-display font-semibold text-foreground mb-4">Gatilhos mais frequentes</h3>
+            <div className="h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={triggerFrequency} layout="vertical" margin={{ left: 10, right: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={110} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }}
+                    formatter={(value: number) => [`${value}x`, "Ocorrências"]}
+                  />
+                  <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={20}>
+                    {triggerFrequency.map((_, i) => (
+                      <Cell key={i} fill={sageShades[i % sageShades.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* Stress line chart */}
+        {chartData.length >= 2 && (
+          <div className="rounded-2xl border border-sage/15 bg-sage/5 p-5">
+            <h3 className="font-display font-semibold text-foreground mb-4">Estresse & Atendimentos</h3>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }} />
+                  <Line type="monotone" dataKey="estresse" stroke="#A57164" strokeWidth={2} dot={{ r: 4 }} name="Estresse" />
+                  <Line type="monotone" dataKey="atendimentos" stroke="#3D5C35" strokeWidth={2} dot={{ r: 4 }} name="Atendimentos" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {historyLoading ? (
+          <p className="text-center text-muted-foreground py-6">Carregando...</p>
+        ) : history.length === 0 && triggerHistory.length === 0 ? (
+          <p className="text-center text-muted-foreground py-6">
+            Nenhum registro neste mês. Comece registrando como você está hoje! 💜
+          </p>
+        ) : null}
       </section>
 
       {/* ── PLEASE Check-in ── */}
       <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8">
-        <h2 className="font-display text-xl font-bold text-foreground mb-5">Check-in Biológico</h2>
+        <h2 className="font-display text-xl font-bold text-foreground mb-5">Check-in Biológico (PLEASE)</h2>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           {pleaseItems.map((item) => {
             const val = pleaseState[item.key];
@@ -613,134 +889,10 @@ const Autocuidado = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ── Dashboard: Emotional Charts ── */}
-      <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="font-display text-xl font-bold text-foreground">Painel Emocional</h2>
-            <p className="text-sm text-muted-foreground">Visualize seus padrões de humor e gatilhos ao longo do mês.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 bg-muted rounded-full p-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthCursor(subMonths(monthCursor, 1))}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm font-medium px-2 capitalize min-w-[120px] text-center">
-                {format(monthCursor, "MMMM yyyy", { locale: ptBR })}
-              </span>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthCursor(addMonths(monthCursor, 1))}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={exportEmotionalReport}
-              disabled={history.length === 0 && triggerHistory.length === 0}
-              className="gap-1.5 border-sage/30 text-sage hover:bg-sage/10"
-            >
-              <Download className="h-4 w-4" />
-              Exportar
-            </Button>
-          </div>
-        </div>
-
-        {/* Stats */}
-        {(history.length > 0 || triggerHistory.length > 0) && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="rounded-xl bg-muted/50 p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{history.length}</p>
-              <p className="text-xs text-muted-foreground">Check-ins</p>
-            </div>
-            <div className="rounded-xl bg-muted/50 p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{avgStress ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">Estresse médio</p>
-            </div>
-            <div className="rounded-xl bg-muted/50 p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">
-                {history.reduce((s, h) => s + h.sessions_count, 0)}
-              </p>
-              <p className="text-xs text-muted-foreground">Atendimentos</p>
-            </div>
-            <div className="rounded-xl bg-muted/50 p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{triggerHistory.length}</p>
-              <p className="text-xs text-muted-foreground">Registros emocionais</p>
-            </div>
-          </div>
-        )}
-
-        {/* Mood line chart */}
-        {moodChartData.length >= 2 && (
-          <div>
-            <h3 className="font-display font-semibold text-foreground mb-3">Variação do Humor</h3>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={moodChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="day" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis domain={[1, 5]} tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))"
-                    tickFormatter={(v) => ["", "😫", "😔", "😐", "🙂", "🤩"][v] || ""} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }}
-                    formatter={(value: number) => [["", "😫", "😔", "😐", "🙂", "🤩"][value] || value, "Humor"]}
-                  />
-                  <Line type="monotone" dataKey="humor" stroke="#3D5C35" strokeWidth={2.5} dot={{ r: 5, fill: "#3D5C35" }} name="Humor" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-
-        {/* Stress line chart */}
-        {chartData.length >= 2 && (
-          <div>
-            <h3 className="font-display font-semibold text-foreground mb-3">Estresse & Atendimentos</h3>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="day" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis domain={[0, 10]} tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }} />
-                  <Line type="monotone" dataKey="estresse" stroke="#A57164" strokeWidth={2} dot={{ r: 4 }} name="Estresse" />
-                  <Line type="monotone" dataKey="atendimentos" stroke="#3D5C35" strokeWidth={2} dot={{ r: 4 }} name="Atendimentos" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-
-        {/* Trigger frequency bar chart */}
-        {triggerFrequency.length > 0 && (
-          <div>
-            <h3 className="font-display font-semibold text-foreground mb-3">Gatilhos mais frequentes</h3>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={triggerFrequency} layout="vertical" margin={{ left: 10, right: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" width={110} />
-                  <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }}
-                    formatter={(value: number) => [`${value}x`, "Ocorrências"]} />
-                  <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={20}>
-                    {triggerFrequency.map((_, i) => (
-                      <Cell key={i} fill={barColors[i % barColors.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-
-        {/* History cards */}
-        {historyLoading ? (
-          <p className="text-center text-muted-foreground py-6">Carregando...</p>
-        ) : history.length === 0 && triggerHistory.length === 0 ? (
-          <p className="text-center text-muted-foreground py-6">
-            Nenhum registro neste mês. Comece registrando como você está hoje! 💜
-          </p>
-        ) : (
+      {/* ── History cards ── */}
+      {!historyLoading && (history.length > 0 || triggerHistory.length > 0) && (
+        <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8">
+          <h2 className="font-display text-xl font-bold text-foreground mb-4">Histórico do Mês</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...history].reverse().map((h) => {
               const pleaseOk = [h.sleep, h.food, h.movement, h.health, h.balance].filter(Boolean).length;
@@ -780,8 +932,8 @@ const Autocuidado = () => {
               );
             })}
           </div>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 };
