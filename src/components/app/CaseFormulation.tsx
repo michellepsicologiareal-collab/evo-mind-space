@@ -56,6 +56,10 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
   const [evoHomework, setEvoHomework] = useState("");
   const [savingEvo, setSavingEvo] = useState(false);
 
+  // AI organize state
+  const [organizing, setOrganizing] = useState(false);
+  const [aiResult, setAiResult] = useState<string | null>(null);
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
