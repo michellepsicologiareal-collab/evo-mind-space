@@ -48,6 +48,20 @@ interface SuperviseeRow {
   patients: Patient[];
 }
 
+interface SessionSummary {
+  id: string;
+  scheduled_at: string;
+  status: string;
+  notes: string | null;
+}
+
+interface ProgressEntry {
+  id: string;
+  recorded_at: string;
+  mood_score: number | null;
+  note: string | null;
+}
+
 const Supervisees = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
