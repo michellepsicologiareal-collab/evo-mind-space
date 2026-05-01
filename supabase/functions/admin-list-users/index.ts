@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
     if (error) throw error;
 
     // Get profiles for enrichment
-    const { data: profiles } = await adminClient.from("profiles").select("id, full_name, crp, profile_type, clinic_name, subscription_status, created_at");
+    const { data: profiles } = await adminClient.from("profiles").select("id, full_name, crp, profile_type, clinic_name, subscription_status, is_approved, created_at");
 
     const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Shield, Users, Mail, Calendar, Building2, ArrowLeft, ChevronDown } from "lucide-react";
+import { Loader2, Shield, Users, Mail, Calendar, Building2, ArrowLeft, ChevronDown, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +36,7 @@ interface AdminUser {
   profile_type: string | null;
   clinic_name: string | null;
   subscription_status: SubStatus;
+  is_approved: boolean;
 }
 
 const Admin = () => {
@@ -98,6 +99,23 @@ const Admin = () => {
     toast.success(`Status alterado para ${STATUS_LABELS[newStatus]}`);
   };
 
+  const handleApproval = async (userId: string, approve: boolean) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_approved: approve } as any)
+      .eq("id", userId);
+
+    if (error) {
+      toast.error("Erro ao atualizar aprovação");
+      return;
+    }
+
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, is_approved: approve } : u))
+    );
+    toast.success(approve ? "Usuário aprovado!" : "Acesso revogado");
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -107,6 +125,9 @@ const Admin = () => {
   }
 
   if (!authorized) return null;
+
+  const pendingUsers = users.filter((u) => !u.is_approved);
+  const approvedUsers = users.filter((u) => u.is_approved);
 
   return (
     <div className="min-h-screen bg-background">
@@ -126,14 +147,50 @@ const Admin = () => {
           </div>
         </header>
 
+        {/* Pending approval section */}
+        {pendingUsers.length > 0 && (
+          <section className="rounded-3xl bg-accent/5 border border-accent/20 shadow-card p-6 lg:p-8">
+            <div className="flex items-center gap-2 mb-6">
+              <XCircle className="h-5 w-5 text-accent" />
+              <h2 className="font-display text-xl font-medium">Aguardando aprovação ({pendingUsers.length})</h2>
+            </div>
+            <div className="space-y-3">
+              {pendingUsers.map((u) => (
+                <div key={u.id} className="flex items-center justify-between gap-4 bg-card rounded-2xl border border-border p-4">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground truncate">{u.full_name || "Sem nome"}</p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <Mail className="h-3.5 w-3.5" /> {u.email}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Cadastro: {new Date(u.created_at).toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="accent"
+                      onClick={() => handleApproval(u.id, true)}
+                      className="gap-1"
+                    >
+                      <CheckCircle2 className="h-4 w-4" /> Aprovar
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Approved users section */}
         <section className="rounded-3xl bg-card border border-border shadow-card p-6 lg:p-8">
           <div className="flex items-center gap-2 mb-6">
             <Users className="h-5 w-5 text-primary" />
-            <h2 className="font-display text-xl font-medium">Psicólogos cadastrados ({users.length})</h2>
+            <h2 className="font-display text-xl font-medium">Psicólogos aprovados ({approvedUsers.length})</h2>
           </div>
 
-          {users.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">Nenhum usuário cadastrado ainda.</p>
+          {approvedUsers.length === 0 ? (
+            <p className="text-muted-foreground text-center py-8">Nenhum usuário aprovado ainda.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -146,11 +203,12 @@ const Admin = () => {
                     <th className="pb-3 pr-4 font-medium">Consultório</th>
                     <th className="pb-3 pr-4 font-medium">Assinatura</th>
                     <th className="pb-3 pr-4 font-medium">Cadastro</th>
-                    <th className="pb-3 font-medium">Último login</th>
+                    <th className="pb-3 pr-4 font-medium">Último login</th>
+                    <th className="pb-3 font-medium">Acesso</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
+                  {approvedUsers.map((u) => (
                     <tr key={u.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                       <td className="py-3 pr-4 font-medium text-foreground">{u.full_name || "—"}</td>
                       <td className="py-3 pr-4 flex items-center gap-1.5">
@@ -202,8 +260,18 @@ const Admin = () => {
                         <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                         {new Date(u.created_at).toLocaleDateString("pt-BR")}
                       </td>
-                      <td className="py-3">
+                      <td className="py-3 pr-4">
                         {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("pt-BR") : "Nunca"}
+                      </td>
+                      <td className="py-3">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleApproval(u.id, false)}
+                          className="text-xs text-destructive hover:text-destructive"
+                        >
+                          Revogar
+                        </Button>
                       </td>
                     </tr>
                   ))}
