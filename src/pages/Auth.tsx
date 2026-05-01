@@ -73,6 +73,24 @@ const Auth = () => {
     setSiPassword("");
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) {
+      toast.error("Informe seu email.");
+      return;
+    }
+    setForgotLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setForgotLoading(false);
+    if (error) {
+      toast.error(error.message || "Erro ao enviar email de recuperação.");
+      return;
+    }
+    setForgotSent(true);
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = signUpSchema.safeParse({
