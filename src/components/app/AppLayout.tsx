@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { NavLink, Outlet, useNavigate, Link, useLocation } from "react-router-dom";
+import logoSrc from "@/assets/logo-psireal.png";
 import {
-  Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut,
+  LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut,
   GraduationCap, ShieldCheck, Crown, Lock, BookOpen, Flower2, FileText,
   FileCheck, Shield, UserCog,
 } from "lucide-react";
