@@ -22,7 +22,7 @@ const plans = [
   },
   {
     name: "Supervisora PsiReal",
-    price: "R$ 79,90",
+    price: "R$ 49,90",
     period: "/mês",
     description: "Para supervisoras que acompanham alunos e precisam de gestão completa.",
     features: [
