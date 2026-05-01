@@ -164,8 +164,8 @@ const Dashboard = () => {
       const mapped = sessionsData.map((s: any) => ({
         id: s.id,
         scheduled_at: s.scheduled_at,
-        patient_name: s.patients?.full_name ?? "—",
-        patient_initials: getInitials(s.patients?.full_name ?? "?"),
+        patient_name: s.session_type === "supervision" ? "Supervisão" : (s.patient?.full_name ?? "—"),
+        patient_initials: s.session_type === "supervision" ? "SV" : getInitials(s.patient?.full_name ?? "?"),
         status: s.status ?? "scheduled",
         session_number: patientSessionCounts[s.patient_id] ?? 1,
       }));
