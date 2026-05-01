@@ -54,6 +54,7 @@ export default {
           DEFAULT: "hsl(var(--sand))",
           foreground: "hsl(var(--sand-foreground))",
         },
+        gold: "hsl(var(--gold))",
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
