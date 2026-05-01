@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Upload, User, Users, ShieldCheck, X, Building2, Trash2, FileText } from "lucide-react";
+import { Loader2, Upload, User, Users, ShieldCheck, X, Building2, Trash2, FileText, Download } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,121 @@ const Profile = () => {
   const [wipeConfirm, setWipeConfirm] = useState("");
   const [wiping, setWiping] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const fetchMyData = async () => {
+    if (!user) return null;
+    const [pRes, sRes, prRes] = await Promise.all([
+      supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
+      supabase.from("sessions").select("*").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
+      (supabase as any).from("patient_progress").select("*").eq("user_id", user.id).order("recorded_at", { ascending: false }),
+    ]);
+    // Build patient name map for display
+    const patientMap = new Map((pRes.data ?? []).map((p: any) => [p.id, p.full_name]));
+    const addName = (row: any) => ({ ...row, _patient_name: patientMap.get(row.patient_id) ?? "—" });
+    return { patients: pRes.data ?? [], sessions: (sRes.data ?? []).map(addName), progress: (prRes.data ?? []).map(addName) };
+  };
+
+  const downloadFile = (content: string, filename: string, mime: string) => {
+    const blob = new Blob(["\uFEFF" + content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCSV = async () => {
+    setExporting(true);
+    try {
+      const data = await fetchMyData();
+      if (!data) return;
+      const esc = (v: any) => {
+        const s = String(v ?? "").replace(/"/g, '""');
+        return `"${s}"`;
+      };
+      let csv = "--- PACIENTES ---\nNome,Email,Telefone,Nascimento,Ativo,Preço sessão,Notas\n";
+      data.patients.forEach((p: any) => {
+        csv += [p.full_name, p.email, p.phone, p.birth_date, p.is_active ? "Sim" : "Não", p.session_price, p.notes].map(esc).join(",") + "\n";
+      });
+      csv += "\n--- SESSÕES ---\nPaciente,Data,Status,Duração(min),Preço,Pagamento,Método,Notas\n";
+      data.sessions.forEach((s: any) => {
+        csv += [s._patient_name, s.scheduled_at, s.status, s.duration_minutes, s.price, s.payment_status, s.payment_method, s.notes].map(esc).join(",") + "\n";
+      });
+      csv += "\n--- HUMOR / PROGRESSO ---\nPaciente,Data,Humor(1-10),Nota\n";
+      data.progress.forEach((pr: any) => {
+        csv += [pr._patient_name, pr.recorded_at, pr.mood_score, pr.note].map(esc).join(",") + "\n";
+      });
+      downloadFile(csv, `psireal_dados_${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8");
+      toast.success("CSV exportado!");
+    } catch {
+      toast.error("Erro ao exportar CSV");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      const data = await fetchMyData();
+      if (!data) return;
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF();
+      let y = 20;
+      const lh = 6;
+      const addPage = () => { doc.addPage(); y = 20; };
+      const checkPage = () => { if (y > 270) addPage(); };
+
+      doc.setFontSize(16);
+      doc.text("Relatório de Dados — PsiReal", 14, y);
+      y += 10;
+      doc.setFontSize(10);
+      doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, 14, y);
+      y += 12;
+
+      doc.setFontSize(13);
+      doc.text("Pacientes", 14, y); y += 8;
+      doc.setFontSize(9);
+      data.patients.forEach((p: any) => {
+        checkPage();
+        doc.text(`• ${p.full_name} — ${p.is_active ? "Ativo" : "Inativo"} — ${p.email || "sem email"} — R$ ${p.session_price ?? "—"}`, 16, y);
+        y += lh;
+      });
+      y += 6;
+
+      checkPage();
+      doc.setFontSize(13);
+      doc.text("Sessões", 14, y); y += 8;
+      doc.setFontSize(9);
+      data.sessions.forEach((s: any) => {
+        checkPage();
+        const dt = new Date(s.scheduled_at).toLocaleDateString("pt-BR");
+        doc.text(`• ${s._patient_name} — ${dt} — ${s.status} — R$ ${s.price ?? "—"} (${s.payment_status})`, 16, y);
+        y += lh;
+      });
+      y += 6;
+
+      checkPage();
+      doc.setFontSize(13);
+      doc.text("Humor / Progresso", 14, y); y += 8;
+      doc.setFontSize(9);
+      data.progress.forEach((pr: any) => {
+        checkPage();
+        const dt = new Date(pr.recorded_at).toLocaleDateString("pt-BR");
+        doc.text(`• ${pr._patient_name} — ${dt} — Humor: ${pr.mood_score ?? "—"} — ${pr.note ?? ""}`.slice(0, 120), 16, y);
+        y += lh;
+      });
+
+      doc.save(`psireal_dados_${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast.success("PDF exportado!");
+    } catch {
+      toast.error("Erro ao exportar PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const load = async () => {
     if (!user) return;
@@ -416,6 +531,28 @@ const Profile = () => {
           </div>
           <span className="text-xs text-muted-foreground">Ler</span>
         </button>
+
+        <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <Download className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Exportar meus dados</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Baixe todos os seus pacientes, sessões e registros de humor/progresso. Apenas seus próprios dados são incluídos.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={exporting}>
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Exportar CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportPDF} disabled={exporting}>
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Exportar PDF
+            </Button>
+          </div>
+        </div>
 
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3">
           <div className="flex items-start gap-3">
