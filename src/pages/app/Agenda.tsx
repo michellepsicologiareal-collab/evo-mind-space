@@ -98,7 +98,9 @@ const Agenda = () => {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
+    session_type: "clinical" as SessionType,
     patient_id: "",
+    discussed_patient_id: "",
     date: format(new Date(), "yyyy-MM-dd"),
     time: "09:00",
     duration_minutes: 50,
