@@ -52,13 +52,14 @@ const Patients = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from("patients")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("full_name");
-    if (error) toast.error("Erro ao carregar pacientes");
-    setPatients(data ?? []);
+    const [patientsRes, profileRes] = await Promise.all([
+      supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
+      supabase.from("profiles").select("full_name, pix_key").eq("id", user.id).maybeSingle(),
+    ]);
+    if (patientsRes.error) toast.error("Erro ao carregar pacientes");
+    setPatients(patientsRes.data ?? []);
+    setPixKey((profileRes.data as any)?.pix_key ?? "");
+    setProfName(profileRes.data?.full_name ?? "");
     setLoading(false);
   };
 
