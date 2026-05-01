@@ -51,6 +51,118 @@ const Profile = () => {
   const [wipeConfirm, setWipeConfirm] = useState("");
   const [wiping, setWiping] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const fetchMyData = async () => {
+    if (!user) return null;
+    const [pRes, sRes, prRes] = await Promise.all([
+      supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
+      supabase.from("sessions").select("*, patients!inner(full_name)").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
+      supabase.from("patient_progress").select("*, patients!patient_progress_patient_id_fkey(full_name)").eq("user_id", user.id).order("recorded_at", { ascending: false }),
+    ]);
+    return { patients: pRes.data ?? [], sessions: sRes.data ?? [], progress: prRes.data ?? [] };
+  };
+
+  const downloadFile = (content: string, filename: string, mime: string) => {
+    const blob = new Blob(["\uFEFF" + content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCSV = async () => {
+    setExporting(true);
+    try {
+      const data = await fetchMyData();
+      if (!data) return;
+      const esc = (v: any) => {
+        const s = String(v ?? "").replace(/"/g, '""');
+        return `"${s}"`;
+      };
+      let csv = "--- PACIENTES ---\nNome,Email,Telefone,Nascimento,Ativo,Preço sessão,Notas\n";
+      data.patients.forEach((p: any) => {
+        csv += [p.full_name, p.email, p.phone, p.birth_date, p.is_active ? "Sim" : "Não", p.session_price, p.notes].map(esc).join(",") + "\n";
+      });
+      csv += "\n--- SESSÕES ---\nPaciente,Data,Status,Duração(min),Preço,Pagamento,Método,Notas\n";
+      data.sessions.forEach((s: any) => {
+        csv += [s.patients?.full_name, s.scheduled_at, s.status, s.duration_minutes, s.price, s.payment_status, s.payment_method, s.notes].map(esc).join(",") + "\n";
+      });
+      csv += "\n--- HUMOR / PROGRESSO ---\nPaciente,Data,Humor(1-10),Nota\n";
+      data.progress.forEach((pr: any) => {
+        csv += [pr.patients?.full_name, pr.recorded_at, pr.mood_score, pr.note].map(esc).join(",") + "\n";
+      });
+      downloadFile(csv, `psireal_dados_${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8");
+      toast.success("CSV exportado!");
+    } catch {
+      toast.error("Erro ao exportar CSV");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      const data = await fetchMyData();
+      if (!data) return;
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF();
+      let y = 20;
+      const lh = 6;
+      const addPage = () => { doc.addPage(); y = 20; };
+      const checkPage = () => { if (y > 270) addPage(); };
+
+      doc.setFontSize(16);
+      doc.text("Relatório de Dados — PsiReal", 14, y);
+      y += 10;
+      doc.setFontSize(10);
+      doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, 14, y);
+      y += 12;
+
+      doc.setFontSize(13);
+      doc.text("Pacientes", 14, y); y += 8;
+      doc.setFontSize(9);
+      data.patients.forEach((p: any) => {
+        checkPage();
+        doc.text(`• ${p.full_name} — ${p.is_active ? "Ativo" : "Inativo"} — ${p.email || "sem email"} — R$ ${p.session_price ?? "—"}`, 16, y);
+        y += lh;
+      });
+      y += 6;
+
+      checkPage();
+      doc.setFontSize(13);
+      doc.text("Sessões", 14, y); y += 8;
+      doc.setFontSize(9);
+      data.sessions.forEach((s: any) => {
+        checkPage();
+        const dt = new Date(s.scheduled_at).toLocaleDateString("pt-BR");
+        doc.text(`• ${s.patients?.full_name} — ${dt} — ${s.status} — R$ ${s.price ?? "—"} (${s.payment_status})`, 16, y);
+        y += lh;
+      });
+      y += 6;
+
+      checkPage();
+      doc.setFontSize(13);
+      doc.text("Humor / Progresso", 14, y); y += 8;
+      doc.setFontSize(9);
+      data.progress.forEach((pr: any) => {
+        checkPage();
+        const dt = new Date(pr.recorded_at).toLocaleDateString("pt-BR");
+        doc.text(`• ${pr.patients?.full_name} — ${dt} — Humor: ${pr.mood_score ?? "—"} — ${pr.note ?? ""}`.slice(0, 120), 16, y);
+        y += lh;
+      });
+
+      doc.save(`psireal_dados_${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast.success("PDF exportado!");
+    } catch {
+      toast.error("Erro ao exportar PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const load = async () => {
     if (!user) return;
