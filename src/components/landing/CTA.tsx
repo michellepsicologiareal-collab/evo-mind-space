@@ -14,7 +14,7 @@ export const CTA = () => {
             <h2 className="mt-4 font-display text-4xl lg:text-6xl font-medium leading-[1.05] text-balance">
               Transforme dados em decisões.
               <br />
-              <span className="italic text-accent">E o seu consultório, em estratégia.</span>
+              <span className="font-bold text-accent">E o seu consultório, em estratégia.</span>
             </h2>
             <p className="mt-6 text-lg text-primary-foreground/85 max-w-xl">
               Comece gratuitamente. Sem cartão de crédito. Em poucos minutos seu consultório passa a operar com clareza.

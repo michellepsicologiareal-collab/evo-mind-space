@@ -8,7 +8,7 @@ export const Differential = () => {
             <h2 className="mt-3 font-display text-4xl lg:text-5xl font-medium leading-tight text-balance">
               Não é só gestão.
               <br />
-              É <span className="italic text-accent">apoio ao raciocínio clínico</span>.
+              É <span className="font-bold text-accent">apoio ao raciocínio clínico</span>.
             </h2>
             <p className="mt-6 text-muted-foreground leading-relaxed">
               O Psi Real estrutura dados consistentes do paciente para que você tome decisões clínicas
@@ -35,7 +35,7 @@ export const Differential = () => {
               <div className="relative rounded-2xl bg-gradient-hero text-primary-foreground p-6 shadow-elegant">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-primary-foreground/70">Com Psi Real</p>
                 <p className="mt-3 font-display text-2xl leading-snug">
-                  "tenho dados consistentes que mostram <span className="italic">evolução ou estagnação</span>."
+                  "tenho dados consistentes que mostram <span className="font-semibold">evolução ou estagnação</span>."
                 </p>
                 <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-accent/40 blur-2xl" />
               </div>

@@ -18,7 +18,7 @@ export const Hero = () => {
 
           <h1 className="mt-6 font-display text-5xl sm:text-6xl lg:text-7xl font-medium leading-[1.02] tracking-tight text-balance">
             Seu consultório não precisa de mais{" "}
-            <span className="italic text-muted-foreground">esforço</span>.
+            <span className="font-semibold text-muted-foreground">esforço</span>.
             <br />
             Precisa de <span className="text-accent italic">estrutura</span>.
           </h1>

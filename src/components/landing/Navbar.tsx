@@ -10,7 +10,7 @@ export const Navbar = () => {
             <span className="absolute inset-0 rounded-full animate-pulse-ring" />
           </span>
           <span className="font-display text-xl font-semibold tracking-tight">
-            Psi <span className="italic text-accent">Real</span>
+            Psi <span className="font-extrabold text-accent">Real</span>
           </span>
         </a>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
