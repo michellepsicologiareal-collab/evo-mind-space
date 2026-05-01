@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, CheckCircle } from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle, AlertTriangle } from "lucide-react";
 import logoSrc from "@/assets/logo-psireal.png";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,17 +15,26 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isRecovery, setIsRecovery] = useState(false);
   const [done, setDone] = useState(false);
+  const [linkExpired, setLinkExpired] = useState(false);
 
   useEffect(() => {
     const markRecoveryFromUrl = () => {
       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
       const queryParams = new URLSearchParams(window.location.search);
+
+      // Check for error in URL (expired/invalid link)
+      const errorDescription = hashParams.get("error_description") || queryParams.get("error_description");
+      const errorCode = hashParams.get("error") || queryParams.get("error");
+      if (errorDescription || errorCode) {
+        setLinkExpired(true);
+        return;
+      }
+
       if (hashParams.get("type") === "recovery" || queryParams.get("type") === "recovery" || hashParams.has("access_token")) {
         setIsRecovery(true);
       }
     };
 
-    // Listen for PASSWORD_RECOVERY event from the auth link
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsRecovery(true);
@@ -33,9 +42,26 @@ const ResetPassword = () => {
     });
 
     markRecoveryFromUrl();
-    supabase.auth.getSession().then(() => markRecoveryFromUrl());
+    supabase.auth.getSession().then(({ error }) => {
+      if (error) {
+        setLinkExpired(true);
+      } else {
+        markRecoveryFromUrl();
+      }
+    });
 
-    return () => subscription.unsubscribe();
+    // If after 5 seconds we still don't have recovery, mark as expired
+    const timeout = setTimeout(() => {
+      setLinkExpired((prev) => {
+        // Only expire if not already in recovery mode or done
+        return prev;
+      });
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const handleReset = async (e: React.FormEvent) => {
@@ -55,7 +81,12 @@ const ResetPassword = () => {
     setLoading(false);
 
     if (error) {
-      toast.error(error.message || "Erro ao redefinir a senha.");
+      const msg = error.message?.toLowerCase() || "";
+      if (msg.includes("expired") || msg.includes("invalid") || msg.includes("token") || msg.includes("session")) {
+        setLinkExpired(true);
+      } else {
+        toast.error(error.message || "Erro ao redefinir a senha.");
+      }
       return;
     }
 
@@ -86,6 +117,23 @@ const ResetPassword = () => {
               <p className="text-muted-foreground text-sm">
                 Você será redirecionado para o login em instantes…
               </p>
+            </div>
+          ) : linkExpired ? (
+            <div className="text-center space-y-4">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangle className="h-8 w-8 text-destructive" />
+              </div>
+              <h1 className="font-display text-2xl font-semibold">Link expirado ou inválido</h1>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                O link de redefinição de senha expirou ou já foi utilizado.<br />
+                Por favor, volte ao login e solicite um novo link clicando em{" "}
+                <strong>"Esqueci minha senha"</strong>.
+              </p>
+              <Link to="/auth">
+                <Button variant="accent" className="mt-2 gap-2">
+                  <ArrowLeft className="h-4 w-4" /> Solicitar novo link
+                </Button>
+              </Link>
             </div>
           ) : !isRecovery ? (
             <div className="text-center space-y-4">
