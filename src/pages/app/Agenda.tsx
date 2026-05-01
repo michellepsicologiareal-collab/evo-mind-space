@@ -826,9 +826,6 @@ const Agenda = () => {
                           <SelectItem value="paid">
                             <span className="text-emerald-600 font-medium">● Pago</span>
                           </SelectItem>
-                          <SelectItem value="cancelled">
-                            <span className="text-muted-foreground font-medium">● Cancelado</span>
-                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <Button
