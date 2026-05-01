@@ -253,9 +253,9 @@ const Patients = () => {
                 <Label htmlFor="notes">Observações</Label>
                 <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button type="submit" variant="accent" disabled={saving}>
+              <DialogFooter className="gap-2">
+                <Button type="button" variant="outline" className="min-h-[44px]" onClick={() => setOpen(false)}>Cancelar</Button>
+                <Button type="submit" variant="accent" className="min-h-[44px]" disabled={saving}>
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                   {editing ? "Salvar" : "Cadastrar"}
                 </Button>
