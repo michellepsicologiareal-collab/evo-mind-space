@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { logClinicalAccess } from "@/utils/auditLog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2, Save, Plus, Check, Trash2, Brain, MessageSquare, ListChecks, BookOpen } from "lucide-react";
