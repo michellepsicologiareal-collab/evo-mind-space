@@ -49,6 +49,12 @@
     /* Dourado Champagne — ícone premium */
     --gold: 38 45% 60%;
 
+    /* Autocuidado — Verde Sálvia e Azul Sereno */
+    --sage: 140 20% 45%;
+    --sage-foreground: 0 0% 100%;
+    --serene: 200 45% 50%;
+    --serene-foreground: 0 0% 100%;
+
     --destructive: 0 65% 48%;
     --destructive-foreground: 37 42% 96%;
 
