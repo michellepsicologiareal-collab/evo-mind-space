@@ -234,6 +234,19 @@ const Patients = () => {
                 <Label htmlFor="full_name">Nome completo *</Label>
                 <Input id="full_name" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">Categoria</Label>
+                <select
+                  id="category"
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value as typeof form.category })}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {PATIENT_CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
