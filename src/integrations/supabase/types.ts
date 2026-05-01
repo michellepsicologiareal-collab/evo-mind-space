@@ -268,6 +268,7 @@ export type Database = {
           crp: string | null
           full_name: string | null
           id: string
+          is_approved: boolean
           phone: string | null
           pix_key: string | null
           profile_type: Database["public"]["Enums"]["profile_type"]
@@ -287,6 +288,7 @@ export type Database = {
           crp?: string | null
           full_name?: string | null
           id: string
+          is_approved?: boolean
           phone?: string | null
           pix_key?: string | null
           profile_type?: Database["public"]["Enums"]["profile_type"]
@@ -306,6 +308,7 @@ export type Database = {
           crp?: string | null
           full_name?: string | null
           id?: string
+          is_approved?: boolean
           phone?: string | null
           pix_key?: string | null
           profile_type?: Database["public"]["Enums"]["profile_type"]
