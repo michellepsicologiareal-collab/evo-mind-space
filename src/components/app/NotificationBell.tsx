@@ -49,8 +49,8 @@ export const NotificationBell = () => {
     if (!user) return;
     load();
 
-    // Realtime subscription scoped to user to prevent cross-user channel access
-    const channelName = `notifications-user-${user.id}-${Date.now()}`;
+    // Channel scoped to user: notifications:{user_id}
+    const channelName = `notifications:${user.id}`;
     const channel = supabase
       .channel(channelName)
       .on(
