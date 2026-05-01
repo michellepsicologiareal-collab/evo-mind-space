@@ -41,12 +41,16 @@ const Profile = () => {
   const [linkingSupervisor, setLinkingSupervisor] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({ full_name: "", crp: "", phone: "", specialty: "" });
+  const [form, setForm] = useState({ full_name: "", clinic_name: "", crp: "", phone: "", specialty: "" });
   const [profileType, setProfileType] = useState<ProfileType>("standard");
   const [supervisorId, setSupervisorId] = useState<string | null>(null);
   const [supervisorName, setSupervisorName] = useState<string | null>(null);
   const [supervisorEmail, setSupervisorEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [wipeOpen, setWipeOpen] = useState(false);
+  const [wipeConfirm, setWipeConfirm] = useState("");
+  const [wiping, setWiping] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
 
   const load = async () => {
     if (!user) return;
@@ -58,6 +62,7 @@ const Profile = () => {
     if (data) {
       setForm({
         full_name: data.full_name ?? "",
+        clinic_name: (data as any).clinic_name ?? "",
         crp: data.crp ?? "",
         phone: data.phone ?? "",
         specialty: data.specialty ?? "",
@@ -104,13 +109,14 @@ const Profile = () => {
       .from("profiles")
       .update({
         full_name: parsed.data.full_name,
+        clinic_name: parsed.data.clinic_name || null,
         crp: parsed.data.crp || null,
         phone: parsed.data.phone || null,
         specialty: parsed.data.specialty || null,
         profile_type: profileType,
         // If switching to standard, clear supervisor link
         ...(profileType === "standard" ? { supervisor_id: null } : {}),
-      })
+      } as any)
       .eq("id", user.id);
     setSaving(false);
     if (error) {
