@@ -97,6 +97,7 @@ const Finance = () => {
   const [monthCursor, setMonthCursor] = useState<Date>(new Date());
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Row | null>(null);
   const [fortnightFilter, setFortnightFilter] = useState<FortnightFilter>("all");
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderWindow, setReminderWindow] = useState(24);
