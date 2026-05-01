@@ -455,6 +455,8 @@ const Profile = () => {
         </div>
       </form>
 
+      <ServiceCatalog />
+
       {profileType === "supervisee" && (
         <section className="rounded-3xl bg-card border border-border p-8 space-y-4">
           <div className="flex items-center gap-3">
