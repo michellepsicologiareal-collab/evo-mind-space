@@ -794,12 +794,38 @@ const SessionsTable = ({
   loading,
   onChange,
   onEdit,
+  allRows,
 }: {
   rows: Row[];
   loading: boolean;
   onChange: (id: string, v: PaymentStatus) => void;
   onEdit: (r: Row) => void;
+  allRows: Row[];
 }) => {
+  // Compute session number per patient in the month
+  const sessionNumbers = useMemo(() => {
+    const byPatient = new Map<string, string[]>();
+    // allRows is already sorted by scheduled_at desc, we need asc for numbering
+    const sorted = [...allRows].sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+    for (const r of sorted) {
+      const name = r.patient?.full_name;
+      if (!name) continue;
+      if (!byPatient.has(name)) byPatient.set(name, []);
+      byPatient.get(name)!.push(r.id);
+    }
+    const map = new Map<string, { num: number; total: number; dates: string[] }>();
+    for (const [name, ids] of byPatient) {
+      const dates = ids.map((id) => {
+        const row = allRows.find((r) => r.id === id);
+        return row ? format(new Date(row.scheduled_at), "dd/MM") : "";
+      });
+      ids.forEach((id, i) => {
+        map.set(id, { num: i + 1, total: ids.length, dates });
+      });
+    }
+    return map;
+  }, [allRows]);
+
   if (loading) {
     return <p className="text-center py-12 text-muted-foreground">Carregando…</p>;
   }
@@ -814,7 +840,9 @@ const SessionsTable = ({
   }
   return (
     <ul className="divide-y divide-border">
-      {rows.map((s) => (
+      {rows.map((s) => {
+        const sn = sessionNumbers.get(s.id);
+        return (
         <li key={s.id} className="py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div className="min-w-0 flex-1">
             <p className="font-medium text-foreground truncate">
@@ -829,6 +857,13 @@ const SessionsTable = ({
                 <span className="ml-2 text-xs">· pago em {format(new Date(s.paid_at), "dd/MM")}</span>
               )}
             </p>
+            {sn && (
+              <p className="text-xs text-primary mt-0.5">
+                {sn.total === 1
+                  ? `Sessão única — ref ${format(new Date(s.scheduled_at), "dd/MM")}`
+                  : `Sessão ${sn.num}/${sn.total} do mês — dias ${sn.dates.join(", ")}`}
+              </p>
+            )}
             <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
               {s.payment_method ? (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
@@ -867,7 +902,8 @@ const SessionsTable = ({
             </Button>
           </div>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 };
