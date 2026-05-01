@@ -338,11 +338,10 @@ const Agenda = () => {
   };
 
   const updatePaymentStatus = async (id: string, paymentStatus: PaymentStatus) => {
-    const updates: Record<string, unknown> = { payment_status: paymentStatus };
-    if (paymentStatus === "paid") {
-      updates.paid_at = new Date().toISOString();
-    }
-    const { error } = await supabase.from("sessions").update(updates).eq("id", id);
+    const { error } = await supabase.from("sessions").update({
+      payment_status: paymentStatus,
+      ...(paymentStatus === "paid" ? { paid_at: new Date().toISOString() } : {}),
+    }).eq("id", id);
     if (error) return toast.error("Erro ao atualizar pagamento");
     toast.success(`Pagamento: ${paymentStatusLabel[paymentStatus]}`);
     load();
