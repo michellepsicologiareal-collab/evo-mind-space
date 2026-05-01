@@ -246,7 +246,11 @@ const Profile = () => {
       setSupervisorId(null);
       setSupervisorName(null);
     }
-    toast.success("Perfil atualizado");
+    if (parsed.data.pix_key) {
+      toast.success("Perfil atualizado — chave Pix salva com sucesso! Ela será incluída automaticamente nas cobranças via WhatsApp.");
+    } else {
+      toast.success("Perfil atualizado");
+    }
   };
 
   const handleLinkSupervisor = async () => {
