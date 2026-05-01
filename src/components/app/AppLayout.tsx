@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { NavLink, Outlet, useNavigate, Link, useLocation } from "react-router-dom";
-import { Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut, GraduationCap, ShieldCheck, Crown, Lock, BookOpen, Flower2 } from "lucide-react";
+import { Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut, GraduationCap, ShieldCheck, Crown, Lock, BookOpen, Flower2, FileText, FileCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,8 @@ const allNavItems: NavItem[] = [
   { to: "/app/supervisao", label: "Supervisão", icon: ShieldCheck, premium: true, visibleTo: ["supervisor", "supervisee"] },
   { to: "/app/biblioteca", label: "Biblioteca", icon: BookOpen },
   { to: "/app/autocuidado", label: "Autocuidado", icon: Flower2 },
+  { to: "/app/contrato-modelo", label: "Termo", icon: FileText },
+  { to: "/app/contratos", label: "Contratos", icon: FileCheck },
   { to: "/app/perfil", label: "Perfil", icon: Settings },
 ];
 

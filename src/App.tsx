@@ -25,6 +25,9 @@ const Supervision = lazy(() => import("./pages/app/Supervision"));
 const SupervisaoCaso = lazy(() => import("./pages/app/SupervisaoCaso"));
 const Library = lazy(() => import("./pages/app/Library"));
 const Autocuidado = lazy(() => import("./pages/app/Autocuidado"));
+const ContratoModelo = lazy(() => import("./pages/app/ContratoModelo"));
+const Contratos = lazy(() => import("./pages/app/Contratos"));
+const ContratoPublico = lazy(() => import("./pages/ContratoPublico"));
 
 const queryClient = new QueryClient();
 
@@ -47,6 +50,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/confirmar-sessao/:token" element={<ConfirmarSessao />} />
+              <Route path="/contrato/:templateId" element={<ContratoPublico />} />
               <Route
                 path="/app"
                 element={
@@ -64,6 +68,8 @@ const App = () => (
                 <Route path="supervisao-caso" element={<SupervisaoCaso />} />
                 <Route path="biblioteca" element={<Library />} />
                 <Route path="autocuidado" element={<Autocuidado />} />
+                <Route path="contrato-modelo" element={<ContratoModelo />} />
+                <Route path="contratos" element={<Contratos />} />
                 <Route path="perfil" element={<Profile />} />
               </Route>
               <Route path="*" element={<NotFound />} />

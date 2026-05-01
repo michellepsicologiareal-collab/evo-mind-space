@@ -101,6 +101,45 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_templates: {
+        Row: {
+          clauses: Json
+          created_at: string
+          id: string
+          lgpd_clause: string
+          professional_address: string
+          professional_cpf: string
+          professional_email: string
+          professional_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clauses?: Json
+          created_at?: string
+          id?: string
+          lgpd_clause?: string
+          professional_address?: string
+          professional_cpf?: string
+          professional_email?: string
+          professional_name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clauses?: Json
+          created_at?: string
+          id?: string
+          lgpd_clause?: string
+          professional_address?: string
+          professional_cpf?: string
+          professional_email?: string
+          professional_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       library_materials: {
         Row: {
           category: Database["public"]["Enums"]["library_category"]
@@ -526,6 +565,71 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signed_contracts: {
+        Row: {
+          accepted_at: string
+          accepted_lgpd: boolean
+          clause_responses: Json
+          created_at: string
+          emergency_contact_name: string
+          emergency_contact_phone: string
+          emergency_contact_relationship: string
+          id: string
+          ip_address: string | null
+          patient_address: string
+          patient_birth_date: string | null
+          patient_cpf: string
+          patient_name: string
+          patient_whatsapp: string
+          template_id: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          accepted_lgpd?: boolean
+          clause_responses?: Json
+          created_at?: string
+          emergency_contact_name?: string
+          emergency_contact_phone?: string
+          emergency_contact_relationship?: string
+          id?: string
+          ip_address?: string | null
+          patient_address?: string
+          patient_birth_date?: string | null
+          patient_cpf?: string
+          patient_name: string
+          patient_whatsapp?: string
+          template_id: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          accepted_lgpd?: boolean
+          clause_responses?: Json
+          created_at?: string
+          emergency_contact_name?: string
+          emergency_contact_phone?: string
+          emergency_contact_relationship?: string
+          id?: string
+          ip_address?: string | null
+          patient_address?: string
+          patient_birth_date?: string | null
+          patient_cpf?: string
+          patient_name?: string
+          patient_whatsapp?: string
+          template_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signed_contracts_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
             referencedColumns: ["id"]
           },
         ]
