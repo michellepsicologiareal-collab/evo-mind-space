@@ -21,7 +21,7 @@ export const Differential = () => {
               {/* Before */}
               <div className="rounded-2xl bg-muted/60 border border-border/60 p-6">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Antes</p>
-                <p className="mt-3 font-display text-2xl text-muted-foreground italic">
+                <p className="mt-3 font-display text-2xl text-muted-foreground font-medium">
                   "acho que o paciente melhorou."
                 </p>
               </div>

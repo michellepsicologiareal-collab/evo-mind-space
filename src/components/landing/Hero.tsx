@@ -20,7 +20,7 @@ export const Hero = () => {
             Seu consultório não precisa de mais{" "}
             <span className="font-semibold text-muted-foreground">esforço</span>.
             <br />
-            Precisa de <span className="text-accent italic">estrutura</span>.
+            Precisa de <span className="text-accent font-bold">estrutura</span>.
           </h1>
 
           <p className="mt-6 max-w-xl text-lg text-muted-foreground text-pretty">
