@@ -12,9 +12,11 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const withTimeout = <T,>(promise: Promise<T>, ms = 8000): Promise<T> =>
+type SupabaseResult<T> = { data: T | null; error: { message?: string } | null };
+
+const withTimeout = <T,>(promise: PromiseLike<T>, ms = 8000): Promise<T> =>
   Promise.race([
-    promise,
+    Promise.resolve(promise),
     new Promise<T>((_, reject) =>
       window.setTimeout(() => reject(new Error("Tempo esgotado ao validar acesso.")), ms)
     ),
@@ -30,7 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { data: ensuredProfile, error: ensureError } = await withTimeout(
         (supabase as any).rpc("ensure_current_profile")
-      );
+      ) as SupabaseResult<Array<{ is_approved: boolean }>>;
 
       if (!ensureError && ensuredProfile?.[0]) {
         setIsApproved(Boolean(ensuredProfile[0].is_approved));
@@ -47,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .select("is_approved")
           .eq("id", userId)
           .maybeSingle()
-      );
+      ) as SupabaseResult<{ is_approved: boolean }>;
 
       if (error) {
         console.warn("Não foi possível verificar a aprovação do perfil:", error.message);
