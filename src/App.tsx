@@ -34,6 +34,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/confirmar-sessao/:token" element={<ConfirmarSessao />} />
             <Route
               path="/app"
               element={
