@@ -6,7 +6,9 @@ import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Penci
 import { TccRecords } from "@/components/app/TccRecords";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
+import { PremiumGate } from "@/components/app/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
