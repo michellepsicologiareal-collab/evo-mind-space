@@ -23,6 +23,7 @@ const mobileNavItems = navItems.slice(0, 5);
 export const AppLayout = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const [planOpen, setPlanOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
