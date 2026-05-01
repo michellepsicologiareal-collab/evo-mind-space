@@ -247,9 +247,12 @@ const Dashboard = () => {
       }
       setWeeklyRevenue(weekData);
 
-      setLoading(false);
     };
-    load();
+    load()
+      .catch((error) => {
+        console.warn("Não foi possível carregar o painel inicial:", error);
+      })
+      .finally(() => setLoading(false));
   }, [user]);
 
   const greeting = (() => {
