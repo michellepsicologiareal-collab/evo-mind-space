@@ -266,6 +266,17 @@ const Patients = () => {
                 {p.phone && <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> {p.phone}</p>}
                 {p.session_price != null && <p className="text-foreground font-medium">R$ {Number(p.session_price).toFixed(2).replace(".", ",")} <span className="text-muted-foreground font-normal">/ sessão</span></p>}
               </div>
+              <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Eye className="h-3.5 w-3.5" />
+                  Visível ao supervisor
+                </div>
+                <Switch
+                  checked={p.shared_with_supervisor}
+                  onCheckedChange={() => toggleSharing(p)}
+                  aria-label="Compartilhar com supervisor"
+                />
+              </div>
             </li>
           ))}
         </ul>
