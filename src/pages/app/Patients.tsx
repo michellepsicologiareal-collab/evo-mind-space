@@ -130,6 +130,9 @@ const Patients = () => {
       phone: parsed.data.phone || null,
       notes: parsed.data.notes || null,
       session_price: parsed.data.session_price ? Number(parsed.data.session_price) : null,
+      chief_complaint: parsed.data.chief_complaint || null,
+      treatment_plan: parsed.data.treatment_plan || null,
+      anamnesis: parsed.data.anamnesis || null,
     };
 
     const { error } = editing
