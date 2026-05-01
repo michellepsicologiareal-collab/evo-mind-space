@@ -46,7 +46,7 @@ const RecoveryLinkRedirect = () => {
     const isRecoveryLink = params.get("type") === "recovery" || params.has("access_token");
 
     if (isRecoveryLink && window.location.pathname !== "/reset-password") {
-      navigate(`/reset-password${window.location.hash}`, { replace: true });
+      navigate(`/reset-password${window.location.search}${window.location.hash}`, { replace: true });
     }
   }, [navigate]);
 
