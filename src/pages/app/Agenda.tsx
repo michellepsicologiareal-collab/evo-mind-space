@@ -68,7 +68,7 @@ const statusLabel: Record<Status, string> = {
 
 const statusClass: Record<Status, string> = {
   scheduled: "bg-secondary text-secondary-foreground",
-  completed: "bg-primary text-primary-foreground",
+  completed: "bg-lilac text-lilac-foreground",
   no_show: "bg-destructive/15 text-destructive",
   rescheduled: "bg-sand text-sand-foreground",
   cancelled: "bg-muted text-muted-foreground line-through",

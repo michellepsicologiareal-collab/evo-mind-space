@@ -10,37 +10,40 @@
 @layer base {
   :root {
     /* Surfaces */
-    --background: 40 33% 97%;            /* warm bone */
+    --background: 35 30% 94%;            /* bege areia sutil */
     --foreground: 190 35% 12%;           /* deep teal ink */
 
-    --card: 0 0% 100%;
+    --card: 38 25% 98%;
     --card-foreground: 190 35% 12%;
 
-    --popover: 0 0% 100%;
+    --popover: 38 25% 98%;
     --popover-foreground: 190 35% 12%;
 
     /* Brand */
     --primary: 185 55% 18%;              /* deep teal */
-    --primary-foreground: 40 33% 97%;
+    --primary-foreground: 35 30% 96%;
     --primary-glow: 170 38% 42%;         /* sage glow */
 
     --secondary: 90 18% 90%;             /* pale sage */
     --secondary-foreground: 185 55% 18%;
 
-    --muted: 40 25% 93%;
+    --muted: 35 20% 90%;
     --muted-foreground: 190 15% 38%;
 
-    --accent: 18 62% 58%;                /* warm terracotta */
-    --accent-foreground: 40 33% 97%;
+    --accent: 16 65% 52%;                /* terracotta forte — botões CTA */
+    --accent-foreground: 0 0% 100%;
+
+    --lilac: 270 40% 72%;                /* lilás — badges concluídas */
+    --lilac-foreground: 270 45% 20%;
 
     --sand: 32 45% 86%;
     --sand-foreground: 190 35% 12%;
 
     --destructive: 0 70% 48%;
-    --destructive-foreground: 40 33% 97%;
+    --destructive-foreground: 35 30% 96%;
 
-    --border: 40 18% 86%;
-    --input: 40 18% 86%;
+    --border: 35 18% 86%;
+    --input: 35 18% 86%;
     --ring: 185 55% 18%;
 
     --radius: 1rem;
