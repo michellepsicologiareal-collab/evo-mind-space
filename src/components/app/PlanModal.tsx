@@ -1,7 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Crown, Sparkles } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface PlanModalProps {
   open: boolean;
@@ -20,11 +19,11 @@ const freePlan = {
   ],
 };
 
-const proPlan = {
-  name: "Psi Real Pro",
+const essentialPlan = {
+  name: "Essencial PsiReal",
   price: "R$ 39,90",
   period: "/mês",
-  description: "Tudo que você precisa para escalar",
+  description: "Tudo que você precisa para organizar seu consultório",
   features: [
     "Pacientes ilimitados",
     "Agenda completa com lembretes",
@@ -70,19 +69,19 @@ export const PlanModal = ({ open, onOpenChange }: PlanModalProps) => {
             </Button>
           </div>
 
-          {/* Pro */}
+          {/* Essencial */}
           <div className="rounded-2xl border-2 border-accent bg-card p-5 flex flex-col relative ring-1 ring-accent/20">
             <span className="absolute -top-3 left-4 bg-accent text-accent-foreground text-xs font-bold px-3 py-0.5 rounded-full flex items-center gap-1">
               <Crown className="h-3 w-3 text-gold" /> Popular
             </span>
-            <h3 className="text-lg font-bold">{proPlan.name}</h3>
-            <p className="text-sm text-muted-foreground mb-3">{proPlan.description}</p>
+            <h3 className="text-lg font-bold">{essentialPlan.name}</h3>
+            <p className="text-sm text-muted-foreground mb-3">{essentialPlan.description}</p>
             <p className="text-3xl font-extrabold mb-4">
-              {proPlan.price}
-              <span className="text-sm font-normal text-muted-foreground">{proPlan.period}</span>
+              {essentialPlan.price}
+              <span className="text-sm font-normal text-muted-foreground">{essentialPlan.period}</span>
             </p>
             <ul className="space-y-2 flex-1">
-              {proPlan.features.map((f) => (
+              {essentialPlan.features.map((f) => (
                 <li key={f} className="flex items-start gap-2 text-sm">
                   <Check className="h-4 w-4 text-accent mt-0.5 shrink-0" />
                   {f}

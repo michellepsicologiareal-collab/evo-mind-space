@@ -18,7 +18,7 @@ export const PremiumGate = ({ open, onOpenChange }: PremiumGateProps) => {
             <Lock className="h-8 w-8 text-accent" />
           </div>
           <DialogTitle className="text-xl font-bold">
-            Recurso Exclusivo do Plano Premium
+            Recurso Exclusivo do Essencial PsiReal
           </DialogTitle>
           <DialogDescription className="text-base">
             Desbloqueie todos os recursos do Psi Real para organizar sua clínica de forma completa.
@@ -27,7 +27,7 @@ export const PremiumGate = ({ open, onOpenChange }: PremiumGateProps) => {
 
         <div className="space-y-4 pt-2">
           <div className="rounded-xl bg-muted/50 p-4 text-sm text-left space-y-2">
-            <p className="font-semibold flex items-center gap-2"><Crown className="h-4 w-4 text-accent" /> Com o Psi Real Pro você tem:</p>
+            <p className="font-semibold flex items-center gap-2"><Crown className="h-4 w-4 text-accent" /> Com o Essencial PsiReal você tem:</p>
             <ul className="space-y-1 text-muted-foreground ml-6 list-disc">
               <li>Pacientes ilimitados</li>
               <li>Financeiro avançado com relatórios</li>
