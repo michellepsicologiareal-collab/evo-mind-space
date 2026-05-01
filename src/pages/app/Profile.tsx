@@ -91,11 +91,11 @@ const Profile = () => {
       });
       csv += "\n--- SESSÕES ---\nPaciente,Data,Status,Duração(min),Preço,Pagamento,Método,Notas\n";
       data.sessions.forEach((s: any) => {
-        csv += [s.patients?.full_name, s.scheduled_at, s.status, s.duration_minutes, s.price, s.payment_status, s.payment_method, s.notes].map(esc).join(",") + "\n";
+        csv += [s._patient_name, s.scheduled_at, s.status, s.duration_minutes, s.price, s.payment_status, s.payment_method, s.notes].map(esc).join(",") + "\n";
       });
       csv += "\n--- HUMOR / PROGRESSO ---\nPaciente,Data,Humor(1-10),Nota\n";
       data.progress.forEach((pr: any) => {
-        csv += [pr.patients?.full_name, pr.recorded_at, pr.mood_score, pr.note].map(esc).join(",") + "\n";
+        csv += [pr._patient_name, pr.recorded_at, pr.mood_score, pr.note].map(esc).join(",") + "\n";
       });
       downloadFile(csv, `psireal_dados_${new Date().toISOString().slice(0, 10)}.csv`, "text/csv;charset=utf-8");
       toast.success("CSV exportado!");
@@ -142,7 +142,7 @@ const Profile = () => {
       data.sessions.forEach((s: any) => {
         checkPage();
         const dt = new Date(s.scheduled_at).toLocaleDateString("pt-BR");
-        doc.text(`• ${s.patients?.full_name} — ${dt} — ${s.status} — R$ ${s.price ?? "—"} (${s.payment_status})`, 16, y);
+        doc.text(`• ${s._patient_name} — ${dt} — ${s.status} — R$ ${s.price ?? "—"} (${s.payment_status})`, 16, y);
         y += lh;
       });
       y += 6;
@@ -154,7 +154,7 @@ const Profile = () => {
       data.progress.forEach((pr: any) => {
         checkPage();
         const dt = new Date(pr.recorded_at).toLocaleDateString("pt-BR");
-        doc.text(`• ${pr.patients?.full_name} — ${dt} — Humor: ${pr.mood_score ?? "—"} — ${pr.note ?? ""}`.slice(0, 120), 16, y);
+        doc.text(`• ${pr._patient_name} — ${dt} — Humor: ${pr.mood_score ?? "—"} — ${pr.note ?? ""}`.slice(0, 120), 16, y);
         y += lh;
       });
 
