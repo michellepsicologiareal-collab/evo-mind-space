@@ -30,6 +30,7 @@ const profileSchema = z.object({
   crp: z.string().trim().max(40).optional().or(z.literal("")),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   specialty: z.string().trim().max(120).optional().or(z.literal("")),
+  pix_key: z.string().trim().max(255).optional().or(z.literal("")),
 });
 
 type ProfileType = "standard" | "supervisee" | "supervisor";
@@ -42,7 +43,7 @@ const Profile = () => {
   const [linkingSupervisor, setLinkingSupervisor] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({ full_name: "", clinic_name: "", crp: "", phone: "", specialty: "" });
+  const [form, setForm] = useState({ full_name: "", clinic_name: "", crp: "", phone: "", specialty: "", pix_key: "" });
   const [profileType, setProfileType] = useState<ProfileType>("standard");
   const [supervisorId, setSupervisorId] = useState<string | null>(null);
   const [supervisorName, setSupervisorName] = useState<string | null>(null);
