@@ -87,6 +87,7 @@ export type Database = {
         Row: {
           anamnesis: string | null
           birth_date: string | null
+          category: Database["public"]["Enums"]["patient_category"]
           chief_complaint: string | null
           created_at: string
           email: string | null
@@ -104,6 +105,7 @@ export type Database = {
         Insert: {
           anamnesis?: string | null
           birth_date?: string | null
+          category?: Database["public"]["Enums"]["patient_category"]
           chief_complaint?: string | null
           created_at?: string
           email?: string | null
@@ -121,6 +123,7 @@ export type Database = {
         Update: {
           anamnesis?: string | null
           birth_date?: string | null
+          category?: Database["public"]["Enums"]["patient_category"]
           chief_complaint?: string | null
           created_at?: string
           email?: string | null
@@ -415,6 +418,7 @@ export type Database = {
         | "documentos_legais"
         | "materiais_pacientes"
         | "guias_tcc"
+      patient_category: "individual" | "crianca" | "grupo" | "casal"
       payment_method: "pix" | "card" | "cash"
       payment_status: "pending" | "paid"
       profile_type: "standard" | "supervisee" | "supervisor"
@@ -558,6 +562,7 @@ export const Constants = {
         "materiais_pacientes",
         "guias_tcc",
       ],
+      patient_category: ["individual", "crianca", "grupo", "casal"],
       payment_method: ["pix", "card", "cash"],
       payment_status: ["pending", "paid"],
       profile_type: ["standard", "supervisee", "supervisor"],

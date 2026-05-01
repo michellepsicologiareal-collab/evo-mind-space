@@ -19,6 +19,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+const PATIENT_CATEGORIES = [
+  { value: "individual", label: "Individual" },
+  { value: "crianca", label: "Criança" },
+  { value: "grupo", label: "Grupo" },
+  { value: "casal", label: "Casal" },
+] as const;
+
 const patientSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(120),
   email: z.string().trim().email("Email inválido").max(255).optional().or(z.literal("")),
@@ -36,6 +43,7 @@ const patientSchema = z.object({
   chief_complaint: z.string().trim().max(2000).optional().or(z.literal("")),
   treatment_plan: z.string().trim().max(4000).optional().or(z.literal("")),
   anamnesis: z.string().trim().max(6000).optional().or(z.literal("")),
+  category: z.enum(["individual", "crianca", "grupo", "casal"]).optional(),
 });
 
 interface Patient {
@@ -50,6 +58,7 @@ interface Patient {
   chief_complaint: string | null;
   treatment_plan: string | null;
   anamnesis: string | null;
+  category: "individual" | "crianca" | "grupo" | "casal";
 }
 
 const FREE_PATIENT_LIMIT = 5;
@@ -70,7 +79,7 @@ const Patients = () => {
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
 
-  const [form, setForm] = useState({ full_name: "", email: "", phone: "", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "" });
+  const [form, setForm] = useState<{ full_name: string; email: string; phone: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal" }>({ full_name: "", email: "", phone: "", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" });
 
   const load = async () => {
     if (!user) return;
@@ -96,7 +105,7 @@ const Patients = () => {
       return;
     }
     setEditing(null);
-    setForm({ full_name: "", email: "", phone: "", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "" });
+    setForm({ full_name: "", email: "", phone: "", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" as const });
     setOpen(true);
   };
 
@@ -111,6 +120,7 @@ const Patients = () => {
       chief_complaint: p.chief_complaint ?? "",
       treatment_plan: p.treatment_plan ?? "",
       anamnesis: p.anamnesis ?? "",
+      category: p.category ?? "individual",
     });
     setOpen(true);
   };
@@ -134,6 +144,7 @@ const Patients = () => {
       chief_complaint: parsed.data.chief_complaint || null,
       treatment_plan: parsed.data.treatment_plan || null,
       anamnesis: parsed.data.anamnesis || null,
+      category: parsed.data.category || "individual",
     };
 
     const { error } = editing
@@ -223,6 +234,19 @@ const Patients = () => {
                 <Label htmlFor="full_name">Nome completo *</Label>
                 <Input id="full_name" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="category">Categoria</Label>
+                <select
+                  id="category"
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value as typeof form.category })}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {PATIENT_CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -307,8 +331,11 @@ const Patients = () => {
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-foreground truncate">{p.full_name}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground flex items-center gap-2">
                       {p.is_active ? <span className="text-primary-glow">● Ativo</span> : <span>○ Inativo</span>}
+                      <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px] uppercase tracking-wider font-medium">
+                        {PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual"}
+                      </span>
                     </p>
                   </div>
                 </div>
