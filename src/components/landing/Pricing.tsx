@@ -1,35 +1,19 @@
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const plans = [
   {
-    name: "Supervisionando PsiReal",
-    price: "R$ 29,90",
-    period: "/mês",
-    description: "Para supervisionandos vinculados a uma supervisora.",
-    features: [
-      "Pacientes ilimitados",
-      "Agenda completa",
-      "Controle financeiro básico",
-      "Prontuário TCC",
-      "Registros de evolução",
-      "Vínculo com supervisora",
-    ],
-    cta: "Começar agora",
-    href: "https://kiwify.com.br/PLACEHOLDER_SUPERVISIONANDO",
-    highlighted: false,
-  },
-  {
     name: "Essencial PsiReal",
-    price: "R$ 39,90",
+    price: "R$ 49,90",
     period: "/mês",
-    description: "Para quem está começando e quer organizar o consultório.",
+    description: "Para o psicólogo autônomo que quer organizar seu consultório com eficiência.",
     features: [
       "Pacientes ilimitados",
       "Agenda completa",
       "Controle financeiro básico",
       "Prontuário TCC",
       "Registros de evolução",
+      "Espaço de Autocuidado",
       "Suporte por e-mail",
     ],
     cta: "Começar agora",
@@ -38,15 +22,16 @@ const plans = [
   },
   {
     name: "Supervisora PsiReal",
-    price: "R$ 49,90",
+    price: "R$ 79,90",
     period: "/mês",
-    description: "Para supervisoras que acompanham supervisionandos.",
+    description: "Para supervisoras que acompanham alunos e precisam de gestão completa.",
     features: [
       "Tudo do Essencial",
-      "Supervisão integrada",
-      "Multi-supervisionandos",
-      "Painel de supervisão",
-      "Financeiro completo + relatórios",
+      "Gestão de supervisionandos",
+      "Painel de supervisão integrado",
+      "Relatórios avançados",
+      "Financeiro completo",
+      "Biblioteca de materiais",
       "Suporte prioritário",
     ],
     cta: "Assinar agora",
@@ -58,7 +43,7 @@ const plans = [
 export const Pricing = () => {
   return (
     <section id="planos" className="py-24 lg:py-32 bg-background">
-      <div className="container max-w-5xl mx-auto px-4 sm:px-6">
+      <div className="container max-w-4xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-16 animate-fade-up">
           <p className="text-sm font-medium tracking-wider uppercase text-accent mb-3">Planos</p>
           <h2 className="font-display text-4xl md:text-5xl font-medium text-foreground text-balance">
@@ -69,7 +54,7 @@ export const Pricing = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.name}
@@ -83,6 +68,14 @@ export const Pricing = () => {
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                   <span className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground text-xs font-semibold px-4 py-1.5 rounded-full">
                     <Sparkles className="h-3.5 w-3.5" /> Mais popular
+                  </span>
+                </div>
+              )}
+
+              {!plan.highlighted && (
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                  <span className="inline-flex items-center gap-1.5 bg-champagne text-foreground text-xs font-semibold px-4 py-1.5 rounded-full">
+                    <Crown className="h-3.5 w-3.5" /> Completo
                   </span>
                 </div>
               )}
