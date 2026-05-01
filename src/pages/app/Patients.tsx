@@ -24,7 +24,7 @@ const patientSchema = z.object({
   phone: z.string().trim().max(40).optional().or(z.literal(""))
     .refine(
       (val) => {
-        if (!val) return true; // optional field
+        if (!val) return true;
         const digits = val.replace(/\D/g, "");
         return digits.length >= 10 && digits.length <= 13;
       },
@@ -32,6 +32,9 @@ const patientSchema = z.object({
     ),
   notes: z.string().trim().max(2000).optional().or(z.literal("")),
   session_price: z.string().optional(),
+  chief_complaint: z.string().trim().max(2000).optional().or(z.literal("")),
+  treatment_plan: z.string().trim().max(4000).optional().or(z.literal("")),
+  anamnesis: z.string().trim().max(6000).optional().or(z.literal("")),
 });
 
 interface Patient {
