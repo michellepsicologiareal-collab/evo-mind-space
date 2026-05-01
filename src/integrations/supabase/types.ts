@@ -157,6 +157,36 @@ export type Database = {
           },
         ]
       }
+      services: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          price?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           created_at: string
@@ -170,6 +200,7 @@ export type Database = {
           payment_status: Database["public"]["Enums"]["payment_status"]
           price: number | null
           scheduled_at: string
+          service_id: string | null
           status: Database["public"]["Enums"]["session_status"]
           updated_at: string
           user_id: string
@@ -186,6 +217,7 @@ export type Database = {
           payment_status?: Database["public"]["Enums"]["payment_status"]
           price?: number | null
           scheduled_at: string
+          service_id?: string | null
           status?: Database["public"]["Enums"]["session_status"]
           updated_at?: string
           user_id: string
@@ -202,6 +234,7 @@ export type Database = {
           payment_status?: Database["public"]["Enums"]["payment_status"]
           price?: number | null
           scheduled_at?: string
+          service_id?: string | null
           status?: Database["public"]["Enums"]["session_status"]
           updated_at?: string
           user_id?: string
@@ -212,6 +245,73 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_records: {
+        Row: {
+          automatic_thought: string | null
+          behavior: string | null
+          cognitive_distortion: string | null
+          created_at: string
+          emotion: string | null
+          id: string
+          patient_id: string
+          rational_response: string | null
+          session_id: string | null
+          situation: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          automatic_thought?: string | null
+          behavior?: string | null
+          cognitive_distortion?: string | null
+          created_at?: string
+          emotion?: string | null
+          id?: string
+          patient_id: string
+          rational_response?: string | null
+          session_id?: string | null
+          situation?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          automatic_thought?: string | null
+          behavior?: string | null
+          cognitive_distortion?: string | null
+          created_at?: string
+          emotion?: string | null
+          id?: string
+          patient_id?: string
+          rational_response?: string | null
+          session_id?: string | null
+          situation?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_records_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcc_records_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
         ]
