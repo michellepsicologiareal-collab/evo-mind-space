@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const signUpSchema = z.object({
   fullName: z.string().trim().min(2, "Nome muito curto").max(100),
   email: z.string().trim().email("Email inválido").max(255),
   password: z.string().min(8, "Mínimo 8 caracteres").max(72),
+  profileType: z.enum(["standard", "supervisee"]),
 });
 
 const signInSchema = z.object({
