@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const patientSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(120),
@@ -38,6 +39,7 @@ const Patients = () => {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Patient | null>(null);
   const [saving, setSaving] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
 
   const [form, setForm] = useState({ full_name: "", email: "", phone: "", notes: "", session_price: "" });
 
@@ -119,10 +121,17 @@ const Patients = () => {
     load();
   };
 
-  const filtered = patients.filter((p) =>
-    p.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.email ?? "").toLowerCase().includes(search.toLowerCase())
-  );
+  const activeCount = patients.filter((p) => p.is_active).length;
+  const inactiveCount = patients.length - activeCount;
+
+  const filtered = patients
+    .filter((p) =>
+      statusFilter === "all" ? true : statusFilter === "active" ? p.is_active : !p.is_active
+    )
+    .filter((p) =>
+      p.full_name.toLowerCase().includes(search.toLowerCase()) ||
+      (p.email ?? "").toLowerCase().includes(search.toLowerCase())
+    );
 
   return (
     <div className="space-y-8 animate-fade-up">
@@ -177,9 +186,18 @@ const Patients = () => {
         </Dialog>
       </header>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Buscar paciente..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input className="pl-9" placeholder="Buscar paciente..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+        <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
+          <TabsList>
+            <TabsTrigger value="active">Ativos ({activeCount})</TabsTrigger>
+            <TabsTrigger value="inactive">Inativos ({inactiveCount})</TabsTrigger>
+            <TabsTrigger value="all">Todos ({patients.length})</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {loading ? (

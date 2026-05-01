@@ -1,12 +1,19 @@
 import { useEffect, useState, useRef } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Upload, User } from "lucide-react";
+import { Loader2, Upload, User, Users, ShieldCheck, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const profileSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(120),
@@ -15,19 +22,30 @@ const profileSchema = z.object({
   specialty: z.string().trim().max(120).optional().or(z.literal("")),
 });
 
+type ProfileType = "standard" | "supervisee";
+
 const Profile = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [linkingSupervisor, setLinkingSupervisor] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({ full_name: "", crp: "", phone: "", specialty: "" });
+  const [profileType, setProfileType] = useState<ProfileType>("standard");
+  const [supervisorId, setSupervisorId] = useState<string | null>(null);
+  const [supervisorName, setSupervisorName] = useState<string | null>(null);
+  const [supervisorEmail, setSupervisorEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const load = async () => {
     if (!user) return;
-    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
     if (data) {
       setForm({
         full_name: data.full_name ?? "",
@@ -35,15 +53,34 @@ const Profile = () => {
         phone: data.phone ?? "",
         specialty: data.specialty ?? "",
       });
+      setProfileType((data.profile_type as ProfileType) ?? "standard");
+      setSupervisorId(data.supervisor_id ?? null);
+
+      if (data.supervisor_id) {
+        const { data: sup } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", data.supervisor_id)
+          .maybeSingle();
+        setSupervisorName(sup?.full_name ?? "Supervisor");
+      } else {
+        setSupervisorName(null);
+      }
+
       if (data.avatar_url) {
-        const { data: signed } = await supabase.storage.from("avatars").createSignedUrl(data.avatar_url, 3600);
+        const { data: signed } = await supabase.storage
+          .from("avatars")
+          .createSignedUrl(data.avatar_url, 3600);
         setAvatarUrl(signed?.signedUrl ?? null);
       }
     }
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user]);
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line
+  }, [user]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,18 +91,83 @@ const Profile = () => {
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("profiles").update({
-      full_name: parsed.data.full_name,
-      crp: parsed.data.crp || null,
-      phone: parsed.data.phone || null,
-      specialty: parsed.data.specialty || null,
-    }).eq("id", user.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: parsed.data.full_name,
+        crp: parsed.data.crp || null,
+        phone: parsed.data.phone || null,
+        specialty: parsed.data.specialty || null,
+        profile_type: profileType,
+        // If switching to standard, clear supervisor link
+        ...(profileType === "standard" ? { supervisor_id: null } : {}),
+      })
+      .eq("id", user.id);
     setSaving(false);
     if (error) {
       toast.error("Erro ao salvar perfil");
       return;
     }
+    if (profileType === "standard") {
+      setSupervisorId(null);
+      setSupervisorName(null);
+    }
     toast.success("Perfil atualizado");
+  };
+
+  const handleLinkSupervisor = async () => {
+    if (!user) return;
+    const email = supervisorEmail.trim().toLowerCase();
+    if (!email) {
+      toast.error("Informe o email do supervisor");
+      return;
+    }
+
+    setLinkingSupervisor(true);
+    // Look up the supervisor's profile id by their auth email (security definer RPC).
+    const { data: lookup, error: lookupErr } = await (supabase.rpc as any)(
+      "get_profile_id_by_email",
+      { _email: email },
+    );
+    const supervisorUuid = lookup as string | null;
+
+    if (lookupErr || !supervisorUuid) {
+      setLinkingSupervisor(false);
+      toast.error("Supervisor não encontrado. Confirme o email cadastrado.");
+      return;
+    }
+
+    if (supervisorUuid === user.id) {
+      setLinkingSupervisor(false);
+      toast.error("Você não pode ser seu próprio supervisor.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ supervisor_id: supervisorUuid })
+      .eq("id", user.id);
+    setLinkingSupervisor(false);
+
+    if (error) {
+      toast.error("Não foi possível vincular o supervisor.");
+      return;
+    }
+    setSupervisorEmail("");
+    toast.success("Supervisor vinculado.");
+    load();
+  };
+
+  const handleUnlinkSupervisor = async () => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ supervisor_id: null })
+      .eq("id", user.id);
+    if (error) return toast.error("Erro ao remover supervisor");
+    toast.success("Vínculo removido");
+    setSupervisorId(null);
+    setSupervisorName(null);
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,7 +187,9 @@ const Profile = () => {
     const ext = file.name.split(".").pop();
     const path = `${user.id}/avatar.${ext}`;
 
-    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    const { error: upErr } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true });
     if (upErr) {
       setUploading(false);
       toast.error("Erro ao enviar foto");
@@ -93,14 +197,20 @@ const Profile = () => {
     }
 
     await supabase.from("profiles").update({ avatar_url: path }).eq("id", user.id);
-    const { data: signed } = await supabase.storage.from("avatars").createSignedUrl(path, 3600);
+    const { data: signed } = await supabase.storage
+      .from("avatars")
+      .createSignedUrl(path, 3600);
     setAvatarUrl(signed?.signedUrl ?? null);
     setUploading(false);
     toast.success("Foto atualizada");
   };
 
   if (loading) {
-    return <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>;
+    return (
+      <div className="text-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -135,6 +245,23 @@ const Profile = () => {
           <Label htmlFor="full_name">Nome completo</Label>
           <Input id="full_name" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="profile_type">Tipo de perfil</Label>
+          <Select value={profileType} onValueChange={(v) => setProfileType(v as ProfileType)}>
+            <SelectTrigger id="profile_type">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="standard">Padrão</SelectItem>
+              <SelectItem value="supervisee">Membro Parceiro / Supervisionando</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Supervisionandos podem vincular um supervisor que terá acesso somente leitura aos seus pacientes e sessões.
+          </p>
+        </div>
+
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="crp">CRP</Label>
@@ -160,6 +287,57 @@ const Profile = () => {
           </Button>
         </div>
       </form>
+
+      {profileType === "supervisee" && (
+        <section className="rounded-3xl bg-card border border-border p-8 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
+              <ShieldCheck className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="font-display text-xl font-semibold">Supervisor vinculado</h2>
+              <p className="text-xs text-muted-foreground">
+                Seu supervisor terá acesso somente leitura aos seus pacientes e sessões.
+              </p>
+            </div>
+          </div>
+
+          {supervisorId ? (
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-secondary/50 p-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <Users className="h-4 w-4 shrink-0 text-primary" />
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{supervisorName ?? "Supervisor"}</p>
+                  <p className="text-xs text-muted-foreground">Vínculo ativo</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleUnlinkSupervisor} className="shrink-0">
+                <X className="h-4 w-4" /> Remover
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="supervisor_email">Email do supervisor</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="supervisor_email"
+                  type="email"
+                  placeholder="supervisor@exemplo.com"
+                  value={supervisorEmail}
+                  onChange={(e) => setSupervisorEmail(e.target.value)}
+                />
+                <Button onClick={handleLinkSupervisor} disabled={linkingSupervisor || !supervisorEmail}>
+                  {linkingSupervisor && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Vincular
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                O supervisor precisa ter conta criada na plataforma com o email informado.
+              </p>
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 };

@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const signUpSchema = z.object({
   fullName: z.string().trim().min(2, "Nome muito curto").max(100),
   email: z.string().trim().email("Email inválido").max(255),
   password: z.string().min(8, "Mínimo 8 caracteres").max(72),
+  profileType: z.enum(["standard", "supervisee"]),
 });
 
 const signInSchema = z.object({
@@ -34,6 +36,7 @@ const Auth = () => {
   const [suName, setSuName] = useState("");
   const [suEmail, setSuEmail] = useState("");
   const [suPassword, setSuPassword] = useState("");
+  const [suProfileType, setSuProfileType] = useState<"standard" | "supervisee">("standard");
 
   useEffect(() => {
     if (user) navigate("/app", { replace: true });
@@ -59,7 +62,12 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = signUpSchema.safeParse({ fullName: suName, email: suEmail, password: suPassword });
+    const parsed = signUpSchema.safeParse({
+      fullName: suName,
+      email: suEmail,
+      password: suPassword,
+      profileType: suProfileType,
+    });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
       return;
@@ -70,7 +78,10 @@ const Auth = () => {
       password: parsed.data.password,
       options: {
         emailRedirectTo: `${window.location.origin}/app`,
-        data: { full_name: parsed.data.fullName },
+        data: {
+          full_name: parsed.data.fullName,
+          profile_type: parsed.data.profileType,
+        },
       },
     });
     setLoading(false);
@@ -167,6 +178,39 @@ const Auth = () => {
                   <Label htmlFor="su-password">Senha</Label>
                   <Input id="su-password" type="password" autoComplete="new-password" required value={suPassword} onChange={(e) => setSuPassword(e.target.value)} />
                   <p className="text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Tipo de perfil</Label>
+                  <RadioGroup
+                    value={suProfileType}
+                    onValueChange={(v) => setSuProfileType(v as "standard" | "supervisee")}
+                    className="grid sm:grid-cols-2 gap-2"
+                  >
+                    <label
+                      htmlFor="pt-standard"
+                      className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
+                        suProfileType === "standard" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"
+                      }`}
+                    >
+                      <RadioGroupItem id="pt-standard" value="standard" className="mt-0.5" />
+                      <span className="text-sm">
+                        <span className="font-medium block">Padrão</span>
+                        <span className="text-xs text-muted-foreground">Psicólogo autônomo, gerencia seus próprios pacientes.</span>
+                      </span>
+                    </label>
+                    <label
+                      htmlFor="pt-supervisee"
+                      className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
+                        suProfileType === "supervisee" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"
+                      }`}
+                    >
+                      <RadioGroupItem id="pt-supervisee" value="supervisee" className="mt-0.5" />
+                      <span className="text-sm">
+                        <span className="font-medium block">Membro Parceiro / Supervisionando</span>
+                        <span className="text-xs text-muted-foreground">Pode vincular um supervisor que verá seus dados em modo leitura.</span>
+                      </span>
+                    </label>
+                  </RadioGroup>
                 </div>
                 <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
