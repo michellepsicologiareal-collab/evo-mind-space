@@ -291,7 +291,7 @@ export default function ContratoModelo() {
                         setClauses((prev) =>
                           prev.map((c, i) =>
                             i === index
-                              ? { ...c, type: v as "agree" | "radio", ...(v === "radio" && !c.options ? { options: ["Opção 1", "Opção 2"] } : {}) }
+                              ? { ...c, type: v as "agree" | "radio" | "text", ...(v === "radio" && !c.options ? { options: ["Opção 1", "Opção 2"] } : {}) }
                               : c
                           )
                         );
@@ -301,6 +301,7 @@ export default function ContratoModelo() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="text">Texto</SelectItem>
                         <SelectItem value="agree">Aceite</SelectItem>
                         <SelectItem value="radio">Escolha</SelectItem>
                       </SelectContent>
