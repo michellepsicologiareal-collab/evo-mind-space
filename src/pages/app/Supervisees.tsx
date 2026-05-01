@@ -1,16 +1,46 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, UserPlus, Users, X, Mail, UserRound } from "lucide-react";
+import {
+  Loader2,
+  UserPlus,
+  Users,
+  X,
+  Mail,
+  UserRound,
+  ChevronDown,
+  ChevronRight,
+  Phone,
+  StickyNote,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+interface Patient {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  notes: string | null;
+  is_active: boolean;
+  session_price: number | null;
+  user_id: string;
+}
 
 interface SuperviseeRow {
   id: string;
   full_name: string | null;
-  activePatients: number;
+  patients: Patient[];
 }
 
 const Supervisees = () => {
@@ -20,6 +50,9 @@ const Supervisees = () => {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [supervisees, setSupervisees] = useState<SuperviseeRow[]>([]);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [tabFilter, setTabFilter] = useState<Record<string, "active" | "inactive" | "all">>({});
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
   const load = async () => {
     if (!user) return;
@@ -37,15 +70,15 @@ const Supervisees = () => {
     }
 
     const ids = (profs ?? []).map((p) => p.id);
-    let countsByUser: Record<string, number> = {};
+    const patientsByUser: Record<string, Patient[]> = {};
     if (ids.length) {
       const { data: pats } = await supabase
         .from("patients")
-        .select("user_id")
+        .select("id, full_name, email, phone, notes, is_active, session_price, user_id")
         .in("user_id", ids)
-        .eq("is_active", true);
+        .order("full_name");
       (pats ?? []).forEach((p) => {
-        countsByUser[p.user_id] = (countsByUser[p.user_id] ?? 0) + 1;
+        (patientsByUser[p.user_id] ??= []).push(p as Patient);
       });
     }
 
@@ -53,7 +86,7 @@ const Supervisees = () => {
       (profs ?? []).map((p) => ({
         id: p.id,
         full_name: p.full_name,
-        activePatients: countsByUser[p.id] ?? 0,
+        patients: patientsByUser[p.id] ?? [],
       })),
     );
     setLoading(false);
@@ -98,12 +131,18 @@ const Supervisees = () => {
     setSupervisees((prev) => prev.filter((s) => s.id !== id));
   };
 
+  const toggleExpand = (id: string) =>
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  const filterPatients = (list: Patient[], f: "active" | "inactive" | "all") =>
+    list.filter((p) => (f === "all" ? true : f === "active" ? p.is_active : !p.is_active));
+
   return (
     <div className="space-y-8 animate-fade-up max-w-3xl">
       <header>
         <h1 className="font-display text-4xl font-medium">Supervisionandos</h1>
         <p className="mt-2 text-muted-foreground">
-          Gerencie os profissionais que você supervisiona e veja o volume de pacientes ativos de cada um.
+          Gerencie os profissionais que você supervisiona e consulte os pacientes vinculados a cada um.
         </p>
       </header>
 
@@ -163,41 +202,176 @@ const Supervisees = () => {
           </div>
         ) : (
           <ul className="space-y-3">
-            {supervisees.map((s) => (
-              <li
-                key={s.id}
-                className="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 p-4"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground shrink-0">
-                    <UserRound className="h-4 w-4" />
+            {supervisees.map((s) => {
+              const isOpen = !!expanded[s.id];
+              const f = tabFilter[s.id] ?? "active";
+              const activeCount = s.patients.filter((p) => p.is_active).length;
+              const inactiveCount = s.patients.length - activeCount;
+              const visible = filterPatients(s.patients, f);
+
+              return (
+                <li key={s.id} className="rounded-xl bg-secondary/40 overflow-hidden">
+                  <div className="flex items-center justify-between gap-3 p-4">
+                    <button
+                      onClick={() => toggleExpand(s.id)}
+                      className="flex items-center gap-3 min-w-0 flex-1 text-left group"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground shrink-0">
+                        <UserRound className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate group-hover:text-primary transition-colors">
+                          {s.full_name || "Sem nome"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {activeCount} {activeCount === 1 ? "ativo" : "ativos"} · {inactiveCount} {inactiveCount === 1 ? "inativo" : "inativos"}
+                        </p>
+                      </div>
+                      {isOpen ? (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      )}
+                    </button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0"
+                      onClick={() => handleRemove(s.id)}
+                      disabled={removingId === s.id}
+                    >
+                      {removingId === s.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <X className="h-4 w-4" />
+                      )}
+                      Remover
+                    </Button>
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{s.full_name || "Sem nome"}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {s.activePatients} {s.activePatients === 1 ? "paciente ativo" : "pacientes ativos"}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0"
-                  onClick={() => handleRemove(s.id)}
-                  disabled={removingId === s.id}
-                >
-                  {removingId === s.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <X className="h-4 w-4" />
+
+                  {isOpen && (
+                    <div className="px-4 pb-4 space-y-3 border-t border-border/60 pt-4 bg-background/40">
+                      {s.patients.length === 0 ? (
+                        <p className="text-sm text-muted-foreground py-4 text-center">
+                          Este supervisionando ainda não tem pacientes cadastrados.
+                        </p>
+                      ) : (
+                        <>
+                          <Tabs
+                            value={f}
+                            onValueChange={(v) =>
+                              setTabFilter((prev) => ({ ...prev, [s.id]: v as typeof f }))
+                            }
+                          >
+                            <TabsList>
+                              <TabsTrigger value="active">Ativos ({activeCount})</TabsTrigger>
+                              <TabsTrigger value="inactive">Inativos ({inactiveCount})</TabsTrigger>
+                              <TabsTrigger value="all">Todos ({s.patients.length})</TabsTrigger>
+                            </TabsList>
+                          </Tabs>
+
+                          {visible.length === 0 ? (
+                            <p className="text-sm text-muted-foreground py-4 text-center">
+                              Nenhum paciente neste filtro.
+                            </p>
+                          ) : (
+                            <ul className="space-y-2">
+                              {visible.map((p) => (
+                                <li key={p.id}>
+                                  <button
+                                    onClick={() => setSelectedPatient(p)}
+                                    className="w-full flex items-center justify-between gap-3 rounded-lg bg-card border border-border p-3 hover:border-primary hover:shadow-soft transition-all text-left"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-primary font-display shrink-0">
+                                        {p.full_name.charAt(0).toUpperCase()}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="font-medium truncate">{p.full_name}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {p.is_active ? (
+                                            <span className="text-primary-glow">● Ativo</span>
+                                          ) : (
+                                            <span>○ Inativo</span>
+                                          )}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </>
+                      )}
+                    </div>
                   )}
-                  Remover
-                </Button>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
+
+      <Dialog open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">
+              {selectedPatient?.full_name}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedPatient?.is_active ? "Paciente ativo" : "Paciente inativo"} · acesso somente leitura
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedPatient && (
+            <div className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                {selectedPatient.email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="truncate">{selectedPatient.email}</span>
+                  </div>
+                )}
+                {selectedPatient.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{selectedPatient.phone}</span>
+                  </div>
+                )}
+              </div>
+
+              {selectedPatient.session_price != null && (
+                <div className="rounded-lg bg-secondary/50 p-3 text-sm">
+                  <span className="text-muted-foreground">Valor da sessão: </span>
+                  <span className="font-medium">
+                    R$ {Number(selectedPatient.session_price).toFixed(2).replace(".", ",")}
+                  </span>
+                </div>
+              )}
+
+              {selectedPatient.notes && (
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-medium mb-2">
+                    <StickyNote className="h-4 w-4 text-muted-foreground" />
+                    Observações
+                  </div>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap rounded-lg bg-secondary/40 p-3">
+                    {selectedPatient.notes}
+                  </p>
+                </div>
+              )}
+
+              {!selectedPatient.email && !selectedPatient.phone && !selectedPatient.notes && selectedPatient.session_price == null && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Sem informações adicionais cadastradas.
+                </p>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
