@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon, Check, X, RotateCcw, Trash2 } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon, Check, X, RotateCcw, Trash2, Link2, CheckCircle2 } from "lucide-react";
 import { addDays, addWeeks, format, isSameDay, startOfWeek, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
