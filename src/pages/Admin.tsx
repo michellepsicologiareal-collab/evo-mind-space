@@ -1,10 +1,30 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Shield, Users, Mail, Calendar, Building2, ArrowLeft } from "lucide-react";
+import { Loader2, Shield, Users, Mail, Calendar, Building2, ArrowLeft, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+type SubStatus = "free" | "pending" | "active";
+
+const STATUS_LABELS: Record<SubStatus, string> = {
+  free: "Gratuito",
+  pending: "Pendente",
+  active: "Ativo",
+};
+
+const STATUS_STYLES: Record<SubStatus, string> = {
+  free: "bg-muted text-muted-foreground",
+  pending: "bg-yellow-100 text-yellow-800",
+  active: "bg-green-100 text-green-800",
+};
 
 interface AdminUser {
   id: string;
@@ -15,6 +35,7 @@ interface AdminUser {
   crp: string | null;
   profile_type: string | null;
   clinic_name: string | null;
+  subscription_status: SubStatus;
 }
 
 const Admin = () => {
@@ -32,7 +53,6 @@ const Admin = () => {
     }
 
     const checkAndLoad = async () => {
-      // Check admin role via user_roles table
       const { data: role } = await supabase
         .from("user_roles")
         .select("role")
@@ -48,7 +68,6 @@ const Admin = () => {
 
       setAuthorized(true);
 
-      // Fetch users via edge function
       const { data, error } = await supabase.functions.invoke("admin-list-users");
       if (error) {
         toast.error("Erro ao carregar usuários");
@@ -61,6 +80,23 @@ const Admin = () => {
 
     checkAndLoad();
   }, [user, authLoading, navigate]);
+
+  const handleStatusChange = async (userId: string, newStatus: SubStatus) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ subscription_status: newStatus } as any)
+      .eq("id", userId);
+
+    if (error) {
+      toast.error("Erro ao atualizar status");
+      return;
+    }
+
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, subscription_status: newStatus } : u))
+    );
+    toast.success(`Status alterado para ${STATUS_LABELS[newStatus]}`);
+  };
 
   if (authLoading || loading) {
     return (
@@ -108,6 +144,7 @@ const Admin = () => {
                     <th className="pb-3 pr-4 font-medium">CRP</th>
                     <th className="pb-3 pr-4 font-medium">Tipo</th>
                     <th className="pb-3 pr-4 font-medium">Consultório</th>
+                    <th className="pb-3 pr-4 font-medium">Assinatura</th>
                     <th className="pb-3 pr-4 font-medium">Cadastro</th>
                     <th className="pb-3 font-medium">Último login</th>
                   </tr>
@@ -136,6 +173,30 @@ const Admin = () => {
                         {u.clinic_name ? (
                           <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5 text-muted-foreground" />{u.clinic_name}</span>
                         ) : "—"}
+                      </td>
+                      <td className="py-3 pr-4">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${STATUS_STYLES[u.subscription_status]}`}>
+                              {STATUS_LABELS[u.subscription_status]}
+                              <ChevronDown className="h-3 w-3" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            {(Object.keys(STATUS_LABELS) as SubStatus[]).map((status) => (
+                              <DropdownMenuItem
+                                key={status}
+                                onClick={() => handleStatusChange(u.id, status)}
+                                className={u.subscription_status === status ? "font-bold" : ""}
+                              >
+                                <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                                  status === "active" ? "bg-green-500" : status === "pending" ? "bg-yellow-500" : "bg-gray-400"
+                                }`} />
+                                {STATUS_LABELS[status]}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                       <td className="py-3 pr-4 flex items-center gap-1">
                         <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
