@@ -284,6 +284,19 @@ const Profile = () => {
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="clinic_name" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-muted-foreground" /> Nome do consultório
+          </Label>
+          <Input
+            id="clinic_name"
+            placeholder="Ex.: Espaço Bem-Estar"
+            value={form.clinic_name}
+            onChange={(e) => setForm({ ...form, clinic_name: e.target.value })}
+          />
+          <p className="text-xs text-muted-foreground">Aparece no topo do seu Painel.</p>
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="profile_type">Tipo de perfil</Label>
           <Select value={profileType} onValueChange={(v) => setProfileType(v as ProfileType)}>
             <SelectTrigger id="profile_type">
