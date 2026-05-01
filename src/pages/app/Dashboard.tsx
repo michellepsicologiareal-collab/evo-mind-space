@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState<Stats>({ activePatients: 0, todaySessions: 0, monthRevenue: 0, monthNoShows: 0 });
   const [upcoming, setUpcoming] = useState<UpcomingSession[]>([]);
   const [profileName, setProfileName] = useState<string>("");
+  const [clinicName, setClinicName] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,14 +37,15 @@ const Dashboard = () => {
       const dayEnd = endOfDay(new Date()).toISOString();
 
       const [profileRes, patientsRes, todayRes, monthRes, upcomingRes] = await Promise.all([
-        supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
-        supabase.from("patients").select("id", { count: "exact", head: true }).eq("is_active", true),
-        supabase.from("sessions").select("id", { count: "exact", head: true }).gte("scheduled_at", dayStart).lte("scheduled_at", dayEnd),
-        supabase.from("sessions").select("price, status").gte("scheduled_at", monthStart).lte("scheduled_at", monthEnd),
-        supabase.from("sessions").select("id, scheduled_at, patient_id, patients(full_name)").gte("scheduled_at", new Date().toISOString()).eq("status", "scheduled").order("scheduled_at").limit(5),
+        supabase.from("profiles").select("full_name, clinic_name").eq("id", user.id).maybeSingle(),
+        supabase.from("patients").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
+        supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", dayStart).lte("scheduled_at", dayEnd),
+        supabase.from("sessions").select("price, status").eq("user_id", user.id).gte("scheduled_at", monthStart).lte("scheduled_at", monthEnd),
+        supabase.from("sessions").select("id, scheduled_at, patient_id, patients(full_name)").eq("user_id", user.id).gte("scheduled_at", new Date().toISOString()).eq("status", "scheduled").order("scheduled_at").limit(5),
       ]);
 
       setProfileName(profileRes.data?.full_name ?? "");
+      setClinicName((profileRes.data as any)?.clinic_name ?? "");
 
       const monthSessions = monthRes.data ?? [];
       const revenue = monthSessions.filter((s) => s.status === "completed").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
@@ -80,7 +82,12 @@ const Dashboard = () => {
   return (
     <div className="space-y-10 animate-fade-up">
       <header>
-        <p className="text-sm text-muted-foreground capitalize">{format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}</p>
+        {clinicName && (
+          <p className="text-xs uppercase tracking-[0.2em] text-accent font-medium">{clinicName}</p>
+        )}
+        <p className={`text-sm text-muted-foreground capitalize ${clinicName ? "mt-2" : ""}`}>
+          {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+        </p>
         <h1 className="mt-2 font-display text-4xl font-medium">
           {greeting}{firstName ? `, ${firstName}` : ""}.
         </h1>

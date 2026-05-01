@@ -44,8 +44,13 @@ const Patients = () => {
   const [form, setForm] = useState({ full_name: "", email: "", phone: "", notes: "", session_price: "" });
 
   const load = async () => {
+    if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase.from("patients").select("*").order("full_name");
+    const { data, error } = await supabase
+      .from("patients")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("full_name");
     if (error) toast.error("Erro ao carregar pacientes");
     setPatients(data ?? []);
     setLoading(false);

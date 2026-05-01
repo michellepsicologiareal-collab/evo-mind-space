@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Upload, User, Users, ShieldCheck, X } from "lucide-react";
+import { Loader2, Upload, User, Users, ShieldCheck, X, Building2, Trash2, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const profileSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(120),
+  clinic_name: z.string().trim().max(120).optional().or(z.literal("")),
   crp: z.string().trim().max(40).optional().or(z.literal("")),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   specialty: z.string().trim().max(120).optional().or(z.literal("")),
@@ -32,12 +41,16 @@ const Profile = () => {
   const [linkingSupervisor, setLinkingSupervisor] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({ full_name: "", crp: "", phone: "", specialty: "" });
+  const [form, setForm] = useState({ full_name: "", clinic_name: "", crp: "", phone: "", specialty: "" });
   const [profileType, setProfileType] = useState<ProfileType>("standard");
   const [supervisorId, setSupervisorId] = useState<string | null>(null);
   const [supervisorName, setSupervisorName] = useState<string | null>(null);
   const [supervisorEmail, setSupervisorEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [wipeOpen, setWipeOpen] = useState(false);
+  const [wipeConfirm, setWipeConfirm] = useState("");
+  const [wiping, setWiping] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
 
   const load = async () => {
     if (!user) return;
@@ -49,6 +62,7 @@ const Profile = () => {
     if (data) {
       setForm({
         full_name: data.full_name ?? "",
+        clinic_name: (data as any).clinic_name ?? "",
         crp: data.crp ?? "",
         phone: data.phone ?? "",
         specialty: data.specialty ?? "",
@@ -95,13 +109,14 @@ const Profile = () => {
       .from("profiles")
       .update({
         full_name: parsed.data.full_name,
+        clinic_name: parsed.data.clinic_name || null,
         crp: parsed.data.crp || null,
         phone: parsed.data.phone || null,
         specialty: parsed.data.specialty || null,
         profile_type: profileType,
         // If switching to standard, clear supervisor link
         ...(profileType === "standard" ? { supervisor_id: null } : {}),
-      })
+      } as any)
       .eq("id", user.id);
     setSaving(false);
     if (error) {
@@ -205,6 +220,28 @@ const Profile = () => {
     toast.success("Foto atualizada");
   };
 
+  const handleWipeData = async () => {
+    if (!user) return;
+    if (wipeConfirm.trim().toUpperCase() !== "LIMPAR") {
+      toast.error("Digite LIMPAR para confirmar.");
+      return;
+    }
+    setWiping(true);
+    const [pr, se, pa] = await Promise.all([
+      (supabase as any).from("patient_progress").delete().eq("user_id", user.id),
+      supabase.from("sessions").delete().eq("user_id", user.id),
+      supabase.from("patients").delete().eq("user_id", user.id),
+    ]);
+    setWiping(false);
+    if (pr.error || se.error || pa.error) {
+      toast.error("Não foi possível limpar todos os dados.");
+      return;
+    }
+    setWipeOpen(false);
+    setWipeConfirm("");
+    toast.success("Pacientes, sessões e registros foram apagados.");
+  };
+
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -244,6 +281,19 @@ const Profile = () => {
         <div className="space-y-2">
           <Label htmlFor="full_name">Nome completo</Label>
           <Input id="full_name" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="clinic_name" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-muted-foreground" /> Nome do consultório
+          </Label>
+          <Input
+            id="clinic_name"
+            placeholder="Ex.: Espaço Bem-Estar"
+            value={form.clinic_name}
+            onChange={(e) => setForm({ ...form, clinic_name: e.target.value })}
+          />
+          <p className="text-xs text-muted-foreground">Aparece no topo do seu Painel.</p>
         </div>
 
         <div className="space-y-2">
@@ -338,6 +388,144 @@ const Profile = () => {
           )}
         </section>
       )}
+
+      <section className="rounded-3xl bg-card border border-border p-8 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
+            <ShieldCheck className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="font-display text-xl font-semibold">Privacidade & LGPD</h2>
+            <p className="text-xs text-muted-foreground">
+              Controle total sobre seus dados — você é o único dono.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setTermsOpen(true)}
+          className="w-full flex items-center justify-between gap-3 rounded-xl bg-secondary/40 hover:bg-secondary/70 transition-colors p-4 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <FileText className="h-4 w-4 text-primary" />
+            <div>
+              <p className="text-sm font-medium">Termos de Uso e LGPD</p>
+              <p className="text-xs text-muted-foreground">Como tratamos seus dados.</p>
+            </div>
+          </div>
+          <span className="text-xs text-muted-foreground">Ler</span>
+        </button>
+
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <Trash2 className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-destructive">Limpar meus dados</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Apaga permanentemente todos os seus pacientes, sessões e registros de humor/progresso. Esta ação não pode ser desfeita.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            onClick={() => {
+              setWipeConfirm("");
+              setWipeOpen(true);
+            }}
+          >
+            <Trash2 className="h-4 w-4" /> Limpar meus dados
+          </Button>
+        </div>
+      </section>
+
+      <Dialog open={wipeOpen} onOpenChange={setWipeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Confirmar limpeza</DialogTitle>
+            <DialogDescription>
+              Você está prestes a apagar <strong>todos</strong> os seus pacientes, sessões e registros de humor/progresso. Seu perfil e conta permanecem ativos.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="wipe_confirm">
+              Digite <span className="font-mono font-semibold">LIMPAR</span> para confirmar
+            </Label>
+            <Input
+              id="wipe_confirm"
+              value={wipeConfirm}
+              onChange={(e) => setWipeConfirm(e.target.value)}
+              placeholder="LIMPAR"
+              autoComplete="off"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setWipeOpen(false)} disabled={wiping}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleWipeData}
+              disabled={wiping || wipeConfirm.trim().toUpperCase() !== "LIMPAR"}
+            >
+              {wiping && <Loader2 className="h-4 w-4 animate-spin" />}
+              Apagar tudo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Termos de Uso e LGPD</DialogTitle>
+            <DialogDescription>Versão preliminar — atualizada em maio/2026.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">1. Sigilo profissional</h3>
+              <p>
+                Os dados dos seus pacientes são acessados exclusivamente por você. Apenas supervisores explicitamente vinculados por você terão acesso somente leitura aos dados dos seus supervisionandos.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">2. Tratamento de dados (LGPD)</h3>
+              <p>
+                Seguimos a Lei Geral de Proteção de Dados (Lei 13.709/2018). Os dados são armazenados de forma segura, com criptografia em trânsito e em repouso, e isolamento por usuário no banco de dados (Row Level Security).
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">3. Seus direitos</h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Acessar e exportar seus dados a qualquer momento.</li>
+                <li>Corrigir informações imprecisas.</li>
+                <li>Apagar todos os seus registros usando "Limpar meus dados".</li>
+                <li>Encerrar sua conta, com remoção definitiva.</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">4. Responsabilidade do psicólogo</h3>
+              <p>
+                Como profissional, você é o controlador dos dados dos pacientes e deve obter o consentimento informado antes de cadastrá-los. A plataforma atua como operadora.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-foreground mb-1">5. Contato</h3>
+              <p>
+                Para dúvidas, exercícios de direitos ou notificações de incidentes, entre em contato pelo email do suporte.
+              </p>
+            </div>
+            <p className="text-xs italic">
+              Este é um texto padrão. Substitua pelo documento jurídico definitivo antes de produção.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTermsOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
