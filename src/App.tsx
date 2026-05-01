@@ -13,6 +13,7 @@ import { Loader2 } from "lucide-react";
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Admin = lazy(() => import("./pages/Admin"));
 const ConfirmarSessao = lazy(() => import("./pages/ConfirmarSessao"));
 const Dashboard = lazy(() => import("./pages/app/Dashboard"));
