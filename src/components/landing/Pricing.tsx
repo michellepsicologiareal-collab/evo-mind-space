@@ -3,54 +3,37 @@ import { Button } from "@/components/ui/button";
 
 const plans = [
   {
-    name: "Essencial",
-    price: "R$ 49",
+    name: "Essencial PsiReal",
+    price: "R$ 39,90",
     period: "/mês",
     description: "Para quem está começando e quer organizar o consultório.",
     features: [
-      "Até 15 pacientes ativos",
+      "Pacientes ilimitados",
       "Agenda completa",
       "Controle financeiro básico",
       "Prontuário TCC",
+      "Registros de evolução",
       "Suporte por e-mail",
     ],
     cta: "Começar agora",
     href: "https://kiwify.com.br/PLACEHOLDER_ESSENCIAL",
-    highlighted: false,
-  },
-  {
-    name: "Profissional",
-    price: "R$ 89",
-    period: "/mês",
-    description: "Para clínicas em crescimento que precisam de escala.",
-    features: [
-      "Pacientes ilimitados",
-      "Agenda + lembretes por e-mail",
-      "Financeiro completo + relatórios",
-      "Prontuário TCC avançado",
-      "Supervisão integrada",
-      "Cobrança via WhatsApp",
-      "Suporte prioritário",
-    ],
-    cta: "Assinar agora",
-    href: "https://kiwify.com.br/PLACEHOLDER_PROFISSIONAL",
     highlighted: true,
   },
   {
-    name: "Clínica",
-    price: "R$ 149",
+    name: "Supervisora PsiReal",
+    price: "R$ 49,90",
     period: "/mês",
-    description: "Para supervisores e equipes multidisciplinares.",
+    description: "Para supervisoras que acompanham supervisionandos.",
     features: [
-      "Tudo do Profissional",
+      "Tudo do Essencial",
+      "Supervisão integrada",
       "Multi-supervisionandos",
       "Painel de supervisão",
-      "Relatórios avançados",
-      "Onboarding dedicado",
-      "Suporte via WhatsApp",
+      "Financeiro completo + relatórios",
+      "Suporte prioritário",
     ],
-    cta: "Falar com equipe",
-    href: "https://kiwify.com.br/PLACEHOLDER_CLINICA",
+    cta: "Assinar agora",
+    href: "https://kiwify.com.br/PLACEHOLDER_SUPERVISORA",
     highlighted: false,
   },
 ];
@@ -58,7 +41,7 @@ const plans = [
 export const Pricing = () => {
   return (
     <section id="planos" className="py-24 lg:py-32 bg-background">
-      <div className="container max-w-6xl mx-auto px-4 sm:px-6">
+      <div className="container max-w-5xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-16 animate-fade-up">
           <p className="text-sm font-medium tracking-wider uppercase text-accent mb-3">Planos</p>
           <h2 className="font-display text-4xl md:text-5xl font-medium text-foreground text-balance">
@@ -69,7 +52,7 @@ export const Pricing = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-3xl mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.name}
