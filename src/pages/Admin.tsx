@@ -129,6 +129,23 @@ const Admin = () => {
     toast.success(approve ? "Usuário aprovado!" : "Acesso revogado");
   };
 
+  const handleProfileTypeChange = async (userId: string, newType: ProfileType) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ profile_type: newType } as any)
+      .eq("id", userId);
+
+    if (error) {
+      toast.error("Erro ao atualizar tipo de perfil");
+      return;
+    }
+
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, profile_type: newType } : u))
+    );
+    toast.success(`Perfil alterado para ${PROFILE_LABELS[newType]}`);
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
