@@ -48,6 +48,8 @@ import {
   Users,
   ChevronDown,
   Sparkles,
+  CalendarClock,
+  BarChart3,
 } from "lucide-react";
 import {
   startOfMonth,
@@ -184,14 +186,24 @@ const Finance = () => {
 
   const billable = useMemo(() => rows.filter((r) => r.status === "completed"), [rows]);
 
-  const fortnightBillable = useMemo(() => {
-    if (fortnightFilter === "all") return billable;
-    return billable.filter((r) => {
+  // Scheduled/confirmed sessions = receita prevista
+  const scheduled = useMemo(
+    () => rows.filter((r) => r.status === "scheduled" || r.status === "confirmed"),
+    [rows]
+  );
+
+  const fortnightFilter_ = (list: Row[]) => {
+    if (fortnightFilter === "all") return list;
+    return list.filter((r) => {
       const day = new Date(r.scheduled_at).getDate();
       return fortnightFilter === "first" ? day <= 15 : day > 15;
     });
-  }, [billable, fortnightFilter]);
+  };
 
+  const fortnightBillable = useMemo(() => fortnightFilter_(billable), [billable, fortnightFilter]);
+  const fortnightScheduled = useMemo(() => fortnightFilter_(scheduled), [scheduled, fortnightFilter]);
+
+  const totalPrevisto = fortnightScheduled.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const totalFaturado = fortnightBillable.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const totalRecebido = fortnightBillable
     .filter((r) => r.payment_status === "paid")
@@ -199,6 +211,34 @@ const Finance = () => {
   const totalPendente = totalFaturado - totalRecebido;
   const sessoesPagas = fortnightBillable.filter((r) => r.payment_status === "paid").length;
   const sessoesPendentes = fortnightBillable.filter((r) => r.payment_status === "pending").length;
+  const sessoesAgendadas = fortnightScheduled.length;
+
+  // Weekly chart data for the month
+  const weeklyChartData = useMemo(() => {
+    const weeks: { label: string; previsto: number; recebido: number; pendente: number }[] = [];
+    const monthDays = monthEnd.getDate();
+    const ranges = [
+      { start: 1, end: 7, label: "Sem 1" },
+      { start: 8, end: 14, label: "Sem 2" },
+      { start: 15, end: 21, label: "Sem 3" },
+      { start: 22, end: monthDays, label: "Sem 4" },
+    ];
+    for (const range of ranges) {
+      const inRange = (r: Row) => {
+        const d = new Date(r.scheduled_at).getDate();
+        return d >= range.start && d <= range.end;
+      };
+      const weekScheduled = scheduled.filter(inRange);
+      const weekBillable = billable.filter(inRange);
+      weeks.push({
+        label: range.label,
+        previsto: weekScheduled.reduce((s, r) => s + Number(r.price ?? 0), 0),
+        recebido: weekBillable.filter((r) => r.payment_status === "paid").reduce((s, r) => s + Number(r.price ?? 0), 0),
+        pendente: weekBillable.filter((r) => r.payment_status === "pending").reduce((s, r) => s + Number(r.price ?? 0), 0),
+      });
+    }
+    return weeks;
+  }, [rows, monthEnd]);
 
   // Service breakdown
   const serviceBreakdown = useMemo(() => {
@@ -524,11 +564,76 @@ const Finance = () => {
         </Tabs>
       </div>
 
-      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={TrendingUp} label="Faturado" value={formatBRL(totalFaturado)} accent />
+      <section className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <KpiCard icon={CalendarClock} label="Receita Prevista" value={formatBRL(totalPrevisto)} hint={`${sessoesAgendadas} sessões agendadas`} />
+        <KpiCard icon={TrendingUp} label="Faturado (realizado)" value={formatBRL(totalFaturado)} accent />
         <KpiCard icon={Wallet} label="Recebido" value={formatBRL(totalRecebido)} hint={`${sessoesPagas} sessões`} />
         <KpiCard icon={Clock} label="A receber" value={formatBRL(totalPendente)} hint={`${sessoesPendentes} sessões`} />
         <KpiCard icon={CheckCircle2} label="Sessões realizadas" value={fortnightBillable.length.toString()} />
+      </section>
+
+      {/* Previsto vs Realizado Chart */}
+      <section className="rounded-3xl bg-card border border-border shadow-card p-6 lg:p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
+            <BarChart3 className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="font-display text-lg font-semibold">Previsto × Realizado</h2>
+            <p className="text-xs text-muted-foreground">Visão semanal do mês</p>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {weeklyChartData.map((w) => {
+            const maxVal = Math.max(
+              ...weeklyChartData.map((d) => d.previsto + d.recebido + d.pendente),
+              1
+            );
+            const pctPrevisto = (w.previsto / maxVal) * 100;
+            const pctRecebido = (w.recebido / maxVal) * 100;
+            const pctPendente = (w.pendente / maxVal) * 100;
+            return (
+              <div key={w.label} className="space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium w-14">{w.label}</span>
+                  <div className="flex gap-4 text-muted-foreground">
+                    {w.previsto > 0 && <span className="text-primary/60">Prev: {formatBRL(w.previsto)}</span>}
+                    {w.recebido > 0 && <span className="text-emerald-600">Rec: {formatBRL(w.recebido)}</span>}
+                    {w.pendente > 0 && <span className="text-amber-600">Pend: {formatBRL(w.pendente)}</span>}
+                  </div>
+                </div>
+                <div className="flex gap-0.5 h-6 rounded-lg overflow-hidden bg-secondary/40">
+                  {pctRecebido > 0 && (
+                    <div
+                      className="bg-emerald-500/80 rounded-l-md transition-all"
+                      style={{ width: `${pctRecebido}%` }}
+                      title={`Recebido: ${formatBRL(w.recebido)}`}
+                    />
+                  )}
+                  {pctPendente > 0 && (
+                    <div
+                      className="bg-amber-400/80 transition-all"
+                      style={{ width: `${pctPendente}%` }}
+                      title={`Pendente: ${formatBRL(w.pendente)}`}
+                    />
+                  )}
+                  {pctPrevisto > 0 && (
+                    <div
+                      className="bg-primary/20 rounded-r-md transition-all"
+                      style={{ width: `${pctPrevisto}%` }}
+                      title={`Previsto: ${formatBRL(w.previsto)}`}
+                    />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          <div className="flex items-center gap-4 pt-2 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-500/80" /> Recebido</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-400/80" /> Pendente</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-primary/20" /> Previsto (agendado)</span>
+          </div>
+        </div>
       </section>
 
       {recentMissing.length > 0 && (
