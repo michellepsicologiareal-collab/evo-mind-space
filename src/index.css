@@ -3,33 +3,33 @@
 @tailwind utilities;
 
 /* Psi Real — Design System
-   Paleta: Terracota · Verde Musgo · Lilás · Bege Areia
-   Tipografia: Playfair Display (títulos) + Inter (corpo)
+   Paleta: Terracota · Verde Musgo · Lilás
+   Tipografia: Inter (toda a UI)
    All colors in HSL.
 */
 
 @layer base {
   :root {
     /* Surfaces */
-    --background: 33 30% 88%;              /* areia quente / fendi — mais escuro para contraste */
-    --foreground: 190 35% 12%;             /* deep teal ink */
+    --background: 214 20% 94%;              /* cinza azulado claro */
+    --foreground: 215 25% 15%;              /* ink escuro azulado */
 
-    --card: 37 50% 98%;                    /* branco quente — destaque sobre o fundo */
-    --card-foreground: 190 35% 12%;
+    --card: 0 0% 100%;                      /* branco puro */
+    --card-foreground: 215 25% 15%;
 
-    --popover: 37 50% 98%;
-    --popover-foreground: 190 35% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
 
     /* Brand — Verde Musgo */
     --primary: 108 27% 28%;               /* verde musgo #3D5C35 */
     --primary-foreground: 37 42% 96%;
     --primary-glow: 108 22% 38%;
 
-    --secondary: 37 30% 90%;              /* bege claro */
+    --secondary: 214 15% 91%;
     --secondary-foreground: 108 27% 28%;
 
-    --muted: 33 22% 85%;
-    --muted-foreground: 190 12% 42%;
+    --muted: 214 15% 90%;
+    --muted-foreground: 215 10% 46%;
 
     /* Terracota — CTAs, salvar, novo — mais vibrante */
     --accent: 19 58% 50%;                 /* terracota vibrante */
@@ -43,34 +43,34 @@
     --moss: 108 27% 28%;
     --moss-foreground: 37 42% 96%;
 
-    --sand: 32 38% 86%;
-    --sand-foreground: 190 35% 12%;
+    --sand: 214 15% 88%;
+    --sand-foreground: 215 25% 15%;
 
     --destructive: 0 65% 48%;
     --destructive-foreground: 37 42% 96%;
 
-    --border: 33 22% 80%;                 /* borda mais definida */
-    --input: 33 22% 82%;
+    --border: 214 18% 86%;
+    --input: 214 18% 88%;
     --ring: 108 27% 28%;
 
     --radius: 1rem;
 
     /* Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(108 27% 28%) 0%, hsl(108 22% 38%) 60%, hsl(19 58% 50%) 130%);
-    --gradient-soft: linear-gradient(180deg, hsl(33 30% 88%) 0%, hsl(33 22% 85%) 100%);
-    --gradient-card: linear-gradient(160deg, hsl(37 50% 99%) 0%, hsl(37 40% 96%) 100%);
+    --gradient-soft: linear-gradient(180deg, hsl(214 20% 94%) 0%, hsl(214 15% 90%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(0 0% 100%) 0%, hsl(214 15% 97%) 100%);
 
     /* Shadows — card elevation */
-    --shadow-elegant: 0 30px 60px -30px hsl(108 27% 28% / 0.2);
-    --shadow-soft: 0 4px 16px -4px hsl(33 20% 40% / 0.10), 0 1px 3px 0 hsl(33 20% 40% / 0.06);
-    --shadow-glow: 0 0 80px -20px hsl(108 22% 38% / 0.35);
-    --shadow-card: 0 2px 12px -3px hsl(33 20% 30% / 0.08), 0 1px 2px 0 hsl(33 20% 30% / 0.04);
+    --shadow-elegant: 0 30px 60px -30px hsl(215 25% 15% / 0.12);
+    --shadow-soft: 0 4px 16px -4px hsl(215 20% 30% / 0.08), 0 1px 3px 0 hsl(215 20% 30% / 0.04);
+    --shadow-glow: 0 0 80px -20px hsl(108 22% 38% / 0.25);
+    --shadow-card: 0 2px 12px -3px hsl(215 20% 30% / 0.06), 0 1px 2px 0 hsl(215 20% 30% / 0.03);
 
     /* Motion */
     --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
 
-    /* Fonts */
-    --font-display: "Playfair Display", ui-serif, Georgia, serif;
+    /* Fonts — Inter only */
+    --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
     --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
   }
 
@@ -112,8 +112,8 @@
   }
   h1, h2, h3, h4, .font-display {
     font-family: var(--font-display);
-    font-optical-sizing: auto;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
   ::selection { background: hsl(var(--accent) / 0.25); }
 }
