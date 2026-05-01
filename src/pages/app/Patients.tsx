@@ -405,6 +405,18 @@ const Patients = () => {
           {tccPatient && <TccRecords patientId={tccPatient.id} />}
         </DialogContent>
       </Dialog>
+
+      {/* Padesky Formulation Dialog */}
+      <Dialog open={!!padeksyPatient} onOpenChange={(o) => !o && setPadeksyPatient(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto [&_textarea]:scroll-mt-24 [&_input]:scroll-mt-24">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{padeksyPatient?.full_name}</DialogTitle>
+            <DialogDescription>Formulação de Caso — Modelo Padesky</DialogDescription>
+          </DialogHeader>
+          {padeksyPatient && <CaseFormulation patientId={padeksyPatient.id} />}
+        </DialogContent>
+      </Dialog>
+
       <PremiumGate open={gateOpen} onOpenChange={setGateOpen} />
     </div>
   );
