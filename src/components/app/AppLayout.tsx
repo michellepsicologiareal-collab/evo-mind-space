@@ -62,7 +62,8 @@ export const AppLayout = () => {
     });
   }, [profileType, isAdmin]);
 
-  const mobileNavItems = navItems.slice(0, 5);
+  // Mobile: show key items in bottom bar, rest accessible via "Mais" or scrollable
+  const mobileNavItems = navItems;
 
   const handleSignOut = async () => {
     await signOut();
