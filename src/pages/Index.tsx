@@ -18,6 +18,7 @@ const Index = () => {
         <Features />
         <Differential />
         <ForWhom />
+        <Pricing />
         <CTA />
       </main>
       <Footer />
