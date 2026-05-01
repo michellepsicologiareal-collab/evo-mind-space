@@ -183,13 +183,38 @@ const Finance = () => {
   };
 
   const billable = useMemo(() => rows.filter((r) => r.status === "completed"), [rows]);
-  const totalFaturado = billable.reduce((s, r) => s + Number(r.price ?? 0), 0);
-  const totalRecebido = billable
+
+  const fortnightBillable = useMemo(() => {
+    if (fortnightFilter === "all") return billable;
+    return billable.filter((r) => {
+      const day = new Date(r.scheduled_at).getDate();
+      return fortnightFilter === "first" ? day <= 15 : day > 15;
+    });
+  }, [billable, fortnightFilter]);
+
+  const totalFaturado = fortnightBillable.reduce((s, r) => s + Number(r.price ?? 0), 0);
+  const totalRecebido = fortnightBillable
     .filter((r) => r.payment_status === "paid")
     .reduce((s, r) => s + Number(r.price ?? 0), 0);
   const totalPendente = totalFaturado - totalRecebido;
-  const sessoesPagas = billable.filter((r) => r.payment_status === "paid").length;
-  const sessoesPendentes = billable.filter((r) => r.payment_status === "pending").length;
+  const sessoesPagas = fortnightBillable.filter((r) => r.payment_status === "paid").length;
+  const sessoesPendentes = fortnightBillable.filter((r) => r.payment_status === "pending").length;
+
+  // Service breakdown
+  const serviceBreakdown = useMemo(() => {
+    const map = new Map<string, { name: string; total: number; count: number }>();
+    fortnightBillable.filter((r) => r.payment_status === "paid").forEach((r) => {
+      const name = (r.service as any)?.name ?? "Sem serviço";
+      const entry = map.get(name);
+      if (entry) {
+        entry.total += Number(r.price ?? 0);
+        entry.count++;
+      } else {
+        map.set(name, { name, total: Number(r.price ?? 0), count: 1 });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => b.total - a.total);
+  }, [fortnightBillable]);
 
   const missingReference = useMemo(
     () =>
