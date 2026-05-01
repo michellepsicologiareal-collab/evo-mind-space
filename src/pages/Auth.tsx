@@ -27,6 +27,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState(false);
 
   // sign in
   const [siEmail, setSiEmail] = useState("");
@@ -44,6 +45,7 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError(false);
     const parsed = signInSchema.safeParse({ email: siEmail, password: siPassword });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
@@ -53,11 +55,17 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
     setLoading(false);
     if (error) {
+      setLoginError(true);
       toast.error(error.message === "Invalid login credentials" ? "Email ou senha incorretos" : error.message);
       return;
     }
     toast.success("Bem-vindo de volta!");
     navigate("/app", { replace: true });
+  };
+
+  const handleRetry = () => {
+    setLoginError(false);
+    setSiPassword("");
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -161,6 +169,14 @@ const Auth = () => {
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Entrar
                 </Button>
+                {loginError && (
+                  <div className="text-center space-y-2">
+                    <p className="text-sm text-destructive">Email ou senha incorretos.</p>
+                    <Button type="button" variant="outline" size="sm" onClick={handleRetry} className="mx-auto">
+                      Tentar novamente
+                    </Button>
+                  </div>
+                )}
               </form>
             </TabsContent>
 
