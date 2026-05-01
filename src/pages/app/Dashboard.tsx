@@ -349,7 +349,113 @@ const Dashboard = () => {
         <KPICard icon={Briefcase} label="Casos em Supervisão" value={stats.supervisionCases.toString()} />
       </section>
 
-      {/* ── Upcoming Sessions ── */}
+      {/* ── Insight Charts (floating card style) ── */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Mood Chart Card */}
+        <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-serene via-serene/60 to-transparent" />
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+            Humor médio{topMoodPatient ? ` · ${topMoodPatient}` : ""}
+          </p>
+          <p className="font-display text-3xl font-bold text-foreground">
+            {avgMood !== null ? avgMood.toFixed(1).replace(".", ",") : "—"}
+            <span className="text-lg text-muted-foreground font-normal"> / 10</span>
+          </p>
+          {moodData.length > 1 ? (
+            <div className="mt-3 h-[80px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={moodData}>
+                  <defs>
+                    <linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--serene))" stopOpacity={0.4} />
+                      <stop offset="100%" stopColor="hsl(var(--serene))" stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+                    formatter={(v: number) => [`${v}/10`, "Humor"]}
+                    labelFormatter={(l) => `Dia ${l}`}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="score"
+                    stroke="hsl(var(--serene))"
+                    strokeWidth={2.5}
+                    fill="url(#moodGrad)"
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground">Registre o humor dos pacientes para ver o gráfico aqui ✨</p>
+          )}
+          {moodData.length > 1 && (
+            <div className="flex gap-1 mt-2">
+              {moodData.slice(-7).map((d, i) => (
+                <div
+                  key={i}
+                  className="h-2 w-2 rounded-full"
+                  style={{
+                    backgroundColor: d.score >= 7 ? "hsl(var(--serene))" : d.score >= 4 ? "hsl(var(--sand))" : "hsl(var(--destructive))",
+                    opacity: 0.5 + (i / 10),
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Revenue Chart Card */}
+        <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent" />
+          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+            Faturamento — {format(new Date(), "MMMM", { locale: ptBR })}
+          </p>
+          <p className="font-display text-3xl font-bold text-foreground">
+            {hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`}
+          </p>
+          {prevMonthRevenue > 0 && !hideRevenue && (() => {
+            const pctChange = ((stats.monthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100;
+            const isUp = pctChange >= 0;
+            return (
+              <p className={`text-sm font-medium mt-1 ${isUp ? "text-emerald-600" : "text-destructive"}`}>
+                {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(0)}% vs. {format(subMonths(new Date(), 1), "MMMM", { locale: ptBR })}
+              </p>
+            );
+          })()}
+          {weeklyRevenue.some((w) => w.value > 0) ? (
+            <div className="mt-3 h-[80px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={weeklyRevenue}>
+                  <defs>
+                    <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.4} />
+                      <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="week" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+                    formatter={(v: number) => [`R$ ${v.toFixed(0)}`, "Receita"]}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke="hsl(var(--accent))"
+                    strokeWidth={2.5}
+                    fill="url(#revGrad)"
+                    dot={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground">Complete sessões para ver seu faturamento semanal 📊</p>
+          )}
+        </div>
+      </section>
+
       <section className="rounded-2xl bg-card border border-border shadow-card p-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Próximas Sessões</h2>
