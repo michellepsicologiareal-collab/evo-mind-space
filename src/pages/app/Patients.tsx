@@ -58,6 +58,7 @@ interface Patient {
   chief_complaint: string | null;
   treatment_plan: string | null;
   anamnesis: string | null;
+  category: "individual" | "crianca" | "grupo" | "casal";
 }
 
 const FREE_PATIENT_LIMIT = 5;
