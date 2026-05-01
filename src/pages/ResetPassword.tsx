@@ -16,6 +16,8 @@ const ResetPassword = () => {
   const [isRecovery, setIsRecovery] = useState(false);
   const [done, setDone] = useState(false);
   const [linkExpired, setLinkExpired] = useState(false);
+  const [countdown, setCountdown] = useState(10);
+  const [countdownCancelled, setCountdownCancelled] = useState(false);
 
   useEffect(() => {
     const markRecoveryFromUrl = () => {
@@ -63,6 +65,17 @@ const ResetPassword = () => {
       clearTimeout(timeout);
     };
   }, []);
+
+  // Countdown redirect when link is expired
+  useEffect(() => {
+    if (!linkExpired || countdownCancelled) return;
+    if (countdown <= 0) {
+      navigate("/auth", { replace: true });
+      return;
+    }
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [linkExpired, countdown, countdownCancelled, navigate]);
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,6 +142,19 @@ const ResetPassword = () => {
                 Por favor, volte ao login e solicite um novo link clicando em{" "}
                 <strong>"Esqueci minha senha"</strong>.
               </p>
+              {!countdownCancelled ? (
+                <p className="text-muted-foreground text-xs">
+                  Redirecionando para o login em{" "}
+                  <span className="font-semibold text-foreground">{countdown}s</span>…{" "}
+                  <button
+                    type="button"
+                    onClick={() => setCountdownCancelled(true)}
+                    className="underline hover:text-foreground transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </p>
+              ) : null}
               <Link to="/auth">
                 <Button variant="accent" className="mt-2 gap-2">
                   <ArrowLeft className="h-4 w-4" /> Solicitar novo link
