@@ -114,6 +114,7 @@ const Finance = () => {
     const { data, error } = await supabase
       .from("sessions")
       .select("id, scheduled_at, status, payment_status, payment_method, payment_reference, price, paid_at, patient:patients(full_name)")
+      .eq("user_id", user.id)
       .gte("scheduled_at", monthStart.toISOString())
       .lte("scheduled_at", monthEnd.toISOString())
       .order("scheduled_at", { ascending: false });
