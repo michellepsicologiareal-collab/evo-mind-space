@@ -46,6 +46,10 @@ export default {
           DEFAULT: "hsl(var(--lilac))",
           foreground: "hsl(var(--lilac-foreground))",
         },
+        moss: {
+          DEFAULT: "hsl(var(--moss))",
+          foreground: "hsl(var(--moss-foreground))",
+        },
         sand: {
           DEFAULT: "hsl(var(--sand))",
           foreground: "hsl(var(--sand-foreground))",
