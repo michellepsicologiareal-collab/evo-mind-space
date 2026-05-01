@@ -9,7 +9,7 @@ export const Footer = () => {
             <Brain className="h-4 w-4" />
           </span>
           <span className="font-display text-lg font-semibold">
-            Psi <span className="italic text-accent">Real</span>
+            Psi <span className="font-extrabold text-accent">Real</span>
           </span>
         </div>
         <p className="text-sm text-muted-foreground text-center">

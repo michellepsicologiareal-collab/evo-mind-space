@@ -109,11 +109,27 @@
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body);
     font-feature-settings: "ss01", "cv11";
+    font-size: 15px;
+    line-height: 1.6;
   }
-  h1, h2, h3, h4, .font-display {
+  /* Typography scale — Inter only */
+  h1, .font-display.text-4xl, .font-display.text-5xl {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  h2, .font-display.text-3xl {
     font-family: var(--font-display);
     font-weight: 700;
     letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  h3, h4, .font-display {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
   }
   ::selection { background: hsl(var(--accent) / 0.25); }
 }

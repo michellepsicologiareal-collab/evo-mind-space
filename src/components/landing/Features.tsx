@@ -48,7 +48,7 @@ export const Features = () => {
             <p className="text-xs uppercase tracking-[0.2em] text-accent font-medium">Funcionalidades</p>
             <h2 className="mt-3 font-display text-4xl lg:text-5xl font-medium leading-tight text-balance">
               Tudo que seu consultório precisa,<br className="hidden lg:block" />
-              <span className="italic text-muted-foreground">nada que ele não precisa.</span>
+              <span className="font-semibold text-muted-foreground">nada que ele não precisa.</span>
             </h2>
           </div>
           <p className="text-muted-foreground max-w-md">

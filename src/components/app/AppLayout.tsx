@@ -37,7 +37,7 @@ export const AppLayout = () => {
             <Brain className="h-4 w-4" />
           </span>
           <span className="font-display text-xl font-semibold">
-            Psi <span className="italic text-accent">Real</span>
+            Psi <span className="font-extrabold text-accent">Real</span>
           </span>
         </Link>
 
@@ -77,7 +77,7 @@ export const AppLayout = () => {
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground">
               <Brain className="h-4 w-4" />
             </span>
-            <span className="font-display text-lg font-semibold">Psi <span className="italic text-accent">Real</span></span>
+            <span className="font-display text-lg font-semibold">Psi <span className="font-extrabold text-accent">Real</span></span>
           </Link>
           <Button variant="ghost" size="icon" onClick={handleSignOut}>
             <LogOut className="h-4 w-4" />

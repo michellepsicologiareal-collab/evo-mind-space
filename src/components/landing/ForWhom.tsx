@@ -14,7 +14,7 @@ export const ForWhom = () => {
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-accent font-medium">Para quem é</p>
           <h2 className="mt-3 font-display text-4xl lg:text-5xl font-medium leading-tight text-balance">
-            Feito para psicólogos que querem <span className="italic text-accent">crescer com clareza</span>.
+            Feito para psicólogos que querem <span className="font-bold text-accent">crescer com clareza</span>.
           </h2>
           <p className="mt-6 text-muted-foreground">
             Se você se reconhece em algum destes pontos, o Psi Real foi pensado para a sua realidade.
