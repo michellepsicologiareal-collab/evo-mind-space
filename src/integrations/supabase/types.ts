@@ -181,6 +181,11 @@ export type Database = {
     Functions: {
       get_profile_id_by_email: { Args: { _email: string }; Returns: string }
       is_supervisor_of: { Args: { _supervisee_id: string }; Returns: boolean }
+      link_supervisee_by_email: { Args: { _email: string }; Returns: string }
+      unlink_supervisee: {
+        Args: { _supervisee_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       payment_method: "pix" | "card" | "cash"
