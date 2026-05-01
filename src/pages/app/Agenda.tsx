@@ -277,14 +277,38 @@ const Agenda = () => {
             ) : (
               <form onSubmit={handleSave} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Paciente *</Label>
-                  <Select value={form.patient_id} onValueChange={(v) => setForm({ ...form, patient_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <Label>Tipo de compromisso</Label>
+                  <Select value={form.session_type} onValueChange={(v) => setForm({ ...form, session_type: v as SessionType })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {patients.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+                      <SelectItem value="clinical">Atendimento Clínico</SelectItem>
+                      <SelectItem value="supervision">Supervisão Técnica</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+                {form.session_type === "clinical" && (
+                  <div className="space-y-2">
+                    <Label>Paciente *</Label>
+                    <Select value={form.patient_id} onValueChange={(v) => setForm({ ...form, patient_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {patients.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {form.session_type === "supervision" && (
+                  <div className="space-y-2">
+                    <Label>Paciente discutido (opcional)</Label>
+                    <Select value={form.discussed_patient_id} onValueChange={(v) => setForm({ ...form, discussed_patient_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Nenhum</SelectItem>
+                        {patients.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="date">Data *</Label>
