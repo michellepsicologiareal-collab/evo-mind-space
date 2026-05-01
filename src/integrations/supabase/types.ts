@@ -64,11 +64,13 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          profile_type: Database["public"]["Enums"]["profile_type"]
           reminder_enabled: boolean
           reminder_group_by_patient: boolean
           reminder_group_sort: string
           reminder_window_hours: number
           specialty: string | null
+          supervisor_id: string | null
           updated_at: string
         }
         Insert: {
@@ -78,11 +80,13 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
+          profile_type?: Database["public"]["Enums"]["profile_type"]
           reminder_enabled?: boolean
           reminder_group_by_patient?: boolean
           reminder_group_sort?: string
           reminder_window_hours?: number
           specialty?: string | null
+          supervisor_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -92,14 +96,24 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          profile_type?: Database["public"]["Enums"]["profile_type"]
           reminder_enabled?: boolean
           reminder_group_by_patient?: boolean
           reminder_group_sort?: string
           reminder_window_hours?: number
           specialty?: string | null
+          supervisor_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sessions: {
         Row: {
@@ -165,11 +179,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_supervisor_of: { Args: { _supervisee_id: string }; Returns: boolean }
     }
     Enums: {
       payment_method: "pix" | "card" | "cash"
       payment_status: "pending" | "paid"
+      profile_type: "standard" | "supervisee"
       session_status:
         | "scheduled"
         | "completed"
@@ -305,6 +320,7 @@ export const Constants = {
     Enums: {
       payment_method: ["pix", "card", "cash"],
       payment_status: ["pending", "paid"],
+      profile_type: ["standard", "supervisee"],
       session_status: [
         "scheduled",
         "completed",
