@@ -48,6 +48,8 @@ import {
   Users,
   ChevronDown,
   Sparkles,
+  CalendarClock,
+  BarChart3,
 } from "lucide-react";
 import {
   startOfMonth,
