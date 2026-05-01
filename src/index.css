@@ -50,8 +50,8 @@
 
     /* Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(185 55% 18%) 0%, hsl(170 38% 28%) 60%, hsl(18 62% 58%) 130%);
-    --gradient-soft: linear-gradient(180deg, hsl(40 33% 97%) 0%, hsl(90 18% 92%) 100%);
-    --gradient-card: linear-gradient(160deg, hsl(0 0% 100%) 0%, hsl(40 25% 96%) 100%);
+    --gradient-soft: linear-gradient(180deg, hsl(35 30% 94%) 0%, hsl(90 18% 92%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(38 25% 98%) 0%, hsl(35 20% 95%) 100%);
 
     /* Shadows */
     --shadow-elegant: 0 30px 60px -30px hsl(185 55% 18% / 0.25);
