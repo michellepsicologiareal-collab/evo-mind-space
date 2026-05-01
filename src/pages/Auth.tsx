@@ -27,6 +27,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState(false);
 
   // sign in
   const [siEmail, setSiEmail] = useState("");
