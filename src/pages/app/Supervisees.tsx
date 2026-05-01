@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   Loader2,
   UserPlus,
@@ -11,6 +13,9 @@ import {
   ChevronRight,
   Phone,
   StickyNote,
+  CalendarDays,
+  Smile,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,6 +48,20 @@ interface SuperviseeRow {
   patients: Patient[];
 }
 
+interface SessionSummary {
+  id: string;
+  scheduled_at: string;
+  status: string;
+  notes: string | null;
+}
+
+interface ProgressEntry {
+  id: string;
+  recorded_at: string;
+  mood_score: number | null;
+  note: string | null;
+}
+
 const Supervisees = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -53,6 +72,43 @@ const Supervisees = () => {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [tabFilter, setTabFilter] = useState<Record<string, "active" | "inactive" | "all">>({});
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [recentSessions, setRecentSessions] = useState<SessionSummary[]>([]);
+  const [latestProgress, setLatestProgress] = useState<ProgressEntry | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedPatient) {
+      setRecentSessions([]);
+      setLatestProgress(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setDetailLoading(true);
+      const [sRes, pRes] = await Promise.all([
+        supabase
+          .from("sessions")
+          .select("id, scheduled_at, status, notes")
+          .eq("patient_id", selectedPatient.id)
+          .order("scheduled_at", { ascending: false })
+          .limit(3),
+        (supabase as any)
+          .from("patient_progress")
+          .select("id, recorded_at, mood_score, note")
+          .eq("patient_id", selectedPatient.id)
+          .order("recorded_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (cancelled) return;
+      setRecentSessions((sRes.data as SessionSummary[]) ?? []);
+      setLatestProgress((pRes.data as ProgressEntry | null) ?? null);
+      setDetailLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPatient]);
 
   const load = async () => {
     if (!user) return;
@@ -363,11 +419,72 @@ const Supervisees = () => {
                 </div>
               )}
 
-              {!selectedPatient.email && !selectedPatient.phone && !selectedPatient.notes && selectedPatient.session_price == null && (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Sem informações adicionais cadastradas.
-                </p>
-              )}
+              <div className="border-t border-border pt-4 space-y-4">
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-medium mb-2">
+                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                    Sessões recentes
+                  </div>
+                  {detailLoading ? (
+                    <div className="py-3 text-center"><Loader2 className="h-4 w-4 animate-spin mx-auto text-primary" /></div>
+                  ) : recentSessions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground rounded-lg bg-secondary/40 p-3">
+                      Nenhuma sessão registrada ainda.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {recentSessions.map((s) => (
+                        <li key={s.id} className="rounded-lg bg-secondary/40 p-3 text-sm">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-medium">
+                              {format(new Date(s.scheduled_at), "dd 'de' MMM, HH:mm", { locale: ptBR })}
+                            </span>
+                            <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-background text-muted-foreground">
+                              {s.status}
+                            </span>
+                          </div>
+                          {s.notes && (
+                            <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{s.notes}</p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-medium mb-2">
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                    Último humor / progresso
+                  </div>
+                  {detailLoading ? null : !latestProgress ? (
+                    <p className="text-sm text-muted-foreground rounded-lg bg-secondary/40 p-3">
+                      Nenhum registro de humor/progresso ainda.
+                    </p>
+                  ) : (
+                    <div className="rounded-lg bg-secondary/40 p-3 space-y-2">
+                      <div className="flex items-center justify-between gap-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Smile className="h-4 w-4 text-primary" />
+                          <span className="font-medium">
+                            {latestProgress.mood_score != null
+                              ? `Humor ${latestProgress.mood_score}/10`
+                              : "Sem humor"}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(latestProgress.recorded_at), "dd/MM/yyyy", { locale: ptBR })}
+                        </span>
+                      </div>
+                      {latestProgress.note && (
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {latestProgress.note}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>
