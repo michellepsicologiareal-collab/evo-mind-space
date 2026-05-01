@@ -18,6 +18,7 @@ import Supervisees from "./pages/app/Supervisees.tsx";
 import Supervision from "./pages/app/Supervision.tsx";
 import SupervisaoCaso from "./pages/app/SupervisaoCaso.tsx";
 import Library from "./pages/app/Library.tsx";
+import Autocuidado from "./pages/app/Autocuidado.tsx";
 import Admin from "./pages/Admin.tsx";
 import ConfirmarSessao from "./pages/ConfirmarSessao.tsx";
 
