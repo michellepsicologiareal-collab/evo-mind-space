@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle } from "lucide-react";
 import { TccRecords } from "@/components/app/TccRecords";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,19 +44,22 @@ const Patients = () => {
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
   const [tccPatient, setTccPatient] = useState<Patient | null>(null);
+  const [pixKey, setPixKey] = useState<string>("");
+  const [profName, setProfName] = useState<string>("");
 
   const [form, setForm] = useState({ full_name: "", email: "", phone: "", notes: "", session_price: "" });
 
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from("patients")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("full_name");
-    if (error) toast.error("Erro ao carregar pacientes");
-    setPatients(data ?? []);
+    const [patientsRes, profileRes] = await Promise.all([
+      supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
+      supabase.from("profiles").select("full_name, pix_key").eq("id", user.id).maybeSingle(),
+    ]);
+    if (patientsRes.error) toast.error("Erro ao carregar pacientes");
+    setPatients(patientsRes.data ?? []);
+    setPixKey((profileRes.data as any)?.pix_key ?? "");
+    setProfName(profileRes.data?.full_name ?? "");
     setLoading(false);
   };
 
@@ -143,6 +146,16 @@ const Patients = () => {
 
   const activeCount = patients.filter((p) => p.is_active).length;
   const inactiveCount = patients.length - activeCount;
+
+  const buildWhatsAppUrl = (p: Patient) => {
+    const phone = (p.phone ?? "").replace(/\D/g, "");
+    if (!phone) return null;
+    const valor = p.session_price != null ? `R$ ${Number(p.session_price).toFixed(2).replace(".", ",")}` : "";
+    let msg = `Olá, ${p.full_name.split(" ")[0]}! 😊\n\nSegue o valor da sua sessão: ${valor}.\n`;
+    if (pixKey) msg += `\nChave Pix para pagamento:\n${pixKey}\n`;
+    msg += `\nQualquer dúvida, estou à disposição.\n${profName ? `— ${profName}` : ""}`;
+    return `https://wa.me/${phone.startsWith("55") ? phone : "55" + phone}?text=${encodeURIComponent(msg)}`;
+  };
 
   const filtered = patients
     .filter((p) =>
@@ -274,6 +287,19 @@ const Patients = () => {
                 {p.phone && <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> {p.phone}</p>}
                 {p.session_price != null && <p className="text-foreground font-medium">R$ {Number(p.session_price).toFixed(2).replace(".", ",")} <span className="text-muted-foreground font-normal">/ sessão</span></p>}
               </div>
+              {/* WhatsApp billing button */}
+              {p.phone && (
+                <div className="mt-3 border-t border-border/50 pt-3">
+                  {(() => {
+                    const url = buildWhatsAppUrl(p);
+                    return url ? (
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors">
+                        <MessageCircle className="h-3.5 w-3.5" /> Cobrar via WhatsApp
+                      </a>
+                    ) : null;
+                  })()}
+                </div>
+              )}
               <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Eye className="h-3.5 w-3.5" />

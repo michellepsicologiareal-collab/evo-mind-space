@@ -30,6 +30,7 @@ const profileSchema = z.object({
   crp: z.string().trim().max(40).optional().or(z.literal("")),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   specialty: z.string().trim().max(120).optional().or(z.literal("")),
+  pix_key: z.string().trim().max(255).optional().or(z.literal("")),
 });
 
 type ProfileType = "standard" | "supervisee" | "supervisor";
@@ -42,7 +43,7 @@ const Profile = () => {
   const [linkingSupervisor, setLinkingSupervisor] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({ full_name: "", clinic_name: "", crp: "", phone: "", specialty: "" });
+  const [form, setForm] = useState({ full_name: "", clinic_name: "", crp: "", phone: "", specialty: "", pix_key: "" });
   const [profileType, setProfileType] = useState<ProfileType>("standard");
   const [supervisorId, setSupervisorId] = useState<string | null>(null);
   const [supervisorName, setSupervisorName] = useState<string | null>(null);
@@ -182,6 +183,7 @@ const Profile = () => {
         crp: data.crp ?? "",
         phone: data.phone ?? "",
         specialty: data.specialty ?? "",
+        pix_key: (data as any).pix_key ?? "",
       });
       setProfileType((data.profile_type as ProfileType) ?? "standard");
       setSupervisorId(data.supervisor_id ?? null);
@@ -228,8 +230,9 @@ const Profile = () => {
         clinic_name: parsed.data.clinic_name || null,
         crp: parsed.data.crp || null,
         phone: parsed.data.phone || null,
-        specialty: parsed.data.specialty || null,
-        profile_type: profileType,
+         specialty: parsed.data.specialty || null,
+         pix_key: parsed.data.pix_key || null,
+         profile_type: profileType,
         // If switching to standard, clear supervisor link
         ...(profileType === "standard" ? { supervisor_id: null } : {}),
       } as any)
@@ -442,6 +445,11 @@ const Profile = () => {
         <div className="space-y-2">
           <Label htmlFor="specialty">Especialidade</Label>
           <Input id="specialty" placeholder="Ex: TCC, Psicanálise..." value={form.specialty} onChange={(e) => setForm({ ...form, specialty: e.target.value })} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="pix_key">Chave Pix</Label>
+          <Input id="pix_key" placeholder="CPF, e-mail, telefone ou chave aleatória" value={form.pix_key} onChange={(e) => setForm({ ...form, pix_key: e.target.value })} />
+          <p className="text-xs text-muted-foreground">Usada na mensagem de cobrança via WhatsApp.</p>
         </div>
         <div className="space-y-2">
           <Label>Email</Label>

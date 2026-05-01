@@ -104,6 +104,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          pix_key: string | null
           profile_type: Database["public"]["Enums"]["profile_type"]
           reminder_enabled: boolean
           reminder_group_by_patient: boolean
@@ -121,6 +122,7 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
+          pix_key?: string | null
           profile_type?: Database["public"]["Enums"]["profile_type"]
           reminder_enabled?: boolean
           reminder_group_by_patient?: boolean
@@ -138,6 +140,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          pix_key?: string | null
           profile_type?: Database["public"]["Enums"]["profile_type"]
           reminder_enabled?: boolean
           reminder_group_by_patient?: boolean
