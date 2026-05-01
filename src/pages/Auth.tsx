@@ -179,6 +179,39 @@ const Auth = () => {
                   <Input id="su-password" type="password" autoComplete="new-password" required value={suPassword} onChange={(e) => setSuPassword(e.target.value)} />
                   <p className="text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
                 </div>
+                <div className="space-y-2">
+                  <Label>Tipo de perfil</Label>
+                  <RadioGroup
+                    value={suProfileType}
+                    onValueChange={(v) => setSuProfileType(v as "standard" | "supervisee")}
+                    className="grid sm:grid-cols-2 gap-2"
+                  >
+                    <label
+                      htmlFor="pt-standard"
+                      className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
+                        suProfileType === "standard" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"
+                      }`}
+                    >
+                      <RadioGroupItem id="pt-standard" value="standard" className="mt-0.5" />
+                      <span className="text-sm">
+                        <span className="font-medium block">Padrão</span>
+                        <span className="text-xs text-muted-foreground">Psicólogo autônomo, gerencia seus próprios pacientes.</span>
+                      </span>
+                    </label>
+                    <label
+                      htmlFor="pt-supervisee"
+                      className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
+                        suProfileType === "supervisee" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"
+                      }`}
+                    >
+                      <RadioGroupItem id="pt-supervisee" value="supervisee" className="mt-0.5" />
+                      <span className="text-sm">
+                        <span className="font-medium block">Membro Parceiro / Supervisionando</span>
+                        <span className="text-xs text-muted-foreground">Pode vincular um supervisor que verá seus dados em modo leitura.</span>
+                      </span>
+                    </label>
+                  </RadioGroup>
+                </div>
                 <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Criar conta
