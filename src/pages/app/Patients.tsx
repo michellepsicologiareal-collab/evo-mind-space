@@ -254,6 +254,7 @@ const Patients = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setTccPatient(p)}><ClipboardList className="h-4 w-4" /> Prontuário TCC</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => toggleActive(p)}>
                       {p.is_active ? "Marcar inativo" : "Reativar"}
                     </DropdownMenuItem>
