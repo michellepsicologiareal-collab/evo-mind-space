@@ -146,7 +146,33 @@ const Agenda = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, weekStart]);
 
+  // Fetch patient session count for the selected month
+  useEffect(() => {
+    if (!user || !form.patient_id || form.session_type !== "clinical" || !form.date) {
+      setPatientMonthCount(null);
+      return;
+    }
+    const selectedDate = new Date(form.date + "T12:00:00");
+    const mStart = startOfMonth(selectedDate);
+    const mEnd = endOfMonth(selectedDate);
+    supabase
+      .from("sessions")
+      .select("scheduled_at")
+      .eq("user_id", user.id)
+      .eq("patient_id", form.patient_id)
+      .eq("session_type", "clinical")
+      .gte("scheduled_at", mStart.toISOString())
+      .lte("scheduled_at", mEnd.toISOString())
+      .not("status", "eq", "cancelled")
+      .order("scheduled_at")
+      .then(({ data }) => {
+        const dates = (data ?? []).map((d: any) => format(new Date(d.scheduled_at), "dd/MM"));
+        setPatientMonthCount({ count: dates.length, dates });
+      });
+  }, [user, form.patient_id, form.date, form.session_type]);
+
   const openNew = (date?: Date) => {
+    setPatientMonthCount(null);
     setForm({
       session_type: "clinical",
       patient_id: "",
