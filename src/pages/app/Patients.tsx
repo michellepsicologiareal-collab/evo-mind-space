@@ -39,6 +39,7 @@ const Patients = () => {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Patient | null>(null);
   const [saving, setSaving] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
 
   const [form, setForm] = useState({ full_name: "", email: "", phone: "", notes: "", session_price: "" });
 
