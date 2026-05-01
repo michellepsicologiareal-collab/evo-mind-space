@@ -58,6 +58,8 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       .limit(20);
     setRecords(data ?? []);
     setLoading(false);
+    // Audit: log access to TCC records
+    if (data?.length) logClinicalAccess("tcc_record", data[0].id, patientId);
   };
 
   useEffect(() => {
