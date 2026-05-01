@@ -11,7 +11,7 @@
 @layer base {
   :root {
     /* Surfaces */
-    --background: 214 20% 94%;              /* cinza azulado claro */
+    --background: 30 25% 93%;               /* bege acolhedor — warmth & segurança */
     --foreground: 215 25% 15%;              /* ink escuro azulado */
 
     --card: 0 0% 100%;                      /* branco puro */
