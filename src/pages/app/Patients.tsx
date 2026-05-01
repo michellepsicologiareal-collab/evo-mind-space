@@ -4,6 +4,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle } from "lucide-react";
 import { TccRecords } from "@/components/app/TccRecords";
+import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
