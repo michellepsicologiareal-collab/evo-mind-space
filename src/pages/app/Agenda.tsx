@@ -204,7 +204,7 @@ const Agenda = () => {
 
     const moodNum = parsed.data.mood_score ? Number(parsed.data.mood_score) : null;
     const progressNote = parsed.data.progress_note?.trim() || null;
-    if ((moodNum && moodNum >= 1 && moodNum <= 10) || progressNote) {
+    if (!isSupervision && parsed.data.patient_id && ((moodNum && moodNum >= 1 && moodNum <= 10) || progressNote)) {
       await supabase.from("patient_progress").insert({
         user_id: user.id,
         patient_id: parsed.data.patient_id,
