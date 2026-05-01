@@ -159,6 +159,36 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
     toast.success("Evolução registrada");
   };
 
+  const organizeNotes = async () => {
+    const notes = evoSummary.trim();
+    if (!notes) {
+      toast.error("Escreva suas anotações antes de organizar.");
+      return;
+    }
+    setOrganizing(true);
+    setAiResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("organize-notes", {
+        body: { notes },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      setAiResult(data.result);
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Erro ao organizar notas. Tente novamente.");
+    } finally {
+      setOrganizing(false);
+    }
+  };
+
+  const copyToEvolution = () => {
+    if (!aiResult) return;
+    setEvoSummary(aiResult);
+    setAiResult(null);
+    toast.success("Texto copiado para a evolução!");
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
