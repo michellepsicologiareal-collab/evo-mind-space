@@ -247,15 +247,25 @@ const Admin = () => {
                       </td>
                       <td className="py-3 pr-4">{u.crp || "—"}</td>
                       <td className="py-3 pr-4">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          u.profile_type === "supervisor"
-                            ? "bg-lilac/20 text-lilac-foreground"
-                            : u.profile_type === "supervisee"
-                            ? "bg-primary/10 text-primary"
-                            : "bg-muted text-muted-foreground"
-                        }`}>
-                          {u.profile_type === "supervisor" ? "Supervisor" : u.profile_type === "supervisee" ? "Supervisionando" : "Padrão"}
-                        </span>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors ${PROFILE_STYLES[(u.profile_type as ProfileType) || "standard"]}`}>
+                              {PROFILE_LABELS[(u.profile_type as ProfileType) || "standard"]}
+                              <ChevronDown className="h-3 w-3" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            {(Object.keys(PROFILE_LABELS) as ProfileType[]).map((type) => (
+                              <DropdownMenuItem
+                                key={type}
+                                onClick={() => handleProfileTypeChange(u.id, type)}
+                                className={u.profile_type === type ? "font-bold" : ""}
+                              >
+                                {PROFILE_LABELS[type]}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                       <td className="py-3 pr-4">
                         {u.clinic_name ? (
