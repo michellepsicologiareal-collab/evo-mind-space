@@ -66,7 +66,14 @@ export const AppLayout = () => {
         </nav>
 
         <div className="p-4 border-t border-border">
-          <p className="text-xs text-muted-foreground truncate mb-3">{user?.email}</p>
+          <button
+            onClick={() => setPlanOpen(true)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors text-accent hover:bg-accent/10 w-full"
+          >
+            <Crown className="h-4 w-4" />
+            Meu Plano
+          </button>
+          <p className="text-xs text-muted-foreground truncate mb-3 mt-3">{user?.email}</p>
           <Button variant="outline" size="sm" className="w-full" onClick={handleSignOut}>
             <LogOut className="h-4 w-4" /> Sair
           </Button>
