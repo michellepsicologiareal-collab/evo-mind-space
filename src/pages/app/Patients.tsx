@@ -284,6 +284,17 @@ const Patients = () => {
           ))}
         </ul>
       )}
+
+      {/* TCC Record Dialog */}
+      <Dialog open={!!tccPatient} onOpenChange={(o) => !o && setTccPatient(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{tccPatient?.full_name}</DialogTitle>
+            <DialogDescription>Prontuário TCC — Registro de Pensamento</DialogDescription>
+          </DialogHeader>
+          {tccPatient && <TccRecords patientId={tccPatient.id} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
