@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { Component, lazy, Suspense, useEffect, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -38,6 +38,40 @@ const PageLoader = () => (
   </div>
 );
 
+class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error("Erro ao carregar o sistema:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background px-4">
+          <div className="max-w-md text-center space-y-4">
+            <h1 className="font-display text-2xl font-semibold text-foreground">Não foi possível abrir o sistema</h1>
+            <p className="text-sm text-muted-foreground">Atualize a página. Se continuar, saia e entre novamente.</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-soft transition-colors hover:bg-accent/90"
+            >
+              Recarregar
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const RecoveryLinkRedirect = () => {
   const navigate = useNavigate();
 
@@ -62,7 +96,8 @@ const App = () => (
         <AuthProvider>
           <RecoveryLinkRedirect />
           <Suspense fallback={<PageLoader />}>
-            <Routes>
+            <AppErrorBoundary>
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
@@ -91,7 +126,8 @@ const App = () => (
                 <Route path="perfil" element={<Profile />} />
               </Route>
               <Route path="*" element={<NotFound />} />
-            </Routes>
+              </Routes>
+            </AppErrorBoundary>
           </Suspense>
         </AuthProvider>
       </BrowserRouter>
