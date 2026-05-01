@@ -149,14 +149,8 @@ const Patients = () => {
   const inactiveCount = patients.length - activeCount;
 
   const buildWhatsAppUrl = (p: Patient) => {
-    let digits = (p.phone ?? "").replace(/\D/g, "");
+    const digits = normalizePhoneForWhatsApp(p.phone);
     if (!digits) return null;
-
-    // Remove leading zero (common in local formats like 011...)
-    if (digits.startsWith("0")) digits = digits.replace(/^0+/, "");
-
-    // Add country code if not present
-    if (!digits.startsWith("55")) digits = "55" + digits;
 
     // Ensure mobile numbers have 9th digit: 55 + 2-digit DDD + 9 digits = 13 digits
     // If we have 12 digits (55 + DDD + 8-digit number), insert the leading 9
