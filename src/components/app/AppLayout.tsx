@@ -31,6 +31,8 @@ const allNavItems: NavItem[] = [
   { to: "/app/supervisao", label: "Supervisão", icon: ShieldCheck, premium: true, visibleTo: ["supervisor", "supervisee"] },
   { to: "/app/biblioteca", label: "Biblioteca", icon: BookOpen },
   { to: "/app/autocuidado", label: "Autocuidado", icon: Flower2 },
+  { to: "/app/contrato-modelo", label: "Termo", icon: FileText },
+  { to: "/app/contratos", label: "Contratos", icon: FileCheck },
   { to: "/app/perfil", label: "Perfil", icon: Settings },
 ];
 
