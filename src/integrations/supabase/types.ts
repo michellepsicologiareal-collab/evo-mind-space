@@ -694,6 +694,50 @@ export type Database = {
           },
         ]
       }
+      therapist_triggers: {
+        Row: {
+          checked_at: string
+          created_at: string
+          id: string
+          mood_emoji: string
+          patient_id: string | null
+          reflective_note: string | null
+          triggers: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checked_at?: string
+          created_at?: string
+          id?: string
+          mood_emoji?: string
+          patient_id?: string | null
+          reflective_note?: string | null
+          triggers?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checked_at?: string
+          created_at?: string
+          id?: string
+          mood_emoji?: string
+          patient_id?: string | null
+          reflective_note?: string | null
+          triggers?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "therapist_triggers_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
