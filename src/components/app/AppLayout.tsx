@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { PlanModal } from "@/components/app/PlanModal";
 import { PremiumGate } from "@/components/app/PremiumGate";
+import { NotificationBell } from "@/components/app/NotificationBell";
 
 const PREMIUM_ROUTES = new Set(["/app/financeiro", "/app/supervisionandos", "/app/supervisao"]);
 
@@ -53,14 +54,17 @@ export const AppLayout = () => {
     <div className="min-h-screen bg-gradient-soft flex">
       {/* ── Desktop sidebar (fixed) ── */}
       <aside className="hidden md:flex md:w-64 lg:w-72 fixed inset-y-0 left-0 z-30 bg-card border-r border-border flex-col">
-        <Link to="/app" className="p-6 flex items-center gap-2 border-b border-border">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground">
-            <Brain className="h-4 w-4" />
-          </span>
-          <span className="font-display text-xl font-semibold">
-            Psi <span className="font-extrabold text-accent">Real</span>
-          </span>
-        </Link>
+        <div className="p-6 flex items-center justify-between border-b border-border">
+          <Link to="/app" className="flex items-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground">
+              <Brain className="h-4 w-4" />
+            </span>
+            <span className="font-display text-xl font-semibold">
+              Psi <span className="font-extrabold text-accent">Real</span>
+            </span>
+          </Link>
+          <NotificationBell />
+        </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
@@ -109,9 +113,12 @@ export const AppLayout = () => {
             </span>
             <span className="font-display text-lg font-semibold">Psi <span className="font-extrabold text-accent">Real</span></span>
           </Link>
-          <Button variant="ghost" size="icon" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <Button variant="ghost" size="icon" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 

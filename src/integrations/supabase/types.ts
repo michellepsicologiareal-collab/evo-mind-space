@@ -47,6 +47,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          session_id: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          session_id?: string | null
+          title: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          session_id?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       patient_progress: {
         Row: {
           created_at: string
@@ -435,6 +468,7 @@ export type Database = {
         | "documentos_legais"
         | "materiais_pacientes"
         | "guias_tcc"
+      notification_type: "confirmation" | "cancellation" | "general"
       patient_category: "individual" | "crianca" | "grupo" | "casal"
       payment_method: "pix" | "card" | "cash"
       payment_status: "pending" | "paid"
@@ -580,6 +614,7 @@ export const Constants = {
         "materiais_pacientes",
         "guias_tcc",
       ],
+      notification_type: ["confirmation", "cancellation", "general"],
       patient_category: ["individual", "crianca", "grupo", "casal"],
       payment_method: ["pix", "card", "cash"],
       payment_status: ["pending", "paid"],
