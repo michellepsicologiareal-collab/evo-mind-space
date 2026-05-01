@@ -85,7 +85,7 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
           physical_reactions: f.physical_reactions ?? "",
         });
         setCoreBeliefs(f.core_beliefs ?? "");
-        setGoals(Array.isArray(f.treatment_goals) ? (f.treatment_goals as Goal[]) : []);
+        setGoals(Array.isArray(f.treatment_goals) ? (f.treatment_goals as unknown as Goal[]) : []);
       }
       setEvolutions((evoRes.data as Evolution[]) ?? []);
       setLoading(false);
