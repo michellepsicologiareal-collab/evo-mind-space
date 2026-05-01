@@ -430,11 +430,21 @@ const Agenda = () => {
                       + adicionar
                     </button>
                   ) : (
-                    items.map((s) => (
-                      <div key={s.id} className={cn("rounded-xl border p-3 group transition-colors", s.status === "confirmed" ? "bg-emerald-50 border-emerald-200" : "bg-background border-border")}>
+                    items.map((s) => {
+                      const isSupervisionCard = s.session_type === "supervision";
+                      return (
+                      <div key={s.id} className={cn(
+                        "rounded-xl border p-3 group transition-colors",
+                        isSupervisionCard
+                          ? "bg-serene/10 border-serene/40"
+                          : s.status === "confirmed"
+                          ? "bg-emerald-50 border-emerald-200"
+                          : "bg-background border-border"
+                      )}>
                         <div className="flex items-start justify-between gap-1">
                           <div className="flex items-center gap-1.5">
                             {s.status === "confirmed" && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />}
+                            {isSupervisionCard && <GraduationCap className="h-3.5 w-3.5 text-serene shrink-0" />}
                             <p className="font-display text-sm text-primary">{format(new Date(s.scheduled_at), "HH:mm")}</p>
                           </div>
                           <DropdownMenu>
@@ -442,7 +452,9 @@ const Agenda = () => {
                               <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">⋯</Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar link de confirmação</DropdownMenuItem>
+                              {!isSupervisionCard && (
+                                <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar link de confirmação</DropdownMenuItem>
+                              )}
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => updateStatus(s.id, "completed")}><Check className="h-4 w-4" /> Realizada</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => updateStatus(s.id, "no_show")}><X className="h-4 w-4" /> Falta</DropdownMenuItem>
@@ -455,10 +467,16 @@ const Agenda = () => {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                        <p className="text-xs text-foreground mt-1 truncate">{s.patients?.full_name}</p>
-                        <span className={cn("inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full", statusClass[s.status])}>{statusLabel[s.status]}</span>
+                        <p className="text-xs text-foreground mt-1 truncate">
+                          {isSupervisionCard ? "Supervisão" : s.patient_name}
+                          {isSupervisionCard && s.discussed_patient_name && (
+                            <span className="text-muted-foreground"> · {s.discussed_patient_name}</span>
+                          )}
+                        </p>
+                        <span className={cn("inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full", isSupervisionCard ? "bg-serene/20 text-serene" : statusClass[s.status])}>{isSupervisionCard ? "Supervisão" : statusLabel[s.status]}</span>
                       </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>
