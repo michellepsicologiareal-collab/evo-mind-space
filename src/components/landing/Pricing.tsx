@@ -3,6 +3,23 @@ import { Button } from "@/components/ui/button";
 
 const plans = [
   {
+    name: "Supervisionando PsiReal",
+    price: "R$ 29,90",
+    period: "/mês",
+    description: "Para supervisionandos vinculados a uma supervisora.",
+    features: [
+      "Pacientes ilimitados",
+      "Agenda completa",
+      "Controle financeiro básico",
+      "Prontuário TCC",
+      "Registros de evolução",
+      "Vínculo com supervisora",
+    ],
+    cta: "Começar agora",
+    href: "https://kiwify.com.br/PLACEHOLDER_SUPERVISIONANDO",
+    highlighted: false,
+  },
+  {
     name: "Essencial PsiReal",
     price: "R$ 39,90",
     period: "/mês",
@@ -52,7 +69,7 @@ export const Pricing = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-3xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.name}
