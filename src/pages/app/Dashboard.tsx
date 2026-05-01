@@ -243,7 +243,9 @@ const Dashboard = () => {
   return (
     <div className="space-y-8 animate-fade-up">
       {/* ── Welcome Header ── */}
-      <header className="rounded-2xl bg-card border border-border shadow-card p-8">
+      <header className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
+        {/* Decorative accent line */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent" />
         {clinicName && (
           <p className="text-xs uppercase tracking-[0.2em] text-accent font-semibold">{clinicName}</p>
         )}
@@ -251,7 +253,7 @@ const Dashboard = () => {
           {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
         </p>
         <h1 className="mt-2 font-display text-3xl md:text-4xl font-bold text-foreground">
-          {greeting}{firstName ? `, ${firstName}` : ""} 👋
+          {greeting}{firstName ? `, ${firstName}` : ""}.
         </h1>
         <p className="mt-2 text-muted-foreground text-sm md:text-base">{summaryText}</p>
       </header>
