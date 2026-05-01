@@ -13,7 +13,7 @@ interface Clause {
   key: string;
   title: string;
   description: string;
-  type: "agree" | "radio";
+  type: "agree" | "radio" | "text";
   options?: string[];
 }
 
