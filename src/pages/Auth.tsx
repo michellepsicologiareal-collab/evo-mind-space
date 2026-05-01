@@ -169,6 +169,14 @@ const Auth = () => {
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Entrar
                 </Button>
+                {loginError && (
+                  <div className="text-center space-y-2">
+                    <p className="text-sm text-destructive">Email ou senha incorretos.</p>
+                    <Button type="button" variant="outline" size="sm" onClick={handleRetry} className="mx-auto">
+                      Tentar novamente
+                    </Button>
+                  </div>
+                )}
               </form>
             </TabsContent>
 
