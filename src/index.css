@@ -55,6 +55,9 @@
     --serene: 200 45% 50%;
     --serene-foreground: 0 0% 100%;
 
+    /* Admin Master — Azul profundo, exclusivo */
+    --admin-accent: 220 60% 42%;
+
     --destructive: 0 65% 48%;
     --destructive-foreground: 37 42% 96%;
 
