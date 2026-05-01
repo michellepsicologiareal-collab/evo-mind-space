@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { NavLink, Outlet, useNavigate, Link, useLocation } from "react-router-dom";
 import { Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut, GraduationCap, ShieldCheck, Crown, Lock, BookOpen, Flower2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,28 +12,47 @@ import { NotificationBell } from "@/components/app/NotificationBell";
 
 const PREMIUM_ROUTES = new Set(["/app/financeiro", "/app/supervisionandos", "/app/supervisao"]);
 
-const navItems = [
+interface NavItem {
+  to: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  end?: boolean;
+  premium?: boolean;
+  /** Which profile types can see this item. undefined = everyone */
+  visibleTo?: Array<"standard" | "supervisee" | "supervisor">;
+}
+
+const allNavItems: NavItem[] = [
   { to: "/app", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "/app/pacientes", label: "Pacientes", icon: Users },
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
   { to: "/app/financeiro", label: "Financeiro", icon: Wallet, premium: true },
-  { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap, premium: true },
-  { to: "/app/supervisao", label: "Supervisão", icon: ShieldCheck, premium: true },
+  { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap, premium: true, visibleTo: ["supervisor"] },
+  { to: "/app/supervisao", label: "Supervisão", icon: ShieldCheck, premium: true, visibleTo: ["supervisor", "supervisee"] },
   { to: "/app/biblioteca", label: "Biblioteca", icon: BookOpen },
   { to: "/app/autocuidado", label: "Autocuidado", icon: Flower2 },
   { to: "/app/perfil", label: "Perfil", icon: Settings },
 ];
 
-/* Mobile bottom bar — show first 5 items */
-const mobileNavItems = navItems.slice(0, 5);
-
 export const AppLayout = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isPremium } = useSubscription();
+  const { isPremium, profileType, isAdmin } = useSubscription();
   const [planOpen, setPlanOpen] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
+
+  // Filter nav items based on profile type (admins see everything)
+  const navItems = useMemo(() => {
+    return allNavItems.filter((item) => {
+      if (!item.visibleTo) return true;
+      if (isAdmin) return true;
+      return item.visibleTo.includes(profileType);
+    });
+  }, [profileType, isAdmin]);
+
+  /* Mobile bottom bar — show first 5 visible items */
+  const mobileNavItems = navItems.slice(0, 5);
 
   const handleSignOut = async () => {
     await signOut();
@@ -41,7 +60,7 @@ export const AppLayout = () => {
     navigate("/auth", { replace: true });
   };
 
-  const handleNavClick = (e: React.MouseEvent, item: typeof navItems[0]) => {
+  const handleNavClick = (e: React.MouseEvent, item: NavItem) => {
     if (item.premium && !isPremium) {
       e.preventDefault();
       setGateOpen(true);
