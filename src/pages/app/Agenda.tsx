@@ -209,49 +209,74 @@ const Agenda = () => {
     }
     setSaving(true);
     const isSupervision = parsed.data.session_type === "supervision";
-    const scheduledAt = parse(`${parsed.data.date} ${parsed.data.time}`, "yyyy-MM-dd HH:mm", new Date());
+    const baseDate = parse(`${parsed.data.date} ${parsed.data.time}`, "yyyy-MM-dd HH:mm", new Date());
     const patient = patients.find((p) => p.id === parsed.data.patient_id);
-    const price = parsed.data.price ? Number(parsed.data.price) : (isSupervision ? null : patient?.session_price ?? null);
+    const unitPrice = parsed.data.price ? Number(parsed.data.price) : (isSupervision ? null : patient?.session_price ?? null);
 
     const ref = parsed.data.payment_reference?.trim() ?? "";
-    const { data: created, error } = await supabase
-      .from("sessions")
-      .insert({
+
+    const isRecurring = form.recurrence === "recurring" && form.recurrence_count > 1;
+    const totalSessions = isRecurring ? form.recurrence_count : 1;
+    const intervalDays = form.recurrence_interval === "biweekly" ? 14 : 7;
+
+    const sessionsToInsert = [];
+    for (let i = 0; i < totalSessions; i++) {
+      const scheduledAt = addDays(baseDate, i * intervalDays);
+      const planLabel = isRecurring
+        ? `Plano ${totalSessions} sessões (${i + 1}/${totalSessions})${form.payment_plan === "single_payment" ? " — Pgto único" : " — Pgto por sessão"}`
+        : null;
+      const noteText = [parsed.data.notes, planLabel].filter(Boolean).join("\n");
+
+      sessionsToInsert.push({
         user_id: user.id,
         patient_id: isSupervision ? null : (parsed.data.patient_id || null),
         scheduled_at: scheduledAt.toISOString(),
         duration_minutes: parsed.data.duration_minutes,
-        price,
-        notes: parsed.data.notes || null,
+        price: unitPrice,
+        notes: noteText || null,
         payment_method: parsed.data.payment_method === "none" ? null : parsed.data.payment_method,
         payment_reference: ref.length > 0 ? ref : null,
         session_type: parsed.data.session_type,
         discussed_patient_id: isSupervision && parsed.data.discussed_patient_id ? parsed.data.discussed_patient_id : null,
         is_expense: isSupervision,
-      })
-      .select("id")
-      .single();
+      });
+    }
+
+    const { data: created, error } = await supabase
+      .from("sessions")
+      .insert(sessionsToInsert)
+      .select("id");
+
     if (error) {
       setSaving(false);
       toast.error("Erro ao agendar sessão");
       return;
     }
 
+    // Progress only for first session of clinical
     const moodNum = parsed.data.mood_score ? Number(parsed.data.mood_score) : null;
     const progressNote = parsed.data.progress_note?.trim() || null;
     if (!isSupervision && parsed.data.patient_id && ((moodNum && moodNum >= 1 && moodNum <= 10) || progressNote)) {
       await supabase.from("patient_progress").insert({
         user_id: user.id,
         patient_id: parsed.data.patient_id,
-        session_id: created?.id ?? null,
+        session_id: created?.[0]?.id ?? null,
         mood_score: moodNum,
         note: progressNote,
-        recorded_at: scheduledAt.toISOString(),
+        recorded_at: baseDate.toISOString(),
       });
     }
 
     setSaving(false);
-    toast.success("Sessão agendada");
+    const totalValue = unitPrice ? unitPrice * totalSessions : 0;
+    if (isRecurring) {
+      const payLabel = form.payment_plan === "single_payment"
+        ? `Pagamento único: R$ ${totalValue.toFixed(2)}`
+        : `${totalSessions}x R$ ${(unitPrice ?? 0).toFixed(2)} = R$ ${totalValue.toFixed(2)}`;
+      toast.success(`${totalSessions} sessões agendadas! ${payLabel}`);
+    } else {
+      toast.success("Sessão agendada");
+    }
     setOpen(false);
     load();
   };
