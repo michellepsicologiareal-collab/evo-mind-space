@@ -90,6 +90,8 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
       }
       setEvolutions((evoRes.data as Evolution[]) ?? []);
       setLoading(false);
+      // Audit: log access to case formulation
+      if (formRes.data) logClinicalAccess("case_formulation", formRes.data.id, patientId);
     };
     load();
   }, [user, patientId]);
