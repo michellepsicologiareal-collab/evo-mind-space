@@ -155,9 +155,9 @@ export const AppLayout = () => {
                 <Lock className="h-10 w-10 text-accent" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold mb-2">Recurso Exclusivo do Plano Premium</h2>
+                <h2 className="text-2xl font-bold mb-2">Recurso Exclusivo do Essencial PsiReal</h2>
                 <p className="text-muted-foreground max-w-md">
-                  Assine o Psi Real Pro para desbloquear esta funcionalidade e organizar sua clínica de forma completa.
+                  Assine o Essencial PsiReal para desbloquear esta funcionalidade e organizar sua clínica de forma completa.
                 </p>
               </div>
               <p className="text-3xl font-extrabold">
