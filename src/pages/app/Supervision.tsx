@@ -19,6 +19,8 @@ import {
   Smile,
   Activity,
   Eye,
+  MapPin,
+  Wifi,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -242,8 +244,18 @@ const Supervision = () => {
             height={112}
           />
           <h2 className="text-xl font-bold">Supervisão com Michelle Donegá</h2>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary px-4 py-1.5 text-sm font-semibold">
+              <MapPin className="h-3.5 w-3.5" />
+              Presencial em Jarinu
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-lilac/15 text-lilac-foreground px-4 py-1.5 text-sm font-semibold">
+              <Wifi className="h-3.5 w-3.5" />
+              Online
+            </span>
+          </div>
           <p className="text-muted-foreground max-w-md mx-auto text-sm leading-relaxed">
-            Psicóloga clínica especialista em TCC. Atendimento <strong>presencial em Jarinu</strong> e <strong>online</strong>.<br />
+            Psicóloga clínica especialista em TCC.<br />
             <a
               href="https://instagram.com/psimichelledonega"
               target="_blank"
