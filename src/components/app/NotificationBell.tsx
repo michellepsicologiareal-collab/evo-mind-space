@@ -49,9 +49,10 @@ export const NotificationBell = () => {
     if (!user) return;
     load();
 
-    // Realtime subscription
+    // Realtime subscription — unique name to avoid Strict Mode collision
+    const channelName = `notifications-bell-${Date.now()}`;
     const channel = supabase
-      .channel("notifications-bell")
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
