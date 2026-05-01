@@ -42,7 +42,9 @@ interface Patient {
 
 const sessionSchema = z
   .object({
-    patient_id: z.string().uuid("Selecione um paciente"),
+    session_type: z.enum(["clinical", "supervision"]).default("clinical"),
+    patient_id: z.string().optional(),
+    discussed_patient_id: z.string().optional(),
     date: z.string().min(1, "Selecione a data"),
     time: z.string().min(1, "Selecione o horário"),
     duration_minutes: z.number().int().positive().max(480),
@@ -53,6 +55,10 @@ const sessionSchema = z
     mood_score: z.string().optional(),
     progress_note: z.string().max(2000).optional(),
   })
+  .refine(
+    (d) => d.session_type === "supervision" || (d.patient_id && d.patient_id.length > 0),
+    { path: ["patient_id"], message: "Selecione um paciente" }
+  )
   .refine(
     (d) =>
       !(d.payment_method === "pix" || d.payment_method === "card") ||
