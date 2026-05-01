@@ -202,7 +202,7 @@ const Supervisees = () => {
         </p>
       </header>
 
-      <section className="rounded-3xl bg-card border border-border p-6 sm:p-8 space-y-4">
+      <section className="rounded-3xl bg-card border border-border shadow-card p-6 sm:p-8 space-y-4">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
             <UserPlus className="h-4 w-4" />
@@ -233,7 +233,7 @@ const Supervisees = () => {
         </div>
       </section>
 
-      <section className="rounded-3xl bg-card border border-border p-6 sm:p-8">
+      <section className="rounded-3xl bg-card border border-border shadow-card p-6 sm:p-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">

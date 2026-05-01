@@ -263,7 +263,7 @@ const Patients = () => {
       ) : (
         <ul className="grid md:grid-cols-2 gap-4">
           {filtered.map((p) => (
-            <li key={p.id} className="rounded-2xl bg-card border border-border p-5 transition-all hover:-translate-y-0.5 hover:shadow-soft">
+            <li key={p.id} className="rounded-2xl bg-card border border-border shadow-card p-5 transition-all hover:-translate-y-0.5 hover:shadow-soft">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground font-display text-base">

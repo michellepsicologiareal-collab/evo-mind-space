@@ -737,7 +737,7 @@ const Finance = () => {
 
       {/* Service breakdown */}
       {serviceBreakdown.length > 0 && (
-        <section className="rounded-3xl bg-card border border-border p-6 lg:p-8">
+        <section className="rounded-3xl bg-card border border-border shadow-card p-6 lg:p-8">
           <h2 className="font-display text-lg font-semibold mb-4">Recebido por serviço</h2>
           <ul className="space-y-2">
             {serviceBreakdown.map((s) => (
@@ -753,7 +753,7 @@ const Finance = () => {
         </section>
       )}
 
-      <section className="rounded-3xl bg-card border border-border p-6 lg:p-8">
+      <section className="rounded-3xl bg-card border border-border shadow-card p-6 lg:p-8">
         <Tabs defaultValue="all">
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-display text-2xl font-semibold">Sessões</h2>

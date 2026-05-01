@@ -376,7 +376,7 @@ const Profile = () => {
         <p className="mt-2 text-muted-foreground">Suas informações profissionais.</p>
       </header>
 
-      <section className="rounded-3xl bg-card border border-border p-8">
+      <section className="rounded-3xl bg-card border border-border shadow-card p-8">
         <div className="flex items-center gap-6">
           <div className="relative h-24 w-24 rounded-full overflow-hidden bg-gradient-hero text-primary-foreground flex items-center justify-center shadow-soft">
             {avatarUrl ? (
@@ -396,7 +396,7 @@ const Profile = () => {
         </div>
       </section>
 
-      <form onSubmit={handleSave} className="rounded-3xl bg-card border border-border p-8 space-y-5">
+      <form onSubmit={handleSave} className="rounded-3xl bg-card border border-border shadow-card p-8 space-y-5">
         <div className="space-y-2">
           <Label htmlFor="full_name">Nome completo</Label>
           <Input id="full_name" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
@@ -466,7 +466,7 @@ const Profile = () => {
       <ServiceCatalog />
 
       {profileType === "supervisee" && (
-        <section className="rounded-3xl bg-card border border-border p-8 space-y-4">
+        <section className="rounded-3xl bg-card border border-border shadow-card p-8 space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
               <ShieldCheck className="h-4 w-4" />
@@ -516,7 +516,7 @@ const Profile = () => {
         </section>
       )}
 
-      <section className="rounded-3xl bg-card border border-border p-8 space-y-5">
+      <section className="rounded-3xl bg-card border border-border shadow-card p-8 space-y-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
             <ShieldCheck className="h-4 w-4" />

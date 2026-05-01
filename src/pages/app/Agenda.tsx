@@ -345,7 +345,7 @@ const Agenda = () => {
         </Dialog>
       </header>
 
-      <div className="flex items-center justify-between rounded-2xl bg-card border border-border p-4">
+      <div className="flex items-center justify-between rounded-2xl bg-card border border-border shadow-card p-4">
         <Button variant="ghost" size="icon" onClick={() => setWeekStart(addWeeks(weekStart, -1))}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
