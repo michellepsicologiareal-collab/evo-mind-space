@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { logSupervisionAccess } from "@/utils/auditLog";
+import michellePhoto from "@/assets/michelle-photo.png";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
