@@ -331,6 +331,54 @@ export type Database = {
           },
         ]
       }
+      selfcare_checkins: {
+        Row: {
+          balance: boolean | null
+          checked_at: string
+          created_at: string
+          food: boolean | null
+          health: boolean | null
+          id: string
+          movement: boolean | null
+          pauses_count: number
+          sessions_count: number
+          sleep: boolean | null
+          stress_level: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: boolean | null
+          checked_at?: string
+          created_at?: string
+          food?: boolean | null
+          health?: boolean | null
+          id?: string
+          movement?: boolean | null
+          pauses_count?: number
+          sessions_count?: number
+          sleep?: boolean | null
+          stress_level?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: boolean | null
+          checked_at?: string
+          created_at?: string
+          food?: boolean | null
+          health?: boolean | null
+          id?: string
+          movement?: boolean | null
+          pauses_count?: number
+          sessions_count?: number
+          sleep?: boolean | null
+          stress_level?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           created_at: string
