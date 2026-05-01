@@ -100,16 +100,18 @@ const Agenda = () => {
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
 
   const load = async () => {
+    if (!user) return;
     setLoading(true);
     const weekEnd = addDays(weekStart, 7);
     const [sRes, pRes] = await Promise.all([
       supabase
         .from("sessions")
         .select("*, patients(full_name)")
+        .eq("user_id", user.id)
         .gte("scheduled_at", weekStart.toISOString())
         .lt("scheduled_at", weekEnd.toISOString())
         .order("scheduled_at"),
-      supabase.from("patients").select("id, full_name, session_price").eq("is_active", true).order("full_name"),
+      supabase.from("patients").select("id, full_name, session_price").eq("user_id", user.id).eq("is_active", true).order("full_name"),
     ]);
     if (sRes.error) toast.error("Erro ao carregar sessões");
     setSessions((sRes.data as Session[]) ?? []);
