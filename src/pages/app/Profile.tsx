@@ -63,7 +63,7 @@ const Profile = () => {
     // Build patient name map for display
     const patientMap = new Map((pRes.data ?? []).map((p: any) => [p.id, p.full_name]));
     const addName = (row: any) => ({ ...row, _patient_name: patientMap.get(row.patient_id) ?? "—" });
-    return { patients: pRes.data ?? [], sessions: sRes.data ?? [], progress: prRes.data ?? [] };
+    return { patients: pRes.data ?? [], sessions: (sRes.data ?? []).map(addName), progress: (prRes.data ?? []).map(addName) };
   };
 
   const downloadFile = (content: string, filename: string, mime: string) => {
