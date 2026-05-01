@@ -123,6 +123,7 @@ export const AppLayout = () => {
           <Outlet />
         </div>
       </main>
+      <PlanModal open={planOpen} onOpenChange={setPlanOpen} />
     </div>
   );
 };
