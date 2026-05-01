@@ -173,22 +173,26 @@ const Agenda = () => {
       return;
     }
     setSaving(true);
+    const isSupervision = parsed.data.session_type === "supervision";
     const scheduledAt = parse(`${parsed.data.date} ${parsed.data.time}`, "yyyy-MM-dd HH:mm", new Date());
     const patient = patients.find((p) => p.id === parsed.data.patient_id);
-    const price = parsed.data.price ? Number(parsed.data.price) : patient?.session_price ?? null;
+    const price = parsed.data.price ? Number(parsed.data.price) : (isSupervision ? null : patient?.session_price ?? null);
 
     const ref = parsed.data.payment_reference?.trim() ?? "";
     const { data: created, error } = await supabase
       .from("sessions")
       .insert({
         user_id: user.id,
-        patient_id: parsed.data.patient_id,
+        patient_id: isSupervision ? null : (parsed.data.patient_id || null),
         scheduled_at: scheduledAt.toISOString(),
         duration_minutes: parsed.data.duration_minutes,
         price,
         notes: parsed.data.notes || null,
         payment_method: parsed.data.payment_method === "none" ? null : parsed.data.payment_method,
         payment_reference: ref.length > 0 ? ref : null,
+        session_type: parsed.data.session_type,
+        discussed_patient_id: isSupervision && parsed.data.discussed_patient_id ? parsed.data.discussed_patient_id : null,
+        is_expense: isSupervision,
       })
       .select("id")
       .single();
