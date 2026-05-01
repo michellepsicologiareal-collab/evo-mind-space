@@ -3,92 +3,101 @@
 @tailwind utilities;
 
 /* Psi Real — Design System
-   Sage / deep teal with warm sand accents.
+   Paleta: Terracota · Verde Musgo · Lilás · Bege Areia
+   Tipografia: Playfair Display (títulos) + Inter (corpo)
    All colors in HSL.
 */
 
 @layer base {
   :root {
     /* Surfaces */
-    --background: 35 30% 94%;            /* bege areia sutil */
-    --foreground: 190 35% 12%;           /* deep teal ink */
+    --background: 37 42% 94%;              /* bege areia #F6F1E9 */
+    --foreground: 190 35% 12%;             /* deep teal ink */
 
-    --card: 38 25% 98%;
+    --card: 37 40% 98%;
     --card-foreground: 190 35% 12%;
 
-    --popover: 38 25% 98%;
+    --popover: 37 40% 98%;
     --popover-foreground: 190 35% 12%;
 
-    /* Brand */
-    --primary: 185 55% 18%;              /* deep teal */
-    --primary-foreground: 35 30% 96%;
-    --primary-glow: 170 38% 42%;         /* sage glow */
+    /* Brand — Verde Musgo */
+    --primary: 108 27% 28%;               /* verde musgo #3D5C35 */
+    --primary-foreground: 37 42% 96%;
+    --primary-glow: 108 22% 38%;
 
-    --secondary: 90 18% 90%;             /* pale sage */
-    --secondary-foreground: 185 55% 18%;
+    --secondary: 37 30% 90%;              /* bege claro */
+    --secondary-foreground: 108 27% 28%;
 
-    --muted: 35 20% 90%;
-    --muted-foreground: 190 15% 38%;
+    --muted: 37 25% 90%;
+    --muted-foreground: 190 12% 42%;
 
-    --accent: 16 65% 52%;                /* terracotta forte — botões CTA */
+    /* Terracota — CTAs, salvar, novo */
+    --accent: 19 51% 53%;                 /* terracota #C4714A */
     --accent-foreground: 0 0% 100%;
 
-    --lilac: 270 40% 72%;                /* lilás — badges concluídas */
-    --lilac-foreground: 270 45% 20%;
+    /* Lilás — badges concluídas, supervisão */
+    --lilac: 260 23% 64%;                 /* lilás #9B8DB8 */
+    --lilac-foreground: 260 30% 18%;
 
-    --sand: 32 45% 86%;
+    /* Verde Musgo lighter — progresso */
+    --moss: 108 27% 28%;
+    --moss-foreground: 37 42% 96%;
+
+    --sand: 32 38% 86%;
     --sand-foreground: 190 35% 12%;
 
-    --destructive: 0 70% 48%;
-    --destructive-foreground: 35 30% 96%;
+    --destructive: 0 65% 48%;
+    --destructive-foreground: 37 42% 96%;
 
-    --border: 35 18% 86%;
-    --input: 35 18% 86%;
-    --ring: 185 55% 18%;
+    --border: 37 20% 86%;
+    --input: 37 20% 86%;
+    --ring: 108 27% 28%;
 
     --radius: 1rem;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(185 55% 18%) 0%, hsl(170 38% 28%) 60%, hsl(18 62% 58%) 130%);
-    --gradient-soft: linear-gradient(180deg, hsl(35 30% 94%) 0%, hsl(90 18% 92%) 100%);
-    --gradient-card: linear-gradient(160deg, hsl(38 25% 98%) 0%, hsl(35 20% 95%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(108 27% 28%) 0%, hsl(108 22% 38%) 60%, hsl(19 51% 53%) 130%);
+    --gradient-soft: linear-gradient(180deg, hsl(37 42% 94%) 0%, hsl(37 30% 90%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(37 40% 98%) 0%, hsl(37 25% 95%) 100%);
 
     /* Shadows */
-    --shadow-elegant: 0 30px 60px -30px hsl(185 55% 18% / 0.25);
-    --shadow-soft: 0 8px 24px -12px hsl(185 55% 18% / 0.12);
-    --shadow-glow: 0 0 80px -20px hsl(170 38% 42% / 0.45);
+    --shadow-elegant: 0 30px 60px -30px hsl(108 27% 28% / 0.2);
+    --shadow-soft: 0 8px 24px -12px hsl(108 27% 28% / 0.1);
+    --shadow-glow: 0 0 80px -20px hsl(108 22% 38% / 0.35);
 
     /* Motion */
     --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
 
     /* Fonts */
-    --font-display: "Fraunces", ui-serif, Georgia, serif;
+    --font-display: "Playfair Display", ui-serif, Georgia, serif;
     --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
   }
 
   .dark {
     --background: 190 40% 7%;
-    --foreground: 40 33% 95%;
+    --foreground: 37 42% 95%;
     --card: 190 35% 10%;
-    --card-foreground: 40 33% 95%;
+    --card-foreground: 37 42% 95%;
     --popover: 190 35% 10%;
-    --popover-foreground: 40 33% 95%;
-    --primary: 170 38% 55%;
+    --popover-foreground: 37 42% 95%;
+    --primary: 108 30% 45%;
     --primary-foreground: 190 40% 7%;
-    --primary-glow: 170 38% 42%;
+    --primary-glow: 108 22% 38%;
     --secondary: 190 25% 16%;
-    --secondary-foreground: 40 33% 95%;
+    --secondary-foreground: 37 42% 95%;
     --muted: 190 25% 14%;
-    --muted-foreground: 40 12% 70%;
-    --accent: 16 65% 52%;
+    --muted-foreground: 37 12% 70%;
+    --accent: 19 51% 53%;
     --accent-foreground: 0 0% 100%;
-    --lilac: 270 35% 65%;
-    --lilac-foreground: 270 50% 15%;
+    --lilac: 260 20% 58%;
+    --lilac-foreground: 260 30% 90%;
+    --moss: 108 30% 45%;
+    --moss-foreground: 190 40% 7%;
     --sand: 32 25% 25%;
-    --sand-foreground: 40 33% 95%;
+    --sand-foreground: 37 42% 95%;
     --border: 190 25% 18%;
     --input: 190 25% 18%;
-    --ring: 170 38% 55%;
+    --ring: 108 30% 45%;
   }
 }
 
@@ -103,9 +112,9 @@
   h1, h2, h3, h4, .font-display {
     font-family: var(--font-display);
     font-optical-sizing: auto;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
   }
-  ::selection { background: hsl(var(--accent) / 0.3); }
+  ::selection { background: hsl(var(--accent) / 0.25); }
 }
 
 @layer utilities {
