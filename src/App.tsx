@@ -17,6 +17,7 @@ import Finance from "./pages/app/Finance.tsx";
 import Supervisees from "./pages/app/Supervisees.tsx";
 import Supervision from "./pages/app/Supervision.tsx";
 import SupervisaoCaso from "./pages/app/SupervisaoCaso.tsx";
+import Library from "./pages/app/Library.tsx";
 import Admin from "./pages/Admin.tsx";
 
 const queryClient = new QueryClient();
