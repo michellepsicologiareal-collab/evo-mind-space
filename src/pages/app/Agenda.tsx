@@ -60,6 +60,7 @@ const sessionSchema = z
 
 const statusLabel: Record<Status, string> = {
   scheduled: "Agendada",
+  confirmed: "Confirmada",
   completed: "Realizada",
   no_show: "Falta",
   rescheduled: "Remarcada",
@@ -68,6 +69,7 @@ const statusLabel: Record<Status, string> = {
 
 const statusClass: Record<Status, string> = {
   scheduled: "bg-secondary text-secondary-foreground",
+  confirmed: "bg-emerald-100 text-emerald-700",
   completed: "bg-lilac text-lilac-foreground",
   no_show: "bg-destructive/15 text-destructive",
   rescheduled: "bg-sand text-sand-foreground",
