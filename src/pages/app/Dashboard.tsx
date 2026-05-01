@@ -64,7 +64,8 @@ const getAvatarColor = (name: string) => {
 };
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  scheduled: { label: "Confirmada", className: "bg-emerald-100 text-emerald-700" },
+  scheduled: { label: "Agendada", className: "bg-secondary text-secondary-foreground" },
+  confirmed: { label: "Confirmada", className: "bg-emerald-100 text-emerald-700" },
   supervision: { label: "Supervisão", className: "bg-lilac/20 text-lilac" },
   pending: { label: "Pendente", className: "bg-amber-100 text-amber-700" },
 };
