@@ -57,6 +57,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!mounted) return;
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      if (newSession?.user) {
+        setLoading(true);
+      }
 
       // defer to avoid deadlock with Supabase client
       setTimeout(() => {
