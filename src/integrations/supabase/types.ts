@@ -52,7 +52,9 @@ export type Database = {
       }
       patients: {
         Row: {
+          anamnesis: string | null
           birth_date: string | null
+          chief_complaint: string | null
           created_at: string
           email: string | null
           full_name: string
@@ -62,11 +64,14 @@ export type Database = {
           phone: string | null
           session_price: number | null
           shared_with_supervisor: boolean
+          treatment_plan: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          anamnesis?: string | null
           birth_date?: string | null
+          chief_complaint?: string | null
           created_at?: string
           email?: string | null
           full_name: string
@@ -76,11 +81,14 @@ export type Database = {
           phone?: string | null
           session_price?: number | null
           shared_with_supervisor?: boolean
+          treatment_plan?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          anamnesis?: string | null
           birth_date?: string | null
+          chief_complaint?: string | null
           created_at?: string
           email?: string | null
           full_name?: string
@@ -90,6 +98,7 @@ export type Database = {
           phone?: string | null
           session_price?: number | null
           shared_with_supervisor?: boolean
+          treatment_plan?: string | null
           updated_at?: string
           user_id?: string
         }
