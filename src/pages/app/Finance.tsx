@@ -564,11 +564,76 @@ const Finance = () => {
         </Tabs>
       </div>
 
-      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={TrendingUp} label="Faturado" value={formatBRL(totalFaturado)} accent />
+      <section className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <KpiCard icon={CalendarClock} label="Receita Prevista" value={formatBRL(totalPrevisto)} hint={`${sessoesAgendadas} sessões agendadas`} />
+        <KpiCard icon={TrendingUp} label="Faturado (realizado)" value={formatBRL(totalFaturado)} accent />
         <KpiCard icon={Wallet} label="Recebido" value={formatBRL(totalRecebido)} hint={`${sessoesPagas} sessões`} />
         <KpiCard icon={Clock} label="A receber" value={formatBRL(totalPendente)} hint={`${sessoesPendentes} sessões`} />
         <KpiCard icon={CheckCircle2} label="Sessões realizadas" value={fortnightBillable.length.toString()} />
+      </section>
+
+      {/* Previsto vs Realizado Chart */}
+      <section className="rounded-3xl bg-card border border-border shadow-card p-6 lg:p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
+            <BarChart3 className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="font-display text-lg font-semibold">Previsto × Realizado</h2>
+            <p className="text-xs text-muted-foreground">Visão semanal do mês</p>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {weeklyChartData.map((w) => {
+            const maxVal = Math.max(
+              ...weeklyChartData.map((d) => d.previsto + d.recebido + d.pendente),
+              1
+            );
+            const pctPrevisto = (w.previsto / maxVal) * 100;
+            const pctRecebido = (w.recebido / maxVal) * 100;
+            const pctPendente = (w.pendente / maxVal) * 100;
+            return (
+              <div key={w.label} className="space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium w-14">{w.label}</span>
+                  <div className="flex gap-4 text-muted-foreground">
+                    {w.previsto > 0 && <span className="text-primary/60">Prev: {formatBRL(w.previsto)}</span>}
+                    {w.recebido > 0 && <span className="text-emerald-600">Rec: {formatBRL(w.recebido)}</span>}
+                    {w.pendente > 0 && <span className="text-amber-600">Pend: {formatBRL(w.pendente)}</span>}
+                  </div>
+                </div>
+                <div className="flex gap-0.5 h-6 rounded-lg overflow-hidden bg-secondary/40">
+                  {pctRecebido > 0 && (
+                    <div
+                      className="bg-emerald-500/80 rounded-l-md transition-all"
+                      style={{ width: `${pctRecebido}%` }}
+                      title={`Recebido: ${formatBRL(w.recebido)}`}
+                    />
+                  )}
+                  {pctPendente > 0 && (
+                    <div
+                      className="bg-amber-400/80 transition-all"
+                      style={{ width: `${pctPendente}%` }}
+                      title={`Pendente: ${formatBRL(w.pendente)}`}
+                    />
+                  )}
+                  {pctPrevisto > 0 && (
+                    <div
+                      className="bg-primary/20 rounded-r-md transition-all"
+                      style={{ width: `${pctPrevisto}%` }}
+                      title={`Previsto: ${formatBRL(w.previsto)}`}
+                    />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          <div className="flex items-center gap-4 pt-2 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-500/80" /> Recebido</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-400/80" /> Pendente</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-primary/20" /> Previsto (agendado)</span>
+          </div>
+        </div>
       </section>
 
       {recentMissing.length > 0 && (
