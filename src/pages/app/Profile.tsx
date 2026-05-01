@@ -57,9 +57,12 @@ const Profile = () => {
     if (!user) return null;
     const [pRes, sRes, prRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
-      supabase.from("sessions").select("*, patients!inner(full_name)").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
-      supabase.from("patient_progress").select("*, patients!patient_progress_patient_id_fkey(full_name)").eq("user_id", user.id).order("recorded_at", { ascending: false }),
+      supabase.from("sessions").select("*").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
+      (supabase as any).from("patient_progress").select("*").eq("user_id", user.id).order("recorded_at", { ascending: false }),
     ]);
+    // Build patient name map for display
+    const patientMap = new Map((pRes.data ?? []).map((p: any) => [p.id, p.full_name]));
+    const addName = (row: any) => ({ ...row, _patient_name: patientMap.get(row.patient_id) ?? "—" });
     return { patients: pRes.data ?? [], sessions: sRes.data ?? [], progress: prRes.data ?? [] };
   };
 
