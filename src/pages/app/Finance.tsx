@@ -513,11 +513,22 @@ const Finance = () => {
         </div>
       </header>
 
+      {/* Fortnight filter */}
+      <div className="flex items-center gap-3">
+        <Tabs value={fortnightFilter} onValueChange={(v) => setFortnightFilter(v as FortnightFilter)}>
+          <TabsList>
+            <TabsTrigger value="all">Mês todo</TabsTrigger>
+            <TabsTrigger value="first">1ª Quinzena (1–15)</TabsTrigger>
+            <TabsTrigger value="second">2ª Quinzena (16–fim)</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
       <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={TrendingUp} label="Faturado no mês" value={formatBRL(totalFaturado)} accent />
+        <KpiCard icon={TrendingUp} label="Faturado" value={formatBRL(totalFaturado)} accent />
         <KpiCard icon={Wallet} label="Recebido" value={formatBRL(totalRecebido)} hint={`${sessoesPagas} sessões`} />
         <KpiCard icon={Clock} label="A receber" value={formatBRL(totalPendente)} hint={`${sessoesPendentes} sessões`} />
-        <KpiCard icon={CheckCircle2} label="Sessões realizadas" value={billable.length.toString()} />
+        <KpiCard icon={CheckCircle2} label="Sessões realizadas" value={fortnightBillable.length.toString()} />
       </section>
 
       {recentMissing.length > 0 && (
