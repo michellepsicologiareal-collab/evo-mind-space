@@ -372,7 +372,8 @@ const Agenda = () => {
                   <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
                 </div>
 
-                {form.session_type === "clinical" && <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
+                {form.session_type === "clinical" && (
+                <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground">Humor / Progresso (opcional)</p>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-2">
@@ -399,6 +400,7 @@ const Agenda = () => {
                     </div>
                   </div>
                 </div>
+                )}
 
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
