@@ -31,7 +31,7 @@ const profileSchema = z.object({
   specialty: z.string().trim().max(120).optional().or(z.literal("")),
 });
 
-type ProfileType = "standard" | "supervisee";
+type ProfileType = "standard" | "supervisee" | "supervisor";
 
 const Profile = () => {
   const { user } = useAuth();
