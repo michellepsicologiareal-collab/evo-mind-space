@@ -184,6 +184,69 @@ const Dashboard = () => {
         setNextSessionMin(diff > 0 ? diff : null);
       }
 
+      // ── Mood chart data ──
+      const { data: moodRows } = await supabase
+        .from("patient_progress")
+        .select("mood_score, recorded_at, patient_id")
+        .eq("user_id", user.id)
+        .not("mood_score", "is", null)
+        .order("recorded_at", { ascending: true })
+        .limit(30);
+
+      if (moodRows && moodRows.length > 0) {
+        const moodChartData = moodRows.map((m: any) => ({
+          name: format(new Date(m.recorded_at), "dd/MM"),
+          score: Number(m.mood_score),
+        }));
+        setMoodData(moodChartData);
+        const avg = moodChartData.reduce((s, d) => s + d.score, 0) / moodChartData.length;
+        setAvgMood(Math.round(avg * 10) / 10);
+
+        // Find patient with most mood entries
+        const patientCounts: Record<string, number> = {};
+        moodRows.forEach((m: any) => { patientCounts[m.patient_id] = (patientCounts[m.patient_id] ?? 0) + 1; });
+        const topPatientId = Object.entries(patientCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+        if (topPatientId) {
+          const { data: pat } = await supabase.from("patients").select("full_name").eq("id", topPatientId).maybeSingle();
+          if (pat) {
+            const parts = pat.full_name.split(" ");
+            setTopMoodPatient(parts[0] + (parts[1] ? ` ${parts[1][0]}.` : ""));
+          }
+        }
+      }
+
+      // ── Previous month revenue ──
+      const prevStart = startOfMonth(subMonths(now, 1)).toISOString();
+      const prevEnd = endOfMonth(subMonths(now, 1)).toISOString();
+      const { data: prevSessions } = await supabase
+        .from("sessions")
+        .select("price, status")
+        .eq("user_id", user.id)
+        .gte("scheduled_at", prevStart)
+        .lte("scheduled_at", prevEnd);
+
+      const prevRev = (prevSessions ?? [])
+        .filter((s) => s.status === "completed")
+        .reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+      setPrevMonthRevenue(prevRev);
+
+      // ── Weekly revenue sparkline ──
+      const weekData: { week: string; value: number }[] = [];
+      const monthSess = monthSessions.filter((s) => s.status === "completed");
+      for (let w = 0; w < 4; w++) {
+        const wStart = w * 7 + 1;
+        const wEnd = w === 3 ? 31 : (w + 1) * 7;
+        const label = `S${w + 1}`;
+        const val = monthSess
+          .filter((s: any) => {
+            const day = new Date(s.scheduled_at ?? now).getDate();
+            return day >= wStart && day <= wEnd;
+          })
+          .reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+        weekData.push({ week: label, value: val });
+      }
+      setWeeklyRevenue(weekData);
+
       setLoading(false);
     };
     load();
