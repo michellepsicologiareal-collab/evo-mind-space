@@ -69,7 +69,7 @@ const Patients = () => {
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
 
-  const [form, setForm] = useState({ full_name: "", email: "", phone: "", notes: "", session_price: "" });
+  const [form, setForm] = useState({ full_name: "", email: "", phone: "", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "" });
 
   const load = async () => {
     if (!user) return;
