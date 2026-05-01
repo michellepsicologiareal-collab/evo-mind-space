@@ -81,7 +81,12 @@ const ResetPassword = () => {
     setLoading(false);
 
     if (error) {
-      toast.error(error.message || "Erro ao redefinir a senha.");
+      const msg = error.message?.toLowerCase() || "";
+      if (msg.includes("expired") || msg.includes("invalid") || msg.includes("token") || msg.includes("session")) {
+        setLinkExpired(true);
+      } else {
+        toast.error(error.message || "Erro ao redefinir a senha.");
+      }
       return;
     }
 
