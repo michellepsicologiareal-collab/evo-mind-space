@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { PlanModal } from "@/components/app/PlanModal";
 import { PremiumGate } from "@/components/app/PremiumGate";
+import { NotificationBell } from "@/components/app/NotificationBell";
 
 const PREMIUM_ROUTES = new Set(["/app/financeiro", "/app/supervisionandos", "/app/supervisao"]);
 
