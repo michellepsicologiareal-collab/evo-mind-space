@@ -20,7 +20,6 @@ const ResetPassword = () => {
   const [countdownCancelled, setCountdownCancelled] = useState(false);
 
   const returnToLogin = async () => {
-    await supabase.auth.signOut({ scope: "local" });
     navigate("/auth?forceLogin=1", { replace: true });
   };
 
