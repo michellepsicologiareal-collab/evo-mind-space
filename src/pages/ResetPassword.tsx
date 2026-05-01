@@ -66,6 +66,17 @@ const ResetPassword = () => {
     };
   }, []);
 
+  // Countdown redirect when link is expired
+  useEffect(() => {
+    if (!linkExpired || countdownCancelled) return;
+    if (countdown <= 0) {
+      navigate("/auth", { replace: true });
+      return;
+    }
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [linkExpired, countdown, countdownCancelled, navigate]);
+
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
 
