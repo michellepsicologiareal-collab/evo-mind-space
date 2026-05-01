@@ -144,6 +144,7 @@ const Patients = () => {
       chief_complaint: parsed.data.chief_complaint || null,
       treatment_plan: parsed.data.treatment_plan || null,
       anamnesis: parsed.data.anamnesis || null,
+      category: parsed.data.category || "individual",
     };
 
     const { error } = editing
