@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 type SubStatus = "free" | "pending" | "active";
+type ProfileType = "standard" | "supervisee" | "supervisor";
 
 const STATUS_LABELS: Record<SubStatus, string> = {
   free: "Gratuito",
@@ -24,6 +25,18 @@ const STATUS_STYLES: Record<SubStatus, string> = {
   free: "bg-muted text-muted-foreground",
   pending: "bg-yellow-100 text-yellow-800",
   active: "bg-green-100 text-green-800",
+};
+
+const PROFILE_LABELS: Record<ProfileType, string> = {
+  standard: "Padrão",
+  supervisee: "Supervisionando",
+  supervisor: "Supervisor",
+};
+
+const PROFILE_STYLES: Record<ProfileType, string> = {
+  standard: "bg-muted text-muted-foreground",
+  supervisee: "bg-primary/10 text-primary",
+  supervisor: "bg-lilac/20 text-lilac-foreground",
 };
 
 interface AdminUser {
