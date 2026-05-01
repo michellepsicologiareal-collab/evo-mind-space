@@ -49,10 +49,7 @@ export const NotificationBell = () => {
     if (!user) return;
     load();
 
-    const channelName = `realtime:notifications:${user.id}`;
-    // Remove any stale channel with the same name first (handles React strict mode double-mount)
-    const existing = supabase.getChannels().find((c) => c.topic === channelName);
-    if (existing) supabase.removeChannel(existing);
+    const channelName = `notifications:${user.id}:${Date.now()}`;
 
     const channel = supabase
       .channel(channelName)
@@ -67,8 +64,9 @@ export const NotificationBell = () => {
         (payload) => {
           setNotifications((prev) => [payload.new as Notification, ...prev].slice(0, 20));
         }
-      )
-      .subscribe();
+      );
+
+    channel.subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, [user]);
