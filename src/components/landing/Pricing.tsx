@@ -3,6 +3,23 @@ import { Button } from "@/components/ui/button";
 
 const plans = [
   {
+    name: "Supervisionando PsiReal",
+    price: "R$ 29,90",
+    period: "/mês",
+    description: "Para supervisionandos vinculados a uma supervisora.",
+    features: [
+      "Pacientes ilimitados",
+      "Agenda completa",
+      "Controle financeiro básico",
+      "Prontuário TCC",
+      "Registros de evolução",
+      "Vínculo com supervisora",
+    ],
+    cta: "Começar agora",
+    href: "https://kiwify.com.br/PLACEHOLDER_SUPERVISIONANDO",
+    highlighted: false,
+  },
+  {
     name: "Essencial PsiReal",
     price: "R$ 39,90",
     period: "/mês",
