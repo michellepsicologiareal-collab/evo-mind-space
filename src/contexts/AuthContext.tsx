@@ -12,6 +12,14 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+const withTimeout = <T,>(promise: Promise<T>, ms = 8000): Promise<T> =>
+  Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      window.setTimeout(() => reject(new Error("Tempo esgotado ao validar acesso.")), ms)
+    ),
+  ]);
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -19,27 +27,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
 
   const checkApproval = async (userId: string) => {
-    const { data: ensuredProfile, error: ensureError } = await (supabase as any)
-      .rpc("ensure_current_profile");
+    try {
+      const { data: ensuredProfile, error: ensureError } = await withTimeout(
+        (supabase as any).rpc("ensure_current_profile")
+      );
 
-    if (!ensureError && ensuredProfile?.[0]) {
-      setIsApproved(Boolean(ensuredProfile[0].is_approved));
-      return;
+      if (!ensureError && ensuredProfile?.[0]) {
+        setIsApproved(Boolean(ensuredProfile[0].is_approved));
+        return;
+      }
+    } catch (error) {
+      console.warn("Validação inicial do perfil demorou demais; tentando consulta direta.", error);
     }
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("is_approved")
-      .eq("id", userId)
-      .maybeSingle();
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from("profiles")
+          .select("is_approved")
+          .eq("id", userId)
+          .maybeSingle()
+      );
 
-    if (error) {
-      console.warn("Não foi possível verificar a aprovação do perfil:", error.message);
+      if (error) {
+        console.warn("Não foi possível verificar a aprovação do perfil:", error.message);
+        setIsApproved(false);
+        return;
+      }
+
+      setIsApproved(data?.is_approved ?? false);
+    } catch (error) {
+      console.warn("Falha ao verificar aprovação do perfil:", error);
       setIsApproved(false);
-      return;
     }
-
-    setIsApproved(data?.is_approved ?? false);
   };
 
   useEffect(() => {
