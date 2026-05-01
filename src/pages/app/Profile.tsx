@@ -230,8 +230,9 @@ const Profile = () => {
         clinic_name: parsed.data.clinic_name || null,
         crp: parsed.data.crp || null,
         phone: parsed.data.phone || null,
-        specialty: parsed.data.specialty || null,
-        profile_type: profileType,
+         specialty: parsed.data.specialty || null,
+         pix_key: parsed.data.pix_key || null,
+         profile_type: profileType,
         // If switching to standard, clear supervisor link
         ...(profileType === "standard" ? { supervisor_id: null } : {}),
       } as any)
