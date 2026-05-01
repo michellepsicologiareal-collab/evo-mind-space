@@ -4,6 +4,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope } from "lucide-react";
 import { TccRecords } from "@/components/app/TccRecords";
+import { CardSkeleton } from "@/components/app/Skeletons";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
