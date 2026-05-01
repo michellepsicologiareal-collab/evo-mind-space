@@ -179,6 +179,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_profile_id_by_email: { Args: { _email: string }; Returns: string }
       is_supervisor_of: { Args: { _supervisee_id: string }; Returns: boolean }
     }
     Enums: {
