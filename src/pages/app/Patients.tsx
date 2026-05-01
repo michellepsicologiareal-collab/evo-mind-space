@@ -152,12 +152,6 @@ const Patients = () => {
     const digits = normalizePhoneForWhatsApp(p.phone);
     if (!digits) return null;
 
-    // Ensure mobile numbers have 9th digit: 55 + 2-digit DDD + 9 digits = 13 digits
-    // If we have 12 digits (55 + DDD + 8-digit number), insert the leading 9
-    if (digits.length === 12) {
-      digits = digits.slice(0, 4) + "9" + digits.slice(4);
-    }
-
     const valor = p.session_price != null ? `R$ ${Number(p.session_price).toFixed(2).replace(".", ",")}` : "";
     let msg = `Olá, ${p.full_name.split(" ")[0]}! 😊\n\nSegue o valor da sua sessão: ${valor}.\n`;
     if (pixKey) msg += `\nChave Pix para pagamento:\n${pixKey}\n`;
