@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope } from "lucide-react";
 import { TccRecords } from "@/components/app/TccRecords";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,6 +50,7 @@ const FREE_PATIENT_LIMIT = 5;
 const Patients = () => {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
+  const navigate = useNavigate();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [gateOpen, setGateOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -293,6 +294,9 @@ const Patients = () => {
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTccPatient(p)}><ClipboardList className="h-4 w-4" /> Prontuário TCC</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate(`/app/supervisao-caso?paciente=${encodeURIComponent(p.full_name)}`)}>
+                      <Stethoscope className="h-4 w-4" /> Pedir Supervisão deste Caso
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => toggleActive(p)}>
                       {p.is_active ? "Marcar inativo" : "Reativar"}
                     </DropdownMenuItem>
