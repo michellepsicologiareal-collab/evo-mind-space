@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Brain, ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import logoSrc from "@/assets/logo-psireal.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -108,8 +109,8 @@ const Auth = () => {
         <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary-glow/40 blur-3xl" />
 
         <Link to="/" className="relative flex items-center gap-2 w-fit">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-foreground/15 backdrop-blur">
-            <Brain className="h-5 w-5" />
+          <span className="flex h-10 w-10 items-center justify-center rounded-full overflow-hidden">
+            <img src={logoSrc} alt="Psicologia Real" className="h-10 w-10 object-cover" />
           </span>
           <span className="font-display text-2xl font-semibold">
             Psi <span className="italic text-accent">Real</span>
@@ -136,8 +137,8 @@ const Auth = () => {
       <main className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <Link to="/" className="lg:hidden mb-6 flex items-center gap-2 w-fit">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground">
-              <Brain className="h-4 w-4" />
+            <span className="flex h-9 w-9 items-center justify-center rounded-full overflow-hidden">
+              <img src={logoSrc} alt="Psicologia Real" className="h-9 w-9 object-cover" />
             </span>
             <span className="font-display text-xl font-semibold">
               Psi <span className="italic text-accent">Real</span>
