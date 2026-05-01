@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, CheckCircle } from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle, AlertTriangle } from "lucide-react";
 import logoSrc from "@/assets/logo-psireal.png";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
