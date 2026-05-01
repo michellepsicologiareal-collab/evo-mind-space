@@ -74,8 +74,12 @@ const Library = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-8 animate-fade-up">
+        <header>
+          <div className="h-10 w-56 rounded bg-muted animate-pulse" />
+          <div className="h-4 w-80 rounded bg-muted animate-pulse mt-3" />
+        </header>
+        <ListSkeleton count={6} />
       </div>
     );
   }
