@@ -147,7 +147,9 @@ const Agenda = () => {
 
   const openNew = (date?: Date) => {
     setForm({
+      session_type: "clinical",
       patient_id: "",
+      discussed_patient_id: "",
       date: format(date ?? new Date(), "yyyy-MM-dd"),
       time: "09:00",
       duration_minutes: 50,
