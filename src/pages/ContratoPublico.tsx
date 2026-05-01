@@ -63,6 +63,7 @@ export default function ContratoPublico() {
         // Initialize responses
         const init: Record<string, string | boolean> = {};
         t.clauses.forEach((c) => {
+          if (c.type === "text") return; // display-only, no response needed
           init[c.key] = c.type === "agree" ? false : "";
         });
         setResponses(init);
