@@ -112,45 +112,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }).catch(clearSession);
 
-    // Periodic session refresh every 4 minutes to prevent auto-logout
-    const refreshInterval = window.setInterval(async () => {
-      if (!mounted) return;
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error || !data.session) return;
-        // Proactively refresh if token expires within 5 minutes
-        const expiresAt = data.session.expires_at ?? 0;
-        const nowSecs = Math.floor(Date.now() / 1000);
-        if (expiresAt - nowSecs < 300) {
-          await supabase.auth.refreshSession();
-        }
-      } catch {
-        // silent – next interval will retry
-      }
-    }, 4 * 60 * 1000);
-
-    // Also refresh on window focus (user returning to tab)
-    const handleVisibility = async () => {
-      if (document.visibilityState !== "visible" || !mounted) return;
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) return;
-        const expiresAt = data.session.expires_at ?? 0;
-        const nowSecs = Math.floor(Date.now() / 1000);
-        if (expiresAt - nowSecs < 300) {
-          await supabase.auth.refreshSession();
-        }
-      } catch {
-        // silent
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-
     return () => {
       mounted = false;
       subscription.unsubscribe();
-      window.clearInterval(refreshInterval);
-      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
 
