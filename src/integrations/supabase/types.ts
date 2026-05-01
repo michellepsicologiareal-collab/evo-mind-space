@@ -724,6 +724,13 @@ export type Database = {
         Args: { _patient_id: string }
         Returns: boolean
       }
+      ensure_current_profile: {
+        Args: never
+        Returns: {
+          is_approved: boolean
+          profile_type: Database["public"]["Enums"]["profile_type"]
+        }[]
+      }
       get_profile_id_by_email: { Args: { _email: string }; Returns: string }
       get_session_by_token: {
         Args: { _token: string }
