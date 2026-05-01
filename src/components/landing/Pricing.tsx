@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 const plans = [
   {
     name: "Essencial PsiReal",
-    price: "R$ 49,90",
+    price: "R$ 39,90",
     period: "/mês",
     description: "Para o psicólogo autônomo que quer organizar seu consultório com eficiência.",
     features: [
@@ -22,7 +22,7 @@ const plans = [
   },
   {
     name: "Supervisora PsiReal",
-    price: "R$ 79,90",
+    price: "R$ 49,90",
     period: "/mês",
     description: "Para supervisoras que acompanham alunos e precisam de gestão completa.",
     features: [
