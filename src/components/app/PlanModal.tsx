@@ -73,7 +73,7 @@ export const PlanModal = ({ open, onOpenChange }: PlanModalProps) => {
           {/* Pro */}
           <div className="rounded-2xl border-2 border-accent bg-card p-5 flex flex-col relative ring-1 ring-accent/20">
             <span className="absolute -top-3 left-4 bg-accent text-accent-foreground text-xs font-bold px-3 py-0.5 rounded-full flex items-center gap-1">
-              <Crown className="h-3 w-3" /> Popular
+              <Crown className="h-3 w-3 text-gold" /> Popular
             </span>
             <h3 className="text-lg font-bold">{proPlan.name}</h3>
             <p className="text-sm text-muted-foreground mb-3">{proPlan.description}</p>

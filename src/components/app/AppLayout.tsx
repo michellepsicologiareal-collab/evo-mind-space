@@ -87,7 +87,7 @@ export const AppLayout = () => {
         <div className="p-4 border-t border-border">
           <button
             onClick={() => setPlanOpen(true)}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors text-accent hover:bg-accent/10 w-full"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors text-gold hover:bg-gold/10 w-full"
           >
             <Crown className="h-4 w-4" />
             Meu Plano

@@ -12,7 +12,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Playfair Display", "ui-serif", "Georgia", "serif"],
+        display: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
@@ -54,6 +54,7 @@ export default {
           DEFAULT: "hsl(var(--sand))",
           foreground: "hsl(var(--sand-foreground))",
         },
+        gold: "hsl(var(--gold))",
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",

@@ -24,7 +24,7 @@ const patientSchema = z.object({
   phone: z.string().trim().max(40).optional().or(z.literal(""))
     .refine(
       (val) => {
-        if (!val) return true; // optional field
+        if (!val) return true;
         const digits = val.replace(/\D/g, "");
         return digits.length >= 10 && digits.length <= 13;
       },
@@ -32,6 +32,9 @@ const patientSchema = z.object({
     ),
   notes: z.string().trim().max(2000).optional().or(z.literal("")),
   session_price: z.string().optional(),
+  chief_complaint: z.string().trim().max(2000).optional().or(z.literal("")),
+  treatment_plan: z.string().trim().max(4000).optional().or(z.literal("")),
+  anamnesis: z.string().trim().max(6000).optional().or(z.literal("")),
 });
 
 interface Patient {
@@ -43,6 +46,9 @@ interface Patient {
   is_active: boolean;
   session_price: number | null;
   shared_with_supervisor: boolean;
+  chief_complaint: string | null;
+  treatment_plan: string | null;
+  anamnesis: string | null;
 }
 
 const FREE_PATIENT_LIMIT = 5;
@@ -63,7 +69,7 @@ const Patients = () => {
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
 
-  const [form, setForm] = useState({ full_name: "", email: "", phone: "", notes: "", session_price: "" });
+  const [form, setForm] = useState({ full_name: "", email: "", phone: "", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "" });
 
   const load = async () => {
     if (!user) return;
@@ -89,7 +95,7 @@ const Patients = () => {
       return;
     }
     setEditing(null);
-    setForm({ full_name: "", email: "", phone: "", notes: "", session_price: "" });
+    setForm({ full_name: "", email: "", phone: "", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "" });
     setOpen(true);
   };
 
@@ -101,6 +107,9 @@ const Patients = () => {
       phone: p.phone ?? "",
       notes: p.notes ?? "",
       session_price: p.session_price?.toString() ?? "",
+      chief_complaint: p.chief_complaint ?? "",
+      treatment_plan: p.treatment_plan ?? "",
+      anamnesis: p.anamnesis ?? "",
     });
     setOpen(true);
   };
@@ -121,6 +130,9 @@ const Patients = () => {
       phone: parsed.data.phone || null,
       notes: parsed.data.notes || null,
       session_price: parsed.data.session_price ? Number(parsed.data.session_price) : null,
+      chief_complaint: parsed.data.chief_complaint || null,
+      treatment_plan: parsed.data.treatment_plan || null,
+      anamnesis: parsed.data.anamnesis || null,
     };
 
     const { error } = editing
@@ -225,8 +237,20 @@ const Patients = () => {
                 <Input id="price" type="number" step="0.01" min="0" value={form.session_price} onChange={(e) => setForm({ ...form, session_price: e.target.value })} />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="chief_complaint">Queixa Principal</Label>
+                <Textarea id="chief_complaint" rows={3} className="min-h-[80px]" placeholder="Descreva a queixa principal do paciente..." value={form.chief_complaint} onChange={(e) => setForm({ ...form, chief_complaint: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="treatment_plan">Plano de Tratamento</Label>
+                <Textarea id="treatment_plan" rows={4} className="min-h-[100px]" placeholder="Objetivos terapêuticos, intervenções planejadas..." value={form.treatment_plan} onChange={(e) => setForm({ ...form, treatment_plan: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="anamnesis">Histórico / Anamnese</Label>
+                <Textarea id="anamnesis" rows={5} className="min-h-[120px]" placeholder="Histórico pessoal, familiar, médico..." value={form.anamnesis} onChange={(e) => setForm({ ...form, anamnesis: e.target.value })} />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="notes">Observações</Label>
-                <Textarea id="notes" rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
