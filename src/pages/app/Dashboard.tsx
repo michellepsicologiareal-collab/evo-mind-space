@@ -456,6 +456,7 @@ const Dashboard = () => {
         </div>
       </section>
 
+      {/* ── Upcoming Sessions ── */}
       <section className="rounded-2xl bg-card border border-border shadow-card p-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Próximas Sessões</h2>
