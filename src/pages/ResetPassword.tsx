@@ -15,6 +15,7 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isRecovery, setIsRecovery] = useState(false);
   const [done, setDone] = useState(false);
+  const [linkExpired, setLinkExpired] = useState(false);
 
   useEffect(() => {
     const markRecoveryFromUrl = () => {
