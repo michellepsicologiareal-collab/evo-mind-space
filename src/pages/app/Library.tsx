@@ -153,8 +153,8 @@ const Library = () => {
 
                       <Button
                         variant={m.is_premium && !isPremium ? "outline" : "accent"}
-                        size="sm"
-                        className="w-full mt-auto"
+                        size="default"
+                        className="w-full mt-auto min-h-[44px]"
                         onClick={() => handleAccess(m)}
                       >
                         {m.is_premium && !isPremium ? (
