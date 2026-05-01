@@ -56,13 +56,22 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: bo
           <div className="max-w-md text-center space-y-4">
             <h1 className="font-display text-2xl font-semibold text-foreground">Não foi possível abrir o sistema</h1>
             <p className="text-sm text-muted-foreground">Atualize a página. Se continuar, saia e entre novamente.</p>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-soft transition-colors hover:bg-accent/90"
-            >
-              Recarregar
-            </button>
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-semibold text-foreground shadow-soft transition-colors hover:bg-secondary"
+              >
+                Recarregar
+              </button>
+              <button
+                type="button"
+                onClick={() => window.location.assign("/auth?forceLogin=1")}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-soft transition-colors hover:bg-accent/90"
+              >
+                Voltar ao login
+              </button>
+            </div>
           </div>
         </div>
       );

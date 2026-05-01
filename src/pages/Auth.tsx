@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -26,6 +26,7 @@ const signInSchema = z.object({
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState(false);
@@ -45,8 +46,13 @@ const Auth = () => {
   const [suProfileType, setSuProfileType] = useState<"standard" | "supervisee">("standard");
 
   useEffect(() => {
+    if (searchParams.get("forceLogin") === "1") {
+      supabase.auth.signOut({ scope: "local" }).finally(() => setSearchParams({}, { replace: true }));
+      return;
+    }
+
     if (user) navigate("/app", { replace: true });
-  }, [user, navigate]);
+  }, [user, navigate, searchParams, setSearchParams]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

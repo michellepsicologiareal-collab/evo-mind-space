@@ -19,6 +19,11 @@ const ResetPassword = () => {
   const [countdown, setCountdown] = useState(10);
   const [countdownCancelled, setCountdownCancelled] = useState(false);
 
+  const returnToLogin = async () => {
+    await supabase.auth.signOut({ scope: "local" });
+    navigate("/auth?forceLogin=1", { replace: true });
+  };
+
   useEffect(() => {
     let cancelled = false;
 
@@ -81,7 +86,7 @@ const ResetPassword = () => {
   useEffect(() => {
     if (!linkExpired || countdownCancelled) return;
     if (countdown <= 0) {
-      navigate("/auth", { replace: true });
+      returnToLogin();
       return;
     }
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
@@ -115,8 +120,8 @@ const ResetPassword = () => {
     }
 
     setDone(true);
-    toast.success("Senha redefinida com sucesso!");
-    setTimeout(() => navigate("/auth", { replace: true }), 2500);
+    toast.success("Senha redefinida com sucesso! Entre novamente com a nova senha.");
+    setTimeout(() => returnToLogin(), 2500);
   };
 
   return (
@@ -166,11 +171,9 @@ const ResetPassword = () => {
                   </button>
                 </p>
               ) : null}
-              <Link to="/auth">
-                <Button variant="accent" className="mt-2 gap-2">
+              <Button type="button" variant="accent" className="mt-2 gap-2" onClick={returnToLogin}>
                   <ArrowLeft className="h-4 w-4" /> Solicitar novo link
-                </Button>
-              </Link>
+              </Button>
             </div>
           ) : !isRecovery ? (
             <div className="text-center space-y-4">
@@ -179,11 +182,9 @@ const ResetPassword = () => {
                 Aguardando validação do link de recuperação…<br />
                 Se você chegou aqui sem clicar no link do email, volte ao login e solicite novamente.
               </p>
-              <Link to="/auth">
-                <Button variant="outline" className="mt-2 gap-2">
+              <Button type="button" variant="outline" className="mt-2 gap-2" onClick={returnToLogin}>
                   <ArrowLeft className="h-4 w-4" /> Voltar ao login
-                </Button>
-              </Link>
+              </Button>
             </div>
           ) : (
             <>
@@ -226,10 +227,10 @@ const ResetPassword = () => {
                   Redefinir senha
                 </Button>
               </form>
-              <Link to="/auth" className="block text-center text-sm text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={returnToLogin} className="block w-full text-center text-sm text-muted-foreground hover:text-foreground">
                 <ArrowLeft className="inline h-3.5 w-3.5 mr-1" />
                 Voltar ao login
-              </Link>
+              </button>
             </>
           )}
         </div>
