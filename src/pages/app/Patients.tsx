@@ -50,6 +50,7 @@ const FREE_PATIENT_LIMIT = 5;
 const Patients = () => {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
+  const navigate = useNavigate();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [gateOpen, setGateOpen] = useState(false);
   const [loading, setLoading] = useState(true);
