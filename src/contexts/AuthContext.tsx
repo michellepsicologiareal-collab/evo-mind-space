@@ -19,27 +19,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
 
   const checkApproval = async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("is_approved")
       .eq("id", userId)
       .maybeSingle();
+
+    if (error) {
+      console.warn("Não foi possível verificar a aprovação do perfil:", error.message);
+      setIsApproved(false);
+      return;
+    }
+
     setIsApproved(data?.is_approved ?? false);
   };
 
   useEffect(() => {
+    let mounted = true;
+
+    const clearSession = () => {
+      if (!mounted) return;
+      setSession(null);
+      setUser(null);
+      setIsApproved(null);
+      setLoading(false);
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
-      if (newSession?.user) {
-        // defer to avoid deadlock with Supabase client
-        setTimeout(() => checkApproval(newSession.user.id), 0);
-      } else {
-        setIsApproved(null);
-      }
+
+      // defer to avoid deadlock with Supabase client
+      setTimeout(() => {
+        if (!mounted) return;
+        if (newSession?.user) {
+          checkApproval(newSession.user.id).finally(() => mounted && setLoading(false));
+        } else {
+          setIsApproved(null);
+          setLoading(false);
+        }
+      }, 0);
     });
 
-    supabase.auth.getSession().then(({ data: { session: existing } }) => {
+    supabase.auth.getSession().then(({ data: { session: existing }, error }) => {
+      if (error) {
+        console.warn("Sessão salva inválida; limpando para novo login:", error.message);
+        supabase.auth.signOut({ scope: "local" }).finally(clearSession);
+        return;
+      }
+
       setSession(existing);
       setUser(existing?.user ?? null);
       if (existing?.user) {
@@ -47,9 +75,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setLoading(false);
       }
-    });
+    }).catch(clearSession);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
