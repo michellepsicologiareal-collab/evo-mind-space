@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
-import { Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut, GraduationCap, ShieldCheck } from "lucide-react";
+import { Brain, LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut, GraduationCap, ShieldCheck, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { PlanModal } from "@/components/app/PlanModal";
 
 const navItems = [
   { to: "/app", label: "Painel", icon: LayoutDashboard, end: true },
@@ -21,6 +23,7 @@ const mobileNavItems = navItems.slice(0, 5);
 export const AppLayout = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const [planOpen, setPlanOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -63,7 +66,14 @@ export const AppLayout = () => {
         </nav>
 
         <div className="p-4 border-t border-border">
-          <p className="text-xs text-muted-foreground truncate mb-3">{user?.email}</p>
+          <button
+            onClick={() => setPlanOpen(true)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors text-accent hover:bg-accent/10 w-full"
+          >
+            <Crown className="h-4 w-4" />
+            Meu Plano
+          </button>
+          <p className="text-xs text-muted-foreground truncate mb-3 mt-3">{user?.email}</p>
           <Button variant="outline" size="sm" className="w-full" onClick={handleSignOut}>
             <LogOut className="h-4 w-4" /> Sair
           </Button>
@@ -113,6 +123,7 @@ export const AppLayout = () => {
           <Outlet />
         </div>
       </main>
+      <PlanModal open={planOpen} onOpenChange={setPlanOpen} />
     </div>
   );
 };
