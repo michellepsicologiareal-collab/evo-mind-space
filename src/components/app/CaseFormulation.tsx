@@ -96,12 +96,12 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
   const saveFormulation = async () => {
     if (!user) return;
     setSaving(true);
-    const payload = {
+    const payload: any = {
       patient_id: patientId,
       user_id: user.id,
       ...systems,
       core_beliefs: coreBeliefs,
-      treatment_goals: goals as unknown as Record<string, unknown>[],
+      treatment_goals: JSON.parse(JSON.stringify(goals)),
     };
 
     if (formId) {
