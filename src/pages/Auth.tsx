@@ -29,6 +29,10 @@ const Auth = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   // sign in
   const [siEmail, setSiEmail] = useState("");
