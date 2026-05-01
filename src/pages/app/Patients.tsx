@@ -331,8 +331,11 @@ const Patients = () => {
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-foreground truncate">{p.full_name}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground flex items-center gap-2">
                       {p.is_active ? <span className="text-primary-glow">● Ativo</span> : <span>○ Inativo</span>}
+                      <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px] uppercase tracking-wider font-medium">
+                        {PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual"}
+                      </span>
                     </p>
                   </div>
                 </div>
