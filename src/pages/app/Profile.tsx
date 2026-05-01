@@ -447,6 +447,11 @@ const Profile = () => {
           <Input id="specialty" placeholder="Ex: TCC, Psicanálise..." value={form.specialty} onChange={(e) => setForm({ ...form, specialty: e.target.value })} />
         </div>
         <div className="space-y-2">
+          <Label htmlFor="pix_key">Chave Pix</Label>
+          <Input id="pix_key" placeholder="CPF, e-mail, telefone ou chave aleatória" value={form.pix_key} onChange={(e) => setForm({ ...form, pix_key: e.target.value })} />
+          <p className="text-xs text-muted-foreground">Usada na mensagem de cobrança via WhatsApp.</p>
+        </div>
+        <div className="space-y-2">
           <Label>Email</Label>
           <Input value={user?.email ?? ""} disabled />
         </div>
