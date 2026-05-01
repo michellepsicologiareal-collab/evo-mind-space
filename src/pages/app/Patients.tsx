@@ -346,6 +346,7 @@ const Patients = () => {
           {tccPatient && <TccRecords patientId={tccPatient.id} />}
         </DialogContent>
       </Dialog>
+      <PremiumGate open={gateOpen} onOpenChange={setGateOpen} />
     </div>
   );
 };
