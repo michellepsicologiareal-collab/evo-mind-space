@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { logSupervisionAccess } from "@/utils/auditLog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -105,6 +106,10 @@ const Supervision = () => {
       setRecentSessions((sRes.data as SessionSummary[]) ?? []);
       setLatestProgress((pRes.data as ProgressEntry | null) ?? null);
       setDetailLoading(false);
+      // Audit: log supervision access to patient data
+      if (selectedPatient?.user_id) {
+        logSupervisionAccess("patient", selectedPatient.id, selectedPatient.user_id, selectedPatient.id);
+      }
     })();
     return () => {
       cancelled = true;

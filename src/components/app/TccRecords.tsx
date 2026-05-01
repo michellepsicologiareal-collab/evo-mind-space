@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { logClinicalAccess } from "@/utils/auditLog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -57,6 +58,8 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       .limit(20);
     setRecords(data ?? []);
     setLoading(false);
+    // Audit: log access to TCC records
+    if (data?.length) logClinicalAccess("tcc_record", data[0].id, patientId);
   };
 
   useEffect(() => {

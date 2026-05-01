@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          access_type: Database["public"]["Enums"]["audit_access_type"]
+          block_reason: string | null
+          created_at: string
+          id: string
+          patient_id: string | null
+          resource_id: string
+          resource_type: string
+          result: Database["public"]["Enums"]["audit_result"]
+          supervisee_id: string | null
+          supervisor_id: string | null
+          user_id: string
+        }
+        Insert: {
+          access_type?: Database["public"]["Enums"]["audit_access_type"]
+          block_reason?: string | null
+          created_at?: string
+          id?: string
+          patient_id?: string | null
+          resource_id: string
+          resource_type: string
+          result?: Database["public"]["Enums"]["audit_result"]
+          supervisee_id?: string | null
+          supervisor_id?: string | null
+          user_id: string
+        }
+        Update: {
+          access_type?: Database["public"]["Enums"]["audit_access_type"]
+          block_reason?: string | null
+          created_at?: string
+          id?: string
+          patient_id?: string | null
+          resource_id?: string
+          resource_type?: string
+          result?: Database["public"]["Enums"]["audit_result"]
+          supervisee_id?: string | null
+          supervisor_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       case_formulations: {
         Row: {
           behaviors: string | null
@@ -547,6 +589,28 @@ export type Database = {
       }
       is_supervisor_of: { Args: { _supervisee_id: string }; Returns: boolean }
       link_supervisee_by_email: { Args: { _email: string }; Returns: string }
+      log_clinical_access: {
+        Args: {
+          _access_type?: Database["public"]["Enums"]["audit_access_type"]
+          _block_reason?: string
+          _patient_id?: string
+          _resource_id: string
+          _resource_type: string
+          _result?: Database["public"]["Enums"]["audit_result"]
+        }
+        Returns: undefined
+      }
+      log_supervision_access: {
+        Args: {
+          _block_reason?: string
+          _patient_id: string
+          _resource_id: string
+          _resource_type: string
+          _result?: Database["public"]["Enums"]["audit_result"]
+          _supervisee_id: string
+        }
+        Returns: undefined
+      }
       respond_to_confirmation: {
         Args: { _confirm: boolean; _token: string }
         Returns: string
@@ -558,6 +622,8 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      audit_access_type: "own" | "supervision"
+      audit_result: "success" | "blocked"
       library_category:
         | "documentos_legais"
         | "materiais_pacientes"
@@ -704,6 +770,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      audit_access_type: ["own", "supervision"],
+      audit_result: ["success", "blocked"],
       library_category: [
         "documentos_legais",
         "materiais_pacientes",
