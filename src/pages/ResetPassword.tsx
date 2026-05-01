@@ -17,6 +17,14 @@ const ResetPassword = () => {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
+    const markRecoveryFromUrl = () => {
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const queryParams = new URLSearchParams(window.location.search);
+      if (hashParams.get("type") === "recovery" || queryParams.get("type") === "recovery" || hashParams.has("access_token")) {
+        setIsRecovery(true);
+      }
+    };
+
     // Listen for PASSWORD_RECOVERY event from the auth link
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
@@ -24,11 +32,8 @@ const ResetPassword = () => {
       }
     });
 
-    // Also check URL hash for recovery type
-    const hash = window.location.hash;
-    if (hash.includes("type=recovery")) {
-      setIsRecovery(true);
-    }
+    markRecoveryFromUrl();
+    supabase.auth.getSession().then(() => markRecoveryFromUrl());
 
     return () => subscription.unsubscribe();
   }, []);
