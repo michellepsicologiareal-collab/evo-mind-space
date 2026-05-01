@@ -183,6 +183,7 @@ const Profile = () => {
         crp: data.crp ?? "",
         phone: data.phone ?? "",
         specialty: data.specialty ?? "",
+        pix_key: (data as any).pix_key ?? "",
       });
       setProfileType((data.profile_type as ProfileType) ?? "standard");
       setSupervisorId(data.supervisor_id ?? null);
