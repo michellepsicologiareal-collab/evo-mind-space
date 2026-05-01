@@ -735,10 +735,28 @@ const Finance = () => {
         </Alert>
       )}
 
+      {/* Service breakdown */}
+      {serviceBreakdown.length > 0 && (
+        <section className="rounded-3xl bg-card border border-border p-6 lg:p-8">
+          <h2 className="font-display text-lg font-semibold mb-4">Recebido por serviço</h2>
+          <ul className="space-y-2">
+            {serviceBreakdown.map((s) => (
+              <li key={s.name} className="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 p-3">
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{s.name}</p>
+                  <p className="text-xs text-muted-foreground">{s.count} {s.count === 1 ? "sessão" : "sessões"}</p>
+                </div>
+                <span className="font-display font-semibold shrink-0">{formatBRL(s.total)}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="rounded-3xl bg-card border border-border p-6 lg:p-8">
         <Tabs defaultValue="all">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-display text-2xl font-semibold">Sessões do mês</h2>
+            <h2 className="font-display text-2xl font-semibold">Sessões</h2>
             <TabsList>
               <TabsTrigger value="all">Todas</TabsTrigger>
               <TabsTrigger value="pending">Pendentes</TabsTrigger>
@@ -747,13 +765,13 @@ const Finance = () => {
           </div>
 
           <TabsContent value="all">
-            <SessionsTable rows={billable} loading={loading} onChange={updatePayment} onEdit={setEditing} />
+            <SessionsTable rows={fortnightBillable} loading={loading} onChange={updatePayment} onEdit={setEditing} />
           </TabsContent>
           <TabsContent value="pending">
-            <SessionsTable rows={billable.filter((r) => r.payment_status === "pending")} loading={loading} onChange={updatePayment} onEdit={setEditing} />
+            <SessionsTable rows={fortnightBillable.filter((r) => r.payment_status === "pending")} loading={loading} onChange={updatePayment} onEdit={setEditing} />
           </TabsContent>
           <TabsContent value="paid">
-            <SessionsTable rows={billable.filter((r) => r.payment_status === "paid")} loading={loading} onChange={updatePayment} onEdit={setEditing} />
+            <SessionsTable rows={fortnightBillable.filter((r) => r.payment_status === "paid")} loading={loading} onChange={updatePayment} onEdit={setEditing} />
           </TabsContent>
         </Tabs>
       </section>
