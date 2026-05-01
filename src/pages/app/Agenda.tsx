@@ -16,17 +16,22 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from "@/lib/utils";
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
+type SessionType = "clinical" | "supervision";
 
 interface Session {
   id: string;
-  patient_id: string;
+  patient_id: string | null;
   scheduled_at: string;
   duration_minutes: number;
   status: Status;
   price: number | null;
   notes: string | null;
   confirmation_token: string | null;
-  patients?: { full_name: string } | null;
+  session_type: SessionType;
+  discussed_patient_id: string | null;
+  is_expense: boolean;
+  patient_name?: string | null;
+  discussed_patient_name?: string | null;
 }
 
 interface Patient {
