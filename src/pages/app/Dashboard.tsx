@@ -105,6 +105,7 @@ const Dashboard = () => {
   const [topMoodPatient, setTopMoodPatient] = useState("");
   const [prevMonthRevenue, setPrevMonthRevenue] = useState(0);
   const [weeklyRevenue, setWeeklyRevenue] = useState<{ week: string; value: number }[]>([]);
+  const [patientMoods, setPatientMoods] = useState<PatientMoodEntry[]>([]);
 
   useEffect(() => {
     if (!user) return;
