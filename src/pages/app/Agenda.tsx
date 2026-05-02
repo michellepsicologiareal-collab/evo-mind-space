@@ -395,6 +395,99 @@ const Agenda = () => {
     window.open(`https://wa.me/?text=${encoded}`, "_blank");
   };
 
+  const openEdit = async (s: Session) => {
+    setEditSessionId(s.id);
+    setEditProgressId(null);
+    setEditForm({
+      status: s.status,
+      payment_status: s.payment_status,
+      payment_method: (s as any).payment_method ?? "none",
+      payment_reference: (s as any).payment_reference ?? "",
+      price: s.price != null ? String(s.price) : "",
+      notes: s.notes ?? "",
+      duration_minutes: s.duration_minutes,
+      mood_score: "",
+      progress_note: "",
+    });
+    setEditOpen(true);
+
+    // Load existing progress record for this session
+    if (s.patient_id && user) {
+      const { data } = await supabase
+        .from("patient_progress")
+        .select("id, mood_score, note")
+        .eq("session_id", s.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data) {
+        setEditProgressId(data.id);
+        setEditForm((prev) => ({
+          ...prev,
+          mood_score: data.mood_score != null ? String(data.mood_score) : "",
+          progress_note: data.note ?? "",
+        }));
+      }
+    }
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !editSessionId) return;
+    setEditSaving(true);
+
+    const session = sessions.find((s) => s.id === editSessionId);
+
+    // Update session fields
+    const { error } = await supabase
+      .from("sessions")
+      .update({
+        status: editForm.status,
+        payment_status: editForm.payment_status,
+        payment_method: editForm.payment_method === "none" ? null : editForm.payment_method,
+        payment_reference: editForm.payment_reference.trim() || null,
+        price: editForm.price ? Number(editForm.price) : null,
+        notes: editForm.notes || null,
+        duration_minutes: editForm.duration_minutes,
+        ...(editForm.payment_status === "paid" && session?.payment_status !== "paid"
+          ? { paid_at: new Date().toISOString() }
+          : {}),
+      })
+      .eq("id", editSessionId);
+
+    if (error) {
+      setEditSaving(false);
+      toast.error("Erro ao salvar sessão");
+      return;
+    }
+
+    // Upsert mood/progress
+    const moodNum = editForm.mood_score ? Number(editForm.mood_score) : null;
+    const progressNote = editForm.progress_note?.trim() || null;
+    if (session?.patient_id && (moodNum || progressNote)) {
+      if (editProgressId) {
+        await supabase
+          .from("patient_progress")
+          .update({ mood_score: moodNum, note: progressNote })
+          .eq("id", editProgressId);
+      } else {
+        await supabase.from("patient_progress").insert({
+          user_id: user.id,
+          patient_id: session.patient_id,
+          session_id: editSessionId,
+          mood_score: moodNum,
+          note: progressNote,
+          recorded_at: session.scheduled_at,
+        });
+      }
+    }
+
+    setEditSaving(false);
+    toast.success("Sessão atualizada");
+    setEditOpen(false);
+    load();
+    loadPending();
+  };
+
   const sessionsByDay = (date: Date) => sessions.filter((s) => isSameDay(new Date(s.scheduled_at), date));
 
   const pendingTotal = pendingSessions.reduce((sum, s) => sum + Number(s.price ?? 0), 0);
