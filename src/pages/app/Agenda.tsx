@@ -134,6 +134,23 @@ const Agenda = () => {
     payment_plan: "per_session" as "per_session" | "single_payment",
   });
 
+  // ── Edit session state ──
+  const [editOpen, setEditOpen] = useState(false);
+  const [editSessionId, setEditSessionId] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    status: "scheduled" as Status,
+    payment_status: "pending" as PaymentStatus,
+    payment_method: "none" as "none" | "pix" | "card" | "cash",
+    payment_reference: "",
+    price: "",
+    notes: "",
+    duration_minutes: 50,
+    mood_score: "",
+    progress_note: "",
+  });
+  const [editProgressId, setEditProgressId] = useState<string | null>(null);
+
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
 
   // Fetch pix key from profile
