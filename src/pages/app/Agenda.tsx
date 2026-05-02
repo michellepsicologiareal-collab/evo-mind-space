@@ -801,8 +801,8 @@ const Agenda = () => {
                         items.map((s) => {
                           const isSupervisionCard = s.session_type === "supervision";
                           return (
-                            <div key={s.id} className={cn(
-                              "rounded-xl border p-3 group transition-colors",
+                            <div key={s.id} onClick={() => openEdit(s)} className={cn(
+                              "rounded-xl border p-3 group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/20",
                               isSupervisionCard
                                 ? "bg-serene/10 border-serene/40"
                                 : s.status === "confirmed"
