@@ -257,6 +257,36 @@ const Dashboard = () => {
       }
       setWeeklyRevenue(weekData);
 
+      // ── Patient moods (recent entries with patient names) ──
+      const { data: recentMoods } = await supabase
+        .from("patient_progress")
+        .select("id, mood_score, note, recorded_at, patient_id")
+        .eq("user_id", user.id)
+        .not("mood_score", "is", null)
+        .order("recorded_at", { ascending: false })
+        .limit(10);
+
+      if (recentMoods && recentMoods.length > 0) {
+        const pIds = [...new Set(recentMoods.map((m: any) => m.patient_id))];
+        const { data: pNames } = await supabase
+          .from("patients")
+          .select("id, full_name")
+          .in("id", pIds);
+        const nameMap: Record<string, string> = {};
+        (pNames ?? []).forEach((p: any) => { nameMap[p.id] = p.full_name; });
+
+        setPatientMoods(
+          recentMoods.map((m: any) => ({
+            id: m.id,
+            patient_name: nameMap[m.patient_id] ?? "Paciente",
+            patient_initials: getInitials(nameMap[m.patient_id] ?? "?"),
+            mood_score: Number(m.mood_score),
+            note: m.note,
+            recorded_at: m.recorded_at,
+          }))
+        );
+      }
+
     };
     load()
       .catch((error) => {
