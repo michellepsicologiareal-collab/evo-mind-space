@@ -42,6 +42,15 @@ interface UpcomingSession {
   session_number: number;
 }
 
+interface PatientMoodEntry {
+  id: string;
+  patient_name: string;
+  patient_initials: string;
+  mood_score: number;
+  note: string | null;
+  recorded_at: string;
+}
+
 /* ── helpers ── */
 const getInitials = (name: string) => {
   const parts = name.trim().split(/\s+/);
