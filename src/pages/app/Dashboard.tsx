@@ -13,6 +13,8 @@ import {
   Clock,
   FileText,
   Target,
+  SmilePlus,
+  Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths } from "date-fns";
@@ -40,6 +42,15 @@ interface UpcomingSession {
   patient_initials: string;
   status: string;
   session_number: number;
+}
+
+interface PatientMoodEntry {
+  id: string;
+  patient_name: string;
+  patient_initials: string;
+  mood_score: number;
+  note: string | null;
+  recorded_at: string;
 }
 
 /* ── helpers ── */
@@ -96,6 +107,7 @@ const Dashboard = () => {
   const [topMoodPatient, setTopMoodPatient] = useState("");
   const [prevMonthRevenue, setPrevMonthRevenue] = useState(0);
   const [weeklyRevenue, setWeeklyRevenue] = useState<{ week: string; value: number }[]>([]);
+  const [patientMoods, setPatientMoods] = useState<PatientMoodEntry[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -246,6 +258,36 @@ const Dashboard = () => {
         weekData.push({ week: `S${w + 1}`, value: val });
       }
       setWeeklyRevenue(weekData);
+
+      // ── Patient moods (recent entries with patient names) ──
+      const { data: recentMoods } = await supabase
+        .from("patient_progress")
+        .select("id, mood_score, note, recorded_at, patient_id")
+        .eq("user_id", user.id)
+        .not("mood_score", "is", null)
+        .order("recorded_at", { ascending: false })
+        .limit(10);
+
+      if (recentMoods && recentMoods.length > 0) {
+        const pIds = [...new Set(recentMoods.map((m: any) => m.patient_id))];
+        const { data: pNames } = await supabase
+          .from("patients")
+          .select("id, full_name")
+          .in("id", pIds);
+        const nameMap: Record<string, string> = {};
+        (pNames ?? []).forEach((p: any) => { nameMap[p.id] = p.full_name; });
+
+        setPatientMoods(
+          recentMoods.map((m: any) => ({
+            id: m.id,
+            patient_name: nameMap[m.patient_id] ?? "Paciente",
+            patient_initials: getInitials(nameMap[m.patient_id] ?? "?"),
+            mood_score: Number(m.mood_score),
+            note: m.note,
+            recorded_at: m.recorded_at,
+          }))
+        );
+      }
 
     };
     load()
@@ -457,6 +499,60 @@ const Dashboard = () => {
             <p className="mt-4 text-sm text-muted-foreground">Complete sessões para ver seu faturamento semanal 📊</p>
           )}
         </div>
+      </section>
+
+      {/* ── Emoções dos Pacientes ── */}
+      <section className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-lilac via-lilac/60 to-transparent" />
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <SmilePlus className="h-5 w-5 text-lilac" />
+            <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Emoções dos Pacientes</h2>
+          </div>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/app/agenda" className="text-lilac hover:text-lilac/80">
+              Ver sessões <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+
+        {patientMoods.length === 0 ? (
+          <div className="text-center py-10 text-muted-foreground">
+            <Heart className="h-12 w-12 mx-auto mb-4 opacity-30" />
+            <p className="font-display text-lg font-medium text-foreground/70">Nenhum registro de humor ainda</p>
+            <p className="mt-1 text-sm">Registre o humor dos pacientes nas sessões para acompanhar a evolução emocional aqui ✨</p>
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {patientMoods.map((m) => {
+              const moodEmoji = m.mood_score >= 8 ? "🤩" : m.mood_score >= 6 ? "🙂" : m.mood_score >= 4 ? "😐" : m.mood_score >= 2 ? "😔" : "😫";
+              const moodColor = m.mood_score >= 7 ? "text-emerald-600 bg-emerald-100" : m.mood_score >= 4 ? "text-amber-600 bg-amber-100" : "text-rose-600 bg-rose-100";
+              return (
+                <li
+                  key={m.id}
+                  className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                >
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-bold text-sm ${getAvatarColor(m.patient_name)}`}>
+                    {m.patient_initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-foreground truncate">{m.patient_name}</p>
+                    {m.note && <p className="text-sm text-muted-foreground truncate">{m.note}</p>}
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {format(new Date(m.recorded_at), "dd/MM · HH:mm", { locale: ptBR })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xl">{moodEmoji}</span>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${moodColor}`}>
+                      {m.mood_score}/10
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
       {/* ── Upcoming Sessions ── */}
