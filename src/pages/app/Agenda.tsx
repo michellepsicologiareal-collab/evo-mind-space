@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon, Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap, MessageCircle, RefreshCw } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon, Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap, MessageCircle, RefreshCw, Pencil } from "lucide-react";
 import { addDays, addWeeks, format, isSameDay, startOfWeek, startOfMonth, endOfMonth, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
@@ -134,6 +134,23 @@ const Agenda = () => {
     payment_plan: "per_session" as "per_session" | "single_payment",
   });
 
+  // ── Edit session state ──
+  const [editOpen, setEditOpen] = useState(false);
+  const [editSessionId, setEditSessionId] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    status: "scheduled" as Status,
+    payment_status: "pending" as PaymentStatus,
+    payment_method: "none" as "none" | "pix" | "card" | "cash",
+    payment_reference: "",
+    price: "",
+    notes: "",
+    duration_minutes: 50,
+    mood_score: "",
+    progress_note: "",
+  });
+  const [editProgressId, setEditProgressId] = useState<string | null>(null);
+
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
 
   // Fetch pix key from profile
@@ -172,7 +189,7 @@ const Agenda = () => {
     const [sRes, pRes] = await Promise.all([
       supabase
         .from("sessions")
-        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .gte("scheduled_at", weekStart.toISOString())
         .lt("scheduled_at", weekEnd.toISOString())
@@ -376,6 +393,99 @@ const Agenda = () => {
     const message = `Olá ${name}, segue o lembrete para o acerto da nossa sessão de ${dateStr}. Valor: ${value}.${pixInfo}`;
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${encoded}`, "_blank");
+  };
+
+  const openEdit = async (s: Session) => {
+    setEditSessionId(s.id);
+    setEditProgressId(null);
+    setEditForm({
+      status: s.status,
+      payment_status: s.payment_status,
+      payment_method: (s as any).payment_method ?? "none",
+      payment_reference: (s as any).payment_reference ?? "",
+      price: s.price != null ? String(s.price) : "",
+      notes: s.notes ?? "",
+      duration_minutes: s.duration_minutes,
+      mood_score: "",
+      progress_note: "",
+    });
+    setEditOpen(true);
+
+    // Load existing progress record for this session
+    if (s.patient_id && user) {
+      const { data } = await supabase
+        .from("patient_progress")
+        .select("id, mood_score, note")
+        .eq("session_id", s.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data) {
+        setEditProgressId(data.id);
+        setEditForm((prev) => ({
+          ...prev,
+          mood_score: data.mood_score != null ? String(data.mood_score) : "",
+          progress_note: data.note ?? "",
+        }));
+      }
+    }
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !editSessionId) return;
+    setEditSaving(true);
+
+    const session = sessions.find((s) => s.id === editSessionId);
+
+    // Update session fields
+    const { error } = await supabase
+      .from("sessions")
+      .update({
+        status: editForm.status,
+        payment_status: editForm.payment_status,
+        payment_method: editForm.payment_method === "none" ? null : editForm.payment_method,
+        payment_reference: editForm.payment_reference.trim() || null,
+        price: editForm.price ? Number(editForm.price) : null,
+        notes: editForm.notes || null,
+        duration_minutes: editForm.duration_minutes,
+        ...(editForm.payment_status === "paid" && session?.payment_status !== "paid"
+          ? { paid_at: new Date().toISOString() }
+          : {}),
+      })
+      .eq("id", editSessionId);
+
+    if (error) {
+      setEditSaving(false);
+      toast.error("Erro ao salvar sessão");
+      return;
+    }
+
+    // Upsert mood/progress
+    const moodNum = editForm.mood_score ? Number(editForm.mood_score) : null;
+    const progressNote = editForm.progress_note?.trim() || null;
+    if (session?.patient_id && (moodNum || progressNote)) {
+      if (editProgressId) {
+        await supabase
+          .from("patient_progress")
+          .update({ mood_score: moodNum, note: progressNote })
+          .eq("id", editProgressId);
+      } else {
+        await supabase.from("patient_progress").insert({
+          user_id: user.id,
+          patient_id: session.patient_id,
+          session_id: editSessionId,
+          mood_score: moodNum,
+          note: progressNote,
+          recorded_at: session.scheduled_at,
+        });
+      }
+    }
+
+    setEditSaving(false);
+    toast.success("Sessão atualizada");
+    setEditOpen(false);
+    load();
+    loadPending();
   };
 
   const sessionsByDay = (date: Date) => sessions.filter((s) => isSameDay(new Date(s.scheduled_at), date));
@@ -691,8 +801,8 @@ const Agenda = () => {
                         items.map((s) => {
                           const isSupervisionCard = s.session_type === "supervision";
                           return (
-                            <div key={s.id} className={cn(
-                              "rounded-xl border p-3 group transition-colors",
+                            <div key={s.id} onClick={() => openEdit(s)} className={cn(
+                              "rounded-xl border p-3 group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/20",
                               isSupervisionCard
                                 ? "bg-serene/10 border-serene/40"
                                 : s.status === "confirmed"
@@ -707,9 +817,10 @@ const Agenda = () => {
                                 </div>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100">⋯</Button>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100" onClick={(e) => e.stopPropagation()}>⋯</Button>
                                   </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
+                                  <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                    <DropdownMenuItem onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /> Editar sessão</DropdownMenuItem>
                                     {!isSupervisionCard && (
                                       <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar link de confirmação</DropdownMenuItem>
                                     )}
@@ -845,6 +956,135 @@ const Agenda = () => {
           </div>
         </div>
       </div>
+
+      {/* ── Edit Session Dialog ── */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Editar sessão</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSave} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={editForm.status} onValueChange={(v) => setEditForm({ ...editForm, status: v as Status })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="scheduled">Agendada</SelectItem>
+                    <SelectItem value="confirmed">Confirmada</SelectItem>
+                    <SelectItem value="completed">Realizada</SelectItem>
+                    <SelectItem value="no_show">Falta</SelectItem>
+                    <SelectItem value="rescheduled">Remarcada</SelectItem>
+                    <SelectItem value="cancelled">Cancelada</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Pagamento</Label>
+                <Select value={editForm.payment_status} onValueChange={(v) => setEditForm({ ...editForm, payment_status: v as PaymentStatus })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pendente</SelectItem>
+                    <SelectItem value="paid">Pago</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Duração (min)</Label>
+                <Input type="number" min="10" max="480" value={editForm.duration_minutes} onChange={(e) => setEditForm({ ...editForm, duration_minutes: Number(e.target.value) })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Valor (R$)</Label>
+                <Input type="number" step="0.01" min="0" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Método pagamento</Label>
+                <Select value={editForm.payment_method} onValueChange={(v) => setEditForm({ ...editForm, payment_method: v as typeof editForm.payment_method })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Não informado</SelectItem>
+                    <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="card">Cartão</SelectItem>
+                    <SelectItem value="cash">Dinheiro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>
+                  Referência
+                  {(editForm.payment_method === "pix" || editForm.payment_method === "card") && (
+                    <span className="text-destructive ml-1">*</span>
+                  )}
+                </Label>
+                <Input
+                  maxLength={500}
+                  placeholder={
+                    editForm.payment_method === "pix"
+                      ? "Ex.: comprovante, ID"
+                      : editForm.payment_method === "card"
+                      ? "Ex.: NSU, últimos 4"
+                      : "Opcional"
+                  }
+                  value={editForm.payment_reference}
+                  onChange={(e) => setEditForm({ ...editForm, payment_reference: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Observações</Label>
+              <Textarea rows={3} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
+            </div>
+
+            {/* ── Mood / Progress (editable) ── */}
+            {(() => {
+              const session = sessions.find((s) => s.id === editSessionId);
+              if (session?.session_type === "supervision") return null;
+              return (
+                <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Humor / Progresso</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-2">
+                      <Label>Humor (1-10)</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="10"
+                        placeholder="—"
+                        value={editForm.mood_score}
+                        onChange={(e) => setEditForm({ ...editForm, mood_score: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <Label>Nota de progresso</Label>
+                      <Input
+                        maxLength={2000}
+                        placeholder="Ex.: melhora no sono"
+                        value={editForm.progress_note}
+                        onChange={(e) => setEditForm({ ...editForm, progress_note: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
+              <Button type="submit" variant="accent" disabled={editSaving}>
+                {editSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                Salvar
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
