@@ -13,6 +13,8 @@ import {
   Clock,
   FileText,
   Target,
+  SmilePlus,
+  Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths } from "date-fns";
