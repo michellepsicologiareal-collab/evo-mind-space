@@ -1148,13 +1148,87 @@ const Agenda = () => {
                   <div className="rounded-xl bg-muted/50 border border-border p-3 mb-2">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Paciente</p>
                     <p className="font-display font-semibold text-foreground">{session.patient_name}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{format(new Date(session.scheduled_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
                   </div>
                 )}
               </>
             );
           })()}
           <form onSubmit={handleEditSave} className="space-y-4">
+            {/* Tipo de compromisso / Serviço */}
+            <div className="space-y-2">
+              <Label>Tipo de compromisso</Label>
+              <Select value={editForm.service_id || editForm.session_type} onValueChange={(v) => {
+                if (v === "clinical" || v === "supervision") {
+                  setEditForm({ ...editForm, session_type: v as SessionType, service_id: "" });
+                } else {
+                  const svc = services.find(s => s.id === v);
+                  setEditForm({ ...editForm, session_type: "clinical", service_id: v, price: svc ? String(svc.price) : editForm.price });
+                }
+              }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="clinical">Atendimento Clínico</SelectItem>
+                  <SelectItem value="supervision">Supervisão Técnica</SelectItem>
+                  {services.length > 0 && services.map(svc => (
+                    <SelectItem key={svc.id} value={svc.id}>
+                      {svc.name} — R$ {Number(svc.price).toFixed(2)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* Data e horário */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Data</Label>
+                <Input type="date" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Horário</Label>
+                <Input type="time" value={editForm.time} onChange={(e) => setEditForm({ ...editForm, time: e.target.value })} />
+              </div>
+            </div>
+            {/* Tipo de agendamento */}
+            <div className="space-y-2">
+              <Label>Tipo de agendamento</Label>
+              <Select value={editForm.recurrence} onValueChange={(v) => setEditForm({ ...editForm, recurrence: v as "single" | "recurring" })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="single">Sessão única</SelectItem>
+                  <SelectItem value="recurring">Sessões recorrentes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {editForm.recurrence === "recurring" && (
+              <div className="rounded-xl bg-muted/50 border border-border p-3 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Quantidade</Label>
+                    <Input type="number" min="2" max="52" value={editForm.recurrence_count} onChange={(e) => setEditForm({ ...editForm, recurrence_count: Math.max(2, Number(e.target.value)) })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Intervalo</Label>
+                    <Select value={editForm.recurrence_interval} onValueChange={(v) => setEditForm({ ...editForm, recurrence_interval: v as "weekly" | "biweekly" })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">Semanal</SelectItem>
+                        <SelectItem value="biweekly">Quinzenal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Forma de pagamento do plano</Label>
+                  <Select value={editForm.payment_plan} onValueChange={(v) => setEditForm({ ...editForm, payment_plan: v as "per_session" | "single_payment" })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="per_session">Por sessão</SelectItem>
+                      <SelectItem value="single_payment">Pagamento único</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Status</Label>
