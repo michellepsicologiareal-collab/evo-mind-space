@@ -810,7 +810,7 @@ const Agenda = () => {
                       <SelectItem value="supervision">Supervisão Técnica</SelectItem>
                       {services.length > 0 && services.map(svc => (
                         <SelectItem key={svc.id} value={svc.id}>
-                          {svc.name} — R$ {Number(svc.price).toFixed(2)}
+                          {svc.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1221,16 +1221,16 @@ const Agenda = () => {
               <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
                 {sortedPending.map((s) => (
                   <div key={s.id} className="rounded-xl border border-border bg-background p-3 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        {s.patient_id && s.patient_name ? (
-                          <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
-                        ) : (
-                          <p className="font-display text-sm font-medium truncate">{s.patient_name}</p>
-                        )}
+                    <div className="min-w-0">
+                      {s.patient_id && s.patient_name ? (
+                        <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
+                      ) : (
+                        <p className="font-display text-sm font-medium truncate">{s.patient_name}</p>
+                      )}
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
                         <p className="text-xs text-muted-foreground">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
+                        <p className="font-display font-bold text-accent whitespace-nowrap">R$ {Number(s.price ?? 0).toFixed(2)}</p>
                       </div>
-                      <p className="font-display font-bold text-accent whitespace-nowrap shrink-0">R$ {Number(s.price ?? 0).toFixed(2)}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Select value={s.payment_status} onValueChange={(v) => updatePaymentStatus(s.id, v as PaymentStatus)}>
@@ -1294,7 +1294,7 @@ const Agenda = () => {
                   <SelectItem value="supervision">Supervisão Técnica</SelectItem>
                   {services.length > 0 && services.map(svc => (
                     <SelectItem key={svc.id} value={svc.id}>
-                      {svc.name} — R$ {Number(svc.price).toFixed(2)}
+                      {svc.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1459,9 +1459,9 @@ const Agenda = () => {
               disabled={deleting}
               onClick={() => executeDelete(false)}
             >
-              <Trash2 className="h-4 w-4 text-destructive shrink-0" />
+              <Trash2 className="h-4 w-4 text-muted-foreground shrink-0" />
               <div>
-                <p className="font-medium text-sm">Excluir apenas a sessão</p>
+                <p className="font-medium text-sm text-foreground">Excluir apenas a sessão</p>
                 <p className="text-xs text-muted-foreground">Remove a sessão, progresso e eventos vinculados</p>
               </div>
             </Button>
@@ -1474,7 +1474,7 @@ const Agenda = () => {
               <DollarSign className="h-4 w-4 text-destructive shrink-0" />
               <div>
                 <p className="font-medium text-sm text-destructive">Excluir sessão + lançamento financeiro</p>
-                <p className="text-xs text-muted-foreground">Remove tudo acima + o registro financeiro vinculado</p>
+                <p className="text-xs text-muted-foreground">Remove a sessão, progresso, eventos vinculados e o lançamento financeiro</p>
               </div>
             </Button>
           </div>

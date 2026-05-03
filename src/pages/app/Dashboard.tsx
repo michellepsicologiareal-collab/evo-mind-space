@@ -15,9 +15,12 @@ import {
   Target,
   SmilePlus,
   Heart,
+  CalendarDays,
+  CalendarRange,
+  Banknote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths, startOfWeek, endOfWeek, startOfYear, endOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CardSkeleton } from "@/components/app/Skeletons";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
@@ -108,6 +111,9 @@ const Dashboard = () => {
   const [prevMonthRevenue, setPrevMonthRevenue] = useState(0);
   const [weeklyRevenue, setWeeklyRevenue] = useState<{ week: string; value: number }[]>([]);
   const [patientMoods, setPatientMoods] = useState<PatientMoodEntry[]>([]);
+  const [weekSessions, setWeekSessions] = useState(0);
+  const [monthSessions, setMonthSessions] = useState(0);
+  const [yearRevenue, setYearRevenue] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -118,7 +124,12 @@ const Dashboard = () => {
       const dayStart = startOfDay(now).toISOString();
       const dayEnd = endOfDay(now).toISOString();
 
-      const [profileRes, patientsRes, todayRes, monthRes, upcomingRes, supervisionRes, recordsRes] =
+      const weekStartDate = startOfWeek(now, { weekStartsOn: 1 });
+      const weekEndDate = endOfWeek(now, { weekStartsOn: 1 });
+      const yearStart = startOfYear(now).toISOString();
+      const yearEnd = endOfYear(now).toISOString();
+
+      const [profileRes, patientsRes, todayRes, monthRes, upcomingRes, supervisionRes, recordsRes, weekRes, monthAllRes, yearRes] =
         await Promise.all([
           supabase.from("profiles").select("full_name, clinic_name").eq("id", user.id).maybeSingle(),
           supabase.from("patients").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
@@ -141,6 +152,9 @@ const Dashboard = () => {
             .from("tcc_records")
             .select("id", { count: "exact", head: true })
             .eq("user_id", user.id),
+          supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", weekStartDate.toISOString()).lte("scheduled_at", weekEndDate.toISOString()).in("status", ["scheduled", "confirmed", "completed"]),
+          supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", monthStart).lte("scheduled_at", monthEnd).in("status", ["scheduled", "confirmed", "completed"]),
+          supabase.from("sessions").select("price, status").eq("user_id", user.id).gte("scheduled_at", yearStart).lte("scheduled_at", yearEnd).eq("status", "completed"),
         ]);
 
       setProfileName(profileRes.data?.full_name ?? "");
@@ -162,7 +176,10 @@ const Dashboard = () => {
         recordsGoal: 20,
       });
 
-      // Count sessions per patient for numbering (parallel)
+      setWeekSessions(weekRes.count ?? 0);
+      setMonthSessions(monthAllRes.count ?? 0);
+      setYearRevenue((yearRes.data ?? []).reduce((sum, s) => sum + Number(s.price ?? 0), 0));
+
       const sessionsData = (upcomingRes.data ?? []) as any[];
       const uniquePatientIds = [...new Set(sessionsData.map((s: any) => s.patient_id).filter(Boolean))];
       const countResults = await Promise.all(
@@ -376,6 +393,11 @@ const Dashboard = () => {
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard icon={Users} label="Pacientes Ativos" value={stats.activePatients.toString()} />
         <KPICard icon={Calendar} label="Sessões Hoje" value={stats.todaySessions.toString()} />
+        <KPICard icon={CalendarDays} label="Sessões esta Semana" value={weekSessions.toString()} />
+        <KPICard icon={CalendarRange} label="Sessões este Mês" value={monthSessions.toString()} />
+      </section>
+
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           icon={TrendingUp}
           label="Faturamento Mensal"
@@ -389,6 +411,12 @@ const Dashboard = () => {
               {hideRevenue ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             </button>
           }
+          highlight
+        />
+        <KPICard
+          icon={Banknote}
+          label={`Faturamento ${new Date().getFullYear()}`}
+          value={hideRevenue ? "•••••" : `R$ ${yearRevenue.toFixed(2).replace(".", ",")}`}
           highlight
         />
         <KPICard icon={Briefcase} label="Casos em Supervisão" value={stats.supervisionCases.toString()} />
