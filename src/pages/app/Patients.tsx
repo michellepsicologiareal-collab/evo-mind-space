@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { format } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -80,6 +81,7 @@ const Patients = () => {
   const [profName, setProfName] = useState<string>("");
   const [profCrp, setProfCrp] = useState<string>("");
   const patientGuard = useUnsavedGuard();
+  const [latestSessionDates, setLatestSessionDates] = useState<Record<string, string>>({});
 
   const [form, setFormRaw] = useState<{ full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string }>({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55" });
   const setForm = useCallback((v: typeof form | ((prev: typeof form) => typeof form)) => { patientGuard.markDirty(); setFormRaw(v); }, [patientGuard.markDirty]);
@@ -87,15 +89,22 @@ const Patients = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [patientsRes, profileRes] = await Promise.all([
+    const [patientsRes, profileRes, sessionsRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
       supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
+      supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
     setPixKey((profileRes.data as any)?.pix_key ?? "");
     setProfName(profileRes.data?.full_name ?? "");
     setProfCrp((profileRes.data as any)?.crp ?? "");
+    // Build map: patient_id -> most recent pending session date
+    const dateMap: Record<string, string> = {};
+    (sessionsRes.data ?? []).forEach((s: any) => {
+      if (s.patient_id && !dateMap[s.patient_id]) dateMap[s.patient_id] = s.scheduled_at;
+    });
+    setLatestSessionDates(dateMap);
     setLoading(false);
   };
 
@@ -244,7 +253,9 @@ const Patients = () => {
     const message = [
       `Ol\u00e1, ${recipientName}! Aqui \u00e9 a sua psi, ${firstName || "sua psic\u00f3loga"}.`,
       "",
-      `Passando para lembrar do acerto referente \u00e0 sua sess\u00e3o.`,
+      latestSessionDates[p.id]
+        ? `Passando para lembrar do acerto referente \u00e0 nossa sess\u00e3o de ${format(new Date(latestSessionDates[p.id]), "dd/MM/yyyy")}.`
+        : `Passando para lembrar do acerto referente \u00e0 sua sess\u00e3o.`,
       "",
       `\u{1F4B3} Valor: ${valor}`,
       pixKey ? `\u{1F511} Chave Pix: ${pixKey}` : "",
