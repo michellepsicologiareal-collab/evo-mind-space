@@ -831,10 +831,18 @@ const Agenda = () => {
               {s.discussed_patient_name && <span className="text-muted-foreground"> · {s.discussed_patient_name}</span>}
             </p>
           ) : s.patient_id && s.patient_name ? (
-            <p className={cn("text-left font-display font-medium text-primary hover:underline hover:text-accent transition-colors cursor-pointer", compact ? "text-xs leading-snug break-words" : "text-sm truncate")}
-               onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}>
-              {s.patient_name}
-            </p>
+            <>
+              <p className={cn("text-left font-display font-medium text-primary hover:underline hover:text-accent transition-colors cursor-pointer", compact ? "text-xs leading-snug break-words" : "text-sm truncate")}
+                 onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}>
+                {s.patient_name}
+              </p>
+              {(() => {
+                const svcName = s.service_id ? services.find(sv => sv.id === s.service_id)?.name : null;
+                return svcName ? (
+                  <p className={cn("text-muted-foreground", compact ? "text-[10px]" : "text-xs")}>{svcName}</p>
+                ) : null;
+              })()}
+            </>
           ) : (
             <p className={cn("text-foreground", compact ? "text-xs" : "text-sm font-medium")}>Paciente</p>
           )}
