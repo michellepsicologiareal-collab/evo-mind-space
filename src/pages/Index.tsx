@@ -6,6 +6,7 @@ import { Differential } from "@/components/landing/Differential";
 import { ForWhom } from "@/components/landing/ForWhom";
 import { CTA } from "@/components/landing/CTA";
 import { Pricing } from "@/components/landing/Pricing";
+import { FAQ } from "@/components/landing/FAQ";
 import { Footer } from "@/components/landing/Footer";
 
 const Index = () => {
@@ -19,6 +20,7 @@ const Index = () => {
         <Differential />
         <ForWhom />
         <Pricing />
+        <FAQ />
         <CTA />
       </main>
       <Footer />
