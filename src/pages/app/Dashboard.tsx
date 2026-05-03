@@ -18,6 +18,10 @@ import {
   CalendarDays,
   CalendarRange,
   Banknote,
+  CheckCircle2,
+  XCircle,
+  CalendarClock,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths, startOfWeek, endOfWeek, startOfYear, endOfYear } from "date-fns";
@@ -36,6 +40,11 @@ interface Stats {
   revenueGoal: number;
   sessionsGoal: number;
   recordsGoal: number;
+  /** New KPIs */
+  previstos: number;
+  realizados: number;
+  faltasCanceladas: number;
+  aRealizar: number;
 }
 
 interface UpcomingSession {
@@ -98,6 +107,10 @@ const Dashboard = () => {
     revenueGoal: 10000,
     sessionsGoal: 40,
     recordsGoal: 20,
+    previstos: 0,
+    realizados: 0,
+    faltasCanceladas: 0,
+    aRealizar: 0,
   });
   const [upcoming, setUpcoming] = useState<UpcomingSession[]>([]);
   const [profileName, setProfileName] = useState("");
@@ -163,6 +176,12 @@ const Dashboard = () => {
       const monthSessions = monthRes.data ?? [];
       const revenue = monthSessions.filter((s) => s.status === "completed").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
       const completed = monthSessions.filter((s) => s.status === "completed").length;
+      const faltasCanceladas = monthSessions.filter((s) => s.status === "no_show" || s.status === "cancelled").length;
+      const now2 = new Date();
+      const aRealizar = monthSessions.filter((s) => {
+        const d = new Date(s.scheduled_at);
+        return d > now2 && s.status !== "completed" && s.status !== "cancelled" && s.status !== "no_show";
+      }).length;
 
       setStats({
         activePatients: patientsRes.count ?? 0,
@@ -174,6 +193,10 @@ const Dashboard = () => {
         revenueGoal: 10000,
         sessionsGoal: 40,
         recordsGoal: 20,
+        previstos: monthSessions.length,
+        realizados: completed,
+        faltasCanceladas,
+        aRealizar,
       });
 
       setWeekSessions(weekRes.count ?? 0);
@@ -395,6 +418,14 @@ const Dashboard = () => {
         <KPICard icon={Calendar} label="Sessões Hoje" value={stats.todaySessions.toString()} />
         <KPICard icon={CalendarDays} label="Sessões esta Semana" value={weekSessions.toString()} />
         <KPICard icon={CalendarRange} label="Sessões este Mês" value={monthSessions.toString()} />
+      </section>
+
+      {/* ── Métricas de Sessões do Mês ── */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <KPICard icon={ClipboardList} label="Previstos no Mês" value={stats.previstos.toString()} />
+        <KPICard icon={CheckCircle2} label="Realizados" value={stats.realizados.toString()} />
+        <KPICard icon={XCircle} label="Faltas / Canceladas" value={stats.faltasCanceladas.toString()} highlight={stats.faltasCanceladas > 0} />
+        <KPICard icon={CalendarClock} label="A Realizar" value={stats.aRealizar.toString()} />
       </section>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
