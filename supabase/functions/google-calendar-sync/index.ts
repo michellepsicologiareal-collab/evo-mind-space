@@ -2,14 +2,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-async function getValidAccessToken(
-  supabase: any,
-  userId: string
-): Promise<string | null> {
+async function getValidAccessToken(supabase: any, userId: string): Promise<string | null> {
   const { data: tokenRow } = await supabase
     .from("google_calendar_tokens")
     .select("*")
@@ -18,12 +14,10 @@ async function getValidAccessToken(
 
   if (!tokenRow) return null;
 
-  // If token is still valid (with 5 min buffer)
   if (new Date(tokenRow.expires_at).getTime() > Date.now() + 5 * 60 * 1000) {
     return tokenRow.access_token;
   }
 
-  // Refresh the token
   const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID")!;
   const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
 
@@ -44,9 +38,7 @@ async function getValidAccessToken(
     return null;
   }
 
-  const expiresAt = new Date(
-    Date.now() + (data.expires_in || 3600) * 1000
-  ).toISOString();
+  const expiresAt = new Date(Date.now() + (data.expires_in || 3600) * 1000).toISOString();
 
   await supabase
     .from("google_calendar_tokens")
@@ -74,34 +66,28 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUser = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const supabaseUser = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } =
-      await supabaseUser.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseUser.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Token inválido" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = claimsData.claims.sub as string;
+    const userId = user.id;
 
     const body = await req.json();
     const { action, session } = body;
-    // action: "sync" | "delete" | "disconnect" | "status"
 
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // Status check
     if (action === "status") {
       const { data } = await supabaseAdmin
         .from("google_calendar_tokens")
@@ -109,46 +95,31 @@ Deno.serve(async (req) => {
         .eq("user_id", userId)
         .maybeSingle();
 
-      return new Response(
-        JSON.stringify({ connected: !!data }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ connected: !!data }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Disconnect
     if (action === "disconnect") {
-      await supabaseAdmin
-        .from("google_calendar_tokens")
-        .delete()
-        .eq("user_id", userId);
-      await supabaseAdmin
-        .from("session_gcal_events")
-        .delete()
-        .eq("user_id", userId);
+      await supabaseAdmin.from("google_calendar_tokens").delete().eq("user_id", userId);
+      await supabaseAdmin.from("session_gcal_events").delete().eq("user_id", userId);
 
       return new Response(JSON.stringify({ ok: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Get valid access token
     const accessToken = await getValidAccessToken(supabaseAdmin, userId);
     if (!accessToken) {
-      return new Response(
-        JSON.stringify({ error: "Google Calendar não conectado ou token expirado. Reconecte." }),
-        {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Google Calendar não conectado ou token expirado. Reconecte." }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const calendarId = "primary";
     const gcalBase = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`;
 
-    // Delete event
     if (action === "delete" && session?.id) {
       const { data: mapping } = await supabaseAdmin
         .from("session_gcal_events")
@@ -161,10 +132,7 @@ Deno.serve(async (req) => {
           method: "DELETE",
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        await supabaseAdmin
-          .from("session_gcal_events")
-          .delete()
-          .eq("session_id", session.id);
+        await supabaseAdmin.from("session_gcal_events").delete().eq("session_id", session.id);
       }
 
       return new Response(JSON.stringify({ ok: true }), {
@@ -172,31 +140,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Sync (create or update) event
     if (action === "sync" && session) {
       const startTime = new Date(session.scheduled_at);
-      const endTime = new Date(
-        startTime.getTime() + (session.duration_minutes || 50) * 60 * 1000
-      );
+      const endTime = new Date(startTime.getTime() + (session.duration_minutes || 50) * 60 * 1000);
 
       const eventBody = {
         summary: `Sessão - ${session.patient_name || "Paciente"}`,
         description: session.notes || "",
-        start: {
-          dateTime: startTime.toISOString(),
-          timeZone: "America/Sao_Paulo",
-        },
-        end: {
-          dateTime: endTime.toISOString(),
-          timeZone: "America/Sao_Paulo",
-        },
+        start: { dateTime: startTime.toISOString(), timeZone: "America/Sao_Paulo" },
+        end: { dateTime: endTime.toISOString(), timeZone: "America/Sao_Paulo" },
         reminders: {
           useDefault: false,
           overrides: [{ method: "popup", minutes: 30 }],
         },
       };
 
-      // Check if event already exists
       const { data: existing } = await supabaseAdmin
         .from("session_gcal_events")
         .select("gcal_event_id")
@@ -206,50 +164,33 @@ Deno.serve(async (req) => {
       let gcalEventId: string;
 
       if (existing) {
-        // Update
-        const res = await fetch(
-          `${gcalBase}/${existing.gcal_event_id}`,
-          {
-            method: "PUT",
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(eventBody),
-          }
-        );
+        const res = await fetch(`${gcalBase}/${existing.gcal_event_id}`, {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify(eventBody),
+        });
         const data = await res.json();
         if (!res.ok) {
           console.error("GCal update failed:", data);
-          return new Response(
-            JSON.stringify({ error: "Falha ao atualizar evento" }),
-            {
-              status: 500,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
+          return new Response(JSON.stringify({ error: "Falha ao atualizar evento" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
         gcalEventId = data.id;
       } else {
-        // Create
         const res = await fetch(gcalBase, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
+          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
           body: JSON.stringify(eventBody),
         });
         const data = await res.json();
         if (!res.ok) {
           console.error("GCal create failed:", data);
-          return new Response(
-            JSON.stringify({ error: "Falha ao criar evento" }),
-            {
-              status: 500,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
+          return new Response(JSON.stringify({ error: "Falha ao criar evento" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
         gcalEventId = data.id;
 
