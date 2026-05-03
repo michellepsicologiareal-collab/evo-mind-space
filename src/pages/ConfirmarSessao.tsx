@@ -110,10 +110,10 @@ const ConfirmarSessao = () => {
               Você confirma sua sessão para
             </p>
             <p className="mt-2 font-display text-xl font-semibold text-foreground capitalize">
-              {format(new Date(session.scheduled_at), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+              {format(toZonedTime(new Date(session.scheduled_at), "America/Sao_Paulo"), "EEEE, dd 'de' MMMM", { locale: ptBR })}
             </p>
             <p className="text-lg text-accent font-semibold">
-              às {format(new Date(session.scheduled_at), "HH:mm")}?
+              às {format(toZonedTime(new Date(session.scheduled_at), "America/Sao_Paulo"), "HH:mm")}?
             </p>
 
             <div className="mt-8 flex flex-col gap-3">
