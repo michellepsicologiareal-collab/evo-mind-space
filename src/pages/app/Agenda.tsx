@@ -439,7 +439,8 @@ const Agenda = () => {
 
   const getSinglePaymentGroup = (session: Session) => {
     const pkgInfo = getPackageInfo(session.notes);
-    if (!pkgInfo || !session.patient_id || !/Pgto único/i.test(session.notes || "")) return null;
+    const isSinglePaymentNote = (notes: string | null) => /(?:Pgto|Pagamento) [úu]nico/i.test(notes || "");
+    if (!pkgInfo || !session.patient_id || !isSinglePaymentNote(session.notes)) return null;
 
     const allKnownSessions = [...sessions, ...pendingSessions].filter(
       (item, index, list) => list.findIndex((candidate) => candidate.id === item.id) === index
@@ -447,7 +448,7 @@ const Agenda = () => {
     const matchingSessions = allKnownSessions
       .filter((item) => {
         const info = getPackageInfo(item.notes);
-        return item.patient_id === session.patient_id && info?.total === pkgInfo.total && /Pgto único/i.test(item.notes || "");
+        return item.patient_id === session.patient_id && info?.total === pkgInfo.total && isSinglePaymentNote(item.notes);
       })
       .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
 
