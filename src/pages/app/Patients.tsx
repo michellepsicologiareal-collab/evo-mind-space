@@ -118,6 +118,15 @@ const Patients = () => {
       ddi = ddiMatch[1];
       localPhone = ddiMatch[2];
     }
+    // Extract DDI from financial responsible phone
+    const rawFrPhone = p.financial_responsible_phone ?? "";
+    let frDdi = "+55";
+    let frLocalPhone = rawFrPhone;
+    const frDdiMatch = rawFrPhone.match(/^(\+\d{1,4})\s*(.*)/);
+    if (frDdiMatch) {
+      frDdi = frDdiMatch[1];
+      frLocalPhone = frDdiMatch[2];
+    }
     setForm({
       full_name: p.full_name,
       email: p.email ?? "",
@@ -129,6 +138,10 @@ const Patients = () => {
       treatment_plan: p.treatment_plan ?? "",
       anamnesis: p.anamnesis ?? "",
       category: p.category ?? "individual",
+      has_financial_responsible: p.has_financial_responsible ?? false,
+      financial_responsible_name: p.financial_responsible_name ?? "",
+      financial_responsible_phone: frLocalPhone,
+      financial_responsible_ddi: frDdi,
     });
     setOpen(true);
   };
