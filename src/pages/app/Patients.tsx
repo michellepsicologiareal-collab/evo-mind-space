@@ -252,7 +252,9 @@ const Patients = () => {
     const message = [
       `Ol\u00e1, ${recipientName}! Aqui \u00e9 a sua psi, ${firstName || "sua psic\u00f3loga"}.`,
       "",
-      `Passando para lembrar do acerto referente \u00e0 sua sess\u00e3o.`,
+      latestSessionDates[p.id]
+        ? `Passando para lembrar do acerto referente \u00e0 nossa sess\u00e3o de ${format(new Date(latestSessionDates[p.id]), "dd/MM/yyyy")}.`
+        : `Passando para lembrar do acerto referente \u00e0 sua sess\u00e3o.`,
       "",
       `\u{1F4B3} Valor: ${valor}`,
       pixKey ? `\u{1F511} Chave Pix: ${pixKey}` : "",
