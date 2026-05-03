@@ -81,7 +81,8 @@ const Patients = () => {
   const [profCrp, setProfCrp] = useState<string>("");
   const patientGuard = useUnsavedGuard();
 
-  const [form, setForm] = useState<{ full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string }>({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55" });
+  const [form, setFormRaw] = useState<{ full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string }>({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55" });
+  const setForm = useCallback((v: typeof form | ((prev: typeof form) => typeof form)) => { patientGuard.markDirty(); setFormRaw(v); }, [patientGuard.markDirty]);
 
   const load = async () => {
     if (!user) return;
