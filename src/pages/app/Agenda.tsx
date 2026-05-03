@@ -386,6 +386,7 @@ const Agenda = () => {
 
   const removeSession = async (id: string) => {
     if (!confirm("Excluir esta sessão?")) return;
+    deleteGcalEvent(id);
     const { error } = await supabase.from("sessions").delete().eq("id", id);
     if (error) return toast.error("Erro ao excluir");
     toast.success("Sessão excluída");
