@@ -124,7 +124,12 @@ const Dashboard = () => {
       const dayStart = startOfDay(now).toISOString();
       const dayEnd = endOfDay(now).toISOString();
 
-      const [profileRes, patientsRes, todayRes, monthRes, upcomingRes, supervisionRes, recordsRes] =
+      const weekStartDate = startOfWeek(now, { weekStartsOn: 1 });
+      const weekEndDate = endOfWeek(now, { weekStartsOn: 1 });
+      const yearStart = startOfYear(now).toISOString();
+      const yearEnd = endOfYear(now).toISOString();
+
+      const [profileRes, patientsRes, todayRes, monthRes, upcomingRes, supervisionRes, recordsRes, weekRes, monthAllRes, yearRes] =
         await Promise.all([
           supabase.from("profiles").select("full_name, clinic_name").eq("id", user.id).maybeSingle(),
           supabase.from("patients").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
@@ -147,6 +152,9 @@ const Dashboard = () => {
             .from("tcc_records")
             .select("id", { count: "exact", head: true })
             .eq("user_id", user.id),
+          supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", weekStartDate.toISOString()).lte("scheduled_at", weekEndDate.toISOString()).in("status", ["scheduled", "confirmed", "completed"]),
+          supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", monthStart).lte("scheduled_at", monthEnd).in("status", ["scheduled", "confirmed", "completed"]),
+          supabase.from("sessions").select("price, status").eq("user_id", user.id).gte("scheduled_at", yearStart).lte("scheduled_at", yearEnd).eq("status", "completed"),
         ]);
 
       setProfileName(profileRes.data?.full_name ?? "");
