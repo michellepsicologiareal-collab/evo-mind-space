@@ -189,6 +189,7 @@ const Patients = () => {
       return;
     }
     toast.success(editing ? "Paciente atualizado" : "Paciente cadastrado");
+    patientGuard.resetDirty();
     setOpen(false);
     load();
   };
