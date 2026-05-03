@@ -185,15 +185,16 @@ const Agenda = () => {
     setLoading(true);
     const mStart = startOfMonth(currentMonth);
     const mEnd = addDays(endOfMonth(currentMonth), 1);
-    const [sRes, pRes] = await Promise.all([
+    const [sRes, pRes, svRes] = await Promise.all([
       supabase
         .from("sessions")
-        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .gte("scheduled_at", mStart.toISOString())
         .lt("scheduled_at", mEnd.toISOString())
         .order("scheduled_at"),
       supabase.from("patients").select("id, full_name, session_price").eq("user_id", user.id).eq("is_active", true).order("full_name"),
+      (supabase as any).from("services").select("id, name, price, is_active").eq("user_id", user.id).eq("is_active", true).order("name"),
     ]);
     if (sRes.error) toast.error("Erro ao carregar sessões");
     const mapped = (sRes.data ?? []).map((s: any) => ({
