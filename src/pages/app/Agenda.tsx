@@ -714,16 +714,22 @@ const Agenda = () => {
     });
   }, [sessions, weekStart]);
 
-  const pendingTotal = pendingSessions.reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+  const pendingTotal = pendingSessions.filter(s => s.payment_status === "pending").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+  const paidTotal = pendingSessions.filter(s => s.payment_status === "paid").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+
+  const filteredByPayment = useMemo(() => {
+    if (paymentFilter === "all") return pendingSessions;
+    return pendingSessions.filter(s => s.payment_status === paymentFilter);
+  }, [pendingSessions, paymentFilter]);
 
   const sortedPending = useMemo(() => {
-    let list = [...pendingSessions];
+    let list = [...filteredByPayment];
     if (filterPatientId !== "all") list = list.filter((s) => s.patient_id === filterPatientId);
     if (pendingSort === "patient") {
       list.sort((a, b) => (a.patient_name ?? "").localeCompare(b.patient_name ?? ""));
     }
     return list;
-  }, [pendingSessions, pendingSort, filterPatientId]);
+  }, [filteredByPayment, pendingSort, filterPatientId]);
 
   const groupedPending = useMemo(() => {
     const used = new Set<string>();
@@ -739,9 +745,9 @@ const Agenda = () => {
   // Unique patients in pending
   const pendingPatients = useMemo(() => {
     const map = new Map<string, string>();
-    pendingSessions.forEach((s) => { if (s.patient_id && s.patient_name) map.set(s.patient_id, s.patient_name); });
+    filteredByPayment.forEach((s) => { if (s.patient_id && s.patient_name) map.set(s.patient_id, s.patient_name); });
     return Array.from(map.entries());
-  }, [pendingSessions]);
+  }, [filteredByPayment]);
 
   // ── Month calendar grid ──
   const monthGrid = useMemo(() => {
