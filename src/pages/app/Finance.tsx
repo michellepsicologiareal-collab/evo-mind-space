@@ -865,7 +865,7 @@ const Finance = () => {
             <TabsList>
               <TabsTrigger value="all">Todas</TabsTrigger>
               <TabsTrigger value="pending">Pendentes</TabsTrigger>
-              <TabsTrigger value="paid">Pagas</TabsTrigger>
+              <TabsTrigger value="paid">Realizadas</TabsTrigger>
             </TabsList>
           </div>
 

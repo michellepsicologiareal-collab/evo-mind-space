@@ -119,6 +119,8 @@ const Agenda = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [pixKey, setPixKey] = useState("");
+  const [psiName, setPsiName] = useState("");
+  const [psiCrp, setPsiCrp] = useState("");
   const [viewTab, setViewTab] = useState<string>("month");
 
   // Pending
@@ -181,8 +183,10 @@ const Agenda = () => {
   // Fetch pix key
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("pix_key").eq("id", user.id).single().then(({ data }) => {
+    supabase.from("profiles").select("pix_key, full_name, crp").eq("id", user.id).single().then(({ data }) => {
       setPixKey(data?.pix_key || "");
+      setPsiName(data?.full_name || "");
+      setPsiCrp(data?.crp || "");
     });
   }, [user]);
 
@@ -399,9 +403,21 @@ const Agenda = () => {
   const sendWhatsAppReminder = (s: Session) => {
     const name = s.patient_name || "Paciente";
     const dateStr = format(new Date(s.scheduled_at), "dd/MM/yyyy");
-    const value = s.price ? `R$ ${Number(s.price).toFixed(2)}` : "a combinar";
-    const pixInfo = pixKey ? `\nChave Pix: ${pixKey}` : "";
-    const message = `Olá ${name}, segue o lembrete para o acerto da nossa sessão de ${dateStr}. Valor: ${value}.${pixInfo}`;
+    const value = s.price ? `R$ ${Number(s.price).toFixed(2).replace(".", ",")}` : "a combinar";
+    const firstName = psiName ? psiName.split(" ")[0] : "";
+    const message = [
+      `Olá, ${name}! Aqui é a sua psi, ${firstName || "sua psicóloga"}.`,
+      "",
+      `Passando para lembrar do acerto referente à nossa sessão de ${dateStr}.`,
+      "",
+      `💳 Valor: ${value}`,
+      pixKey ? `🔑 Chave Pix: ${pixKey}` : "",
+      "",
+      `Assim que realizar, pode me enviar o comprovante por aqui. Qualquer dúvida, fico à disposição!`,
+      "",
+      psiName || "",
+      psiCrp ? `Psicóloga | CRP ${psiCrp}` : "Psicóloga",
+    ].filter(Boolean).join("\n");
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
   };
 

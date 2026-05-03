@@ -122,14 +122,14 @@ const Dashboard = () => {
         await Promise.all([
           supabase.from("profiles").select("full_name, clinic_name").eq("id", user.id).maybeSingle(),
           supabase.from("patients").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
-          supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", dayStart).lte("scheduled_at", dayEnd),
+          supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", dayStart).lte("scheduled_at", dayEnd).in("status", ["scheduled", "confirmed", "completed"]),
           supabase.from("sessions").select("price, status, scheduled_at").eq("user_id", user.id).gte("scheduled_at", monthStart).lte("scheduled_at", monthEnd),
           supabase
             .from("sessions")
             .select("id, scheduled_at, status, patient_id, session_type, patient:patients!sessions_patient_id_fkey(full_name)")
             .eq("user_id", user.id)
             .gte("scheduled_at", now.toISOString())
-            .eq("status", "scheduled")
+            .in("status", ["scheduled", "confirmed"])
             .order("scheduled_at")
             .limit(3),
           supabase
