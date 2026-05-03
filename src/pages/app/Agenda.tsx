@@ -868,6 +868,11 @@ const Agenda = () => {
             {s.price != null && (
               <span className="text-[10px] text-muted-foreground">R$ {Number(s.price).toFixed(2)}</span>
             )}
+            {s.billing_sent_at && (
+              <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                💸 Cobrança enviada {format(new Date(s.billing_sent_at), "dd/MM")}
+              </span>
+            )}
           </div>
         )}
       </div>
