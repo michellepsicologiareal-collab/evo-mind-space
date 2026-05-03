@@ -11,11 +11,11 @@ import {
   UserRound,
   ChevronDown,
   ChevronRight,
-  Phone,
   StickyNote,
   CalendarDays,
   Smile,
   Activity,
+  Brain,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
