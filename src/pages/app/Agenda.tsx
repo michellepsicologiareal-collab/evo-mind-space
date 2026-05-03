@@ -381,6 +381,16 @@ const Agenda = () => {
     load(); loadPending();
   };
 
+  const updatePaymentGroup = async (ids: string[], paymentStatus: PaymentStatus) => {
+    const { error } = await supabase.from("sessions").update({
+      payment_status: paymentStatus,
+      ...(paymentStatus === "paid" ? { paid_at: new Date().toISOString() } : { paid_at: null }),
+    }).in("id", ids);
+    if (error) return toast.error("Erro ao atualizar pagamento");
+    toast.success(`${ids.length} sessões marcadas como ${paymentStatusLabel[paymentStatus].toLowerCase()}`);
+    load(); loadPending();
+  };
+
   // ── Delete with confirmation modal ──
   const promptDelete = (id: string) => {
     setDeleteSessionId(id);
