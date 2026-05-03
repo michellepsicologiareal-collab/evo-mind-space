@@ -182,6 +182,10 @@ const Agenda = () => {
   const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Reschedule recurring modal
+  const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
+  const [pendingEditEvent, setPendingEditEvent] = useState<React.FormEvent | null>(null);
+
   // Patient drawer
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerPatientId, setDrawerPatientId] = useState<string | null>(null);
@@ -457,7 +461,7 @@ const Agenda = () => {
     setEditSessionId(s.id);
     setEditProgressId(null);
     const scheduledDate = new Date(s.scheduled_at);
-    setEditForm({
+    setEditFormRaw({
       status: s.status, payment_status: s.payment_status,
       payment_method: (s as any).payment_method ?? "none",
       payment_reference: (s as any).payment_reference ?? "",
@@ -479,7 +483,7 @@ const Agenda = () => {
         .select("id, mood_score, note").eq("session_id", s.id).eq("user_id", user.id).maybeSingle();
       if (data) {
         setEditProgressId(data.id);
-        setEditForm((prev) => ({
+        setEditFormRaw((prev) => ({
           ...prev,
           mood_score: data.mood_score != null ? String(data.mood_score) : "",
           progress_note: data.note ?? "",
@@ -488,11 +492,38 @@ const Agenda = () => {
     }
   };
 
-  const handleEditSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Detect if session is part of a recurring package from notes
+  const isPackageSession = (notes: string | null): boolean => {
+    if (!notes) return false;
+    return /Plano \d+ sess/.test(notes);
+  };
+
+  const getPackageInfo = (notes: string | null): { total: number; index: number } | null => {
+    if (!notes) return null;
+    const match = notes.match(/Plano (\d+) sess[õo]es \((\d+)\/(\d+)\)/);
+    if (!match) return null;
+    return { total: parseInt(match[1]), index: parseInt(match[2]) };
+  };
+
+  const didDateTimeChange = (session: Session | undefined): boolean => {
+    if (!session) return false;
+    const orig = new Date(session.scheduled_at);
+    return editForm.date !== format(orig, "yyyy-MM-dd") || editForm.time !== format(orig, "HH:mm");
+  };
+
+  const handleEditSave = async (e: React.FormEvent, rescheduleAll?: boolean) => {
+    e?.preventDefault?.();
     if (!user || !editSessionId) return;
-    setEditSaving(true);
     const session = sessions.find((s) => s.id === editSessionId);
+
+    // Check if date/time changed on a package session — show modal
+    if (rescheduleAll === undefined && session && isPackageSession(session.notes) && didDateTimeChange(session)) {
+      setPendingEditEvent(e);
+      setRescheduleModalOpen(true);
+      return;
+    }
+
+    setEditSaving(true);
     const newScheduledAt = editForm.date && editForm.time
       ? parse(`${editForm.date} ${editForm.time}`, "yyyy-MM-dd HH:mm", new Date()).toISOString()
       : undefined;
@@ -511,15 +542,48 @@ const Agenda = () => {
 
     if (error) { setEditSaving(false); toast.error("Erro ao salvar sessão"); return; }
 
+    // Reschedule all future sessions in the package
+    if (rescheduleAll && session && newScheduledAt) {
+      const origDate = new Date(session.scheduled_at);
+      const newDate = new Date(newScheduledAt);
+      const diffMs = newDate.getTime() - origDate.getTime();
+      const pkgInfo = getPackageInfo(session.notes);
+
+      if (pkgInfo && session.patient_id) {
+        // Find sibling sessions in the same package that are AFTER this one
+        const { data: siblings } = await supabase.from("sessions")
+          .select("id, scheduled_at, notes")
+          .eq("user_id", user.id)
+          .eq("patient_id", session.patient_id)
+          .gt("scheduled_at", session.scheduled_at)
+          .order("scheduled_at");
+
+        const packageSiblings = (siblings ?? []).filter(s =>
+          s.notes && /Plano \d+ sess/.test(s.notes) &&
+          s.notes.includes(`/${pkgInfo.total})`)
+        );
+
+        for (const sib of packageSiblings) {
+          const sibDate = new Date(sib.scheduled_at);
+          const newSibDate = new Date(sibDate.getTime() + diffMs);
+          await supabase.from("sessions").update({
+            scheduled_at: newSibDate.toISOString(),
+          } as any).eq("id", sib.id);
+        }
+
+        if (packageSiblings.length > 0) {
+          toast.success(`${packageSiblings.length + 1} sessões do pacote remarcadas`);
+        }
+      }
+    }
+
     // Always update mood/progress if patient exists (even when clearing values)
     const moodNum = editForm.mood_score ? Number(editForm.mood_score) : null;
     const progressNote = editForm.progress_note?.trim() || null;
     if (session?.patient_id) {
       if (editProgressId) {
-        // Always update existing progress record (including clearing)
         await supabase.from("patient_progress").update({ mood_score: moodNum, note: progressNote }).eq("id", editProgressId);
       } else if (moodNum || progressNote) {
-        // Only create new record if there's data
         await supabase.from("patient_progress").insert({
           user_id: user.id, patient_id: session.patient_id,
           session_id: editSessionId, mood_score: moodNum,
@@ -529,7 +593,9 @@ const Agenda = () => {
     }
 
     setEditSaving(false);
-    toast.success("Sessão atualizada");
+    if (!rescheduleAll || !(session && isPackageSession(session.notes) && didDateTimeChange(session))) {
+      toast.success("Sessão atualizada");
+    }
     editGuard.resetDirty();
     setEditOpen(false);
     load(); loadPending();
@@ -965,21 +1031,23 @@ const Agenda = () => {
                               key={dateKey}
                               onClick={() => setSelectedDate(cell)}
                               className={cn(
-                                "aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all text-sm",
+                                "aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all text-sm leading-none",
                                 isSelected ? "bg-accent text-accent-foreground ring-2 ring-accent/40 font-bold"
                                   : isToday ? "bg-primary/10 text-primary font-semibold"
                                     : "hover:bg-muted/50 text-foreground"
                               )}
                             >
-                              {format(cell, "d")}
-                              {hasSessions && (
-                                <div className="flex gap-0.5 mt-0.5">
+                              <span>{format(cell, "d")}</span>
+                              {hasSessions ? (
+                                <span className="flex items-center gap-0.5 h-3">
                                   <span className={cn(
-                                    "w-1.5 h-1.5 rounded-full",
+                                    "w-1.5 h-1.5 rounded-full shrink-0",
                                     isSelected ? "bg-accent-foreground" : "bg-accent"
                                   )} />
                                   {dayCount > 1 && <span className={cn("text-[8px] leading-none", isSelected ? "text-accent-foreground" : "text-accent")}>{dayCount}</span>}
-                                </div>
+                                </span>
+                              ) : (
+                                <span className="h-3" />
                               )}
                             </button>
                           );
@@ -1162,7 +1230,7 @@ const Agenda = () => {
                         )}
                         <p className="text-xs text-muted-foreground">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
                       </div>
-                      <p className="font-display font-bold text-accent whitespace-nowrap">R$ {Number(s.price ?? 0).toFixed(2)}</p>
+                      <p className="font-display font-bold text-accent whitespace-nowrap shrink-0">R$ {Number(s.price ?? 0).toFixed(2)}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Select value={s.payment_status} onValueChange={(v) => updatePaymentStatus(s.id, v as PaymentStatus)}>
@@ -1416,7 +1484,53 @@ const Agenda = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ── Patient Drawer ── */}
+      {/* ── Reschedule Recurring Modal ── */}
+      <Dialog open={rescheduleModalOpen} onOpenChange={setRescheduleModalOpen}>
+        <DialogContent className="max-w-[90vw] sm:max-w-sm mx-auto p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">Remarcar sessão de pacote</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Esta sessão faz parte de um pacote recorrente. Como deseja remarcar?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-3 h-auto py-3 text-left"
+              disabled={editSaving}
+              onClick={() => {
+                setRescheduleModalOpen(false);
+                if (pendingEditEvent) handleEditSave(pendingEditEvent, false);
+              }}
+            >
+              <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
+              <div>
+                <p className="font-medium text-sm">Alterar apenas esta sessão</p>
+                <p className="text-xs text-muted-foreground">Só esta sessão será remarcada</p>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-3 h-auto py-3 text-left border-primary/30 hover:bg-primary/5"
+              disabled={editSaving}
+              onClick={() => {
+                setRescheduleModalOpen(false);
+                if (pendingEditEvent) handleEditSave(pendingEditEvent, true);
+              }}
+            >
+              <Users className="h-4 w-4 text-primary shrink-0" />
+              <div>
+                <p className="font-medium text-sm">Alterar todas as próximas sessões</p>
+                <p className="text-xs text-muted-foreground">Remarca esta e todas as futuras do pacote mantendo o intervalo</p>
+              </div>
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRescheduleModalOpen(false)} disabled={editSaving}>Cancelar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader className="mb-4">
