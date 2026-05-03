@@ -15,7 +15,7 @@ import { PlanModal } from "@/components/app/PlanModal";
 import { PremiumGate } from "@/components/app/PremiumGate";
 import { NotificationBell } from "@/components/app/NotificationBell";
 
-const PREMIUM_ROUTES = new Set(["/app/financeiro", "/app/supervisionandos", "/app/supervisao"]);
+const PREMIUM_ROUTES = new Set(["/app/financeiro", "/app/supervisionandos"]);
 
 interface NavItem {
   to: string;
@@ -33,7 +33,6 @@ const allNavItems: NavItem[] = [
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
   { to: "/app/financeiro", label: "Financeiro", icon: Wallet, premium: true },
   { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap, premium: true, visibleTo: ["supervisor"] },
-  { to: "/app/supervisao", label: "Supervisão", icon: ShieldCheck, premium: true, visibleTo: ["supervisor", "supervisee"] },
   { to: "/app/biblioteca", label: "Biblioteca", icon: BookOpen },
   { to: "/app/autocuidado", label: "Autocuidado", icon: Flower2 },
   { to: "/app/contrato-modelo", label: "Termo", icon: FileText },
