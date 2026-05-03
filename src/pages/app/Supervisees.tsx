@@ -72,7 +72,7 @@ const Supervisees = () => {
     if (ids.length) {
       const { data: pats } = await supabase
         .from("patients")
-        .select("id, full_name, email, phone, notes, is_active, session_price, user_id")
+        .select("id, full_name, is_active, user_id")
         .in("user_id", ids)
         .order("full_name");
       (pats ?? []).forEach((p) => {
