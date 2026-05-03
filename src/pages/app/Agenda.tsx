@@ -153,6 +153,12 @@ const Agenda = () => {
     payment_method: "none" as "none" | "pix" | "card" | "cash",
     payment_reference: "", price: "", notes: "",
     duration_minutes: 50, mood_score: "", progress_note: "",
+    session_type: "clinical" as SessionType,
+    service_id: "" as string,
+    recurrence: "single" as "single" | "recurring",
+    recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
+    payment_plan: "per_session" as "per_session" | "single_payment",
+    date: "", time: "",
   });
   const [editProgressId, setEditProgressId] = useState<string | null>(null);
 
