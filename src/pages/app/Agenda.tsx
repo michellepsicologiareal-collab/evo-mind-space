@@ -279,6 +279,7 @@ const Agenda = () => {
       recurrence: "single", recurrence_count: 4, recurrence_interval: "weekly",
       payment_plan: "per_session", service_id: "",
     });
+    newGuard.resetDirty();
     setOpen(true);
   };
 
