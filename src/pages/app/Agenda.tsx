@@ -472,6 +472,7 @@ const Agenda = () => {
       date: format(scheduledDate, "yyyy-MM-dd"),
       time: format(scheduledDate, "HH:mm"),
     });
+    editGuard.resetDirty();
     setEditOpen(true);
     if (s.patient_id && user) {
       const { data } = await supabase.from("patient_progress")
