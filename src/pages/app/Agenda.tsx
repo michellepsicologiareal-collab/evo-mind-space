@@ -1500,7 +1500,7 @@ const Agenda = () => {
 
       {/* ── Delete Confirmation Modal ── */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="max-w-[90vw] sm:max-w-sm mx-auto p-4 sm:p-6">
+          <DialogContent className="w-[calc(100vw-2rem)] max-w-sm sm:max-w-md mx-auto p-4 sm:p-6 overflow-hidden">
           <DialogHeader>
             <DialogTitle className="font-display text-xl">Excluir sessão</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -1510,26 +1510,26 @@ const Agenda = () => {
           <div className="space-y-3 py-2">
             <Button
               variant="outline"
-              className="w-full justify-start gap-3 h-auto py-3 text-left"
+              className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden"
               disabled={deleting}
               onClick={() => executeDelete(false)}
             >
               <Trash2 className="h-4 w-4 text-muted-foreground shrink-0" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="font-medium text-sm text-foreground">Excluir apenas a sessão</p>
-                <p className="text-xs text-muted-foreground">Remove a sessão, progresso e eventos vinculados</p>
+                <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso e eventos vinculados</p>
               </div>
             </Button>
             <Button
               variant="outline"
-              className="w-full justify-start gap-3 h-auto py-3 text-left border-destructive/30 hover:bg-destructive/5"
+              className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden border-destructive/30 hover:bg-destructive/5"
               disabled={deleting}
               onClick={() => executeDelete(true)}
             >
               <DollarSign className="h-4 w-4 text-destructive shrink-0" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="font-medium text-sm text-destructive">Excluir sessão + lançamento financeiro</p>
-                <p className="text-xs text-muted-foreground">Remove a sessão, progresso, eventos vinculados e o lançamento financeiro</p>
+                <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso, eventos vinculados e o lançamento financeiro</p>
               </div>
             </Button>
           </div>
