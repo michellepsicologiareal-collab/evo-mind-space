@@ -494,9 +494,80 @@ const Agenda = () => {
     loadPending();
   };
 
+  // ── Google Calendar helpers ──
+  const gcalInvoke = useCallback(async (body: any) => {
+    const { data, error } = await supabase.functions.invoke("google-calendar-sync", { body });
+    if (error) throw error;
+    return data;
+  }, []);
+
+  const checkGcalStatus = useCallback(async () => {
+    try {
+      const res = await gcalInvoke({ action: "status" });
+      setGcalConnected(res?.connected ?? false);
+    } catch { setGcalConnected(false); }
+  }, [gcalInvoke]);
+
+  useEffect(() => {
+    if (user) checkGcalStatus();
+  }, [user, checkGcalStatus]);
+
+  // Handle OAuth callback redirect
+  useEffect(() => {
+    const gcalParam = searchParams.get("gcal");
+    if (gcalParam === "connected") {
+      toast.success("Google Calendar conectado com sucesso!");
+      setGcalConnected(true);
+      setSearchParams({}, { replace: true });
+    } else if (gcalParam === "error") {
+      toast.error("Falha ao conectar Google Calendar. Tente novamente.");
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+  const startGcalAuth = async () => {
+    setGcalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("google-calendar-auth");
+      if (error || !data?.url) throw error || new Error("URL não retornada");
+      window.location.href = data.url;
+    } catch {
+      toast.error("Erro ao iniciar conexão com Google Calendar");
+      setGcalLoading(false);
+    }
+  };
+
+  const disconnectGcal = async () => {
+    if (!confirm("Desconectar Google Calendar?")) return;
+    try {
+      await gcalInvoke({ action: "disconnect" });
+      setGcalConnected(false);
+      toast.success("Google Calendar desconectado");
+    } catch { toast.error("Erro ao desconectar"); }
+  };
+
+  const syncSessionToGcal = async (session: { id: string; scheduled_at: string; duration_minutes: number; patient_name?: string | null; notes?: string | null }) => {
+    if (!gcalConnected) return;
+    try {
+      await gcalInvoke({ action: "sync", session });
+    } catch (err) {
+      console.warn("GCal sync failed:", err);
+    }
+  };
+
+  const deleteGcalEvent = async (sessionId: string) => {
+    if (!gcalConnected) return;
+    try {
+      await gcalInvoke({ action: "delete", session: { id: sessionId } });
+    } catch (err) {
+      console.warn("GCal delete failed:", err);
+    }
+  };
+
   const sessionsByDay = (date: Date) => sessions.filter((s) => isSameDay(new Date(s.scheduled_at), date));
 
   const pendingTotal = pendingSessions.reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+
 
   return (
     <div className="space-y-6 animate-fade-up">
