@@ -1,0 +1,1 @@
+ALTER TABLE public.sessions ADD COLUMN billing_sent_at timestamptz DEFAULT NULL;

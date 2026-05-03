@@ -50,6 +50,7 @@ interface Session {
   patient_name?: string | null;
   discussed_patient_name?: string | null;
   service_id?: string | null;
+  billing_sent_at?: string | null;
 }
 
 interface Patient {
@@ -215,7 +216,7 @@ const Agenda = () => {
     const [sRes, pRes, svRes] = await Promise.all([
       supabase
         .from("sessions")
-        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, billing_sent_at, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .gte("scheduled_at", mStart.toISOString())
         .lt("scheduled_at", mEnd.toISOString())
@@ -242,7 +243,7 @@ const Agenda = () => {
     const mEnd = endOfMonth(currentMonth).toISOString();
     const { data } = await supabase
       .from("sessions")
-      .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, patient:patients!sessions_patient_id_fkey(full_name)")
+       .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, patient:patients!sessions_patient_id_fkey(full_name)")
       .eq("user_id", user.id)
       .eq("session_type", "clinical")
       .not("patient_id", "is", null)
@@ -258,7 +259,7 @@ const Agenda = () => {
     if (packagePatientIds.length > 0) {
       const { data: packageData } = await supabase
         .from("sessions")
-        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, patient:patients!sessions_patient_id_fkey(full_name)")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, patient:patients!sessions_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .eq("session_type", "clinical")
         .in("patient_id", packagePatientIds)
@@ -487,7 +488,7 @@ const Agenda = () => {
     };
   };
 
-  const sendWhatsAppReminder = (s: Session) => {
+  const sendWhatsAppReminder = async (s: Session) => {
     const name = s.patient_name || "Paciente";
     const singlePaymentGroup = getSinglePaymentGroup(s);
     const dateStr = singlePaymentGroup ? singlePaymentGroup.dates.join(", ") : format(new Date(s.scheduled_at), "dd/MM/yyyy");
@@ -520,6 +521,13 @@ const Agenda = () => {
       phoneNumber = patient.phone.replace(/\D/g, "");
     }
     window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
+
+    // Save billing sent timestamp
+    const now = new Date().toISOString();
+    await supabase.from("sessions").update({ billing_sent_at: now } as any).eq("id", s.id);
+    setSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
+    setPendingSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
+    toast.success("Cobrança enviada registrada");
   };
 
   const openEdit = async (s: Session) => {
@@ -677,7 +685,7 @@ const Agenda = () => {
     const [patientRes, sessionsRes] = await Promise.all([
       supabase.from("patients").select("*").eq("id", patientId).single(),
       supabase.from("sessions")
-        .select("id, scheduled_at, status, price, payment_status, payment_method, duration_minutes, notes")
+        .select("id, scheduled_at, status, price, payment_status, payment_method, duration_minutes, notes, billing_sent_at")
         .eq("user_id", user.id).eq("patient_id", patientId).eq("session_type", "clinical")
         .order("scheduled_at", { ascending: false })
         .limit(100),
@@ -859,6 +867,11 @@ const Agenda = () => {
             )}
             {s.price != null && (
               <span className="text-[10px] text-muted-foreground">R$ {Number(s.price).toFixed(2)}</span>
+            )}
+            {s.billing_sent_at && (
+              <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                💸 Cobrança enviada {format(new Date(s.billing_sent_at), "dd/MM")}
+              </span>
             )}
           </div>
         )}
@@ -1260,6 +1273,11 @@ const Agenda = () => {
                                       {!isSupervisionRow && s.price != null && (
                                         <span className={cn("text-[10px] px-2 py-0.5 rounded-full border", paymentStatusClass[s.payment_status])}>
                                           {paymentStatusLabel[s.payment_status]}
+                                        </span>
+                                       )}
+                                      {s.billing_sent_at && (
+                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                                          💸 {format(new Date(s.billing_sent_at), "dd/MM")}
                                         </span>
                                       )}
                                     </div>
