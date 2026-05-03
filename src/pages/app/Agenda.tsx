@@ -47,12 +47,20 @@ interface Session {
   payment_reference?: string | null;
   patient_name?: string | null;
   discussed_patient_name?: string | null;
+  service_id?: string | null;
 }
 
 interface Patient {
   id: string;
   full_name: string;
   session_price: number | null;
+}
+
+interface Service {
+  id: string;
+  name: string;
+  price: number;
+  is_active: boolean;
 }
 
 const sessionSchema = z
