@@ -1294,7 +1294,7 @@ const Agenda = () => {
                   <SelectItem value="supervision">Supervisão Técnica</SelectItem>
                   {services.length > 0 && services.map(svc => (
                     <SelectItem key={svc.id} value={svc.id}>
-                      {svc.name} — R$ {Number(svc.price).toFixed(2)}
+                      {svc.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
