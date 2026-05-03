@@ -103,11 +103,16 @@ const paymentStatusClass: Record<PaymentStatus, string> = {
 
 const Agenda = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [sessions, setSessions] = useState<Session[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [pixKey, setPixKey] = useState("");
+
+  // Google Calendar
+  const [gcalConnected, setGcalConnected] = useState<boolean | null>(null);
+  const [gcalLoading, setGcalLoading] = useState(false);
 
   // All pending sessions (not limited to current week)
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
