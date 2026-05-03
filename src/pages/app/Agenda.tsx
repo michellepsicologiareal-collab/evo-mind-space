@@ -502,6 +502,22 @@ const Agenda = () => {
       }
     }
 
+    // Sync edit to Google Calendar
+    if (session && gcalConnected) {
+      const isCancelled = editForm.status === "cancelled";
+      if (isCancelled) {
+        deleteGcalEvent(editSessionId);
+      } else {
+        syncSessionToGcal({
+          id: editSessionId,
+          scheduled_at: session.scheduled_at,
+          duration_minutes: editForm.duration_minutes,
+          patient_name: session.patient_name ?? null,
+          notes: editForm.notes,
+        });
+      }
+    }
+
     setEditSaving(false);
     toast.success("Sessão atualizada");
     setEditOpen(false);
