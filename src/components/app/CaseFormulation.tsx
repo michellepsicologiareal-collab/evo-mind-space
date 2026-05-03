@@ -36,7 +36,7 @@ const FIVE_SYSTEMS = [
 
 type SystemKey = (typeof FIVE_SYSTEMS)[number]["key"];
 
-export const CaseFormulation = ({ patientId }: { patientId: string }) => {
+export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: string; readOnly?: boolean }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -223,13 +223,17 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
         {FIVE_SYSTEMS.map((sys) => (
           <div key={sys.key} className="space-y-1.5">
             <Label className="font-semibold text-sm">{sys.label}</Label>
-            <Textarea
-              rows={3}
-              className="min-h-[72px] scroll-mt-24"
-              placeholder={sys.placeholder}
-              value={systems[sys.key]}
-              onChange={(e) => setSystems((prev) => ({ ...prev, [sys.key]: e.target.value }))}
-            />
+            {readOnly ? (
+              <p className="text-sm text-foreground whitespace-pre-wrap rounded-lg bg-secondary/40 p-3 min-h-[40px]">{systems[sys.key] || <span className="text-muted-foreground italic">—</span>}</p>
+            ) : (
+              <Textarea
+                rows={3}
+                className="min-h-[72px] scroll-mt-24"
+                placeholder={sys.placeholder}
+                value={systems[sys.key]}
+                onChange={(e) => setSystems((prev) => ({ ...prev, [sys.key]: e.target.value }))}
+              />
+            )}
           </div>
         ))}
 
@@ -238,19 +242,25 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
             <MessageSquare className="h-4 w-4 text-accent" /> Crenças Nucleares
           </Label>
           <p className="text-xs text-muted-foreground mb-1">Visão de Si, do Mundo e do Futuro</p>
-          <Textarea
-            rows={4}
-            className="min-h-[90px] scroll-mt-24 border-accent/30"
-            placeholder="Ex.: 'Eu sou incapaz' (Si) · 'O mundo é ameaçador' (Mundo) · 'Nada vai melhorar' (Futuro)"
-            value={coreBeliefs}
-            onChange={(e) => setCoreBeliefs(e.target.value)}
-          />
+          {readOnly ? (
+            <p className="text-sm text-foreground whitespace-pre-wrap rounded-lg bg-secondary/40 p-3 min-h-[40px]">{coreBeliefs || <span className="text-muted-foreground italic">—</span>}</p>
+          ) : (
+            <Textarea
+              rows={4}
+              className="min-h-[90px] scroll-mt-24 border-accent/30"
+              placeholder="Ex.: 'Eu sou incapaz' (Si) · 'O mundo é ameaçador' (Mundo) · 'Nada vai melhorar' (Futuro)"
+              value={coreBeliefs}
+              onChange={(e) => setCoreBeliefs(e.target.value)}
+            />
+          )}
         </div>
 
-        <Button variant="accent" className="min-h-[44px] w-full" onClick={saveFormulation} disabled={saving}>
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Salvar Formulação
-        </Button>
+        {!readOnly && (
+          <Button variant="accent" className="min-h-[44px] w-full" onClick={saveFormulation} disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Salvar Formulação
+          </Button>
+        )}
       </TabsContent>
 
       {/* ── Treatment Goals ── */}
@@ -262,18 +272,20 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
           <p className="text-xs text-muted-foreground">Adicione e acompanhe os objetivos terapêuticos.</p>
         </div>
 
-        <div className="flex gap-2">
-          <Input
-            placeholder="Novo objetivo..."
-            value={newGoal}
-            onChange={(e) => setNewGoal(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addGoal()}
-            className="scroll-mt-24"
-          />
-          <Button variant="accent" size="icon" className="shrink-0 min-h-[44px] min-w-[44px]" onClick={addGoal}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
+        {!readOnly && (
+          <div className="flex gap-2">
+            <Input
+              placeholder="Novo objetivo..."
+              value={newGoal}
+              onChange={(e) => setNewGoal(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addGoal()}
+              className="scroll-mt-24"
+            />
+            <Button variant="accent" size="icon" className="shrink-0 min-h-[44px] min-w-[44px]" onClick={addGoal}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
 
         {goals.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground py-8">Nenhuma meta definida ainda.</p>
@@ -299,21 +311,25 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
                 <span className={cn("flex-1 text-sm", g.completed && "line-through text-muted-foreground")}>
                   {g.text}
                 </span>
-                <button
-                  onClick={() => removeGoal(i)}
-                  className="text-muted-foreground hover:text-destructive transition-colors"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                {!readOnly && (
+                  <button
+                    onClick={() => removeGoal(i)}
+                    className="text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </li>
             ))}
           </ul>
         )}
 
-        <Button variant="accent" className="min-h-[44px] w-full" onClick={saveFormulation} disabled={saving}>
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Salvar Metas
-        </Button>
+        {!readOnly && (
+          <Button variant="accent" className="min-h-[44px] w-full" onClick={saveFormulation} disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Salvar Metas
+          </Button>
+        )}
       </TabsContent>
 
       {/* ── Session Evolution ── */}
@@ -325,44 +341,46 @@ export const CaseFormulation = ({ patientId }: { patientId: string }) => {
           <p className="text-xs text-muted-foreground">Registre o resumo e a tarefa de casa de cada sessão.</p>
         </div>
 
-        <div className="space-y-3 rounded-xl border border-border p-4">
-          <div className="space-y-1.5">
-            <Label className="font-semibold text-sm">Anotações da Sessão</Label>
-            <Textarea
-              rows={5}
-              className="min-h-[100px] scroll-mt-24"
-              placeholder="Escreva suas anotações brutas da sessão aqui... temas abordados, observações, combinados, etc."
-              value={evoSummary}
-              onChange={(e) => setEvoSummary(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="font-semibold text-sm">Tarefa de Casa</Label>
-            <Textarea
-              rows={2}
-              className="min-h-[56px] scroll-mt-24"
-              placeholder="Atividade para o paciente realizar até a próxima sessão..."
-              value={evoHomework}
-              onChange={(e) => setEvoHomework(e.target.value)}
-            />
-          </div>
+        {!readOnly && (
+          <div className="space-y-3 rounded-xl border border-border p-4">
+            <div className="space-y-1.5">
+              <Label className="font-semibold text-sm">Anotações da Sessão</Label>
+              <Textarea
+                rows={5}
+                className="min-h-[100px] scroll-mt-24"
+                placeholder="Escreva suas anotações brutas da sessão aqui... temas abordados, observações, combinados, etc."
+                value={evoSummary}
+                onChange={(e) => setEvoSummary(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="font-semibold text-sm">Tarefa de Casa</Label>
+              <Textarea
+                rows={2}
+                className="min-h-[56px] scroll-mt-24"
+                placeholder="Atividade para o paciente realizar até a próxima sessão..."
+                value={evoHomework}
+                onChange={(e) => setEvoHomework(e.target.value)}
+              />
+            </div>
 
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="min-h-[44px] flex-1 border-primary/30 text-primary hover:bg-primary/10"
-              onClick={organizeNotes}
-              disabled={organizing || !evoSummary.trim()}
-            >
-              {organizing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
-              ✨ Organizar Notas
-            </Button>
-            <Button variant="accent" className="min-h-[44px] flex-1" onClick={saveEvolution} disabled={savingEvo}>
-              {savingEvo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Registrar Evolução
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="min-h-[44px] flex-1 border-primary/30 text-primary hover:bg-primary/10"
+                onClick={organizeNotes}
+                disabled={organizing || !evoSummary.trim()}
+              >
+                {organizing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                ✨ Organizar Notas
+              </Button>
+              <Button variant="accent" className="min-h-[44px] flex-1" onClick={saveEvolution} disabled={savingEvo}>
+                {savingEvo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                Registrar Evolução
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* AI Result */}
         {aiResult && (
