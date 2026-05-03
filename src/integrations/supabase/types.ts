@@ -549,6 +549,7 @@ export type Database = {
       }
       sessions: {
         Row: {
+          billing_sent_at: string | null
           confirmation_token: string | null
           created_at: string
           discussed_patient_id: string | null
@@ -570,6 +571,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          billing_sent_at?: string | null
           confirmation_token?: string | null
           created_at?: string
           discussed_patient_id?: string | null
@@ -591,6 +593,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          billing_sent_at?: string | null
           confirmation_token?: string | null
           created_at?: string
           discussed_patient_id?: string | null
