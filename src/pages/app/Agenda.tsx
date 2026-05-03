@@ -1271,21 +1271,24 @@ const Agenda = () => {
               </div>
             ) : (
               <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-                {sortedPending.map((s) => (
-                  <div key={s.id} className="rounded-xl border border-border bg-background p-3 space-y-2">
+                {groupedPending.map((group) => {
+                  const s = group.session;
+                  return (
+                  <div key={group.key} className="rounded-xl border border-border bg-background p-3 space-y-2">
                     <div className="min-w-0">
                       {s.patient_id && s.patient_name ? (
                         <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
                       ) : (
                         <p className="font-display text-sm font-medium truncate">{s.patient_name}</p>
                       )}
-                      <div className="flex items-center justify-between gap-2 mt-0.5">
-                        <p className="text-xs text-muted-foreground">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
-                        <p className="font-display font-bold text-accent whitespace-nowrap">R$ {Number(s.price ?? 0).toFixed(2)}</p>
+                      <div className="mt-1 space-y-1">
+                        {group.isSinglePayment && <p className="text-xs font-medium text-primary">Pagamento único · {group.sessions.length} sessões</p>}
+                        <p className="text-xs text-muted-foreground break-words">{group.isSinglePayment ? group.dates.join(", ") : format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
+                        <p className="font-display font-bold text-accent whitespace-nowrap">R$ {group.total.toFixed(2)}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Select value={s.payment_status} onValueChange={(v) => updatePaymentStatus(s.id, v as PaymentStatus)}>
+                      <Select value={s.payment_status} onValueChange={(v) => group.isSinglePayment ? updatePaymentGroup(group.sessions.map((item) => item.id), v as PaymentStatus) : updatePaymentStatus(s.id, v as PaymentStatus)}>
                         <SelectTrigger className={cn("h-8 text-xs flex-1 border", paymentStatusClass[s.payment_status])}>
                           <SelectValue />
                         </SelectTrigger>
@@ -1302,7 +1305,7 @@ const Agenda = () => {
                       </Button>
                     </div>
                   </div>
-                ))}
+                );})}
               </div>
             )}
           </div>
