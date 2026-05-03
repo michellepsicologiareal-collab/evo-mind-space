@@ -140,6 +140,39 @@ export type Database = {
         }
         Relationships: []
       }
+      google_calendar_tokens: {
+        Row: {
+          access_token: string
+          calendar_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          refresh_token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          calendar_id?: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          refresh_token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          calendar_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       library_materials: {
         Row: {
           category: Database["public"]["Enums"]["library_category"]
@@ -477,6 +510,30 @@ export type Database = {
           session_id?: string | null
           session_summary?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      session_gcal_events: {
+        Row: {
+          created_at: string
+          gcal_event_id: string
+          id: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          gcal_event_id: string
+          id?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          gcal_event_id?: string
+          id?: string
+          session_id?: string
           user_id?: string
         }
         Relationships: []
