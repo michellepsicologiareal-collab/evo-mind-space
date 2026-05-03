@@ -182,6 +182,10 @@ const Agenda = () => {
   const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Reschedule recurring modal
+  const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
+  const [pendingEditEvent, setPendingEditEvent] = useState<React.FormEvent | null>(null);
+
   // Patient drawer
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerPatientId, setDrawerPatientId] = useState<string | null>(null);
