@@ -679,11 +679,23 @@ const Agenda = () => {
               <form onSubmit={handleSave} className="space-y-4">
                 <div className="space-y-2">
                   <Label>Tipo de compromisso</Label>
-                  <Select value={form.session_type} onValueChange={(v) => setForm({ ...form, session_type: v as SessionType })}>
+                  <Select value={form.service_id || form.session_type} onValueChange={(v) => {
+                    if (v === "clinical" || v === "supervision") {
+                      setForm({ ...form, session_type: v as SessionType, service_id: "" });
+                    } else {
+                      const svc = services.find(s => s.id === v);
+                      setForm({ ...form, session_type: "clinical", service_id: v, price: svc ? String(svc.price) : form.price });
+                    }
+                  }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="clinical">Atendimento Clínico</SelectItem>
                       <SelectItem value="supervision">Supervisão Técnica</SelectItem>
+                      {services.length > 0 && services.map(svc => (
+                        <SelectItem key={svc.id} value={svc.id}>
+                          {svc.name} — R$ {Number(svc.price).toFixed(2)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
