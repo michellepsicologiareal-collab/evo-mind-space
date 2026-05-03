@@ -183,8 +183,10 @@ const Agenda = () => {
   // Fetch pix key
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("pix_key").eq("id", user.id).single().then(({ data }) => {
+    supabase.from("profiles").select("pix_key, full_name, crp").eq("id", user.id).single().then(({ data }) => {
       setPixKey(data?.pix_key || "");
+      setPsiName(data?.full_name || "");
+      setPsiCrp(data?.crp || "");
     });
   }, [user]);
 
