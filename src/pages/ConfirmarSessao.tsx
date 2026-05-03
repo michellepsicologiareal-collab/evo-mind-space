@@ -87,7 +87,7 @@ const ConfirmarSessao = () => {
       {/* Logo */}
       <div className="mb-8 text-center">
         <div className="inline-flex items-center gap-2">
-          <Heart className="h-7 w-7 text-accent fill-accent/20" />
+          <img src={logoImg} alt="Psi Real" className="h-10 w-10 object-contain" />
           <span className="font-display text-2xl font-bold text-foreground">Psi Real</span>
         </div>
       </div>
