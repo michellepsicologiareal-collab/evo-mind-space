@@ -19,6 +19,8 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
+import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 
 const PATIENT_CATEGORIES = [
   { value: "individual", label: "Individual" },
