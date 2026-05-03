@@ -530,6 +530,7 @@ const Agenda = () => {
 
     setEditSaving(false);
     toast.success("Sessão atualizada");
+    editGuard.resetDirty();
     setEditOpen(false);
     load(); loadPending();
   };
