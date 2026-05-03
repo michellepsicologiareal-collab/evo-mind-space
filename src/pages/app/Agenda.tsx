@@ -831,10 +831,18 @@ const Agenda = () => {
               {s.discussed_patient_name && <span className="text-muted-foreground"> · {s.discussed_patient_name}</span>}
             </p>
           ) : s.patient_id && s.patient_name ? (
-            <p className={cn("text-left font-display font-medium text-primary hover:underline hover:text-accent transition-colors cursor-pointer", compact ? "text-xs leading-snug break-words" : "text-sm truncate")}
-               onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}>
-              {s.patient_name}
-            </p>
+            <>
+              <p className={cn("text-left font-display font-medium text-primary hover:underline hover:text-accent transition-colors cursor-pointer", compact ? "text-xs leading-snug break-words" : "text-sm truncate")}
+                 onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}>
+                {s.patient_name}
+              </p>
+              {(() => {
+                const svcName = s.service_id ? services.find(sv => sv.id === s.service_id)?.name : null;
+                return svcName ? (
+                  <p className={cn("text-muted-foreground", compact ? "text-[10px]" : "text-xs")}>{svcName}</p>
+                ) : null;
+              })()}
+            </>
           ) : (
             <p className={cn("text-foreground", compact ? "text-xs" : "text-sm font-medium")}>Paciente</p>
           )}
@@ -1194,23 +1202,72 @@ const Agenda = () => {
                 {loading ? (
                   <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
+                  <div className="space-y-2">
                     {weekDays.map((day) => {
                       const items = sessionsByDay(day);
                       const isToday = isSameDay(day, new Date());
                       return (
-                        <div key={day.toISOString()} className={cn("rounded-2xl border p-3 min-h-[180px] flex flex-col", isToday ? "bg-card border-primary/40" : "bg-card border-border")}>
-                          <div className="flex items-baseline justify-between mb-3 px-1">
-                            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{format(day, "EEE", { locale: ptBR })}</p>
-                            <p className={cn("font-display text-xl", isToday ? "text-accent" : "text-foreground")}>{format(day, "dd")}</p>
+                        <div key={day.toISOString()} className="rounded-2xl bg-card border border-border shadow-card overflow-hidden">
+                          {/* Day header */}
+                          <div className={cn(
+                            "flex items-center justify-between px-5 py-3 border-b",
+                            isToday ? "bg-accent/10 border-accent/20" : "bg-secondary/30 border-border"
+                          )}>
+                            <p className={cn("font-display font-semibold capitalize", isToday ? "text-accent" : "text-foreground")}>
+                              {format(day, "EEEE", { locale: ptBR })}, {format(day, "dd/MM")}
+                            </p>
+                            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-accent" onClick={() => openNew(day)}>
+                              <Plus className="h-3.5 w-3.5 mr-1" /> adicionar
+                            </Button>
                           </div>
-                          <div className="space-y-2 flex-1">
-                            {items.length === 0 ? (
-                              <button onClick={() => openNew(day)} className="w-full text-xs text-muted-foreground/60 hover:text-accent border border-dashed border-border rounded-xl py-3 transition-colors">+ adicionar</button>
-                            ) : (
-                              items.map((s) => <SessionCard key={s.id} s={s} compact />)
-                            )}
-                          </div>
+                          {/* Sessions rows */}
+                          {items.length === 0 ? (
+                            <button onClick={() => openNew(day)} className="w-full text-sm text-muted-foreground/50 hover:text-accent py-4 transition-colors text-center">
+                              Nenhuma sessão — clique para agendar
+                            </button>
+                          ) : (
+                            <div className="divide-y divide-border">
+                              {items.map((s) => {
+                                const isSupervisionRow = s.session_type === "supervision";
+                                const svcName = s.service_id ? services.find(sv => sv.id === s.service_id)?.name : null;
+                                return (
+                                  <div
+                                    key={s.id}
+                                    onClick={() => openEdit(s)}
+                                    className="flex items-center gap-3 px-5 py-3 hover:bg-secondary/30 cursor-pointer transition-colors group"
+                                  >
+                                    {/* Time */}
+                                    <span className="font-display text-sm font-semibold text-primary w-12 shrink-0">
+                                      {format(new Date(s.scheduled_at), "HH:mm")}
+                                    </span>
+                                    {/* Divider */}
+                                    <div className="w-px h-8 bg-border shrink-0" />
+                                    {/* Name + type */}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-sm text-foreground truncate">
+                                        {isSupervisionRow ? "Supervisão" : s.patient_name || "Paciente"}
+                                        {isSupervisionRow && s.discussed_patient_name && <span className="text-muted-foreground"> · {s.discussed_patient_name}</span>}
+                                      </p>
+                                      {svcName && !isSupervisionRow && (
+                                        <p className="text-xs text-muted-foreground">{svcName}</p>
+                                      )}
+                                    </div>
+                                    {/* Status + Payment */}
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      <span className={cn("text-[10px] px-2 py-0.5 rounded-full", isSupervisionRow ? "bg-serene/20 text-serene" : statusClass[s.status])}>
+                                        {isSupervisionRow ? "Supervisão" : statusLabel[s.status]}
+                                      </span>
+                                      {!isSupervisionRow && s.price != null && (
+                                        <span className={cn("text-[10px] px-2 py-0.5 rounded-full border", paymentStatusClass[s.payment_status])}>
+                                          {paymentStatusLabel[s.payment_status]}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
