@@ -427,6 +427,26 @@ const Agenda = () => {
     load();
   };
 
+  const getSinglePaymentGroup = (session: Session) => {
+    const pkgInfo = getPackageInfo(session.notes);
+    if (!pkgInfo || !session.patient_id || !/Pgto único/i.test(session.notes || "")) return null;
+
+    const groupSessions = pendingSessions
+      .filter((item) => {
+        const info = getPackageInfo(item.notes);
+        return item.patient_id === session.patient_id && info?.total === pkgInfo.total && /Pgto único/i.test(item.notes || "");
+      })
+      .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+
+    if (groupSessions.length <= 1) return null;
+
+    return {
+      sessions: groupSessions,
+      total: groupSessions.reduce((sum, item) => sum + Number(item.price ?? 0), 0),
+      dates: groupSessions.map((item) => format(new Date(item.scheduled_at), "dd/MM/yyyy")),
+    };
+  };
+
   const sendWhatsAppReminder = (s: Session) => {
     const name = s.patient_name || "Paciente";
     const singlePaymentGroup = getSinglePaymentGroup(s);
