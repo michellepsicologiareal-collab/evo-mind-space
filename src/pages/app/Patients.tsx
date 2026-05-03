@@ -143,7 +143,7 @@ const Patients = () => {
       user_id: user.id,
       full_name: parsed.data.full_name,
       email: parsed.data.email || null,
-      phone: parsed.data.phone || null,
+      phone: parsed.data.phone ? `${parsed.data.phone_ddi || "+55"} ${parsed.data.phone}`.trim() : null,
       notes: parsed.data.notes || null,
       session_price: parsed.data.session_price ? Number(parsed.data.session_price) : null,
       chief_complaint: parsed.data.chief_complaint || null,
