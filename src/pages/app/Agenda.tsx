@@ -238,15 +238,19 @@ const Agenda = () => {
   const loadPending = async () => {
     if (!user) return;
     setLoadingPending(true);
+    const mStart = startOfMonth(currentMonth).toISOString();
+    const mEnd = endOfMonth(currentMonth).toISOString();
     const { data } = await supabase
       .from("sessions")
       .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, patient:patients!sessions_patient_id_fkey(full_name)")
       .eq("user_id", user.id)
-      .eq("payment_status", "pending")
       .eq("session_type", "clinical")
       .not("patient_id", "is", null)
+      .not("status", "in", '("cancelled","no_show")')
+      .gte("scheduled_at", mStart)
+      .lte("scheduled_at", mEnd)
       .order("scheduled_at", { ascending: false })
-      .limit(50);
+      .limit(200);
     const mapped = (data ?? []).map((s: any) => ({
       ...s, patient_name: s.patient?.full_name ?? null, discussed_patient_name: null,
     }));
@@ -259,6 +263,7 @@ const Agenda = () => {
         .eq("session_type", "clinical")
         .in("patient_id", packagePatientIds)
         .ilike("notes", "%Pgto%")
+        .not("status", "in", '("cancelled","no_show")')
         .order("scheduled_at", { ascending: true })
         .limit(200);
       setPendingPackageSessions((packageData ?? []).map((s: any) => ({ ...s, patient_name: s.patient?.full_name ?? null, discussed_patient_name: null })) as Session[]);
