@@ -492,11 +492,38 @@ const Agenda = () => {
     }
   };
 
-  const handleEditSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Detect if session is part of a recurring package from notes
+  const isPackageSession = (notes: string | null): boolean => {
+    if (!notes) return false;
+    return /Plano \d+ sess/.test(notes);
+  };
+
+  const getPackageInfo = (notes: string | null): { total: number; index: number } | null => {
+    if (!notes) return null;
+    const match = notes.match(/Plano (\d+) sess[õo]es \((\d+)\/(\d+)\)/);
+    if (!match) return null;
+    return { total: parseInt(match[1]), index: parseInt(match[2]) };
+  };
+
+  const didDateTimeChange = (session: Session | undefined): boolean => {
+    if (!session) return false;
+    const orig = new Date(session.scheduled_at);
+    return editForm.date !== format(orig, "yyyy-MM-dd") || editForm.time !== format(orig, "HH:mm");
+  };
+
+  const handleEditSave = async (e: React.FormEvent, rescheduleAll?: boolean) => {
+    e?.preventDefault?.();
     if (!user || !editSessionId) return;
-    setEditSaving(true);
     const session = sessions.find((s) => s.id === editSessionId);
+
+    // Check if date/time changed on a package session — show modal
+    if (rescheduleAll === undefined && session && isPackageSession(session.notes) && didDateTimeChange(session)) {
+      setPendingEditEvent(e);
+      setRescheduleModalOpen(true);
+      return;
+    }
+
+    setEditSaving(true);
     const newScheduledAt = editForm.date && editForm.time
       ? parse(`${editForm.date} ${editForm.time}`, "yyyy-MM-dd HH:mm", new Date()).toISOString()
       : undefined;
@@ -515,15 +542,48 @@ const Agenda = () => {
 
     if (error) { setEditSaving(false); toast.error("Erro ao salvar sessão"); return; }
 
+    // Reschedule all future sessions in the package
+    if (rescheduleAll && session && newScheduledAt) {
+      const origDate = new Date(session.scheduled_at);
+      const newDate = new Date(newScheduledAt);
+      const diffMs = newDate.getTime() - origDate.getTime();
+      const pkgInfo = getPackageInfo(session.notes);
+
+      if (pkgInfo && session.patient_id) {
+        // Find sibling sessions in the same package that are AFTER this one
+        const { data: siblings } = await supabase.from("sessions")
+          .select("id, scheduled_at, notes")
+          .eq("user_id", user.id)
+          .eq("patient_id", session.patient_id)
+          .gt("scheduled_at", session.scheduled_at)
+          .order("scheduled_at");
+
+        const packageSiblings = (siblings ?? []).filter(s =>
+          s.notes && /Plano \d+ sess/.test(s.notes) &&
+          s.notes.includes(`/${pkgInfo.total})`)
+        );
+
+        for (const sib of packageSiblings) {
+          const sibDate = new Date(sib.scheduled_at);
+          const newSibDate = new Date(sibDate.getTime() + diffMs);
+          await supabase.from("sessions").update({
+            scheduled_at: newSibDate.toISOString(),
+          } as any).eq("id", sib.id);
+        }
+
+        if (packageSiblings.length > 0) {
+          toast.success(`${packageSiblings.length + 1} sessões do pacote remarcadas`);
+        }
+      }
+    }
+
     // Always update mood/progress if patient exists (even when clearing values)
     const moodNum = editForm.mood_score ? Number(editForm.mood_score) : null;
     const progressNote = editForm.progress_note?.trim() || null;
     if (session?.patient_id) {
       if (editProgressId) {
-        // Always update existing progress record (including clearing)
         await supabase.from("patient_progress").update({ mood_score: moodNum, note: progressNote }).eq("id", editProgressId);
       } else if (moodNum || progressNote) {
-        // Only create new record if there's data
         await supabase.from("patient_progress").insert({
           user_id: user.id, patient_id: session.patient_id,
           session_id: editSessionId, mood_score: moodNum,
@@ -533,7 +593,9 @@ const Agenda = () => {
     }
 
     setEditSaving(false);
-    toast.success("Sessão atualizada");
+    if (!rescheduleAll || !(session && isPackageSession(session.notes) && didDateTimeChange(session))) {
+      toast.success("Sessão atualizada");
+    }
     editGuard.resetDirty();
     setEditOpen(false);
     load(); loadPending();
