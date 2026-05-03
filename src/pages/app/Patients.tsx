@@ -136,7 +136,7 @@ const Patients = () => {
     }
     // Extract DDI from financial responsible phone
     const rawFrPhone = p.financial_responsible_phone ?? "";
-    let frDdi = "+55";
+    let frDdi = "";
     let frLocalPhone = rawFrPhone;
     const frDdiMatch = rawFrPhone.match(/^(\+\d{1,4})\s*(.*)/);
     if (frDdiMatch) {
