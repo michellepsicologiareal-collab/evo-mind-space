@@ -127,7 +127,7 @@ const Patients = () => {
     setEditing(p);
     // Extract DDI from stored phone if it starts with +
     const rawPhone = p.phone ?? "";
-    let ddi = "+55";
+    let ddi = "";
     let localPhone = rawPhone;
     const ddiMatch = rawPhone.match(/^(\+\d{1,4})\s*(.*)/);
     if (ddiMatch) {
