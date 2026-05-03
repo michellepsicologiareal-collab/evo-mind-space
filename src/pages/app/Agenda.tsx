@@ -422,7 +422,16 @@ const Agenda = () => {
       psiName || "",
       psiCrp ? `Psicóloga | CRP ${psiCrp}` : "Psicóloga",
     ].filter(Boolean).join("\n");
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+
+    // Determine WhatsApp number: financial responsible or patient
+    const patient = patients.find((p) => p.id === s.patient_id);
+    let phoneNumber = "";
+    if (patient?.has_financial_responsible && patient.financial_responsible_phone) {
+      phoneNumber = patient.financial_responsible_phone.replace(/\D/g, "");
+    } else if (patient?.phone) {
+      phoneNumber = patient.phone.replace(/\D/g, "");
+    }
+    window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
   };
 
   const openEdit = async (s: Session) => {
