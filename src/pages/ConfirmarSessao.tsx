@@ -3,8 +3,10 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Check, X, Loader2, CalendarCheck, Heart } from "lucide-react";
+import { toZonedTime } from "date-fns-tz";
+import { Check, X, Loader2, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logoImg from "@/assets/logo-psireal.png";
 
 interface SessionData {
   id: string;
