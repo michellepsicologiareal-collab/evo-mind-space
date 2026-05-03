@@ -742,16 +742,19 @@ const Agenda = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="mt-1">
+        <div className="mt-1 min-w-0">
           {isSupervisionCard ? (
-            <p className={cn("text-foreground", compact ? "text-xs truncate" : "text-sm font-medium")}>
+            <p className={cn("text-foreground", compact ? "text-xs" : "text-sm font-medium")}>
               Supervisão
               {s.discussed_patient_name && <span className="text-muted-foreground"> · {s.discussed_patient_name}</span>}
             </p>
           ) : s.patient_id && s.patient_name ? (
-            <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
+            <p className={cn("text-left font-display font-medium text-primary hover:underline hover:text-accent transition-colors cursor-pointer", compact ? "text-xs leading-snug break-words" : "text-sm truncate")}
+               onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}>
+              {s.patient_name}
+            </p>
           ) : (
-            <p className={cn("text-foreground", compact ? "text-xs truncate" : "text-sm font-medium")}>Paciente</p>
+            <p className={cn("text-foreground", compact ? "text-xs" : "text-sm font-medium")}>Paciente</p>
           )}
         </div>
         {!compact && (
