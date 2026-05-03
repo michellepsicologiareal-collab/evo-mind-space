@@ -521,6 +521,13 @@ const Agenda = () => {
       phoneNumber = patient.phone.replace(/\D/g, "");
     }
     window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
+
+    // Save billing sent timestamp
+    const now = new Date().toISOString();
+    await supabase.from("sessions").update({ billing_sent_at: now } as any).eq("id", s.id);
+    setSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
+    setPendingSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
+    toast.success("Cobrança enviada registrada");
   };
 
   const openEdit = async (s: Session) => {
