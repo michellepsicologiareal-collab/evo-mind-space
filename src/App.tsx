@@ -26,6 +26,7 @@ const Library = lazy(() => import("./pages/app/Library"));
 const Autocuidado = lazy(() => import("./pages/app/Autocuidado"));
 const ContratoModelo = lazy(() => import("./pages/app/ContratoModelo"));
 const Contratos = lazy(() => import("./pages/app/Contratos"));
+const ComecePorAqui = lazy(() => import("./pages/app/ComecePorAqui"));
 const ContratoPublico = lazy(() => import("./pages/ContratoPublico"));
 
 const queryClient = new QueryClient();
