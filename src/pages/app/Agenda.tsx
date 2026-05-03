@@ -50,6 +50,7 @@ interface Session {
   patient_name?: string | null;
   discussed_patient_name?: string | null;
   service_id?: string | null;
+  billing_sent_at?: string | null;
 }
 
 interface Patient {
