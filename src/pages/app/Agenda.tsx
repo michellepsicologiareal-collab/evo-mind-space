@@ -208,7 +208,7 @@ const Agenda = () => {
         .gte("scheduled_at", mStart.toISOString())
         .lt("scheduled_at", mEnd.toISOString())
         .order("scheduled_at"),
-      supabase.from("patients").select("id, full_name, session_price").eq("user_id", user.id).eq("is_active", true).order("full_name"),
+      supabase.from("patients").select("id, full_name, session_price, phone, has_financial_responsible, financial_responsible_name, financial_responsible_phone").eq("user_id", user.id).eq("is_active", true).order("full_name"),
       (supabase as any).from("services").select("id, name, price, is_active").eq("user_id", user.id).eq("is_active", true).order("name"),
     ]);
     if (sRes.error) toast.error("Erro ao carregar sessões");
