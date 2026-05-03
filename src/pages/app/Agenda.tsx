@@ -437,7 +437,7 @@ const Agenda = () => {
     const groupSessions = allKnownSessions
       .filter((item) => {
         const info = getPackageInfo(item.notes);
-        return item.patient_id === session.patient_id && info?.total === pkgInfo.total && /Pgto único/i.test(item.notes || "");
+        return item.patient_id === session.patient_id && info?.total === pkgInfo.total && /Pgto único/i.test(item.notes || "") && new Date(item.scheduled_at).getMonth() === new Date(session.scheduled_at).getMonth() && new Date(item.scheduled_at).getFullYear() === new Date(session.scheduled_at).getFullYear();
       })
       .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
 
