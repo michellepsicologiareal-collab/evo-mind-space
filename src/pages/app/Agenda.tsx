@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import {
   Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon,
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
-  MessageCircle, Pencil, Filter, Users, ArrowUpDown
+  MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText
 } from "lucide-react";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
@@ -19,9 +19,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -147,6 +148,19 @@ const Agenda = () => {
 
   // Patient filter for pending list
   const [filterPatientId, setFilterPatientId] = useState<string>("all");
+
+  // Delete confirmation modal
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Patient drawer
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerPatientId, setDrawerPatientId] = useState<string | null>(null);
+  const [drawerTab, setDrawerTab] = useState("sessions");
+  const [drawerPatientData, setDrawerPatientData] = useState<any>(null);
+  const [drawerSessions, setDrawerSessions] = useState<any[]>([]);
+  const [drawerLoadingSessions, setDrawerLoadingSessions] = useState(false);
 
   // Fetch pix key
   useEffect(() => {
@@ -317,16 +331,36 @@ const Agenda = () => {
     load(); loadPending();
   };
 
-  const removeSession = async (id: string) => {
-    if (!confirm("Excluir esta sessão e suas pendências financeiras?")) return;
+  // ── Delete with confirmation modal ──
+  const promptDelete = (id: string) => {
+    setDeleteSessionId(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const executeDelete = async (includeFinancial: boolean) => {
+    if (!deleteSessionId) return;
+    setDeleting(true);
     // Delete related progress
-    await supabase.from("patient_progress").delete().eq("session_id", id);
+    await supabase.from("patient_progress").delete().eq("session_id", deleteSessionId);
     // Delete related gcal events
-    await supabase.from("session_gcal_events").delete().eq("session_id", id);
-    // Delete session
-    const { error } = await supabase.from("sessions").delete().eq("id", id);
-    if (error) return toast.error("Erro ao excluir");
-    toast.success("Sessão e pendências excluídas");
+    await supabase.from("session_gcal_events").delete().eq("session_id", deleteSessionId);
+
+    if (includeFinancial) {
+      // Delete the session entirely (which IS the financial record)
+      const { error } = await supabase.from("sessions").delete().eq("id", deleteSessionId);
+      if (error) { setDeleting(false); toast.error("Erro ao excluir"); return; }
+      toast.success("Sessão, progresso e lançamento financeiro excluídos");
+    } else {
+      // Keep the session row but mark as cancelled, clear payment
+      const { error } = await supabase.from("sessions").delete().eq("id", deleteSessionId);
+      if (error) { setDeleting(false); toast.error("Erro ao excluir"); return; }
+      toast.success("Sessão e progresso excluídos");
+    }
+
+    setDeleting(false);
+    setDeleteConfirmOpen(false);
+    setDeleteSessionId(null);
+    if (editOpen) setEditOpen(false);
     load(); loadPending();
   };
 
@@ -395,12 +429,15 @@ const Agenda = () => {
 
     if (error) { setEditSaving(false); toast.error("Erro ao salvar sessão"); return; }
 
+    // Always update mood/progress if patient exists (even when clearing values)
     const moodNum = editForm.mood_score ? Number(editForm.mood_score) : null;
     const progressNote = editForm.progress_note?.trim() || null;
-    if (session?.patient_id && (moodNum || progressNote)) {
+    if (session?.patient_id) {
       if (editProgressId) {
+        // Always update existing progress record (including clearing)
         await supabase.from("patient_progress").update({ mood_score: moodNum, note: progressNote }).eq("id", editProgressId);
-      } else {
+      } else if (moodNum || progressNote) {
+        // Only create new record if there's data
         await supabase.from("patient_progress").insert({
           user_id: user.id, patient_id: session.patient_id,
           session_id: editSessionId, mood_score: moodNum,
@@ -414,6 +451,34 @@ const Agenda = () => {
     setEditOpen(false);
     load(); loadPending();
   };
+
+  // ── Patient Drawer ──
+  const openPatientDrawer = async (patientId: string) => {
+    if (!user) return;
+    setDrawerPatientId(patientId);
+    setDrawerTab("sessions");
+    setDrawerOpen(true);
+    setDrawerLoadingSessions(true);
+
+    const [patientRes, sessionsRes] = await Promise.all([
+      supabase.from("patients").select("*").eq("id", patientId).single(),
+      supabase.from("sessions")
+        .select("id, scheduled_at, status, price, payment_status, payment_method, duration_minutes, notes")
+        .eq("user_id", user.id).eq("patient_id", patientId).eq("session_type", "clinical")
+        .order("scheduled_at", { ascending: false })
+        .limit(100),
+    ]);
+
+    setDrawerPatientData(patientRes.data);
+    setDrawerSessions(sessionsRes.data ?? []);
+    setDrawerLoadingSessions(false);
+  };
+
+  const drawerFinancials = useMemo(() => {
+    const totalPaid = drawerSessions.filter(s => s.payment_status === "paid").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+    const totalPending = drawerSessions.filter(s => s.payment_status === "pending").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+    return { totalPaid, totalPending };
+  }, [drawerSessions]);
 
   // ── Derived data ──
   const sessionsByDay = (date: Date) => sessions.filter((s) => isSameDay(new Date(s.scheduled_at), date));
@@ -466,6 +531,17 @@ const Agenda = () => {
     return cells;
   }, [currentMonth]);
 
+  // ── Clickable patient name ──
+  const PatientNameLink = ({ patientId, name }: { patientId: string; name: string }) => (
+    <button
+      type="button"
+      className="text-left font-display text-sm font-medium text-primary hover:underline hover:text-accent transition-colors truncate"
+      onClick={(e) => { e.stopPropagation(); openPatientDrawer(patientId); }}
+    >
+      {name}
+    </button>
+  );
+
   // ── Session card component ──
   const SessionCard = ({ s, compact = false }: { s: Session; compact?: boolean }) => {
     const isSupervisionCard = s.session_type === "supervision";
@@ -511,18 +587,24 @@ const Agenda = () => {
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DropdownMenuItem onClick={() => removeSession(s.id)} className="text-destructive">
+              <DropdownMenuItem onClick={() => promptDelete(s.id)} className="text-destructive">
                 <Trash2 className="h-4 w-4" /> Excluir
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <p className={cn("text-foreground mt-1", compact ? "text-xs truncate" : "text-sm font-medium")}>
-          {isSupervisionCard ? "Supervisão" : s.patient_name}
-          {isSupervisionCard && s.discussed_patient_name && (
-            <span className="text-muted-foreground"> · {s.discussed_patient_name}</span>
+        <div className="mt-1">
+          {isSupervisionCard ? (
+            <p className={cn("text-foreground", compact ? "text-xs truncate" : "text-sm font-medium")}>
+              Supervisão
+              {s.discussed_patient_name && <span className="text-muted-foreground"> · {s.discussed_patient_name}</span>}
+            </p>
+          ) : s.patient_id && s.patient_name ? (
+            <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
+          ) : (
+            <p className={cn("text-foreground", compact ? "text-xs truncate" : "text-sm font-medium")}>Paciente</p>
           )}
-        </p>
+        </div>
         {!compact && (
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
             <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full", isSupervisionCard ? "bg-serene/20 text-serene" : statusClass[s.status])}>
@@ -973,7 +1055,11 @@ const Agenda = () => {
                   <div key={s.id} className="rounded-xl border border-border bg-background p-3 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="font-display text-sm font-medium truncate">{s.patient_name}</p>
+                        {s.patient_id && s.patient_name ? (
+                          <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
+                        ) : (
+                          <p className="font-display text-sm font-medium truncate">{s.patient_name}</p>
+                        )}
                         <p className="text-xs text-muted-foreground">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
                       </div>
                       <p className="font-display font-bold text-accent whitespace-nowrap">R$ {Number(s.price ?? 0).toFixed(2)}</p>
@@ -991,7 +1077,7 @@ const Agenda = () => {
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 shrink-0" title="Cobrar via WhatsApp" onClick={() => sendWhatsAppReminder(s)}>
                         <MessageCircle className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0" title="Excluir sessão e pendência" onClick={() => removeSession(s.id)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0" title="Excluir sessão" onClick={() => promptDelete(s.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -1102,7 +1188,7 @@ const Agenda = () => {
               <Button
                 type="button" variant="destructive" size="sm"
                 className="sm:mr-auto"
-                onClick={() => { if (editSessionId) { removeSession(editSessionId); setEditOpen(false); } }}
+                onClick={() => { if (editSessionId) { promptDelete(editSessionId); } }}
               >
                 <Trash2 className="h-4 w-4" /> Excluir sessão
               </Button>
@@ -1114,6 +1200,180 @@ const Agenda = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* ── Delete Confirmation Modal ── */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">Excluir sessão</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Escolha o que deseja excluir:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-3 h-auto py-3 text-left"
+              disabled={deleting}
+              onClick={() => executeDelete(false)}
+            >
+              <Trash2 className="h-4 w-4 text-destructive shrink-0" />
+              <div>
+                <p className="font-medium text-sm">Excluir apenas a sessão</p>
+                <p className="text-xs text-muted-foreground">Remove a sessão, progresso e eventos vinculados</p>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-3 h-auto py-3 text-left border-destructive/30 hover:bg-destructive/5"
+              disabled={deleting}
+              onClick={() => executeDelete(true)}
+            >
+              <DollarSign className="h-4 w-4 text-destructive shrink-0" />
+              <div>
+                <p className="font-medium text-sm text-destructive">Excluir sessão + lançamento financeiro</p>
+                <p className="text-xs text-muted-foreground">Remove tudo acima + o registro financeiro vinculado</p>
+              </div>
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setDeleteConfirmOpen(false)} disabled={deleting}>Cancelar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Patient Drawer ── */}
+      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="font-display text-xl flex items-center gap-2">
+              <User className="h-5 w-5 text-accent" />
+              {drawerPatientData?.full_name ?? "Paciente"}
+            </SheetTitle>
+            <SheetDescription className="text-sm text-muted-foreground">
+              Informações do paciente
+            </SheetDescription>
+          </SheetHeader>
+
+          <Tabs value={drawerTab} onValueChange={setDrawerTab}>
+            <TabsList className="w-full">
+              <TabsTrigger value="sessions" className="flex-1 text-xs gap-1">
+                <CalendarIcon className="h-3.5 w-3.5" /> Sessões
+              </TabsTrigger>
+              <TabsTrigger value="financial" className="flex-1 text-xs gap-1">
+                <DollarSign className="h-3.5 w-3.5" /> Financeiro
+              </TabsTrigger>
+              <TabsTrigger value="info" className="flex-1 text-xs gap-1">
+                <FileText className="h-3.5 w-3.5" /> Cadastro
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Sessions tab */}
+            <TabsContent value="sessions" className="mt-4">
+              {drawerLoadingSessions ? (
+                <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" /></div>
+              ) : drawerSessions.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Nenhuma sessão encontrada.</p>
+              ) : (
+                <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                  {drawerSessions.map((s) => (
+                    <div key={s.id} className="rounded-xl border border-border bg-background p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-medium">{format(new Date(s.scheduled_at), "dd/MM/yyyy 'às' HH:mm")}</p>
+                          <p className="text-xs text-muted-foreground">{s.duration_minutes} min</p>
+                        </div>
+                        <div className="text-right">
+                          <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full", statusClass[s.status as Status])}>
+                            {statusLabel[s.status as Status]}
+                          </span>
+                          {s.price != null && (
+                            <p className="text-xs text-muted-foreground mt-1">R$ {Number(s.price).toFixed(2)}</p>
+                          )}
+                        </div>
+                      </div>
+                      {s.price != null && (
+                        <div className="mt-1.5">
+                          <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full border", paymentStatusClass[s.payment_status as PaymentStatus])}>
+                            {paymentStatusLabel[s.payment_status as PaymentStatus]}
+                            {s.payment_method && ` · ${s.payment_method === "pix" ? "PIX" : s.payment_method === "card" ? "Cartão" : s.payment_method === "cash" ? "Dinheiro" : ""}`}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Financial tab */}
+            <TabsContent value="financial" className="mt-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-center">
+                    <p className="text-xs uppercase tracking-wider text-emerald-600 mb-1">Total Pago</p>
+                    <p className="font-display text-xl font-bold text-emerald-700">R$ {drawerFinancials.totalPaid.toFixed(2)}</p>
+                  </div>
+                  <div className="rounded-xl bg-accent/10 border border-accent/30 p-4 text-center">
+                    <p className="text-xs uppercase tracking-wider text-accent mb-1">Total Pendente</p>
+                    <p className="font-display text-xl font-bold text-accent">R$ {drawerFinancials.totalPending.toFixed(2)}</p>
+                  </div>
+                </div>
+                <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                  {drawerSessions.filter(s => s.price != null).map((s) => (
+                    <div key={s.id} className="rounded-xl border border-border bg-background p-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
+                        <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full border mt-1", paymentStatusClass[s.payment_status as PaymentStatus])}>
+                          {paymentStatusLabel[s.payment_status as PaymentStatus]}
+                        </span>
+                      </div>
+                      <p className="font-display font-bold text-sm">R$ {Number(s.price).toFixed(2)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Info tab */}
+            <TabsContent value="info" className="mt-4">
+              {drawerPatientData ? (
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    {[
+                      { label: "Nome completo", value: drawerPatientData.full_name },
+                      { label: "Telefone", value: drawerPatientData.phone },
+                      { label: "Email", value: drawerPatientData.email },
+                      { label: "Data de nascimento", value: drawerPatientData.birth_date ? format(new Date(drawerPatientData.birth_date + "T12:00:00"), "dd/MM/yyyy") : null },
+                      { label: "Valor da sessão", value: drawerPatientData.session_price ? `R$ ${Number(drawerPatientData.session_price).toFixed(2)}` : null },
+                      { label: "Categoria", value: drawerPatientData.category === "individual" ? "Individual" : drawerPatientData.category === "couple" ? "Casal" : drawerPatientData.category },
+                    ].map((item) => (
+                      <div key={item.label} className="rounded-xl bg-muted/50 border border-border p-3">
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground mb-0.5">{item.label}</p>
+                        <p className="text-sm text-foreground">{item.value || "—"}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {drawerPatientData.notes && (
+                    <div className="rounded-xl bg-muted/50 border border-border p-3">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Observações</p>
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{drawerPatientData.notes}</p>
+                    </div>
+                  )}
+                  {drawerPatientData.chief_complaint && (
+                    <div className="rounded-xl bg-muted/50 border border-border p-3">
+                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Queixa principal</p>
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{drawerPatientData.chief_complaint}</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" /></div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
