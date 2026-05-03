@@ -898,7 +898,7 @@ const Agenda = () => {
                   </div>
                 )}
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                  <Button type="button" variant="outline" onClick={() => newGuard.guardClose(() => setOpen(false))}>Cancelar</Button>
                   <Button type="submit" variant="accent" disabled={saving}>
                     {saving && <Loader2 className="h-4 w-4 animate-spin" />} Agendar
                   </Button>
@@ -1366,7 +1366,7 @@ const Agenda = () => {
               >
                 <Trash2 className="h-4 w-4" /> Excluir sessão
               </Button>
-              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
+              <Button type="button" variant="outline" onClick={() => editGuard.guardClose(() => setEditOpen(false))}>Cancelar</Button>
               <Button type="submit" variant="accent" disabled={editSaving}>
                 {editSaving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
               </Button>
