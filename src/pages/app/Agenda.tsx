@@ -1351,7 +1351,7 @@ const Agenda = () => {
 
       {/* ── Delete Confirmation Modal ── */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-[90vw] sm:max-w-sm mx-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="font-display text-xl">Excluir sessão</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
