@@ -134,6 +134,7 @@ const Agenda = () => {
   const [pendingPackageSessions, setPendingPackageSessions] = useState<Session[]>([]);
   const [loadingPending, setLoadingPending] = useState(true);
   const [pendingSort, setPendingSort] = useState<"date" | "patient">("date");
+  const [paymentFilter, setPaymentFilter] = useState<"pending" | "paid" | "all">("pending");
 
   // New session dialog
   const [open, setOpen] = useState(false);
