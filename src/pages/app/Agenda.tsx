@@ -458,7 +458,7 @@ const Agenda = () => {
     const isSinglePaymentNote = (notes: string | null) => /(?:Pgto|Pagamento) [úu]nico/i.test(notes || "");
     if (!pkgInfo || !session.patient_id || !isSinglePaymentNote(session.notes)) return null;
 
-    const allKnownSessions = [...sessions, ...pendingSessions].filter(
+    const allKnownSessions = [...sessions, ...pendingSessions, ...pendingPackageSessions].filter(
       (item, index, list) => list.findIndex((candidate) => candidate.id === item.id) === index
     );
     const matchingSessions = allKnownSessions
@@ -728,7 +728,7 @@ const Agenda = () => {
       group.sessions.forEach((item) => used.add(item.id));
       return [{ key: `single-${session.patient_id}-${group.dates.join("-")}`, session, sessions: group.sessions, total: group.total, dates: group.dates, isSinglePayment: true }];
     });
-  }, [sortedPending, sessions, pendingSessions]);
+  }, [sortedPending, sessions, pendingSessions, pendingPackageSessions]);
 
   // Unique patients in pending
   const pendingPatients = useMemo(() => {
