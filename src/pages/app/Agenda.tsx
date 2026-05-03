@@ -1459,9 +1459,9 @@ const Agenda = () => {
               disabled={deleting}
               onClick={() => executeDelete(false)}
             >
-              <Trash2 className="h-4 w-4 text-destructive shrink-0" />
+              <Trash2 className="h-4 w-4 text-muted-foreground shrink-0" />
               <div>
-                <p className="font-medium text-sm">Excluir apenas a sessão</p>
+                <p className="font-medium text-sm text-foreground">Excluir apenas a sessão</p>
                 <p className="text-xs text-muted-foreground">Remove a sessão, progresso e eventos vinculados</p>
               </div>
             </Button>
@@ -1474,7 +1474,7 @@ const Agenda = () => {
               <DollarSign className="h-4 w-4 text-destructive shrink-0" />
               <div>
                 <p className="font-medium text-sm text-destructive">Excluir sessão + lançamento financeiro</p>
-                <p className="text-xs text-muted-foreground">Remove tudo acima + o registro financeiro vinculado</p>
+                <p className="text-xs text-muted-foreground">Remove a sessão, progresso, eventos vinculados e o lançamento financeiro</p>
               </div>
             </Button>
           </div>
