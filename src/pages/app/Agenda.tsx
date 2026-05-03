@@ -336,6 +336,21 @@ const Agenda = () => {
       });
     }
 
+    // Sync to Google Calendar
+    if (created && gcalConnected) {
+      for (let i = 0; i < created.length; i++) {
+        const s = sessionsToInsert[i];
+        const pat = patients.find(p => p.id === s.patient_id);
+        syncSessionToGcal({
+          id: created[i].id,
+          scheduled_at: s.scheduled_at,
+          duration_minutes: s.duration_minutes,
+          patient_name: pat?.full_name ?? null,
+          notes: s.notes,
+        });
+      }
+    }
+
     setSaving(false);
     const totalValue = unitPrice ? unitPrice * totalSessions : 0;
     if (isRecurring) {
