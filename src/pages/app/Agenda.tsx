@@ -609,9 +609,16 @@ const Agenda = () => {
           <p className="mt-2 text-muted-foreground">Visualize e organize seus atendimentos.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => toast.info("Sincronização com Google Calendar em breve!")}>
-            <RefreshCw className="h-4 w-4 mr-1" /> Sincronizar com Google Calendar
-          </Button>
+          {gcalConnected ? (
+            <Button variant="outline" size="sm" onClick={disconnectGcal} className="border-emerald-300 text-emerald-700">
+              <CheckCircle2 className="h-4 w-4 mr-1" /> Google Calendar conectado
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={startGcalAuth} disabled={gcalLoading}>
+              {gcalLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+              Sincronizar com Google Calendar
+            </Button>
+          )}
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button variant="accent" onClick={() => openNew()}>
