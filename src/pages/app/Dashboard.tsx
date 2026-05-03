@@ -18,6 +18,10 @@ import {
   CalendarDays,
   CalendarRange,
   Banknote,
+  CheckCircle2,
+  XCircle,
+  CalendarClock,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths, startOfWeek, endOfWeek, startOfYear, endOfYear } from "date-fns";
