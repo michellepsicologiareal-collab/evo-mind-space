@@ -140,6 +140,7 @@ const Agenda = () => {
     recurrence: "single" as "single" | "recurring",
     recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
     payment_plan: "per_session" as "per_session" | "single_payment",
+    service_id: "" as string,
   });
 
   // Edit session
