@@ -20,7 +20,7 @@ import {
   Banknote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths, startOfWeek, endOfWeek, startOfYear, endOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CardSkeleton } from "@/components/app/Skeletons";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
