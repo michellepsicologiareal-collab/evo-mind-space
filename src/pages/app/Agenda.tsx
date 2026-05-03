@@ -54,6 +54,10 @@ interface Patient {
   id: string;
   full_name: string;
   session_price: number | null;
+  phone: string | null;
+  has_financial_responsible: boolean;
+  financial_responsible_name: string | null;
+  financial_responsible_phone: string | null;
 }
 
 interface Service {
@@ -204,7 +208,7 @@ const Agenda = () => {
         .gte("scheduled_at", mStart.toISOString())
         .lt("scheduled_at", mEnd.toISOString())
         .order("scheduled_at"),
-      supabase.from("patients").select("id, full_name, session_price").eq("user_id", user.id).eq("is_active", true).order("full_name"),
+      supabase.from("patients").select("id, full_name, session_price, phone, has_financial_responsible, financial_responsible_name, financial_responsible_phone").eq("user_id", user.id).eq("is_active", true).order("full_name"),
       (supabase as any).from("services").select("id, name, price, is_active").eq("user_id", user.id).eq("is_active", true).order("name"),
     ]);
     if (sRes.error) toast.error("Erro ao carregar sessões");
@@ -418,7 +422,16 @@ const Agenda = () => {
       psiName || "",
       psiCrp ? `Psicóloga | CRP ${psiCrp}` : "Psicóloga",
     ].filter(Boolean).join("\n");
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+
+    // Determine WhatsApp number: financial responsible or patient
+    const patient = patients.find((p) => p.id === s.patient_id);
+    let phoneNumber = "";
+    if (patient?.has_financial_responsible && patient.financial_responsible_phone) {
+      phoneNumber = patient.financial_responsible_phone.replace(/\D/g, "");
+    } else if (patient?.phone) {
+      phoneNumber = patient.phone.replace(/\D/g, "");
+    }
+    window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
   };
 
   const openEdit = async (s: Session) => {
@@ -1338,7 +1351,7 @@ const Agenda = () => {
 
       {/* ── Delete Confirmation Modal ── */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-[90vw] sm:max-w-sm mx-auto p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="font-display text-xl">Excluir sessão</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">

@@ -53,6 +53,9 @@ interface Patient {
   treatment_plan: string | null;
   anamnesis: string | null;
   category: "individual" | "crianca" | "grupo" | "casal";
+  has_financial_responsible: boolean;
+  financial_responsible_name: string | null;
+  financial_responsible_phone: string | null;
 }
 
 const FREE_PATIENT_LIMIT = 5;
@@ -74,7 +77,7 @@ const Patients = () => {
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
 
-  const [form, setForm] = useState<{ full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal" }>({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" });
+  const [form, setForm] = useState<{ full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string }>({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55" });
 
   const load = async () => {
     if (!user) return;
@@ -100,7 +103,7 @@ const Patients = () => {
       return;
     }
     setEditing(null);
-    setForm({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" as const });
+    setForm({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" as const, has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55" });
     setOpen(true);
   };
 
@@ -115,6 +118,15 @@ const Patients = () => {
       ddi = ddiMatch[1];
       localPhone = ddiMatch[2];
     }
+    // Extract DDI from financial responsible phone
+    const rawFrPhone = p.financial_responsible_phone ?? "";
+    let frDdi = "+55";
+    let frLocalPhone = rawFrPhone;
+    const frDdiMatch = rawFrPhone.match(/^(\+\d{1,4})\s*(.*)/);
+    if (frDdiMatch) {
+      frDdi = frDdiMatch[1];
+      frLocalPhone = frDdiMatch[2];
+    }
     setForm({
       full_name: p.full_name,
       email: p.email ?? "",
@@ -126,6 +138,10 @@ const Patients = () => {
       treatment_plan: p.treatment_plan ?? "",
       anamnesis: p.anamnesis ?? "",
       category: p.category ?? "individual",
+      has_financial_responsible: p.has_financial_responsible ?? false,
+      financial_responsible_name: p.financial_responsible_name ?? "",
+      financial_responsible_phone: frLocalPhone,
+      financial_responsible_ddi: frDdi,
     });
     setOpen(true);
   };
@@ -139,7 +155,7 @@ const Patients = () => {
       return;
     }
     setSaving(true);
-    const payload = {
+    const payload: any = {
       user_id: user.id,
       full_name: parsed.data.full_name,
       email: parsed.data.email || null,
@@ -150,6 +166,11 @@ const Patients = () => {
       treatment_plan: parsed.data.treatment_plan || null,
       anamnesis: parsed.data.anamnesis || null,
       category: parsed.data.category || "individual",
+      has_financial_responsible: form.has_financial_responsible,
+      financial_responsible_name: form.has_financial_responsible ? (form.financial_responsible_name || null) : null,
+      financial_responsible_phone: form.has_financial_responsible && form.financial_responsible_phone
+        ? `${form.financial_responsible_ddi || "+55"} ${form.financial_responsible_phone}`.trim()
+        : null,
     };
 
     const { error } = editing
@@ -294,6 +315,59 @@ const Patients = () => {
                 <Label htmlFor="price">Valor da sessão (R$)</Label>
                 <Input id="price" type="number" step="0.01" min="0" value={form.session_price} onChange={(e) => setForm({ ...form, session_price: e.target.value })} />
               </div>
+
+              {/* Financial Responsible Toggle */}
+              <div className="rounded-xl border border-border p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="has_financial_responsible" className="text-sm font-medium">Responsável financeiro é outra pessoa?</Label>
+                  <Switch
+                    id="has_financial_responsible"
+                    checked={form.has_financial_responsible}
+                    onCheckedChange={(checked) => setForm({ ...form, has_financial_responsible: checked })}
+                  />
+                </div>
+                {form.has_financial_responsible && (
+                  <div className="space-y-3 pt-2 border-t border-border">
+                    <div className="space-y-2">
+                      <Label htmlFor="fr_name">Nome do responsável</Label>
+                      <Input id="fr_name" placeholder="Nome completo" value={form.financial_responsible_name} onChange={(e) => setForm({ ...form, financial_responsible_name: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="fr_phone">Celular / WhatsApp do responsável</Label>
+                      <div className="flex gap-2">
+                        <select
+                          value={form.financial_responsible_ddi}
+                          onChange={(e) => setForm({ ...form, financial_responsible_ddi: e.target.value })}
+                          className="flex h-10 w-[100px] shrink-0 rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                          <option value="+55">🇧🇷 +55</option>
+                          <option value="+1">🇺🇸 +1</option>
+                          <option value="+351">🇵🇹 +351</option>
+                          <option value="+34">🇪🇸 +34</option>
+                          <option value="+33">🇫🇷 +33</option>
+                          <option value="+39">🇮🇹 +39</option>
+                          <option value="+49">🇩🇪 +49</option>
+                          <option value="+44">🇬🇧 +44</option>
+                          <option value="+81">🇯🇵 +81</option>
+                          <option value="+61">🇦🇺 +61</option>
+                          <option value="+54">🇦🇷 +54</option>
+                          <option value="+56">🇨🇱 +56</option>
+                          <option value="+57">🇨🇴 +57</option>
+                          <option value="+52">🇲🇽 +52</option>
+                          <option value="+595">🇵🇾 +595</option>
+                          <option value="+598">🇺🇾 +598</option>
+                          <option value="+41">🇨🇭 +41</option>
+                          <option value="+31">🇳🇱 +31</option>
+                          <option value="+353">🇮🇪 +353</option>
+                          <option value="+972">🇮🇱 +972</option>
+                        </select>
+                        <Input id="fr_phone" className="flex-1" placeholder="11 99988-7766" value={form.financial_responsible_phone} onChange={(e) => setForm({ ...form, financial_responsible_phone: e.target.value })} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="chief_complaint">Queixa Principal</Label>
                 <Textarea id="chief_complaint" rows={3} className="min-h-[80px]" placeholder="Descreva a queixa principal do paciente..." value={form.chief_complaint} onChange={(e) => setForm({ ...form, chief_complaint: e.target.value })} />
