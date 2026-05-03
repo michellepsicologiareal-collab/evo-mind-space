@@ -457,7 +457,7 @@ const Agenda = () => {
     setEditSessionId(s.id);
     setEditProgressId(null);
     const scheduledDate = new Date(s.scheduled_at);
-    setEditForm({
+    setEditFormRaw({
       status: s.status, payment_status: s.payment_status,
       payment_method: (s as any).payment_method ?? "none",
       payment_reference: (s as any).payment_reference ?? "",
@@ -479,7 +479,7 @@ const Agenda = () => {
         .select("id, mood_score, note").eq("session_id", s.id).eq("user_id", user.id).maybeSingle();
       if (data) {
         setEditProgressId(data.id);
-        setEditForm((prev) => ({
+        setEditFormRaw((prev) => ({
           ...prev,
           mood_score: data.mood_score != null ? String(data.mood_score) : "",
           progress_note: data.note ?? "",
