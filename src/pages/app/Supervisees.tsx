@@ -313,7 +313,7 @@ const Supervisees = () => {
       </section>
 
       <Dialog open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">
               {selectedPatient?.full_name}
