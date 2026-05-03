@@ -76,6 +76,7 @@ const Patients = () => {
   const [padeksyPatient, setPadeksyPatient] = useState<Patient | null>(null);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
+  const [profCrp, setProfCrp] = useState<string>("");
 
   const [form, setForm] = useState<{ full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string }>({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55" });
 
@@ -84,12 +85,13 @@ const Patients = () => {
     setLoading(true);
     const [patientsRes, profileRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
-      supabase.from("profiles").select("full_name, pix_key").eq("id", user.id).maybeSingle(),
+      supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
     setPixKey((profileRes.data as any)?.pix_key ?? "");
     setProfName(profileRes.data?.full_name ?? "");
+    setProfCrp((profileRes.data as any)?.crp ?? "");
     setLoading(false);
   };
 
