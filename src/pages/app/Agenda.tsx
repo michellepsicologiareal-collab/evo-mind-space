@@ -1484,7 +1484,53 @@ const Agenda = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ── Patient Drawer ── */}
+      {/* ── Reschedule Recurring Modal ── */}
+      <Dialog open={rescheduleModalOpen} onOpenChange={setRescheduleModalOpen}>
+        <DialogContent className="max-w-[90vw] sm:max-w-sm mx-auto p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">Remarcar sessão de pacote</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Esta sessão faz parte de um pacote recorrente. Como deseja remarcar?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-3 h-auto py-3 text-left"
+              disabled={editSaving}
+              onClick={() => {
+                setRescheduleModalOpen(false);
+                if (pendingEditEvent) handleEditSave(pendingEditEvent, false);
+              }}
+            >
+              <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
+              <div>
+                <p className="font-medium text-sm">Alterar apenas esta sessão</p>
+                <p className="text-xs text-muted-foreground">Só esta sessão será remarcada</p>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-3 h-auto py-3 text-left border-primary/30 hover:bg-primary/5"
+              disabled={editSaving}
+              onClick={() => {
+                setRescheduleModalOpen(false);
+                if (pendingEditEvent) handleEditSave(pendingEditEvent, true);
+              }}
+            >
+              <Users className="h-4 w-4 text-primary shrink-0" />
+              <div>
+                <p className="font-medium text-sm">Alterar todas as próximas sessões</p>
+                <p className="text-xs text-muted-foreground">Remarca esta e todas as futuras do pacote mantendo o intervalo</p>
+              </div>
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRescheduleModalOpen(false)} disabled={editSaving}>Cancelar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader className="mb-4">
