@@ -360,32 +360,17 @@ const Patients = () => {
                     <div className="space-y-2">
                       <Label htmlFor="fr_phone">Celular / WhatsApp do responsável</Label>
                       <div className="flex gap-2">
-                        <select
+                        <Input
                           value={form.financial_responsible_ddi}
-                          onChange={(e) => setForm({ ...form, financial_responsible_ddi: e.target.value })}
-                          className="flex h-10 w-[100px] shrink-0 rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                          <option value="+55">🇧🇷 +55</option>
-                          <option value="+1">🇺🇸 +1</option>
-                          <option value="+351">🇵🇹 +351</option>
-                          <option value="+34">🇪🇸 +34</option>
-                          <option value="+33">🇫🇷 +33</option>
-                          <option value="+39">🇮🇹 +39</option>
-                          <option value="+49">🇩🇪 +49</option>
-                          <option value="+44">🇬🇧 +44</option>
-                          <option value="+81">🇯🇵 +81</option>
-                          <option value="+61">🇦🇺 +61</option>
-                          <option value="+54">🇦🇷 +54</option>
-                          <option value="+56">🇨🇱 +56</option>
-                          <option value="+57">🇨🇴 +57</option>
-                          <option value="+52">🇲🇽 +52</option>
-                          <option value="+595">🇵🇾 +595</option>
-                          <option value="+598">🇺🇾 +598</option>
-                          <option value="+41">🇨🇭 +41</option>
-                          <option value="+31">🇳🇱 +31</option>
-                          <option value="+353">🇮🇪 +353</option>
-                          <option value="+972">🇮🇱 +972</option>
-                        </select>
+                          onChange={(e) => {
+                            let v = e.target.value;
+                            if (v && !v.startsWith("+")) v = "+" + v;
+                            setForm({ ...form, financial_responsible_ddi: v });
+                          }}
+                          className="w-[80px] shrink-0 text-center"
+                          placeholder="+55"
+                          maxLength={5}
+                        />
                         <Input id="fr_phone" className="flex-1" placeholder="11 99988-7766" value={form.financial_responsible_phone} onChange={(e) => setForm({ ...form, financial_responsible_phone: e.target.value })} />
                       </div>
                     </div>
