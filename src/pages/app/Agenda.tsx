@@ -965,21 +965,23 @@ const Agenda = () => {
                               key={dateKey}
                               onClick={() => setSelectedDate(cell)}
                               className={cn(
-                                "aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all text-sm",
+                                "aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all text-sm leading-none",
                                 isSelected ? "bg-accent text-accent-foreground ring-2 ring-accent/40 font-bold"
                                   : isToday ? "bg-primary/10 text-primary font-semibold"
                                     : "hover:bg-muted/50 text-foreground"
                               )}
                             >
-                              {format(cell, "d")}
-                              {hasSessions && (
-                                <div className="flex gap-0.5 mt-0.5">
+                              <span>{format(cell, "d")}</span>
+                              {hasSessions ? (
+                                <span className="flex items-center gap-0.5 h-3">
                                   <span className={cn(
-                                    "w-1.5 h-1.5 rounded-full",
+                                    "w-1.5 h-1.5 rounded-full shrink-0",
                                     isSelected ? "bg-accent-foreground" : "bg-accent"
                                   )} />
                                   {dayCount > 1 && <span className={cn("text-[8px] leading-none", isSelected ? "text-accent-foreground" : "text-accent")}>{dayCount}</span>}
-                                </div>
+                                </span>
+                              ) : (
+                                <span className="h-3" />
                               )}
                             </button>
                           );
