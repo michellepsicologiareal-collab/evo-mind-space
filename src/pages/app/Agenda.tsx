@@ -1221,16 +1221,16 @@ const Agenda = () => {
               <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
                 {sortedPending.map((s) => (
                   <div key={s.id} className="rounded-xl border border-border bg-background p-3 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        {s.patient_id && s.patient_name ? (
-                          <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
-                        ) : (
-                          <p className="font-display text-sm font-medium truncate">{s.patient_name}</p>
-                        )}
+                    <div className="min-w-0">
+                      {s.patient_id && s.patient_name ? (
+                        <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
+                      ) : (
+                        <p className="font-display text-sm font-medium truncate">{s.patient_name}</p>
+                      )}
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
                         <p className="text-xs text-muted-foreground">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
+                        <p className="font-display font-bold text-accent whitespace-nowrap">R$ {Number(s.price ?? 0).toFixed(2)}</p>
                       </div>
-                      <p className="font-display font-bold text-accent whitespace-nowrap shrink-0">R$ {Number(s.price ?? 0).toFixed(2)}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Select value={s.payment_status} onValueChange={(v) => updatePaymentStatus(s.id, v as PaymentStatus)}>
