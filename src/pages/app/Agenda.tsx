@@ -685,7 +685,7 @@ const Agenda = () => {
     const [patientRes, sessionsRes] = await Promise.all([
       supabase.from("patients").select("*").eq("id", patientId).single(),
       supabase.from("sessions")
-        .select("id, scheduled_at, status, price, payment_status, payment_method, duration_minutes, notes")
+        .select("id, scheduled_at, status, price, payment_status, payment_method, duration_minutes, notes, billing_sent_at")
         .eq("user_id", user.id).eq("patient_id", patientId).eq("session_type", "clinical")
         .order("scheduled_at", { ascending: false })
         .limit(100),
