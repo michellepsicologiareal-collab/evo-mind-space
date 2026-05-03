@@ -53,6 +53,9 @@ interface Patient {
   treatment_plan: string | null;
   anamnesis: string | null;
   category: "individual" | "crianca" | "grupo" | "casal";
+  has_financial_responsible: boolean;
+  financial_responsible_name: string | null;
+  financial_responsible_phone: string | null;
 }
 
 const FREE_PATIENT_LIMIT = 5;
