@@ -407,6 +407,7 @@ const Agenda = () => {
   const openEdit = async (s: Session) => {
     setEditSessionId(s.id);
     setEditProgressId(null);
+    const scheduledDate = new Date(s.scheduled_at);
     setEditForm({
       status: s.status, payment_status: s.payment_status,
       payment_method: (s as any).payment_method ?? "none",
@@ -414,6 +415,13 @@ const Agenda = () => {
       price: s.price != null ? String(s.price) : "",
       notes: s.notes ?? "", duration_minutes: s.duration_minutes,
       mood_score: "", progress_note: "",
+      session_type: s.session_type,
+      service_id: s.service_id ?? "",
+      recurrence: "single",
+      recurrence_count: 4, recurrence_interval: "weekly",
+      payment_plan: "per_session",
+      date: format(scheduledDate, "yyyy-MM-dd"),
+      time: format(scheduledDate, "HH:mm"),
     });
     setEditOpen(true);
     if (s.patient_id && user) {
