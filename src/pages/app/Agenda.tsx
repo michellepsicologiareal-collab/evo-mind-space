@@ -488,7 +488,7 @@ const Agenda = () => {
     };
   };
 
-  const sendWhatsAppReminder = (s: Session) => {
+  const sendWhatsAppReminder = async (s: Session) => {
     const name = s.patient_name || "Paciente";
     const singlePaymentGroup = getSinglePaymentGroup(s);
     const dateStr = singlePaymentGroup ? singlePaymentGroup.dates.join(", ") : format(new Date(s.scheduled_at), "dd/MM/yyyy");
