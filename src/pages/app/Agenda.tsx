@@ -828,8 +828,13 @@ const Agenda = () => {
                       });
                       return (
                         <div className="rounded-lg bg-card border border-border p-3 text-sm space-y-1.5">
-                          <p className="font-medium text-foreground">📋 {form.recurrence_count} sessões — Total: <span className="text-accent font-bold">R$ {total.toFixed(2)}</span></p>
-                          <p className="text-xs text-muted-foreground">📅 {dates.join(", ")}</p>
+                          <p className="font-medium text-foreground">{"\uD83D\uDCCB"} {form.recurrence_count} sess\u00f5es — Total: <span className="text-accent font-bold">R$ {total.toFixed(2)}</span></p>
+                          <p className="text-xs text-muted-foreground">
+                            {form.payment_plan === "single_payment"
+                              ? `\uD83D\uDCB3 1 lan\u00e7amento financeiro de R$ ${total.toFixed(2)}`
+                              : `\uD83D\uDCB3 ${form.recurrence_count}x R$ ${unitPrice.toFixed(2)}`}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{"\uD83D\uDCC5"} {dates.join(", ")}</p>
                         </div>
                       );
                     })()}
