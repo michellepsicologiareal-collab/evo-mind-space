@@ -1548,6 +1548,8 @@ const Agenda = () => {
           </Tabs>
         </SheetContent>
       </Sheet>
+      <UnsavedGuardDialog open={newGuard.confirmOpen} onConfirm={newGuard.confirmLeave} onCancel={newGuard.cancelLeave} />
+      <UnsavedGuardDialog open={editGuard.confirmOpen} onConfirm={editGuard.confirmLeave} onCancel={editGuard.cancelLeave} />
     </div>
   );
 };
