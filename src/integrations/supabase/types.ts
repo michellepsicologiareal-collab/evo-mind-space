@@ -700,6 +700,42 @@ export type Database = {
           },
         ]
       }
+      supervisee_goals: {
+        Row: {
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          status: string
+          supervisee_id: string
+          supervisor_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          status?: string
+          supervisee_id: string
+          supervisor_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          status?: string
+          supervisee_id?: string
+          supervisor_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tcc_records: {
         Row: {
           automatic_thought: string | null
