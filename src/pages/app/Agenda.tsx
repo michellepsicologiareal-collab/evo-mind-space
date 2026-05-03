@@ -204,6 +204,7 @@ const Agenda = () => {
     }));
     setSessions(mapped as Session[]);
     setPatients((pRes.data as Patient[]) ?? []);
+    setServices((svRes.data as Service[]) ?? []);
     setLoading(false);
   };
 
