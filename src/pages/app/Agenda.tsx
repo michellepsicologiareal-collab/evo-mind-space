@@ -131,6 +131,7 @@ const Agenda = () => {
 
   // Pending
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
+  const [pendingPackageSessions, setPendingPackageSessions] = useState<Session[]>([]);
   const [loadingPending, setLoadingPending] = useState(true);
   const [pendingSort, setPendingSort] = useState<"date" | "patient">("date");
 
@@ -248,6 +249,21 @@ const Agenda = () => {
     const mapped = (data ?? []).map((s: any) => ({
       ...s, patient_name: s.patient?.full_name ?? null, discussed_patient_name: null,
     }));
+    const packagePatientIds = Array.from(new Set(mapped.filter((s: any) => /(?:Pgto|Pagamento) [úu]nico/i.test(s.notes || "") && s.patient_id).map((s: any) => s.patient_id)));
+    if (packagePatientIds.length > 0) {
+      const { data: packageData } = await supabase
+        .from("sessions")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, patient:patients!sessions_patient_id_fkey(full_name)")
+        .eq("user_id", user.id)
+        .eq("session_type", "clinical")
+        .in("patient_id", packagePatientIds)
+        .ilike("notes", "%Pgto%")
+        .order("scheduled_at", { ascending: true })
+        .limit(200);
+      setPendingPackageSessions((packageData ?? []).map((s: any) => ({ ...s, patient_name: s.patient?.full_name ?? null, discussed_patient_name: null })) as Session[]);
+    } else {
+      setPendingPackageSessions([]);
+    }
     setPendingSessions(mapped as Session[]);
     setLoadingPending(false);
   };
