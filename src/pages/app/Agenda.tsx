@@ -431,7 +431,10 @@ const Agenda = () => {
     const pkgInfo = getPackageInfo(session.notes);
     if (!pkgInfo || !session.patient_id || !/Pgto único/i.test(session.notes || "")) return null;
 
-    const groupSessions = pendingSessions
+    const allKnownSessions = [...sessions, ...pendingSessions].filter(
+      (item, index, list) => list.findIndex((candidate) => candidate.id === item.id) === index
+    );
+    const groupSessions = allKnownSessions
       .filter((item) => {
         const info = getPackageInfo(item.notes);
         return item.patient_id === session.patient_id && info?.total === pkgInfo.total && /Pgto único/i.test(item.notes || "");
