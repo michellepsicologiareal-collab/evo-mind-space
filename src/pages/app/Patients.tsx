@@ -218,14 +218,34 @@ const Patients = () => {
   const inactiveCount = patients.length - activeCount;
 
   const buildWhatsAppUrl = (p: Patient) => {
-    const digits = normalizePhoneForWhatsApp(p.phone);
+    // Use financial responsible phone if available
+    let digits: string;
+    if (p.has_financial_responsible && p.financial_responsible_phone) {
+      digits = p.financial_responsible_phone.replace(/\D/g, "");
+    } else {
+      digits = normalizePhoneForWhatsApp(p.phone);
+    }
     if (!digits) return null;
 
-    const valor = p.session_price != null ? `R$ ${Number(p.session_price).toFixed(2).replace(".", ",")}` : "";
-    let msg = `Olá, ${p.full_name.split(" ")[0]}! 😊\n\nSegue o valor da sua sessão: ${valor}.\n`;
-    if (pixKey) msg += `\nChave Pix para pagamento:\n${pixKey}\n`;
-    msg += `\nQualquer dúvida, estou à disposição.\n${profName ? `— ${profName}` : ""}`;
-    return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
+    const recipientName = p.has_financial_responsible && p.financial_responsible_name
+      ? p.financial_responsible_name.split(" ")[0]
+      : p.full_name.split(" ")[0];
+    const valor = p.session_price != null ? `R$ ${Number(p.session_price).toFixed(2).replace(".", ",")}` : "a combinar";
+    const firstName = profName ? profName.split(" ")[0] : "";
+    const message = [
+      `Ol\u00e1, ${recipientName}! Aqui \u00e9 a sua psi, ${firstName || "sua psic\u00f3loga"}.`,
+      "",
+      `Passando para lembrar do acerto referente \u00e0 sess\u00e3o de ${p.full_name.split(" ")[0]}.`,
+      "",
+      `\u{1F4B3} Valor: ${valor}`,
+      pixKey ? `\u{1F511} Chave Pix: ${pixKey}` : "",
+      "",
+      `Assim que realizar, pode me enviar o comprovante por aqui. Qualquer d\u00favida, fico \u00e0 disposi\u00e7\u00e3o!`,
+      "",
+      profName || "",
+      profCrp ? `Psic\u00f3loga | CRP ${profCrp}` : "Psic\u00f3loga",
+    ].filter(Boolean).join("\n");
+    return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
   };
 
   const filtered = patients
