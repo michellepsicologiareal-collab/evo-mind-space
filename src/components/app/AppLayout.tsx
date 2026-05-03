@@ -4,7 +4,7 @@ import logoSrc from "@/assets/logo-psireal.png";
 import {
   LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut,
   GraduationCap, ShieldCheck, Crown, Lock, BookOpen, Flower2, FileText,
-  FileCheck, Shield, UserCog,
+  FileCheck, Shield, UserCog, Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -28,6 +28,7 @@ interface NavItem {
 
 /* ── Navigation items for ALL users (including admin as regular user) ── */
 const allNavItems: NavItem[] = [
+  { to: "/app/comece-por-aqui", label: "Comece por Aqui", icon: Sparkles },
   { to: "/app", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "/app/pacientes", label: "Pacientes", icon: Users },
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
