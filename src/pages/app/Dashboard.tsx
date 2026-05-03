@@ -393,6 +393,11 @@ const Dashboard = () => {
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard icon={Users} label="Pacientes Ativos" value={stats.activePatients.toString()} />
         <KPICard icon={Calendar} label="Sessões Hoje" value={stats.todaySessions.toString()} />
+        <KPICard icon={CalendarDays} label="Sessões esta Semana" value={weekSessions.toString()} />
+        <KPICard icon={CalendarRange} label="Sessões este Mês" value={monthSessions.toString()} />
+      </section>
+
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           icon={TrendingUp}
           label="Faturamento Mensal"
@@ -406,6 +411,12 @@ const Dashboard = () => {
               {hideRevenue ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             </button>
           }
+          highlight
+        />
+        <KPICard
+          icon={Banknote}
+          label={`Faturamento ${new Date().getFullYear()}`}
+          value={hideRevenue ? "•••••" : `R$ ${yearRevenue.toFixed(2).replace(".", ",")}`}
           highlight
         />
         <KPICard icon={Briefcase} label="Casos em Supervisão" value={stats.supervisionCases.toString()} />
