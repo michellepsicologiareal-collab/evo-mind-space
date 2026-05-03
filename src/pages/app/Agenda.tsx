@@ -714,7 +714,7 @@ const Agenda = () => {
           <h1 className="font-display text-4xl font-medium">Agenda</h1>
           <p className="mt-2 text-muted-foreground">Visualize e organize seus atendimentos.</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
             <Button variant="accent" onClick={() => openNew()}>
               <Plus className="h-4 w-4" /> Nova sessão
