@@ -15,6 +15,9 @@ import {
   Target,
   SmilePlus,
   Heart,
+  CalendarDays,
+  CalendarRange,
+  Banknote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths } from "date-fns";
