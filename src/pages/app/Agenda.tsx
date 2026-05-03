@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import {
@@ -25,6 +25,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
+import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
 type PaymentStatus = "pending" | "paid";
@@ -136,7 +138,8 @@ const Agenda = () => {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [patientMonthCount, setPatientMonthCount] = useState<{ count: number; dates: string[] } | null>(null);
-  const [form, setForm] = useState({
+  const newGuard = useUnsavedGuard();
+  const [form, setFormRaw] = useState({
     session_type: "clinical" as SessionType,
     patient_id: "", discussed_patient_id: "",
     date: format(new Date(), "yyyy-MM-dd"), time: "09:00",
@@ -148,12 +151,14 @@ const Agenda = () => {
     payment_plan: "per_session" as "per_session" | "single_payment",
     service_id: "" as string,
   });
+  const setForm: typeof setFormRaw = useCallback((v) => { newGuard.markDirty(); setFormRaw(v); }, [newGuard.markDirty]);
 
   // Edit session
   const [editOpen, setEditOpen] = useState(false);
   const [editSessionId, setEditSessionId] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
-  const [editForm, setEditForm] = useState({
+  const editGuard = useUnsavedGuard();
+  const [editForm, setEditFormRaw] = useState({
     status: "scheduled" as Status,
     payment_status: "pending" as PaymentStatus,
     payment_method: "none" as "none" | "pix" | "card" | "cash",
@@ -166,6 +171,7 @@ const Agenda = () => {
     payment_plan: "per_session" as "per_session" | "single_payment",
     date: "", time: "",
   });
+  const setEditForm: typeof setEditFormRaw = useCallback((v) => { editGuard.markDirty(); setEditFormRaw(v); }, [editGuard.markDirty]);
   const [editProgressId, setEditProgressId] = useState<string | null>(null);
 
   // Patient filter for pending list
@@ -273,6 +279,7 @@ const Agenda = () => {
       recurrence: "single", recurrence_count: 4, recurrence_interval: "weekly",
       payment_plan: "per_session", service_id: "",
     });
+    newGuard.resetDirty();
     setOpen(true);
   };
 
@@ -348,6 +355,7 @@ const Agenda = () => {
     } else {
       toast.success("Sessão agendada");
     }
+    newGuard.resetDirty();
     setOpen(false);
     load(); loadPending();
   };
@@ -398,7 +406,7 @@ const Agenda = () => {
     setDeleting(false);
     setDeleteConfirmOpen(false);
     setDeleteSessionId(null);
-    if (editOpen) setEditOpen(false);
+    if (editOpen) { editGuard.resetDirty(); setEditOpen(false); }
     load(); loadPending();
   };
 
@@ -464,6 +472,7 @@ const Agenda = () => {
       date: format(scheduledDate, "yyyy-MM-dd"),
       time: format(scheduledDate, "HH:mm"),
     });
+    editGuard.resetDirty();
     setEditOpen(true);
     if (s.patient_id && user) {
       const { data } = await supabase.from("patient_progress")
@@ -521,6 +530,7 @@ const Agenda = () => {
 
     setEditSaving(false);
     toast.success("Sessão atualizada");
+    editGuard.resetDirty();
     setEditOpen(false);
     load(); loadPending();
   };
@@ -704,7 +714,7 @@ const Agenda = () => {
           <h1 className="font-display text-4xl font-medium">Agenda</h1>
           <p className="mt-2 text-muted-foreground">Visualize e organize seus atendimentos.</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
             <Button variant="accent" onClick={() => openNew()}>
               <Plus className="h-4 w-4" /> Nova sessão
@@ -888,7 +898,7 @@ const Agenda = () => {
                   </div>
                 )}
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                  <Button type="button" variant="outline" onClick={() => newGuard.guardClose(() => setOpen(false))}>Cancelar</Button>
                   <Button type="submit" variant="accent" disabled={saving}>
                     {saving && <Loader2 className="h-4 w-4 animate-spin" />} Agendar
                   </Button>
@@ -1180,7 +1190,7 @@ const Agenda = () => {
       </div>
 
       {/* ── Edit Session Dialog ── */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+      <Dialog open={editOpen} onOpenChange={(v) => { if (!v) { editGuard.guardClose(() => setEditOpen(false)); } else { setEditOpen(true); } }}>
         <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">Editar sessão</DialogTitle>
@@ -1356,7 +1366,7 @@ const Agenda = () => {
               >
                 <Trash2 className="h-4 w-4" /> Excluir sessão
               </Button>
-              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Cancelar</Button>
+              <Button type="button" variant="outline" onClick={() => editGuard.guardClose(() => setEditOpen(false))}>Cancelar</Button>
               <Button type="submit" variant="accent" disabled={editSaving}>
                 {editSaving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
               </Button>
@@ -1538,6 +1548,8 @@ const Agenda = () => {
           </Tabs>
         </SheetContent>
       </Sheet>
+      <UnsavedGuardDialog open={newGuard.confirmOpen} onConfirm={newGuard.confirmLeave} onCancel={newGuard.cancelLeave} />
+      <UnsavedGuardDialog open={editGuard.confirmOpen} onConfirm={editGuard.confirmLeave} onCancel={editGuard.cancelLeave} />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -19,6 +19,8 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
+import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 
 const PATIENT_CATEGORIES = [
   { value: "individual", label: "Individual" },
@@ -77,8 +79,10 @@ const Patients = () => {
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
   const [profCrp, setProfCrp] = useState<string>("");
+  const patientGuard = useUnsavedGuard();
 
-  const [form, setForm] = useState<{ full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string }>({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55" });
+  const [form, setFormRaw] = useState<{ full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string }>({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55" });
+  const setForm = useCallback((v: typeof form | ((prev: typeof form) => typeof form)) => { patientGuard.markDirty(); setFormRaw(v); }, [patientGuard.markDirty]);
 
   const load = async () => {
     if (!user) return;
@@ -106,6 +110,7 @@ const Patients = () => {
     }
     setEditing(null);
     setForm({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" as const, has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55" });
+    patientGuard.resetDirty();
     setOpen(true);
   };
 
@@ -145,6 +150,7 @@ const Patients = () => {
       financial_responsible_phone: frLocalPhone,
       financial_responsible_ddi: frDdi,
     });
+    patientGuard.resetDirty();
     setOpen(true);
   };
 
@@ -184,6 +190,7 @@ const Patients = () => {
       return;
     }
     toast.success(editing ? "Paciente atualizado" : "Paciente cadastrado");
+    patientGuard.resetDirty();
     setOpen(false);
     load();
   };
@@ -266,7 +273,7 @@ const Patients = () => {
           <h1 className="font-display text-4xl font-medium">Pacientes</h1>
           <p className="mt-2 text-muted-foreground">Gerencie quem está sob seus cuidados.</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { patientGuard.guardClose(() => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
             <Button variant="accent" className="min-h-[44px]" onClick={openNew}>
               <Plus className="h-4 w-4" /> Novo paciente
@@ -407,7 +414,7 @@ const Patients = () => {
                 <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
               <DialogFooter className="gap-2">
-                <Button type="button" variant="outline" className="min-h-[44px]" onClick={() => setOpen(false)}>Cancelar</Button>
+                <Button type="button" variant="outline" className="min-h-[44px]" onClick={() => patientGuard.guardClose(() => setOpen(false))}>Cancelar</Button>
                 <Button type="submit" variant="accent" className="min-h-[44px]" disabled={saving}>
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                   {editing ? "Salvar" : "Cadastrar"}
@@ -555,6 +562,7 @@ const Patients = () => {
       </Dialog>
 
       <PremiumGate open={gateOpen} onOpenChange={setGateOpen} />
+      <UnsavedGuardDialog open={patientGuard.confirmOpen} onConfirm={patientGuard.confirmLeave} onCancel={patientGuard.cancelLeave} />
     </div>
   );
 };
