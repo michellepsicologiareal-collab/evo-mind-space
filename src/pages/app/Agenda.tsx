@@ -116,6 +116,7 @@ const Agenda = () => {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [sessions, setSessions] = useState<Session[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [pixKey, setPixKey] = useState("");
   const [viewTab, setViewTab] = useState<string>("month");
