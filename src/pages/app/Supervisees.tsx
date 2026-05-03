@@ -45,20 +45,6 @@ interface SuperviseeRow {
   patients: Patient[];
 }
 
-interface SessionSummary {
-  id: string;
-  scheduled_at: string;
-  status: string;
-  notes: string | null;
-}
-
-interface ProgressEntry {
-  id: string;
-  recorded_at: string;
-  mood_score: number | null;
-  note: string | null;
-}
-
 const Supervisees = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -69,43 +55,6 @@ const Supervisees = () => {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [tabFilter, setTabFilter] = useState<Record<string, "active" | "inactive" | "all">>({});
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [recentSessions, setRecentSessions] = useState<SessionSummary[]>([]);
-  const [latestProgress, setLatestProgress] = useState<ProgressEntry | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-
-  useEffect(() => {
-    if (!selectedPatient) {
-      setRecentSessions([]);
-      setLatestProgress(null);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      setDetailLoading(true);
-      const [sRes, pRes] = await Promise.all([
-        supabase
-          .from("sessions")
-          .select("id, scheduled_at, status, notes")
-          .eq("patient_id", selectedPatient.id)
-          .order("scheduled_at", { ascending: false })
-          .limit(3),
-        (supabase as any)
-          .from("patient_progress")
-          .select("id, recorded_at, mood_score, note")
-          .eq("patient_id", selectedPatient.id)
-          .order("recorded_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ]);
-      if (cancelled) return;
-      setRecentSessions((sRes.data as SessionSummary[]) ?? []);
-      setLatestProgress((pRes.data as ProgressEntry | null) ?? null);
-      setDetailLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedPatient]);
 
   const load = async () => {
     if (!user) return;
