@@ -28,6 +28,7 @@ interface NavItem {
 
 /* ── Navigation items for ALL users (including admin as regular user) ── */
 const allNavItems: NavItem[] = [
+  { to: "/app/comece-por-aqui", label: "Comece por Aqui", icon: Sparkles },
   { to: "/app", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "/app/pacientes", label: "Pacientes", icon: Users },
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
