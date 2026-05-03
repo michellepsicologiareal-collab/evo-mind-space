@@ -106,10 +106,20 @@ const Patients = () => {
 
   const openEdit = (p: Patient) => {
     setEditing(p);
+    // Extract DDI from stored phone if it starts with +
+    const rawPhone = p.phone ?? "";
+    let ddi = "+55";
+    let localPhone = rawPhone;
+    const ddiMatch = rawPhone.match(/^(\+\d{1,4})\s*(.*)/);
+    if (ddiMatch) {
+      ddi = ddiMatch[1];
+      localPhone = ddiMatch[2];
+    }
     setForm({
       full_name: p.full_name,
       email: p.email ?? "",
-      phone: p.phone ?? "",
+      phone: localPhone,
+      phone_ddi: ddi,
       notes: p.notes ?? "",
       session_price: p.session_price?.toString() ?? "",
       chief_complaint: p.chief_complaint ?? "",
