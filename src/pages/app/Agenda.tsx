@@ -134,6 +134,7 @@ const Agenda = () => {
   const [pendingPackageSessions, setPendingPackageSessions] = useState<Session[]>([]);
   const [loadingPending, setLoadingPending] = useState(true);
   const [pendingSort, setPendingSort] = useState<"date" | "patient">("date");
+  const [paymentFilter, setPaymentFilter] = useState<"pending" | "paid" | "all">("pending");
 
   // New session dialog
   const [open, setOpen] = useState(false);
@@ -237,15 +238,19 @@ const Agenda = () => {
   const loadPending = async () => {
     if (!user) return;
     setLoadingPending(true);
+    const mStart = startOfMonth(currentMonth).toISOString();
+    const mEnd = endOfMonth(currentMonth).toISOString();
     const { data } = await supabase
       .from("sessions")
       .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, patient:patients!sessions_patient_id_fkey(full_name)")
       .eq("user_id", user.id)
-      .eq("payment_status", "pending")
       .eq("session_type", "clinical")
       .not("patient_id", "is", null)
+      .not("status", "in", '("cancelled","no_show")')
+      .gte("scheduled_at", mStart)
+      .lte("scheduled_at", mEnd)
       .order("scheduled_at", { ascending: false })
-      .limit(50);
+      .limit(200);
     const mapped = (data ?? []).map((s: any) => ({
       ...s, patient_name: s.patient?.full_name ?? null, discussed_patient_name: null,
     }));
@@ -258,6 +263,7 @@ const Agenda = () => {
         .eq("session_type", "clinical")
         .in("patient_id", packagePatientIds)
         .ilike("notes", "%Pgto%")
+        .not("status", "in", '("cancelled","no_show")')
         .order("scheduled_at", { ascending: true })
         .limit(200);
       setPendingPackageSessions((packageData ?? []).map((s: any) => ({ ...s, patient_name: s.patient?.full_name ?? null, discussed_patient_name: null })) as Session[]);
@@ -708,16 +714,22 @@ const Agenda = () => {
     });
   }, [sessions, weekStart]);
 
-  const pendingTotal = pendingSessions.reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+  const pendingTotal = pendingSessions.filter(s => s.payment_status === "pending").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+  const paidTotal = pendingSessions.filter(s => s.payment_status === "paid").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+
+  const filteredByPayment = useMemo(() => {
+    if (paymentFilter === "all") return pendingSessions;
+    return pendingSessions.filter(s => s.payment_status === paymentFilter);
+  }, [pendingSessions, paymentFilter]);
 
   const sortedPending = useMemo(() => {
-    let list = [...pendingSessions];
+    let list = [...filteredByPayment];
     if (filterPatientId !== "all") list = list.filter((s) => s.patient_id === filterPatientId);
     if (pendingSort === "patient") {
       list.sort((a, b) => (a.patient_name ?? "").localeCompare(b.patient_name ?? ""));
     }
     return list;
-  }, [pendingSessions, pendingSort, filterPatientId]);
+  }, [filteredByPayment, pendingSort, filterPatientId]);
 
   const groupedPending = useMemo(() => {
     const used = new Set<string>();
@@ -733,9 +745,9 @@ const Agenda = () => {
   // Unique patients in pending
   const pendingPatients = useMemo(() => {
     const map = new Map<string, string>();
-    pendingSessions.forEach((s) => { if (s.patient_id && s.patient_name) map.set(s.patient_id, s.patient_name); });
+    filteredByPayment.forEach((s) => { if (s.patient_id && s.patient_name) map.set(s.patient_id, s.patient_name); });
     return Array.from(map.entries());
-  }, [pendingSessions]);
+  }, [filteredByPayment]);
 
   // ── Month calendar grid ──
   const monthGrid = useMemo(() => {
@@ -1250,16 +1262,23 @@ const Agenda = () => {
           </Tabs>
         </div>
 
-        {/* ── RIGHT: Pending Payments ── */}
+        {/* ── RIGHT: Sessions Panel ── */}
         <div className="space-y-4">
           <div className="rounded-2xl bg-card border border-border shadow-card p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h2 className="font-display font-semibold text-lg">Sessões Pendentes</h2>
-                <p className="text-xs text-muted-foreground">
-                  {pendingSessions.length} pendência{pendingSessions.length !== 1 ? "s" : ""} • Total: <span className="font-semibold text-accent">R$ {pendingTotal.toFixed(2)}</span>
-                </p>
-              </div>
+            <div className="mb-3">
+              <h2 className="font-display font-semibold text-lg">Sessões do Mês</h2>
+              <p className="text-xs text-muted-foreground">
+                {format(currentMonth, "MMMM yyyy", { locale: ptBR })} • <span className="text-accent font-semibold">Pendente: R$ {pendingTotal.toFixed(2)}</span> • <span className="text-emerald-600 font-semibold">Pago: R$ {paidTotal.toFixed(2)}</span>
+              </p>
+            </div>
+
+            {/* Payment status tabs */}
+            <div className="flex items-center gap-1 mb-3 bg-muted/50 rounded-lg p-0.5">
+              {([["pending", "Pendentes"], ["paid", "Pagos"], ["all", "Todos"]] as const).map(([val, label]) => (
+                <button key={val} onClick={() => setPaymentFilter(val)} className={cn("flex-1 text-xs py-1.5 px-2 rounded-md font-medium transition-colors", paymentFilter === val ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>
+                  {label}
+                </button>
+              ))}
             </div>
 
             {/* Filters */}
@@ -1288,7 +1307,7 @@ const Agenda = () => {
             ) : sortedPending.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground">
                 <CheckCircle2 className="h-10 w-10 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">Nenhum pagamento pendente 🎉</p>
+                <p className="text-sm">{paymentFilter === "paid" ? "Nenhuma sessão paga neste mês" : paymentFilter === "all" ? "Nenhuma sessão neste mês" : "Nenhum pagamento pendente 🎉"}</p>
               </div>
             ) : (
               <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
