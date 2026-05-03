@@ -149,6 +149,7 @@ const Patients = () => {
       financial_responsible_phone: frLocalPhone,
       financial_responsible_ddi: frDdi,
     });
+    patientGuard.resetDirty();
     setOpen(true);
   };
 
