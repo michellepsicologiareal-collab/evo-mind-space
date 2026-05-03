@@ -11,10 +11,6 @@ import {
   UserRound,
   ChevronDown,
   ChevronRight,
-  StickyNote,
-  CalendarDays,
-  Smile,
-  Activity,
   Brain,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
