@@ -1262,16 +1262,23 @@ const Agenda = () => {
           </Tabs>
         </div>
 
-        {/* ── RIGHT: Pending Payments ── */}
+        {/* ── RIGHT: Sessions Panel ── */}
         <div className="space-y-4">
           <div className="rounded-2xl bg-card border border-border shadow-card p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h2 className="font-display font-semibold text-lg">Sessões Pendentes</h2>
-                <p className="text-xs text-muted-foreground">
-                  {pendingSessions.length} pendência{pendingSessions.length !== 1 ? "s" : ""} • Total: <span className="font-semibold text-accent">R$ {pendingTotal.toFixed(2)}</span>
-                </p>
-              </div>
+            <div className="mb-3">
+              <h2 className="font-display font-semibold text-lg">Sessões do Mês</h2>
+              <p className="text-xs text-muted-foreground">
+                {format(currentMonth, "MMMM yyyy", { locale: ptBR })} • <span className="text-accent font-semibold">Pendente: R$ {pendingTotal.toFixed(2)}</span> • <span className="text-emerald-600 font-semibold">Pago: R$ {paidTotal.toFixed(2)}</span>
+              </p>
+            </div>
+
+            {/* Payment status tabs */}
+            <div className="flex items-center gap-1 mb-3 bg-muted/50 rounded-lg p-0.5">
+              {([["pending", "Pendentes"], ["paid", "Pagos"], ["all", "Todos"]] as const).map(([val, label]) => (
+                <button key={val} onClick={() => setPaymentFilter(val)} className={cn("flex-1 text-xs py-1.5 px-2 rounded-md font-medium transition-colors", paymentFilter === val ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>
+                  {label}
+                </button>
+              ))}
             </div>
 
             {/* Filters */}
