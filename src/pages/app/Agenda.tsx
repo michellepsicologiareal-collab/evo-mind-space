@@ -302,7 +302,8 @@ const Agenda = () => {
         session_type: parsed.data.session_type,
         discussed_patient_id: isSupervision && parsed.data.discussed_patient_id ? parsed.data.discussed_patient_id : null,
         is_expense: isSupervision,
-      });
+        service_id: form.service_id || null,
+      } as any);
     }
 
     const { data: created, error } = await supabase.from("sessions").insert(sessionsToInsert).select("id");
