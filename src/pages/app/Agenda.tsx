@@ -119,6 +119,8 @@ const Agenda = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [pixKey, setPixKey] = useState("");
+  const [psiName, setPsiName] = useState("");
+  const [psiCrp, setPsiCrp] = useState("");
   const [viewTab, setViewTab] = useState<string>("month");
 
   // Pending
