@@ -444,12 +444,16 @@ const Agenda = () => {
     const allKnownSessions = [...sessions, ...pendingSessions].filter(
       (item, index, list) => list.findIndex((candidate) => candidate.id === item.id) === index
     );
-    const groupSessions = allKnownSessions
+    const matchingSessions = allKnownSessions
       .filter((item) => {
         const info = getPackageInfo(item.notes);
-        return item.patient_id === session.patient_id && info?.total === pkgInfo.total && /Pgto único/i.test(item.notes || "") && new Date(item.scheduled_at).getMonth() === new Date(session.scheduled_at).getMonth() && new Date(item.scheduled_at).getFullYear() === new Date(session.scheduled_at).getFullYear();
+        return item.patient_id === session.patient_id && info?.total === pkgInfo.total && /Pgto único/i.test(item.notes || "");
       })
       .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+
+    const sessionIndex = matchingSessions.findIndex((item) => item.id === session.id);
+    const chunkStart = sessionIndex >= 0 ? Math.floor(sessionIndex / pkgInfo.total) * pkgInfo.total : 0;
+    const groupSessions = matchingSessions.slice(chunkStart, chunkStart + pkgInfo.total);
 
     if (groupSessions.length <= 1) return null;
 
