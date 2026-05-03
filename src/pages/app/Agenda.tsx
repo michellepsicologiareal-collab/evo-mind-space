@@ -1274,6 +1274,11 @@ const Agenda = () => {
                                         <span className={cn("text-[10px] px-2 py-0.5 rounded-full border", paymentStatusClass[s.payment_status])}>
                                           {paymentStatusLabel[s.payment_status]}
                                         </span>
+                                       )}
+                                      {s.billing_sent_at && (
+                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                                          💸 {format(new Date(s.billing_sent_at), "dd/MM")}
+                                        </span>
                                       )}
                                     </div>
                                   </div>
