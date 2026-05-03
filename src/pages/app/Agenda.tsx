@@ -257,7 +257,7 @@ const Agenda = () => {
       duration_minutes: 50, price: "", notes: "",
       payment_method: "none", payment_reference: "", mood_score: "", progress_note: "",
       recurrence: "single", recurrence_count: 4, recurrence_interval: "weekly",
-      payment_plan: "per_session",
+      payment_plan: "per_session", service_id: "",
     });
     setOpen(true);
   };
