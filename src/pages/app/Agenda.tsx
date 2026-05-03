@@ -54,6 +54,10 @@ interface Patient {
   id: string;
   full_name: string;
   session_price: number | null;
+  phone: string | null;
+  has_financial_responsible: boolean;
+  financial_responsible_name: string | null;
+  financial_responsible_phone: string | null;
 }
 
 interface Service {
