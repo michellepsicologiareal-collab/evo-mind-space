@@ -429,13 +429,18 @@ const Agenda = () => {
 
   const sendWhatsAppReminder = (s: Session) => {
     const name = s.patient_name || "Paciente";
-    const dateStr = format(new Date(s.scheduled_at), "dd/MM/yyyy");
-    const value = s.price ? `R$ ${Number(s.price).toFixed(2).replace(".", ",")}` : "a combinar";
+    const singlePaymentGroup = getSinglePaymentGroup(s);
+    const dateStr = singlePaymentGroup ? singlePaymentGroup.dates.join(", ") : format(new Date(s.scheduled_at), "dd/MM/yyyy");
+    const valueNumber = singlePaymentGroup?.total ?? Number(s.price ?? 0);
+    const value = valueNumber > 0 ? `R$ ${valueNumber.toFixed(2).replace(".", ",")}` : "a combinar";
     const firstName = psiName ? psiName.split(" ")[0] : "";
+    const sessionLine = singlePaymentGroup
+      ? `Passando para lembrar do acerto referente às nossas ${singlePaymentGroup.sessions.length} sessões de ${dateStr}.`
+      : `Passando para lembrar do acerto referente à nossa sessão de ${dateStr}.`;
     const message = [
       `Olá, ${name}! Aqui é a sua psi, ${firstName || "sua psicóloga"}.`,
       "",
-      `Passando para lembrar do acerto referente à nossa sessão de ${dateStr}.`,
+      sessionLine,
       "",
       `\u{1F4B3} Valor: ${value}`,
       pixKey ? `\u{1F511} Chave Pix: ${pixKey}` : "",
