@@ -406,7 +406,7 @@ const Agenda = () => {
     setDeleting(false);
     setDeleteConfirmOpen(false);
     setDeleteSessionId(null);
-    if (editOpen) setEditOpen(false);
+    if (editOpen) { editGuard.resetDirty(); setEditOpen(false); }
     load(); loadPending();
   };
 
