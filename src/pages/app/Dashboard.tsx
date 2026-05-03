@@ -103,6 +103,10 @@ const Dashboard = () => {
     revenueGoal: 10000,
     sessionsGoal: 40,
     recordsGoal: 20,
+    previstos: 0,
+    realizados: 0,
+    faltasCanceladas: 0,
+    aRealizar: 0,
   });
   const [upcoming, setUpcoming] = useState<UpcomingSession[]>([]);
   const [profileName, setProfileName] = useState("");
