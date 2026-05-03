@@ -443,15 +443,21 @@ const Agenda = () => {
     if (!user || !editSessionId) return;
     setEditSaving(true);
     const session = sessions.find((s) => s.id === editSessionId);
+    const newScheduledAt = editForm.date && editForm.time
+      ? parse(`${editForm.date} ${editForm.time}`, "yyyy-MM-dd HH:mm", new Date()).toISOString()
+      : undefined;
     const { error } = await supabase.from("sessions").update({
       status: editForm.status, payment_status: editForm.payment_status,
       payment_method: editForm.payment_method === "none" ? null : editForm.payment_method,
       payment_reference: editForm.payment_reference.trim() || null,
       price: editForm.price ? Number(editForm.price) : null,
       notes: editForm.notes || null, duration_minutes: editForm.duration_minutes,
+      session_type: editForm.session_type,
+      service_id: editForm.service_id || null,
+      ...(newScheduledAt ? { scheduled_at: newScheduledAt } : {}),
       ...(editForm.payment_status === "paid" && session?.payment_status !== "paid"
         ? { paid_at: new Date().toISOString() } : {}),
-    }).eq("id", editSessionId);
+    } as any).eq("id", editSessionId);
 
     if (error) { setEditSaving(false); toast.error("Erro ao salvar sessão"); return; }
 
