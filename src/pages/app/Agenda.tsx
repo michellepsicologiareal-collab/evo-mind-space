@@ -157,7 +157,8 @@ const Agenda = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [editSessionId, setEditSessionId] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
-  const [editForm, setEditForm] = useState({
+  const editGuard = useUnsavedGuard();
+  const [editForm, setEditFormRaw] = useState({
     status: "scheduled" as Status,
     payment_status: "pending" as PaymentStatus,
     payment_method: "none" as "none" | "pix" | "card" | "cash",
@@ -170,6 +171,7 @@ const Agenda = () => {
     payment_plan: "per_session" as "per_session" | "single_payment",
     date: "", time: "",
   });
+  const setEditForm: typeof setEditFormRaw = useCallback((v) => { editGuard.markDirty(); setEditFormRaw(v); }, [editGuard.markDirty]);
   const [editProgressId, setEditProgressId] = useState<string | null>(null);
 
   // Patient filter for pending list
