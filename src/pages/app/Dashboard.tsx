@@ -420,6 +420,14 @@ const Dashboard = () => {
         <KPICard icon={CalendarRange} label="Sessões este Mês" value={monthSessions.toString()} />
       </section>
 
+      {/* ── Métricas de Sessões do Mês ── */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <KPICard icon={ClipboardList} label="Previstos no Mês" value={stats.previstos.toString()} />
+        <KPICard icon={CheckCircle2} label="Realizados" value={stats.realizados.toString()} />
+        <KPICard icon={XCircle} label="Faltas / Canceladas" value={stats.faltasCanceladas.toString()} highlight={stats.faltasCanceladas > 0} />
+        <KPICard icon={CalendarClock} label="A Realizar" value={stats.aRealizar.toString()} />
+      </section>
+
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           icon={TrendingUp}
