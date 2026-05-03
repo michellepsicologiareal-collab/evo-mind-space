@@ -31,11 +31,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 interface Patient {
   id: string;
   full_name: string;
-  email: string | null;
-  phone: string | null;
-  notes: string | null;
   is_active: boolean;
-  session_price: number | null;
   user_id: string;
 }
 
