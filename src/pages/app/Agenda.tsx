@@ -1162,7 +1162,7 @@ const Agenda = () => {
                         )}
                         <p className="text-xs text-muted-foreground">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
                       </div>
-                      <p className="font-display font-bold text-accent whitespace-nowrap">R$ {Number(s.price ?? 0).toFixed(2)}</p>
+                      <p className="font-display font-bold text-accent whitespace-nowrap shrink-0">R$ {Number(s.price ?? 0).toFixed(2)}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Select value={s.payment_status} onValueChange={(v) => updatePaymentStatus(s.id, v as PaymentStatus)}>
