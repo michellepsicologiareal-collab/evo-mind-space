@@ -36,6 +36,11 @@ interface Stats {
   revenueGoal: number;
   sessionsGoal: number;
   recordsGoal: number;
+  /** New KPIs */
+  previstos: number;
+  realizados: number;
+  faltasCanceladas: number;
+  aRealizar: number;
 }
 
 interface UpcomingSession {
