@@ -688,6 +688,17 @@ const Agenda = () => {
     return list;
   }, [pendingSessions, pendingSort, filterPatientId]);
 
+  const groupedPending = useMemo(() => {
+    const used = new Set<string>();
+    return sortedPending.flatMap((session) => {
+      if (used.has(session.id)) return [];
+      const group = getSinglePaymentGroup(session);
+      if (!group) return [{ key: session.id, session, sessions: [session], total: Number(session.price ?? 0), dates: [format(new Date(session.scheduled_at), "dd/MM/yyyy")], isSinglePayment: false }];
+      group.sessions.forEach((item) => used.add(item.id));
+      return [{ key: `single-${session.patient_id}-${group.dates.join("-")}`, session, sessions: group.sessions, total: group.total, dates: group.dates, isSinglePayment: true }];
+    });
+  }, [sortedPending, sessions, pendingSessions]);
+
   // Unique patients in pending
   const pendingPatients = useMemo(() => {
     const map = new Map<string, string>();
