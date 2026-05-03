@@ -176,7 +176,10 @@ const Dashboard = () => {
         recordsGoal: 20,
       });
 
-      // Count sessions per patient for numbering (parallel)
+      setWeekSessions(weekRes.count ?? 0);
+      setMonthSessions(monthAllRes.count ?? 0);
+      setYearRevenue((yearRes.data ?? []).reduce((sum, s) => sum + Number(s.price ?? 0), 0));
+
       const sessionsData = (upcomingRes.data ?? []) as any[];
       const uniquePatientIds = [...new Set(sessionsData.map((s: any) => s.patient_id).filter(Boolean))];
       const countResults = await Promise.all(
