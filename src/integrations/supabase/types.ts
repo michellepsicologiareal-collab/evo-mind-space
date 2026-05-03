@@ -283,7 +283,10 @@ export type Database = {
           chief_complaint: string | null
           created_at: string
           email: string | null
+          financial_responsible_name: string | null
+          financial_responsible_phone: string | null
           full_name: string
+          has_financial_responsible: boolean
           id: string
           is_active: boolean
           notes: string | null
@@ -301,7 +304,10 @@ export type Database = {
           chief_complaint?: string | null
           created_at?: string
           email?: string | null
+          financial_responsible_name?: string | null
+          financial_responsible_phone?: string | null
           full_name: string
+          has_financial_responsible?: boolean
           id?: string
           is_active?: boolean
           notes?: string | null
@@ -319,7 +325,10 @@ export type Database = {
           chief_complaint?: string | null
           created_at?: string
           email?: string | null
+          financial_responsible_name?: string | null
+          financial_responsible_phone?: string | null
           full_name?: string
+          has_financial_responsible?: boolean
           id?: string
           is_active?: boolean
           notes?: string | null
