@@ -138,7 +138,8 @@ const Agenda = () => {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [patientMonthCount, setPatientMonthCount] = useState<{ count: number; dates: string[] } | null>(null);
-  const [form, setForm] = useState({
+  const newGuard = useUnsavedGuard();
+  const [form, setFormRaw] = useState({
     session_type: "clinical" as SessionType,
     patient_id: "", discussed_patient_id: "",
     date: format(new Date(), "yyyy-MM-dd"), time: "09:00",
@@ -150,6 +151,7 @@ const Agenda = () => {
     payment_plan: "per_session" as "per_session" | "single_payment",
     service_id: "" as string,
   });
+  const setForm: typeof setFormRaw = useCallback((v) => { newGuard.markDirty(); setFormRaw(v); }, [newGuard.markDirty]);
 
   // Edit session
   const [editOpen, setEditOpen] = useState(false);
