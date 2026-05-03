@@ -272,7 +272,7 @@ const Patients = () => {
           <h1 className="font-display text-4xl font-medium">Pacientes</h1>
           <p className="mt-2 text-muted-foreground">Gerencie quem está sob seus cuidados.</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { patientGuard.guardClose(() => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
             <Button variant="accent" className="min-h-[44px]" onClick={openNew}>
               <Plus className="h-4 w-4" /> Novo paciente
