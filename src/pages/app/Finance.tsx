@@ -861,7 +861,7 @@ const Finance = () => {
       <section className="rounded-3xl bg-card border border-border shadow-card p-6 lg:p-8">
         <Tabs defaultValue="all">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-display text-2xl font-semibold">Sessões</h2>
+            <h2 className="font-display text-2xl font-semibold">Sessões realizadas</h2>
             <TabsList>
               <TabsTrigger value="all">Todas</TabsTrigger>
               <TabsTrigger value="pending">Pendentes</TabsTrigger>

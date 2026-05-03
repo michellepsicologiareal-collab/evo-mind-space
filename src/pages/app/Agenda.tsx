@@ -131,6 +131,7 @@ const Agenda = () => {
 
   // Pending
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
+  const [pendingPackageSessions, setPendingPackageSessions] = useState<Session[]>([]);
   const [loadingPending, setLoadingPending] = useState(true);
   const [pendingSort, setPendingSort] = useState<"date" | "patient">("date");
 
@@ -248,6 +249,21 @@ const Agenda = () => {
     const mapped = (data ?? []).map((s: any) => ({
       ...s, patient_name: s.patient?.full_name ?? null, discussed_patient_name: null,
     }));
+    const packagePatientIds = Array.from(new Set(mapped.filter((s: any) => /(?:Pgto|Pagamento) [úu]nico/i.test(s.notes || "") && s.patient_id).map((s: any) => s.patient_id)));
+    if (packagePatientIds.length > 0) {
+      const { data: packageData } = await supabase
+        .from("sessions")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, patient:patients!sessions_patient_id_fkey(full_name)")
+        .eq("user_id", user.id)
+        .eq("session_type", "clinical")
+        .in("patient_id", packagePatientIds)
+        .ilike("notes", "%Pgto%")
+        .order("scheduled_at", { ascending: true })
+        .limit(200);
+      setPendingPackageSessions((packageData ?? []).map((s: any) => ({ ...s, patient_name: s.patient?.full_name ?? null, discussed_patient_name: null })) as Session[]);
+    } else {
+      setPendingPackageSessions([]);
+    }
     setPendingSessions(mapped as Session[]);
     setLoadingPending(false);
   };
@@ -381,6 +397,16 @@ const Agenda = () => {
     load(); loadPending();
   };
 
+  const updatePaymentGroup = async (ids: string[], paymentStatus: PaymentStatus) => {
+    const { error } = await supabase.from("sessions").update({
+      payment_status: paymentStatus,
+      ...(paymentStatus === "paid" ? { paid_at: new Date().toISOString() } : { paid_at: null }),
+    }).in("id", ids);
+    if (error) return toast.error("Erro ao atualizar pagamento");
+    toast.success(`${ids.length} sessões marcadas como ${paymentStatusLabel[paymentStatus].toLowerCase()}`);
+    load(); loadPending();
+  };
+
   // ── Delete with confirmation modal ──
   const promptDelete = (id: string) => {
     setDeleteSessionId(id);
@@ -427,15 +453,48 @@ const Agenda = () => {
     load();
   };
 
+  const getSinglePaymentGroup = (session: Session) => {
+    const pkgInfo = getPackageInfo(session.notes);
+    const isSinglePaymentNote = (notes: string | null) => /(?:Pgto|Pagamento) [úu]nico/i.test(notes || "");
+    if (!pkgInfo || !session.patient_id || !isSinglePaymentNote(session.notes)) return null;
+
+    const allKnownSessions = [...sessions, ...pendingSessions, ...pendingPackageSessions].filter(
+      (item, index, list) => list.findIndex((candidate) => candidate.id === item.id) === index
+    );
+    const matchingSessions = allKnownSessions
+      .filter((item) => {
+        const info = getPackageInfo(item.notes);
+        return item.patient_id === session.patient_id && info?.total === pkgInfo.total && isSinglePaymentNote(item.notes);
+      })
+      .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+
+    const sessionIndex = matchingSessions.findIndex((item) => item.id === session.id);
+    const chunkStart = sessionIndex >= 0 ? Math.floor(sessionIndex / pkgInfo.total) * pkgInfo.total : 0;
+    const groupSessions = matchingSessions.slice(chunkStart, chunkStart + pkgInfo.total);
+
+    if (groupSessions.length <= 1) return null;
+
+    return {
+      sessions: groupSessions,
+      total: groupSessions.reduce((sum, item) => sum + Number(item.price ?? 0), 0),
+      dates: groupSessions.map((item) => format(new Date(item.scheduled_at), "dd/MM/yyyy")),
+    };
+  };
+
   const sendWhatsAppReminder = (s: Session) => {
     const name = s.patient_name || "Paciente";
-    const dateStr = format(new Date(s.scheduled_at), "dd/MM/yyyy");
-    const value = s.price ? `R$ ${Number(s.price).toFixed(2).replace(".", ",")}` : "a combinar";
+    const singlePaymentGroup = getSinglePaymentGroup(s);
+    const dateStr = singlePaymentGroup ? singlePaymentGroup.dates.join(", ") : format(new Date(s.scheduled_at), "dd/MM/yyyy");
+    const valueNumber = singlePaymentGroup?.total ?? Number(s.price ?? 0);
+    const value = valueNumber > 0 ? `R$ ${valueNumber.toFixed(2).replace(".", ",")}` : "a combinar";
     const firstName = psiName ? psiName.split(" ")[0] : "";
+    const sessionLine = singlePaymentGroup
+      ? `Passando para lembrar do acerto referente às nossas ${singlePaymentGroup.sessions.length} sessões de ${dateStr}.`
+      : `Passando para lembrar do acerto referente à nossa sessão de ${dateStr}.`;
     const message = [
       `Olá, ${name}! Aqui é a sua psi, ${firstName || "sua psicóloga"}.`,
       "",
-      `Passando para lembrar do acerto referente à nossa sessão de ${dateStr}.`,
+      sessionLine,
       "",
       `\u{1F4B3} Valor: ${value}`,
       pixKey ? `\u{1F511} Chave Pix: ${pixKey}` : "",
@@ -659,6 +718,17 @@ const Agenda = () => {
     }
     return list;
   }, [pendingSessions, pendingSort, filterPatientId]);
+
+  const groupedPending = useMemo(() => {
+    const used = new Set<string>();
+    return sortedPending.flatMap((session) => {
+      if (used.has(session.id)) return [];
+      const group = getSinglePaymentGroup(session);
+      if (!group) return [{ key: session.id, session, sessions: [session], total: Number(session.price ?? 0), dates: [format(new Date(session.scheduled_at), "dd/MM/yyyy")], isSinglePayment: false }];
+      group.sessions.forEach((item) => used.add(item.id));
+      return [{ key: `single-${session.patient_id}-${group.dates.join("-")}`, session, sessions: group.sessions, total: group.total, dates: group.dates, isSinglePayment: true }];
+    });
+  }, [sortedPending, sessions, pendingSessions, pendingPackageSessions]);
 
   // Unique patients in pending
   const pendingPatients = useMemo(() => {
@@ -1222,21 +1292,24 @@ const Agenda = () => {
               </div>
             ) : (
               <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-                {sortedPending.map((s) => (
-                  <div key={s.id} className="rounded-xl border border-border bg-background p-3 space-y-2">
+                {groupedPending.map((group) => {
+                  const s = group.session;
+                  return (
+                  <div key={group.key} className="rounded-xl border border-border bg-background p-3 space-y-2">
                     <div className="min-w-0">
                       {s.patient_id && s.patient_name ? (
                         <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
                       ) : (
                         <p className="font-display text-sm font-medium truncate">{s.patient_name}</p>
                       )}
-                      <div className="flex items-center justify-between gap-2 mt-0.5">
-                        <p className="text-xs text-muted-foreground">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
-                        <p className="font-display font-bold text-accent whitespace-nowrap">R$ {Number(s.price ?? 0).toFixed(2)}</p>
+                      <div className="mt-1 space-y-1">
+                        {group.isSinglePayment && <p className="text-xs font-medium text-primary">Pagamento único · {group.sessions.length} sessões</p>}
+                        <p className="text-xs text-muted-foreground break-words">{group.isSinglePayment ? group.dates.join(", ") : format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
+                        <p className="font-display font-bold text-accent whitespace-nowrap">R$ {group.total.toFixed(2)}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Select value={s.payment_status} onValueChange={(v) => updatePaymentStatus(s.id, v as PaymentStatus)}>
+                      <Select value={s.payment_status} onValueChange={(v) => group.isSinglePayment ? updatePaymentGroup(group.sessions.map((item) => item.id), v as PaymentStatus) : updatePaymentStatus(s.id, v as PaymentStatus)}>
                         <SelectTrigger className={cn("h-8 text-xs flex-1 border", paymentStatusClass[s.payment_status])}>
                           <SelectValue />
                         </SelectTrigger>
@@ -1253,7 +1326,7 @@ const Agenda = () => {
                       </Button>
                     </div>
                   </div>
-                ))}
+                );})}
               </div>
             )}
           </div>
@@ -1448,7 +1521,7 @@ const Agenda = () => {
 
       {/* ── Delete Confirmation Modal ── */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="max-w-[90vw] sm:max-w-sm mx-auto p-4 sm:p-6">
+          <DialogContent className="w-[calc(100vw-2rem)] max-w-sm sm:max-w-md mx-auto p-4 sm:p-6 overflow-hidden">
           <DialogHeader>
             <DialogTitle className="font-display text-xl">Excluir sessão</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -1458,26 +1531,26 @@ const Agenda = () => {
           <div className="space-y-3 py-2">
             <Button
               variant="outline"
-              className="w-full justify-start gap-3 h-auto py-3 text-left"
+              className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden"
               disabled={deleting}
               onClick={() => executeDelete(false)}
             >
               <Trash2 className="h-4 w-4 text-muted-foreground shrink-0" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="font-medium text-sm text-foreground">Excluir apenas a sessão</p>
-                <p className="text-xs text-muted-foreground">Remove a sessão, progresso e eventos vinculados</p>
+                <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso e eventos vinculados</p>
               </div>
             </Button>
             <Button
               variant="outline"
-              className="w-full justify-start gap-3 h-auto py-3 text-left border-destructive/30 hover:bg-destructive/5"
+              className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden border-destructive/30 hover:bg-destructive/5"
               disabled={deleting}
               onClick={() => executeDelete(true)}
             >
               <DollarSign className="h-4 w-4 text-destructive shrink-0" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="font-medium text-sm text-destructive">Excluir sessão + lançamento financeiro</p>
-                <p className="text-xs text-muted-foreground">Remove a sessão, progresso, eventos vinculados e o lançamento financeiro</p>
+                <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso, eventos vinculados e o lançamento financeiro</p>
               </div>
             </Button>
           </div>
