@@ -129,7 +129,7 @@ const Dashboard = () => {
             .select("id, scheduled_at, status, patient_id, session_type, patient:patients!sessions_patient_id_fkey(full_name)")
             .eq("user_id", user.id)
             .gte("scheduled_at", now.toISOString())
-            .eq("status", "scheduled")
+            .in("status", ["scheduled", "confirmed"])
             .order("scheduled_at")
             .limit(3),
           supabase
