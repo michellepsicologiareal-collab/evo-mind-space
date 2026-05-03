@@ -25,6 +25,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
+import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
 type PaymentStatus = "pending" | "paid";
