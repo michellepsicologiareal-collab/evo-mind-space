@@ -562,6 +562,7 @@ const Patients = () => {
       </Dialog>
 
       <PremiumGate open={gateOpen} onOpenChange={setGateOpen} />
+      <UnsavedGuardDialog open={patientGuard.confirmOpen} onConfirm={patientGuard.confirmLeave} onCancel={patientGuard.cancelLeave} />
     </div>
   );
 };
