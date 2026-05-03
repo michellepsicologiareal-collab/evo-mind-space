@@ -36,7 +36,7 @@ const FIVE_SYSTEMS = [
 
 type SystemKey = (typeof FIVE_SYSTEMS)[number]["key"];
 
-export const CaseFormulation = ({ patientId }: { patientId: string }) => {
+export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: string; readOnly?: boolean }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
