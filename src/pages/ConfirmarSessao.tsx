@@ -98,15 +98,9 @@ const ConfirmarSessao = () => {
                 {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
                 Sim, confirmo
               </Button>
-              <Button
-                variant="outline"
-                className="min-h-[52px] text-base w-full"
-                disabled={submitting}
-                onClick={() => respond(false)}
-              >
-                {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <X className="h-5 w-5" />}
-                Não poderei ir
-              </Button>
+              <p className="text-xs text-muted-foreground text-center mt-1">
+                Precisa cancelar? Entre em contato diretamente com sua psicóloga.
+              </p>
             </div>
           </>
         )}

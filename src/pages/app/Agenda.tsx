@@ -47,12 +47,20 @@ interface Session {
   payment_reference?: string | null;
   patient_name?: string | null;
   discussed_patient_name?: string | null;
+  service_id?: string | null;
 }
 
 interface Patient {
   id: string;
   full_name: string;
   session_price: number | null;
+}
+
+interface Service {
+  id: string;
+  name: string;
+  price: number;
+  is_active: boolean;
 }
 
 const sessionSchema = z
@@ -108,6 +116,7 @@ const Agenda = () => {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [sessions, setSessions] = useState<Session[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [pixKey, setPixKey] = useState("");
   const [viewTab, setViewTab] = useState<string>("month");
@@ -131,6 +140,7 @@ const Agenda = () => {
     recurrence: "single" as "single" | "recurring",
     recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
     payment_plan: "per_session" as "per_session" | "single_payment",
+    service_id: "" as string,
   });
 
   // Edit session
@@ -143,6 +153,12 @@ const Agenda = () => {
     payment_method: "none" as "none" | "pix" | "card" | "cash",
     payment_reference: "", price: "", notes: "",
     duration_minutes: 50, mood_score: "", progress_note: "",
+    session_type: "clinical" as SessionType,
+    service_id: "" as string,
+    recurrence: "single" as "single" | "recurring",
+    recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
+    payment_plan: "per_session" as "per_session" | "single_payment",
+    date: "", time: "",
   });
   const [editProgressId, setEditProgressId] = useState<string | null>(null);
 
@@ -176,15 +192,16 @@ const Agenda = () => {
     setLoading(true);
     const mStart = startOfMonth(currentMonth);
     const mEnd = addDays(endOfMonth(currentMonth), 1);
-    const [sRes, pRes] = await Promise.all([
+    const [sRes, pRes, svRes] = await Promise.all([
       supabase
         .from("sessions")
-        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .gte("scheduled_at", mStart.toISOString())
         .lt("scheduled_at", mEnd.toISOString())
         .order("scheduled_at"),
       supabase.from("patients").select("id, full_name, session_price").eq("user_id", user.id).eq("is_active", true).order("full_name"),
+      (supabase as any).from("services").select("id, name, price, is_active").eq("user_id", user.id).eq("is_active", true).order("name"),
     ]);
     if (sRes.error) toast.error("Erro ao carregar sessões");
     const mapped = (sRes.data ?? []).map((s: any) => ({
@@ -194,6 +211,7 @@ const Agenda = () => {
     }));
     setSessions(mapped as Session[]);
     setPatients((pRes.data as Patient[]) ?? []);
+    setServices((svRes.data as Service[]) ?? []);
     setLoading(false);
   };
 
@@ -245,7 +263,7 @@ const Agenda = () => {
       duration_minutes: 50, price: "", notes: "",
       payment_method: "none", payment_reference: "", mood_score: "", progress_note: "",
       recurrence: "single", recurrence_count: 4, recurrence_interval: "weekly",
-      payment_plan: "per_session",
+      payment_plan: "per_session", service_id: "",
     });
     setOpen(true);
   };
@@ -284,7 +302,8 @@ const Agenda = () => {
         session_type: parsed.data.session_type,
         discussed_patient_id: isSupervision && parsed.data.discussed_patient_id ? parsed.data.discussed_patient_id : null,
         is_expense: isSupervision,
-      });
+        service_id: form.service_id || null,
+      } as any);
     }
 
     const { data: created, error } = await supabase.from("sessions").insert(sessionsToInsert).select("id");
@@ -389,6 +408,7 @@ const Agenda = () => {
   const openEdit = async (s: Session) => {
     setEditSessionId(s.id);
     setEditProgressId(null);
+    const scheduledDate = new Date(s.scheduled_at);
     setEditForm({
       status: s.status, payment_status: s.payment_status,
       payment_method: (s as any).payment_method ?? "none",
@@ -396,6 +416,13 @@ const Agenda = () => {
       price: s.price != null ? String(s.price) : "",
       notes: s.notes ?? "", duration_minutes: s.duration_minutes,
       mood_score: "", progress_note: "",
+      session_type: s.session_type,
+      service_id: s.service_id ?? "",
+      recurrence: "single",
+      recurrence_count: 4, recurrence_interval: "weekly",
+      payment_plan: "per_session",
+      date: format(scheduledDate, "yyyy-MM-dd"),
+      time: format(scheduledDate, "HH:mm"),
     });
     setEditOpen(true);
     if (s.patient_id && user) {
@@ -417,15 +444,21 @@ const Agenda = () => {
     if (!user || !editSessionId) return;
     setEditSaving(true);
     const session = sessions.find((s) => s.id === editSessionId);
+    const newScheduledAt = editForm.date && editForm.time
+      ? parse(`${editForm.date} ${editForm.time}`, "yyyy-MM-dd HH:mm", new Date()).toISOString()
+      : undefined;
     const { error } = await supabase.from("sessions").update({
       status: editForm.status, payment_status: editForm.payment_status,
       payment_method: editForm.payment_method === "none" ? null : editForm.payment_method,
       payment_reference: editForm.payment_reference.trim() || null,
       price: editForm.price ? Number(editForm.price) : null,
       notes: editForm.notes || null, duration_minutes: editForm.duration_minutes,
+      session_type: editForm.session_type,
+      service_id: editForm.service_id || null,
+      ...(newScheduledAt ? { scheduled_at: newScheduledAt } : {}),
       ...(editForm.payment_status === "paid" && session?.payment_status !== "paid"
         ? { paid_at: new Date().toISOString() } : {}),
-    }).eq("id", editSessionId);
+    } as any).eq("id", editSessionId);
 
     if (error) { setEditSaving(false); toast.error("Erro ao salvar sessão"); return; }
 
@@ -647,11 +680,23 @@ const Agenda = () => {
               <form onSubmit={handleSave} className="space-y-4">
                 <div className="space-y-2">
                   <Label>Tipo de compromisso</Label>
-                  <Select value={form.session_type} onValueChange={(v) => setForm({ ...form, session_type: v as SessionType })}>
+                  <Select value={form.service_id || form.session_type} onValueChange={(v) => {
+                    if (v === "clinical" || v === "supervision") {
+                      setForm({ ...form, session_type: v as SessionType, service_id: "" });
+                    } else {
+                      const svc = services.find(s => s.id === v);
+                      setForm({ ...form, session_type: "clinical", service_id: v, price: svc ? String(svc.price) : form.price });
+                    }
+                  }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="clinical">Atendimento Clínico</SelectItem>
                       <SelectItem value="supervision">Supervisão Técnica</SelectItem>
+                      {services.length > 0 && services.map(svc => (
+                        <SelectItem key={svc.id} value={svc.id}>
+                          {svc.name} — R$ {Number(svc.price).toFixed(2)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1103,13 +1148,87 @@ const Agenda = () => {
                   <div className="rounded-xl bg-muted/50 border border-border p-3 mb-2">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Paciente</p>
                     <p className="font-display font-semibold text-foreground">{session.patient_name}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{format(new Date(session.scheduled_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
                   </div>
                 )}
               </>
             );
           })()}
           <form onSubmit={handleEditSave} className="space-y-4">
+            {/* Tipo de compromisso / Serviço */}
+            <div className="space-y-2">
+              <Label>Tipo de compromisso</Label>
+              <Select value={editForm.service_id || editForm.session_type} onValueChange={(v) => {
+                if (v === "clinical" || v === "supervision") {
+                  setEditForm({ ...editForm, session_type: v as SessionType, service_id: "" });
+                } else {
+                  const svc = services.find(s => s.id === v);
+                  setEditForm({ ...editForm, session_type: "clinical", service_id: v, price: svc ? String(svc.price) : editForm.price });
+                }
+              }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="clinical">Atendimento Clínico</SelectItem>
+                  <SelectItem value="supervision">Supervisão Técnica</SelectItem>
+                  {services.length > 0 && services.map(svc => (
+                    <SelectItem key={svc.id} value={svc.id}>
+                      {svc.name} — R$ {Number(svc.price).toFixed(2)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* Data e horário */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Data</Label>
+                <Input type="date" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Horário</Label>
+                <Input type="time" value={editForm.time} onChange={(e) => setEditForm({ ...editForm, time: e.target.value })} />
+              </div>
+            </div>
+            {/* Tipo de agendamento */}
+            <div className="space-y-2">
+              <Label>Tipo de agendamento</Label>
+              <Select value={editForm.recurrence} onValueChange={(v) => setEditForm({ ...editForm, recurrence: v as "single" | "recurring" })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="single">Sessão única</SelectItem>
+                  <SelectItem value="recurring">Sessões recorrentes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {editForm.recurrence === "recurring" && (
+              <div className="rounded-xl bg-muted/50 border border-border p-3 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Quantidade</Label>
+                    <Input type="number" min="2" max="52" value={editForm.recurrence_count} onChange={(e) => setEditForm({ ...editForm, recurrence_count: Math.max(2, Number(e.target.value)) })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Intervalo</Label>
+                    <Select value={editForm.recurrence_interval} onValueChange={(v) => setEditForm({ ...editForm, recurrence_interval: v as "weekly" | "biweekly" })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">Semanal</SelectItem>
+                        <SelectItem value="biweekly">Quinzenal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Forma de pagamento do plano</Label>
+                  <Select value={editForm.payment_plan} onValueChange={(v) => setEditForm({ ...editForm, payment_plan: v as "per_session" | "single_payment" })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="per_session">Por sessão</SelectItem>
+                      <SelectItem value="single_payment">Pagamento único</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Status</Label>

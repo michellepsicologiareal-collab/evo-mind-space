@@ -30,15 +30,8 @@ const PATIENT_CATEGORIES = [
 const patientSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(120),
   email: z.string().trim().email("Email inválido").max(255).optional().or(z.literal("")),
-  phone: z.string().trim().max(40).optional().or(z.literal(""))
-    .refine(
-      (val) => {
-        if (!val) return true;
-        const digits = val.replace(/\D/g, "");
-        return digits.length >= 10 && digits.length <= 13;
-      },
-      { message: "Telefone inválido. Use DDD + número (ex: 11999887766)" }
-    ),
+  phone: z.string().trim().max(40).optional().or(z.literal("")),
+  phone_ddi: z.string().optional(),
   notes: z.string().trim().max(2000).optional().or(z.literal("")),
   session_price: z.string().optional(),
   chief_complaint: z.string().trim().max(2000).optional().or(z.literal("")),
@@ -81,7 +74,7 @@ const Patients = () => {
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
 
-  const [form, setForm] = useState<{ full_name: string; email: string; phone: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal" }>({ full_name: "", email: "", phone: "", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" });
+  const [form, setForm] = useState<{ full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal" }>({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" });
 
   const load = async () => {
     if (!user) return;
@@ -107,16 +100,26 @@ const Patients = () => {
       return;
     }
     setEditing(null);
-    setForm({ full_name: "", email: "", phone: "", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" as const });
+    setForm({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" as const });
     setOpen(true);
   };
 
   const openEdit = (p: Patient) => {
     setEditing(p);
+    // Extract DDI from stored phone if it starts with +
+    const rawPhone = p.phone ?? "";
+    let ddi = "+55";
+    let localPhone = rawPhone;
+    const ddiMatch = rawPhone.match(/^(\+\d{1,4})\s*(.*)/);
+    if (ddiMatch) {
+      ddi = ddiMatch[1];
+      localPhone = ddiMatch[2];
+    }
     setForm({
       full_name: p.full_name,
       email: p.email ?? "",
-      phone: p.phone ?? "",
+      phone: localPhone,
+      phone_ddi: ddi,
       notes: p.notes ?? "",
       session_price: p.session_price?.toString() ?? "",
       chief_complaint: p.chief_complaint ?? "",
@@ -140,7 +143,7 @@ const Patients = () => {
       user_id: user.id,
       full_name: parsed.data.full_name,
       email: parsed.data.email || null,
-      phone: parsed.data.phone || null,
+      phone: parsed.data.phone ? `${parsed.data.phone_ddi || "+55"} ${parsed.data.phone}`.trim() : null,
       notes: parsed.data.notes || null,
       session_price: parsed.data.session_price ? Number(parsed.data.session_price) : null,
       chief_complaint: parsed.data.chief_complaint || null,
@@ -255,8 +258,36 @@ const Patients = () => {
                   <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  <Label htmlFor="phone">Telefone / WhatsApp</Label>
+                  <div className="flex gap-2">
+                    <select
+                      value={form.phone_ddi}
+                      onChange={(e) => setForm({ ...form, phone_ddi: e.target.value })}
+                      className="flex h-10 w-[100px] shrink-0 rounded-md border border-input bg-background px-2 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      <option value="+55">🇧🇷 +55</option>
+                      <option value="+1">🇺🇸 +1</option>
+                      <option value="+351">🇵🇹 +351</option>
+                      <option value="+34">🇪🇸 +34</option>
+                      <option value="+33">🇫🇷 +33</option>
+                      <option value="+39">🇮🇹 +39</option>
+                      <option value="+49">🇩🇪 +49</option>
+                      <option value="+44">🇬🇧 +44</option>
+                      <option value="+81">🇯🇵 +81</option>
+                      <option value="+61">🇦🇺 +61</option>
+                      <option value="+54">🇦🇷 +54</option>
+                      <option value="+56">🇨🇱 +56</option>
+                      <option value="+57">🇨🇴 +57</option>
+                      <option value="+52">🇲🇽 +52</option>
+                      <option value="+595">🇵🇾 +595</option>
+                      <option value="+598">🇺🇾 +598</option>
+                      <option value="+41">🇨🇭 +41</option>
+                      <option value="+31">🇳🇱 +31</option>
+                      <option value="+353">🇮🇪 +353</option>
+                      <option value="+972">🇮🇱 +972</option>
+                    </select>
+                    <Input id="phone" className="flex-1" placeholder="11 99988-7766" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  </div>
                 </div>
               </div>
               <div className="space-y-2">
