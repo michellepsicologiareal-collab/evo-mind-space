@@ -103,7 +103,7 @@ const Patients = () => {
       return;
     }
     setEditing(null);
-    setForm({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" as const });
+    setForm({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" as const, has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55" });
     setOpen(true);
   };
 
