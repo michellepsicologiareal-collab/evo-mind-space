@@ -14,11 +14,19 @@ export const Navbar = () => {
           </span>
         </a>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-          <a href="#problema" className="hover:text-foreground transition-colors">Problema</a>
           <a href="#funcionalidades" className="hover:text-foreground transition-colors">Funcionalidades</a>
           <a href="#diferencial" className="hover:text-foreground transition-colors">Diferencial</a>
-          <a href="#para-quem" className="hover:text-foreground transition-colors">Para quem</a>
           <a href="#planos" className="hover:text-foreground transition-colors">Planos</a>
+          <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
+          <a
+            href="https://wa.me/5511947388423?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20com%20o%20Psi%20Real"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-accent hover:text-accent/80 transition-colors font-medium"
+          >
+            <MessageCircle className="h-4 w-4" />
+            Suporte
+          </a>
         </nav>
         <a
           href="/auth"
