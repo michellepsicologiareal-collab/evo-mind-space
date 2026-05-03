@@ -340,7 +340,7 @@ const Agenda = () => {
       const sessionPrice = isSinglePayment
         ? (i === 0 ? totalPrice : 0)
         : unitPrice;
-      const sessionPaymentStatus = isSinglePayment && i > 0 ? "paid" : "pending";
+      const sessionPaymentStatus = "pending";
 
       sessionsToInsert.push({
         user_id: user.id,
