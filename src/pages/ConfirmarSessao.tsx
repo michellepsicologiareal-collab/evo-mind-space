@@ -22,6 +22,32 @@ const ConfirmarSessao = () => {
   const [state, setState] = useState<PageState>("loading");
   const [submitting, setSubmitting] = useState(false);
 
+  // Set OG meta tags for WhatsApp / social previews
+  useEffect(() => {
+    document.title = "Confirmação de Sessão — Psi Real";
+    const setMeta = (property: string, content: string) => {
+      let el = document.querySelector(`meta[property="${property}"]`) || document.querySelector(`meta[name="${property}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(property.startsWith("og:") ? "property" : "name", property);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    };
+    const baseUrl = window.location.origin;
+    setMeta("og:title", "Confirmação de Sessão — Psi Real");
+    setMeta("og:description", "Clique para confirmar sua sessão");
+    setMeta("og:image", `${baseUrl}/logo-psireal.png`);
+    setMeta("og:type", "website");
+    setMeta("twitter:title", "Confirmação de Sessão — Psi Real");
+    setMeta("twitter:description", "Clique para confirmar sua sessão");
+    setMeta("twitter:image", `${baseUrl}/logo-psireal.png`);
+
+    return () => {
+      document.title = "Psi Real — Gestão Inteligente para Psicólogos";
+    };
+  }, []);
+
   useEffect(() => {
     if (!token) { setState("error"); return; }
     const load = async () => {
