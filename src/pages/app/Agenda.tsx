@@ -1307,7 +1307,7 @@ const Agenda = () => {
             ) : sortedPending.length === 0 ? (
               <div className="py-8 text-center text-muted-foreground">
                 <CheckCircle2 className="h-10 w-10 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">Nenhum pagamento pendente 🎉</p>
+                <p className="text-sm">{paymentFilter === "paid" ? "Nenhuma sessão paga neste mês" : paymentFilter === "all" ? "Nenhuma sessão neste mês" : "Nenhum pagamento pendente 🎉"}</p>
               </div>
             ) : (
               <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
