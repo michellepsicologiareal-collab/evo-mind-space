@@ -510,7 +510,7 @@ const Dashboard = () => {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
+              <CalendarPicker
                 mode="single"
                 selected={dateFrom}
                 onSelect={(d) => d && setDateFrom(startOfDay(d))}
@@ -528,7 +528,7 @@ const Dashboard = () => {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
+              <CalendarPicker
                 mode="single"
                 selected={dateTo}
                 onSelect={(d) => d && setDateTo(endOfDay(d))}
@@ -878,7 +878,7 @@ const Dashboard = () => {
 
           {upcoming.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-30" />
+              <CalendarPicker className="h-12 w-12 mx-auto mb-4 opacity-30" />
               <p className="font-display text-lg font-medium text-foreground/70">Sua agenda está tranquila</p>
               <p className="mt-1 text-sm">Que tal agendar a próxima sessão?</p>
               <Button variant="accent" size="sm" className="mt-5 min-h-[44px]" asChild>
