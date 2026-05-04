@@ -458,31 +458,48 @@ const Agenda = () => {
     load();
   };
 
+  const getGroupId = (notes: string | null): string | null => {
+    if (!notes) return null;
+    const match = notes.match(/Pgto [úu]nico \[([^\]]+)\]/);
+    return match ? match[1] : null;
+  };
+
   const getSinglePaymentGroup = (session: Session) => {
     const pkgInfo = getPackageInfo(session.notes);
     const isSinglePaymentNote = (notes: string | null) => /(?:Pgto|Pagamento) [úu]nico/i.test(notes || "");
     if (!pkgInfo || !session.patient_id || !isSinglePaymentNote(session.notes)) return null;
 
+    const groupId = getGroupId(session.notes);
+
     const allKnownSessions = [...sessions, ...pendingSessions, ...pendingPackageSessions].filter(
       (item, index, list) => list.findIndex((candidate) => candidate.id === item.id) === index
     );
-    const matchingSessions = allKnownSessions
-      .filter((item) => {
-        const info = getPackageInfo(item.notes);
-        return item.patient_id === session.patient_id && info?.total === pkgInfo.total && isSinglePaymentNote(item.notes);
-      })
-      .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
 
-    const sessionIndex = matchingSessions.findIndex((item) => item.id === session.id);
-    const chunkStart = sessionIndex >= 0 ? Math.floor(sessionIndex / pkgInfo.total) * pkgInfo.total : 0;
-    const groupSessions = matchingSessions.slice(chunkStart, chunkStart + pkgInfo.total);
+    let matchingSessions: Session[];
+    if (groupId) {
+      // New format: match by group ID
+      matchingSessions = allKnownSessions
+        .filter((item) => item.patient_id === session.patient_id && getGroupId(item.notes) === groupId)
+        .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+    } else {
+      // Legacy format: match by chunking (old packages without group ID)
+      matchingSessions = allKnownSessions
+        .filter((item) => {
+          const info = getPackageInfo(item.notes);
+          return item.patient_id === session.patient_id && info?.total === pkgInfo.total && isSinglePaymentNote(item.notes) && !getGroupId(item.notes);
+        })
+        .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+      const sessionIndex = matchingSessions.findIndex((item) => item.id === session.id);
+      const chunkStart = sessionIndex >= 0 ? Math.floor(sessionIndex / pkgInfo.total) * pkgInfo.total : 0;
+      matchingSessions = matchingSessions.slice(chunkStart, chunkStart + pkgInfo.total);
+    }
 
-    if (groupSessions.length <= 1) return null;
+    if (matchingSessions.length <= 1) return null;
 
     return {
-      sessions: groupSessions,
-      total: groupSessions.reduce((sum, item) => sum + Number(item.price ?? 0), 0),
-      dates: groupSessions.map((item) => format(new Date(item.scheduled_at), "dd/MM/yyyy")),
+      sessions: matchingSessions,
+      total: matchingSessions.reduce((sum, item) => sum + Number(item.price ?? 0), 0),
+      dates: matchingSessions.map((item) => format(new Date(item.scheduled_at), "dd/MM/yyyy")),
     };
   };
 
