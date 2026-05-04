@@ -1,4 +1,4 @@
-import heroImg from "@/assets/hero.jpg";
+import dashboardImg from "@/assets/screenshots/dashboard.jpg";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 
@@ -10,7 +10,7 @@ export const Hero = () => {
       <div className="absolute -bottom-32 -left-32 h-[380px] w-[380px] rounded-full bg-accent/15 blur-3xl animate-float-slow" aria-hidden />
 
       <div className="container relative grid lg:grid-cols-12 gap-12 lg:gap-8 items-center py-20 lg:py-28">
-        <div className="lg:col-span-7 animate-fade-up">
+        <div className="lg:col-span-6 animate-fade-up">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-card/60 backdrop-blur px-4 py-1.5 text-xs text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5 text-accent" />
             Gestão clínica orientada a dados — para psicólogos
@@ -53,37 +53,16 @@ export const Hero = () => {
           </dl>
         </div>
 
-        <div className="lg:col-span-5 relative">
-          <div className="relative rounded-[2rem] overflow-hidden shadow-elegant ring-1 ring-primary/10">
+        <div className="lg:col-span-6 relative">
+          <div className="relative rounded-[1.5rem] overflow-hidden shadow-elegant ring-1 ring-primary/10">
             <img
-              src={heroImg}
-              alt="Psi Real — visualização abstrata de dados clínicos, agenda e evolução emocional"
-              width={1536}
-              height={1280}
-              className="w-full h-full object-cover"
+              src={dashboardImg}
+              alt="Psi Real — Painel de controle com visão geral de pacientes, faturamento e agenda"
+              width={1280}
+              height={800}
+              className="w-full h-auto object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/20 via-transparent to-transparent" />
-          </div>
-
-          {/* Floating cards */}
-          <div className="absolute -left-6 top-10 hidden md:block animate-float-slow">
-            <div className="rounded-2xl bg-card/95 backdrop-blur border border-border/60 shadow-soft px-5 py-4 w-56">
-              <p className="text-xs text-muted-foreground">Humor médio · Maria S.</p>
-              <p className="font-display text-2xl font-semibold text-primary mt-1">7,4 / 10</p>
-              <div className="mt-2 flex gap-1">
-                {[3,5,4,6,7,7,8].map((h,i)=>(
-                  <span key={i} className="flex-1 rounded-sm bg-primary-glow/60" style={{height: `${h*4}px`}} />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="absolute -right-4 -bottom-6 hidden md:block animate-float-slow" style={{ animationDelay: "1.2s" }}>
-            <div className="rounded-2xl bg-card/95 backdrop-blur border border-border/60 shadow-soft px-5 py-4 w-60">
-              <p className="text-xs text-muted-foreground">Faturamento — Outubro</p>
-              <p className="font-display text-2xl font-semibold text-primary mt-1">R$ 12.480</p>
-              <p className="text-xs text-accent mt-1">↑ 18% vs. setembro</p>
-            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/10 via-transparent to-transparent" />
           </div>
         </div>
       </div>
