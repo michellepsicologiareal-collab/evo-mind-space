@@ -620,7 +620,7 @@ const Patients = () => {
 
       {/* TCC Record Dialog */}
       <Dialog open={!!tccPatient} onOpenChange={(o) => !o && setTccPatient(null)}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{tccPatient?.full_name}</DialogTitle>
             <DialogDescription>Prontuário TCC — Registro de Pensamento</DialogDescription>
@@ -631,7 +631,7 @@ const Patients = () => {
 
       {/* Padesky Formulation Dialog */}
       <Dialog open={!!padeksyPatient} onOpenChange={(o) => !o && setPadeksyPatient(null)}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto [&_textarea]:scroll-mt-24 [&_input]:scroll-mt-24">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto [&_textarea]:scroll-mt-24 [&_input]:scroll-mt-24">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{padeksyPatient?.full_name}</DialogTitle>
             <DialogDescription>Formulação de Caso — Modelo Padesky</DialogDescription>
@@ -642,12 +642,12 @@ const Patients = () => {
 
       {/* Session History Dialog */}
       <Dialog open={!!historyPatient} onOpenChange={(o) => !o && setHistoryPatient(null)}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{historyPatient?.full_name}</DialogTitle>
             <DialogDescription>Histórico de sessões e evolução do humor</DialogDescription>
           </DialogHeader>
-          {historyPatient && <PatientSessionHistory patientId={historyPatient.id} />}
+          {historyPatient && <PatientSessionHistory patientId={historyPatient.id} patientName={historyPatient.full_name} />}
         </DialogContent>
       </Dialog>
 

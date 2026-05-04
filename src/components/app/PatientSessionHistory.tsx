@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Calendar, DollarSign, CheckCircle2, Clock, XCircle, AlertTriangle, RotateCcw } from "lucide-react";
+import { Loader2, Calendar, DollarSign, CheckCircle2, Clock, XCircle, RotateCcw, FileDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 interface SessionHistoryProps {
   patientId: string;
+  patientName?: string;
 }
 
 interface SessionRow {
@@ -103,7 +105,118 @@ const SessionCard = ({ s }: { s: SessionRow }) => (
   </div>
 );
 
-export const PatientSessionHistory = ({ patientId }: SessionHistoryProps) => {
+const generatePDF = (sessions: SessionRow[], patientName: string) => {
+  const completed = sessions.filter(s => s.status === "completed").length;
+  const noShow = sessions.filter(s => s.status === "no_show").length;
+  const paid = sessions.filter(s => s.payment_status === "paid").length;
+  const totalRevenue = sessions.filter(s => s.payment_status === "paid" && s.price).reduce((sum, s) => sum + Number(s.price), 0);
+  const totalPending = sessions.filter(s => s.payment_status === "pending" && s.price).reduce((sum, s) => sum + Number(s.price), 0);
+
+  const rows = sessions.map(s => {
+    const date = format(new Date(s.scheduled_at), "dd/MM/yyyy HH:mm");
+    const status = statusLabel[s.status] ?? s.status;
+    const payment = paymentLabel[s.payment_status] ?? s.payment_status;
+    const price = s.price != null ? `R$ ${Number(s.price).toFixed(2).replace(".", ",")}` : "-";
+    return `${date} | ${status} | ${payment} | ${price} | ${s.duration_minutes}min`;
+  });
+
+  const content = [
+    `HISTÓRICO DE SESSÕES`,
+    `Paciente: ${patientName}`,
+    `Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
+    ``,
+    `RESUMO`,
+    `Total de sessões: ${sessions.length}`,
+    `Realizadas: ${completed}`,
+    `Faltas: ${noShow}`,
+    `Total recebido: R$ ${totalRevenue.toFixed(2).replace(".", ",")}`,
+    `Total pendente: R$ ${totalPending.toFixed(2).replace(".", ",")}`,
+    ``,
+    `DETALHAMENTO`,
+    `Data/Hora | Status | Pagamento | Valor | Duração`,
+    `${"—".repeat(60)}`,
+    ...rows,
+  ].join("\n");
+
+  // Create a printable HTML and trigger print (PDF)
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) return;
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8" />
+      <title>Histórico - ${patientName}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', Arial, sans-serif; padding: 40px; color: #333; font-size: 12px; }
+        h1 { font-size: 18px; margin-bottom: 4px; color: #A57164; }
+        h2 { font-size: 14px; margin: 20px 0 8px; color: #3D5C35; }
+        .meta { color: #888; margin-bottom: 20px; }
+        .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+        .summary-card { border: 1px solid #e5e5e5; border-radius: 8px; padding: 12px; text-align: center; }
+        .summary-card .value { font-size: 20px; font-weight: 700; }
+        .summary-card .label { font-size: 10px; text-transform: uppercase; color: #888; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; font-size: 10px; text-transform: uppercase; color: #888; border-bottom: 2px solid #e5e5e5; padding: 8px 6px; }
+        td { padding: 8px 6px; border-bottom: 1px solid #f0f0f0; font-size: 11px; }
+        tr:nth-child(even) { background: #fafafa; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .badge-completed { background: #E8F5E9; color: #2E7D32; }
+        .badge-scheduled, .badge-confirmed { background: #F3F4F6; color: #4B5563; }
+        .badge-no_show { background: #FFEBEE; color: #C62828; }
+        .badge-cancelled { background: #F5F5F5; color: #9E9E9E; }
+        .badge-rescheduled { background: #FFF8E1; color: #F57F17; }
+        .badge-paid { background: #E8F5E9; color: #2E7D32; }
+        .badge-pending { background: #FFF8E1; color: #E65100; }
+        .badge-overdue { background: #FFEBEE; color: #C62828; }
+        .badge-waived { background: #F5F5F5; color: #9E9E9E; }
+        .footer { margin-top: 30px; text-align: center; color: #bbb; font-size: 10px; }
+        @media print { body { padding: 20px; } }
+      </style>
+    </head>
+    <body>
+      <h1>Histórico de Sessões</h1>
+      <p class="meta">Paciente: <strong>${patientName}</strong> · Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
+      
+      <div class="summary">
+        <div class="summary-card"><div class="value">${sessions.length}</div><div class="label">Total</div></div>
+        <div class="summary-card"><div class="value" style="color:#2E7D32">${completed}</div><div class="label">Realizadas</div></div>
+        <div class="summary-card"><div class="value" style="color:#C62828">${noShow}</div><div class="label">Faltas</div></div>
+        <div class="summary-card"><div class="value" style="color:#2E7D32">R$ ${totalRevenue.toFixed(0)}</div><div class="label">Recebido</div></div>
+      </div>
+      
+      <h2>Detalhamento</h2>
+      <table>
+        <thead>
+          <tr><th>Data</th><th>Horário</th><th>Duração</th><th>Status</th><th>Pagamento</th><th>Valor</th></tr>
+        </thead>
+        <tbody>
+          ${sessions.map(s => `
+            <tr>
+              <td>${format(new Date(s.scheduled_at), "dd/MM/yyyy")}</td>
+              <td>${format(new Date(s.scheduled_at), "HH:mm")}</td>
+              <td>${s.duration_minutes} min</td>
+              <td><span class="badge badge-${s.status}">${statusLabel[s.status] ?? s.status}</span></td>
+              <td><span class="badge badge-${s.payment_status}">${paymentLabel[s.payment_status] ?? s.payment_status}</span></td>
+              <td>${s.price != null ? `R$ ${Number(s.price).toFixed(2).replace(".", ",")}` : "—"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      
+      <div class="footer">
+        <p>Psi Real · Relatório gerado automaticamente</p>
+      </div>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+  setTimeout(() => printWindow.print(), 300);
+};
+
+export const PatientSessionHistory = ({ patientId, patientName = "Paciente" }: SessionHistoryProps) => {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -137,7 +250,6 @@ export const PatientSessionHistory = ({ patientId }: SessionHistoryProps) => {
     );
   }
 
-  // Group by status
   const byStatus: Record<string, SessionRow[]> = {};
   sessions.forEach((s) => {
     const key = s.status;
@@ -145,7 +257,6 @@ export const PatientSessionHistory = ({ patientId }: SessionHistoryProps) => {
     byStatus[key].push(s);
   });
 
-  // Group by payment
   const byPayment: Record<string, SessionRow[]> = {};
   sessions.forEach((s) => {
     const key = s.payment_status;
@@ -153,15 +264,19 @@ export const PatientSessionHistory = ({ patientId }: SessionHistoryProps) => {
     byPayment[key].push(s);
   });
 
-  // Summary stats
   const completed = sessions.filter(s => s.status === "completed").length;
   const noShow = sessions.filter(s => s.status === "no_show").length;
-  const paid = sessions.filter(s => s.payment_status === "paid").length;
-  const pending = sessions.filter(s => s.payment_status === "pending").length;
   const totalRevenue = sessions.filter(s => s.payment_status === "paid" && s.price).reduce((sum, s) => sum + Number(s.price), 0);
 
   return (
     <div className="space-y-4">
+      {/* PDF button */}
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => generatePDF(sessions, patientName)}>
+          <FileDown className="h-3.5 w-3.5" /> Gerar PDF
+        </Button>
+      </div>
+
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <div className="rounded-xl bg-muted/30 p-3 text-center">

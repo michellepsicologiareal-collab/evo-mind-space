@@ -499,17 +499,17 @@ const Agenda = () => {
       ? `Passando para lembrar do acerto referente às nossas ${singlePaymentGroup.sessions.length} sessões de ${dateStr}.`
       : `Passando para lembrar do acerto referente à nossa sessão de ${dateStr}.`;
     const message = [
-      `Olá, ${name}! Aqui é a sua psi, ${firstName || "sua psicóloga"}.`,
+      `Ol\u00e1, ${name}! Aqui \u00e9 a sua psi, ${firstName || "sua psic\u00f3loga"}.`,
       "",
       sessionLine,
       "",
-      `\u{1F4B3} Valor: ${value}`,
-      pixKey ? `\u{1F511} Chave Pix: ${pixKey}` : "",
+      `💳 Valor: ${value}`,
+      pixKey ? `🔑 Chave Pix: ${pixKey}` : "",
       "",
-      `Assim que realizar, pode me enviar o comprovante por aqui. Qualquer dúvida, fico à disposição!`,
+      `Assim que realizar, pode me enviar o comprovante por aqui. Qualquer d\u00favida, fico \u00e0 disposi\u00e7\u00e3o!`,
       "",
       psiName || "",
-      psiCrp ? `Psicóloga | CRP ${psiCrp}` : "Psicóloga",
+      psiCrp ? `Psic\u00f3loga | CRP ${psiCrp}` : "Psic\u00f3loga",
     ].filter(Boolean).join("\n");
 
     // Determine WhatsApp number: financial responsible or patient
@@ -1582,7 +1582,25 @@ const Agenda = () => {
               if (session?.session_type === "supervision") return null;
               return (
                 <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Humor / Progresso</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Humor / Progresso</p>
+                    {editProgressId && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive text-xs h-7 px-2"
+                        onClick={async () => {
+                          await supabase.from("patient_progress").delete().eq("id", editProgressId);
+                          setEditProgressId(null);
+                          setEditFormRaw((prev) => ({ ...prev, mood_score: "", progress_note: "" }));
+                          toast.success("Registro de humor excluído");
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" /> Excluir humor
+                      </Button>
+                    )}
+                  </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-2">
                       <Label>Humor (1-10)</Label>
