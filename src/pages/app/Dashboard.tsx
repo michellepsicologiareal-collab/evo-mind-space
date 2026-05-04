@@ -111,45 +111,9 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 
 const PIE_COLORS = ["hsl(var(--accent))", "hsl(var(--lilac))"];
 
-/* ── period helpers ── */
-type PeriodKey = string; // "month_0" (current), "month_1"..., "trimestre", "semestre", "anual"
-
-const getPeriodRange = (key: PeriodKey): { start: Date; end: Date; label: string } => {
-  const now = new Date();
-  if (key === "anual") {
-    return { start: startOfYear(now), end: endOfYear(now), label: `Anual ${now.getFullYear()}` };
-  }
-  if (key === "semestre") {
-    const start = subMonths(startOfMonth(now), 5);
-    return { start, end: endOfMonth(now), label: "Último semestre" };
-  }
-  if (key === "trimestre") {
-    const start = subMonths(startOfMonth(now), 2);
-    return { start, end: endOfMonth(now), label: "Último trimestre" };
-  }
-  // month_N
-  const n = parseInt(key.replace("month_", ""), 10) || 0;
-  const target = subMonths(now, n);
-  return {
-    start: startOfMonth(target),
-    end: endOfMonth(target),
-    label: format(startOfMonth(target), "MMMM yyyy", { locale: ptBR }),
-  };
-};
-
-const buildPeriodOptions = () => {
-  const now = new Date();
-  const options: { value: string; label: string }[] = [];
-  for (let i = 0; i < 12; i++) {
-    const m = subMonths(now, i);
-    const label = format(m, "MMMM yyyy", { locale: ptBR });
-    options.push({ value: `month_${i}`, label: label.charAt(0).toUpperCase() + label.slice(1) });
-  }
-  options.push({ value: "trimestre", label: "Trimestral" });
-  options.push({ value: "semestre", label: "Semestral" });
-  options.push({ value: "anual", label: `Anual ${now.getFullYear()}` });
-  return options;
-};
+/* ── date range helpers ── */
+const currentMonthStart = () => startOfMonth(new Date());
+const currentMonthEnd = () => endOfMonth(new Date());
 
 /* ── component ── */
 const Dashboard = () => {
