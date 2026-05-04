@@ -1,4 +1,9 @@
 import { Calendar, DollarSign, Activity, ClipboardList, TrendingUp } from "lucide-react";
+import agendaImg from "@/assets/screenshots/agenda.jpg";
+import financeiroImg from "@/assets/screenshots/financeiro.jpg";
+import registroImg from "@/assets/screenshots/registro.jpg";
+import pacientesImg from "@/assets/screenshots/pacientes.jpg";
+import dashboardImg from "@/assets/screenshots/dashboard.jpg";
 
 const features = [
   {
@@ -7,6 +12,8 @@ const features = [
     title: "Gestão de Agenda Inteligente",
     desc: "Visualização clara dos atendimentos, controle de faltas, remarcações e frequência — organizado por paciente.",
     span: "lg:col-span-2",
+    image: agendaImg,
+    imageAlt: "Tela de agenda semanal do Psi Real com sessões organizadas por dia e horário",
   },
   {
     icon: DollarSign,
@@ -14,6 +21,8 @@ const features = [
     title: "Controle Financeiro Simplificado",
     desc: "Sessões pagas e pendentes, faturamento mensal e clareza sobre a entrada real — não só sobre a agenda cheia.",
     span: "lg:col-span-1",
+    image: financeiroImg,
+    imageAlt: "Tela financeira do Psi Real com faturamento, recebimentos e pendências",
   },
   {
     icon: Activity,
@@ -22,6 +31,8 @@ const features = [
     desc: "Monitoramento de humor e progresso. Base para intervenções em TCC: dados → hipótese → intervenção.",
     span: "lg:col-span-1",
     highlight: true,
+    image: registroImg,
+    imageAlt: "Registro de sessão com temas, observações clínicas e pontuação de humor",
   },
   {
     icon: ClipboardList,
@@ -29,6 +40,8 @@ const features = [
     title: "Organização Terapêutica em TCC",
     desc: "Registro estruturado de sessões, acompanhamento de metas terapêuticas e plano de tratamento claro.",
     span: "lg:col-span-1",
+    image: pacientesImg,
+    imageAlt: "Lista de pacientes do Psi Real com busca, filtros e status de atividade",
   },
   {
     icon: TrendingUp,
@@ -36,6 +49,8 @@ const features = [
     title: "Visão Estratégica do Consultório",
     desc: "Pacientes ativos, taxa de faltas, crescimento mensal e onde você está perdendo dinheiro sem perceber.",
     span: "lg:col-span-1",
+    image: dashboardImg,
+    imageAlt: "Dashboard estratégico do Psi Real com gráficos de faturamento e pacientes",
   },
 ];
 
@@ -80,6 +95,20 @@ export const Features = () => {
               <p className={`mt-3 text-sm leading-relaxed ${f.highlight ? "text-primary-foreground/85" : "text-muted-foreground"}`}>
                 {f.desc}
               </p>
+
+              {/* Screenshot preview */}
+              {f.image && (
+                <div className="mt-6 -mb-8 -mx-2 rounded-t-xl overflow-hidden shadow-soft ring-1 ring-border/30 opacity-90 group-hover:opacity-100 transition-opacity">
+                  <img
+                    src={f.image}
+                    alt={f.imageAlt}
+                    loading="lazy"
+                    width={1280}
+                    height={800}
+                    className="w-full h-auto object-cover object-top max-h-48"
+                  />
+                </div>
+              )}
 
               {f.highlight && (
                 <div className="absolute -right-10 -bottom-10 h-44 w-44 rounded-full bg-accent/40 blur-3xl" aria-hidden />
