@@ -173,6 +173,7 @@ export default function ContratoModelo() {
       toast.success("Modelo salvo com sucesso!");
     }
   };
+  const navigate = useNavigate();
 
   const publicLink = templateId
     ? `${window.location.origin}/contrato/${templateId}`
