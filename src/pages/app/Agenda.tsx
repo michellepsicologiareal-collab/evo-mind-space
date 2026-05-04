@@ -912,7 +912,7 @@ const Agenda = () => {
               <Plus className="h-4 w-4" /> Nova sessão
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle className="font-display text-2xl">Nova sessão</DialogTitle>
             </DialogHeader>
