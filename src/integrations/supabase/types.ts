@@ -287,13 +287,19 @@ export type Database = {
           financial_responsible_phone: string | null
           full_name: string
           has_financial_responsible: boolean
+          has_psychiatrist: boolean
           id: string
           is_active: boolean
+          medications: string | null
           notes: string | null
           phone: string | null
+          psychiatrist_name: string | null
+          psychiatrist_phone: string | null
           session_price: number | null
           shared_with_supervisor: boolean
+          treatment_end_date: string | null
           treatment_plan: string | null
+          treatment_start_date: string | null
           updated_at: string
           user_id: string
         }
@@ -308,13 +314,19 @@ export type Database = {
           financial_responsible_phone?: string | null
           full_name: string
           has_financial_responsible?: boolean
+          has_psychiatrist?: boolean
           id?: string
           is_active?: boolean
+          medications?: string | null
           notes?: string | null
           phone?: string | null
+          psychiatrist_name?: string | null
+          psychiatrist_phone?: string | null
           session_price?: number | null
           shared_with_supervisor?: boolean
+          treatment_end_date?: string | null
           treatment_plan?: string | null
+          treatment_start_date?: string | null
           updated_at?: string
           user_id: string
         }
@@ -329,13 +341,19 @@ export type Database = {
           financial_responsible_phone?: string | null
           full_name?: string
           has_financial_responsible?: boolean
+          has_psychiatrist?: boolean
           id?: string
           is_active?: boolean
+          medications?: string | null
           notes?: string | null
           phone?: string | null
+          psychiatrist_name?: string | null
+          psychiatrist_phone?: string | null
           session_price?: number | null
           shared_with_supervisor?: boolean
+          treatment_end_date?: string | null
           treatment_plan?: string | null
+          treatment_start_date?: string | null
           updated_at?: string
           user_id?: string
         }
