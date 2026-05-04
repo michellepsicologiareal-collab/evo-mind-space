@@ -175,6 +175,78 @@ const Profile = () => {
     }
   };
 
+  const handleBackupExport = async () => {
+    setBackingUp(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { toast.error("Faça login novamente"); return; }
+      const res = await supabase.functions.invoke("backup-export", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.error) throw res.error;
+      const json = JSON.stringify(res.data, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `psireal_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Backup completo baixado!");
+    } catch {
+      toast.error("Erro ao gerar backup");
+    } finally {
+      setBackingUp(false);
+    }
+  };
+
+  const handleBackupFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith(".json")) {
+      toast.error("Selecione um arquivo .json de backup");
+      return;
+    }
+    setPendingBackupFile(file);
+    setRestoreConfirm("");
+    setRestoreOpen(true);
+  };
+
+  const handleBackupRestore = async () => {
+    if (!pendingBackupFile || !user) return;
+    if (restoreConfirm.trim().toUpperCase() !== "RESTAURAR") {
+      toast.error("Digite RESTAURAR para confirmar");
+      return;
+    }
+    setRestoring(true);
+    try {
+      const text = await pendingBackupFile.text();
+      const backup = JSON.parse(text);
+      if (!backup.version || !backup.tables) {
+        toast.error("Arquivo de backup inválido");
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { toast.error("Faça login novamente"); return; }
+      const res = await supabase.functions.invoke("backup-import", {
+        body: backup,
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.error) throw res.error;
+      const results = res.data?.results;
+      const totalInserted = Object.values(results || {}).reduce(
+        (sum: number, r: any) => sum + (r.inserted || 0), 0
+      );
+      setRestoreOpen(false);
+      setPendingBackupFile(null);
+      toast.success(`Backup restaurado! ${totalInserted} registros importados.`);
+    } catch (err: any) {
+      toast.error("Erro ao restaurar backup: " + (err?.message || "tente novamente"));
+    } finally {
+      setRestoring(false);
+    }
+  };
+
   const load = async () => {
     if (!user) return;
     const { data } = await supabase
