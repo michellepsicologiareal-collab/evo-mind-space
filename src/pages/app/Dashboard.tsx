@@ -106,7 +106,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   pending: { label: "Pendente", className: "bg-amber-100 text-amber-700" },
 };
 
-const PIE_COLORS = ["hsl(var(--accent))", "hsl(var(--lilac))", "hsl(var(--serene))", "hsl(var(--sand))"];
+const PIE_COLORS = ["hsl(var(--accent))", "hsl(var(--lilac))"];
 
 /* ── component ── */
 const Dashboard = () => {
