@@ -28,7 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths, startOfWeek, endOfWeek, startOfYear, endOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CardSkeleton } from "@/components/app/Skeletons";
