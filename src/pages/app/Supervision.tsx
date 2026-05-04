@@ -57,7 +57,7 @@ interface PatientDetail {
 interface SuperviseeRow {
   id: string;
   full_name: string | null;
-  patients: Patient[];
+  patients: PatientListItem[];
 }
 
 interface SessionSummary {
