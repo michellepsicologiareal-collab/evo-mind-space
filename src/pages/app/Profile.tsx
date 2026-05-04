@@ -598,6 +598,60 @@ const Profile = () => {
         </section>
       )}
 
+      {/* Backup Section */}
+      <section className="rounded-3xl bg-card border border-border shadow-card p-8 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent">
+            <DatabaseBackup className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="font-display text-xl font-semibold">Backup de Dados</h2>
+            <p className="text-xs text-muted-foreground">
+              Faça backups regulares para nunca perder seus dados.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <Download className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Exportar backup completo</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Baixa um arquivo JSON com <strong>todos</strong> os seus dados: pacientes, sessões, registros clínicos, formulações, progresso, serviços e mais.
+              </p>
+            </div>
+          </div>
+          <Button variant="accent" size="sm" onClick={handleBackupExport} disabled={backingUp}>
+            {backingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            Baixar backup completo (.json)
+          </Button>
+        </div>
+
+        <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <UploadCloud className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Restaurar backup</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Importe um arquivo JSON de backup para restaurar seus dados. <strong className="text-destructive">Atenção:</strong> os dados atuais serão substituídos pelos do backup.
+              </p>
+            </div>
+          </div>
+          <input
+            ref={backupInputRef}
+            type="file"
+            accept=".json"
+            hidden
+            onChange={handleBackupFileSelect}
+          />
+          <Button variant="outline" size="sm" onClick={() => backupInputRef.current?.click()} disabled={restoring}>
+            {restoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+            Selecionar arquivo de backup
+          </Button>
+        </div>
+      </section>
+
       <section className="rounded-3xl bg-card border border-border shadow-card p-8 space-y-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
