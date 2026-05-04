@@ -428,7 +428,7 @@ const Dashboard = () => {
   })();
 
   const firstName = profileName?.split(" ")[0] ?? "";
-  const periodLabel = getPeriodRange(period).label;
+  const periodLabel = `${format(dateFrom, "dd/MM/yyyy")} — ${format(dateTo, "dd/MM/yyyy")}`;
 
   if (loading) {
     return (
