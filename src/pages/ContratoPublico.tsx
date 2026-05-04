@@ -233,7 +233,8 @@ export default function ContratoPublico() {
 
           {/* Patient data */}
           <div className="space-y-4">
-            <h2 className="font-display font-semibold text-lg">Dados Pessoais</h2>
+            <h2 className="font-display font-semibold text-lg">Contratante (Paciente)</h2>
+            <p className="text-xs text-muted-foreground">Pessoa física que solicita e receberá os serviços de psicologia.</p>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <Label>Nome completo *</Label>
