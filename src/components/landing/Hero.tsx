@@ -1,4 +1,3 @@
-import dashboardImg from "@/assets/screenshots/dashboard.jpg";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 
