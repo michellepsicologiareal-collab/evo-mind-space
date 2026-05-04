@@ -274,13 +274,11 @@ const Dashboard = () => {
         const freqCounts: Record<string, { count: number; totalPrice: number }> = {
           Semanal: { count: 0, totalPrice: 0 },
           Quinzenal: { count: 0, totalPrice: 0 },
-          Outros: { count: 0, totalPrice: 0 },
         };
 
         Object.values(byPatient).forEach(({ dates, prices }) => {
           if (dates.length < 2) {
-            freqCounts["Outros"].count++;
-            freqCounts["Outros"].totalPrice += prices.reduce((a, b) => a + b, 0) / prices.length;
+            // With only 1 session, can't determine interval — skip
             return;
           }
           // calc avg interval in days
@@ -294,12 +292,9 @@ const Dashboard = () => {
           if (avgInterval <= 10) {
             freqCounts["Semanal"].count++;
             freqCounts["Semanal"].totalPrice += avgPrice;
-          } else if (avgInterval <= 20) {
+          } else {
             freqCounts["Quinzenal"].count++;
             freqCounts["Quinzenal"].totalPrice += avgPrice;
-          } else {
-            freqCounts["Outros"].count++;
-            freqCounts["Outros"].totalPrice += avgPrice;
           }
         });
 
