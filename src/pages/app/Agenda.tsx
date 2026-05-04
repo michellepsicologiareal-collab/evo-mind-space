@@ -1582,7 +1582,25 @@ const Agenda = () => {
               if (session?.session_type === "supervision") return null;
               return (
                 <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Humor / Progresso</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Humor / Progresso</p>
+                    {editProgressId && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive text-xs h-7 px-2"
+                        onClick={async () => {
+                          await supabase.from("patient_progress").delete().eq("id", editProgressId);
+                          setEditProgressId(null);
+                          setEditFormRaw((prev) => ({ ...prev, mood_score: "", progress_note: "" }));
+                          toast.success("Registro de humor excluído");
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" /> Excluir humor
+                      </Button>
+                    )}
+                  </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-2">
                       <Label>Humor (1-10)</Label>
