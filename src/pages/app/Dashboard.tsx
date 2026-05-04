@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,8 +23,10 @@ import {
   CalendarClock,
   ClipboardList,
   Info,
+  Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths, startOfWeek, endOfWeek, startOfYear, endOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CardSkeleton } from "@/components/app/Skeletons";
@@ -108,9 +110,51 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 
 const PIE_COLORS = ["hsl(var(--accent))", "hsl(var(--lilac))"];
 
+/* ── period helpers ── */
+type PeriodKey = string; // "month_0" (current), "month_1"..., "trimestre", "semestre", "anual"
+
+const getPeriodRange = (key: PeriodKey): { start: Date; end: Date; label: string } => {
+  const now = new Date();
+  if (key === "anual") {
+    return { start: startOfYear(now), end: endOfYear(now), label: `Anual ${now.getFullYear()}` };
+  }
+  if (key === "semestre") {
+    const start = subMonths(startOfMonth(now), 5);
+    return { start, end: endOfMonth(now), label: "Último semestre" };
+  }
+  if (key === "trimestre") {
+    const start = subMonths(startOfMonth(now), 2);
+    return { start, end: endOfMonth(now), label: "Último trimestre" };
+  }
+  // month_N
+  const n = parseInt(key.replace("month_", ""), 10) || 0;
+  const target = subMonths(now, n);
+  return {
+    start: startOfMonth(target),
+    end: endOfMonth(target),
+    label: format(startOfMonth(target), "MMMM yyyy", { locale: ptBR }),
+  };
+};
+
+const buildPeriodOptions = () => {
+  const now = new Date();
+  const options: { value: string; label: string }[] = [];
+  for (let i = 0; i < 12; i++) {
+    const m = subMonths(now, i);
+    const label = format(m, "MMMM yyyy", { locale: ptBR });
+    options.push({ value: `month_${i}`, label: label.charAt(0).toUpperCase() + label.slice(1) });
+  }
+  options.push({ value: "trimestre", label: "Trimestral" });
+  options.push({ value: "semestre", label: "Semestral" });
+  options.push({ value: "anual", label: `Anual ${now.getFullYear()}` });
+  return options;
+};
+
 /* ── component ── */
 const Dashboard = () => {
   const { user } = useAuth();
+  const [period, setPeriod] = useState<PeriodKey>("month_0");
+  const periodOptions = useMemo(buildPeriodOptions, []);
   const [stats, setStats] = useState<Stats>({
     activePatients: 0,
     todaySessions: 0,
@@ -147,8 +191,9 @@ const Dashboard = () => {
     if (!user) return;
     const load = async () => {
       const now = new Date();
-      const monthStart = startOfMonth(now).toISOString();
-      const monthEnd = endOfMonth(now).toISOString();
+      const { start: periodStart, end: periodEnd } = getPeriodRange(period);
+      const periodStartISO = periodStart.toISOString();
+      const periodEndISO = periodEnd.toISOString();
       const dayStart = startOfDay(now).toISOString();
       const dayEnd = endOfDay(now).toISOString();
 
@@ -162,7 +207,7 @@ const Dashboard = () => {
           supabase.from("profiles").select("full_name, clinic_name").eq("id", user.id).maybeSingle(),
           supabase.from("patients").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
           supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", dayStart).lte("scheduled_at", dayEnd).in("status", ["scheduled", "confirmed", "completed"]),
-          supabase.from("sessions").select("price, status, scheduled_at").eq("user_id", user.id).gte("scheduled_at", monthStart).lte("scheduled_at", monthEnd),
+          supabase.from("sessions").select("price, status, scheduled_at").eq("user_id", user.id).gte("scheduled_at", periodStartISO).lte("scheduled_at", periodEndISO),
           supabase
             .from("sessions")
             .select("id, scheduled_at, status, patient_id, session_type, patient:patients!sessions_patient_id_fkey(full_name)")
@@ -181,7 +226,7 @@ const Dashboard = () => {
             .select("id", { count: "exact", head: true })
             .eq("user_id", user.id),
           supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", weekStartDate.toISOString()).lte("scheduled_at", weekEndDate.toISOString()).in("status", ["scheduled", "confirmed", "completed"]),
-          supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", monthStart).lte("scheduled_at", monthEnd).in("status", ["scheduled", "confirmed", "completed"]),
+          supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", periodStartISO).lte("scheduled_at", periodEndISO).in("status", ["scheduled", "confirmed", "completed"]),
           supabase.from("sessions").select("price, status, is_expense").eq("user_id", user.id).gte("scheduled_at", yearStart).lte("scheduled_at", yearEnd).eq("status", "completed"),
         ]);
 
@@ -405,7 +450,7 @@ const Dashboard = () => {
         console.warn("Não foi possível carregar o painel inicial:", error);
       })
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [user, period]);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -415,6 +460,7 @@ const Dashboard = () => {
   })();
 
   const firstName = profileName?.split(" ")[0] ?? "";
+  const periodLabel = getPeriodRange(period).label;
 
   if (loading) {
     return (
@@ -482,6 +528,22 @@ const Dashboard = () => {
           <p className="mt-2 text-muted-foreground text-sm md:text-base">{summaryText}</p>
         </header>
 
+        {/* ── Period Filter ── */}
+        <div className="flex items-center gap-3">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium text-muted-foreground">Período:</span>
+          <Select value={period} onValueChange={(v) => setPeriod(v)}>
+            <SelectTrigger className="w-[220px] h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {periodOptions.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* ── KPI Cards ── */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard icon={Users} label="Pacientes Ativos" value={stats.activePatients.toString()} tooltip="Total de pacientes com status ativo no seu cadastro." />
@@ -492,16 +554,16 @@ const Dashboard = () => {
 
         {/* ── Métricas de Sessões do Mês ── */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard icon={ClipboardList} label="Previstos no Mês" value={stats.previstos.toString()} tooltip="Total de sessões previstas no mês (todos os status, incluindo futuras)." />
-          <KPICard icon={CheckCircle2} label="Realizados" value={stats.realizados.toString()} tooltip="Quantidade de sessões já concluídas (status 'completed') neste mês." />
-          <KPICard icon={XCircle} label="Faltas / Canceladas" value={stats.faltasCanceladas.toString()} highlight={stats.faltasCanceladas > 0} tooltip="Sessões que foram canceladas ou marcadas como falta (no-show) neste mês." />
-          <KPICard icon={CalendarClock} label="A Realizar" value={stats.aRealizar.toString()} tooltip="Sessões futuras previstas para o restante do mês que ainda não foram concluídas." />
+          <KPICard icon={ClipboardList} label="Previstos" value={stats.previstos.toString()} tooltip="Total de sessões previstas no período selecionado (todos os status)." />
+          <KPICard icon={CheckCircle2} label="Realizados" value={stats.realizados.toString()} tooltip="Sessões concluídas (status 'completed') no período." />
+          <KPICard icon={XCircle} label="Faltas / Canceladas" value={stats.faltasCanceladas.toString()} highlight={stats.faltasCanceladas > 0} tooltip="Sessões canceladas ou marcadas como falta no período." />
+          <KPICard icon={CalendarClock} label="A Realizar" value={stats.aRealizar.toString()} tooltip="Sessões futuras no período que ainda não foram concluídas." />
         </section>
 
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard
             icon={TrendingUp}
-            label="Faturamento Mensal"
+            label={`Faturamento — ${periodLabel}`}
             value={hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(2).replace(".", ",")}`}
             action={
               <button
@@ -586,7 +648,7 @@ const Dashboard = () => {
           <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent" />
             <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
-              Faturamento — {format(new Date(), "MMMM", { locale: ptBR })}
+              Faturamento — {periodLabel}
             </p>
             <p className="font-display text-3xl font-bold text-foreground">
               {hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`}
