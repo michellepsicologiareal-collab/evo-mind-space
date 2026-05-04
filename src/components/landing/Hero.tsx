@@ -1,4 +1,3 @@
-import dashboardImg from "@/assets/screenshots/dashboard.jpg";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 
@@ -51,19 +50,6 @@ export const Hero = () => {
               </div>
             ))}
           </dl>
-        </div>
-
-        <div className="lg:col-span-6 relative">
-          <div className="relative rounded-[1.5rem] overflow-hidden shadow-elegant ring-1 ring-primary/10">
-            <img
-              src={dashboardImg}
-              alt="Psi Real — Painel de controle com visão geral de pacientes, faturamento e agenda"
-              width={1280}
-              height={800}
-              className="w-full h-auto object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/10 via-transparent to-transparent" />
-          </div>
         </div>
       </div>
     </section>

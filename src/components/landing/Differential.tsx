@@ -1,5 +1,3 @@
-import registroImg from "@/assets/screenshots/registro.jpg";
-
 export const Differential = () => {
   return (
     <section id="diferencial" className="py-24 lg:py-32 bg-background">
@@ -34,20 +32,6 @@ export const Differential = () => {
                 </p>
                 <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-accent/40 blur-2xl" />
               </div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-7">
-            <div className="relative rounded-[1.5rem] overflow-hidden shadow-elegant ring-1 ring-primary/10">
-              <img
-                src={registroImg}
-                alt="Registro de sessão com observações clínicas, indicador de risco e pontuação de humor"
-                loading="lazy"
-                width={1280}
-                height={800}
-                className="w-full h-auto object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/5 via-transparent to-transparent" />
             </div>
           </div>
         </div>
