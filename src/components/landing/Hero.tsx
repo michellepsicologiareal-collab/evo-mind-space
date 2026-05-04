@@ -30,8 +30,8 @@ export const Hero = () => {
 
           <div className="mt-10 flex flex-wrap gap-4">
             <Button variant="hero" size="xl" asChild>
-              <a href="/auth">
-                Começar grátis <ArrowRight className="ml-1" />
+              <a href="#planos">
+                Conhecer os planos <ArrowRight className="ml-1" />
               </a>
             </Button>
             <Button variant="outline" size="xl" asChild>
