@@ -7,9 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, FileText, Copy, ExternalLink, Plus, Trash2, GripVertical } from "lucide-react";
+import { Loader2, FileText, Copy, ExternalLink, Plus, Trash2, Link2, FileCheck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
 
 interface Clause {
   key: string;
@@ -172,6 +173,7 @@ export default function ContratoModelo() {
       toast.success("Modelo salvo com sucesso!");
     }
   };
+  const navigate = useNavigate();
 
   const publicLink = templateId
     ? `${window.location.origin}/contrato/${templateId}`
@@ -217,24 +219,53 @@ export default function ContratoModelo() {
           </p>
         </div>
         <div className="flex gap-2">
-          {publicLink && (
-            <>
-              <Button variant="outline" size="sm" onClick={copyLink}>
-                <Copy className="h-4 w-4 mr-1" /> Copiar Link
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <a href={publicLink} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-1" /> Visualizar
-                </a>
-              </Button>
-            </>
-          )}
+          <Button variant="outline" size="sm" onClick={() => navigate("/app/contratos")}>
+            <FileCheck className="h-4 w-4 mr-1" /> Contratos assinados
+          </Button>
           <Button variant="accent" onClick={handleSave} disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
             Salvar Modelo
           </Button>
         </div>
       </div>
+
+      {/* Link card - prominent */}
+      {publicLink ? (
+        <Card className="rounded-2xl border-accent/30 bg-accent/5">
+          <CardContent className="p-5 space-y-3">
+            <div className="flex items-center gap-2 text-accent">
+              <Link2 className="h-5 w-5" />
+              <p className="font-display font-semibold">Link para o paciente preencher</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                readOnly
+                value={publicLink}
+                className="font-mono text-sm bg-card"
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+              />
+              <Button variant="accent" size="sm" onClick={copyLink} className="shrink-0">
+                <Copy className="h-4 w-4 mr-1" /> Copiar
+              </Button>
+              <Button variant="outline" size="sm" asChild className="shrink-0">
+                <a href={publicLink} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4 mr-1" /> Abrir
+                </a>
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Envie este link ao paciente por WhatsApp ou e-mail. Após preencher, o contrato aparecerá em "Contratos assinados".
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="rounded-2xl border-dashed border-muted-foreground/30">
+          <CardContent className="p-5 text-center text-sm text-muted-foreground">
+            <Link2 className="h-6 w-6 mx-auto mb-2 opacity-40" />
+            Salve o modelo para gerar o link de preenchimento para o paciente.
+          </CardContent>
+        </Card>
+      )}
 
       {/* Professional info */}
       <Card className="rounded-2xl">

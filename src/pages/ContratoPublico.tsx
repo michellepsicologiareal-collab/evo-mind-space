@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, Brain, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import logo from "@/assets/logo-psireal.png";
 
 interface Clause {
   key: string;
@@ -169,9 +170,7 @@ export default function ContratoPublico() {
         {/* Header */}
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <Brain className="h-5 w-5" />
-            </span>
+            <img src={logo} alt="Psi Real" className="h-10 w-10 rounded-full" />
           </div>
           <h1 className="text-2xl font-display font-bold">Termo de Adesão ao Tratamento</h1>
           <p className="text-muted-foreground text-sm">
