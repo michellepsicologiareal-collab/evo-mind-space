@@ -1,0 +1,1 @@
+ALTER TABLE public.contract_templates ADD COLUMN professional_crp text NOT NULL DEFAULT '';

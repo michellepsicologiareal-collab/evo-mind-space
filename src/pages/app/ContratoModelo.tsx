@@ -117,6 +117,7 @@ export default function ContratoModelo() {
   const [templateId, setTemplateId] = useState<string | null>(null);
 
   const [professionalName, setProfessionalName] = useState("");
+  const [professionalCrp, setProfessionalCrp] = useState("");
   const [professionalCpf, setProfessionalCpf] = useState("");
   const [professionalAddress, setProfessionalAddress] = useState("");
   const [professionalEmail, setProfessionalEmail] = useState("");
@@ -134,6 +135,7 @@ export default function ContratoModelo() {
       if (data) {
         setTemplateId(data.id);
         setProfessionalName(data.professional_name);
+        setProfessionalCrp((data as any).professional_crp ?? "");
         setProfessionalCpf(data.professional_cpf);
         setProfessionalAddress(data.professional_address);
         setProfessionalEmail(data.professional_email);
@@ -150,12 +152,13 @@ export default function ContratoModelo() {
     const payload = {
       user_id: user.id,
       professional_name: professionalName,
+      professional_crp: professionalCrp,
       professional_cpf: professionalCpf,
       professional_address: professionalAddress,
       professional_email: professionalEmail,
       lgpd_clause: lgpdClause,
       clauses: JSON.parse(JSON.stringify(clauses)),
-    };
+    } as any;
 
     let error;
     if (templateId) {
@@ -278,6 +281,10 @@ export default function ContratoModelo() {
           <div>
             <Label>Nome completo</Label>
             <Input value={professionalName} onChange={(e) => setProfessionalName(e.target.value)} placeholder="Nome do Psicólogo(a)" />
+          </div>
+          <div>
+            <Label>CRP</Label>
+            <Input value={professionalCrp} onChange={(e) => setProfessionalCrp(e.target.value)} placeholder="00/00000" />
           </div>
           <div>
             <Label>CPF</Label>

@@ -109,6 +109,7 @@ export type Database = {
           lgpd_clause: string
           professional_address: string
           professional_cpf: string
+          professional_crp: string
           professional_email: string
           professional_name: string
           updated_at: string
@@ -121,6 +122,7 @@ export type Database = {
           lgpd_clause?: string
           professional_address?: string
           professional_cpf?: string
+          professional_crp?: string
           professional_email?: string
           professional_name?: string
           updated_at?: string
@@ -133,6 +135,7 @@ export type Database = {
           lgpd_clause?: string
           professional_address?: string
           professional_cpf?: string
+          professional_crp?: string
           professional_email?: string
           professional_name?: string
           updated_at?: string
