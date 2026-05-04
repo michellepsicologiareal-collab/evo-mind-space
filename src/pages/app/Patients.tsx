@@ -408,7 +408,61 @@ const Patients = () => {
                 )}
               </div>
 
+              {/* Datas de tratamento */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="treatment_start_date">Início do tratamento</Label>
+                  <Input id="treatment_start_date" type="date" value={form.treatment_start_date} onChange={(e) => setForm({ ...form, treatment_start_date: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="treatment_end_date">Término do tratamento</Label>
+                  <Input id="treatment_end_date" type="date" value={form.treatment_end_date} onChange={(e) => setForm({ ...form, treatment_end_date: e.target.value })} />
+                </div>
+              </div>
+
+              {/* Acompanhamento psiquiátrico */}
+              <div className="rounded-xl border border-border p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="has_psychiatrist" className="text-sm font-medium">Faz acompanhamento psiquiátrico?</Label>
+                  <Switch
+                    id="has_psychiatrist"
+                    checked={form.has_psychiatrist}
+                    onCheckedChange={(checked) => setForm({ ...form, has_psychiatrist: checked })}
+                  />
+                </div>
+                {form.has_psychiatrist && (
+                  <div className="space-y-3 pt-2 border-t border-border">
+                    <div className="space-y-2">
+                      <Label htmlFor="psychiatrist_name">Nome do médico</Label>
+                      <Input id="psychiatrist_name" placeholder="Nome do psiquiatra" value={form.psychiatrist_name} onChange={(e) => setForm({ ...form, psychiatrist_name: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="psychiatrist_phone">WhatsApp do médico</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={form.psychiatrist_phone_ddi}
+                          onChange={(e) => {
+                            let v = e.target.value;
+                            if (v && !v.startsWith("+")) v = "+" + v;
+                            setForm({ ...form, psychiatrist_phone_ddi: v });
+                          }}
+                          className="w-[80px] shrink-0 text-center"
+                          placeholder="+55"
+                          maxLength={5}
+                        />
+                        <Input id="psychiatrist_phone" className="flex-1" placeholder="11 99988-7766" value={form.psychiatrist_phone} onChange={(e) => setForm({ ...form, psychiatrist_phone: e.target.value })} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Medicamentos */}
               <div className="space-y-2">
+                <Label htmlFor="medications">Medicamentos em uso</Label>
+                <Textarea id="medications" rows={3} className="min-h-[80px]" placeholder="Liste os medicamentos que o paciente toma atualmente..." value={form.medications} onChange={(e) => setForm({ ...form, medications: e.target.value })} />
+              </div>
+
                 <Label htmlFor="chief_complaint">Queixa Principal</Label>
                 <Textarea id="chief_complaint" rows={3} className="min-h-[80px]" placeholder="Descreva a queixa principal do paciente..." value={form.chief_complaint} onChange={(e) => setForm({ ...form, chief_complaint: e.target.value })} />
               </div>
