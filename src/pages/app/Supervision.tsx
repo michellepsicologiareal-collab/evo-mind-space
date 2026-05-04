@@ -159,16 +159,24 @@ const Supervision = () => {
     }
 
     const ids = (profs ?? []).map((p) => p.id);
-    const patientsByUser: Record<string, Patient[]> = {};
+    const patientsByUser: Record<string, PatientListItem[]> = {};
     if (ids.length) {
-      // RLS already filters to shared_with_supervisor = true
       const { data: pats } = await supabase
         .from("patients")
-        .select("id, full_name, email, phone, notes, is_active, session_price, user_id")
+        .select("id, full_name, is_active, user_id")
         .in("user_id", ids)
         .order("full_name");
-      (pats ?? []).forEach((p) => {
-        (patientsByUser[p.user_id] ??= []).push(p as Patient);
+      (pats ?? []).forEach((p: any) => {
+        const parts = (p.full_name || "").trim().split(/\s+/);
+        const initials = parts.length >= 2
+          ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+          : (parts[0]?.[0] ?? "?").toUpperCase();
+        (patientsByUser[p.user_id] ??= []).push({
+          id: p.id,
+          initials,
+          is_active: p.is_active,
+          user_id: p.user_id,
+        });
       });
     }
 
