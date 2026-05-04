@@ -22,6 +22,7 @@ interface Template {
   id: string;
   user_id: string;
   professional_name: string;
+  professional_crp: string;
   professional_cpf: string;
   professional_address: string;
   professional_email: string;
