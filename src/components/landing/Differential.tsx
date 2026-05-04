@@ -1,3 +1,5 @@
+import registroImg from "@/assets/screenshots/registro.jpg";
+
 export const Differential = () => {
   return (
     <section id="diferencial" className="py-24 lg:py-32 bg-background">
@@ -14,31 +16,38 @@ export const Differential = () => {
               O Psi Real estrutura dados consistentes do paciente para que você tome decisões clínicas
               com mais segurança. <strong className="text-foreground">TCC na prática:</strong> monitoramento, hipótese, ajuste.
             </p>
-          </div>
 
-          <div className="lg:col-span-7">
-            <div className="relative rounded-3xl bg-gradient-card border border-border p-8 lg:p-10 shadow-soft">
-              {/* Before */}
-              <div className="rounded-2xl bg-muted/60 border border-border/60 p-6">
+            <div className="mt-8 rounded-3xl bg-gradient-card border border-border p-6 shadow-soft">
+              <div className="rounded-2xl bg-muted/60 border border-border/60 p-5">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Antes</p>
-                <p className="mt-3 font-display text-2xl text-muted-foreground font-medium">
+                <p className="mt-2 font-display text-xl text-muted-foreground font-medium">
                   "acho que o paciente melhorou."
                 </p>
               </div>
-
-              {/* Arrow */}
-              <div className="flex justify-center my-4">
-                <div className="h-10 w-px bg-gradient-to-b from-muted-foreground/40 to-accent" />
+              <div className="flex justify-center my-3">
+                <div className="h-8 w-px bg-gradient-to-b from-muted-foreground/40 to-accent" />
               </div>
-
-              {/* After */}
-              <div className="relative rounded-2xl bg-gradient-hero text-primary-foreground p-6 shadow-elegant">
+              <div className="relative rounded-2xl bg-gradient-hero text-primary-foreground p-5 shadow-elegant">
                 <p className="text-[11px] uppercase tracking-[0.18em] text-primary-foreground/70">Com Psi Real</p>
-                <p className="mt-3 font-display text-2xl leading-snug">
+                <p className="mt-2 font-display text-xl leading-snug">
                   "tenho dados consistentes que mostram <span className="font-semibold">evolução ou estagnação</span>."
                 </p>
-                <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-accent/40 blur-2xl" />
+                <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-accent/40 blur-2xl" />
               </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-7">
+            <div className="relative rounded-[1.5rem] overflow-hidden shadow-elegant ring-1 ring-primary/10">
+              <img
+                src={registroImg}
+                alt="Registro de sessão com observações clínicas, indicador de risco e pontuação de humor"
+                loading="lazy"
+                width={1280}
+                height={800}
+                className="w-full h-auto object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/5 via-transparent to-transparent" />
             </div>
           </div>
         </div>
