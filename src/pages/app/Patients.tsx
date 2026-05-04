@@ -210,6 +210,14 @@ const Patients = () => {
       financial_responsible_phone: form.has_financial_responsible && form.financial_responsible_phone
         ? `${form.financial_responsible_ddi || "+55"} ${form.financial_responsible_phone}`.trim()
         : null,
+      treatment_start_date: form.treatment_start_date || null,
+      treatment_end_date: form.treatment_end_date || null,
+      has_psychiatrist: form.has_psychiatrist,
+      psychiatrist_name: form.has_psychiatrist ? (form.psychiatrist_name || null) : null,
+      psychiatrist_phone: form.has_psychiatrist && form.psychiatrist_phone
+        ? `${form.psychiatrist_phone_ddi || "+55"} ${form.psychiatrist_phone}`.trim()
+        : null,
+      medications: form.medications || null,
     };
 
     const { error } = editing
