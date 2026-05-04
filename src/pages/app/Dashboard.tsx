@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,14 +24,19 @@ import {
   ClipboardList,
   Info,
   Filter,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths, startOfWeek, endOfWeek, startOfYear, endOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CardSkeleton } from "@/components/app/Skeletons";
+import { toast } from "sonner";
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, PieChart, Pie, Cell, Legend } from "recharts";
 import {
   Tooltip,
@@ -155,6 +160,12 @@ const Dashboard = () => {
   const [frequencyData, setFrequencyData] = useState<FrequencyData[]>([]);
   const [moodFilterPatient, setMoodFilterPatient] = useState<string>("all");
 
+  const [editGoalsOpen, setEditGoalsOpen] = useState(false);
+  const [goalFormSessions, setGoalFormSessions] = useState(40);
+  const [goalFormRevenue, setGoalFormRevenue] = useState(10000);
+  const [goalFormRecords, setGoalFormRecords] = useState(20);
+  const [savingGoals, setSavingGoals] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
@@ -173,7 +184,7 @@ const Dashboard = () => {
 
       const [profileRes, patientsRes, todayRes, monthRes, upcomingRes, supervisionRes, recordsRes, weekRes, monthAllRes, yearRes] =
         await Promise.all([
-          supabase.from("profiles").select("full_name, clinic_name").eq("id", user.id).maybeSingle(),
+          supabase.from("profiles").select("full_name, clinic_name, goal_sessions, goal_revenue, goal_records").eq("id", user.id).maybeSingle(),
           supabase.from("patients").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
           supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", dayStart).lte("scheduled_at", dayEnd).in("status", ["scheduled", "confirmed", "completed"]),
           supabase.from("sessions").select("price, status, scheduled_at").eq("user_id", user.id).gte("scheduled_at", periodStartISO).lte("scheduled_at", periodEndISO),
@@ -202,6 +213,13 @@ const Dashboard = () => {
       setProfileName(profileRes.data?.full_name ?? "");
       setClinicName((profileRes.data as any)?.clinic_name ?? "");
 
+      const pGoalSessions = (profileRes.data as any)?.goal_sessions ?? 40;
+      const pGoalRevenue = Number((profileRes.data as any)?.goal_revenue ?? 10000);
+      const pGoalRecords = (profileRes.data as any)?.goal_records ?? 20;
+      setGoalFormSessions(pGoalSessions);
+      setGoalFormRevenue(pGoalRevenue);
+      setGoalFormRecords(pGoalRecords);
+
       const monthSessionsArr = monthRes.data ?? [];
       const revenue = monthSessionsArr.filter((s) => s.status === "completed").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
       const completed = monthSessionsArr.filter((s) => s.status === "completed").length;
@@ -219,9 +237,9 @@ const Dashboard = () => {
         supervisionCases: supervisionRes.count ?? 0,
         completedSessions: completed,
         totalRecords: recordsRes.count ?? 0,
-        revenueGoal: 10000,
-        sessionsGoal: 40,
-        recordsGoal: 20,
+        revenueGoal: pGoalRevenue,
+        sessionsGoal: pGoalSessions,
+        recordsGoal: pGoalRecords,
         previstos: monthSessionsArr.length,
         realizados: completed,
         faltasCanceladas,
@@ -709,7 +727,7 @@ const Dashboard = () => {
         </section>
 
         {/* ── Gráfico de Pizza: Frequência de Atendimentos ── */}
-        <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 relative overflow-hidden">
+        <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 relative">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-lilac via-accent/60 to-transparent" />
           <div className="flex items-center gap-2 mb-4">
             <CalendarRange className="h-5 w-5 text-lilac" />
@@ -732,19 +750,29 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div className="h-[250px]">
+              <div className="h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={frequencyData}
                       cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={90}
+                      cy="55%"
+                      innerRadius={45}
+                      outerRadius={80}
                       paddingAngle={4}
                       dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      labelLine={false}
+                      label={({ name, percent, cx, cy, midAngle, outerRadius: or }) => {
+                        const RADIAN = Math.PI / 180;
+                        const radius = or + 20;
+                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                        return (
+                          <text x={x} y={y} fill="hsl(var(--foreground))" textAnchor={x > cx ? "start" : "end"} dominantBaseline="central" fontSize={12}>
+                            {name} {(percent * 100).toFixed(0)}%
+                          </text>
+                        );
+                      }}
+                      labelLine={true}
                     >
                       {frequencyData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
@@ -933,7 +961,12 @@ const Dashboard = () => {
 
         {/* ── Goals / Gamification ── */}
         <section className="rounded-2xl bg-card border border-border shadow-card p-8">
-          <h2 className="font-display text-xl md:text-2xl font-bold text-foreground mb-6">Metas do Mês</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Metas do Mês</h2>
+            <Button variant="ghost" size="sm" onClick={() => setEditGoalsOpen(true)}>
+              <Pencil className="h-4 w-4 mr-1" /> Editar metas
+            </Button>
+          </div>
           <div className="grid md:grid-cols-3 gap-6">
             {progressItems.map((item) => {
               const pct = item.goal > 0 ? Math.min((item.current / item.goal) * 100, 100) : 0;
@@ -966,6 +999,53 @@ const Dashboard = () => {
             })}
           </div>
         </section>
+
+        {/* ── Edit Goals Dialog ── */}
+        <Dialog open={editGoalsOpen} onOpenChange={setEditGoalsOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="font-display text-xl">Editar Metas</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Meta de Sessões Realizadas</Label>
+                <Input type="number" min="1" value={goalFormSessions} onChange={(e) => setGoalFormSessions(Number(e.target.value))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Meta de Faturamento (R$)</Label>
+                <Input type="number" min="0" step="100" value={goalFormRevenue} onChange={(e) => setGoalFormRevenue(Number(e.target.value))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Meta de Registros Clínicos</Label>
+                <Input type="number" min="1" value={goalFormRecords} onChange={(e) => setGoalFormRecords(Number(e.target.value))} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditGoalsOpen(false)}>Cancelar</Button>
+              <Button variant="accent" disabled={savingGoals} onClick={async () => {
+                if (!user) return;
+                setSavingGoals(true);
+                const { error } = await supabase.from("profiles").update({
+                  goal_sessions: goalFormSessions,
+                  goal_revenue: goalFormRevenue,
+                  goal_records: goalFormRecords,
+                } as any).eq("id", user.id);
+                setSavingGoals(false);
+                if (error) { toast.error("Erro ao salvar metas"); return; }
+                setStats(prev => ({
+                  ...prev,
+                  sessionsGoal: goalFormSessions,
+                  revenueGoal: goalFormRevenue,
+                  recordsGoal: goalFormRecords,
+                }));
+                toast.success("Metas atualizadas!");
+                setEditGoalsOpen(false);
+              }}>
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   );
