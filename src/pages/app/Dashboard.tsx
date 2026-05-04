@@ -563,7 +563,7 @@ const Dashboard = () => {
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard
             icon={TrendingUp}
-            label="Faturamento Mensal"
+            label={`Faturamento — ${periodLabel}`}
             value={hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(2).replace(".", ",")}`}
             action={
               <button
