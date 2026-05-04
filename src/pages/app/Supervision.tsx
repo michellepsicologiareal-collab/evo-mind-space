@@ -36,7 +36,14 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface Patient {
+interface PatientListItem {
+  id: string;
+  initials: string;
+  is_active: boolean;
+  user_id: string;
+}
+
+interface PatientDetail {
   id: string;
   full_name: string;
   email: string | null;
@@ -50,7 +57,7 @@ interface Patient {
 interface SuperviseeRow {
   id: string;
   full_name: string | null;
-  patients: Patient[];
+  patients: PatientListItem[];
 }
 
 interface SessionSummary {
@@ -77,48 +84,49 @@ const Supervision = () => {
   const [supervisees, setSupervisees] = useState<SuperviseeRow[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [tabFilter, setTabFilter] = useState<Record<string, "active" | "inactive" | "all">>({});
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedPatientItem, setSelectedPatientItem] = useState<PatientListItem | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<PatientDetail | null>(null);
   const [recentSessions, setRecentSessions] = useState<SessionSummary[]>([]);
   const [latestProgress, setLatestProgress] = useState<ProgressEntry | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  useEffect(() => {
-    if (!selectedPatient) {
-      setRecentSessions([]);
-      setLatestProgress(null);
-      return;
+  const openPatientDetail = async (item: PatientListItem) => {
+    setSelectedPatientItem(item);
+    setSelectedPatient(null);
+    setDetailLoading(true);
+    setRecentSessions([]);
+    setLatestProgress(null);
+
+    const [patRes, sRes, pRes] = await Promise.all([
+      supabase
+        .from("patients")
+        .select("id, full_name, email, phone, notes, is_active, session_price, user_id")
+        .eq("id", item.id)
+        .maybeSingle(),
+      supabase
+        .from("sessions")
+        .select("id, scheduled_at, status, notes")
+        .eq("patient_id", item.id)
+        .order("scheduled_at", { ascending: false })
+        .limit(5),
+      (supabase as any)
+        .from("patient_progress")
+        .select("id, recorded_at, mood_score, note")
+        .eq("patient_id", item.id)
+        .order("recorded_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    setSelectedPatient(patRes.data as PatientDetail | null);
+    setRecentSessions((sRes.data as SessionSummary[]) ?? []);
+    setLatestProgress((pRes.data as ProgressEntry | null) ?? null);
+    setDetailLoading(false);
+
+    if (item.user_id) {
+      logSupervisionAccess("patient", item.id, item.user_id, item.id);
     }
-    let cancelled = false;
-    (async () => {
-      setDetailLoading(true);
-      const [sRes, pRes] = await Promise.all([
-        supabase
-          .from("sessions")
-          .select("id, scheduled_at, status, notes")
-          .eq("patient_id", selectedPatient.id)
-          .order("scheduled_at", { ascending: false })
-          .limit(5),
-        (supabase as any)
-          .from("patient_progress")
-          .select("id, recorded_at, mood_score, note")
-          .eq("patient_id", selectedPatient.id)
-          .order("recorded_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ]);
-      if (cancelled) return;
-      setRecentSessions((sRes.data as SessionSummary[]) ?? []);
-      setLatestProgress((pRes.data as ProgressEntry | null) ?? null);
-      setDetailLoading(false);
-      // Audit: log supervision access to patient data
-      if (selectedPatient?.user_id) {
-        logSupervisionAccess("patient", selectedPatient.id, selectedPatient.user_id, selectedPatient.id);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedPatient]);
+  };
 
   const load = async () => {
     if (!user) return;
@@ -151,16 +159,24 @@ const Supervision = () => {
     }
 
     const ids = (profs ?? []).map((p) => p.id);
-    const patientsByUser: Record<string, Patient[]> = {};
+    const patientsByUser: Record<string, PatientListItem[]> = {};
     if (ids.length) {
-      // RLS already filters to shared_with_supervisor = true
       const { data: pats } = await supabase
         .from("patients")
-        .select("id, full_name, email, phone, notes, is_active, session_price, user_id")
+        .select("id, full_name, is_active, user_id")
         .in("user_id", ids)
         .order("full_name");
-      (pats ?? []).forEach((p) => {
-        (patientsByUser[p.user_id] ??= []).push(p as Patient);
+      (pats ?? []).forEach((p: any) => {
+        const parts = (p.full_name || "").trim().split(/\s+/);
+        const initials = parts.length >= 2
+          ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+          : (parts[0]?.[0] ?? "?").toUpperCase();
+        (patientsByUser[p.user_id] ??= []).push({
+          id: p.id,
+          initials,
+          is_active: p.is_active,
+          user_id: p.user_id,
+        });
       });
     }
 
@@ -216,7 +232,7 @@ const Supervision = () => {
   const toggleExpand = (id: string) =>
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const filterPatients = (list: Patient[], f: "active" | "inactive" | "all") =>
+  const filterPatients = (list: PatientListItem[], f: "active" | "inactive" | "all") =>
     list.filter((p) => (f === "all" ? true : f === "active" ? p.is_active : !p.is_active));
 
   const totalShared = supervisees.reduce((s, r) => s + r.patients.length, 0);
@@ -443,15 +459,15 @@ const Supervision = () => {
                               {visible.map((p) => (
                                 <li key={p.id}>
                                   <button
-                                    onClick={() => setSelectedPatient(p)}
+                                    onClick={() => openPatientDetail(p)}
                                     className="w-full flex items-center justify-between gap-3 rounded-lg bg-card border border-border p-3 hover:border-primary hover:shadow-soft transition-all text-left"
                                   >
                                     <div className="flex items-center gap-3 min-w-0">
-                                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-primary font-display shrink-0">
-                                        {p.full_name.charAt(0).toUpperCase()}
+                                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-primary font-display font-bold shrink-0">
+                                        {p.initials}
                                       </div>
                                       <div className="min-w-0">
-                                        <p className="font-medium truncate">{p.full_name}</p>
+                                        <p className="font-medium">{p.initials}</p>
                                         <p className="text-xs text-muted-foreground">
                                           {p.is_active ? (
                                             <span className="text-primary-glow">● Ativo</span>
@@ -479,18 +495,24 @@ const Supervision = () => {
       </section>
 
       {/* Patient detail dialog */}
-      <Dialog open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
+      <Dialog open={!!selectedPatientItem} onOpenChange={(o) => { if (!o) { setSelectedPatientItem(null); setSelectedPatient(null); } }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">
-              {selectedPatient?.full_name}
+              {selectedPatient?.full_name ?? selectedPatientItem?.initials ?? ""}
             </DialogTitle>
             <DialogDescription>
-              {selectedPatient?.is_active ? "Paciente ativo" : "Paciente inativo"} · acesso somente leitura
+              {(selectedPatient ?? selectedPatientItem)?.is_active ? "Paciente ativo" : "Paciente inativo"} · acesso somente leitura
             </DialogDescription>
           </DialogHeader>
 
-          {selectedPatient && (
+          {detailLoading && (
+            <div className="text-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+            </div>
+          )}
+
+          {selectedPatient && !detailLoading && (
             <div className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-3 text-sm">
                 {selectedPatient.email && (
