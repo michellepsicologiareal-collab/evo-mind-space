@@ -878,7 +878,7 @@ const Dashboard = () => {
 
           {upcoming.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <CalendarPicker className="h-12 w-12 mx-auto mb-4 opacity-30" />
+              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-30" />
               <p className="font-display text-lg font-medium text-foreground/70">Sua agenda está tranquila</p>
               <p className="mt-1 text-sm">Que tal agendar a próxima sessão?</p>
               <Button variant="accent" size="sm" className="mt-5 min-h-[44px]" asChild>
