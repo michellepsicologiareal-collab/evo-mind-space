@@ -527,6 +527,22 @@ const Dashboard = () => {
           <p className="mt-2 text-muted-foreground text-sm md:text-base">{summaryText}</p>
         </header>
 
+        {/* ── Period Filter ── */}
+        <div className="flex items-center gap-3">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium text-muted-foreground">Período:</span>
+          <Select value={period} onValueChange={(v) => setPeriod(v)}>
+            <SelectTrigger className="w-[220px] h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {periodOptions.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* ── KPI Cards ── */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard icon={Users} label="Pacientes Ativos" value={stats.activePatients.toString()} tooltip="Total de pacientes com status ativo no seu cadastro." />
