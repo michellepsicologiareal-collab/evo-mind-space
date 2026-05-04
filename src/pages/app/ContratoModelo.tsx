@@ -127,20 +127,33 @@ export default function ContratoModelo() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await supabase
-        .from("contract_templates")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (data) {
-        setTemplateId(data.id);
-        setProfessionalName(data.professional_name);
-        setProfessionalCrp((data as any).professional_crp ?? "");
-        setProfessionalCpf(data.professional_cpf);
-        setProfessionalAddress(data.professional_address);
-        setProfessionalEmail(data.professional_email);
-        setLgpdClause(data.lgpd_clause);
-        setClauses(data.clauses as unknown as Clause[]);
+      const [{ data: tpl }, { data: profile }] = await Promise.all([
+        supabase
+          .from("contract_templates")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("full_name, crp, phone, clinic_name")
+          .eq("id", user.id)
+          .maybeSingle(),
+      ]);
+
+      if (tpl) {
+        setTemplateId(tpl.id);
+        setProfessionalName(tpl.professional_name);
+        setProfessionalCrp((tpl as any).professional_crp ?? "");
+        setProfessionalCpf(tpl.professional_cpf);
+        setProfessionalAddress(tpl.professional_address);
+        setProfessionalEmail(tpl.professional_email);
+        setLgpdClause(tpl.lgpd_clause);
+        setClauses(tpl.clauses as unknown as Clause[]);
+      } else if (profile) {
+        // Pre-fill from profile when no template exists yet
+        setProfessionalName(profile.full_name ?? "");
+        setProfessionalCrp(profile.crp ?? "");
+        setProfessionalEmail(user.email ?? "");
       }
       setLoading(false);
     })();
