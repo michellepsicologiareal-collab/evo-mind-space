@@ -592,7 +592,17 @@ const Patients = () => {
                   })()}
                 </div>
               )}
-              <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-3">
+              <div className="mt-3 flex items-center gap-2 border-t border-border/50 pt-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5"
+                  onClick={() => setHistoryPatient(p)}
+                >
+                  <CalendarDays className="h-3.5 w-3.5" /> Histórico de Sessões
+                </Button>
+              </div>
+              <div className="mt-2 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Eye className="h-3.5 w-3.5" />
                   Visível ao supervisor
