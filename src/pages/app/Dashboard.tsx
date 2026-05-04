@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +27,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths, startOfWeek, endOfWeek, startOfYear, endOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CardSkeleton } from "@/components/app/Skeletons";
@@ -111,51 +113,15 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 
 const PIE_COLORS = ["hsl(var(--accent))", "hsl(var(--lilac))"];
 
-/* ── period helpers ── */
-type PeriodKey = string; // "month_0" (current), "month_1"..., "trimestre", "semestre", "anual"
-
-const getPeriodRange = (key: PeriodKey): { start: Date; end: Date; label: string } => {
-  const now = new Date();
-  if (key === "anual") {
-    return { start: startOfYear(now), end: endOfYear(now), label: `Anual ${now.getFullYear()}` };
-  }
-  if (key === "semestre") {
-    const start = subMonths(startOfMonth(now), 5);
-    return { start, end: endOfMonth(now), label: "Último semestre" };
-  }
-  if (key === "trimestre") {
-    const start = subMonths(startOfMonth(now), 2);
-    return { start, end: endOfMonth(now), label: "Último trimestre" };
-  }
-  // month_N
-  const n = parseInt(key.replace("month_", ""), 10) || 0;
-  const target = subMonths(now, n);
-  return {
-    start: startOfMonth(target),
-    end: endOfMonth(target),
-    label: format(startOfMonth(target), "MMMM yyyy", { locale: ptBR }),
-  };
-};
-
-const buildPeriodOptions = () => {
-  const now = new Date();
-  const options: { value: string; label: string }[] = [];
-  for (let i = 0; i < 12; i++) {
-    const m = subMonths(now, i);
-    const label = format(m, "MMMM yyyy", { locale: ptBR });
-    options.push({ value: `month_${i}`, label: label.charAt(0).toUpperCase() + label.slice(1) });
-  }
-  options.push({ value: "trimestre", label: "Trimestral" });
-  options.push({ value: "semestre", label: "Semestral" });
-  options.push({ value: "anual", label: `Anual ${now.getFullYear()}` });
-  return options;
-};
+/* ── date range helpers ── */
+const currentMonthStart = () => startOfMonth(new Date());
+const currentMonthEnd = () => endOfMonth(new Date());
 
 /* ── component ── */
 const Dashboard = () => {
   const { user } = useAuth();
-  const [period, setPeriod] = useState<PeriodKey>("month_0");
-  const periodOptions = useMemo(buildPeriodOptions, []);
+  const [dateFrom, setDateFrom] = useState<Date>(currentMonthStart());
+  const [dateTo, setDateTo] = useState<Date>(currentMonthEnd());
   const [stats, setStats] = useState<Stats>({
     activePatients: 0,
     todaySessions: 0,
@@ -193,7 +159,8 @@ const Dashboard = () => {
     if (!user) return;
     const load = async () => {
       const now = new Date();
-      const { start: periodStart, end: periodEnd } = getPeriodRange(period);
+      const periodStart = dateFrom;
+      const periodEnd = dateTo;
       const periodStartISO = periodStart.toISOString();
       const periodEndISO = periodEnd.toISOString();
       const dayStart = startOfDay(now).toISOString();
@@ -453,7 +420,7 @@ const Dashboard = () => {
         console.warn("Não foi possível carregar o painel inicial:", error);
       })
       .finally(() => setLoading(false));
-  }, [user, period]);
+  }, [user, dateFrom, dateTo]);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -463,7 +430,7 @@ const Dashboard = () => {
   })();
 
   const firstName = profileName?.split(" ")[0] ?? "";
-  const periodLabel = getPeriodRange(period).label;
+  const periodLabel = `${format(dateFrom, "dd/MM/yyyy")} — ${format(dateTo, "dd/MM/yyyy")}`;
 
   if (loading) {
     return (
@@ -532,19 +499,52 @@ const Dashboard = () => {
         </header>
 
         {/* ── Period Filter ── */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium text-muted-foreground">Período:</span>
-          <Select value={period} onValueChange={(v) => setPeriod(v)}>
-            <SelectTrigger className="w-[220px] h-9 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {periodOptions.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-2 text-sm">
+                <CalendarDays className="h-3.5 w-3.5" />
+                {format(dateFrom, "dd/MM/yyyy")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarPicker
+                mode="single"
+                selected={dateFrom}
+                onSelect={(d) => d && setDateFrom(startOfDay(d))}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          <span className="text-sm text-muted-foreground">até</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-2 text-sm">
+                <CalendarDays className="h-3.5 w-3.5" />
+                {format(dateTo, "dd/MM/yyyy")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarPicker
+                mode="single"
+                selected={dateTo}
+                onSelect={(d) => d && setDateTo(endOfDay(d))}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-accent"
+            onClick={() => { setDateFrom(currentMonthStart()); setDateTo(currentMonthEnd()); }}
+          >
+            Mês atual
+          </Button>
         </div>
 
         {/* ── KPI Cards ── */}
