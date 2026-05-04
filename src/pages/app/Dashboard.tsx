@@ -187,6 +187,7 @@ const Dashboard = () => {
   const [monthSessions, setMonthSessions] = useState(0);
   const [yearRevenue, setYearRevenue] = useState(0);
   const [frequencyData, setFrequencyData] = useState<FrequencyData[]>([]);
+  const [moodFilterPatient, setMoodFilterPatient] = useState<string>("all");
 
   useEffect(() => {
     if (!user) return;
