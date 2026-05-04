@@ -90,43 +90,43 @@ const Supervision = () => {
   const [latestProgress, setLatestProgress] = useState<ProgressEntry | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  useEffect(() => {
-    if (!selectedPatient) {
-      setRecentSessions([]);
-      setLatestProgress(null);
-      return;
+  const openPatientDetail = async (item: PatientListItem) => {
+    setSelectedPatientItem(item);
+    setSelectedPatient(null);
+    setDetailLoading(true);
+    setRecentSessions([]);
+    setLatestProgress(null);
+
+    const [patRes, sRes, pRes] = await Promise.all([
+      supabase
+        .from("patients")
+        .select("id, full_name, email, phone, notes, is_active, session_price, user_id")
+        .eq("id", item.id)
+        .maybeSingle(),
+      supabase
+        .from("sessions")
+        .select("id, scheduled_at, status, notes")
+        .eq("patient_id", item.id)
+        .order("scheduled_at", { ascending: false })
+        .limit(5),
+      (supabase as any)
+        .from("patient_progress")
+        .select("id, recorded_at, mood_score, note")
+        .eq("patient_id", item.id)
+        .order("recorded_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    setSelectedPatient(patRes.data as PatientDetail | null);
+    setRecentSessions((sRes.data as SessionSummary[]) ?? []);
+    setLatestProgress((pRes.data as ProgressEntry | null) ?? null);
+    setDetailLoading(false);
+
+    if (item.user_id) {
+      logSupervisionAccess("patient", item.id, item.user_id, item.id);
     }
-    let cancelled = false;
-    (async () => {
-      setDetailLoading(true);
-      const [sRes, pRes] = await Promise.all([
-        supabase
-          .from("sessions")
-          .select("id, scheduled_at, status, notes")
-          .eq("patient_id", selectedPatient.id)
-          .order("scheduled_at", { ascending: false })
-          .limit(5),
-        (supabase as any)
-          .from("patient_progress")
-          .select("id, recorded_at, mood_score, note")
-          .eq("patient_id", selectedPatient.id)
-          .order("recorded_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ]);
-      if (cancelled) return;
-      setRecentSessions((sRes.data as SessionSummary[]) ?? []);
-      setLatestProgress((pRes.data as ProgressEntry | null) ?? null);
-      setDetailLoading(false);
-      // Audit: log supervision access to patient data
-      if (selectedPatient?.user_id) {
-        logSupervisionAccess("patient", selectedPatient.id, selectedPatient.user_id, selectedPatient.id);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedPatient]);
+  };
 
   const load = async () => {
     if (!user) return;
