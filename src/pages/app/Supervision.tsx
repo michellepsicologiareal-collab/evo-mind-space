@@ -495,18 +495,24 @@ const Supervision = () => {
       </section>
 
       {/* Patient detail dialog */}
-      <Dialog open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
+      <Dialog open={!!selectedPatientItem} onOpenChange={(o) => { if (!o) { setSelectedPatientItem(null); setSelectedPatient(null); } }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">
-              {selectedPatient?.full_name}
+              {selectedPatient?.full_name ?? selectedPatientItem?.initials ?? ""}
             </DialogTitle>
             <DialogDescription>
-              {selectedPatient?.is_active ? "Paciente ativo" : "Paciente inativo"} · acesso somente leitura
+              {(selectedPatient ?? selectedPatientItem)?.is_active ? "Paciente ativo" : "Paciente inativo"} · acesso somente leitura
             </DialogDescription>
           </DialogHeader>
 
-          {selectedPatient && (
+          {detailLoading && (
+            <div className="text-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+            </div>
+          )}
+
+          {selectedPatient && !detailLoading && (
             <div className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-3 text-sm">
                 {selectedPatient.email && (
