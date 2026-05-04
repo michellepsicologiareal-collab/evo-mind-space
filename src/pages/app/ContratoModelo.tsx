@@ -117,6 +117,7 @@ export default function ContratoModelo() {
   const [templateId, setTemplateId] = useState<string | null>(null);
 
   const [professionalName, setProfessionalName] = useState("");
+  const [professionalCrp, setProfessionalCrp] = useState("");
   const [professionalCpf, setProfessionalCpf] = useState("");
   const [professionalAddress, setProfessionalAddress] = useState("");
   const [professionalEmail, setProfessionalEmail] = useState("");
