@@ -463,6 +463,7 @@ const Patients = () => {
                 <Textarea id="medications" rows={3} className="min-h-[80px]" placeholder="Liste os medicamentos que o paciente toma atualmente..." value={form.medications} onChange={(e) => setForm({ ...form, medications: e.target.value })} />
               </div>
 
+              <div className="space-y-2">
                 <Label htmlFor="chief_complaint">Queixa Principal</Label>
                 <Textarea id="chief_complaint" rows={3} className="min-h-[80px]" placeholder="Descreva a queixa principal do paciente..." value={form.chief_complaint} onChange={(e) => setForm({ ...form, chief_complaint: e.target.value })} />
               </div>
