@@ -176,6 +176,7 @@ export default function ContratoPublico() {
           <h1 className="text-2xl font-display font-bold">Termo de Adesão ao Tratamento</h1>
           <p className="text-muted-foreground text-sm">
             Profissional: <strong>{template.professional_name}</strong>
+            {template.professional_crp && <> — CRP {template.professional_crp}</>}
           </p>
           {template.professional_address && (
             <p className="text-xs text-muted-foreground">{template.professional_address}</p>
