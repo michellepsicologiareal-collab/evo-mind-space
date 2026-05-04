@@ -437,6 +437,7 @@ const Dashboard = () => {
         setPatientMoods(
           recentMoods.map((m: any) => ({
             id: m.id,
+            patient_id: m.patient_id,
             patient_name: nameMap[m.patient_id] ?? "Paciente",
             patient_initials: getInitials(nameMap[m.patient_id] ?? "?"),
             mood_score: Number(m.mood_score),
