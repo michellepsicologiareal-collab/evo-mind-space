@@ -212,6 +212,13 @@ const Dashboard = () => {
       setProfileName(profileRes.data?.full_name ?? "");
       setClinicName((profileRes.data as any)?.clinic_name ?? "");
 
+      const pGoalSessions = (profileRes.data as any)?.goal_sessions ?? 40;
+      const pGoalRevenue = Number((profileRes.data as any)?.goal_revenue ?? 10000);
+      const pGoalRecords = (profileRes.data as any)?.goal_records ?? 20;
+      setGoalFormSessions(pGoalSessions);
+      setGoalFormRevenue(pGoalRevenue);
+      setGoalFormRecords(pGoalRecords);
+
       const monthSessionsArr = monthRes.data ?? [];
       const revenue = monthSessionsArr.filter((s) => s.status === "completed").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
       const completed = monthSessionsArr.filter((s) => s.status === "completed").length;
@@ -229,9 +236,9 @@ const Dashboard = () => {
         supervisionCases: supervisionRes.count ?? 0,
         completedSessions: completed,
         totalRecords: recordsRes.count ?? 0,
-        revenueGoal: 10000,
-        sessionsGoal: 40,
-        recordsGoal: 20,
+        revenueGoal: pGoalRevenue,
+        sessionsGoal: pGoalSessions,
+        recordsGoal: pGoalRecords,
         previstos: monthSessionsArr.length,
         realizados: completed,
         faltasCanceladas,
