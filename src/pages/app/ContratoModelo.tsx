@@ -142,11 +142,12 @@ export default function ContratoModelo() {
 
       if (tpl) {
         setTemplateId(tpl.id);
-        setProfessionalName(tpl.professional_name);
-        setProfessionalCrp((tpl as any).professional_crp ?? "");
-        setProfessionalCpf(tpl.professional_cpf);
-        setProfessionalAddress(tpl.professional_address);
-        setProfessionalEmail(tpl.professional_email);
+        // Use template values, but fallback to profile when fields are empty
+        setProfessionalName(tpl.professional_name || profile?.full_name || "");
+        setProfessionalCrp((tpl as any).professional_crp || profile?.crp || "");
+        setProfessionalCpf(tpl.professional_cpf || "");
+        setProfessionalAddress(tpl.professional_address || "");
+        setProfessionalEmail(tpl.professional_email || user.email || "");
         setLgpdClause(tpl.lgpd_clause);
         setClauses(tpl.clauses as unknown as Clause[]);
       } else if (profile) {
