@@ -749,19 +749,29 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div className="h-[250px]">
+              <div className="h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={frequencyData}
                       cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={90}
+                      cy="55%"
+                      innerRadius={45}
+                      outerRadius={80}
                       paddingAngle={4}
                       dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      labelLine={false}
+                      label={({ name, percent, cx, cy, midAngle, outerRadius: or }) => {
+                        const RADIAN = Math.PI / 180;
+                        const radius = or + 20;
+                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                        return (
+                          <text x={x} y={y} fill="hsl(var(--foreground))" textAnchor={x > cx ? "start" : "end"} dominantBaseline="central" fontSize={12}>
+                            {name} {(percent * 100).toFixed(0)}%
+                          </text>
+                        );
+                      }}
+                      labelLine={true}
                     >
                       {frequencyData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
