@@ -17,7 +17,7 @@ export const CTA = () => {
               <span className="font-bold text-accent">E o seu consultório, em estratégia.</span>
             </h2>
             <p className="mt-6 text-lg text-primary-foreground/85 max-w-xl">
-              Comece gratuitamente. Sem cartão de crédito. Em poucos minutos seu consultório passa a operar com clareza.
+              Escolha o plano ideal para o seu momento e comece a organizar seu consultório com clareza e estratégia.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Button variant="accent" size="xl" asChild>
@@ -27,8 +27,15 @@ export const CTA = () => {
                 variant="outline"
                 size="xl"
                 className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+                asChild
               >
-                Falar com a equipe
+                <a
+                  href="https://wa.me/5511947388423?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Psi%20Real"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Falar com a equipe
+                </a>
               </Button>
             </div>
           </div>
