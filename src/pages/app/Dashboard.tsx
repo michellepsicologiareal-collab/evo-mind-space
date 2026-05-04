@@ -267,48 +267,59 @@ const Dashboard = () => {
         setNextSessionMin(diff > 0 ? diff : null);
       }
 
-      // ── Frequency analysis (weekly vs biweekly) ──
-      // Group completed sessions by patient, calc avg interval
-      const { data: freqSessions } = await supabase
-        .from("sessions")
-        .select("patient_id, scheduled_at, price, status, is_expense")
+      // ── Frequency analysis: active patients only (weekly vs biweekly) ──
+      // Fetch active patients with session_price
+      const { data: activePatients } = await supabase
+        .from("patients")
+        .select("id, session_price")
         .eq("user_id", user.id)
-        .eq("status", "completed")
-        .eq("is_expense", false)
-        .order("scheduled_at", { ascending: true });
+        .eq("is_active", true);
 
-      if (freqSessions && freqSessions.length > 0) {
-        const byPatient: Record<string, { dates: Date[]; prices: number[] }> = {};
-        freqSessions.forEach((s: any) => {
-          if (!byPatient[s.patient_id]) byPatient[s.patient_id] = { dates: [], prices: [] };
-          byPatient[s.patient_id].dates.push(new Date(s.scheduled_at));
-          byPatient[s.patient_id].prices.push(Number(s.price ?? 0));
+      if (activePatients && activePatients.length > 0) {
+        const activeIds = new Set(activePatients.map((p: any) => p.id));
+        const priceMap: Record<string, number> = {};
+        activePatients.forEach((p: any) => {
+          priceMap[p.id] = Number(p.session_price ?? 0);
         });
+
+        // Fetch completed sessions for active patients to calc interval
+        const { data: freqSessions } = await supabase
+          .from("sessions")
+          .select("patient_id, scheduled_at")
+          .eq("user_id", user.id)
+          .eq("status", "completed")
+          .eq("is_expense", false)
+          .order("scheduled_at", { ascending: true });
+
+        const byPatient: Record<string, Date[]> = {};
+        if (freqSessions) {
+          freqSessions.forEach((s: any) => {
+            if (!activeIds.has(s.patient_id)) return;
+            if (!byPatient[s.patient_id]) byPatient[s.patient_id] = [];
+            byPatient[s.patient_id].push(new Date(s.scheduled_at));
+          });
+        }
 
         const freqCounts: Record<string, { count: number; totalPrice: number }> = {
           Semanal: { count: 0, totalPrice: 0 },
           Quinzenal: { count: 0, totalPrice: 0 },
         };
 
-        Object.values(byPatient).forEach(({ dates, prices }) => {
-          if (dates.length < 2) {
-            // With only 1 session, can't determine interval — skip
-            return;
-          }
-          // calc avg interval in days
+        Object.entries(byPatient).forEach(([patientId, dates]) => {
+          if (dates.length < 2) return;
           let totalDays = 0;
           for (let i = 1; i < dates.length; i++) {
             totalDays += (dates[i].getTime() - dates[i - 1].getTime()) / (1000 * 60 * 60 * 24);
           }
           const avgInterval = totalDays / (dates.length - 1);
-          const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+          const patientPrice = priceMap[patientId] ?? 0;
 
           if (avgInterval <= 10) {
             freqCounts["Semanal"].count++;
-            freqCounts["Semanal"].totalPrice += avgPrice;
+            freqCounts["Semanal"].totalPrice += patientPrice;
           } else {
             freqCounts["Quinzenal"].count++;
-            freqCounts["Quinzenal"].totalPrice += avgPrice;
+            freqCounts["Quinzenal"].totalPrice += patientPrice;
           }
         });
 
@@ -708,7 +719,7 @@ const Dashboard = () => {
                 <Info className="h-4 w-4 text-muted-foreground cursor-help" />
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                <p>Classifica seus pacientes pelo intervalo médio entre sessões: Semanal (até 10 dias) ou Quinzenal (acima de 10 dias). Mostra a média de valor por tipo.</p>
+                <p>Mostra apenas pacientes ativos, classificados pelo intervalo médio entre sessões: Semanal (até 10 dias) ou Quinzenal (acima de 10 dias). A média de valor usa o valor de sessão cadastrado no paciente.</p>
               </TooltipContent>
             </Tooltip>
           </div>
