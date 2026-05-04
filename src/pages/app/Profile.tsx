@@ -54,6 +54,12 @@ const Profile = () => {
   const [wiping, setWiping] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [backingUp, setBackingUp] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [restoreOpen, setRestoreOpen] = useState(false);
+  const [restoreConfirm, setRestoreConfirm] = useState("");
+  const backupInputRef = useRef<HTMLInputElement>(null);
+  const [pendingBackupFile, setPendingBackupFile] = useState<File | null>(null);
 
   const fetchMyData = async () => {
     if (!user) return null;
