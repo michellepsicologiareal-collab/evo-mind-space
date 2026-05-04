@@ -460,6 +460,7 @@ const Dashboard = () => {
   })();
 
   const firstName = profileName?.split(" ")[0] ?? "";
+  const periodLabel = getPeriodRange(period).label;
 
   if (loading) {
     return (
