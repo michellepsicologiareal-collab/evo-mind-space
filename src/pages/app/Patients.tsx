@@ -124,7 +124,7 @@ const Patients = () => {
       return;
     }
     setEditing(null);
-    setForm({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" as const, has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55" });
+    setForm({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" as const, has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55", treatment_start_date: "", treatment_end_date: "", has_psychiatrist: false, psychiatrist_name: "", psychiatrist_phone: "", psychiatrist_phone_ddi: "+55", medications: "" });
     patientGuard.resetDirty();
     setOpen(true);
   };
