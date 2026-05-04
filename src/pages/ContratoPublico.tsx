@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, Brain, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import logo from "@/assets/logo-psireal.png";
 
 interface Clause {
   key: string;
