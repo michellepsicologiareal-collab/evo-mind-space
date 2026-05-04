@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Upload, User, Users, ShieldCheck, X, Building2, Trash2, FileText, Download } from "lucide-react";
+import { Loader2, Upload, User, Users, ShieldCheck, X, Building2, Trash2, FileText, Download, DatabaseBackup, UploadCloud } from "lucide-react";
 import { ServiceCatalog } from "@/components/app/ServiceCatalog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +54,12 @@ const Profile = () => {
   const [wiping, setWiping] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [backingUp, setBackingUp] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [restoreOpen, setRestoreOpen] = useState(false);
+  const [restoreConfirm, setRestoreConfirm] = useState("");
+  const backupInputRef = useRef<HTMLInputElement>(null);
+  const [pendingBackupFile, setPendingBackupFile] = useState<File | null>(null);
 
   const fetchMyData = async () => {
     if (!user) return null;
@@ -166,6 +172,78 @@ const Profile = () => {
       toast.error("Erro ao exportar PDF");
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleBackupExport = async () => {
+    setBackingUp(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { toast.error("Faça login novamente"); return; }
+      const res = await supabase.functions.invoke("backup-export", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.error) throw res.error;
+      const json = JSON.stringify(res.data, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `psireal_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Backup completo baixado!");
+    } catch {
+      toast.error("Erro ao gerar backup");
+    } finally {
+      setBackingUp(false);
+    }
+  };
+
+  const handleBackupFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith(".json")) {
+      toast.error("Selecione um arquivo .json de backup");
+      return;
+    }
+    setPendingBackupFile(file);
+    setRestoreConfirm("");
+    setRestoreOpen(true);
+  };
+
+  const handleBackupRestore = async () => {
+    if (!pendingBackupFile || !user) return;
+    if (restoreConfirm.trim().toUpperCase() !== "RESTAURAR") {
+      toast.error("Digite RESTAURAR para confirmar");
+      return;
+    }
+    setRestoring(true);
+    try {
+      const text = await pendingBackupFile.text();
+      const backup = JSON.parse(text);
+      if (!backup.version || !backup.tables) {
+        toast.error("Arquivo de backup inválido");
+        return;
+      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { toast.error("Faça login novamente"); return; }
+      const res = await supabase.functions.invoke("backup-import", {
+        body: backup,
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.error) throw res.error;
+      const results = res.data?.results;
+      const totalInserted = Object.values(results || {}).reduce(
+        (sum: number, r: any) => sum + (r.inserted || 0), 0
+      );
+      setRestoreOpen(false);
+      setPendingBackupFile(null);
+      toast.success(`Backup restaurado! ${totalInserted} registros importados.`);
+    } catch (err: any) {
+      toast.error("Erro ao restaurar backup: " + (err?.message || "tente novamente"));
+    } finally {
+      setRestoring(false);
     }
   };
 
@@ -520,6 +598,60 @@ const Profile = () => {
         </section>
       )}
 
+      {/* Backup Section */}
+      <section className="rounded-3xl bg-card border border-border shadow-card p-8 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent">
+            <DatabaseBackup className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="font-display text-xl font-semibold">Backup de Dados</h2>
+            <p className="text-xs text-muted-foreground">
+              Faça backups regulares para nunca perder seus dados.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <Download className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Exportar backup completo</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Baixa um arquivo JSON com <strong>todos</strong> os seus dados: pacientes, sessões, registros clínicos, formulações, progresso, serviços e mais.
+              </p>
+            </div>
+          </div>
+          <Button variant="accent" size="sm" onClick={handleBackupExport} disabled={backingUp}>
+            {backingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            Baixar backup completo (.json)
+          </Button>
+        </div>
+
+        <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <UploadCloud className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Restaurar backup</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Importe um arquivo JSON de backup para restaurar seus dados. <strong className="text-destructive">Atenção:</strong> os dados atuais serão substituídos pelos do backup.
+              </p>
+            </div>
+          </div>
+          <input
+            ref={backupInputRef}
+            type="file"
+            accept=".json"
+            hidden
+            onChange={handleBackupFileSelect}
+          />
+          <Button variant="outline" size="sm" onClick={() => backupInputRef.current?.click()} disabled={restoring}>
+            {restoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+            Selecionar arquivo de backup
+          </Button>
+        </div>
+      </section>
+
       <section className="rounded-3xl bg-card border border-border shadow-card p-8 space-y-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
@@ -676,6 +808,47 @@ const Profile = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setTermsOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={restoreOpen} onOpenChange={(o) => { setRestoreOpen(o); if (!o) setPendingBackupFile(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Restaurar backup</DialogTitle>
+            <DialogDescription>
+              Seus dados atuais serão <strong>apagados</strong> e substituídos pelos do arquivo de backup.
+              {pendingBackupFile && (
+                <span className="block mt-2 font-medium text-foreground">
+                  Arquivo: {pendingBackupFile.name}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="restore_confirm">
+              Digite <span className="font-mono font-semibold">RESTAURAR</span> para confirmar
+            </Label>
+            <Input
+              id="restore_confirm"
+              value={restoreConfirm}
+              onChange={(e) => setRestoreConfirm(e.target.value)}
+              placeholder="RESTAURAR"
+              autoComplete="off"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRestoreOpen(false)} disabled={restoring}>
+              Cancelar
+            </Button>
+            <Button
+              variant="accent"
+              onClick={handleBackupRestore}
+              disabled={restoring || restoreConfirm.trim().toUpperCase() !== "RESTAURAR"}
+            >
+              {restoring && <Loader2 className="h-4 w-4 animate-spin" />}
+              Restaurar dados
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
