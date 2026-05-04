@@ -59,6 +59,12 @@ interface Patient {
   has_financial_responsible: boolean;
   financial_responsible_name: string | null;
   financial_responsible_phone: string | null;
+  treatment_start_date: string | null;
+  treatment_end_date: string | null;
+  has_psychiatrist: boolean;
+  psychiatrist_name: string | null;
+  psychiatrist_phone: string | null;
+  medications: string | null;
 }
 
 const FREE_PATIENT_LIMIT = 5;
