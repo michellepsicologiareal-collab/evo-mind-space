@@ -157,7 +157,8 @@ const Dashboard = () => {
     if (!user) return;
     const load = async () => {
       const now = new Date();
-      const { start: periodStart, end: periodEnd } = getPeriodRange(period);
+      const periodStart = dateFrom;
+      const periodEnd = dateTo;
       const periodStartISO = periodStart.toISOString();
       const periodEndISO = periodEnd.toISOString();
       const dayStart = startOfDay(now).toISOString();
