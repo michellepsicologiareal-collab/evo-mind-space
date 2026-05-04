@@ -159,6 +159,12 @@ const Dashboard = () => {
   const [frequencyData, setFrequencyData] = useState<FrequencyData[]>([]);
   const [moodFilterPatient, setMoodFilterPatient] = useState<string>("all");
 
+  const [editGoalsOpen, setEditGoalsOpen] = useState(false);
+  const [goalFormSessions, setGoalFormSessions] = useState(40);
+  const [goalFormRevenue, setGoalFormRevenue] = useState(10000);
+  const [goalFormRecords, setGoalFormRecords] = useState(20);
+  const [savingGoals, setSavingGoals] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
