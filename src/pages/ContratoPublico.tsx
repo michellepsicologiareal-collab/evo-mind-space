@@ -170,9 +170,7 @@ export default function ContratoPublico() {
         {/* Header */}
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <Brain className="h-5 w-5" />
-            </span>
+            <img src={logo} alt="Psi Real" className="h-10 w-10 rounded-full" />
           </div>
           <h1 className="text-2xl font-display font-bold">Termo de Adesão ao Tratamento</h1>
           <p className="text-muted-foreground text-sm">
