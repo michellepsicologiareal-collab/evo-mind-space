@@ -114,16 +114,32 @@ const Finance = () => {
   const monthStart = useMemo(() => startOfMonth(monthCursor), [monthCursor]);
   const monthEnd = useMemo(() => endOfMonth(monthCursor), [monthCursor]);
 
+  // Extra rows: sessions paid in this month but scheduled outside it (pre-paid packages)
+  const [paidElsewhereRows, setPaidElsewhereRows] = useState<Row[]>([]);
+
   const load = async () => {
     if (!user) return;
     setLoading(true);
+    const selectCols = "id, scheduled_at, status, payment_status, payment_method, payment_reference, price, paid_at, is_expense, session_type, patient:patients!sessions_patient_id_fkey(full_name), service:services(name)";
+
+    // 1) Sessions scheduled this month (main view)
     const { data, error } = await supabase
       .from("sessions")
-      .select("id, scheduled_at, status, payment_status, payment_method, payment_reference, price, paid_at, is_expense, session_type, patient:patients!sessions_patient_id_fkey(full_name), service:services(name)")
+      .select(selectCols)
       .eq("user_id", user.id)
       .gte("scheduled_at", monthStart.toISOString())
       .lte("scheduled_at", monthEnd.toISOString())
       .order("scheduled_at", { ascending: false });
+
+    // 2) Sessions paid this month but scheduled OUTSIDE this month (pre-paid packages)
+    const { data: paidData } = await supabase
+      .from("sessions")
+      .select(selectCols)
+      .eq("user_id", user.id)
+      .eq("payment_status", "paid")
+      .gte("paid_at", monthStart.toISOString())
+      .lte("paid_at", monthEnd.toISOString())
+      .or(`scheduled_at.lt.${monthStart.toISOString()},scheduled_at.gt.${monthEnd.toISOString()}`);
 
     if (error) {
       toast.error("Erro ao carregar dados financeiros.");
@@ -131,6 +147,7 @@ const Finance = () => {
       return;
     }
     setRows((data ?? []) as any);
+    setPaidElsewhereRows((paidData ?? []) as any);
     setLoading(false);
   };
 
@@ -210,15 +227,28 @@ const Finance = () => {
   const fortnightScheduled = useMemo(() => fortnightFilter_(scheduled), [scheduled, fortnightFilter]);
   const fortnightAllValid = useMemo(() => fortnightFilter_(allValid), [allValid, fortnightFilter]);
 
-  // Previsto = ALL non-cancelled sessions (including completed ones)
+  // Helper: check if paid_at falls within the current month
+  const isPaidThisMonth = (r: Row) => {
+    if (!r.paid_at) return false;
+    const paidDate = new Date(r.paid_at);
+    return paidDate >= monthStart && paidDate <= monthEnd;
+  };
+
+  // Previsto = ALL non-cancelled sessions scheduled this month (including completed)
   const totalPrevisto = fortnightAllValid.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const totalFaturado = fortnightBillable.reduce((s, r) => s + Number(r.price ?? 0), 0);
-  const totalRecebido = fortnightBillable
-    .filter((r) => r.payment_status === "paid")
+
+  // Recebido = sessions where paid_at is in this month (includes pre-paid packages from other months)
+  const recebidoFromScheduled = fortnightBillable
+    .filter((r) => r.payment_status === "paid" && isPaidThisMonth(r))
     .reduce((s, r) => s + Number(r.price ?? 0), 0);
-  const totalPendente = totalFaturado - totalRecebido;
+  const recebidoFromElsewhere = paidElsewhereRows
+    .reduce((s, r) => s + Number(r.price ?? 0), 0);
+  const totalRecebido = recebidoFromScheduled + recebidoFromElsewhere;
+
+  const totalPendente = totalFaturado - recebidoFromScheduled;
   const totalAReceber = totalPrevisto - totalRecebido;
-  const sessoesPagas = fortnightBillable.filter((r) => r.payment_status === "paid").length;
+  const sessoesPagas = fortnightBillable.filter((r) => r.payment_status === "paid" && isPaidThisMonth(r)).length + paidElsewhereRows.length;
   const sessoesPendentes = fortnightBillable.filter((r) => r.payment_status === "pending").length;
   const sessoesAgendadas = fortnightAllValid.length;
   const sessoesRealizadas = fortnightBillable.length;
@@ -238,17 +268,25 @@ const Finance = () => {
         const d = new Date(r.scheduled_at).getDate();
         return d >= range.start && d <= range.end;
       };
+      const inRangePaidAt = (r: Row) => {
+        if (!r.paid_at) return false;
+        const d = new Date(r.paid_at).getDate();
+        return d >= range.start && d <= range.end;
+      };
       const weekAllValid = allValid.filter(inRange);
       const weekBillable = billable.filter(inRange);
+      const weekPaidElsewhere = paidElsewhereRows.filter(inRangePaidAt);
       weeks.push({
         label: range.label,
         previsto: weekAllValid.reduce((s, r) => s + Number(r.price ?? 0), 0),
-        recebido: weekBillable.filter((r) => r.payment_status === "paid").reduce((s, r) => s + Number(r.price ?? 0), 0),
+        recebido:
+          weekBillable.filter((r) => r.payment_status === "paid" && isPaidThisMonth(r)).reduce((s, r) => s + Number(r.price ?? 0), 0) +
+          weekPaidElsewhere.reduce((s, r) => s + Number(r.price ?? 0), 0),
         pendente: weekBillable.filter((r) => r.payment_status === "pending").reduce((s, r) => s + Number(r.price ?? 0), 0),
       });
     }
     return weeks;
-  }, [rows, monthEnd]);
+  }, [rows, paidElsewhereRows, monthStart, monthEnd]);
 
   // Service breakdown
   const serviceBreakdown = useMemo(() => {

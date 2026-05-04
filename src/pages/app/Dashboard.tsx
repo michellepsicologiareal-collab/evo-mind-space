@@ -189,7 +189,7 @@ const Dashboard = () => {
           supabase.from("profiles").select("full_name, clinic_name, goal_sessions, goal_revenue, goal_records").eq("id", user.id).maybeSingle(),
           supabase.from("patients").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
           supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", dayStart).lte("scheduled_at", dayEnd).in("status", ["scheduled", "confirmed", "completed"]),
-          supabase.from("sessions").select("price, status, scheduled_at").eq("user_id", user.id).gte("scheduled_at", periodStartISO).lte("scheduled_at", periodEndISO),
+          supabase.from("sessions").select("price, status, scheduled_at, paid_at, payment_status").eq("user_id", user.id).gte("scheduled_at", periodStartISO).lte("scheduled_at", periodEndISO),
           supabase
             .from("sessions")
             .select("id, scheduled_at, status, patient_id, session_type, patient:patients!sessions_patient_id_fkey(full_name)")
@@ -223,8 +223,11 @@ const Dashboard = () => {
       setGoalFormRecords(pGoalRecords);
 
       const monthSessionsArr = monthRes.data ?? [];
-      const revenue = monthSessionsArr.filter((s) => s.status === "completed").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
-      const previstoRevenue = monthSessionsArr.filter((s) => s.status !== "cancelled" && s.status !== "no_show").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+      // Faturado (realizado) = completed sessions where paid_at is in the period
+      const revenue = monthSessionsArr
+        .filter((s: any) => s.status === "completed" && s.payment_status === "paid" && s.paid_at && new Date(s.paid_at) >= periodStart && new Date(s.paid_at) <= periodEnd)
+        .reduce((sum: number, s: any) => sum + Number(s.price ?? 0), 0);
+      const previstoRevenue = monthSessionsArr.filter((s: any) => s.status !== "cancelled" && s.status !== "no_show").reduce((sum: number, s: any) => sum + Number(s.price ?? 0), 0);
       const completed = monthSessionsArr.filter((s) => s.status === "completed").length;
       const faltasCanceladas = monthSessionsArr.filter((s) => s.status === "no_show" || s.status === "cancelled").length;
       const now2 = new Date();
