@@ -960,7 +960,12 @@ const Dashboard = () => {
 
         {/* ── Goals / Gamification ── */}
         <section className="rounded-2xl bg-card border border-border shadow-card p-8">
-          <h2 className="font-display text-xl md:text-2xl font-bold text-foreground mb-6">Metas do Mês</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Metas do Mês</h2>
+            <Button variant="ghost" size="sm" onClick={() => setEditGoalsOpen(true)}>
+              <Pencil className="h-4 w-4 mr-1" /> Editar metas
+            </Button>
+          </div>
           <div className="grid md:grid-cols-3 gap-6">
             {progressItems.map((item) => {
               const pct = item.goal > 0 ? Math.min((item.current / item.goal) * 100, 100) : 0;
@@ -993,6 +998,53 @@ const Dashboard = () => {
             })}
           </div>
         </section>
+
+        {/* ── Edit Goals Dialog ── */}
+        <Dialog open={editGoalsOpen} onOpenChange={setEditGoalsOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="font-display text-xl">Editar Metas</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Meta de Sessões Realizadas</Label>
+                <Input type="number" min="1" value={goalFormSessions} onChange={(e) => setGoalFormSessions(Number(e.target.value))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Meta de Faturamento (R$)</Label>
+                <Input type="number" min="0" step="100" value={goalFormRevenue} onChange={(e) => setGoalFormRevenue(Number(e.target.value))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Meta de Registros Clínicos</Label>
+                <Input type="number" min="1" value={goalFormRecords} onChange={(e) => setGoalFormRecords(Number(e.target.value))} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditGoalsOpen(false)}>Cancelar</Button>
+              <Button variant="accent" disabled={savingGoals} onClick={async () => {
+                if (!user) return;
+                setSavingGoals(true);
+                const { error } = await supabase.from("profiles").update({
+                  goal_sessions: goalFormSessions,
+                  goal_revenue: goalFormRevenue,
+                  goal_records: goalFormRecords,
+                } as any).eq("id", user.id);
+                setSavingGoals(false);
+                if (error) { toast.error("Erro ao salvar metas"); return; }
+                setStats(prev => ({
+                  ...prev,
+                  sessionsGoal: goalFormSessions,
+                  revenueGoal: goalFormRevenue,
+                  recordsGoal: goalFormRecords,
+                }));
+                toast.success("Metas atualizadas!");
+                setEditGoalsOpen(false);
+              }}>
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   );
