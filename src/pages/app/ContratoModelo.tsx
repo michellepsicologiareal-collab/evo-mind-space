@@ -152,12 +152,13 @@ export default function ContratoModelo() {
     const payload = {
       user_id: user.id,
       professional_name: professionalName,
+      professional_crp: professionalCrp,
       professional_cpf: professionalCpf,
       professional_address: professionalAddress,
       professional_email: professionalEmail,
       lgpd_clause: lgpdClause,
       clauses: JSON.parse(JSON.stringify(clauses)),
-    };
+    } as any;
 
     let error;
     if (templateId) {
