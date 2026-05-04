@@ -549,6 +549,7 @@ const Patients = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setHistoryPatient(p)}><CalendarDays className="h-4 w-4" /> Histórico de Sessões</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTccPatient(p)}><ClipboardList className="h-4 w-4" /> Prontuário TCC</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><Brain className="h-4 w-4" /> Formulação Padesky</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate(`/app/supervisao-caso?paciente=${encodeURIComponent(p.full_name)}`)}>
