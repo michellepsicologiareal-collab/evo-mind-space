@@ -36,6 +36,7 @@ import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths, startOfWeek, endOfWeek, startOfYear, endOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CardSkeleton } from "@/components/app/Skeletons";
+import { toast } from "sonner";
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, PieChart, Pie, Cell, Legend } from "recharts";
 import {
   Tooltip,
