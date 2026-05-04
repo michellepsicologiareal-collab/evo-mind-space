@@ -224,6 +224,7 @@ const Dashboard = () => {
 
       const monthSessionsArr = monthRes.data ?? [];
       const revenue = monthSessionsArr.filter((s) => s.status === "completed").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+      const previstoRevenue = monthSessionsArr.filter((s) => s.status !== "cancelled" && s.status !== "no_show").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
       const completed = monthSessionsArr.filter((s) => s.status === "completed").length;
       const faltasCanceladas = monthSessionsArr.filter((s) => s.status === "no_show" || s.status === "cancelled").length;
       const now2 = new Date();
@@ -242,10 +243,11 @@ const Dashboard = () => {
         revenueGoal: pGoalRevenue,
         sessionsGoal: pGoalSessions,
         recordsGoal: pGoalRecords,
-        previstos: monthSessionsArr.length,
+        previstos: monthSessionsArr.filter((s) => s.status !== "cancelled" && s.status !== "no_show").length,
         realizados: completed,
         faltasCanceladas,
         aRealizar,
+        previstoRevenue,
       });
 
       setWeekSessions(weekRes.count ?? 0);
