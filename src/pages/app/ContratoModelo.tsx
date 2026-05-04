@@ -283,6 +283,10 @@ export default function ContratoModelo() {
             <Input value={professionalName} onChange={(e) => setProfessionalName(e.target.value)} placeholder="Nome do Psicólogo(a)" />
           </div>
           <div>
+            <Label>CRP</Label>
+            <Input value={professionalCrp} onChange={(e) => setProfessionalCrp(e.target.value)} placeholder="00/00000" />
+          </div>
+          <div>
             <Label>CPF</Label>
             <Input value={professionalCpf} onChange={(e) => setProfessionalCpf(e.target.value)} placeholder="000.000.000-00" />
           </div>
