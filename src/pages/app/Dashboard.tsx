@@ -142,6 +142,7 @@ const Dashboard = () => {
     realizados: 0,
     faltasCanceladas: 0,
     aRealizar: 0,
+    previstoRevenue: 0,
   });
   const [upcoming, setUpcoming] = useState<UpcomingSession[]>([]);
   const [profileName, setProfileName] = useState("");
