@@ -547,6 +547,66 @@ export type Database = {
         }
         Relationships: []
       }
+      session_records: {
+        Row: {
+          chief_complaint: string | null
+          clinical_observations: string | null
+          created_at: string
+          duration_minutes: number
+          engagement: number | null
+          id: string
+          modality: string
+          next_session_plan: string | null
+          patient_id: string
+          private_notes: string | null
+          risk_indicator: string
+          session_date: string
+          session_id: string | null
+          session_number: number | null
+          themes: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chief_complaint?: string | null
+          clinical_observations?: string | null
+          created_at?: string
+          duration_minutes?: number
+          engagement?: number | null
+          id?: string
+          modality?: string
+          next_session_plan?: string | null
+          patient_id: string
+          private_notes?: string | null
+          risk_indicator?: string
+          session_date?: string
+          session_id?: string | null
+          session_number?: number | null
+          themes?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chief_complaint?: string | null
+          clinical_observations?: string | null
+          created_at?: string
+          duration_minutes?: number
+          engagement?: number | null
+          id?: string
+          modality?: string
+          next_session_plan?: string | null
+          patient_id?: string
+          private_notes?: string | null
+          risk_indicator?: string
+          session_date?: string
+          session_id?: string | null
+          session_number?: number | null
+          themes?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           billing_sent_at: string | null
