@@ -811,6 +811,47 @@ const Profile = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={restoreOpen} onOpenChange={(o) => { setRestoreOpen(o); if (!o) setPendingBackupFile(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Restaurar backup</DialogTitle>
+            <DialogDescription>
+              Seus dados atuais serão <strong>apagados</strong> e substituídos pelos do arquivo de backup.
+              {pendingBackupFile && (
+                <span className="block mt-2 font-medium text-foreground">
+                  Arquivo: {pendingBackupFile.name}
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="restore_confirm">
+              Digite <span className="font-mono font-semibold">RESTAURAR</span> para confirmar
+            </Label>
+            <Input
+              id="restore_confirm"
+              value={restoreConfirm}
+              onChange={(e) => setRestoreConfirm(e.target.value)}
+              placeholder="RESTAURAR"
+              autoComplete="off"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRestoreOpen(false)} disabled={restoring}>
+              Cancelar
+            </Button>
+            <Button
+              variant="accent"
+              onClick={handleBackupRestore}
+              disabled={restoring || restoreConfirm.trim().toUpperCase() !== "RESTAURAR"}
+            >
+              {restoring && <Loader2 className="h-4 w-4 animate-spin" />}
+              Restaurar dados
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
