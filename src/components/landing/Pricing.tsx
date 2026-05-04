@@ -17,7 +17,7 @@ const plans = [
       "Suporte por e-mail",
     ],
     cta: "Começar agora",
-    href: "https://kiwify.com.br/PLACEHOLDER_ESSENCIAL",
+    href: "https://pay.kiwify.com.br/gRIR9My",
     highlighted: true,
   },
   {
@@ -35,7 +35,7 @@ const plans = [
       "Suporte prioritário",
     ],
     cta: "Assinar agora",
-    href: "https://kiwify.com.br/PLACEHOLDER_SUPERVISORA",
+    href: "https://pay.kiwify.com.br/E8GFp8u",
     highlighted: false,
   },
 ];
