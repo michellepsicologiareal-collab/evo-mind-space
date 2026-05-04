@@ -630,7 +630,17 @@ const Patients = () => {
         </DialogContent>
       </Dialog>
 
-      <PremiumGate open={gateOpen} onOpenChange={setGateOpen} />
+      {/* Session History Dialog */}
+      <Dialog open={!!historyPatient} onOpenChange={(o) => !o && setHistoryPatient(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{historyPatient?.full_name}</DialogTitle>
+            <DialogDescription>Histórico de sessões e evolução do humor</DialogDescription>
+          </DialogHeader>
+          {historyPatient && <PatientSessionHistory patientId={historyPatient.id} />}
+        </DialogContent>
+      </Dialog>
+
       <UnsavedGuardDialog open={patientGuard.confirmOpen} onConfirm={patientGuard.confirmLeave} onCancel={patientGuard.cancelLeave} />
     </div>
   );
