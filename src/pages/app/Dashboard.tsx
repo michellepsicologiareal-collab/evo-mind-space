@@ -554,10 +554,10 @@ const Dashboard = () => {
 
         {/* ── Métricas de Sessões do Mês ── */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard icon={ClipboardList} label="Previstos no Mês" value={stats.previstos.toString()} tooltip="Total de sessões previstas no mês (todos os status, incluindo futuras)." />
-          <KPICard icon={CheckCircle2} label="Realizados" value={stats.realizados.toString()} tooltip="Quantidade de sessões já concluídas (status 'completed') neste mês." />
-          <KPICard icon={XCircle} label="Faltas / Canceladas" value={stats.faltasCanceladas.toString()} highlight={stats.faltasCanceladas > 0} tooltip="Sessões que foram canceladas ou marcadas como falta (no-show) neste mês." />
-          <KPICard icon={CalendarClock} label="A Realizar" value={stats.aRealizar.toString()} tooltip="Sessões futuras previstas para o restante do mês que ainda não foram concluídas." />
+          <KPICard icon={ClipboardList} label="Previstos" value={stats.previstos.toString()} tooltip="Total de sessões previstas no período selecionado (todos os status)." />
+          <KPICard icon={CheckCircle2} label="Realizados" value={stats.realizados.toString()} tooltip="Sessões concluídas (status 'completed') no período." />
+          <KPICard icon={XCircle} label="Faltas / Canceladas" value={stats.faltasCanceladas.toString()} highlight={stats.faltasCanceladas > 0} tooltip="Sessões canceladas ou marcadas como falta no período." />
+          <KPICard icon={CalendarClock} label="A Realizar" value={stats.aRealizar.toString()} tooltip="Sessões futuras no período que ainda não foram concluídas." />
         </section>
 
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
