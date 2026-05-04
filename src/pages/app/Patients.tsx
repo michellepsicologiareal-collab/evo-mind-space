@@ -3,9 +3,10 @@ import { format } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays } from "lucide-react";
 import { TccRecords } from "@/components/app/TccRecords";
 import { CaseFormulation } from "@/components/app/CaseFormulation";
+import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 import { CardSkeleton } from "@/components/app/Skeletons";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
@@ -59,6 +60,12 @@ interface Patient {
   has_financial_responsible: boolean;
   financial_responsible_name: string | null;
   financial_responsible_phone: string | null;
+  treatment_start_date: string | null;
+  treatment_end_date: string | null;
+  has_psychiatrist: boolean;
+  psychiatrist_name: string | null;
+  psychiatrist_phone: string | null;
+  medications: string | null;
 }
 
 const FREE_PATIENT_LIMIT = 5;
@@ -77,13 +84,14 @@ const Patients = () => {
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
   const [tccPatient, setTccPatient] = useState<Patient | null>(null);
   const [padeksyPatient, setPadeksyPatient] = useState<Patient | null>(null);
+  const [historyPatient, setHistoryPatient] = useState<Patient | null>(null);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
   const [profCrp, setProfCrp] = useState<string>("");
   const patientGuard = useUnsavedGuard();
   const [latestSessionDates, setLatestSessionDates] = useState<Record<string, string>>({});
 
-  const [form, setFormRaw] = useState<{ full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string }>({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55" });
+  const [form, setFormRaw] = useState<{ full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string }>({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55", treatment_start_date: "", treatment_end_date: "", has_psychiatrist: false, psychiatrist_name: "", psychiatrist_phone: "", psychiatrist_phone_ddi: "+55", medications: "" });
   const setForm = useCallback((v: typeof form | ((prev: typeof form) => typeof form)) => { patientGuard.markDirty(); setFormRaw(v); }, [patientGuard.markDirty]);
 
   const load = async () => {
@@ -118,7 +126,7 @@ const Patients = () => {
       return;
     }
     setEditing(null);
-    setForm({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" as const, has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55" });
+    setForm({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" as const, has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55", treatment_start_date: "", treatment_end_date: "", has_psychiatrist: false, psychiatrist_name: "", psychiatrist_phone: "", psychiatrist_phone_ddi: "+55", medications: "" });
     patientGuard.resetDirty();
     setOpen(true);
   };
@@ -143,6 +151,15 @@ const Patients = () => {
       frDdi = frDdiMatch[1];
       frLocalPhone = frDdiMatch[2];
     }
+    // Extract DDI from psychiatrist phone
+    const rawPsyPhone = p.psychiatrist_phone ?? "";
+    let psyDdi = "";
+    let psyLocalPhone = rawPsyPhone;
+    const psyDdiMatch = rawPsyPhone.match(/^(\+\d{1,4})\s*(.*)/);
+    if (psyDdiMatch) {
+      psyDdi = psyDdiMatch[1];
+      psyLocalPhone = psyDdiMatch[2];
+    }
     setForm({
       full_name: p.full_name,
       email: p.email ?? "",
@@ -158,6 +175,13 @@ const Patients = () => {
       financial_responsible_name: p.financial_responsible_name ?? "",
       financial_responsible_phone: frLocalPhone,
       financial_responsible_ddi: frDdi,
+      treatment_start_date: p.treatment_start_date ?? "",
+      treatment_end_date: p.treatment_end_date ?? "",
+      has_psychiatrist: p.has_psychiatrist ?? false,
+      psychiatrist_name: p.psychiatrist_name ?? "",
+      psychiatrist_phone: psyLocalPhone,
+      psychiatrist_phone_ddi: psyDdi,
+      medications: p.medications ?? "",
     });
     patientGuard.resetDirty();
     setOpen(true);
@@ -188,6 +212,14 @@ const Patients = () => {
       financial_responsible_phone: form.has_financial_responsible && form.financial_responsible_phone
         ? `${form.financial_responsible_ddi || "+55"} ${form.financial_responsible_phone}`.trim()
         : null,
+      treatment_start_date: form.treatment_start_date || null,
+      treatment_end_date: form.treatment_end_date || null,
+      has_psychiatrist: form.has_psychiatrist,
+      psychiatrist_name: form.has_psychiatrist ? (form.psychiatrist_name || null) : null,
+      psychiatrist_phone: form.has_psychiatrist && form.psychiatrist_phone
+        ? `${form.psychiatrist_phone_ddi || "+55"} ${form.psychiatrist_phone}`.trim()
+        : null,
+      medications: form.medications || null,
     };
 
     const { error } = editing
@@ -378,6 +410,61 @@ const Patients = () => {
                 )}
               </div>
 
+              {/* Datas de tratamento */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="treatment_start_date">Início do tratamento</Label>
+                  <Input id="treatment_start_date" type="date" value={form.treatment_start_date} onChange={(e) => setForm({ ...form, treatment_start_date: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="treatment_end_date">Término do tratamento</Label>
+                  <Input id="treatment_end_date" type="date" value={form.treatment_end_date} onChange={(e) => setForm({ ...form, treatment_end_date: e.target.value })} />
+                </div>
+              </div>
+
+              {/* Acompanhamento psiquiátrico */}
+              <div className="rounded-xl border border-border p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="has_psychiatrist" className="text-sm font-medium">Faz acompanhamento psiquiátrico?</Label>
+                  <Switch
+                    id="has_psychiatrist"
+                    checked={form.has_psychiatrist}
+                    onCheckedChange={(checked) => setForm({ ...form, has_psychiatrist: checked })}
+                  />
+                </div>
+                {form.has_psychiatrist && (
+                  <div className="space-y-3 pt-2 border-t border-border">
+                    <div className="space-y-2">
+                      <Label htmlFor="psychiatrist_name">Nome do médico</Label>
+                      <Input id="psychiatrist_name" placeholder="Nome do psiquiatra" value={form.psychiatrist_name} onChange={(e) => setForm({ ...form, psychiatrist_name: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="psychiatrist_phone">WhatsApp do médico</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={form.psychiatrist_phone_ddi}
+                          onChange={(e) => {
+                            let v = e.target.value;
+                            if (v && !v.startsWith("+")) v = "+" + v;
+                            setForm({ ...form, psychiatrist_phone_ddi: v });
+                          }}
+                          className="w-[80px] shrink-0 text-center"
+                          placeholder="+55"
+                          maxLength={5}
+                        />
+                        <Input id="psychiatrist_phone" className="flex-1" placeholder="11 99988-7766" value={form.psychiatrist_phone} onChange={(e) => setForm({ ...form, psychiatrist_phone: e.target.value })} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Medicamentos */}
+              <div className="space-y-2">
+                <Label htmlFor="medications">Medicamentos em uso</Label>
+                <Textarea id="medications" rows={3} className="min-h-[80px]" placeholder="Liste os medicamentos que o paciente toma atualmente..." value={form.medications} onChange={(e) => setForm({ ...form, medications: e.target.value })} />
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="chief_complaint">Queixa Principal</Label>
                 <Textarea id="chief_complaint" rows={3} className="min-h-[80px]" placeholder="Descreva a queixa principal do paciente..." value={form.chief_complaint} onChange={(e) => setForm({ ...form, chief_complaint: e.target.value })} />
@@ -462,6 +549,7 @@ const Patients = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setHistoryPatient(p)}><CalendarDays className="h-4 w-4" /> Histórico de Sessões</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTccPatient(p)}><ClipboardList className="h-4 w-4" /> Prontuário TCC</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><Brain className="h-4 w-4" /> Formulação Padesky</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate(`/app/supervisao-caso?paciente=${encodeURIComponent(p.full_name)}`)}>
@@ -539,6 +627,17 @@ const Patients = () => {
             <DialogDescription>Formulação de Caso — Modelo Padesky</DialogDescription>
           </DialogHeader>
           {padeksyPatient && <CaseFormulation patientId={padeksyPatient.id} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Session History Dialog */}
+      <Dialog open={!!historyPatient} onOpenChange={(o) => !o && setHistoryPatient(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{historyPatient?.full_name}</DialogTitle>
+            <DialogDescription>Histórico de sessões e evolução do humor</DialogDescription>
+          </DialogHeader>
+          {historyPatient && <PatientSessionHistory patientId={historyPatient.id} />}
         </DialogContent>
       </Dialog>
 
