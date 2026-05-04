@@ -719,7 +719,7 @@ const Dashboard = () => {
                 <Info className="h-4 w-4 text-muted-foreground cursor-help" />
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                <p>Mostra apenas pacientes ativos, classificados pelo intervalo médio entre sessões: Semanal (até 10 dias) ou Quinzenal (acima de 10 dias). A média de valor usa o valor de sessão cadastrado no paciente.</p>
+                <p>Mostra apenas pacientes ativos, classificados pelo intervalo médio entre sessões previstas: Semanal (até 10 dias) ou Quinzenal (acima de 10 dias). A média de valor usa o valor de sessão cadastrado no paciente.</p>
               </TooltipContent>
             </Tooltip>
           </div>
