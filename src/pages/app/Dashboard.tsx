@@ -60,6 +60,7 @@ interface Stats {
   realizados: number;
   faltasCanceladas: number;
   aRealizar: number;
+  previstoRevenue: number;
 }
 
 interface UpcomingSession {
