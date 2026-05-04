@@ -578,7 +578,7 @@ const Finance = () => {
         <KpiCard icon={CalendarClock} label="Receita Prevista" value={formatBRL(totalPrevisto)} hint={`${sessoesAgendadas} sessões agendadas`} />
         <KpiCard icon={TrendingUp} label="Faturado (realizado)" value={formatBRL(totalFaturado)} accent />
         <KpiCard icon={Wallet} label="Recebido" value={formatBRL(totalRecebido)} hint={`${sessoesPagas} sessões`} />
-        <KpiCard icon={Clock} label="A receber" value={formatBRL(totalPendente)} hint={`${sessoesPendentes} sessões`} />
+        <KpiCard icon={Clock} label="A receber" value={formatBRL(totalAReceber)} hint={`${sessoesAgendadas - sessoesRealizadas} sessões`} />
         <KpiCard icon={CheckCircle2} label="Sessões realizadas" value={fortnightBillable.length.toString()} />
       </section>
 
