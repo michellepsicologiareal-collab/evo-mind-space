@@ -282,13 +282,13 @@ const Dashboard = () => {
           priceMap[p.id] = Number(p.session_price ?? 0);
         });
 
-        // Fetch completed sessions for active patients to calc interval
+        // Fetch scheduled (planned) sessions for active patients to calc interval
         const { data: freqSessions } = await supabase
           .from("sessions")
           .select("patient_id, scheduled_at")
           .eq("user_id", user.id)
-          .eq("status", "completed")
           .eq("is_expense", false)
+          .in("status", ["scheduled", "completed", "confirmed"])
           .order("scheduled_at", { ascending: true });
 
         const byPatient: Record<string, Date[]> = {};
