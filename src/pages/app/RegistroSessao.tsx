@@ -247,7 +247,7 @@ const RegistroSessao = () => {
 
   const getPatientName = (id: string) => patients.find((p) => p.id === id)?.full_name ?? "—";
 
-  const filteredRecords = historyFilter
+  const filteredRecords = historyFilter && historyFilter !== "all"
     ? records.filter((r) => r.patient_id === historyFilter)
     : records;
 
