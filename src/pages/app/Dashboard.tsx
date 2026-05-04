@@ -418,7 +418,7 @@ const Dashboard = () => {
         console.warn("Não foi possível carregar o painel inicial:", error);
       })
       .finally(() => setLoading(false));
-  }, [user, period]);
+  }, [user, dateFrom, dateTo]);
 
   const greeting = (() => {
     const h = new Date().getHours();
