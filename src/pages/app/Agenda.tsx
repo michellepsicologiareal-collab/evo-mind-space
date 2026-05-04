@@ -755,14 +755,19 @@ const Agenda = () => {
   }, [filteredByPayment, pendingSort, filterPatientId]);
 
   const groupedPending = useMemo(() => {
-    const used = new Set<string>();
-    return sortedPending.flatMap((session) => {
-      if (used.has(session.id)) return [];
-      const group = getSinglePaymentGroup(session);
-      if (!group) return [{ key: session.id, session, sessions: [session], total: Number(session.price ?? 0), dates: [format(new Date(session.scheduled_at), "dd/MM/yyyy")], isSinglePayment: false }];
-      group.sessions.forEach((item) => used.add(item.id));
-      return [{ key: `single-${session.patient_id}-${group.dates.join("-")}`, session, sessions: group.sessions, total: group.total, dates: group.dates, isSinglePayment: true }];
-    });
+    try {
+      const used = new Set<string>();
+      return sortedPending.flatMap((session) => {
+        if (used.has(session.id)) return [];
+        const group = getSinglePaymentGroup(session);
+        if (!group) return [{ key: session.id, session, sessions: [session], total: Number(session.price ?? 0), dates: [format(new Date(session.scheduled_at), "dd/MM/yyyy")], isSinglePayment: false }];
+        group.sessions.forEach((item) => used.add(item.id));
+        return [{ key: `single-${session.patient_id}-${group.dates.join("-")}`, session, sessions: group.sessions, total: group.total, dates: group.dates, isSinglePayment: true }];
+      });
+    } catch (err) {
+      console.error("Error grouping pending sessions:", err);
+      return sortedPending.map((session) => ({ key: session.id, session, sessions: [session], total: Number(session.price ?? 0), dates: [format(new Date(session.scheduled_at), "dd/MM/yyyy")], isSinglePayment: false }));
+    }
   }, [sortedPending, sessions, pendingSessions, pendingPackageSessions]);
 
   // Unique patients in pending
