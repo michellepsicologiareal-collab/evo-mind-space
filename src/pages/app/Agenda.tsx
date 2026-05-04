@@ -1449,7 +1449,7 @@ const Agenda = () => {
 
       {/* ── Edit Session Dialog ── */}
       <Dialog open={editOpen} onOpenChange={(v) => { if (!v) { editGuard.guardClose(() => setEditOpen(false)); } else { setEditOpen(true); } }}>
-        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">Editar sessão</DialogTitle>
           </DialogHeader>
