@@ -186,7 +186,13 @@ const Finance = () => {
 
   const billable = useMemo(() => rows.filter((r) => r.status === "completed"), [rows]);
 
-  // Scheduled/confirmed sessions = receita prevista
+  // ALL non-cancelled/no_show sessions = receita prevista (scheduled + confirmed + completed)
+  const allValid = useMemo(
+    () => rows.filter((r) => r.status !== "cancelled" && r.status !== "no_show"),
+    [rows]
+  );
+
+  // Only scheduled/confirmed (not yet completed)
   const scheduled = useMemo(
     () => rows.filter((r) => r.status === "scheduled" || r.status === "confirmed"),
     [rows]
@@ -202,16 +208,20 @@ const Finance = () => {
 
   const fortnightBillable = useMemo(() => fortnightFilter_(billable), [billable, fortnightFilter]);
   const fortnightScheduled = useMemo(() => fortnightFilter_(scheduled), [scheduled, fortnightFilter]);
+  const fortnightAllValid = useMemo(() => fortnightFilter_(allValid), [allValid, fortnightFilter]);
 
-  const totalPrevisto = fortnightScheduled.reduce((s, r) => s + Number(r.price ?? 0), 0);
+  // Previsto = ALL non-cancelled sessions (including completed ones)
+  const totalPrevisto = fortnightAllValid.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const totalFaturado = fortnightBillable.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const totalRecebido = fortnightBillable
     .filter((r) => r.payment_status === "paid")
     .reduce((s, r) => s + Number(r.price ?? 0), 0);
   const totalPendente = totalFaturado - totalRecebido;
+  const totalAReceber = totalPrevisto - totalRecebido;
   const sessoesPagas = fortnightBillable.filter((r) => r.payment_status === "paid").length;
   const sessoesPendentes = fortnightBillable.filter((r) => r.payment_status === "pending").length;
-  const sessoesAgendadas = fortnightScheduled.length;
+  const sessoesAgendadas = fortnightAllValid.length;
+  const sessoesRealizadas = fortnightBillable.length;
 
   // Weekly chart data for the month
   const weeklyChartData = useMemo(() => {
