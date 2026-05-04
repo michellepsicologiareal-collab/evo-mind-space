@@ -22,12 +22,19 @@ import {
   XCircle,
   CalendarClock,
   ClipboardList,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths, startOfWeek, endOfWeek, startOfYear, endOfYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CardSkeleton } from "@/components/app/Skeletons";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, PieChart, Pie, Cell, Legend } from "recharts";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /* ── types ── */
 interface Stats {
@@ -40,7 +47,6 @@ interface Stats {
   revenueGoal: number;
   sessionsGoal: number;
   recordsGoal: number;
-  /** New KPIs */
   previstos: number;
   realizados: number;
   faltasCanceladas: number;
@@ -63,6 +69,12 @@ interface PatientMoodEntry {
   mood_score: number;
   note: string | null;
   recorded_at: string;
+}
+
+interface FrequencyData {
+  name: string;
+  value: number;
+  avgPrice: number;
 }
 
 /* ── helpers ── */
@@ -93,6 +105,8 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   supervision: { label: "Supervisão", className: "bg-lilac/20 text-lilac" },
   pending: { label: "Pendente", className: "bg-amber-100 text-amber-700" },
 };
+
+const PIE_COLORS = ["hsl(var(--accent))", "hsl(var(--lilac))", "hsl(var(--serene))", "hsl(var(--sand))"];
 
 /* ── component ── */
 const Dashboard = () => {
@@ -127,6 +141,7 @@ const Dashboard = () => {
   const [weekSessions, setWeekSessions] = useState(0);
   const [monthSessions, setMonthSessions] = useState(0);
   const [yearRevenue, setYearRevenue] = useState(0);
+  const [frequencyData, setFrequencyData] = useState<FrequencyData[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -167,18 +182,18 @@ const Dashboard = () => {
             .eq("user_id", user.id),
           supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", weekStartDate.toISOString()).lte("scheduled_at", weekEndDate.toISOString()).in("status", ["scheduled", "confirmed", "completed"]),
           supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", monthStart).lte("scheduled_at", monthEnd).in("status", ["scheduled", "confirmed", "completed"]),
-          supabase.from("sessions").select("price, status").eq("user_id", user.id).gte("scheduled_at", yearStart).lte("scheduled_at", yearEnd).eq("status", "completed"),
+          supabase.from("sessions").select("price, status, is_expense").eq("user_id", user.id).gte("scheduled_at", yearStart).lte("scheduled_at", yearEnd).eq("status", "completed"),
         ]);
 
       setProfileName(profileRes.data?.full_name ?? "");
       setClinicName((profileRes.data as any)?.clinic_name ?? "");
 
-      const monthSessions = monthRes.data ?? [];
-      const revenue = monthSessions.filter((s) => s.status === "completed").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
-      const completed = monthSessions.filter((s) => s.status === "completed").length;
-      const faltasCanceladas = monthSessions.filter((s) => s.status === "no_show" || s.status === "cancelled").length;
+      const monthSessionsArr = monthRes.data ?? [];
+      const revenue = monthSessionsArr.filter((s) => s.status === "completed").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+      const completed = monthSessionsArr.filter((s) => s.status === "completed").length;
+      const faltasCanceladas = monthSessionsArr.filter((s) => s.status === "no_show" || s.status === "cancelled").length;
       const now2 = new Date();
-      const aRealizar = monthSessions.filter((s) => {
+      const aRealizar = monthSessionsArr.filter((s) => {
         const d = new Date(s.scheduled_at);
         return d > now2 && s.status !== "completed" && s.status !== "cancelled" && s.status !== "no_show";
       }).length;
@@ -193,7 +208,7 @@ const Dashboard = () => {
         revenueGoal: 10000,
         sessionsGoal: 40,
         recordsGoal: 20,
-        previstos: monthSessions.length,
+        previstos: monthSessionsArr.length,
         realizados: completed,
         faltasCanceladas,
         aRealizar,
@@ -201,7 +216,12 @@ const Dashboard = () => {
 
       setWeekSessions(weekRes.count ?? 0);
       setMonthSessions(monthAllRes.count ?? 0);
-      setYearRevenue((yearRes.data ?? []).reduce((sum, s) => sum + Number(s.price ?? 0), 0));
+      // Exclude expenses from year revenue
+      setYearRevenue(
+        (yearRes.data ?? [])
+          .filter((s: any) => !s.is_expense)
+          .reduce((sum, s) => sum + Number(s.price ?? 0), 0)
+      );
 
       const sessionsData = (upcomingRes.data ?? []) as any[];
       const uniquePatientIds = [...new Set(sessionsData.map((s: any) => s.patient_id).filter(Boolean))];
@@ -228,10 +248,70 @@ const Dashboard = () => {
 
       setUpcoming(mapped);
 
-      // Next session countdown
       if (mapped.length > 0) {
         const diff = differenceInMinutes(new Date(mapped[0].scheduled_at), now);
         setNextSessionMin(diff > 0 ? diff : null);
+      }
+
+      // ── Frequency analysis (weekly vs biweekly) ──
+      // Group completed sessions by patient, calc avg interval
+      const { data: freqSessions } = await supabase
+        .from("sessions")
+        .select("patient_id, scheduled_at, price, status, is_expense")
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .eq("is_expense", false)
+        .order("scheduled_at", { ascending: true });
+
+      if (freqSessions && freqSessions.length > 0) {
+        const byPatient: Record<string, { dates: Date[]; prices: number[] }> = {};
+        freqSessions.forEach((s: any) => {
+          if (!byPatient[s.patient_id]) byPatient[s.patient_id] = { dates: [], prices: [] };
+          byPatient[s.patient_id].dates.push(new Date(s.scheduled_at));
+          byPatient[s.patient_id].prices.push(Number(s.price ?? 0));
+        });
+
+        const freqCounts: Record<string, { count: number; totalPrice: number }> = {
+          Semanal: { count: 0, totalPrice: 0 },
+          Quinzenal: { count: 0, totalPrice: 0 },
+          Outros: { count: 0, totalPrice: 0 },
+        };
+
+        Object.values(byPatient).forEach(({ dates, prices }) => {
+          if (dates.length < 2) {
+            freqCounts["Outros"].count++;
+            freqCounts["Outros"].totalPrice += prices.reduce((a, b) => a + b, 0) / prices.length;
+            return;
+          }
+          // calc avg interval in days
+          let totalDays = 0;
+          for (let i = 1; i < dates.length; i++) {
+            totalDays += (dates[i].getTime() - dates[i - 1].getTime()) / (1000 * 60 * 60 * 24);
+          }
+          const avgInterval = totalDays / (dates.length - 1);
+          const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+
+          if (avgInterval <= 10) {
+            freqCounts["Semanal"].count++;
+            freqCounts["Semanal"].totalPrice += avgPrice;
+          } else if (avgInterval <= 20) {
+            freqCounts["Quinzenal"].count++;
+            freqCounts["Quinzenal"].totalPrice += avgPrice;
+          } else {
+            freqCounts["Outros"].count++;
+            freqCounts["Outros"].totalPrice += avgPrice;
+          }
+        });
+
+        const pieData: FrequencyData[] = Object.entries(freqCounts)
+          .filter(([, v]) => v.count > 0)
+          .map(([name, v]) => ({
+            name,
+            value: v.count,
+            avgPrice: v.count > 0 ? Math.round(v.totalPrice / v.count) : 0,
+          }));
+
+        setFrequencyData(pieData);
       }
 
       // ── Mood + Previous revenue in parallel ──
@@ -254,7 +334,6 @@ const Dashboard = () => {
           .lte("scheduled_at", prevEnd),
       ]);
 
-      // Mood chart
       const moodRows = moodRes.data;
       if (moodRows && moodRows.length > 0) {
         const moodChartData = moodRows.map((m: any) => ({
@@ -277,15 +356,13 @@ const Dashboard = () => {
         }
       }
 
-      // Previous month revenue
       const prevRev = (prevRes.data ?? [])
         .filter((s) => s.status === "completed")
         .reduce((sum, s) => sum + Number(s.price ?? 0), 0);
       setPrevMonthRevenue(prevRev);
 
-      // Weekly revenue sparkline (no extra query, uses existing data)
       const weekData: { week: string; value: number }[] = [];
-      const monthSess = monthSessions.filter((s) => s.status === "completed");
+      const monthSess = monthSessionsArr.filter((s) => s.status === "completed");
       for (let w = 0; w < 4; w++) {
         const wStart = w * 7 + 1;
         const wEnd = w === 3 ? 31 : (w + 1) * 7;
@@ -299,7 +376,6 @@ const Dashboard = () => {
       }
       setWeeklyRevenue(weekData);
 
-      // ── Patient moods (recent entries with patient names) ──
       const { data: recentMoods } = await supabase
         .from("patient_progress")
         .select("id, mood_score, note, recorded_at, patient_id")
@@ -328,7 +404,6 @@ const Dashboard = () => {
           }))
         );
       }
-
     };
     load()
       .catch((error) => {
@@ -395,322 +470,389 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="space-y-8 animate-fade-up">
-      {/* ── Welcome Header ── */}
-      <header className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
-        {/* Decorative accent line */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent" />
-        {clinicName && (
-          <p className="text-xs uppercase tracking-[0.2em] text-accent font-semibold">{clinicName}</p>
-        )}
-        <p className={`text-sm text-muted-foreground capitalize ${clinicName ? "mt-1" : ""}`}>
-          {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-        </p>
-        <h1 className="mt-2 font-display text-3xl md:text-4xl font-bold text-foreground">
-          {greeting}{firstName ? `, ${firstName}` : ""}.
-        </h1>
-        <p className="mt-2 text-muted-foreground text-sm md:text-base">{summaryText}</p>
-      </header>
-
-      {/* ── KPI Cards ── */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard icon={Users} label="Pacientes Ativos" value={stats.activePatients.toString()} />
-        <KPICard icon={Calendar} label="Sessões Hoje" value={stats.todaySessions.toString()} />
-        <KPICard icon={CalendarDays} label="Sessões esta Semana" value={weekSessions.toString()} />
-        <KPICard icon={CalendarRange} label="Sessões este Mês" value={monthSessions.toString()} />
-      </section>
-
-      {/* ── Métricas de Sessões do Mês ── */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard icon={ClipboardList} label="Previstos no Mês" value={stats.previstos.toString()} />
-        <KPICard icon={CheckCircle2} label="Realizados" value={stats.realizados.toString()} />
-        <KPICard icon={XCircle} label="Faltas / Canceladas" value={stats.faltasCanceladas.toString()} highlight={stats.faltasCanceladas > 0} />
-        <KPICard icon={CalendarClock} label="A Realizar" value={stats.aRealizar.toString()} />
-      </section>
-
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          icon={TrendingUp}
-          label="Faturamento Mensal"
-          value={hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(2).replace(".", ",")}`}
-          action={
-            <button
-              onClick={() => setHideRevenue(!hideRevenue)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label={hideRevenue ? "Mostrar valor" : "Ocultar valor"}
-            >
-              {hideRevenue ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-            </button>
-          }
-          highlight
-        />
-        <KPICard
-          icon={Banknote}
-          label={`Faturamento ${new Date().getFullYear()}`}
-          value={hideRevenue ? "•••••" : `R$ ${yearRevenue.toFixed(2).replace(".", ",")}`}
-          highlight
-        />
-        <KPICard icon={Briefcase} label="Casos em Supervisão" value={stats.supervisionCases.toString()} />
-      </section>
-
-      {/* ── Insight Charts (floating card style) ── */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Mood Chart Card */}
-        <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-serene via-serene/60 to-transparent" />
-          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
-            Humor médio{topMoodPatient ? ` · ${topMoodPatient}` : ""}
-          </p>
-          <p className="font-display text-3xl font-bold text-foreground">
-            {avgMood !== null ? avgMood.toFixed(1).replace(".", ",") : "—"}
-            <span className="text-lg text-muted-foreground font-normal"> / 10</span>
-          </p>
-          {moodData.length > 1 ? (
-            <div className="mt-3 h-[80px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={moodData}>
-                  <defs>
-                    <linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--serene))" stopOpacity={0.4} />
-                      <stop offset="100%" stopColor="hsl(var(--serene))" stopOpacity={0.05} />
-                    </linearGradient>
-                  </defs>
-                  <Tooltip
-                    contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
-                    formatter={(v: number) => [`${v}/10`, "Humor"]}
-                    labelFormatter={(l) => `Dia ${l}`}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="score"
-                    stroke="hsl(var(--serene))"
-                    strokeWidth={2.5}
-                    fill="url(#moodGrad)"
-                    dot={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <p className="mt-4 text-sm text-muted-foreground">Registre o humor dos pacientes para ver o gráfico aqui ✨</p>
-          )}
-          {moodData.length > 1 && (
-            <div className="flex gap-1 mt-2">
-              {moodData.slice(-7).map((d, i) => (
-                <div
-                  key={i}
-                  className="h-2 w-2 rounded-full"
-                  style={{
-                    backgroundColor: d.score >= 7 ? "hsl(var(--serene))" : d.score >= 4 ? "hsl(var(--sand))" : "hsl(var(--destructive))",
-                    opacity: 0.5 + (i / 10),
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Revenue Chart Card */}
-        <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
+    <TooltipProvider delayDuration={300}>
+      <div className="space-y-8 animate-fade-up">
+        {/* ── Welcome Header ── */}
+        <header className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent" />
-          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
-            Faturamento — {format(new Date(), "MMMM", { locale: ptBR })}
+          {clinicName && (
+            <p className="text-xs uppercase tracking-[0.2em] text-accent font-semibold">{clinicName}</p>
+          )}
+          <p className={`text-sm text-muted-foreground capitalize ${clinicName ? "mt-1" : ""}`}>
+            {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
-          <p className="font-display text-3xl font-bold text-foreground">
-            {hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`}
-          </p>
-          {prevMonthRevenue > 0 && !hideRevenue && (() => {
-            const pctChange = ((stats.monthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100;
-            const isUp = pctChange >= 0;
-            return (
-              <p className={`text-sm font-medium mt-1 ${isUp ? "text-emerald-600" : "text-destructive"}`}>
-                {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(0)}% vs. {format(subMonths(new Date(), 1), "MMMM", { locale: ptBR })}
-              </p>
-            );
-          })()}
-          {weeklyRevenue.some((w) => w.value > 0) ? (
-            <div className="mt-3 h-[80px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={weeklyRevenue}>
-                  <defs>
-                    <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.4} />
-                      <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.05} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="week" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
-                    formatter={(v: number) => [`R$ ${v.toFixed(0)}`, "Receita"]}
+          <h1 className="mt-2 font-display text-3xl md:text-4xl font-bold text-foreground">
+            {greeting}{firstName ? `, ${firstName}` : ""}.
+          </h1>
+          <p className="mt-2 text-muted-foreground text-sm md:text-base">{summaryText}</p>
+        </header>
+
+        {/* ── KPI Cards ── */}
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <KPICard icon={Users} label="Pacientes Ativos" value={stats.activePatients.toString()} tooltip="Total de pacientes com status ativo no seu cadastro." />
+          <KPICard icon={Calendar} label="Sessões Hoje" value={stats.todaySessions.toString()} tooltip="Quantidade de sessões agendadas, confirmadas ou concluídas para o dia de hoje." />
+          <KPICard icon={CalendarDays} label="Sessões esta Semana" value={weekSessions.toString()} tooltip="Total de sessões (agendadas, confirmadas ou concluídas) na semana atual (segunda a domingo)." />
+          <KPICard icon={CalendarRange} label="Sessões este Mês" value={monthSessions.toString()} tooltip="Total de sessões (agendadas, confirmadas ou concluídas) no mês corrente." />
+        </section>
+
+        {/* ── Métricas de Sessões do Mês ── */}
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <KPICard icon={ClipboardList} label="Previstos no Mês" value={stats.previstos.toString()} tooltip="Total de sessões previstas no mês (todos os status, incluindo futuras)." />
+          <KPICard icon={CheckCircle2} label="Realizados" value={stats.realizados.toString()} tooltip="Quantidade de sessões já concluídas (status 'completed') neste mês." />
+          <KPICard icon={XCircle} label="Faltas / Canceladas" value={stats.faltasCanceladas.toString()} highlight={stats.faltasCanceladas > 0} tooltip="Sessões que foram canceladas ou marcadas como falta (no-show) neste mês." />
+          <KPICard icon={CalendarClock} label="A Realizar" value={stats.aRealizar.toString()} tooltip="Sessões futuras previstas para o restante do mês que ainda não foram concluídas." />
+        </section>
+
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <KPICard
+            icon={TrendingUp}
+            label="Faturamento Mensal"
+            value={hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(2).replace(".", ",")}`}
+            action={
+              <button
+                onClick={() => setHideRevenue(!hideRevenue)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={hideRevenue ? "Mostrar valor" : "Ocultar valor"}
+              >
+                {hideRevenue ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              </button>
+            }
+            highlight
+            tooltip="Soma dos valores de todas as sessões concluídas no mês atual (exceto despesas)."
+          />
+          <KPICard
+            icon={Banknote}
+            label={`Faturamento ${new Date().getFullYear()}`}
+            value={hideRevenue ? "•••••" : `R$ ${yearRevenue.toFixed(2).replace(".", ",")}`}
+            highlight
+            tooltip={`Soma de todas as sessões concluídas em ${new Date().getFullYear()}, excluindo despesas.`}
+          />
+          <KPICard icon={Briefcase} label="Casos em Supervisão" value={stats.supervisionCases.toString()} tooltip="Pacientes com compartilhamento ativo para supervisão clínica." />
+        </section>
+
+        {/* ── Insight Charts ── */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Mood Chart Card */}
+          <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-serene via-serene/60 to-transparent" />
+            <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+              Humor médio{topMoodPatient ? ` · ${topMoodPatient}` : ""}
+            </p>
+            <p className="font-display text-3xl font-bold text-foreground">
+              {avgMood !== null ? avgMood.toFixed(1).replace(".", ",") : "—"}
+              <span className="text-lg text-muted-foreground font-normal"> / 10</span>
+            </p>
+            {moodData.length > 1 ? (
+              <div className="mt-3 h-[80px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={moodData}>
+                    <defs>
+                      <linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--serene))" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="hsl(var(--serene))" stopOpacity={0.05} />
+                      </linearGradient>
+                    </defs>
+                    <RechartsTooltip
+                      contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+                      formatter={(v: number) => [`${v}/10`, "Humor"]}
+                      labelFormatter={(l) => `Dia ${l}`}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="score"
+                      stroke="hsl(var(--serene))"
+                      strokeWidth={2.5}
+                      fill="url(#moodGrad)"
+                      dot={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-muted-foreground">Registre o humor dos pacientes para ver o gráfico aqui ✨</p>
+            )}
+            {moodData.length > 1 && (
+              <div className="flex gap-1 mt-2">
+                {moodData.slice(-7).map((d, i) => (
+                  <div
+                    key={i}
+                    className="h-2 w-2 rounded-full"
+                    style={{
+                      backgroundColor: d.score >= 7 ? "hsl(var(--serene))" : d.score >= 4 ? "hsl(var(--sand))" : "hsl(var(--destructive))",
+                      opacity: 0.5 + (i / 10),
+                    }}
                   />
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    stroke="hsl(var(--accent))"
-                    strokeWidth={2.5}
-                    fill="url(#revGrad)"
-                    dot={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Revenue Chart Card */}
+          <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent" />
+            <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+              Faturamento — {format(new Date(), "MMMM", { locale: ptBR })}
+            </p>
+            <p className="font-display text-3xl font-bold text-foreground">
+              {hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`}
+            </p>
+            {prevMonthRevenue > 0 && !hideRevenue && (() => {
+              const pctChange = ((stats.monthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100;
+              const isUp = pctChange >= 0;
+              return (
+                <p className={`text-sm font-medium mt-1 ${isUp ? "text-emerald-600" : "text-destructive"}`}>
+                  {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(0)}% vs. {format(subMonths(new Date(), 1), "MMMM", { locale: ptBR })}
+                </p>
+              );
+            })()}
+            {weeklyRevenue.some((w) => w.value > 0) ? (
+              <div className="mt-3 h-[80px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={weeklyRevenue}>
+                    <defs>
+                      <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.05} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="week" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <RechartsTooltip
+                      contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+                      formatter={(v: number) => [`R$ ${v.toFixed(0)}`, "Receita"]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="hsl(var(--accent))"
+                      strokeWidth={2.5}
+                      fill="url(#revGrad)"
+                      dot={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-muted-foreground">Complete sessões para ver seu faturamento semanal 📊</p>
+            )}
+          </div>
+        </section>
+
+        {/* ── Gráfico de Pizza: Frequência de Atendimentos ── */}
+        <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-lilac via-accent/60 to-transparent" />
+          <div className="flex items-center gap-2 mb-4">
+            <CalendarRange className="h-5 w-5 text-lilac" />
+            <h2 className="font-display text-xl font-bold text-foreground">Tipo de Atendimento por Frequência</h2>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>Classifica seus pacientes pela frequência média entre sessões: Semanal (até 10 dias), Quinzenal (até 20 dias) ou Outros. Mostra a média de valor por tipo.</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          {frequencyData.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">
+              <CalendarRange className="h-12 w-12 mx-auto mb-4 opacity-30" />
+              <p className="font-display text-lg font-medium text-foreground/70">Dados insuficientes</p>
+              <p className="mt-1 text-sm">Complete mais sessões para ver a distribuição de frequências dos seus atendimentos.</p>
             </div>
           ) : (
-            <p className="mt-4 text-sm text-muted-foreground">Complete sessões para ver seu faturamento semanal 📊</p>
-          )}
-        </div>
-      </section>
-
-      {/* ── Emoções dos Pacientes ── */}
-      <section className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-lilac via-lilac/60 to-transparent" />
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <SmilePlus className="h-5 w-5 text-lilac" />
-            <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Emoções dos Pacientes</h2>
-          </div>
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/app/agenda" className="text-lilac hover:text-lilac/80">
-              Ver sessões <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-
-        {patientMoods.length === 0 ? (
-          <div className="text-center py-10 text-muted-foreground">
-            <Heart className="h-12 w-12 mx-auto mb-4 opacity-30" />
-            <p className="font-display text-lg font-medium text-foreground/70">Nenhum registro de humor ainda</p>
-            <p className="mt-1 text-sm">Registre o humor dos pacientes nas sessões para acompanhar a evolução emocional aqui ✨</p>
-          </div>
-        ) : (
-          <ul className="space-y-3">
-            {patientMoods.map((m) => {
-              const moodEmoji = m.mood_score >= 8 ? "🤩" : m.mood_score >= 6 ? "🙂" : m.mood_score >= 4 ? "😐" : m.mood_score >= 2 ? "😔" : "😫";
-              const moodColor = m.mood_score >= 7 ? "text-emerald-600 bg-emerald-100" : m.mood_score >= 4 ? "text-amber-600 bg-amber-100" : "text-rose-600 bg-rose-100";
-              return (
-                <li
-                  key={m.id}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                >
-                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-bold text-sm ${getAvatarColor(m.patient_name)}`}>
-                    {m.patient_initials}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-foreground truncate">{m.patient_name}</p>
-                    {m.note && <p className="text-sm text-muted-foreground truncate">{m.note}</p>}
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {format(new Date(m.recorded_at), "dd/MM · HH:mm", { locale: ptBR })}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xl">{moodEmoji}</span>
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${moodColor}`}>
-                      {m.mood_score}/10
-                    </span>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
-
-      {/* ── Upcoming Sessions ── */}
-      <section className="rounded-2xl bg-card border border-border shadow-card p-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Próximas Sessões</h2>
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/app/agenda" className="text-accent hover:text-accent/80">
-              Ver agenda <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-
-        {upcoming.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-30" />
-            <p className="font-display text-lg font-medium text-foreground/70">Sua agenda está tranquila</p>
-            <p className="mt-1 text-sm">Que tal agendar a próxima sessão?</p>
-            <Button variant="accent" size="sm" className="mt-5 min-h-[44px]" asChild>
-              <Link to="/app/agenda">Agendar uma sessão</Link>
-            </Button>
-          </div>
-        ) : (
-          <ul className="space-y-3">
-            {upcoming.map((s) => {
-              const st = statusConfig[s.status] ?? statusConfig.scheduled;
-              return (
-                <li
-                  key={s.id}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                >
-                  {/* Avatar */}
-                  <div
-                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-bold text-sm ${getAvatarColor(s.patient_name)}`}
-                  >
-                    {s.patient_initials}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-foreground truncate">{s.patient_name}</p>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-3.5 w-3.5" />
-                      <span className="capitalize">
-                        {format(new Date(s.scheduled_at), "HH:mm", { locale: ptBR })}
-                      </span>
-                      <span className="text-border">•</span>
-                      <span>Sessão #{s.session_number}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={frequencyData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={90}
+                      paddingAngle={4}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      labelLine={false}
+                    >
+                      {frequencyData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip
+                      contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+                      formatter={(value: number, name: string, props: any) => [
+                        `${value} paciente${value !== 1 ? "s" : ""} · Média R$ ${props.payload.avgPrice}`,
+                        name,
+                      ]}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="space-y-3">
+                {frequencyData.map((item, i) => (
+                  <div key={item.name} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30">
+                    <div className="h-4 w-4 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                    <div className="flex-1">
+                      <p className="font-semibold text-foreground text-sm">{item.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.value} paciente{item.value !== 1 ? "s" : ""} · Média: R$ {item.avgPrice.toFixed(2).replace(".", ",")}
+                      </p>
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
 
-                  {/* Status badge */}
-                  <span className={`text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap ${st.className}`}>
-                    {st.label}
-                  </span>
-                </li>
+        {/* ── Emoções dos Pacientes ── */}
+        <section className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-lilac via-lilac/60 to-transparent" />
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <SmilePlus className="h-5 w-5 text-lilac" />
+              <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Emoções dos Pacientes</h2>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/app/agenda" className="text-lilac hover:text-lilac/80">
+                Ver sessões <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+
+          {patientMoods.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">
+              <Heart className="h-12 w-12 mx-auto mb-4 opacity-30" />
+              <p className="font-display text-lg font-medium text-foreground/70">Nenhum registro de humor ainda</p>
+              <p className="mt-1 text-sm">Registre o humor dos pacientes nas sessões para acompanhar a evolução emocional aqui ✨</p>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {patientMoods.map((m) => {
+                const moodEmoji = m.mood_score >= 8 ? "🤩" : m.mood_score >= 6 ? "🙂" : m.mood_score >= 4 ? "😐" : m.mood_score >= 2 ? "😔" : "😫";
+                const moodColor = m.mood_score >= 7 ? "text-emerald-600 bg-emerald-100" : m.mood_score >= 4 ? "text-amber-600 bg-amber-100" : "text-rose-600 bg-rose-100";
+                return (
+                  <li
+                    key={m.id}
+                    className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                  >
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-bold text-sm ${getAvatarColor(m.patient_name)}`}>
+                      {m.patient_initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground truncate">{m.patient_name}</p>
+                      {m.note && <p className="text-sm text-muted-foreground truncate">{m.note}</p>}
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {format(new Date(m.recorded_at), "dd/MM · HH:mm", { locale: ptBR })}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xl">{moodEmoji}</span>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${moodColor}`}>
+                        {m.mood_score}/10
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        {/* ── Upcoming Sessions ── */}
+        <section className="rounded-2xl bg-card border border-border shadow-card p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Próximas Sessões</h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/app/agenda" className="text-accent hover:text-accent/80">
+                Ver agenda <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+
+          {upcoming.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-30" />
+              <p className="font-display text-lg font-medium text-foreground/70">Sua agenda está tranquila</p>
+              <p className="mt-1 text-sm">Que tal agendar a próxima sessão?</p>
+              <Button variant="accent" size="sm" className="mt-5 min-h-[44px]" asChild>
+                <Link to="/app/agenda">Agendar uma sessão</Link>
+              </Button>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {upcoming.map((s) => {
+                const st = statusConfig[s.status] ?? statusConfig.scheduled;
+                return (
+                  <li
+                    key={s.id}
+                    className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                  >
+                    <div
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-bold text-sm ${getAvatarColor(s.patient_name)}`}
+                    >
+                      {s.patient_initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground truncate">{s.patient_name}</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span className="capitalize">
+                          {format(new Date(s.scheduled_at), "HH:mm", { locale: ptBR })}
+                        </span>
+                        <span className="text-border">•</span>
+                        <span>Sessão #{s.session_number}</span>
+                      </div>
+                    </div>
+                    <span className={`text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap ${st.className}`}>
+                      {st.label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        {/* ── Goals / Gamification ── */}
+        <section className="rounded-2xl bg-card border border-border shadow-card p-8">
+          <h2 className="font-display text-xl md:text-2xl font-bold text-foreground mb-6">Metas do Mês</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {progressItems.map((item) => {
+              const pct = item.goal > 0 ? Math.min((item.current / item.goal) * 100, 100) : 0;
+              const displayCurrent = item.isCurrency
+                ? `R$ ${item.current.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`
+                : item.current.toString();
+              const displayGoal = item.isCurrency
+                ? `R$ ${item.goal.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`
+                : item.goal.toString();
+
+              return (
+                <div key={item.label} className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <item.icon className="h-4 w-4 text-accent" />
+                    {item.label}
+                  </div>
+                  <div className="h-3 rounded-full bg-secondary overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-accent transition-all duration-700 ease-out"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{displayCurrent}</span>
+                    <span className="font-medium">{Math.round(pct)}%</span>
+                    <span>{displayGoal}</span>
+                  </div>
+                </div>
               );
             })}
-          </ul>
-        )}
-      </section>
-
-      {/* ── Goals / Gamification ── */}
-      <section className="rounded-2xl bg-card border border-border shadow-card p-8">
-        <h2 className="font-display text-xl md:text-2xl font-bold text-foreground mb-6">Metas do Mês</h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          {progressItems.map((item) => {
-            const pct = item.goal > 0 ? Math.min((item.current / item.goal) * 100, 100) : 0;
-            const displayCurrent = item.isCurrency
-              ? `R$ ${item.current.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`
-              : item.current.toString();
-            const displayGoal = item.isCurrency
-              ? `R$ ${item.goal.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`
-              : item.goal.toString();
-
-            return (
-              <div key={item.label} className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                  <item.icon className="h-4 w-4 text-accent" />
-                  {item.label}
-                </div>
-                {/* Progress bar */}
-                <div className="h-3 rounded-full bg-secondary overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-accent transition-all duration-700 ease-out"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{displayCurrent}</span>
-                  <span className="font-medium">{Math.round(pct)}%</span>
-                  <span>{displayGoal}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-    </div>
+          </div>
+        </section>
+      </div>
+    </TooltipProvider>
   );
 };
 
@@ -721,12 +863,14 @@ const KPICard = ({
   value,
   highlight,
   action,
+  tooltip,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
   highlight?: boolean;
   action?: React.ReactNode;
+  tooltip?: string;
 }) => (
   <div
     className={`rounded-2xl border p-5 md:p-6 transition-all hover:-translate-y-0.5 hover:shadow-soft ${
@@ -737,7 +881,19 @@ const KPICard = ({
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-accent">
         <Icon className="h-5 w-5" />
       </div>
-      {action}
+      <div className="flex items-center gap-1">
+        {action}
+        {tooltip && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs text-xs">
+              <p>{tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
     </div>
     <p className="mt-4 text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
     <p className="mt-1 font-display text-2xl md:text-3xl font-bold text-foreground">{value}</p>
