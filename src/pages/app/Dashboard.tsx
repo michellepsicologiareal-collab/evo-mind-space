@@ -66,6 +66,7 @@ interface UpcomingSession {
 
 interface PatientMoodEntry {
   id: string;
+  patient_id: string;
   patient_name: string;
   patient_initials: string;
   mood_score: number;
