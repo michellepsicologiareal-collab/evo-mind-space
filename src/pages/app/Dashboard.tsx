@@ -106,7 +106,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   pending: { label: "Pendente", className: "bg-amber-100 text-amber-700" },
 };
 
-const PIE_COLORS = ["hsl(var(--accent))", "hsl(var(--lilac))", "hsl(var(--serene))", "hsl(var(--sand))"];
+const PIE_COLORS = ["hsl(var(--accent))", "hsl(var(--lilac))"];
 
 /* ── component ── */
 const Dashboard = () => {
@@ -274,13 +274,11 @@ const Dashboard = () => {
         const freqCounts: Record<string, { count: number; totalPrice: number }> = {
           Semanal: { count: 0, totalPrice: 0 },
           Quinzenal: { count: 0, totalPrice: 0 },
-          Outros: { count: 0, totalPrice: 0 },
         };
 
         Object.values(byPatient).forEach(({ dates, prices }) => {
           if (dates.length < 2) {
-            freqCounts["Outros"].count++;
-            freqCounts["Outros"].totalPrice += prices.reduce((a, b) => a + b, 0) / prices.length;
+            // With only 1 session, can't determine interval — skip
             return;
           }
           // calc avg interval in days
@@ -294,12 +292,9 @@ const Dashboard = () => {
           if (avgInterval <= 10) {
             freqCounts["Semanal"].count++;
             freqCounts["Semanal"].totalPrice += avgPrice;
-          } else if (avgInterval <= 20) {
+          } else {
             freqCounts["Quinzenal"].count++;
             freqCounts["Quinzenal"].totalPrice += avgPrice;
-          } else {
-            freqCounts["Outros"].count++;
-            freqCounts["Outros"].totalPrice += avgPrice;
           }
         });
 
@@ -648,7 +643,7 @@ const Dashboard = () => {
                 <Info className="h-4 w-4 text-muted-foreground cursor-help" />
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                <p>Classifica seus pacientes pela frequência média entre sessões: Semanal (até 10 dias), Quinzenal (até 20 dias) ou Outros. Mostra a média de valor por tipo.</p>
+                <p>Classifica seus pacientes pelo intervalo médio entre sessões: Semanal (até 10 dias) ou Quinzenal (acima de 10 dias). Mostra a média de valor por tipo.</p>
               </TooltipContent>
             </Tooltip>
           </div>
