@@ -15,7 +15,8 @@ export const Navbar = () => {
         </a>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           <a href="#funcionalidades" className="hover:text-foreground transition-colors">Funcionalidades</a>
-          <a href="#diferencial" className="hover:text-foreground transition-colors">Diferencial</a>
+          <a href="#supervisao" className="hover:text-foreground transition-colors">Supervisão</a>
+          <a href="#confianca" className="hover:text-foreground transition-colors">Segurança</a>
           <a href="#planos" className="hover:text-foreground transition-colors">Planos</a>
           <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
           <a
