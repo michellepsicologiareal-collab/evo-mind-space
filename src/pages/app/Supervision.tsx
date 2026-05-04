@@ -459,15 +459,15 @@ const Supervision = () => {
                               {visible.map((p) => (
                                 <li key={p.id}>
                                   <button
-                                    onClick={() => setSelectedPatient(p)}
+                                    onClick={() => openPatientDetail(p)}
                                     className="w-full flex items-center justify-between gap-3 rounded-lg bg-card border border-border p-3 hover:border-primary hover:shadow-soft transition-all text-left"
                                   >
                                     <div className="flex items-center gap-3 min-w-0">
-                                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-primary font-display shrink-0">
-                                        {p.full_name.charAt(0).toUpperCase()}
+                                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-primary font-display font-bold shrink-0">
+                                        {p.initials}
                                       </div>
                                       <div className="min-w-0">
-                                        <p className="font-medium truncate">{p.full_name}</p>
+                                        <p className="font-medium">{p.initials}</p>
                                         <p className="text-xs text-muted-foreground">
                                           {p.is_active ? (
                                             <span className="text-primary-glow">● Ativo</span>
