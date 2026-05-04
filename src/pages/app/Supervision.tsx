@@ -36,7 +36,14 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface Patient {
+interface PatientListItem {
+  id: string;
+  initials: string;
+  is_active: boolean;
+  user_id: string;
+}
+
+interface PatientDetail {
   id: string;
   full_name: string;
   email: string | null;
