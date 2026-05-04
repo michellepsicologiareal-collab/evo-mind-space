@@ -238,11 +238,11 @@ const Finance = () => {
         const d = new Date(r.scheduled_at).getDate();
         return d >= range.start && d <= range.end;
       };
-      const weekScheduled = scheduled.filter(inRange);
+      const weekAllValid = allValid.filter(inRange);
       const weekBillable = billable.filter(inRange);
       weeks.push({
         label: range.label,
-        previsto: weekScheduled.reduce((s, r) => s + Number(r.price ?? 0), 0),
+        previsto: weekAllValid.reduce((s, r) => s + Number(r.price ?? 0), 0),
         recebido: weekBillable.filter((r) => r.payment_status === "paid").reduce((s, r) => s + Number(r.price ?? 0), 0),
         pendente: weekBillable.filter((r) => r.payment_status === "pending").reduce((s, r) => s + Number(r.price ?? 0), 0),
       });
