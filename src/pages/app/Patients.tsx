@@ -149,6 +149,15 @@ const Patients = () => {
       frDdi = frDdiMatch[1];
       frLocalPhone = frDdiMatch[2];
     }
+    // Extract DDI from psychiatrist phone
+    const rawPsyPhone = p.psychiatrist_phone ?? "";
+    let psyDdi = "";
+    let psyLocalPhone = rawPsyPhone;
+    const psyDdiMatch = rawPsyPhone.match(/^(\+\d{1,4})\s*(.*)/);
+    if (psyDdiMatch) {
+      psyDdi = psyDdiMatch[1];
+      psyLocalPhone = psyDdiMatch[2];
+    }
     setForm({
       full_name: p.full_name,
       email: p.email ?? "",
@@ -164,6 +173,13 @@ const Patients = () => {
       financial_responsible_name: p.financial_responsible_name ?? "",
       financial_responsible_phone: frLocalPhone,
       financial_responsible_ddi: frDdi,
+      treatment_start_date: p.treatment_start_date ?? "",
+      treatment_end_date: p.treatment_end_date ?? "",
+      has_psychiatrist: p.has_psychiatrist ?? false,
+      psychiatrist_name: p.psychiatrist_name ?? "",
+      psychiatrist_phone: psyLocalPhone,
+      psychiatrist_phone_ddi: psyDdi,
+      medications: p.medications ?? "",
     });
     patientGuard.resetDirty();
     setOpen(true);
