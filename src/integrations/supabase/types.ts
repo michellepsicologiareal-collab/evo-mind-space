@@ -369,6 +369,9 @@ export type Database = {
           created_at: string
           crp: string | null
           full_name: string | null
+          goal_records: number
+          goal_revenue: number
+          goal_sessions: number
           id: string
           is_approved: boolean
           phone: string | null
@@ -389,6 +392,9 @@ export type Database = {
           created_at?: string
           crp?: string | null
           full_name?: string | null
+          goal_records?: number
+          goal_revenue?: number
+          goal_sessions?: number
           id: string
           is_approved?: boolean
           phone?: string | null
@@ -409,6 +415,9 @@ export type Database = {
           created_at?: string
           crp?: string | null
           full_name?: string | null
+          goal_records?: number
+          goal_revenue?: number
+          goal_sessions?: number
           id?: string
           is_approved?: boolean
           phone?: string | null
