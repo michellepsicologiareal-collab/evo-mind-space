@@ -174,13 +174,16 @@ export default function ContratoPublico() {
             <img src={logo} alt="Psi Real" className="h-10 w-10 rounded-full" />
           </div>
           <h1 className="text-2xl font-display font-bold">Termo de Adesão ao Tratamento</h1>
-          <p className="text-muted-foreground text-sm">
-            Profissional: <strong>{template.professional_name}</strong>
-            {template.professional_crp && <> — CRP {template.professional_crp}</>}
-          </p>
-          {template.professional_address && (
-            <p className="text-xs text-muted-foreground">{template.professional_address}</p>
-          )}
+        </div>
+
+        {/* Contratada (Profissional) */}
+        <div className="border rounded-xl p-4 bg-card space-y-1">
+          <h2 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider">Contratada (Profissional)</h2>
+          <p className="text-sm"><strong>{template.professional_name || "—"}</strong></p>
+          {template.professional_crp && <p className="text-sm text-muted-foreground">CRP: {template.professional_crp}</p>}
+          {template.professional_cpf && <p className="text-sm text-muted-foreground">CPF: {template.professional_cpf}</p>}
+          {template.professional_address && <p className="text-sm text-muted-foreground">Endereço: {template.professional_address}</p>}
+          {template.professional_email && <p className="text-sm text-muted-foreground">E-mail: {template.professional_email}</p>}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
