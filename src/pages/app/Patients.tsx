@@ -631,7 +631,7 @@ const Patients = () => {
 
       {/* Padesky Formulation Dialog */}
       <Dialog open={!!padeksyPatient} onOpenChange={(o) => !o && setPadeksyPatient(null)}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto [&_textarea]:scroll-mt-24 [&_input]:scroll-mt-24">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto [&_textarea]:scroll-mt-24 [&_input]:scroll-mt-24">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{padeksyPatient?.full_name}</DialogTitle>
             <DialogDescription>Formulação de Caso — Modelo Padesky</DialogDescription>
