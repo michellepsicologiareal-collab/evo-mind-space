@@ -135,6 +135,7 @@ export default function ContratoModelo() {
       if (data) {
         setTemplateId(data.id);
         setProfessionalName(data.professional_name);
+        setProfessionalCrp((data as any).professional_crp ?? "");
         setProfessionalCpf(data.professional_cpf);
         setProfessionalAddress(data.professional_address);
         setProfessionalEmail(data.professional_email);
