@@ -726,7 +726,7 @@ const Dashboard = () => {
         </section>
 
         {/* ── Gráfico de Pizza: Frequência de Atendimentos ── */}
-        <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 relative overflow-hidden">
+        <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 relative">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-lilac via-accent/60 to-transparent" />
           <div className="flex items-center gap-2 mb-4">
             <CalendarRange className="h-5 w-5 text-lilac" />
