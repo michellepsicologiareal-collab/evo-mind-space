@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { Save, RotateCcw, Loader2, AlertTriangle } from "lucide-react";
+import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,23 @@ interface Patient {
   full_name: string;
 }
 
+interface SavedRecord {
+  id: string;
+  patient_id: string;
+  session_date: string;
+  session_number: number | null;
+  modality: string;
+  duration_minutes: number;
+  chief_complaint: string;
+  themes: string[];
+  clinical_observations: string;
+  next_session_plan: string;
+  engagement: number | null;
+  risk_indicator: string;
+  private_notes: string;
+  created_at: string;
+}
+
 const emptyForm = {
   patient_id: "",
   session_date: format(new Date(), "yyyy-MM-dd"),
@@ -65,7 +82,25 @@ const RegistroSessao = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [polishing, setPolishing] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Saved records
+  const [records, setRecords] = useState<SavedRecord[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyFilter, setHistoryFilter] = useState("");
+
+  const loadRecords = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("session_records")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("session_date", { ascending: false })
+      .limit(50);
+    setRecords((data as SavedRecord[]) ?? []);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -76,9 +111,10 @@ const RegistroSessao = () => {
         .eq("is_active", true)
         .order("full_name");
       setPatients(data ?? []);
+      await loadRecords();
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, loadRecords]);
 
   const toggleTheme = useCallback((theme: string) => {
     setForm((prev) => ({
@@ -91,6 +127,7 @@ const RegistroSessao = () => {
 
   const handleClear = () => {
     setForm({ ...emptyForm });
+    setEditingId(null);
   };
 
   const handleSave = async () => {
@@ -101,7 +138,7 @@ const RegistroSessao = () => {
     }
 
     setSaving(true);
-    const { error } = await supabase.from("session_records").insert({
+    const payload = {
       user_id: user.id,
       patient_id: form.patient_id,
       session_date: form.session_date,
@@ -115,7 +152,11 @@ const RegistroSessao = () => {
       engagement: form.engagement,
       risk_indicator: form.risk_indicator,
       private_notes: form.private_notes,
-    });
+    };
+
+    const { error } = editingId
+      ? await supabase.from("session_records").update(payload).eq("id", editingId)
+      : await supabase.from("session_records").insert(payload);
     setSaving(false);
 
     if (error) {
@@ -124,9 +165,91 @@ const RegistroSessao = () => {
       return;
     }
 
-    toast.success("Registro salvo com sucesso.");
+    toast.success(editingId ? "Registro atualizado." : "Registro salvo com sucesso.");
     handleClear();
+    loadRecords();
   };
+
+  const handlePolish = async () => {
+    const hasText = form.chief_complaint || form.clinical_observations || form.next_session_plan || form.private_notes;
+    if (!hasText) {
+      toast.error("Preencha pelo menos um campo de texto antes de usar a IA.");
+      return;
+    }
+
+    setPolishing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("polish-session-text", {
+        body: {
+          chief_complaint: form.chief_complaint,
+          clinical_observations: form.clinical_observations,
+          next_session_plan: form.next_session_plan,
+          private_notes: form.private_notes,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      const result = data?.result;
+      if (result) {
+        setForm((prev) => ({
+          ...prev,
+          chief_complaint: result.chief_complaint ?? prev.chief_complaint,
+          clinical_observations: result.clinical_observations ?? prev.clinical_observations,
+          next_session_plan: result.next_session_plan ?? prev.next_session_plan,
+          private_notes: result.private_notes ?? prev.private_notes,
+        }));
+        toast.success("Textos revisados pela IA com sucesso.");
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Erro ao processar com IA.");
+    } finally {
+      setPolishing(false);
+    }
+  };
+
+  const openEdit = (r: SavedRecord) => {
+    setEditingId(r.id);
+    setForm({
+      patient_id: r.patient_id,
+      session_date: r.session_date,
+      session_number: r.session_number?.toString() ?? "",
+      modality: r.modality,
+      duration_minutes: r.duration_minutes,
+      chief_complaint: r.chief_complaint ?? "",
+      themes: r.themes ?? [],
+      clinical_observations: r.clinical_observations ?? "",
+      next_session_plan: r.next_session_plan ?? "",
+      engagement: r.engagement ?? 3,
+      risk_indicator: r.risk_indicator ?? "none",
+      private_notes: r.private_notes ?? "",
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Excluir este registro de sessão?")) return;
+    const { error } = await supabase.from("session_records").delete().eq("id", id);
+    if (error) {
+      toast.error("Erro ao excluir.");
+      return;
+    }
+    toast.success("Registro excluído.");
+    if (editingId === id) handleClear();
+    loadRecords();
+  };
+
+  const getPatientName = (id: string) => patients.find((p) => p.id === id)?.full_name ?? "—";
+
+  const filteredRecords = historyFilter && historyFilter !== "all"
+    ? records.filter((r) => r.patient_id === historyFilter)
+    : records;
 
   if (loading) {
     return (
@@ -143,7 +266,7 @@ const RegistroSessao = () => {
           Registro de Sessão
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Documente os dados clínicos da sessão realizada.
+          {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
         </p>
       </div>
 
@@ -370,15 +493,41 @@ const RegistroSessao = () => {
         </div>
       </section>
 
+      {/* ── Seção 5: IA — Revisão de texto ── */}
+      <section className="rounded-2xl border border-primary/20 bg-primary/5 p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-primary" />
+          <h2 className="font-display text-base font-semibold text-foreground">
+            Revisão com IA
+          </h2>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          A IA revisa ortografia, gramática e clareza dos textos clínicos sem alterar o conteúdo.
+        </p>
+        <Button
+          variant="outline"
+          className="w-full border-primary/30 text-primary hover:bg-primary/10"
+          onClick={handlePolish}
+          disabled={polishing}
+        >
+          {polishing ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : (
+            <Sparkles className="h-4 w-4 mr-2" />
+          )}
+          {polishing ? "Revisando..." : "Revisar textos com IA"}
+        </Button>
+      </section>
+
       {/* ── Ações ── */}
-      <div className="flex flex-col sm:flex-row gap-3 pb-8">
+      <div className="flex flex-col sm:flex-row gap-3">
         <Button
           variant="outline"
           className="flex-1"
           onClick={handleClear}
         >
           <RotateCcw className="h-4 w-4 mr-2" />
-          Limpar
+          {editingId ? "Cancelar edição" : "Limpar"}
         </Button>
         <Button
           variant="accent"
@@ -391,9 +540,121 @@ const RegistroSessao = () => {
           ) : (
             <Save className="h-4 w-4 mr-2" />
           )}
-          Salvar registro
+          {editingId ? "Atualizar registro" : "Salvar registro"}
         </Button>
       </div>
+
+      {/* ── Histórico de registros ── */}
+      <section className="rounded-2xl border border-border bg-card overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowHistory(!showHistory)}
+          className="w-full flex items-center justify-between p-5 hover:bg-muted/30 transition-colors"
+        >
+          <h2 className="font-display text-base font-semibold text-foreground">
+            Registros salvos ({records.length})
+          </h2>
+          {showHistory ? (
+            <ChevronUp className="h-5 w-5 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-5 w-5 text-muted-foreground" />
+          )}
+        </button>
+
+        {showHistory && (
+          <div className="border-t border-border">
+            {records.length > 0 && (
+              <div className="p-4 pb-0">
+                <Select value={historyFilter} onValueChange={setHistoryFilter}>
+                  <SelectTrigger className="max-w-xs">
+                    <SelectValue placeholder="Filtrar por paciente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os pacientes</SelectItem>
+                    {patients.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {filteredRecords.length === 0 ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                Nenhum registro salvo ainda. Preencha o formulário acima e clique em "Salvar registro".
+              </div>
+            ) : (
+              <ul className="divide-y divide-border">
+                {filteredRecords.map((r) => (
+                  <li key={r.id} className="p-4 hover:bg-muted/20 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-sm text-foreground">
+                            {getPatientName(r.patient_id)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(r.session_date), "dd/MM/yyyy")}
+                          </span>
+                          {r.session_number && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                              Sessão {r.session_number}
+                            </span>
+                          )}
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
+                            {r.modality}
+                          </span>
+                        </div>
+                        {r.chief_complaint && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {r.chief_complaint}
+                          </p>
+                        )}
+                        {r.themes.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {r.themes.map((t) => (
+                              <span
+                                key={t}
+                                className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary"
+                              >
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => openEdit(r)}
+                          title="Editar"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(r.id)}
+                          title="Excluir"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </section>
+
+      <div className="pb-8" />
     </div>
   );
 };
