@@ -118,8 +118,8 @@ const currentMonthEnd = () => endOfMonth(new Date());
 /* ── component ── */
 const Dashboard = () => {
   const { user } = useAuth();
-  const [period, setPeriod] = useState<PeriodKey>("month_0");
-  const periodOptions = useMemo(buildPeriodOptions, []);
+  const [dateFrom, setDateFrom] = useState<Date>(currentMonthStart());
+  const [dateTo, setDateTo] = useState<Date>(currentMonthEnd());
   const [stats, setStats] = useState<Stats>({
     activePatients: 0,
     todaySessions: 0,
