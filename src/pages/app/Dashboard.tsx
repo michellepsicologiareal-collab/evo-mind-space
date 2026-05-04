@@ -598,9 +598,9 @@ const Dashboard = () => {
 
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard
-            icon={TrendingUp}
-            label={`Faturamento — ${periodLabel}`}
-            value={hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(2).replace(".", ",")}`}
+            icon={CalendarClock}
+            label={`Receita Prevista — ${periodLabel}`}
+            value={hideRevenue ? "•••••" : `R$ ${stats.previstoRevenue.toFixed(2).replace(".", ",")}`}
             action={
               <button
                 onClick={() => setHideRevenue(!hideRevenue)}
@@ -610,8 +610,14 @@ const Dashboard = () => {
                 {hideRevenue ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
               </button>
             }
+            tooltip={`Receita prevista: soma de todas as ${stats.previstos} sessões não canceladas no período.`}
+          />
+          <KPICard
+            icon={TrendingUp}
+            label={`Faturado (Realizado) — ${periodLabel}`}
+            value={hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(2).replace(".", ",")}`}
             highlight
-            tooltip="Soma dos valores de todas as sessões concluídas no mês atual (exceto despesas)."
+            tooltip="Soma dos valores de todas as sessões concluídas no período."
           />
           <KPICard
             icon={Banknote}
