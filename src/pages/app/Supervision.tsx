@@ -232,7 +232,7 @@ const Supervision = () => {
   const toggleExpand = (id: string) =>
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const filterPatients = (list: Patient[], f: "active" | "inactive" | "all") =>
+  const filterPatients = (list: PatientListItem[], f: "active" | "inactive" | "all") =>
     list.filter((p) => (f === "all" ? true : f === "active" ? p.is_active : !p.is_active));
 
   const totalShared = supervisees.reduce((s, r) => s + r.patients.length, 0);
