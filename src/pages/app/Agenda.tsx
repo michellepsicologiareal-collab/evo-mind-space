@@ -326,20 +326,18 @@ const Agenda = () => {
     const intervalDays = form.recurrence_interval === "biweekly" ? 14 : 7;
 
     const isSinglePayment = isRecurring && form.payment_plan === "single_payment";
-    const totalPrice = unitPrice ? unitPrice * totalSessions : null;
+    const groupId = isSinglePayment ? crypto.randomUUID().slice(0, 8) : null;
 
     const sessionsToInsert = [];
     for (let i = 0; i < totalSessions; i++) {
       const scheduledAt = addDays(baseDate, i * intervalDays);
       const planLabel = isRecurring
-        ? `Plano ${totalSessions} sess\u00f5es (${i + 1}/${totalSessions})${isSinglePayment ? " \u2014 Pgto \u00fanico" : " \u2014 Pgto por sess\u00e3o"}`
+        ? `Plano ${totalSessions} sess\u00f5es (${i + 1}/${totalSessions})${isSinglePayment ? ` \u2014 Pgto \u00fanico [${groupId}]` : " \u2014 Pgto por sess\u00e3o"}`
         : null;
       const noteText = [parsed.data.notes, planLabel].filter(Boolean).join("\n");
 
-      // Single payment: first session carries full total, rest are R$0 + already paid
-      const sessionPrice = isSinglePayment
-        ? (i === 0 ? totalPrice : 0)
-        : unitPrice;
+      // All sessions carry the unit price — the total is computed when displaying
+      const sessionPrice = unitPrice;
       const sessionPaymentStatus = "pending";
 
       sessionsToInsert.push({
