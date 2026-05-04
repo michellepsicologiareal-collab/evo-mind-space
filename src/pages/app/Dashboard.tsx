@@ -648,7 +648,7 @@ const Dashboard = () => {
           <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent" />
             <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
-              Faturamento — {format(new Date(), "MMMM", { locale: ptBR })}
+              Faturamento — {periodLabel}
             </p>
             <p className="font-display text-3xl font-bold text-foreground">
               {hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`}
