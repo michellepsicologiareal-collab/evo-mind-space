@@ -497,19 +497,52 @@ const Dashboard = () => {
         </header>
 
         {/* ── Period Filter ── */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium text-muted-foreground">Período:</span>
-          <Select value={period} onValueChange={(v) => setPeriod(v)}>
-            <SelectTrigger className="w-[220px] h-9 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {periodOptions.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-2 text-sm">
+                <CalendarDays className="h-3.5 w-3.5" />
+                {format(dateFrom, "dd/MM/yyyy")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dateFrom}
+                onSelect={(d) => d && setDateFrom(startOfDay(d))}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          <span className="text-sm text-muted-foreground">até</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-2 text-sm">
+                <CalendarDays className="h-3.5 w-3.5" />
+                {format(dateTo, "dd/MM/yyyy")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dateTo}
+                onSelect={(d) => d && setDateTo(endOfDay(d))}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-accent"
+            onClick={() => { setDateFrom(currentMonthStart()); setDateTo(currentMonthEnd()); }}
+          >
+            Mês atual
+          </Button>
         </div>
 
         {/* ── KPI Cards ── */}
