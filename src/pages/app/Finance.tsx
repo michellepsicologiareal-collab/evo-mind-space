@@ -114,15 +114,11 @@ const Finance = () => {
   const monthStart = useMemo(() => startOfMonth(monthCursor), [monthCursor]);
   const monthEnd = useMemo(() => endOfMonth(monthCursor), [monthCursor]);
 
-  // Extra rows: sessions paid in this month but scheduled outside it (pre-paid packages)
-  const [paidElsewhereRows, setPaidElsewhereRows] = useState<Row[]>([]);
-
   const load = async () => {
     if (!user) return;
     setLoading(true);
     const selectCols = "id, scheduled_at, status, payment_status, payment_method, payment_reference, price, paid_at, is_expense, session_type, patient:patients!sessions_patient_id_fkey(full_name), service:services(name)";
 
-    // 1) Sessions scheduled this month (main view)
     const { data, error } = await supabase
       .from("sessions")
       .select(selectCols)
@@ -131,23 +127,12 @@ const Finance = () => {
       .lte("scheduled_at", monthEnd.toISOString())
       .order("scheduled_at", { ascending: false });
 
-    // 2) Sessions paid this month but scheduled OUTSIDE this month (pre-paid packages)
-    const { data: paidData } = await supabase
-      .from("sessions")
-      .select(selectCols)
-      .eq("user_id", user.id)
-      .eq("payment_status", "paid")
-      .gte("paid_at", monthStart.toISOString())
-      .lte("paid_at", monthEnd.toISOString())
-      .or(`scheduled_at.lt.${monthStart.toISOString()},scheduled_at.gt.${monthEnd.toISOString()}`);
-
     if (error) {
       toast.error("Erro ao carregar dados financeiros.");
       setLoading(false);
       return;
     }
     setRows((data ?? []) as any);
-    setPaidElsewhereRows((paidData ?? []) as any);
     setLoading(false);
   };
 
