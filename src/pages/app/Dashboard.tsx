@@ -424,7 +424,7 @@ const Dashboard = () => {
         .eq("user_id", user.id)
         .not("mood_score", "is", null)
         .order("recorded_at", { ascending: false })
-        .limit(10);
+        .limit(100);
 
       if (recentMoods && recentMoods.length > 0) {
         const pIds = [...new Set(recentMoods.map((m: any) => m.patient_id))];
