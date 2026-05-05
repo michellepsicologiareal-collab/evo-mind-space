@@ -101,6 +101,17 @@ interface AdminPatient {
   last_session_status: string | null;
 }
 
+/** Gera iniciais a partir do nome completo (ex: "Maria Silva" → "M.S.") */
+const toInitials = (name: string): string => {
+  if (!name) return "—";
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0].toUpperCase())
+    .join(".")
+    .concat(".");
+};
+
 interface AuditLog {
   id: string;
   user_id: string;
@@ -213,8 +224,6 @@ const Admin = () => {
       const q = search.toLowerCase();
       list = list.filter(
         (p) =>
-          p.full_name.toLowerCase().includes(q) ||
-          (p.email ?? "").toLowerCase().includes(q) ||
           p.therapist_name.toLowerCase().includes(q) ||
           (p.supervisor_name ?? "").toLowerCase().includes(q)
       );
@@ -571,7 +580,6 @@ const Admin = () => {
                             <th className="pb-2 pr-3 font-medium text-center">Evoluções</th>
                             <th className="pb-2 pr-3 font-medium">Última sessão</th>
                             <th className="pb-2 pr-3 font-medium">Status sessão</th>
-                            <th className="pb-2 pr-3 font-medium">Queixa</th>
                             <th className="pb-2 pr-3 font-medium">Compartilhado</th>
                             <th className="pb-2 font-medium">Status</th>
                           </tr>
@@ -579,7 +587,7 @@ const Admin = () => {
                         <tbody>
                           {group.patients.map((p) => (
                             <tr key={p.id} className="border-b border-border/30 hover:bg-muted/30 transition-colors">
-                              <td className="py-2.5 pr-3 font-medium text-foreground whitespace-nowrap">{p.full_name}</td>
+                              <td className="py-2.5 pr-3 font-medium text-foreground whitespace-nowrap">{toInitials(p.full_name)}</td>
                               <td className="py-2.5 pr-3 text-sm text-muted-foreground whitespace-nowrap">{p.therapist_name}</td>
                               <td className="py-2.5 pr-3">
                                 <span className="px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground capitalize">
@@ -610,9 +618,6 @@ const Admin = () => {
                                     {SESSION_STATUS_LABELS[p.last_session_status] ?? p.last_session_status}
                                   </span>
                                 ) : "—"}
-                              </td>
-                              <td className="py-2.5 pr-3 text-xs text-muted-foreground max-w-[160px] truncate" title={p.chief_complaint ?? ""}>
-                                {p.chief_complaint || "—"}
                               </td>
                               <td className="py-2.5 pr-3 text-center">
                                 {p.shared_with_supervisor ? (
