@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
 
   const checkApproval = async (userId: string) => {
+    // Try RPC first, then direct query — never throw
     try {
       const { data: ensuredProfile, error: ensureError } = await withTimeout(
         (supabase as any).rpc("ensure_current_profile")
@@ -53,8 +54,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsApproved(Boolean(ensuredProfile[0].is_approved));
         return;
       }
-    } catch (error) {
-      console.warn("Validação inicial do perfil demorou demais; tentando consulta direta.", error);
+    } catch {
+      // silent — fall through to direct query
     }
 
     try {
@@ -66,17 +67,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .maybeSingle()
       ) as SupabaseResult<{ is_approved: boolean }>;
 
-      if (error) {
-        console.warn("Não foi possível verificar a aprovação do perfil:", error.message);
-        setIsApproved(false);
+      if (!error && data) {
+        setIsApproved(data.is_approved ?? false);
         return;
       }
-
-      setIsApproved(data?.is_approved ?? false);
-    } catch (error) {
-      console.warn("Falha ao verificar aprovação do perfil:", error);
-      setIsApproved(false);
+    } catch {
+      // silent
     }
+
+    // If both fail, default to false (unapproved) — don't throw
+    console.warn("Não foi possível verificar aprovação; assumindo não aprovado.");
+    setIsApproved(false);
   };
 
   useEffect(() => {
