@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2 } from "lucide-react";
+import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
+
+const DRAFT_KEY = "rascunho_registro_sessao";
 
 const THEME_CHIPS = [
   "Ansiedade",
@@ -77,6 +80,19 @@ const emptyForm = {
   private_notes: "",
 };
 
+type FormState = typeof emptyForm;
+
+function hasMeaningfulData(f: FormState): boolean {
+  return !!(
+    f.patient_id ||
+    f.chief_complaint.trim() ||
+    f.clinical_observations.trim() ||
+    f.next_session_plan.trim() ||
+    f.private_notes.trim() ||
+    f.themes.length > 0
+  );
+}
+
 const RegistroSessao = () => {
   const { user } = useAuth();
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -85,11 +101,43 @@ const RegistroSessao = () => {
   const [polishing, setPolishing] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftRestored, setDraftRestored] = useState(false);
 
   // Saved records
   const [records, setRecords] = useState<SavedRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [historyFilter, setHistoryFilter] = useState("");
+
+  // --- Draft auto-save ---
+  useEffect(() => {
+    if (editingId) return; // don't save draft when editing existing record
+    if (hasMeaningfulData(form)) {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+    }
+  }, [form, editingId]);
+
+  const clearDraft = useCallback(() => {
+    localStorage.removeItem(DRAFT_KEY);
+    setDraftRestored(false);
+  }, []);
+
+  // Restore draft on mount (only for new records)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as FormState;
+        if (hasMeaningfulData(saved)) {
+          setForm(saved);
+          setDraftRestored(true);
+          toast.info("Rascunho recuperado. Continue de onde parou.");
+        }
+      }
+    } catch {
+      localStorage.removeItem(DRAFT_KEY);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadRecords = useCallback(async () => {
     if (!user) return;
@@ -126,6 +174,7 @@ const RegistroSessao = () => {
   }, []);
 
   const handleClear = () => {
+    clearDraft();
     setForm({ ...emptyForm });
     setEditingId(null);
   };
@@ -166,7 +215,9 @@ const RegistroSessao = () => {
     }
 
     toast.success(editingId ? "Registro atualizado." : "Registro salvo com sucesso.");
-    handleClear();
+    clearDraft();
+    setForm({ ...emptyForm });
+    setEditingId(null);
     loadRecords();
   };
 
@@ -216,6 +267,7 @@ const RegistroSessao = () => {
 
   const openEdit = (r: SavedRecord) => {
     setEditingId(r.id);
+    setDraftRestored(false);
     setForm({
       patient_id: r.patient_id,
       session_date: r.session_date,
@@ -269,6 +321,24 @@ const RegistroSessao = () => {
           {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
         </p>
       </div>
+
+      {/* Draft restored banner */}
+      {draftRestored && !editingId && (
+        <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
+          <span>Rascunho recuperado. Continue de onde parou.</span>
+          <button
+            type="button"
+            onClick={() => {
+              clearDraft();
+              setForm({ ...emptyForm });
+            }}
+            className="ml-3 flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium hover:bg-primary/10 transition-colors"
+          >
+            <X className="h-3 w-3" />
+            Descartar
+          </button>
+        </div>
+      )}
 
       {/* ── Seção 1: Identificação ── */}
       <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
