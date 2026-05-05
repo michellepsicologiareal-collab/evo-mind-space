@@ -312,6 +312,7 @@ const Agenda = () => {
       payment_method: "none", payment_reference: "", mood_score: "", progress_note: "",
       recurrence: "single", recurrence_count: 4, recurrence_interval: "weekly",
       payment_plan: "per_session", service_id: "",
+      modality: "presencial", meeting_link: "",
     });
     newGuard.resetDirty();
     setOpen(true);
@@ -570,6 +571,8 @@ const Agenda = () => {
       payment_plan: "per_session",
       date: format(scheduledDate, "yyyy-MM-dd"),
       time: format(scheduledDate, "HH:mm"),
+      modality: (s as any).modality ?? "presencial",
+      meeting_link: (s as any).meeting_link ?? "",
     });
     editGuard.resetDirty();
     setEditOpen(true);
