@@ -62,7 +62,7 @@ const Auth = () => {
       return;
     }
 
-    if (user) navigate("/app", { replace: true });
+    if (user) navigate(returnUrlRef.current || "/app", { replace: true });
   }, [user, navigate, searchParams, setSearchParams]);
 
   const handleSignIn = async (e: React.FormEvent) => {
