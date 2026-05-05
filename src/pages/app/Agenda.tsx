@@ -996,7 +996,6 @@ const Agenda = () => {
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="clinical">Atendimento Clínico</SelectItem>
-                      <SelectItem value="supervision">Supervisão</SelectItem>
                       {services.length > 0 && services.map(svc => (
                         <SelectItem key={svc.id} value={svc.id}>
                           {svc.name}
@@ -1562,7 +1561,7 @@ const Agenda = () => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="clinical">Atendimento Clínico</SelectItem>
-                  <SelectItem value="supervision">Supervisão</SelectItem>
+                  
                   {services.length > 0 && services.map(svc => (
                     <SelectItem key={svc.id} value={svc.id}>
                       {svc.name}
