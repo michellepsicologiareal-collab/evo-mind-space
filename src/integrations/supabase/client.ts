@@ -4,6 +4,7 @@ import type { Database } from './types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const AUTH_STORAGE_KEY = `sb-${new URL(SUPABASE_URL).hostname.split(".")[0]}-auth-token`;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +12,7 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
+    storageKey: AUTH_STORAGE_KEY,
     persistSession: true,
     autoRefreshToken: true,
   }
