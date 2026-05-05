@@ -116,6 +116,17 @@ const RegistroSessao = () => {
     }
   }, [form, editingId]);
 
+  // Warn on browser close/refresh with unsaved data
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasMeaningfulData(form)) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [form]);
+
   const clearDraft = useCallback(() => {
     localStorage.removeItem(DRAFT_KEY);
     setDraftRestored(false);
