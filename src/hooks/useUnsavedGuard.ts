@@ -39,6 +39,14 @@ export function useUnsavedGuard() {
     pendingClose.current = null;
   }, []);
 
+  /** User chose "save draft and leave" — keeps localStorage intact */
+  const saveDraftAndLeave = useCallback(() => {
+    setConfirmOpen(false);
+    setDirty(false);
+    pendingClose.current?.();
+    pendingClose.current = null;
+  }, []);
+
   /** User chose "continue editing" */
   const cancelLeave = useCallback(() => {
     setConfirmOpen(false);
