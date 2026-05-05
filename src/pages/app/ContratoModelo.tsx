@@ -292,6 +292,18 @@ export default function ContratoModelo() {
         </div>
       </div>
 
+      {draftRestored && (
+        <div className="rounded-lg bg-accent/20 border border-accent/30 px-3 py-2 text-sm text-muted-foreground flex items-center justify-between gap-2">
+          <span>📝 Rascunho recuperado. Continue de onde parou.</span>
+          <Button variant="ghost" size="sm" className="h-auto py-1 px-2 text-xs" onClick={() => {
+            clearDraft();
+            setProfessionalName(""); setProfessionalCrp(""); setProfessionalCpf("");
+            setProfessionalAddress(""); setProfessionalEmail(""); setLgpdClause(DEFAULT_LGPD);
+            setClauses(DEFAULT_CLAUSES);
+          }}>Descartar</Button>
+        </div>
+      )}
+
       {/* Link card - prominent */}
       {publicLink ? (
         <Card className="rounded-2xl border-accent/30 bg-accent/5">
