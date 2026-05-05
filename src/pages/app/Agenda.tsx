@@ -362,6 +362,8 @@ const Agenda = () => {
         discussed_patient_id: isSupervision && parsed.data.discussed_patient_id ? parsed.data.discussed_patient_id : null,
         is_expense: isSupervision,
         service_id: form.service_id || null,
+        modality: form.modality,
+        meeting_link: form.modality === "online" && form.meeting_link.trim() ? form.meeting_link.trim() : null,
       } as any);
     }
 
