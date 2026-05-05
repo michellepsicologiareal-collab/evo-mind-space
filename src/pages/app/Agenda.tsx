@@ -963,7 +963,7 @@ const Agenda = () => {
           <h1 className="font-display text-4xl font-medium">Agenda</h1>
           <p className="mt-2 text-muted-foreground">Visualize e organize seus atendimentos.</p>
         </div>
-        <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }); } else { setOpen(true); } }}>
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
             <Button variant="accent" onClick={() => openNew()}>
               <Plus className="h-4 w-4" /> Nova sessão
@@ -1171,7 +1171,7 @@ const Agenda = () => {
                   </div>
                 )}
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); })}>Cancelar</Button>
+                  <Button type="button" variant="outline" onClick={() => newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false))}>Cancelar</Button>
                   <Button type="submit" variant="accent" disabled={saving}>
                     {saving && <Loader2 className="h-4 w-4 animate-spin" />} Agendar
                   </Button>
@@ -1529,7 +1529,7 @@ const Agenda = () => {
       </div>
 
       {/* ── Edit Session Dialog ── */}
-      <Dialog open={editOpen} onOpenChange={(v) => { if (!v) { editGuard.guardClose(() => setEditOpen(false)); } else { setEditOpen(true); } }}>
+      <Dialog open={editOpen} onOpenChange={(v) => { if (!v) { editGuard.guardClose(() => setEditOpen(false), () => setEditOpen(false)); } else { setEditOpen(true); } }}>
         <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">Editar sessão</DialogTitle>
@@ -1969,8 +1969,8 @@ const Agenda = () => {
           </Tabs>
         </SheetContent>
       </Sheet>
-      <UnsavedGuardDialog open={newGuard.confirmOpen} onConfirm={newGuard.confirmLeave} onCancel={newGuard.cancelLeave} />
-      <UnsavedGuardDialog open={editGuard.confirmOpen} onConfirm={editGuard.confirmLeave} onCancel={editGuard.cancelLeave} />
+      <UnsavedGuardDialog open={newGuard.confirmOpen} onConfirm={newGuard.confirmLeave} onCancel={newGuard.cancelLeave} onSaveDraft={newGuard.saveDraftAndLeave} />
+      <UnsavedGuardDialog open={editGuard.confirmOpen} onConfirm={editGuard.confirmLeave} onCancel={editGuard.cancelLeave} onSaveDraft={editGuard.saveDraftAndLeave} />
     </div>
   );
 };

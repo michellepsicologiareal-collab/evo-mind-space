@@ -355,7 +355,7 @@ const Patients = () => {
           <h1 className="font-display text-4xl font-medium">Pacientes</h1>
           <p className="mt-2 text-muted-foreground">Gerencie quem está sob seus cuidados.</p>
         </div>
-        <Dialog open={open} onOpenChange={(v) => { if (!v) { patientGuard.guardClose(() => { if (!editing) clearDraft(); setOpen(false); }); } else { setOpen(true); } }}>
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { patientGuard.guardClose(() => { if (!editing) clearDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
             <Button variant="accent" className="min-h-[44px]" onClick={openNew}>
               <Plus className="h-4 w-4" /> Novo paciente
@@ -527,7 +527,7 @@ const Patients = () => {
                 <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
               <DialogFooter className="gap-2">
-                <Button type="button" variant="outline" className="min-h-[44px]" onClick={() => patientGuard.guardClose(() => { if (!editing) clearDraft(); setOpen(false); })}>Cancelar</Button>
+                <Button type="button" variant="outline" className="min-h-[44px]" onClick={() => patientGuard.guardClose(() => { if (!editing) clearDraft(); setOpen(false); }, () => setOpen(false))}>Cancelar</Button>
                 <Button type="submit" variant="accent" className="min-h-[44px]" disabled={saving}>
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                   {editing ? "Salvar" : "Cadastrar"}
@@ -697,7 +697,7 @@ const Patients = () => {
       </Dialog>
 
       <PremiumGate open={gateOpen} onOpenChange={setGateOpen} />
-      <UnsavedGuardDialog open={patientGuard.confirmOpen} onConfirm={patientGuard.confirmLeave} onCancel={patientGuard.cancelLeave} />
+      <UnsavedGuardDialog open={patientGuard.confirmOpen} onConfirm={patientGuard.confirmLeave} onCancel={patientGuard.cancelLeave} onSaveDraft={patientGuard.saveDraftAndLeave} />
     </div>
   );
 };
