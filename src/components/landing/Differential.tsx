@@ -1,3 +1,5 @@
+import mockupEmocoes from "@/assets/mockup-emocoes.png";
+
 export const Differential = () => {
   return (
     <section id="diferencial" className="py-24 lg:py-32 bg-background">
@@ -32,6 +34,19 @@ export const Differential = () => {
                 </p>
                 <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-accent/40 blur-2xl" />
               </div>
+            </div>
+          </div>
+
+          {/* Mockup image */}
+          <div className="lg:col-span-7 animate-fade-up">
+            <div className="relative">
+              <div className="absolute -inset-6 bg-gradient-to-tr from-accent/8 via-primary/5 to-transparent rounded-[2.5rem] blur-2xl" aria-hidden />
+              <img
+                src={mockupEmocoes}
+                alt="Painel de emoções dos pacientes com monitoramento de humor"
+                className="relative w-full rounded-2xl shadow-elegant"
+                loading="lazy"
+              />
             </div>
           </div>
         </div>
