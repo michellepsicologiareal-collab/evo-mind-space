@@ -144,8 +144,10 @@ const Agenda = () => {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [patientMonthCount, setPatientMonthCount] = useState<{ count: number; dates: string[] } | null>(null);
+  const DRAFT_SESSION_KEY = "rascunho_nova_sessao";
   const newGuard = useUnsavedGuard();
-  const [form, setFormRaw] = useState({
+  const [draftRestored, setDraftRestored] = useState(false);
+  const emptySessionForm = {
     session_type: "clinical" as SessionType,
     patient_id: "", discussed_patient_id: "",
     date: format(new Date(), "yyyy-MM-dd"), time: "09:00",
@@ -158,8 +160,22 @@ const Agenda = () => {
     service_id: "" as string,
     modality: "presencial" as "presencial" | "online",
     meeting_link: "",
-  });
+  };
+  const [form, setFormRaw] = useState(emptySessionForm);
   const setForm: typeof setFormRaw = useCallback((v) => { newGuard.markDirty(); setFormRaw(v); }, [newGuard.markDirty]);
+
+  // Auto-save draft to localStorage (only for new session, not editing)
+  useEffect(() => {
+    if (!open || editOpen) return;
+    if (form.patient_id || form.notes || form.price) {
+      try { localStorage.setItem(DRAFT_SESSION_KEY, JSON.stringify(form)); } catch {}
+    }
+  }, [form, open, editOpen]);
+
+  const clearSessionDraft = useCallback(() => {
+    try { localStorage.removeItem(DRAFT_SESSION_KEY); } catch {}
+    setDraftRestored(false);
+  }, []);
 
   // Edit session
   const [editOpen, setEditOpen] = useState(false);
