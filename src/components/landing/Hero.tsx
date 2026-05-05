@@ -30,7 +30,7 @@ export const Hero = () => {
 
           <div className="mt-10 flex flex-wrap gap-4">
             <Button variant="hero" size="xl" asChild>
-              <a href="/login?tab=signup">
+              <a href="/auth?tab=signup">
                 Começar meus 14 dias grátis <ArrowRight className="ml-1" />
               </a>
             </Button>
