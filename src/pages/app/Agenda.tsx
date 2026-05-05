@@ -907,7 +907,7 @@ const Agenda = () => {
               <a href={(s as any).meeting_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
                 <Link2 className="h-2.5 w-2.5" /> Entrar
               </a>
-            )
+            )}
             {!isSupervisionCard && s.price != null && (
               <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full border", paymentStatusClass[s.payment_status])}>
                 {paymentStatusLabel[s.payment_status]}
