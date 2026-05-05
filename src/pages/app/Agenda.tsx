@@ -894,6 +894,20 @@ const Agenda = () => {
             <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full", isSupervisionCard ? "bg-serene/20 text-serene" : statusClass[s.status])}>
               {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
             </span>
+            {(s as any).modality === "online" ? (
+              <span className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                <Video className="h-2.5 w-2.5" /> Online
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                <MapPin className="h-2.5 w-2.5" /> Presencial
+              </span>
+            )}
+            {(s as any).modality === "online" && (s as any).meeting_link && (
+              <a href={(s as any).meeting_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+                <Link2 className="h-2.5 w-2.5" /> Entrar
+              </a>
+            )
             {!isSupervisionCard && s.price != null && (
               <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full border", paymentStatusClass[s.payment_status])}>
                 {paymentStatusLabel[s.payment_status]}
