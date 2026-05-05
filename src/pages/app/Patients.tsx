@@ -95,8 +95,26 @@ const Patients = () => {
   const patientGuard = useUnsavedGuard();
   const [latestSessionDates, setLatestSessionDates] = useState<Record<string, string>>({});
 
-  const [form, setFormRaw] = useState<{ full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string }>({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55", treatment_start_date: "", treatment_end_date: "", has_psychiatrist: false, psychiatrist_name: "", psychiatrist_phone: "", psychiatrist_phone_ddi: "+55", medications: "" });
-  const setForm = useCallback((v: typeof form | ((prev: typeof form) => typeof form)) => { patientGuard.markDirty(); setFormRaw(v); }, [patientGuard.markDirty]);
+  const DRAFT_KEY = "rascunho_novo_paciente";
+  type FormState = { full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "individual" | "crianca" | "grupo" | "casal"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string };
+  const emptyForm: FormState = { full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55", treatment_start_date: "", treatment_end_date: "", has_psychiatrist: false, psychiatrist_name: "", psychiatrist_phone: "", psychiatrist_phone_ddi: "+55", medications: "" };
+  const [form, setFormRaw] = useState<FormState>(emptyForm);
+  const [draftRestored, setDraftRestored] = useState(false);
+  const setForm = useCallback((v: typeof emptyForm | ((prev: typeof emptyForm) => typeof emptyForm)) => { patientGuard.markDirty(); setFormRaw(v); }, [patientGuard.markDirty]);
+
+  // Auto-save draft to localStorage when form changes (only for new patient, not editing)
+  useEffect(() => {
+    if (!open || editing) return;
+    // Only save if form has meaningful data
+    if (form.full_name || form.email || form.phone || form.notes || form.chief_complaint) {
+      try { localStorage.setItem(DRAFT_KEY, JSON.stringify(form)); } catch {}
+    }
+  }, [form, open, editing]);
+
+  const clearDraft = useCallback(() => {
+    try { localStorage.removeItem(DRAFT_KEY); } catch {}
+    setDraftRestored(false);
+  }, []);
 
   const load = async () => {
     if (!user) return;
@@ -130,7 +148,23 @@ const Patients = () => {
       return;
     }
     setEditing(null);
-    setForm({ full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual" as const, has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55", treatment_start_date: "", treatment_end_date: "", has_psychiatrist: false, psychiatrist_name: "", psychiatrist_phone: "", psychiatrist_phone_ddi: "+55", medications: "" });
+    // Try to restore draft from localStorage
+    let restored = false;
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const draft = JSON.parse(raw) as FormState;
+        if (draft.full_name || draft.email || draft.phone || draft.notes || draft.chief_complaint) {
+          setFormRaw(draft);
+          restored = true;
+          setDraftRestored(true);
+        }
+      }
+    } catch {}
+    if (!restored) {
+      setFormRaw(emptyForm);
+      setDraftRestored(false);
+    }
     patientGuard.resetDirty();
     setOpen(true);
   };
@@ -235,6 +269,7 @@ const Patients = () => {
       return;
     }
     toast.success(editing ? "Paciente atualizado" : "Paciente cadastrado");
+    if (!editing) clearDraft();
     patientGuard.resetDirty();
     setOpen(false);
     load();
@@ -320,7 +355,7 @@ const Patients = () => {
           <h1 className="font-display text-4xl font-medium">Pacientes</h1>
           <p className="mt-2 text-muted-foreground">Gerencie quem está sob seus cuidados.</p>
         </div>
-        <Dialog open={open} onOpenChange={(v) => { if (!v) { patientGuard.guardClose(() => setOpen(false)); } else { setOpen(true); } }}>
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { patientGuard.guardClose(() => { if (!editing) clearDraft(); setOpen(false); }); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
             <Button variant="accent" className="min-h-[44px]" onClick={openNew}>
               <Plus className="h-4 w-4" /> Novo paciente
@@ -331,6 +366,11 @@ const Patients = () => {
               <DialogTitle className="font-display text-2xl">{editing ? "Editar paciente" : "Novo paciente"}</DialogTitle>
               <DialogDescription>Cadastre as informações do paciente.</DialogDescription>
             </DialogHeader>
+            {draftRestored && !editing && (
+              <div className="rounded-lg bg-accent/20 border border-accent/30 px-3 py-2 text-sm text-muted-foreground">
+                📝 Rascunho recuperado. Continue de onde parou.
+              </div>
+            )}
             <form onSubmit={handleSave} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="full_name">Nome completo *</Label>
@@ -486,7 +526,7 @@ const Patients = () => {
                 <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
               <DialogFooter className="gap-2">
-                <Button type="button" variant="outline" className="min-h-[44px]" onClick={() => patientGuard.guardClose(() => setOpen(false))}>Cancelar</Button>
+                <Button type="button" variant="outline" className="min-h-[44px]" onClick={() => patientGuard.guardClose(() => { if (!editing) clearDraft(); setOpen(false); })}>Cancelar</Button>
                 <Button type="submit" variant="accent" className="min-h-[44px]" disabled={saving}>
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                   {editing ? "Salvar" : "Cadastrar"}
