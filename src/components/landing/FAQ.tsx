@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     q: "Meus dados e os dos meus pacientes estão seguros?",
-    a: "Todos os dados são criptografados em trânsito e em repouso, com isolamento por usuário (Row-Level Security). Nenhum outro profissional acessa suas informações. Estamos em conformidade com a LGPD para dados pessoais sensíveis.",
+    a: "Sim. Toda comunicação é protegida por HTTPS/TLS. Cada profissional acessa apenas seus próprios dados. Seguimos as diretrizes da LGPD para tratamento de dados sensíveis de saúde.",
   },
   {
     q: "Como funciona o módulo de supervisão?",

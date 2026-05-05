@@ -8,18 +8,18 @@ const badges = [
   },
   {
     icon: Lock,
-    title: "Dados Criptografados",
-    desc: "Criptografia em trânsito (TLS) e em repouso. Cada profissional acessa apenas seus próprios dados — isolamento total.",
+    title: "Conexão segura",
+    desc: "Toda comunicação é protegida por HTTPS/TLS. Seus dados trafegam sempre criptografados.",
   },
   {
     icon: Scale,
-    title: "LGPD Compliance",
-    desc: "Tratamento de dados pessoais sensíveis de acordo com a Lei Geral de Proteção de Dados. Termos e consentimento integrados.",
+    title: "LGPD compliance",
+    desc: "Tratamento de dados sensíveis conforme a Lei Geral de Proteção de Dados.",
   },
   {
     icon: Eye,
-    title: "Sigilo Profissional",
-    desc: "Nenhum dado clínico é compartilhado, vendido ou acessível por terceiros. Seu prontuário é só seu.",
+    title: "Sigilo profissional",
+    desc: "Nenhum dado clínico é compartilhado, vendido ou acessível por terceiros.",
   },
   {
     icon: FileCheck,
