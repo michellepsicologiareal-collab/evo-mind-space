@@ -1,4 +1,7 @@
 import { Calendar, DollarSign, Activity, ClipboardList, TrendingUp } from "lucide-react";
+import mockupAgenda from "@/assets/mockup-agenda.png";
+import mockupFinanceiro from "@/assets/mockup-financeiro.png";
+import mockupEmocoes from "@/assets/mockup-emocoes.png";
 
 const features = [
   {
@@ -6,36 +9,40 @@ const features = [
     tag: "Agenda",
     title: "Gestão de Agenda Inteligente",
     desc: "Visualização clara dos atendimentos, controle de faltas, remarcações e frequência — organizado por paciente.",
-    span: "lg:col-span-2",
+    image: mockupAgenda,
+    imageAlt: "Tela de agenda do Psi Real com visualização diária e sessões do mês",
   },
   {
     icon: DollarSign,
     tag: "Financeiro",
     title: "Controle Financeiro Simplificado",
     desc: "Sessões pagas e pendentes, faturamento mensal e clareza sobre a entrada real — não só sobre a agenda cheia.",
-    span: "lg:col-span-1",
+    image: mockupFinanceiro,
+    imageAlt: "Painel financeiro com faturamento, receitas e gráfico semanal",
   },
   {
     icon: Activity,
     tag: "Diferencial clínico",
     title: "Painel de Emoções & Evolução",
     desc: "Monitoramento de humor e progresso. Base para intervenções em TCC: dados → hipótese → intervenção.",
-    span: "lg:col-span-1",
+    image: mockupEmocoes,
+    imageAlt: "Painel de emoções dos pacientes com histórico de humor",
     highlight: true,
   },
+];
+
+const smallFeatures = [
   {
     icon: ClipboardList,
     tag: "Clínica",
     title: "Organização Terapêutica em TCC",
     desc: "Registro estruturado de sessões, acompanhamento de metas terapêuticas e plano de tratamento claro.",
-    span: "lg:col-span-1",
   },
   {
     icon: TrendingUp,
     tag: "Estratégia",
     title: "Visão Estratégica do Consultório",
     desc: "Pacientes ativos, taxa de faltas, crescimento mensal e onde você está perdendo dinheiro sem perceber.",
-    span: "lg:col-span-1",
   },
 ];
 
@@ -56,34 +63,73 @@ export const Features = () => {
           </p>
         </div>
 
-        <div className="mt-16 grid lg:grid-cols-3 gap-5">
-          {features.map((f) => (
+        {/* Featured cards with images */}
+        <div className="mt-16 space-y-8">
+          {features.map((f, i) => (
             <article
               key={f.title}
-              className={`${f.span} group relative overflow-hidden rounded-3xl border border-border/70 p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-elegant ${
+              className={`group relative overflow-hidden rounded-3xl border border-border/70 transition-all duration-500 hover:shadow-elegant ${
                 f.highlight
                   ? "bg-gradient-hero text-primary-foreground border-transparent"
                   : "bg-card"
               }`}
             >
-              <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
-                f.highlight ? "bg-primary-foreground/15 text-primary-foreground" : "bg-secondary text-primary"
-              }`}>
-                <f.icon className="h-5 w-5" />
+              <div className={`grid lg:grid-cols-2 gap-0 items-center ${i % 2 === 1 ? "lg:grid-flow-col-dense" : ""}`}>
+                {/* Text side */}
+                <div className={`p-8 lg:p-12 ${i % 2 === 1 ? "lg:col-start-2" : ""}`}>
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                    f.highlight ? "bg-primary-foreground/15 text-primary-foreground" : "bg-secondary text-primary"
+                  }`}>
+                    <f.icon className="h-5 w-5" />
+                  </div>
+                  <p className={`mt-6 text-[11px] uppercase tracking-[0.18em] ${f.highlight ? "text-primary-foreground/70" : "text-accent"}`}>
+                    {f.tag}
+                  </p>
+                  <h3 className={`mt-2 font-display text-2xl lg:text-3xl font-semibold leading-snug ${f.highlight ? "" : "text-foreground"}`}>
+                    {f.title}
+                  </h3>
+                  <p className={`mt-3 text-sm lg:text-base leading-relaxed max-w-md ${f.highlight ? "text-primary-foreground/85" : "text-muted-foreground"}`}>
+                    {f.desc}
+                  </p>
+                </div>
+
+                {/* Image side */}
+                <div className={`relative p-4 lg:p-6 ${i % 2 === 1 ? "lg:col-start-1" : ""}`}>
+                  <img
+                    src={f.image}
+                    alt={f.imageAlt}
+                    className="w-full rounded-2xl"
+                    loading="lazy"
+                  />
+                </div>
               </div>
-              <p className={`mt-6 text-[11px] uppercase tracking-[0.18em] ${f.highlight ? "text-primary-foreground/70" : "text-accent"}`}>
-                {f.tag}
-              </p>
-              <h3 className={`mt-2 font-display text-2xl font-semibold leading-snug ${f.highlight ? "" : "text-foreground"}`}>
-                {f.title}
-              </h3>
-              <p className={`mt-3 text-sm leading-relaxed ${f.highlight ? "text-primary-foreground/85" : "text-muted-foreground"}`}>
-                {f.desc}
-              </p>
 
               {f.highlight && (
                 <div className="absolute -right-10 -bottom-10 h-44 w-44 rounded-full bg-accent/40 blur-3xl" aria-hidden />
               )}
+            </article>
+          ))}
+        </div>
+
+        {/* Smaller feature cards without images */}
+        <div className="mt-8 grid lg:grid-cols-2 gap-5">
+          {smallFeatures.map((f) => (
+            <article
+              key={f.title}
+              className="group relative overflow-hidden rounded-3xl border border-border/70 bg-card p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-elegant"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-primary">
+                <f.icon className="h-5 w-5" />
+              </div>
+              <p className="mt-6 text-[11px] uppercase tracking-[0.18em] text-accent">
+                {f.tag}
+              </p>
+              <h3 className="mt-2 font-display text-2xl font-semibold leading-snug text-foreground">
+                {f.title}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                {f.desc}
+              </p>
             </article>
           ))}
         </div>

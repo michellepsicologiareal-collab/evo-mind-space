@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
+import mockupDashboard from "@/assets/mockup-dashboard.png";
 
 export const Hero = () => {
   return (
@@ -50,6 +51,19 @@ export const Hero = () => {
               </div>
             ))}
           </dl>
+        </div>
+
+        {/* Hero mockup image */}
+        <div className="lg:col-span-6 animate-fade-up" style={{ animationDelay: "0.15s" }}>
+          <div className="relative">
+            <div className="absolute -inset-4 bg-gradient-to-br from-accent/10 via-primary/5 to-transparent rounded-[2rem] blur-2xl" aria-hidden />
+            <img
+              src={mockupDashboard}
+              alt="Painel do Psi Real mostrando visão geral do consultório"
+              className="relative w-full rounded-2xl shadow-elegant"
+              loading="eager"
+            />
+          </div>
         </div>
       </div>
     </section>
