@@ -323,15 +323,25 @@ const Agenda = () => {
 
   const openNew = (date?: Date) => {
     setPatientMonthCount(null);
-    setForm({
-      session_type: "clinical", patient_id: "", discussed_patient_id: "",
-      date: format(date ?? new Date(), "yyyy-MM-dd"), time: "09:00",
-      duration_minutes: 50, price: "", notes: "",
-      payment_method: "none", payment_reference: "", mood_score: "", progress_note: "",
-      recurrence: "single", recurrence_count: 4, recurrence_interval: "weekly",
-      payment_plan: "per_session", service_id: "",
-      modality: "presencial", meeting_link: "",
-    });
+    let restored = false;
+    try {
+      const raw = localStorage.getItem(DRAFT_SESSION_KEY);
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft.patient_id || draft.notes || draft.price) {
+          setFormRaw({ ...emptySessionForm, ...draft, date: format(date ?? new Date(), "yyyy-MM-dd") });
+          restored = true;
+          setDraftRestored(true);
+        }
+      }
+    } catch {}
+    if (!restored) {
+      setFormRaw({
+        ...emptySessionForm,
+        date: format(date ?? new Date(), "yyyy-MM-dd"),
+      });
+      setDraftRestored(false);
+    }
     newGuard.resetDirty();
     setOpen(true);
   };
