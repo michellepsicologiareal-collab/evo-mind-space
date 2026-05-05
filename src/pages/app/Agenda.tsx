@@ -1058,6 +1058,24 @@ const Agenda = () => {
                 )}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
+                    <Label>Modalidade</Label>
+                    <Select value={form.modality} onValueChange={(v) => setForm({ ...form, modality: v as "presencial" | "online" })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="presencial"><span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> Presencial</span></SelectItem>
+                        <SelectItem value="online"><span className="flex items-center gap-1.5"><Video className="h-3.5 w-3.5" /> Online</span></SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {form.modality === "online" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="meeting_link">Link da sessão</Label>
+                      <Input id="meeting_link" type="url" placeholder="https://meet.google.com/..." value={form.meeting_link} onChange={(e) => setForm({ ...form, meeting_link: e.target.value })} />
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
                     <Label htmlFor="dur">Duração (min)</Label>
                     <Input id="dur" type="number" min="10" max="480" value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })} />
                   </div>
