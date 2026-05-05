@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,6 +21,21 @@ const withTimeout = <T,>(promise: PromiseLike<T>, ms = 8000): Promise<T> =>
       window.setTimeout(() => reject(new Error("Tempo esgotado ao validar acesso.")), ms)
     ),
   ]);
+
+const SESSION_RETURN_KEY = "psireal_return_url";
+const SESSION_EXPIRED_KEY = "psireal_session_expired";
+
+export const getSessionExpiredFlag = () => {
+  const flag = sessionStorage.getItem(SESSION_EXPIRED_KEY);
+  if (flag) sessionStorage.removeItem(SESSION_EXPIRED_KEY);
+  return flag === "1";
+};
+
+export const getReturnUrl = () => {
+  const url = sessionStorage.getItem(SESSION_RETURN_KEY);
+  if (url) sessionStorage.removeItem(SESSION_RETURN_KEY);
+  return url;
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -64,8 +79,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Proactive token refresh: refresh 5 min before expiry
+  const scheduleTokenRefresh = useCallback((sess: Session) => {
+    if (!sess.expires_at) return;
+    const expiresAtMs = sess.expires_at * 1000;
+    const refreshInMs = expiresAtMs - Date.now() - 5 * 60 * 1000; // 5 min before
+    if (refreshInMs <= 0) {
+      // Already close to expiry, refresh now
+      supabase.auth.refreshSession();
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      supabase.auth.refreshSession();
+    }, refreshInMs);
+    return timer;
+  }, []);
+
   useEffect(() => {
     let mounted = true;
+    let refreshTimer: number | undefined;
 
     const clearSession = () => {
       if (!mounted) return;
@@ -75,10 +107,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!mounted) return;
+
+      // Handle session expiry / sign out while using the app
+      if (event === "SIGNED_OUT" || (event === "TOKEN_REFRESHED" && !newSession)) {
+        if (refreshTimer) window.clearTimeout(refreshTimer);
+        // Only save return URL if user was previously logged in (session expired)
+        if (user && window.location.pathname.startsWith("/app")) {
+          sessionStorage.setItem(SESSION_RETURN_KEY, window.location.pathname + window.location.search);
+          sessionStorage.setItem(SESSION_EXPIRED_KEY, "1");
+        }
+        clearSession();
+        return;
+      }
+
       setSession(newSession);
       setUser(newSession?.user ?? null);
+
+      // Schedule proactive refresh
+      if (newSession) {
+        if (refreshTimer) window.clearTimeout(refreshTimer);
+        refreshTimer = scheduleTokenRefresh(newSession);
+      }
+
       if (newSession?.user) {
         setLoading(true);
       }
@@ -105,6 +157,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!mounted) return;
       setSession(existing);
       setUser(existing?.user ?? null);
+
+      if (existing) {
+        refreshTimer = scheduleTokenRefresh(existing);
+      }
+
       if (existing?.user) {
         checkApproval(existing.user.id).finally(() => mounted && setLoading(false));
       } else {
@@ -114,6 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       mounted = false;
+      if (refreshTimer) window.clearTimeout(refreshTimer);
       subscription.unsubscribe();
     };
   }, []);
