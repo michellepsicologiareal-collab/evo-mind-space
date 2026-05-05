@@ -82,7 +82,8 @@ const Auth = () => {
       return;
     }
     toast.success("Bem-vindo de volta!");
-    navigate("/app", { replace: true });
+    navigate(returnUrlRef.current || "/app", { replace: true });
+    returnUrlRef.current = null;
   };
 
   const handleRetry = () => {
