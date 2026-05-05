@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { NavLink, Outlet, useNavigate, Link, useLocation } from "react-router-dom";
+import { KeepAliveOutlet } from "@/components/app/KeepAliveOutlet";
 import logoSrc from "@/assets/logo-psireal.png";
 import {
   LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut,
