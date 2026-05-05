@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import {
   Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon,
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
-  MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText
+  MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
+  Video, MapPin,
 } from "lucide-react";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
@@ -51,6 +52,8 @@ interface Session {
   discussed_patient_name?: string | null;
   service_id?: string | null;
   billing_sent_at?: string | null;
+  modality?: string;
+  meeting_link?: string | null;
 }
 
 interface Patient {
