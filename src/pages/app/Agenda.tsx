@@ -418,6 +418,7 @@ const Agenda = () => {
     } else {
       toast.success("Sessão agendada");
     }
+    clearSessionDraft();
     newGuard.resetDirty();
     setOpen(false);
     load(); loadPending();
