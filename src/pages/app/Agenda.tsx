@@ -963,7 +963,7 @@ const Agenda = () => {
           <h1 className="font-display text-4xl font-medium">Agenda</h1>
           <p className="mt-2 text-muted-foreground">Visualize e organize seus atendimentos.</p>
         </div>
-        <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => setOpen(false)); } else { setOpen(true); } }}>
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
             <Button variant="accent" onClick={() => openNew()}>
               <Plus className="h-4 w-4" /> Nova sessão
@@ -973,6 +973,12 @@ const Agenda = () => {
             <DialogHeader>
               <DialogTitle className="font-display text-2xl">Nova sessão</DialogTitle>
             </DialogHeader>
+            {draftRestored && (
+              <div className="rounded-lg bg-accent/20 border border-accent/30 px-3 py-2 text-sm text-muted-foreground flex items-center justify-between gap-2">
+                <span>📝 Rascunho recuperado. Continue de onde parou.</span>
+                <Button variant="ghost" size="sm" className="h-auto py-1 px-2 text-xs" onClick={() => { clearSessionDraft(); setFormRaw({ ...emptySessionForm, date: form.date }); }}>Descartar</Button>
+              </div>
+            )}
             {patients.length === 0 ? (
               <p className="text-sm text-muted-foreground py-6">Cadastre um paciente ativo antes de agendar.</p>
             ) : (
