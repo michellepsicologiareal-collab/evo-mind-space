@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import {
   Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon,
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
-  MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText
+  MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
+  Video, MapPin,
 } from "lucide-react";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
@@ -51,6 +52,8 @@ interface Session {
   discussed_patient_name?: string | null;
   service_id?: string | null;
   billing_sent_at?: string | null;
+  modality?: string;
+  meeting_link?: string | null;
 }
 
 interface Patient {
@@ -153,6 +156,8 @@ const Agenda = () => {
     recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
     payment_plan: "per_session" as "per_session" | "single_payment",
     service_id: "" as string,
+    modality: "presencial" as "presencial" | "online",
+    meeting_link: "",
   });
   const setForm: typeof setFormRaw = useCallback((v) => { newGuard.markDirty(); setFormRaw(v); }, [newGuard.markDirty]);
 
@@ -173,6 +178,8 @@ const Agenda = () => {
     recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
     payment_plan: "per_session" as "per_session" | "single_payment",
     date: "", time: "",
+    modality: "presencial" as "presencial" | "online",
+    meeting_link: "",
   });
   const setEditForm: typeof setEditFormRaw = useCallback((v) => { editGuard.markDirty(); setEditFormRaw(v); }, [editGuard.markDirty]);
   const [editProgressId, setEditProgressId] = useState<string | null>(null);
@@ -216,7 +223,7 @@ const Agenda = () => {
     const [sRes, pRes, svRes] = await Promise.all([
       supabase
         .from("sessions")
-        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, billing_sent_at, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .gte("scheduled_at", mStart.toISOString())
         .lt("scheduled_at", mEnd.toISOString())
@@ -243,7 +250,7 @@ const Agenda = () => {
     const mEnd = endOfMonth(currentMonth).toISOString();
     const { data } = await supabase
       .from("sessions")
-       .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, patient:patients!sessions_patient_id_fkey(full_name)")
+      .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)")
       .eq("user_id", user.id)
       .eq("session_type", "clinical")
       .not("patient_id", "is", null)
@@ -259,7 +266,7 @@ const Agenda = () => {
     if (packagePatientIds.length > 0) {
       const { data: packageData } = await supabase
         .from("sessions")
-        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, patient:patients!sessions_patient_id_fkey(full_name)")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .eq("session_type", "clinical")
         .in("patient_id", packagePatientIds)
@@ -305,6 +312,7 @@ const Agenda = () => {
       payment_method: "none", payment_reference: "", mood_score: "", progress_note: "",
       recurrence: "single", recurrence_count: 4, recurrence_interval: "weekly",
       payment_plan: "per_session", service_id: "",
+      modality: "presencial", meeting_link: "",
     });
     newGuard.resetDirty();
     setOpen(true);
@@ -354,6 +362,8 @@ const Agenda = () => {
         discussed_patient_id: isSupervision && parsed.data.discussed_patient_id ? parsed.data.discussed_patient_id : null,
         is_expense: isSupervision,
         service_id: form.service_id || null,
+        modality: form.modality,
+        meeting_link: form.modality === "online" && form.meeting_link.trim() ? form.meeting_link.trim() : null,
       } as any);
     }
 
@@ -563,6 +573,8 @@ const Agenda = () => {
       payment_plan: "per_session",
       date: format(scheduledDate, "yyyy-MM-dd"),
       time: format(scheduledDate, "HH:mm"),
+      modality: (s as any).modality ?? "presencial",
+      meeting_link: (s as any).meeting_link ?? "",
     });
     editGuard.resetDirty();
     setEditOpen(true);
@@ -623,6 +635,8 @@ const Agenda = () => {
       notes: editForm.notes || null, duration_minutes: editForm.duration_minutes,
       session_type: editForm.session_type,
       service_id: editForm.service_id || null,
+      modality: editForm.modality,
+      meeting_link: editForm.modality === "online" && editForm.meeting_link.trim() ? editForm.meeting_link.trim() : null,
       ...(newScheduledAt ? { scheduled_at: newScheduledAt } : {}),
       ...(editForm.payment_status === "paid" && session?.payment_status !== "paid"
         ? { paid_at: new Date().toISOString() } : {}),
@@ -880,6 +894,20 @@ const Agenda = () => {
             <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full", isSupervisionCard ? "bg-serene/20 text-serene" : statusClass[s.status])}>
               {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
             </span>
+            {(s as any).modality === "online" ? (
+              <span className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                <Video className="h-2.5 w-2.5" /> Online
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                <MapPin className="h-2.5 w-2.5" /> Presencial
+              </span>
+            )}
+            {(s as any).modality === "online" && (s as any).meeting_link && (
+              <a href={(s as any).meeting_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+                <Link2 className="h-2.5 w-2.5" /> Entrar
+              </a>
+            )}
             {!isSupervisionCard && s.price != null && (
               <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full border", paymentStatusClass[s.payment_status])}>
                 {paymentStatusLabel[s.payment_status]}
@@ -1042,6 +1070,24 @@ const Agenda = () => {
                     })()}
                   </div>
                 )}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Modalidade</Label>
+                    <Select value={form.modality} onValueChange={(v) => setForm({ ...form, modality: v as "presencial" | "online" })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="presencial"><span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> Presencial</span></SelectItem>
+                        <SelectItem value="online"><span className="flex items-center gap-1.5"><Video className="h-3.5 w-3.5" /> Online</span></SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {form.modality === "online" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="meeting_link">Link da sessão</Label>
+                      <Input id="meeting_link" type="url" placeholder="https://meet.google.com/..." value={form.meeting_link} onChange={(e) => setForm({ ...form, meeting_link: e.target.value })} />
+                    </div>
+                  )}
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="dur">Duração (min)</Label>
@@ -1564,6 +1610,24 @@ const Agenda = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Modalidade</Label>
+                <Select value={editForm.modality} onValueChange={(v) => setEditForm({ ...editForm, modality: v as "presencial" | "online" })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="presencial"><span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> Presencial</span></SelectItem>
+                    <SelectItem value="online"><span className="flex items-center gap-1.5"><Video className="h-3.5 w-3.5" /> Online</span></SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {editForm.modality === "online" && (
+                <div className="space-y-2">
+                  <Label>Link da sessão</Label>
+                  <Input type="url" placeholder="https://meet.google.com/..." value={editForm.meeting_link} onChange={(e) => setEditForm({ ...editForm, meeting_link: e.target.value })} />
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">

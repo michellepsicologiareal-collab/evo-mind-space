@@ -646,6 +646,8 @@ export type Database = {
           duration_minutes: number
           id: string
           is_expense: boolean
+          meeting_link: string | null
+          modality: string
           notes: string | null
           paid_at: string | null
           patient_id: string | null
@@ -668,6 +670,8 @@ export type Database = {
           duration_minutes?: number
           id?: string
           is_expense?: boolean
+          meeting_link?: string | null
+          modality?: string
           notes?: string | null
           paid_at?: string | null
           patient_id?: string | null
@@ -690,6 +694,8 @@ export type Database = {
           duration_minutes?: number
           id?: string
           is_expense?: boolean
+          meeting_link?: string | null
+          modality?: string
           notes?: string | null
           paid_at?: string | null
           patient_id?: string | null
