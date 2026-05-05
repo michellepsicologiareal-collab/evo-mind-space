@@ -1036,7 +1036,15 @@ export type Database = {
         | "materiais_pacientes"
         | "guias_tcc"
       notification_type: "confirmation" | "cancellation" | "general"
-      patient_category: "individual" | "crianca" | "grupo" | "casal"
+      patient_category:
+        | "individual"
+        | "crianca"
+        | "grupo"
+        | "casal"
+        | "adolescente"
+        | "avaliacao"
+        | "supervisao"
+        | "sessao_breve"
       payment_method: "pix" | "card" | "cash"
       payment_status: "pending" | "paid"
       profile_type: "standard" | "supervisee" | "supervisor"
@@ -1185,7 +1193,16 @@ export const Constants = {
         "guias_tcc",
       ],
       notification_type: ["confirmation", "cancellation", "general"],
-      patient_category: ["individual", "crianca", "grupo", "casal"],
+      patient_category: [
+        "individual",
+        "crianca",
+        "grupo",
+        "casal",
+        "adolescente",
+        "avaliacao",
+        "supervisao",
+        "sessao_breve",
+      ],
       payment_method: ["pix", "card", "cash"],
       payment_status: ["pending", "paid"],
       profile_type: ["standard", "supervisee", "supervisor"],
