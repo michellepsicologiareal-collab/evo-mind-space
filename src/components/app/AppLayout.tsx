@@ -229,7 +229,7 @@ export const AppLayout = () => {
               </Button>
             </div>
           ) : (
-            <Outlet />
+            <KeepAliveOutlet />
           )}
         </div>
       </main>
