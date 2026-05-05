@@ -232,6 +232,7 @@ export default function ContratoModelo() {
     if (error) {
       toast.error("Erro ao salvar modelo");
     } else {
+      clearDraft();
       toast.success("Modelo salvo com sucesso!");
     }
   };
