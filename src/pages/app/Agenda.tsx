@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import {
@@ -144,8 +144,10 @@ const Agenda = () => {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [patientMonthCount, setPatientMonthCount] = useState<{ count: number; dates: string[] } | null>(null);
+  const DRAFT_SESSION_KEY = "rascunho_nova_sessao";
   const newGuard = useUnsavedGuard();
-  const [form, setFormRaw] = useState({
+  const [draftRestored, setDraftRestored] = useState(false);
+  const emptySessionForm = {
     session_type: "clinical" as SessionType,
     patient_id: "", discussed_patient_id: "",
     date: format(new Date(), "yyyy-MM-dd"), time: "09:00",
@@ -158,8 +160,24 @@ const Agenda = () => {
     service_id: "" as string,
     modality: "presencial" as "presencial" | "online",
     meeting_link: "",
-  });
+  };
+  const [form, setFormRaw] = useState(emptySessionForm);
   const setForm: typeof setFormRaw = useCallback((v) => { newGuard.markDirty(); setFormRaw(v); }, [newGuard.markDirty]);
+
+  // Auto-save draft to localStorage (only for new session)
+  const draftSaveRef = useRef(false);
+  useEffect(() => { draftSaveRef.current = open; }, [open]);
+  useEffect(() => {
+    if (!draftSaveRef.current) return;
+    if (form.patient_id || form.notes || form.price) {
+      try { localStorage.setItem(DRAFT_SESSION_KEY, JSON.stringify(form)); } catch {}
+    }
+  }, [form]);
+
+  const clearSessionDraft = useCallback(() => {
+    try { localStorage.removeItem(DRAFT_SESSION_KEY); } catch {}
+    setDraftRestored(false);
+  }, []);
 
   // Edit session
   const [editOpen, setEditOpen] = useState(false);
@@ -305,15 +323,25 @@ const Agenda = () => {
 
   const openNew = (date?: Date) => {
     setPatientMonthCount(null);
-    setForm({
-      session_type: "clinical", patient_id: "", discussed_patient_id: "",
-      date: format(date ?? new Date(), "yyyy-MM-dd"), time: "09:00",
-      duration_minutes: 50, price: "", notes: "",
-      payment_method: "none", payment_reference: "", mood_score: "", progress_note: "",
-      recurrence: "single", recurrence_count: 4, recurrence_interval: "weekly",
-      payment_plan: "per_session", service_id: "",
-      modality: "presencial", meeting_link: "",
-    });
+    let restored = false;
+    try {
+      const raw = localStorage.getItem(DRAFT_SESSION_KEY);
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft.patient_id || draft.notes || draft.price) {
+          setFormRaw({ ...emptySessionForm, ...draft, date: format(date ?? new Date(), "yyyy-MM-dd") });
+          restored = true;
+          setDraftRestored(true);
+        }
+      }
+    } catch {}
+    if (!restored) {
+      setFormRaw({
+        ...emptySessionForm,
+        date: format(date ?? new Date(), "yyyy-MM-dd"),
+      });
+      setDraftRestored(false);
+    }
     newGuard.resetDirty();
     setOpen(true);
   };
@@ -390,6 +418,7 @@ const Agenda = () => {
     } else {
       toast.success("Sessão agendada");
     }
+    clearSessionDraft();
     newGuard.resetDirty();
     setOpen(false);
     load(); loadPending();
@@ -934,7 +963,7 @@ const Agenda = () => {
           <h1 className="font-display text-4xl font-medium">Agenda</h1>
           <p className="mt-2 text-muted-foreground">Visualize e organize seus atendimentos.</p>
         </div>
-        <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => setOpen(false)); } else { setOpen(true); } }}>
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
             <Button variant="accent" onClick={() => openNew()}>
               <Plus className="h-4 w-4" /> Nova sessão
@@ -944,6 +973,12 @@ const Agenda = () => {
             <DialogHeader>
               <DialogTitle className="font-display text-2xl">Nova sessão</DialogTitle>
             </DialogHeader>
+            {draftRestored && (
+              <div className="rounded-lg bg-accent/20 border border-accent/30 px-3 py-2 text-sm text-muted-foreground flex items-center justify-between gap-2">
+                <span>📝 Rascunho recuperado. Continue de onde parou.</span>
+                <Button variant="ghost" size="sm" className="h-auto py-1 px-2 text-xs" onClick={() => { clearSessionDraft(); setFormRaw({ ...emptySessionForm, date: form.date }); }}>Descartar</Button>
+              </div>
+            )}
             {patients.length === 0 ? (
               <p className="text-sm text-muted-foreground py-6">Cadastre um paciente ativo antes de agendar.</p>
             ) : (
@@ -1136,7 +1171,7 @@ const Agenda = () => {
                   </div>
                 )}
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => newGuard.guardClose(() => setOpen(false))}>Cancelar</Button>
+                  <Button type="button" variant="outline" onClick={() => newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); })}>Cancelar</Button>
                   <Button type="submit" variant="accent" disabled={saving}>
                     {saving && <Loader2 className="h-4 w-4 animate-spin" />} Agendar
                   </Button>

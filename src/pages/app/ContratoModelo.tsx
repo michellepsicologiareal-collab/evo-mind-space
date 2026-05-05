@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -115,6 +115,9 @@ export default function ContratoModelo() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [templateId, setTemplateId] = useState<string | null>(null);
+  const [draftRestored, setDraftRestored] = useState(false);
+
+  const DRAFT_KEY = "rascunho_novo_contrato";
 
   const [professionalName, setProfessionalName] = useState("");
   const [professionalCrp, setProfessionalCrp] = useState("");
@@ -123,6 +126,23 @@ export default function ContratoModelo() {
   const [professionalEmail, setProfessionalEmail] = useState("");
   const [lgpdClause, setLgpdClause] = useState(DEFAULT_LGPD);
   const [clauses, setClauses] = useState<Clause[]>(DEFAULT_CLAUSES);
+
+  const clearDraft = useCallback(() => {
+    try { localStorage.removeItem(DRAFT_KEY); } catch {}
+    setDraftRestored(false);
+  }, []);
+
+  // Auto-save draft on every change (after initial load)
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    if (!loaded) return;
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        professionalName, professionalCrp, professionalCpf,
+        professionalAddress, professionalEmail, lgpdClause, clauses,
+      }));
+    } catch {}
+  }, [loaded, professionalName, professionalCrp, professionalCpf, professionalAddress, professionalEmail, lgpdClause, clauses]);
 
   useEffect(() => {
     if (!user) return;
@@ -140,23 +160,48 @@ export default function ContratoModelo() {
           .maybeSingle(),
       ]);
 
-      if (tpl) {
-        setTemplateId(tpl.id);
-        // Use template values, but fallback to profile when fields are empty
-        setProfessionalName(tpl.professional_name || profile?.full_name || "");
-        setProfessionalCrp((tpl as any).professional_crp || profile?.crp || "");
-        setProfessionalCpf(tpl.professional_cpf || "");
-        setProfessionalAddress(tpl.professional_address || "");
-        setProfessionalEmail(tpl.professional_email || user.email || "");
-        setLgpdClause(tpl.lgpd_clause);
-        setClauses(tpl.clauses as unknown as Clause[]);
-      } else if (profile) {
-        // Pre-fill from profile when no template exists yet
-        setProfessionalName(profile.full_name ?? "");
-        setProfessionalCrp(profile.crp ?? "");
-        setProfessionalEmail(user.email ?? "");
+      // Check for draft first (only when no template exists yet)
+      let restoredFromDraft = false;
+      if (!tpl) {
+        try {
+          const raw = localStorage.getItem(DRAFT_KEY);
+          if (raw) {
+            const draft = JSON.parse(raw);
+            if (draft.professionalName || draft.professionalCpf || draft.professionalAddress) {
+              setProfessionalName(draft.professionalName ?? "");
+              setProfessionalCrp(draft.professionalCrp ?? "");
+              setProfessionalCpf(draft.professionalCpf ?? "");
+              setProfessionalAddress(draft.professionalAddress ?? "");
+              setProfessionalEmail(draft.professionalEmail ?? "");
+              setLgpdClause(draft.lgpdClause ?? DEFAULT_LGPD);
+              if (Array.isArray(draft.clauses) && draft.clauses.length > 0) setClauses(draft.clauses);
+              restoredFromDraft = true;
+              setDraftRestored(true);
+            }
+          }
+        } catch {}
+      }
+
+      if (!restoredFromDraft) {
+        if (tpl) {
+          setTemplateId(tpl.id);
+          setProfessionalName(tpl.professional_name || profile?.full_name || "");
+          setProfessionalCrp((tpl as any).professional_crp || profile?.crp || "");
+          setProfessionalCpf(tpl.professional_cpf || "");
+          setProfessionalAddress(tpl.professional_address || "");
+          setProfessionalEmail(tpl.professional_email || user.email || "");
+          setLgpdClause(tpl.lgpd_clause);
+          setClauses(tpl.clauses as unknown as Clause[]);
+          // Clear any stale draft when DB template exists
+          clearDraft();
+        } else if (profile) {
+          setProfessionalName(profile.full_name ?? "");
+          setProfessionalCrp(profile.crp ?? "");
+          setProfessionalEmail(user.email ?? "");
+        }
       }
       setLoading(false);
+      setLoaded(true);
     })();
   }, [user]);
 
@@ -187,6 +232,7 @@ export default function ContratoModelo() {
     if (error) {
       toast.error("Erro ao salvar modelo");
     } else {
+      clearDraft();
       toast.success("Modelo salvo com sucesso!");
     }
   };
@@ -245,6 +291,18 @@ export default function ContratoModelo() {
           </Button>
         </div>
       </div>
+
+      {draftRestored && (
+        <div className="rounded-lg bg-accent/20 border border-accent/30 px-3 py-2 text-sm text-muted-foreground flex items-center justify-between gap-2">
+          <span>📝 Rascunho recuperado. Continue de onde parou.</span>
+          <Button variant="ghost" size="sm" className="h-auto py-1 px-2 text-xs" onClick={() => {
+            clearDraft();
+            setProfessionalName(""); setProfessionalCrp(""); setProfessionalCpf("");
+            setProfessionalAddress(""); setProfessionalEmail(""); setLgpdClause(DEFAULT_LGPD);
+            setClauses(DEFAULT_CLAUSES);
+          }}>Descartar</Button>
+        </div>
+      )}
 
       {/* Link card - prominent */}
       {publicLink ? (
