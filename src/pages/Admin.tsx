@@ -224,8 +224,6 @@ const Admin = () => {
       const q = search.toLowerCase();
       list = list.filter(
         (p) =>
-          p.full_name.toLowerCase().includes(q) ||
-          (p.email ?? "").toLowerCase().includes(q) ||
           p.therapist_name.toLowerCase().includes(q) ||
           (p.supervisor_name ?? "").toLowerCase().includes(q)
       );
