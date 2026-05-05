@@ -30,14 +30,17 @@ export const Hero = () => {
 
           <div className="mt-10 flex flex-wrap gap-4">
             <Button variant="hero" size="xl" asChild>
-              <a href="#planos">
-                Conhecer os planos <ArrowRight className="ml-1" />
+              <a href="/login?tab=signup">
+                Começar meus 14 dias grátis <ArrowRight className="ml-1" />
               </a>
             </Button>
             <Button variant="outline" size="xl" asChild>
               <a href="#funcionalidades">Ver funcionalidades</a>
             </Button>
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Sem cartão de crédito · Cancele quando quiser · Acesso completo por 14 dias
+          </p>
 
           <dl className="mt-12 grid grid-cols-3 gap-6 max-w-md">
             {[
