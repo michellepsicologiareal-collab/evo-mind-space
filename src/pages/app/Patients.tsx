@@ -25,14 +25,14 @@ import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 
 const PATIENT_CATEGORIES = [
-  { value: "individual", label: "Individual" },
-  { value: "crianca", label: "Criança" },
   { value: "adolescente", label: "Adolescente" },
-  { value: "grupo", label: "Grupo" },
-  { value: "casal", label: "Casal" },
   { value: "avaliacao", label: "Avaliação" },
-  { value: "supervisao", label: "Supervisão" },
+  { value: "casal", label: "Casal" },
+  { value: "crianca", label: "Criança" },
+  { value: "grupo", label: "Grupo" },
+  { value: "individual", label: "Individual" },
   { value: "sessao_breve", label: "Sessão Breve" },
+  { value: "supervisao", label: "Supervisão" },
 ] as const;
 
 const patientSchema = z.object({
