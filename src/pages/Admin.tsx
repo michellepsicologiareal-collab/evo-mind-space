@@ -101,6 +101,17 @@ interface AdminPatient {
   last_session_status: string | null;
 }
 
+/** Gera iniciais a partir do nome completo (ex: "Maria Silva" → "M.S.") */
+const toInitials = (name: string): string => {
+  if (!name) return "—";
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0].toUpperCase())
+    .join(".")
+    .concat(".");
+};
+
 interface AuditLog {
   id: string;
   user_id: string;
