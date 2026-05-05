@@ -34,6 +34,17 @@ const Auth = () => {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+  const returnUrlRef = useRef<string | null>(null);
+
+  // Check for expired session on mount
+  useEffect(() => {
+    const expired = getSessionExpiredFlag();
+    const returnUrl = getReturnUrl();
+    if (expired) {
+      toast.error("Sua sessão expirou. Faça login novamente.");
+      returnUrlRef.current = returnUrl;
+    }
+  }, []);
 
   // sign in
   const [siEmail, setSiEmail] = useState("");
