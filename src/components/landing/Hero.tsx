@@ -41,6 +41,13 @@ export const Hero = () => {
           <p className="mt-3 text-xs text-muted-foreground">
             Sem cartão de crédito · Cancele quando quiser · Acesso completo por 14 dias
           </p>
+          <a
+            href="/auth?tab=signup"
+            className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent/80 transition-colors"
+          >
+            <ArrowRight className="h-4 w-4" />
+            Clique e crie sua conta grátis — leva menos de 1 minuto.
+          </a>
 
           <dl className="mt-12 grid grid-cols-3 gap-6 max-w-md">
             {[
