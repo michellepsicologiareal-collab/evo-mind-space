@@ -635,6 +635,8 @@ const Agenda = () => {
       notes: editForm.notes || null, duration_minutes: editForm.duration_minutes,
       session_type: editForm.session_type,
       service_id: editForm.service_id || null,
+      modality: editForm.modality,
+      meeting_link: editForm.modality === "online" && editForm.meeting_link.trim() ? editForm.meeting_link.trim() : null,
       ...(newScheduledAt ? { scheduled_at: newScheduledAt } : {}),
       ...(editForm.payment_status === "paid" && session?.payment_status !== "paid"
         ? { paid_at: new Date().toISOString() } : {}),
