@@ -156,6 +156,8 @@ const Agenda = () => {
     recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
     payment_plan: "per_session" as "per_session" | "single_payment",
     service_id: "" as string,
+    modality: "presencial" as "presencial" | "online",
+    meeting_link: "",
   });
   const setForm: typeof setFormRaw = useCallback((v) => { newGuard.markDirty(); setFormRaw(v); }, [newGuard.markDirty]);
 
@@ -176,6 +178,8 @@ const Agenda = () => {
     recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
     payment_plan: "per_session" as "per_session" | "single_payment",
     date: "", time: "",
+    modality: "presencial" as "presencial" | "online",
+    meeting_link: "",
   });
   const setEditForm: typeof setEditFormRaw = useCallback((v) => { editGuard.markDirty(); setEditFormRaw(v); }, [editGuard.markDirty]);
   const [editProgressId, setEditProgressId] = useState<string | null>(null);
