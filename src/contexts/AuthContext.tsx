@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -79,25 +79,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Proactive token refresh: refresh 5 min before expiry
-  const scheduleTokenRefresh = useCallback((sess: Session) => {
-    if (!sess.expires_at) return;
-    const expiresAtMs = sess.expires_at * 1000;
-    const refreshInMs = expiresAtMs - Date.now() - 5 * 60 * 1000; // 5 min before
-    if (refreshInMs <= 0) {
-      // Already close to expiry, refresh now
-      supabase.auth.refreshSession();
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      supabase.auth.refreshSession();
-    }, refreshInMs);
-    return timer;
-  }, []);
-
   useEffect(() => {
     let mounted = true;
-    let refreshTimer: number | undefined;
 
     const clearSession = () => {
       if (!mounted) return;
@@ -111,8 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!mounted) return;
 
       // Handle session expiry / sign out while using the app
-      if (event === "SIGNED_OUT" || (event === "TOKEN_REFRESHED" && !newSession)) {
-        if (refreshTimer) window.clearTimeout(refreshTimer);
+      if (event === "SIGNED_OUT") {
         // Only save return URL if user was previously logged in (session expired)
         if (user && window.location.pathname.startsWith("/app")) {
           sessionStorage.setItem(SESSION_RETURN_KEY, window.location.pathname + window.location.search);
@@ -124,12 +106,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       setSession(newSession);
       setUser(newSession?.user ?? null);
-
-      // Schedule proactive refresh
-      if (newSession) {
-        if (refreshTimer) window.clearTimeout(refreshTimer);
-        refreshTimer = scheduleTokenRefresh(newSession);
-      }
 
       if (newSession?.user) {
         setLoading(true);
@@ -158,10 +134,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(existing);
       setUser(existing?.user ?? null);
 
-      if (existing) {
-        refreshTimer = scheduleTokenRefresh(existing);
-      }
-
       if (existing?.user) {
         checkApproval(existing.user.id).finally(() => mounted && setLoading(false));
       } else {
@@ -171,7 +143,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       mounted = false;
-      if (refreshTimer) window.clearTimeout(refreshTimer);
       subscription.unsubscribe();
     };
   }, []);
