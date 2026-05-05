@@ -1,4 +1,11 @@
 project_id = "fdixnrqzoyuyeaqurfdx"
 
+[auth]
+site_url = "https://psireal.app"
+
+[auth.sessions]
+timebox = "28800s"
+inactivity_timeout = "28800s"
+
 [functions.google-calendar-callback]
 verify_jwt = false

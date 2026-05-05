@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import logoSrc from "@/assets/logo-psireal.png";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, getSessionExpiredFlag, getReturnUrl } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,6 +34,17 @@ const Auth = () => {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+  const returnUrlRef = useRef<string | null>(null);
+
+  // Check for expired session on mount
+  useEffect(() => {
+    const expired = getSessionExpiredFlag();
+    const returnUrl = getReturnUrl();
+    if (expired) {
+      toast.error("Sua sessão expirou. Faça login novamente.");
+      returnUrlRef.current = returnUrl;
+    }
+  }, []);
 
   // sign in
   const [siEmail, setSiEmail] = useState("");
@@ -51,7 +62,7 @@ const Auth = () => {
       return;
     }
 
-    if (user) navigate("/app", { replace: true });
+    if (user) navigate(returnUrlRef.current || "/app", { replace: true });
   }, [user, navigate, searchParams, setSearchParams]);
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -71,7 +82,8 @@ const Auth = () => {
       return;
     }
     toast.success("Bem-vindo de volta!");
-    navigate("/app", { replace: true });
+    navigate(returnUrlRef.current || "/app", { replace: true });
+    returnUrlRef.current = null;
   };
 
   const handleRetry = () => {
