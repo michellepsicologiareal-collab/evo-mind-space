@@ -164,13 +164,15 @@ const Agenda = () => {
   const [form, setFormRaw] = useState(emptySessionForm);
   const setForm: typeof setFormRaw = useCallback((v) => { newGuard.markDirty(); setFormRaw(v); }, [newGuard.markDirty]);
 
-  // Auto-save draft to localStorage (only for new session, not editing)
+  // Auto-save draft to localStorage (only for new session)
+  const draftSaveRef = useRef(false);
+  useEffect(() => { draftSaveRef.current = open; }, [open]);
   useEffect(() => {
-    if (!open || editOpen) return;
+    if (!draftSaveRef.current) return;
     if (form.patient_id || form.notes || form.price) {
       try { localStorage.setItem(DRAFT_SESSION_KEY, JSON.stringify(form)); } catch {}
     }
-  }, [form, open, editOpen]);
+  }, [form]);
 
   const clearSessionDraft = useCallback(() => {
     try { localStorage.removeItem(DRAFT_SESSION_KEY); } catch {}
