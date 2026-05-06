@@ -1,4 +1,4 @@
-import mockupEmocoes from "@/assets/mockup-emocoes.png";
+import mockupEmocoes from "@/assets/mockup-emocoes-v2.png";
 
 export const Differential = () => {
   return (
