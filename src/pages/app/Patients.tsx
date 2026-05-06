@@ -597,7 +597,7 @@ const Patients = () => {
                     <DropdownMenuItem onClick={() => setHistoryPatient(p)}><CalendarDays className="h-4 w-4" /> Histórico de Sessões</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTccPatient(p)}><ClipboardList className="h-4 w-4" /> Prontuário TCC</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><Brain className="h-4 w-4" /> Formulação Padesky</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate(`/app/supervisao-caso?paciente=${encodeURIComponent(p.full_name)}`)}>
+                    <DropdownMenuItem onClick={() => window.open(`https://wa.me/5511947388423?text=${encodeURIComponent(`Olá Michelle, preciso de supervisão para o caso do(a) paciente: ${p.full_name}`)}`, "_blank")}>
                       <Stethoscope className="h-4 w-4" /> Pedir Supervisão deste Caso
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => toggleActive(p)}>
