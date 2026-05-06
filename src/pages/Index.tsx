@@ -4,6 +4,7 @@ import { Problem } from "@/components/landing/Problem";
 import { Features } from "@/components/landing/Features";
 import { Supervision } from "@/components/landing/Supervision";
 import { Differential } from "@/components/landing/Differential";
+import { Selfcare } from "@/components/landing/Selfcare";
 import { Trust } from "@/components/landing/Trust";
 import { ForWhom } from "@/components/landing/ForWhom";
 import { CTA } from "@/components/landing/CTA";
@@ -20,6 +21,7 @@ const Index = () => {
         <Problem />
         <Features />
         <Supervision />
+        <Selfcare />
         <Differential />
         <Trust />
         <ForWhom />
