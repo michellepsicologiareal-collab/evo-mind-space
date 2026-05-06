@@ -21,6 +21,7 @@ const Index = () => {
         <Problem />
         <Features />
         <Supervision />
+        <Selfcare />
         <Differential />
         <Trust />
         <ForWhom />
