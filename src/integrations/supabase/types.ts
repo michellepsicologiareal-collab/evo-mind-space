@@ -835,6 +835,57 @@ export type Database = {
         }
         Relationships: []
       }
+      supervision_records: {
+        Row: {
+          chief_complaint: string
+          created_at: string
+          general_observations: string
+          id: string
+          identified_beliefs: string
+          patient_name: string
+          planned_interventions: string
+          problem_list: string
+          shared_at: string | null
+          shared_fields: string[]
+          supervisee_id: string
+          supervision_date: string
+          supervisor_id: string
+          updated_at: string
+        }
+        Insert: {
+          chief_complaint?: string
+          created_at?: string
+          general_observations?: string
+          id?: string
+          identified_beliefs?: string
+          patient_name?: string
+          planned_interventions?: string
+          problem_list?: string
+          shared_at?: string | null
+          shared_fields?: string[]
+          supervisee_id: string
+          supervision_date?: string
+          supervisor_id: string
+          updated_at?: string
+        }
+        Update: {
+          chief_complaint?: string
+          created_at?: string
+          general_observations?: string
+          id?: string
+          identified_beliefs?: string
+          patient_name?: string
+          planned_interventions?: string
+          problem_list?: string
+          shared_at?: string | null
+          shared_fields?: string[]
+          supervisee_id?: string
+          supervision_date?: string
+          supervisor_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tcc_records: {
         Row: {
           automatic_thought: string | null

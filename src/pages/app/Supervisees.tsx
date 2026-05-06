@@ -25,6 +25,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CaseFormulation } from "@/components/app/CaseFormulation";
+import { SupervisionRecords } from "@/components/app/SupervisionRecords";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -348,6 +349,15 @@ const Supervisees = () => {
                         Remover
                       </Button>
                     </div>
+                  </div>
+
+                  {/* ── Supervision Records ── */}
+                  <div className="px-5 py-4 border-t border-border/60 bg-background/40">
+                    <SupervisionRecords
+                      supervisorId={user!.id}
+                      superviseeId={s.id}
+                      superviseeName={s.full_name || "Supervisionando"}
+                    />
                   </div>
 
                   {/* ── Patients list ── */}
