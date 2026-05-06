@@ -351,6 +351,15 @@ const Supervisees = () => {
                     </div>
                   </div>
 
+                  {/* ── Supervision Records ── */}
+                  <div className="px-5 py-4 border-t border-border/60 bg-background/40">
+                    <SupervisionRecords
+                      supervisorId={user!.id}
+                      superviseeId={s.id}
+                      superviseeName={s.full_name || "Supervisionando"}
+                    />
+                  </div>
+
                   {/* ── Patients list ── */}
                   {isOpen && (
                     <div className="px-5 pb-5 space-y-3 border-t border-border/60 pt-4 bg-background/40">
