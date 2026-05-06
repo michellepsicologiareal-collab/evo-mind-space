@@ -44,7 +44,7 @@ export const Differential = () => {
               <img
                 src={mockupEmocoes}
                 alt="Painel de emoções dos pacientes com monitoramento de humor"
-                className="relative w-full rounded-2xl shadow-elegant"
+                className="relative w-full rounded-2xl border border-border/70 shadow-elegant"
                 loading="lazy"
               />
             </div>
