@@ -57,16 +57,16 @@ export const Selfcare = () => {
             <img
               src={mockupEmocoes}
               alt="Painel de clima emocional com variação de humor e gatilhos"
-              className="relative w-full rounded-2xl shadow-elegant"
+              className="relative w-full rounded-2xl border border-border/70 shadow-elegant"
               loading="lazy"
             />
           </div>
           <div className="relative">
             <div className="absolute -inset-4 bg-gradient-to-bl from-accent/8 via-primary/5 to-transparent rounded-[2rem] blur-xl" aria-hidden />
             <img
-              src={mockupAutocuidado}
-              alt="Habilidades de regulação e histórico mensal de autocuidado"
-              className="relative w-full rounded-2xl shadow-elegant"
+              src={mockupPacientes}
+              alt="Gestão de pacientes com cards organizados"
+              className="relative w-full rounded-2xl border border-border/70 shadow-elegant"
               loading="lazy"
             />
           </div>
