@@ -98,7 +98,7 @@ export const Features = () => {
                   <img
                     src={f.image}
                     alt={f.imageAlt}
-                    className="w-full rounded-2xl"
+                    className="w-full rounded-2xl border border-border/70 shadow-elegant"
                     loading="lazy"
                   />
                 </div>
