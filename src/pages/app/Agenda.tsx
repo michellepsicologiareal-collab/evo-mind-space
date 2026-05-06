@@ -460,28 +460,32 @@ const Agenda = () => {
   const executeDelete = async (includeFinancial: boolean) => {
     if (!deleteSessionId) return;
     setDeleting(true);
-    // Delete related progress
-    await supabase.from("patient_progress").delete().eq("session_id", deleteSessionId);
-    // Delete related gcal events
-    await supabase.from("session_gcal_events").delete().eq("session_id", deleteSessionId);
+
+    // Delete related progress & gcal events
+    await Promise.all([
+      supabase.from("patient_progress").delete().eq("session_id", deleteSessionId),
+      supabase.from("session_gcal_events").delete().eq("session_id", deleteSessionId),
+      supabase.from("session_records").delete().eq("session_id", deleteSessionId),
+      supabase.from("session_evolutions").delete().eq("session_id", deleteSessionId),
+    ]);
 
     if (includeFinancial) {
-      // Delete the session entirely (which IS the financial record)
+      // Delete the session row entirely (removes from agenda + finance)
       const { error } = await supabase.from("sessions").delete().eq("id", deleteSessionId);
       if (error) { setDeleting(false); toast.error("Erro ao excluir"); return; }
-      toast.success("Sessão, progresso e lançamento financeiro excluídos");
+      toast.success("Sessão e lançamento financeiro excluídos");
     } else {
-      // Keep the session row but mark as cancelled, clear payment
-      const { error } = await supabase.from("sessions").delete().eq("id", deleteSessionId);
+      // Cancel the session (removes from agenda but keeps financial record)
+      const { error } = await supabase.from("sessions").update({ status: "cancelled" as any }).eq("id", deleteSessionId);
       if (error) { setDeleting(false); toast.error("Erro ao excluir"); return; }
-      toast.success("Sessão e progresso excluídos");
+      toast.success("Sessão excluída (lançamento financeiro mantido)");
     }
 
     setDeleting(false);
     setDeleteConfirmOpen(false);
     setDeleteSessionId(null);
     if (editOpen) { editGuard.resetDirty(); setEditOpen(false); }
-    load(); loadPending();
+    await load(); loadPending();
   };
 
   const copyConfirmationLink = async (s: Session) => {
