@@ -1,6 +1,7 @@
 import { Heart, Shield, Moon, Sparkles } from "lucide-react";
 import mockupAutocuidado from "@/assets/mockup-autocuidado.png";
 import mockupEmocoes from "@/assets/mockup-emocoes-v2.png";
+import mockupPacientes from "@/assets/mockup-pacientes.png";
 
 const pillars = [
   { icon: Moon, label: "Check-in diário", desc: "Protocolo PLEASE: sono, alimentação, movimento, saúde e equilíbrio." },
