@@ -9,3 +9,6 @@ inactivity_timeout = "28800s"
 
 [functions.google-calendar-callback]
 verify_jwt = false
+
+[functions.auth-email-hook]
+verify_jwt = false
