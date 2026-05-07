@@ -1033,9 +1033,11 @@ export type Database = {
         Returns: {
           duration_minutes: number
           id: string
+          modality: string
           patient_name: string
           scheduled_at: string
           status: string
+          therapist_name: string
         }[]
       }
       has_role: {
