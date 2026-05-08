@@ -558,17 +558,17 @@ const Agenda = () => {
       ? `Passando para lembrar do acerto referente às nossas ${singlePaymentGroup.sessions.length} sessões de ${dateStr}.`
       : `Passando para lembrar do acerto referente à nossa sessão de ${dateStr}.`;
     const message = [
-      `Ol\u00e1, ${name}! Aqui \u00e9 a sua psi, ${firstName || "sua psic\u00f3loga"}.`,
+      `Olá, ${name}! Aqui é a sua psi, ${firstName || "sua psicóloga"}.`,
       "",
       sessionLine,
       "",
       `💳 Valor: ${value}`,
       pixKey ? `🔑 Chave Pix: ${pixKey}` : "",
       "",
-      `Assim que realizar, pode me enviar o comprovante por aqui. Qualquer d\u00favida, fico \u00e0 disposi\u00e7\u00e3o!`,
+      `Assim que realizar, pode me enviar o comprovante por aqui. Qualquer dúvida, fico à disposição!`,
       "",
       psiName || "",
-      psiCrp ? `Psic\u00f3loga | CRP ${psiCrp}` : "Psic\u00f3loga",
+      psiCrp ? `Psicóloga | CRP ${psiCrp}` : "Psicóloga",
     ].filter(Boolean).join("\n");
 
     // Determine WhatsApp number: financial responsible or patient
