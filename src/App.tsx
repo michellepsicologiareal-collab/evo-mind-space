@@ -16,6 +16,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Admin = lazy(() => import("./pages/Admin"));
 const ConfirmarSessao = lazy(() => import("./pages/ConfirmarSessao"));
+const SessaoConfirmada = lazy(() => import("./pages/SessaoConfirmada"));
 const Dashboard = lazy(() => import("./pages/app/Dashboard"));
 const Patients = lazy(() => import("./pages/app/Patients"));
 const Agenda = lazy(() => import("./pages/app/Agenda"));
