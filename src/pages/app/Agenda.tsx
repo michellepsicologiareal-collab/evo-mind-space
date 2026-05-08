@@ -369,7 +369,7 @@ const Agenda = () => {
     for (let i = 0; i < totalSessions; i++) {
       const scheduledAt = addDays(baseDate, i * intervalDays);
       const planLabel = isRecurring
-        ? `Plano ${totalSessions} sess\u00f5es (${i + 1}/${totalSessions})${isSinglePayment ? ` \u2014 Pgto \u00fanico [${groupId}]` : " \u2014 Pgto por sess\u00e3o"}`
+        ? `Plano ${totalSessions} sessões (${i + 1}/${totalSessions})${isSinglePayment ? ` — Pgto único [${groupId}]` : " — Pgto por sessão"}`
         : null;
       const noteText = [parsed.data.notes, planLabel].filter(Boolean).join("\n");
 
