@@ -369,7 +369,7 @@ const Agenda = () => {
     for (let i = 0; i < totalSessions; i++) {
       const scheduledAt = addDays(baseDate, i * intervalDays);
       const planLabel = isRecurring
-        ? `Plano ${totalSessions} sess\u00f5es (${i + 1}/${totalSessions})${isSinglePayment ? ` \u2014 Pgto \u00fanico [${groupId}]` : " \u2014 Pgto por sess\u00e3o"}`
+        ? `Plano ${totalSessions} sessões (${i + 1}/${totalSessions})${isSinglePayment ? ` — Pgto único [${groupId}]` : " — Pgto por sessão"}`
         : null;
       const noteText = [parsed.data.notes, planLabel].filter(Boolean).join("\n");
 
@@ -429,7 +429,7 @@ const Agenda = () => {
     const { error } = await supabase.from("sessions").update({ status }).eq("id", id);
     if (error) return toast.error("Erro ao atualizar");
     toast.success(`Marcada como ${statusLabel[status].toLowerCase()}`);
-    load();
+    load(); loadPending();
   };
 
   const updatePaymentStatus = async (id: string, paymentStatus: PaymentStatus) => {
@@ -558,17 +558,17 @@ const Agenda = () => {
       ? `Passando para lembrar do acerto referente às nossas ${singlePaymentGroup.sessions.length} sessões de ${dateStr}.`
       : `Passando para lembrar do acerto referente à nossa sessão de ${dateStr}.`;
     const message = [
-      `Ol\u00e1, ${name}! Aqui \u00e9 a sua psi, ${firstName || "sua psic\u00f3loga"}.`,
+      `Olá, ${name}! Aqui é a sua psi, ${firstName || "sua psicóloga"}.`,
       "",
       sessionLine,
       "",
       `💳 Valor: ${value}`,
       pixKey ? `🔑 Chave Pix: ${pixKey}` : "",
       "",
-      `Assim que realizar, pode me enviar o comprovante por aqui. Qualquer d\u00favida, fico \u00e0 disposi\u00e7\u00e3o!`,
+      `Assim que realizar, pode me enviar o comprovante por aqui. Qualquer dúvida, fico à disposição!`,
       "",
       psiName || "",
-      psiCrp ? `Psic\u00f3loga | CRP ${psiCrp}` : "Psic\u00f3loga",
+      psiCrp ? `Psicóloga | CRP ${psiCrp}` : "Psicóloga",
     ].filter(Boolean).join("\n");
 
     // Determine WhatsApp number: financial responsible or patient
@@ -1097,13 +1097,13 @@ const Agenda = () => {
                       });
                       return (
                         <div className="rounded-lg bg-card border border-border p-3 text-sm space-y-1.5">
-                          <p className="font-medium text-foreground">{"\uD83D\uDCCB"} {form.recurrence_count} sess\u00f5es — Total: <span className="text-accent font-bold">R$ {total.toFixed(2)}</span></p>
+                          <p className="font-medium text-foreground">📋 {form.recurrence_count} sessões — Total: <span className="text-accent font-bold">R$ {total.toFixed(2)}</span></p>
                           <p className="text-xs text-muted-foreground">
                             {form.payment_plan === "single_payment"
-                              ? `\uD83D\uDCB3 1 lan\u00e7amento financeiro de R$ ${total.toFixed(2)}`
-                              : `\uD83D\uDCB3 ${form.recurrence_count}x R$ ${unitPrice.toFixed(2)}`}
+                              ? `💳 1 lançamento financeiro de R$ ${total.toFixed(2)}`
+                              : `💳 ${form.recurrence_count}x R$ ${unitPrice.toFixed(2)}`}
                           </p>
-                          <p className="text-xs text-muted-foreground">{"\uD83D\uDCC5"} {dates.join(", ")}</p>
+                          <p className="text-xs text-muted-foreground">📅 {dates.join(", ")}</p>
                         </div>
                       );
                     })()}
