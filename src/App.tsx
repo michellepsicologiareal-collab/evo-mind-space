@@ -114,6 +114,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/confirmar-sessao/:token" element={<ConfirmarSessao />} />
+              <Route path="/sessao-confirmada/:token" element={<SessaoConfirmada />} />
               <Route path="/contrato/:templateId" element={<ContratoPublico />} />
               <Route
                 path="/app"
