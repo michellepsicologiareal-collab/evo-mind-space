@@ -429,7 +429,7 @@ const Agenda = () => {
     const { error } = await supabase.from("sessions").update({ status }).eq("id", id);
     if (error) return toast.error("Erro ao atualizar");
     toast.success(`Marcada como ${statusLabel[status].toLowerCase()}`);
-    load();
+    load(); loadPending();
   };
 
   const updatePaymentStatus = async (id: string, paymentStatus: PaymentStatus) => {
