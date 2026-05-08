@@ -322,19 +322,19 @@ const Patients = () => {
     const valor = p.session_price != null ? `R$ ${Number(p.session_price).toFixed(2).replace(".", ",")}` : "a combinar";
     const firstName = profName ? profName.split(" ")[0] : "";
     const message = [
-      `Ol\u00e1, ${recipientName}! Aqui \u00e9 a sua psi, ${firstName || "sua psic\u00f3loga"}.`,
+      `Olá, ${recipientName}! Aqui é a sua psi, ${firstName || "sua psicóloga"}.`,
       "",
       latestSessionDates[p.id]
-        ? `Passando para lembrar do acerto referente \u00e0 nossa sess\u00e3o de ${format(new Date(latestSessionDates[p.id]), "dd/MM/yyyy")}.`
-        : `Passando para lembrar do acerto referente \u00e0 sua sess\u00e3o.`,
+        ? `Passando para lembrar do acerto referente à nossa sessão de ${format(new Date(latestSessionDates[p.id]), "dd/MM/yyyy")}.`
+        : `Passando para lembrar do acerto referente à sua sessão.`,
       "",
-      `\u{1F4B3} Valor: ${valor}`,
-      pixKey ? `\u{1F511} Chave Pix: ${pixKey}` : "",
+      `💳 Valor: ${valor}`,
+      pixKey ? `🔑 Chave Pix: ${pixKey}` : "",
       "",
-      `Assim que realizar, pode me enviar o comprovante por aqui. Qualquer d\u00favida, fico \u00e0 disposi\u00e7\u00e3o!`,
+      `Assim que realizar, pode me enviar o comprovante por aqui. Qualquer dúvida, fico à disposição!`,
       "",
       profName || "",
-      profCrp ? `Psic\u00f3loga | CRP ${profCrp}` : "Psic\u00f3loga",
+      profCrp ? `Psicóloga | CRP ${profCrp}` : "Psicóloga",
     ].filter(Boolean).join("\n");
     return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
   };
