@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -140,6 +141,8 @@ const Finance = () => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, monthCursor]);
+
+  useAutoRefresh(() => { if (user) load(); }, { routePath: "/app/financeiro" });
 
   // Load reminder preferences from profile
   useEffect(() => {

@@ -12,6 +12,7 @@ import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { PremiumGate } from "@/components/app/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -141,6 +142,8 @@ const Patients = () => {
   useEffect(() => {
     if (user) load();
   }, [user]);
+
+  useAutoRefresh(() => { if (user) load(); }, { routePath: "/app/pacientes" });
 
   const openNew = () => {
     if (!isPremium && patients.length >= FREE_PATIENT_LIMIT) {
