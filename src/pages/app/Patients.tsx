@@ -328,8 +328,8 @@ const Patients = () => {
         ? `Passando para lembrar do acerto referente à nossa sessão de ${format(new Date(latestSessionDates[p.id]), "dd/MM/yyyy")}.`
         : `Passando para lembrar do acerto referente à sua sessão.`,
       "",
-      `💳 Valor: ${valor}`,
-      pixKey ? `🔑 Chave Pix: ${pixKey}` : "",
+      `Valor: ${valor}`,
+      pixKey ? `Chave Pix: ${pixKey}` : "",
       "",
       `Assim que realizar, pode me enviar o comprovante por aqui. Qualquer dúvida, fico à disposição!`,
       "",
