@@ -31,11 +31,20 @@ const Fallback = () => (
 export const KeepAliveOutlet = () => {
   const { pathname } = useLocation();
   const visitedRef = useRef<Set<string>>(new Set());
+  const prevPathRef = useRef<string | null>(null);
 
   // Track visited routes
   if (routeComponents[pathname]) {
     visitedRef.current.add(pathname);
   }
+
+  // Notify hidden→visible page transitions so it can refresh stale data
+  useEffect(() => {
+    if (prevPathRef.current !== pathname) {
+      prevPathRef.current = pathname;
+      window.dispatchEvent(new CustomEvent("route-active", { detail: { path: pathname } }));
+    }
+  }, [pathname]);
 
   return (
     <>
