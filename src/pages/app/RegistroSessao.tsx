@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -109,33 +109,81 @@ const RegistroSessao = () => {
   const [historyFilter, setHistoryFilter] = useState("");
 
   // --- Draft auto-save ---
-  useEffect(() => {
-    if (editingId) return; // don't save draft when editing existing record
-    if (hasMeaningfulData(form)) {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
-    }
-  }, [form, editingId]);
+  // Keep a ref with the latest form so event listeners always read fresh data
+  const formRef = useRef(form);
+  const editingIdRef = useRef(editingId);
+  useEffect(() => { formRef.current = form; }, [form]);
+  useEffect(() => { editingIdRef.current = editingId; }, [editingId]);
 
-  // Warn on browser close/refresh with unsaved data
-  useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      if (hasMeaningfulData(form)) {
-        e.preventDefault();
+  const draftKeyFor = useCallback(
+    (id: string | null) => (id ? `${DRAFT_KEY}::${id}` : DRAFT_KEY),
+    []
+  );
+
+  const flushDraft = useCallback(() => {
+    try {
+      const f = formRef.current;
+      if (hasMeaningfulData(f)) {
+        localStorage.setItem(draftKeyFor(editingIdRef.current), JSON.stringify(f));
       }
+    } catch {
+      /* storage may be full or unavailable — ignore */
+    }
+  }, [draftKeyFor]);
+
+  // Save draft on every meaningful change (covers typing pauses)
+  useEffect(() => {
+    if (hasMeaningfulData(form)) {
+      try { localStorage.setItem(draftKeyFor(editingId), JSON.stringify(form)); } catch {}
+    }
+  }, [form, editingId, draftKeyFor]);
+
+  // Save when the tab is hidden/minimized, window blurs, app is being closed,
+  // network drops, or page navigation occurs.
+  useEffect(() => {
+    const onVisibility = () => { if (document.visibilityState === "hidden") flushDraft(); };
+    const onPageHide = () => flushDraft();
+    const onBlur = () => flushDraft();
+    const onOffline = () => flushDraft();
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      flushDraft();
+      if (hasMeaningfulData(formRef.current)) e.preventDefault();
     };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [form]);
+
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("blur", onBlur);
+    window.addEventListener("offline", onOffline);
+    window.addEventListener("beforeunload", onBeforeUnload);
+
+    // Periodic safety net: every 10s save in background
+    const interval = window.setInterval(flushDraft, 10000);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("offline", onOffline);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      window.clearInterval(interval);
+      // Final flush on unmount (route change)
+      flushDraft();
+    };
+  }, [flushDraft]);
 
   const clearDraft = useCallback(() => {
-    localStorage.removeItem(DRAFT_KEY);
+    try {
+      localStorage.removeItem(draftKeyFor(editingIdRef.current));
+      localStorage.removeItem(DRAFT_KEY);
+    } catch {}
     setDraftRestored(false);
-  }, []);
+  }, [draftKeyFor]);
 
-  // Restore draft on mount (only for new records)
+  // Restore draft on mount (new records or when editing resumes)
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(DRAFT_KEY);
+      const key = draftKeyFor(editingId);
+      const raw = localStorage.getItem(key);
       if (raw) {
         const saved = JSON.parse(raw) as FormState;
         if (hasMeaningfulData(saved)) {
@@ -145,7 +193,7 @@ const RegistroSessao = () => {
         }
       }
     } catch {
-      localStorage.removeItem(DRAFT_KEY);
+      try { localStorage.removeItem(draftKeyFor(editingId)); } catch {}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
