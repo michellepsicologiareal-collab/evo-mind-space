@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -148,6 +149,8 @@ const Dashboard = () => {
   const [profileName, setProfileName] = useState("");
   const [clinicName, setClinicName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+  useAutoRefresh(() => setRefreshKey(k => k + 1), { routePath: "/app" });
   const [hideRevenue, setHideRevenue] = useState(false);
   const [nextSessionMin, setNextSessionMin] = useState<number | null>(null);
   const [moodData, setMoodData] = useState<{ name: string; score: number }[]>([]);
@@ -456,7 +459,7 @@ const Dashboard = () => {
         console.warn("Não foi possível carregar o painel inicial:", error);
       })
       .finally(() => setLoading(false));
-  }, [user, dateFrom, dateTo]);
+  }, [user, dateFrom, dateTo, refreshKey]);
 
   const greeting = (() => {
     const h = new Date().getHours();

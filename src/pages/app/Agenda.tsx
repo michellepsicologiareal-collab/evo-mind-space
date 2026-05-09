@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { z } from "zod";
 import { toast } from "sonner";
 import {
@@ -302,6 +303,8 @@ const Agenda = () => {
   };
 
   useEffect(() => { if (user) { load(); loadPending(); } }, [user, currentMonth]);
+
+  useAutoRefresh(() => { if (user) { load(); loadPending(); } }, { routePath: "/app/agenda" });
 
   // Patient month count for new session form
   useEffect(() => {
