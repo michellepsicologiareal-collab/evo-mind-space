@@ -1,22 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logClinicalAccess } from "@/utils/auditLog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Save, Plus, Check, Trash2, Brain, MessageSquare, ListChecks, BookOpen, Sparkles, Copy } from "lucide-react";
+import {
+  Loader2, Save, Plus, Trash2, Brain, MessageSquare, ListChecks, BookOpen,
+  Sparkles, Copy, ChevronDown, ChevronUp, Pencil, X,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-interface Goal {
-  text: string;
-  completed: boolean;
+type PlanStatus = "initial" | "in_progress" | "consolidated";
+
+interface TherapyPlan {
+  id: string;
+  objective: string;
+  hypothesis: string;
+  interventions: string[];
+  homework: string[];
+  indicators: string[];
+  status: PlanStatus;
 }
 
 interface Evolution {
@@ -36,6 +47,92 @@ const FIVE_SYSTEMS = [
 
 type SystemKey = (typeof FIVE_SYSTEMS)[number]["key"];
 
+const STATUS_META: Record<PlanStatus, { label: string; cls: string }> = {
+  initial: { label: "Inicial", cls: "bg-muted text-muted-foreground border border-border" },
+  in_progress: { label: "Em andamento", cls: "bg-serene/15 text-serene border border-serene/30" },
+  consolidated: { label: "Consolidado", cls: "bg-accent/15 text-accent border border-accent/30" },
+};
+
+const newPlan = (): TherapyPlan => ({
+  id: (typeof crypto !== "undefined" && "randomUUID" in crypto) ? crypto.randomUUID() : `p_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+  objective: "",
+  hypothesis: "",
+  interventions: [],
+  homework: [],
+  indicators: [],
+  status: "initial",
+});
+
+// Migrate legacy goals (`{text, completed}[]`) to TherapyPlan[]
+const normalizePlans = (raw: unknown): TherapyPlan[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((g: any) => {
+    if (g && typeof g.objective === "string") {
+      return {
+        id: g.id ?? newPlan().id,
+        objective: g.objective ?? "",
+        hypothesis: g.hypothesis ?? "",
+        interventions: Array.isArray(g.interventions) ? g.interventions : [],
+        homework: Array.isArray(g.homework) ? g.homework : [],
+        indicators: Array.isArray(g.indicators) ? g.indicators : [],
+        status: (["initial", "in_progress", "consolidated"].includes(g.status) ? g.status : "initial") as PlanStatus,
+      };
+    }
+    // Legacy {text, completed}
+    return {
+      ...newPlan(),
+      objective: g?.text ?? "",
+      status: g?.completed ? "consolidated" : "initial",
+    };
+  });
+};
+
+// Chip-list editor
+const ChipList = ({
+  label, items, onChange, placeholder, readOnly,
+}: { label: string; items: string[]; onChange: (next: string[]) => void; placeholder: string; readOnly?: boolean }) => {
+  const [draft, setDraft] = useState("");
+  const add = () => {
+    const v = draft.trim();
+    if (!v) return;
+    onChange([...items, v]);
+    setDraft("");
+  };
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs font-semibold text-foreground/80">{label}</Label>
+      {items.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {items.map((it, i) => (
+            <span key={i} className="inline-flex items-center gap-1 rounded-full bg-secondary/60 border border-border px-2.5 py-1 text-xs text-foreground">
+              {it}
+              {!readOnly && (
+                <button type="button" onClick={() => onChange(items.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-destructive">
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+      {!readOnly && (
+        <div className="flex gap-2">
+          <Input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
+            placeholder={placeholder}
+            className="h-9 text-sm"
+          />
+          <Button type="button" variant="outline" size="sm" className="h-9 shrink-0" onClick={add}>
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: string; readOnly?: boolean }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -46,8 +143,8 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
     environment: "", thoughts: "", emotions: "", behaviors: "", physical_reactions: "",
   });
   const [coreBeliefs, setCoreBeliefs] = useState("");
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [newGoal, setNewGoal] = useState("");
+  const [plans, setPlans] = useState<TherapyPlan[]>([]);
+  const [openPlanId, setOpenPlanId] = useState<string | null>(null);
   const [formId, setFormId] = useState<string | null>(null);
 
   // Evolutions state
@@ -55,29 +152,25 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   const [evoSummary, setEvoSummary] = useState("");
   const [evoHomework, setEvoHomework] = useState("");
   const [savingEvo, setSavingEvo] = useState(false);
+  const [editingEvoId, setEditingEvoId] = useState<string | null>(null);
+  const [editEvoSummary, setEditEvoSummary] = useState("");
+  const [editEvoHomework, setEditEvoHomework] = useState("");
+  const [savingEvoEdit, setSavingEvoEdit] = useState(false);
 
   // AI organize state
   const [organizing, setOrganizing] = useState(false);
   const [aiResult, setAiResult] = useState<string | null>(null);
+
+  const draftKey = `therapy-plan-draft::${patientId}`;
+  const hasLoadedRef = useRef(false);
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       setLoading(true);
       const [formRes, evoRes] = await Promise.all([
-        supabase
-          .from("case_formulations")
-          .select("*")
-          .eq("patient_id", patientId)
-          .eq("user_id", user.id)
-          .maybeSingle(),
-        supabase
-          .from("session_evolutions")
-          .select("*")
-          .eq("patient_id", patientId)
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(50),
+        supabase.from("case_formulations").select("*").eq("patient_id", patientId).eq("user_id", user.id).maybeSingle(),
+        supabase.from("session_evolutions").select("*").eq("patient_id", patientId).eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
       ]);
 
       if (formRes.data) {
@@ -91,15 +184,31 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
           physical_reactions: f.physical_reactions ?? "",
         });
         setCoreBeliefs(f.core_beliefs ?? "");
-        setGoals(Array.isArray(f.treatment_goals) ? (f.treatment_goals as unknown as Goal[]) : []);
+        setPlans(normalizePlans(f.treatment_goals));
       }
+
+      // Restore localStorage draft (overrides DB if present)
+      try {
+        const raw = localStorage.getItem(draftKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) setPlans(normalizePlans(parsed));
+        }
+      } catch { /* noop */ }
+
       setEvolutions((evoRes.data as Evolution[]) ?? []);
       setLoading(false);
-      // Audit: log access to case formulation
+      hasLoadedRef.current = true;
       if (formRes.data) logClinicalAccess("case_formulation", formRes.data.id, patientId);
     };
     load();
-  }, [user, patientId]);
+  }, [user, patientId, draftKey]);
+
+  // Auto-save plans to localStorage on every change
+  useEffect(() => {
+    if (!hasLoadedRef.current) return;
+    try { localStorage.setItem(draftKey, JSON.stringify(plans)); } catch { /* noop */ }
+  }, [plans, draftKey]);
 
   const saveFormulation = async () => {
     if (!user) return;
@@ -109,7 +218,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
       user_id: user.id,
       ...systems,
       core_beliefs: coreBeliefs,
-      treatment_goals: JSON.parse(JSON.stringify(goals)),
+      treatment_goals: JSON.parse(JSON.stringify(plans)),
     };
 
     if (formId) {
@@ -120,22 +229,25 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
       if (error) { toast.error("Erro ao criar formulação"); setSaving(false); return; }
       setFormId(data.id);
     }
-    toast.success("Formulação salva");
+    try { localStorage.removeItem(draftKey); } catch { /* noop */ }
+    toast.success("Plano terapêutico salvo");
     setSaving(false);
   };
 
-  const addGoal = () => {
-    if (!newGoal.trim()) return;
-    setGoals((prev) => [...prev, { text: newGoal.trim(), completed: false }]);
-    setNewGoal("");
+  const updatePlan = (id: string, patch: Partial<TherapyPlan>) => {
+    setPlans((prev) => prev.map((p) => p.id === id ? { ...p, ...patch } : p));
   };
 
-  const toggleGoal = (i: number) => {
-    setGoals((prev) => prev.map((g, idx) => idx === i ? { ...g, completed: !g.completed } : g));
+  const addPlan = () => {
+    const p = newPlan();
+    setPlans((prev) => [...prev, p]);
+    setOpenPlanId(p.id);
   };
 
-  const removeGoal = (i: number) => {
-    setGoals((prev) => prev.filter((_, idx) => idx !== i));
+  const removePlan = (id: string) => {
+    if (!window.confirm("Excluir este objetivo terapêutico?")) return;
+    setPlans((prev) => prev.filter((p) => p.id !== id));
+    if (openPlanId === id) setOpenPlanId(null);
   };
 
   const saveEvolution = async () => {
@@ -143,49 +255,68 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
     setSavingEvo(true);
     const { data, error } = await supabase
       .from("session_evolutions")
-      .insert({
-        patient_id: patientId,
-        user_id: user.id,
-        session_summary: evoSummary.trim(),
-        homework: evoHomework.trim(),
-      })
-      .select("*")
-      .single();
+      .insert({ patient_id: patientId, user_id: user.id, session_summary: evoSummary.trim(), homework: evoHomework.trim() })
+      .select("*").single();
     setSavingEvo(false);
     if (error) { toast.error("Erro ao salvar evolução"); return; }
     setEvolutions((prev) => [data as Evolution, ...prev]);
-    setEvoSummary("");
-    setEvoHomework("");
+    setEvoSummary(""); setEvoHomework("");
     toast.success("Evolução registrada");
+  };
+
+  const startEditEvo = (evo: Evolution) => {
+    setEditingEvoId(evo.id);
+    setEditEvoSummary(evo.session_summary ?? "");
+    setEditEvoHomework(evo.homework ?? "");
+  };
+
+  const cancelEditEvo = () => {
+    setEditingEvoId(null);
+    setEditEvoSummary("");
+    setEditEvoHomework("");
+  };
+
+  const saveEditEvo = async () => {
+    if (!editingEvoId) return;
+    setSavingEvoEdit(true);
+    const { error } = await supabase
+      .from("session_evolutions")
+      .update({ session_summary: editEvoSummary.trim(), homework: editEvoHomework.trim() })
+      .eq("id", editingEvoId);
+    setSavingEvoEdit(false);
+    if (error) { toast.error("Erro ao salvar alteração"); return; }
+    setEvolutions((prev) => prev.map((e) => e.id === editingEvoId ? { ...e, session_summary: editEvoSummary.trim(), homework: editEvoHomework.trim() } : e));
+    cancelEditEvo();
+    toast.success("Alteração salva");
+  };
+
+  const deleteEvo = async (id: string) => {
+    if (!window.confirm("Excluir este registro de evolução? Esta ação não pode ser desfeita.")) return;
+    const { error } = await supabase.from("session_evolutions").delete().eq("id", id);
+    if (error) { toast.error("Erro ao excluir"); return; }
+    setEvolutions((prev) => prev.filter((e) => e.id !== id));
+    if (editingEvoId === id) cancelEditEvo();
+    toast.success("Registro excluído");
   };
 
   const organizeNotes = async () => {
     const notes = evoSummary.trim();
-    if (!notes) {
-      toast.error("Escreva suas anotações antes de organizar.");
-      return;
-    }
-    setOrganizing(true);
-    setAiResult(null);
+    if (!notes) { toast.error("Escreva suas anotações antes de organizar."); return; }
+    setOrganizing(true); setAiResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke("organize-notes", {
-        body: { notes },
-      });
+      const { data, error } = await supabase.functions.invoke("organize-notes", { body: { notes } });
       if (error) throw error;
       if (data?.error) { toast.error(data.error); return; }
       setAiResult(data.result);
     } catch (e: any) {
       console.error(e);
       toast.error("Erro ao organizar notas. Tente novamente.");
-    } finally {
-      setOrganizing(false);
-    }
+    } finally { setOrganizing(false); }
   };
 
   const copyToEvolution = () => {
     if (!aiResult) return;
-    setEvoSummary(aiResult);
-    setAiResult(null);
+    setEvoSummary(aiResult); setAiResult(null);
     toast.success("Texto copiado para a evolução!");
   };
 
@@ -204,7 +335,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
           <Brain className="h-4 w-4 mr-1 hidden sm:inline" /> 5 Sistemas
         </TabsTrigger>
         <TabsTrigger value="goals" className="text-xs sm:text-sm">
-          <ListChecks className="h-4 w-4 mr-1 hidden sm:inline" /> Metas
+          <ListChecks className="h-4 w-4 mr-1 hidden sm:inline" /> Plano Terapêutico
         </TabsTrigger>
         <TabsTrigger value="evolution" className="text-xs sm:text-sm">
           <BookOpen className="h-4 w-4 mr-1 hidden sm:inline" /> Evolução
@@ -263,72 +394,136 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
         )}
       </TabsContent>
 
-      {/* ── Treatment Goals ── */}
+      {/* ── Plano Terapêutico ── */}
       <TabsContent value="goals" className="space-y-4">
         <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
           <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-1">
-            <ListChecks className="h-4 w-4 text-accent" /> Metas do Tratamento
+            <ListChecks className="h-4 w-4 text-accent" /> Plano Terapêutico
           </h3>
-          <p className="text-xs text-muted-foreground">Adicione e acompanhe os objetivos terapêuticos.</p>
+          <p className="text-xs text-muted-foreground">5 Sistemas → Hipóteses → Plano → Evolução</p>
         </div>
 
-        {!readOnly && (
-          <div className="flex gap-2">
-            <Input
-              placeholder="Novo objetivo..."
-              value={newGoal}
-              onChange={(e) => setNewGoal(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addGoal()}
-              className="scroll-mt-24"
-            />
-            <Button variant="accent" size="icon" className="shrink-0 min-h-[44px] min-w-[44px]" onClick={addGoal}>
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-
-        {goals.length === 0 ? (
-          <p className="text-center text-sm text-muted-foreground py-8">Nenhuma meta definida ainda.</p>
+        {plans.length === 0 ? (
+          <p className="text-center text-sm text-muted-foreground py-8">Nenhum objetivo terapêutico ainda. Adicione o primeiro abaixo.</p>
         ) : (
-          <ul className="space-y-2">
-            {goals.map((g, i) => (
-              <li
-                key={i}
-                className={cn(
-                  "flex items-center gap-3 rounded-xl border p-3 transition-colors",
-                  g.completed ? "bg-accent/5 border-accent/20" : "border-border"
-                )}
-              >
-                <button
-                  onClick={() => toggleGoal(i)}
-                  className={cn(
-                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-all",
-                    g.completed ? "bg-accent border-accent text-white" : "border-border hover:border-accent/50"
-                  )}
-                >
-                  {g.completed && <Check className="h-3.5 w-3.5" />}
-                </button>
-                <span className={cn("flex-1 text-sm", g.completed && "line-through text-muted-foreground")}>
-                  {g.text}
-                </span>
-                {!readOnly && (
+          <ul className="space-y-3">
+            {plans.map((p) => {
+              const open = openPlanId === p.id;
+              const status = STATUS_META[p.status];
+              return (
+                <li key={p.id} className="rounded-2xl border border-border bg-card overflow-hidden transition-shadow hover:shadow-card">
                   <button
-                    onClick={() => removeGoal(i)}
-                    className="text-muted-foreground hover:text-destructive transition-colors"
+                    type="button"
+                    onClick={() => setOpenPlanId(open ? null : p.id)}
+                    className="w-full flex items-center gap-3 p-4 text-left"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {p.objective || <span className="text-muted-foreground italic font-normal">Sem título</span>}
+                      </p>
+                    </div>
+                    <span className={cn("shrink-0 text-[11px] font-medium px-2.5 py-1 rounded-full", status.cls)}>
+                      {status.label}
+                    </span>
+                    {open ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
                   </button>
-                )}
-              </li>
-            ))}
+
+                  {open && (
+                    <div className="border-t border-border p-4 space-y-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-foreground/80">Objetivo terapêutico</Label>
+                        <Input
+                          value={p.objective}
+                          onChange={(e) => updatePlan(p.id, { objective: e.target.value })}
+                          placeholder="Ex.: Reduzir esquiva social"
+                          disabled={readOnly}
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-foreground/80">Hipótese clínica</Label>
+                        <Textarea
+                          rows={3}
+                          value={p.hypothesis}
+                          onChange={(e) => updatePlan(p.id, { hypothesis: e.target.value })}
+                          placeholder="Formulação que sustenta este objetivo..."
+                          disabled={readOnly}
+                        />
+                      </div>
+
+                      <ChipList
+                        label="Intervenções planejadas"
+                        items={p.interventions}
+                        onChange={(next) => updatePlan(p.id, { interventions: next })}
+                        placeholder="Adicionar intervenção e Enter"
+                        readOnly={readOnly}
+                      />
+                      <ChipList
+                        label="Tarefas de casa"
+                        items={p.homework}
+                        onChange={(next) => updatePlan(p.id, { homework: next })}
+                        placeholder="Adicionar tarefa e Enter"
+                        readOnly={readOnly}
+                      />
+                      <ChipList
+                        label="Indicadores de progresso"
+                        items={p.indicators}
+                        onChange={(next) => updatePlan(p.id, { indicators: next })}
+                        placeholder="Adicionar indicador e Enter"
+                        readOnly={readOnly}
+                      />
+
+                      <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 sm:items-end">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-semibold text-foreground/80">Status</Label>
+                          <Select
+                            value={p.status}
+                            onValueChange={(v) => updatePlan(p.id, { status: v as PlanStatus })}
+                            disabled={readOnly}
+                          >
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="initial">Inicial</SelectItem>
+                              <SelectItem value="in_progress">Em andamento</SelectItem>
+                              <SelectItem value="consolidated">Consolidado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {!readOnly && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 sm:self-end"
+                            onClick={() => removePlan(p.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" /> Excluir objetivo
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
 
         {!readOnly && (
-          <Button variant="accent" className="min-h-[44px] w-full" onClick={saveFormulation} disabled={saving}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Salvar Metas
-          </Button>
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full min-h-[44px] border-dashed border-accent/40 text-accent hover:bg-accent/10"
+              onClick={addPlan}
+            >
+              <Plus className="h-4 w-4 mr-1" /> Adicionar Objetivo
+            </Button>
+            <Button variant="accent" className="min-h-[44px] w-full" onClick={saveFormulation} disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Salvar Plano Terapêutico
+            </Button>
+          </>
         )}
       </TabsContent>
 
@@ -389,12 +584,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
               <h4 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" /> Notas Organizadas
               </h4>
-              <Button
-                size="sm"
-                variant="accent"
-                className="min-h-[36px]"
-                onClick={copyToEvolution}
-              >
+              <Button size="sm" variant="accent" className="min-h-[36px]" onClick={copyToEvolution}>
                 <Copy className="h-3.5 w-3.5 mr-1" /> Copiar para a Evolução
               </Button>
             </div>
@@ -408,25 +598,75 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
           <p className="text-center text-sm text-muted-foreground py-6">Nenhuma evolução registrada.</p>
         ) : (
           <ul className="space-y-3">
-            {evolutions.map((evo) => (
-              <li key={evo.id} className="rounded-xl border border-border p-4 space-y-2">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                  {format(new Date(evo.created_at), "dd 'de' MMMM 'de' yyyy, HH:mm", { locale: ptBR })}
-                </p>
-                {evo.session_summary && (
-                  <div>
-                    <p className="text-xs font-semibold text-foreground/60">Resumo</p>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{evo.session_summary}</p>
+            {evolutions.map((evo) => {
+              const isEditing = editingEvoId === evo.id;
+              return (
+                <li key={evo.id} className="rounded-xl border border-border p-4 space-y-2 relative">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      {format(new Date(evo.created_at), "dd 'de' MMMM 'de' yyyy, HH:mm", { locale: ptBR })}
+                    </p>
+                    {!readOnly && !isEditing && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => startEditEvo(evo)}
+                          className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-accent hover:bg-accent/10 transition-colors"
+                          aria-label="Editar registro"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteEvo(evo.id)}
+                          className="h-8 w-8 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          aria-label="Excluir registro"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-                {evo.homework && (
-                  <div>
-                    <p className="text-xs font-semibold text-accent">Tarefa de Casa</p>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{evo.homework}</p>
-                  </div>
-                )}
-              </li>
-            ))}
+
+                  {isEditing ? (
+                    <div className="space-y-3 pt-1">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-foreground/80">Resumo</Label>
+                        <Textarea rows={4} value={editEvoSummary} onChange={(e) => setEditEvoSummary(e.target.value)} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-foreground/80">Tarefa de Casa</Label>
+                        <Textarea rows={2} value={editEvoHomework} onChange={(e) => setEditEvoHomework(e.target.value)} />
+                      </div>
+                      <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+                        <Button type="button" variant="outline" size="sm" onClick={cancelEditEvo} disabled={savingEvoEdit}>
+                          Cancelar
+                        </Button>
+                        <Button type="button" variant="accent" size="sm" onClick={saveEditEvo} disabled={savingEvoEdit}>
+                          {savingEvoEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                          Salvar alteração
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {evo.session_summary && (
+                        <div>
+                          <p className="text-xs font-semibold text-foreground/60">Resumo</p>
+                          <p className="text-sm text-foreground whitespace-pre-wrap">{evo.session_summary}</p>
+                        </div>
+                      )}
+                      {evo.homework && (
+                        <div>
+                          <p className="text-xs font-semibold text-accent">Tarefa de Casa</p>
+                          <p className="text-sm text-foreground whitespace-pre-wrap">{evo.homework}</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </TabsContent>
