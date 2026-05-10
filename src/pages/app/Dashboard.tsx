@@ -164,6 +164,7 @@ const Dashboard = () => {
   const [yearRevenue, setYearRevenue] = useState(0);
   const [frequencyData, setFrequencyData] = useState<FrequencyData[]>([]);
   const [moodFilterPatient, setMoodFilterPatient] = useState<string>("all");
+  const [moodChartPatient, setMoodChartPatient] = useState<string>("all");
 
   const [editGoalsOpen, setEditGoalsOpen] = useState(false);
   const [goalFormSessions, setGoalFormSessions] = useState(40);
