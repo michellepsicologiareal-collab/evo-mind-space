@@ -1715,7 +1715,7 @@ const Agenda = () => {
               return (
                 <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Humor / Progresso</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Dados do humor — preencher após sessão</p>
                     {editProgressId && (
                       <Button
                         type="button"
