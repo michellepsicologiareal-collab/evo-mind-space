@@ -1739,7 +1739,7 @@ const Agenda = () => {
                       <Input type="number" min="1" max="10" placeholder="—" value={editForm.mood_score} onChange={(e) => setEditForm({ ...editForm, mood_score: e.target.value })} />
                     </div>
                     <div className="space-y-2 col-span-2">
-                      <Label>Nota de progresso</Label>
+                      <Label>Observação</Label>
                       <Input maxLength={2000} placeholder="Ex.: melhora no sono" value={editForm.progress_note} onChange={(e) => setEditForm({ ...editForm, progress_note: e.target.value })} />
                     </div>
                   </div>
