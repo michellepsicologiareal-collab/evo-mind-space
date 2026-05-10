@@ -1167,14 +1167,14 @@ const Agenda = () => {
                 </div>
                 {form.session_type === "clinical" && (
                   <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Humor / Progresso (opcional)</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Dados do humor — preencher após sessão</p>
                     <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="mood">Humor (1-10)</Label>
                         <Input id="mood" type="number" min="1" max="10" placeholder="—" value={form.mood_score} onChange={(e) => setForm({ ...form, mood_score: e.target.value })} />
                       </div>
                       <div className="space-y-2 col-span-2">
-                        <Label htmlFor="prog">Nota de progresso</Label>
+                        <Label htmlFor="prog">Observação</Label>
                         <Input id="prog" maxLength={2000} placeholder="Ex.: melhora no sono" value={form.progress_note} onChange={(e) => setForm({ ...form, progress_note: e.target.value })} />
                       </div>
                     </div>
