@@ -164,6 +164,7 @@ const Dashboard = () => {
   const [yearRevenue, setYearRevenue] = useState(0);
   const [frequencyData, setFrequencyData] = useState<FrequencyData[]>([]);
   const [moodFilterPatient, setMoodFilterPatient] = useState<string>("all");
+  const [moodChartPatient, setMoodChartPatient] = useState<string>("all");
 
   const [editGoalsOpen, setEditGoalsOpen] = useState(false);
   const [goalFormSessions, setGoalFormSessions] = useState(40);
@@ -638,59 +639,97 @@ const Dashboard = () => {
         {/* ── Insight Charts ── */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Mood Chart Card */}
-          <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-serene via-serene/60 to-transparent" />
-            <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
-              Humor médio{topMoodPatient ? ` · ${topMoodPatient}` : ""}
-            </p>
-            <p className="font-display text-3xl font-bold text-foreground">
-              {avgMood !== null ? avgMood.toFixed(1).replace(".", ",") : "—"}
-              <span className="text-lg text-muted-foreground font-normal"> / 10</span>
-            </p>
-            {moodData.length > 1 ? (
-              <div className="mt-3 h-[80px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={moodData}>
-                    <defs>
-                      <linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--serene))" stopOpacity={0.4} />
-                        <stop offset="100%" stopColor="hsl(var(--serene))" stopOpacity={0.05} />
-                      </linearGradient>
-                    </defs>
-                    <RechartsTooltip
-                      contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
-                      formatter={(v: number) => [`${v}/10`, "Humor"]}
-                      labelFormatter={(l) => `Dia ${l}`}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="score"
-                      stroke="hsl(var(--serene))"
-                      strokeWidth={2.5}
-                      fill="url(#moodGrad)"
-                      dot={false}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+          {(() => {
+            const uniquePatients = Array.from(
+              new Map(patientMoods.map((m) => [m.patient_id, m.patient_name])).entries()
+            );
+            const chartSource = moodChartPatient === "all"
+              ? moodData
+              : [...patientMoods]
+                  .filter((m) => m.patient_id === moodChartPatient)
+                  .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
+                  .map((m) => ({ name: format(new Date(m.recorded_at), "dd/MM"), score: m.mood_score }));
+            const chartAvg = chartSource.length > 0
+              ? Math.round((chartSource.reduce((s, d) => s + d.score, 0) / chartSource.length) * 10) / 10
+              : null;
+            const selectedName = moodChartPatient === "all"
+              ? (topMoodPatient ? ` · ${topMoodPatient}` : "")
+              : ` · ${uniquePatients.find(([id]) => id === moodChartPatient)?.[1] ?? ""}`;
+            return (
+              <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-serene via-serene/60 to-transparent" />
+                <div className="flex items-start justify-between gap-3 mb-1">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Humor médio{selectedName}
+                  </p>
+                  {uniquePatients.length > 0 && (
+                    <Select value={moodChartPatient} onValueChange={setMoodChartPatient}>
+                      <SelectTrigger className="h-7 text-xs w-[160px]">
+                        <SelectValue placeholder="Paciente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os pacientes</SelectItem>
+                        {uniquePatients.map(([id, name]) => (
+                          <SelectItem key={id} value={id}>{name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <p className="font-display text-3xl font-bold text-foreground">
+                  {chartAvg !== null ? chartAvg.toFixed(1).replace(".", ",") : "—"}
+                  <span className="text-lg text-muted-foreground font-normal"> / 10</span>
+                </p>
+                {chartSource.length > 1 ? (
+                  <div className="mt-3 h-[80px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartSource}>
+                        <defs>
+                          <linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="hsl(var(--serene))" stopOpacity={0.4} />
+                            <stop offset="100%" stopColor="hsl(var(--serene))" stopOpacity={0.05} />
+                          </linearGradient>
+                        </defs>
+                        <RechartsTooltip
+                          contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+                          formatter={(v: number) => [`${v}/10`, "Humor"]}
+                          labelFormatter={(l) => `Dia ${l}`}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="score"
+                          stroke="hsl(var(--serene))"
+                          strokeWidth={2.5}
+                          fill="url(#moodGrad)"
+                          dot={false}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    {moodChartPatient === "all"
+                      ? "Registre o humor dos pacientes para ver o gráfico aqui ✨"
+                      : "Este paciente ainda não tem registros suficientes."}
+                  </p>
+                )}
+                {chartSource.length > 1 && (
+                  <div className="flex gap-1 mt-2">
+                    {chartSource.slice(-7).map((d, i) => (
+                      <div
+                        key={i}
+                        className="h-2 w-2 rounded-full"
+                        style={{
+                          backgroundColor: d.score >= 7 ? "hsl(var(--serene))" : d.score >= 4 ? "hsl(var(--sand))" : "hsl(var(--destructive))",
+                          opacity: 0.5 + (i / 10),
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-            ) : (
-              <p className="mt-4 text-sm text-muted-foreground">Registre o humor dos pacientes para ver o gráfico aqui ✨</p>
-            )}
-            {moodData.length > 1 && (
-              <div className="flex gap-1 mt-2">
-                {moodData.slice(-7).map((d, i) => (
-                  <div
-                    key={i}
-                    className="h-2 w-2 rounded-full"
-                    style={{
-                      backgroundColor: d.score >= 7 ? "hsl(var(--serene))" : d.score >= 4 ? "hsl(var(--sand))" : "hsl(var(--destructive))",
-                      opacity: 0.5 + (i / 10),
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+            );
+          })()}
 
           {/* Revenue Chart Card */}
           <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">

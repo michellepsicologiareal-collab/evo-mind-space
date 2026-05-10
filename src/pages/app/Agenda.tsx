@@ -1140,22 +1140,25 @@ const Agenda = () => {
                     <Input id="price" type="number" step="0.01" min="0" placeholder="Auto" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Método pagamento</Label>
-                    <Select value={form.payment_method} onValueChange={(v) => setForm({ ...form, payment_method: v as typeof form.payment_method })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Não informado</SelectItem>
-                        <SelectItem value="pix">PIX</SelectItem>
-                        <SelectItem value="card">Cartão</SelectItem>
-                        <SelectItem value="cash">Dinheiro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="payref">Referência{(form.payment_method === "pix" || form.payment_method === "card") && <span className="text-destructive ml-1">*</span>}</Label>
-                    <Input id="payref" maxLength={500} placeholder={form.payment_method === "pix" ? "Ex.: comprovante" : form.payment_method === "card" ? "Ex.: NSU" : "Opcional"} value={form.payment_reference} onChange={(e) => setForm({ ...form, payment_reference: e.target.value })} />
+                <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Pagamento — preencher após sessão realizada</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Método pagamento</Label>
+                      <Select value={form.payment_method} onValueChange={(v) => setForm({ ...form, payment_method: v as typeof form.payment_method })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Não informado</SelectItem>
+                          <SelectItem value="pix">PIX</SelectItem>
+                          <SelectItem value="card">Cartão</SelectItem>
+                          <SelectItem value="cash">Dinheiro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="payref">Referência{(form.payment_method === "pix" || form.payment_method === "card") && <span className="text-destructive ml-1">*</span>}</Label>
+                      <Input id="payref" maxLength={500} placeholder={form.payment_method === "pix" ? "Ex.: comprovante" : form.payment_method === "card" ? "Ex.: NSU" : "Opcional"} value={form.payment_reference} onChange={(e) => setForm({ ...form, payment_reference: e.target.value })} />
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -1164,14 +1167,14 @@ const Agenda = () => {
                 </div>
                 {form.session_type === "clinical" && (
                   <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Humor / Progresso (opcional)</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Dados do humor — preencher após sessão</p>
                     <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="mood">Humor (1-10)</Label>
                         <Input id="mood" type="number" min="1" max="10" placeholder="—" value={form.mood_score} onChange={(e) => setForm({ ...form, mood_score: e.target.value })} />
                       </div>
                       <div className="space-y-2 col-span-2">
-                        <Label htmlFor="prog">Nota de progresso</Label>
+                        <Label htmlFor="prog">Observação</Label>
                         <Input id="prog" maxLength={2000} placeholder="Ex.: melhora no sono" value={form.progress_note} onChange={(e) => setForm({ ...form, progress_note: e.target.value })} />
                       </div>
                     </div>
@@ -1681,22 +1684,25 @@ const Agenda = () => {
                 <Input type="number" step="0.01" min="0" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Método pagamento</Label>
-                <Select value={editForm.payment_method} onValueChange={(v) => setEditForm({ ...editForm, payment_method: v as typeof editForm.payment_method })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Não informado</SelectItem>
-                    <SelectItem value="pix">PIX</SelectItem>
-                    <SelectItem value="card">Cartão</SelectItem>
-                    <SelectItem value="cash">Dinheiro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Referência{(editForm.payment_method === "pix" || editForm.payment_method === "card") && <span className="text-destructive ml-1">*</span>}</Label>
-                <Input maxLength={500} placeholder={editForm.payment_method === "pix" ? "Ex.: comprovante" : editForm.payment_method === "card" ? "Ex.: NSU" : "Opcional"} value={editForm.payment_reference} onChange={(e) => setEditForm({ ...editForm, payment_reference: e.target.value })} />
+            <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Pagamento — preencher após sessão realizada</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Método pagamento</Label>
+                  <Select value={editForm.payment_method} onValueChange={(v) => setEditForm({ ...editForm, payment_method: v as typeof editForm.payment_method })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Não informado</SelectItem>
+                      <SelectItem value="pix">PIX</SelectItem>
+                      <SelectItem value="card">Cartão</SelectItem>
+                      <SelectItem value="cash">Dinheiro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Referência{(editForm.payment_method === "pix" || editForm.payment_method === "card") && <span className="text-destructive ml-1">*</span>}</Label>
+                  <Input maxLength={500} placeholder={editForm.payment_method === "pix" ? "Ex.: comprovante" : editForm.payment_method === "card" ? "Ex.: NSU" : "Opcional"} value={editForm.payment_reference} onChange={(e) => setEditForm({ ...editForm, payment_reference: e.target.value })} />
+                </div>
               </div>
             </div>
             <div className="space-y-2">
@@ -1709,7 +1715,7 @@ const Agenda = () => {
               return (
                 <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Humor / Progresso</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Dados do humor — preencher após sessão</p>
                     {editProgressId && (
                       <Button
                         type="button"
@@ -1733,7 +1739,7 @@ const Agenda = () => {
                       <Input type="number" min="1" max="10" placeholder="—" value={editForm.mood_score} onChange={(e) => setEditForm({ ...editForm, mood_score: e.target.value })} />
                     </div>
                     <div className="space-y-2 col-span-2">
-                      <Label>Nota de progresso</Label>
+                      <Label>Observação</Label>
                       <Input maxLength={2000} placeholder="Ex.: melhora no sono" value={editForm.progress_note} onChange={(e) => setEditForm({ ...editForm, progress_note: e.target.value })} />
                     </div>
                   </div>
