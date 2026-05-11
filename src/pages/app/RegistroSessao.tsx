@@ -107,6 +107,7 @@ const RegistroSessao = () => {
   const [records, setRecords] = useState<SavedRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [historyFilter, setHistoryFilter] = useState("");
+  const [expandedPatients, setExpandedPatients] = useState<Record<string, boolean>>({});
 
   // --- Draft auto-save ---
   // Keep a ref with the latest form so event listeners always read fresh data
