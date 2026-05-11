@@ -224,12 +224,14 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
     };
 
     if (formId) {
-      const { error } = await supabase.from("case_formulations").update(payload).eq("id", formId);
+      const { data, error } = await supabase.from("case_formulations").update(payload).eq("id", formId).select("updated_at").single();
       if (error) { toast.error("Erro ao salvar"); setSaving(false); return; }
+      setPlanSavedAt(data?.updated_at ?? new Date().toISOString());
     } else {
-      const { data, error } = await supabase.from("case_formulations").insert(payload).select("id").single();
+      const { data, error } = await supabase.from("case_formulations").insert(payload).select("id, updated_at").single();
       if (error) { toast.error("Erro ao criar formulação"); setSaving(false); return; }
       setFormId(data.id);
+      setPlanSavedAt(data.updated_at ?? new Date().toISOString());
     }
     try { localStorage.removeItem(draftKey); } catch { /* noop */ }
     toast.success("Plano terapêutico salvo");
