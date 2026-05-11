@@ -712,6 +712,57 @@ const Admin = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Global Audit Log Dialog */}
+        <Dialog open={globalLogsOpen} onOpenChange={setGlobalLogsOpen}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Logs do Sistema (últimos 200)
+              </DialogTitle>
+            </DialogHeader>
+            {globalLogsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : globalLogs.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">Nenhum log de auditoria registrado.</p>
+            ) : (
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border text-left text-muted-foreground">
+                    <th className="pb-2 pr-3 font-medium">Data</th>
+                    <th className="pb-2 pr-3 font-medium">Usuário</th>
+                    <th className="pb-2 pr-3 font-medium">Recurso</th>
+                    <th className="pb-2 pr-3 font-medium">Tipo</th>
+                    <th className="pb-2 pr-3 font-medium">Resultado</th>
+                    <th className="pb-2 font-medium">Motivo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {globalLogs.map((log) => {
+                    const actor = users.find((u) => u.id === log.user_id);
+                    return (
+                      <tr key={log.id} className="border-b border-border/30">
+                        <td className="py-2 pr-3 whitespace-nowrap">{new Date(log.created_at).toLocaleString("pt-BR")}</td>
+                        <td className="py-2 pr-3">{actor?.full_name || actor?.email || log.user_id.slice(0, 8)}</td>
+                        <td className="py-2 pr-3">{log.resource_type}</td>
+                        <td className="py-2 pr-3">{log.access_type}</td>
+                        <td className="py-2 pr-3">
+                          <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${log.result === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                            {log.result === "success" ? "Sucesso" : "Bloqueado"}
+                          </span>
+                        </td>
+                        <td className="py-2 text-muted-foreground">{log.block_reason || "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
