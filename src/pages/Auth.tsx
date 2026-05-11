@@ -276,6 +276,10 @@ const Auth = () => {
                   <Input id="su-email" type="email" autoComplete="email" required value={suEmail} onChange={(e) => setSuEmail(e.target.value)} />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="su-phone">Telefone (WhatsApp)</Label>
+                  <Input id="su-phone" type="tel" autoComplete="tel" required placeholder="(11) 99999-9999" value={suPhone} onChange={(e) => setSuPhone(e.target.value)} />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="su-password">Senha</Label>
                   <Input id="su-password" type="password" autoComplete="new-password" required value={suPassword} onChange={(e) => setSuPassword(e.target.value)} />
                   <p className="text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
