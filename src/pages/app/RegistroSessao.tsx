@@ -107,6 +107,7 @@ const RegistroSessao = () => {
   const [records, setRecords] = useState<SavedRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [historyFilter, setHistoryFilter] = useState("");
+  const [expandedPatients, setExpandedPatients] = useState<Record<string, boolean>>({});
 
   // --- Draft auto-save ---
   // Keep a ref with the latest form so event listeners always read fresh data
@@ -716,67 +717,113 @@ const RegistroSessao = () => {
               </div>
             ) : (
               <ul className="divide-y divide-border">
-                {filteredRecords.map((r) => (
-                  <li key={r.id} className="p-4 hover:bg-muted/20 transition-colors">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-sm text-foreground">
-                            {getPatientName(r.patient_id)}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {format(new Date(r.session_date), "dd/MM/yyyy")}
-                          </span>
-                          {r.session_number && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                              Sessão {r.session_number}
-                            </span>
-                          )}
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
-                            {r.modality}
-                          </span>
-                        </div>
-                        {r.chief_complaint && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                            {r.chief_complaint}
-                          </p>
-                        )}
-                        {r.themes.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1.5">
-                            {r.themes.map((t) => (
-                              <span
-                                key={t}
-                                className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary"
-                              >
-                                {t}
-                              </span>
-                            ))}
+                {(() => {
+                  // Group filtered records by patient
+                  const groups = new Map<string, SavedRecord[]>();
+                  filteredRecords.forEach((r) => {
+                    if (!groups.has(r.patient_id)) groups.set(r.patient_id, []);
+                    groups.get(r.patient_id)!.push(r);
+                  });
+                  const ordered = Array.from(groups.entries()).sort((a, b) =>
+                    getPatientName(a[0]).localeCompare(getPatientName(b[0]))
+                  );
+                  return ordered.map(([patientId, items]) => {
+                    const isOpen = !!expandedPatients[patientId];
+                    const lastDate = items[0]?.session_date;
+                    return (
+                      <li key={patientId}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedPatients((prev) => ({ ...prev, [patientId]: !prev[patientId] }))
+                          }
+                          className="w-full flex items-center justify-between gap-3 p-4 hover:bg-muted/30 transition-colors text-left"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm text-foreground truncate">
+                              {getPatientName(patientId)}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {items.length} {items.length === 1 ? "registro" : "registros"}
+                              {lastDate && ` · último em ${format(new Date(lastDate), "dd/MM/yyyy")}`}
+                            </p>
                           </div>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
+                            {items.length}
+                          </span>
+                          {isOpen ? (
+                            <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                          )}
+                        </button>
+
+                        {isOpen && (
+                          <ul className="bg-muted/10 divide-y divide-border/60 border-t border-border">
+                            {items.map((r) => (
+                              <li key={r.id} className="p-4 pl-6 hover:bg-muted/20 transition-colors">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="text-xs text-muted-foreground">
+                                        {format(new Date(r.session_date), "dd/MM/yyyy")}
+                                      </span>
+                                      {r.session_number && (
+                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                                          Sessão {r.session_number}
+                                        </span>
+                                      )}
+                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
+                                        {r.modality}
+                                      </span>
+                                    </div>
+                                    {r.chief_complaint && (
+                                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                        {r.chief_complaint}
+                                      </p>
+                                    )}
+                                    {r.themes.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mt-1.5">
+                                        {r.themes.map((t) => (
+                                          <span
+                                            key={t}
+                                            className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary"
+                                          >
+                                            {t}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-1 shrink-0">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => openEdit(r)}
+                                      title="Editar"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-destructive hover:text-destructive"
+                                      onClick={() => handleDelete(r.id)}
+                                      title="Excluir"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
                         )}
-                      </div>
-                      <div className="flex gap-1 shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => openEdit(r)}
-                          title="Editar"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(r.id)}
-                          title="Excluir"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
+                      </li>
+                    );
+                  });
+                })()}
               </ul>
             )}
           </div>
