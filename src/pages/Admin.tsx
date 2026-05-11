@@ -204,10 +204,23 @@ const Admin = () => {
       .select("id, user_id, resource_type, access_type, result, block_reason, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(50);
-    if (error) toast.error("Erro ao carregar logs");
+      .limit(100);
+    if (error) toast.error("Erro ao carregar logs: " + error.message);
     setLogs((data as AuditLog[]) ?? []);
     setLogsLoading(false);
+  };
+
+  const openGlobalLogs = async () => {
+    setGlobalLogsOpen(true);
+    setGlobalLogsLoading(true);
+    const { data, error } = await supabase
+      .from("audit_logs")
+      .select("id, user_id, resource_type, access_type, result, block_reason, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) toast.error("Erro ao carregar logs: " + error.message);
+    setGlobalLogs((data as AuditLog[]) ?? []);
+    setGlobalLogsLoading(false);
   };
 
   const filtered = useMemo(() => {
