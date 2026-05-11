@@ -135,6 +135,9 @@ const Admin = () => {
   const [logUserId, setLogUserId] = useState<string | null>(null);
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [globalLogsOpen, setGlobalLogsOpen] = useState(false);
+  const [globalLogs, setGlobalLogs] = useState<AuditLog[]>([]);
+  const [globalLogsLoading, setGlobalLogsLoading] = useState(false);
   const [patientFilter, setPatientFilter] = useState<"all" | "active" | "inactive">("all");
   const [supervisorFilter, setSupervisorFilter] = useState<string>("all");
 
@@ -201,10 +204,23 @@ const Admin = () => {
       .select("id, user_id, resource_type, access_type, result, block_reason, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
-      .limit(50);
-    if (error) toast.error("Erro ao carregar logs");
+      .limit(100);
+    if (error) toast.error("Erro ao carregar logs: " + error.message);
     setLogs((data as AuditLog[]) ?? []);
     setLogsLoading(false);
+  };
+
+  const openGlobalLogs = async () => {
+    setGlobalLogsOpen(true);
+    setGlobalLogsLoading(true);
+    const { data, error } = await supabase
+      .from("audit_logs")
+      .select("id, user_id, resource_type, access_type, result, block_reason, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) toast.error("Erro ao carregar logs: " + error.message);
+    setGlobalLogs((data as AuditLog[]) ?? []);
+    setGlobalLogsLoading(false);
   };
 
   const filtered = useMemo(() => {
@@ -401,15 +417,20 @@ const Admin = () => {
           ))}
         </div>
 
-        {/* Search */}
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome, email ou CRP…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+        {/* Search + Logs */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+          <div className="relative max-w-sm flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome, email ou CRP…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Button variant="outline" size="sm" onClick={openGlobalLogs} className="gap-2 shrink-0">
+            <FileText className="h-4 w-4" /> Logs do Sistema
+          </Button>
         </div>
 
         {/* Pending approval alert */}
@@ -657,7 +678,10 @@ const Admin = () => {
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : logs.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">Nenhum log encontrado.</p>
+              <div className="text-center py-8 space-y-2">
+                <p className="text-muted-foreground">Nenhum log de auditoria registrado para este usuário.</p>
+                <p className="text-xs text-muted-foreground">Logs são gerados quando o usuário acessa dados clínicos no sistema.</p>
+              </div>
             ) : (
               <table className="w-full text-xs">
                 <thead>
@@ -683,6 +707,57 @@ const Admin = () => {
                       <td className="py-2 text-muted-foreground">{log.block_reason || "—"}</td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Global Audit Log Dialog */}
+        <Dialog open={globalLogsOpen} onOpenChange={setGlobalLogsOpen}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Logs do Sistema (últimos 200)
+              </DialogTitle>
+            </DialogHeader>
+            {globalLogsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : globalLogs.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">Nenhum log de auditoria registrado.</p>
+            ) : (
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border text-left text-muted-foreground">
+                    <th className="pb-2 pr-3 font-medium">Data</th>
+                    <th className="pb-2 pr-3 font-medium">Usuário</th>
+                    <th className="pb-2 pr-3 font-medium">Recurso</th>
+                    <th className="pb-2 pr-3 font-medium">Tipo</th>
+                    <th className="pb-2 pr-3 font-medium">Resultado</th>
+                    <th className="pb-2 font-medium">Motivo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {globalLogs.map((log) => {
+                    const actor = users.find((u) => u.id === log.user_id);
+                    return (
+                      <tr key={log.id} className="border-b border-border/30">
+                        <td className="py-2 pr-3 whitespace-nowrap">{new Date(log.created_at).toLocaleString("pt-BR")}</td>
+                        <td className="py-2 pr-3">{actor?.full_name || actor?.email || log.user_id.slice(0, 8)}</td>
+                        <td className="py-2 pr-3">{log.resource_type}</td>
+                        <td className="py-2 pr-3">{log.access_type}</td>
+                        <td className="py-2 pr-3">
+                          <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${log.result === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                            {log.result === "success" ? "Sucesso" : "Bloqueado"}
+                          </span>
+                        </td>
+                        <td className="py-2 text-muted-foreground">{log.block_reason || "—"}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}

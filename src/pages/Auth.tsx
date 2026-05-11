@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 const signUpSchema = z.object({
   fullName: z.string().trim().min(2, "Nome muito curto").max(100),
   email: z.string().trim().email("Email inválido").max(255),
+  phone: z.string().trim().min(8, "Telefone inválido").max(20),
   password: z.string().min(8, "Mínimo 8 caracteres").max(72),
   profileType: z.enum(["standard", "supervisee"]),
 });
@@ -53,6 +54,7 @@ const Auth = () => {
   // sign up
   const [suName, setSuName] = useState("");
   const [suEmail, setSuEmail] = useState("");
+  const [suPhone, setSuPhone] = useState("");
   const [suPassword, setSuPassword] = useState("");
   const [suProfileType, setSuProfileType] = useState<"standard" | "supervisee">("standard");
 
@@ -114,6 +116,7 @@ const Auth = () => {
     const parsed = signUpSchema.safeParse({
       fullName: suName,
       email: suEmail,
+      phone: suPhone,
       password: suPassword,
       profileType: suProfileType,
     });
@@ -129,6 +132,7 @@ const Auth = () => {
         emailRedirectTo: `${window.location.origin}/app`,
         data: {
           full_name: parsed.data.fullName,
+          phone: parsed.data.phone,
           profile_type: parsed.data.profileType,
         },
       },
@@ -270,6 +274,10 @@ const Auth = () => {
                 <div className="space-y-2">
                   <Label htmlFor="su-email">Email</Label>
                   <Input id="su-email" type="email" autoComplete="email" required value={suEmail} onChange={(e) => setSuEmail(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="su-phone">Telefone (WhatsApp)</Label>
+                  <Input id="su-phone" type="tel" autoComplete="tel" required placeholder="(11) 99999-9999" value={suPhone} onChange={(e) => setSuPhone(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="su-password">Senha</Label>

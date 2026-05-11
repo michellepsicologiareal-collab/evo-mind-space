@@ -146,6 +146,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   const [plans, setPlans] = useState<TherapyPlan[]>([]);
   const [openPlanId, setOpenPlanId] = useState<string | null>(null);
   const [formId, setFormId] = useState<string | null>(null);
+  const [planSavedAt, setPlanSavedAt] = useState<string | null>(null);
 
   // Evolutions state
   const [evolutions, setEvolutions] = useState<Evolution[]>([]);
@@ -185,6 +186,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
         });
         setCoreBeliefs(f.core_beliefs ?? "");
         setPlans(normalizePlans(f.treatment_goals));
+        setPlanSavedAt(f.updated_at ?? null);
       }
 
       // Restore localStorage draft (overrides DB if present)
@@ -222,12 +224,14 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
     };
 
     if (formId) {
-      const { error } = await supabase.from("case_formulations").update(payload).eq("id", formId);
+      const { data, error } = await supabase.from("case_formulations").update(payload).eq("id", formId).select("updated_at").single();
       if (error) { toast.error("Erro ao salvar"); setSaving(false); return; }
+      setPlanSavedAt(data?.updated_at ?? new Date().toISOString());
     } else {
-      const { data, error } = await supabase.from("case_formulations").insert(payload).select("id").single();
+      const { data, error } = await supabase.from("case_formulations").insert(payload).select("id, updated_at").single();
       if (error) { toast.error("Erro ao criar formulação"); setSaving(false); return; }
       setFormId(data.id);
+      setPlanSavedAt(data.updated_at ?? new Date().toISOString());
     }
     try { localStorage.removeItem(draftKey); } catch { /* noop */ }
     toast.success("Plano terapêutico salvo");
@@ -401,6 +405,11 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
             <ListChecks className="h-4 w-4 text-accent" /> Plano Terapêutico
           </h3>
           <p className="text-xs text-muted-foreground">5 Sistemas → Hipóteses → Plano → Evolução</p>
+          {planSavedAt && (
+            <p className="text-xs text-accent mt-2 font-medium">
+              Última atualização: {format(new Date(planSavedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+            </p>
+          )}
         </div>
 
         {plans.length === 0 ? (
