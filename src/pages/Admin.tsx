@@ -678,7 +678,10 @@ const Admin = () => {
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : logs.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">Nenhum log encontrado.</p>
+              <div className="text-center py-8 space-y-2">
+                <p className="text-muted-foreground">Nenhum log de auditoria registrado para este usuário.</p>
+                <p className="text-xs text-muted-foreground">Logs são gerados quando o usuário acessa dados clínicos no sistema.</p>
+              </div>
             ) : (
               <table className="w-full text-xs">
                 <thead>
