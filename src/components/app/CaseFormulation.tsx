@@ -146,6 +146,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   const [plans, setPlans] = useState<TherapyPlan[]>([]);
   const [openPlanId, setOpenPlanId] = useState<string | null>(null);
   const [formId, setFormId] = useState<string | null>(null);
+  const [planSavedAt, setPlanSavedAt] = useState<string | null>(null);
 
   // Evolutions state
   const [evolutions, setEvolutions] = useState<Evolution[]>([]);
