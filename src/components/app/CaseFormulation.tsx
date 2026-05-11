@@ -186,6 +186,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
         });
         setCoreBeliefs(f.core_beliefs ?? "");
         setPlans(normalizePlans(f.treatment_goals));
+        setPlanSavedAt(f.updated_at ?? null);
       }
 
       // Restore localStorage draft (overrides DB if present)
