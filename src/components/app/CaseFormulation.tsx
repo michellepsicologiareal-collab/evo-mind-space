@@ -405,6 +405,11 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
             <ListChecks className="h-4 w-4 text-accent" /> Plano Terapêutico
           </h3>
           <p className="text-xs text-muted-foreground">5 Sistemas → Hipóteses → Plano → Evolução</p>
+          {planSavedAt && (
+            <p className="text-xs text-accent mt-2 font-medium">
+              Última atualização: {format(new Date(planSavedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+            </p>
+          )}
         </div>
 
         {plans.length === 0 ? (
