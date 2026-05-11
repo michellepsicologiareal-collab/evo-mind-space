@@ -135,6 +135,9 @@ const Admin = () => {
   const [logUserId, setLogUserId] = useState<string | null>(null);
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
+  const [globalLogsOpen, setGlobalLogsOpen] = useState(false);
+  const [globalLogs, setGlobalLogs] = useState<AuditLog[]>([]);
+  const [globalLogsLoading, setGlobalLogsLoading] = useState(false);
   const [patientFilter, setPatientFilter] = useState<"all" | "active" | "inactive">("all");
   const [supervisorFilter, setSupervisorFilter] = useState<string>("all");
 
