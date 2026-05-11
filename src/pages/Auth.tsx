@@ -116,6 +116,7 @@ const Auth = () => {
     const parsed = signUpSchema.safeParse({
       fullName: suName,
       email: suEmail,
+      phone: suPhone,
       password: suPassword,
       profileType: suProfileType,
     });
@@ -131,6 +132,7 @@ const Auth = () => {
         emailRedirectTo: `${window.location.origin}/app`,
         data: {
           full_name: parsed.data.fullName,
+          phone: parsed.data.phone,
           profile_type: parsed.data.profileType,
         },
       },
