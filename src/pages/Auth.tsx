@@ -54,6 +54,7 @@ const Auth = () => {
   // sign up
   const [suName, setSuName] = useState("");
   const [suEmail, setSuEmail] = useState("");
+  const [suPhone, setSuPhone] = useState("");
   const [suPassword, setSuPassword] = useState("");
   const [suProfileType, setSuProfileType] = useState<"standard" | "supervisee">("standard");
 
