@@ -148,7 +148,7 @@ export const AppLayout = () => {
           )}
         </nav>
 
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-[hsl(var(--sidebar-border))]">
           <button
             onClick={() => setPlanOpen(true)}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors text-gold hover:bg-gold/10 w-full"
