@@ -164,7 +164,7 @@ export const AppLayout = () => {
       </aside>
 
       {/* ── Mobile top header ── */}
-      <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-card/95 backdrop-blur-lg border-b border-border">
+      <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-card border-b border-[hsl(var(--sidebar-border))]">
         <div className="flex items-center justify-between px-4 py-3">
           <Link to="/app" className="flex items-center gap-2">
             <img src={logoSrc} alt="Psicologia Real" className="h-8 w-8 rounded-full object-cover" />
