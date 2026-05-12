@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays, Smile, FileText } from "lucide-react";
 import { TccRecords } from "@/components/app/TccRecords";
 import { CaseFormulation } from "@/components/app/CaseFormulation";
 import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
@@ -640,7 +640,7 @@ const Patients = () => {
                   })()}
                 </div>
               )}
-              <div className="mt-3 flex items-center gap-2 border-t border-border/50 pt-3">
+              <div className="mt-3 flex items-center gap-2 border-t border-border/50 pt-3 flex-wrap">
                 <Button
                   variant="outline"
                   size="sm"
@@ -648,6 +648,22 @@ const Patients = () => {
                   onClick={() => setHistoryPatient(p)}
                 >
                   <CalendarDays className="h-3.5 w-3.5" /> Histórico de Sessões
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5"
+                  onClick={() => navigate(`/app/registro-sessao?patient=${p.id}`)}
+                >
+                  <FileText className="h-3.5 w-3.5" /> Registros de Sessão
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5"
+                  onClick={() => navigate(`/app?patient=${p.id}#humor`)}
+                >
+                  <Smile className="h-3.5 w-3.5" /> Humor
                 </Button>
               </div>
               <div className="mt-2 flex items-center justify-between">
