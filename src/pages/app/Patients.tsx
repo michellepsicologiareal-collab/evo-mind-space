@@ -353,14 +353,14 @@ const Patients = () => {
 
   return (
     <div className="space-y-8 animate-fade-up">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="sticky top-0 md:-mx-6 lg:-mx-10 -mx-6 px-6 lg:px-10 py-4 bg-card border-b border-[hsl(var(--sidebar-border))] z-20 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl font-medium">Pacientes</h1>
-          <p className="mt-2 text-muted-foreground">Gerencie quem está sob seus cuidados.</p>
+          <h1 className="font-display text-2xl md:text-3xl font-medium">Pacientes</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Gerencie quem está sob seus cuidados.</p>
         </div>
         <Dialog open={open} onOpenChange={(v) => { if (!v) { patientGuard.guardClose(() => { if (!editing) clearDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
-            <Button variant="accent" className="min-h-[44px]" onClick={openNew}>
+            <Button className="min-h-[44px] bg-[#8B4A52] text-white hover:bg-[#7a4047]" onClick={openNew}>
               <Plus className="h-4 w-4" /> Novo paciente
             </Button>
           </DialogTrigger>
