@@ -11,66 +11,67 @@
 @layer base {
   :root {
     /* Surfaces */
-    --background: 30 25% 93%;               /* bege acolhedor — warmth & segurança */
-    --foreground: 215 25% 15%;              /* ink escuro azulado */
+    --background: 0 0% 98%;                 /* #FAFAFA */
+    --foreground: 7 27% 13%;                /* #2A1A18 */
 
     --card: 0 0% 100%;                      /* branco puro */
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 7 27% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 7 27% 13%;
 
-    /* Brand — Verde Musgo */
-    --primary: 108 27% 28%;               /* verde musgo #3D5C35 */
-    --primary-foreground: 37 42% 96%;
-    --primary-glow: 108 22% 38%;
+    /* Brand — Rosê queimado */
+    --primary: 353 30% 42%;                 /* #8B4A52 */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 353 30% 52%;
 
-    --secondary: 214 15% 91%;
-    --secondary-foreground: 108 27% 28%;
+    --secondary: 28 27% 95%;
+    --secondary-foreground: 353 30% 42%;
 
-    --muted: 214 15% 90%;
-    --muted-foreground: 215 10% 46%;
+    --muted: 28 27% 95%;
+    --muted-foreground: 7 10% 49%;          /* #8A7370 */
 
-    /* Terracota Apagado — CTAs, salvar, novo — acolhimento & maturidade */
-    --accent: 8 28% 52%;                  /* rose wood #A57164 */
+    /* Accent — mesmo tom rosê queimado para CTAs/Salvar/Novo */
+    --accent: 353 30% 42%;                  /* #8B4A52 */
     --accent-foreground: 0 0% 100%;
 
     /* Lilás — badges concluídas, supervisão */
-    --lilac: 260 23% 64%;                 /* lilás #9B8DB8 */
+    --lilac: 260 23% 64%;
     --lilac-foreground: 260 30% 18%;
 
-    /* Verde Musgo lighter — progresso */
     --moss: 108 27% 28%;
-    --moss-foreground: 37 42% 96%;
+    --moss-foreground: 0 0% 100%;
 
-    --sand: 214 15% 88%;
-    --sand-foreground: 215 25% 15%;
+    --sand: 28 27% 90%;
+    --sand-foreground: 7 27% 13%;
 
-    /* Dourado Champagne — ícone premium */
     --gold: 38 45% 60%;
 
-    /* Autocuidado — Verde Sálvia e Azul Sereno */
     --sage: 140 20% 45%;
     --sage-foreground: 0 0% 100%;
     --serene: 200 45% 50%;
     --serene-foreground: 0 0% 100%;
 
-    /* Admin Master — Azul profundo, exclusivo */
     --admin-accent: 220 60% 42%;
 
     --destructive: 0 65% 48%;
-    --destructive-foreground: 37 42% 96%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214 18% 86%;
-    --input: 214 18% 88%;
-    --ring: 108 27% 28%;
+    --border: 28 27% 90%;                   /* #EDE6E0 */
+    --input: 28 27% 90%;
+    --ring: 353 30% 42%;
+
+    /* Sidebar tokens */
+    --sidebar-hover: 13 53% 97%;            /* #FBF4F2 */
+    --sidebar-active: 9 48% 95%;            /* #F8EDEB */
+    --sidebar-border: 23 30% 92%;           /* #F0E8E3 */
 
     --radius: 1rem;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(108 27% 28%) 0%, hsl(108 22% 38%) 60%, hsl(8 28% 52%) 130%);
-    --gradient-soft: linear-gradient(180deg, hsl(214 20% 94%) 0%, hsl(214 15% 90%) 100%);
-    --gradient-card: linear-gradient(160deg, hsl(0 0% 100%) 0%, hsl(214 15% 97%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(353 30% 42%) 0%, hsl(353 30% 52%) 60%, hsl(13 53% 97%) 130%);
+    --gradient-soft: linear-gradient(180deg, hsl(0 0% 99%) 0%, hsl(0 0% 98%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(0 0% 100%) 0%, hsl(28 27% 98%) 100%);
 
     /* Shadows — card elevation */
     --shadow-elegant: 0 30px 60px -30px hsl(215 25% 15% / 0.12);
