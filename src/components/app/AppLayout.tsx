@@ -122,7 +122,27 @@ export const AppLayout = () => {
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => renderNavLink(item))}
+          {(() => {
+            const sections: { label: string; routes: string[] }[] = [
+              { label: "INÍCIO", routes: ["/app/comece-por-aqui", "/app"] },
+              { label: "CLÍNICA", routes: ["/app/pacientes", "/app/agenda", "/app/registro-sessao", "/app/financeiro", "/app/supervisionandos"] },
+              { label: "RECURSOS", routes: ["/app/biblioteca", "/app/autocuidado", "/app/contrato-modelo", "/app/contratos", "/app/perfil"] },
+            ];
+            return sections.map((sec) => {
+              const items = sec.routes
+                .map((r) => navItems.find((n) => n.to === r))
+                .filter(Boolean) as NavItem[];
+              if (items.length === 0) return null;
+              return (
+                <div key={sec.label} className="space-y-1">
+                  <div className="px-4 pt-3 pb-1 text-[10px] font-medium tracking-widest" style={{ color: "#C4A8A4" }}>
+                    {sec.label}
+                  </div>
+                  {items.map((item) => renderNavLink(item))}
+                </div>
+              );
+            });
+          })()}
 
           {/* ── Admin section (visually separated, different color) ── */}
           {isAdmin && (
@@ -164,7 +184,7 @@ export const AppLayout = () => {
       </aside>
 
       {/* ── Mobile top header ── */}
-      <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-card/95 backdrop-blur-lg border-b border-border">
+      <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-card border-b border-[hsl(var(--sidebar-border))]">
         <div className="flex items-center justify-between px-4 py-3">
           <Link to="/app" className="flex items-center gap-2">
             <img src={logoSrc} alt="Psicologia Real" className="h-8 w-8 rounded-full object-cover" />

@@ -353,14 +353,14 @@ const Patients = () => {
 
   return (
     <div className="space-y-8 animate-fade-up">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="sticky top-0 md:-mx-6 lg:-mx-10 -mx-6 px-6 lg:px-10 py-4 bg-card border-b border-[hsl(var(--sidebar-border))] z-20 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl font-medium">Pacientes</h1>
-          <p className="mt-2 text-muted-foreground">Gerencie quem está sob seus cuidados.</p>
+          <h1 className="font-display text-2xl md:text-3xl font-medium">Pacientes</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Gerencie quem está sob seus cuidados.</p>
         </div>
         <Dialog open={open} onOpenChange={(v) => { if (!v) { patientGuard.guardClose(() => { if (!editing) clearDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
-            <Button variant="accent" className="min-h-[44px]" onClick={openNew}>
+            <Button className="min-h-[44px] bg-[#8B4A52] text-white hover:bg-[#7a4047]" onClick={openNew}>
               <Plus className="h-4 w-4" /> Novo paciente
             </Button>
           </DialogTrigger>
@@ -583,11 +583,26 @@ const Patients = () => {
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-foreground truncate">{p.full_name}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
                       {p.is_active ? <span className="text-primary-glow">● Ativo</span> : <span>○ Inativo</span>}
-                      <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px] uppercase tracking-wider font-medium">
-                        {PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual"}
-                      </span>
+                      {(() => {
+                        const styles: Record<string, string> = {
+                          individual: "bg-primary/15 text-primary",
+                          crianca: "bg-lilac/20 text-lilac-foreground",
+                          adolescente: "bg-sage/15 text-sage",
+                          casal: "bg-accent/15 text-accent",
+                          avaliacao: "bg-serene/15 text-serene",
+                          grupo: "bg-moss/15 text-moss",
+                          sessao_breve: "bg-gold/20 text-foreground",
+                          supervisao: "bg-[hsl(var(--admin-accent))]/15 text-[hsl(var(--admin-accent))]",
+                        };
+                        const cls = styles[p.category] ?? styles.individual;
+                        return (
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-medium ${cls}`}>
+                            {PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual"}
+                          </span>
+                        );
+                      })()}
                     </p>
                   </div>
                 </div>
