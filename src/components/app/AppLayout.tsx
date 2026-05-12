@@ -90,14 +90,14 @@ export const AppLayout = () => {
       onClick={(e) => handleNavClick(e, item)}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
+          "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
           isActive
             ? isAdminSection
               ? "bg-[hsl(var(--admin-accent))] text-white shadow-soft"
-              : "bg-primary text-primary-foreground shadow-soft"
+              : "bg-[hsl(var(--sidebar-active))] text-primary"
             : isAdminSection
             ? "text-[hsl(var(--admin-accent))]/80 hover:bg-[hsl(var(--admin-accent))]/10 hover:text-[hsl(var(--admin-accent))]"
-            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            : "text-muted-foreground hover:bg-[hsl(var(--sidebar-hover))] hover:text-foreground"
         )
       }
     >
@@ -108,10 +108,10 @@ export const AppLayout = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-soft flex">
+    <div className="min-h-screen bg-background flex">
       {/* ── Desktop sidebar (fixed) ── */}
-      <aside className="hidden md:flex md:w-64 lg:w-72 fixed inset-y-0 left-0 z-30 bg-card border-r border-border flex-col">
-        <div className="p-6 flex items-center justify-between border-b border-border">
+      <aside className="hidden md:flex md:w-[220px] fixed inset-y-0 left-0 z-30 bg-card border-r border-[hsl(var(--sidebar-border))] flex-col">
+        <div className="p-6 flex items-center justify-between border-b border-[hsl(var(--sidebar-border))]">
           <Link to="/app" className="flex items-center gap-2">
             <img src={logoSrc} alt="Psicologia Real" className="h-9 w-9 rounded-full object-cover" />
             <span className="font-display text-xl font-semibold">
