@@ -583,11 +583,26 @@ const Patients = () => {
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-foreground truncate">{p.full_name}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
                       {p.is_active ? <span className="text-primary-glow">● Ativo</span> : <span>○ Inativo</span>}
-                      <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px] uppercase tracking-wider font-medium">
-                        {PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual"}
-                      </span>
+                      {(() => {
+                        const styles: Record<string, string> = {
+                          individual: "bg-primary/15 text-primary",
+                          crianca: "bg-lilac/20 text-lilac-foreground",
+                          adolescente: "bg-sage/15 text-sage",
+                          casal: "bg-accent/15 text-accent",
+                          avaliacao: "bg-serene/15 text-serene",
+                          grupo: "bg-moss/15 text-moss",
+                          sessao_breve: "bg-gold/20 text-foreground",
+                          supervisao: "bg-[hsl(var(--admin-accent))]/15 text-[hsl(var(--admin-accent))]",
+                        };
+                        const cls = styles[p.category] ?? styles.individual;
+                        return (
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-medium ${cls}`}>
+                            {PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual"}
+                          </span>
+                        );
+                      })()}
                     </p>
                   </div>
                 </div>
