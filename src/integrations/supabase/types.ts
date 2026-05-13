@@ -101,6 +101,120 @@ export type Database = {
         }
         Relationships: []
       }
+      child_anamneses: {
+        Row: {
+          authorized_lgpd: boolean
+          chief_complaint: string | null
+          child_birth_date: string | null
+          child_name: string | null
+          created_at: string
+          delivery_type: string | null
+          email: string | null
+          father_name: string | null
+          father_profession: string | null
+          father_schooling: string | null
+          feeding: string | null
+          has_disease: string | null
+          id: string
+          mother_name: string | null
+          mother_profession: string | null
+          mother_schooling: string | null
+          parents_disorder: string | null
+          parents_disorder_which: string | null
+          parents_kinship: string | null
+          parents_living_together: string | null
+          parents_relationship: string | null
+          patient_id: string
+          pregnancy_health_issue: string | null
+          pregnancy_health_which: string | null
+          relationship_father: string | null
+          relationship_mother: string | null
+          school_relationship: string | null
+          schooling: string | null
+          sexual_curiosity: string | null
+          sleep: string | null
+          social_relationship: string | null
+          updated_at: string
+          user_id: string
+          was_desired: string | null
+          weeks_at_birth: string | null
+        }
+        Insert: {
+          authorized_lgpd?: boolean
+          chief_complaint?: string | null
+          child_birth_date?: string | null
+          child_name?: string | null
+          created_at?: string
+          delivery_type?: string | null
+          email?: string | null
+          father_name?: string | null
+          father_profession?: string | null
+          father_schooling?: string | null
+          feeding?: string | null
+          has_disease?: string | null
+          id?: string
+          mother_name?: string | null
+          mother_profession?: string | null
+          mother_schooling?: string | null
+          parents_disorder?: string | null
+          parents_disorder_which?: string | null
+          parents_kinship?: string | null
+          parents_living_together?: string | null
+          parents_relationship?: string | null
+          patient_id: string
+          pregnancy_health_issue?: string | null
+          pregnancy_health_which?: string | null
+          relationship_father?: string | null
+          relationship_mother?: string | null
+          school_relationship?: string | null
+          schooling?: string | null
+          sexual_curiosity?: string | null
+          sleep?: string | null
+          social_relationship?: string | null
+          updated_at?: string
+          user_id: string
+          was_desired?: string | null
+          weeks_at_birth?: string | null
+        }
+        Update: {
+          authorized_lgpd?: boolean
+          chief_complaint?: string | null
+          child_birth_date?: string | null
+          child_name?: string | null
+          created_at?: string
+          delivery_type?: string | null
+          email?: string | null
+          father_name?: string | null
+          father_profession?: string | null
+          father_schooling?: string | null
+          feeding?: string | null
+          has_disease?: string | null
+          id?: string
+          mother_name?: string | null
+          mother_profession?: string | null
+          mother_schooling?: string | null
+          parents_disorder?: string | null
+          parents_disorder_which?: string | null
+          parents_kinship?: string | null
+          parents_living_together?: string | null
+          parents_relationship?: string | null
+          patient_id?: string
+          pregnancy_health_issue?: string | null
+          pregnancy_health_which?: string | null
+          relationship_father?: string | null
+          relationship_mother?: string | null
+          school_relationship?: string | null
+          schooling?: string | null
+          sexual_curiosity?: string | null
+          sleep?: string | null
+          social_relationship?: string | null
+          updated_at?: string
+          user_id?: string
+          was_desired?: string | null
+          weeks_at_birth?: string | null
+        }
+        Relationships: []
+      }
       contract_templates: {
         Row: {
           clauses: Json
