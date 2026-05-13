@@ -3,9 +3,10 @@ import { format } from "date-fns";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays, Smile, FileText } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays, Smile, FileText, Baby } from "lucide-react";
 import { TccRecords } from "@/components/app/TccRecords";
 import { CaseFormulation } from "@/components/app/CaseFormulation";
+import { ChildAnamnesisForm } from "@/components/app/ChildAnamnesisForm";
 import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 import { CardSkeleton } from "@/components/app/Skeletons";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
@@ -90,6 +91,7 @@ const Patients = () => {
   const [tccPatient, setTccPatient] = useState<Patient | null>(null);
   const [padeksyPatient, setPadeksyPatient] = useState<Patient | null>(null);
   const [historyPatient, setHistoryPatient] = useState<Patient | null>(null);
+  const [anamnesisPatient, setAnamnesisPatient] = useState<Patient | null>(null);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
   const [profCrp, setProfCrp] = useState<string>("");
@@ -615,6 +617,7 @@ const Patients = () => {
                     <DropdownMenuItem onClick={() => setHistoryPatient(p)}><CalendarDays className="h-4 w-4" /> Histórico de Sessões</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTccPatient(p)}><ClipboardList className="h-4 w-4" /> Prontuário TCC</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><Brain className="h-4 w-4" /> Formulação Padesky</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setAnamnesisPatient(p)}><Baby className="h-4 w-4" /> Anamnese (Criança)</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => window.open(`https://wa.me/5511947388423?text=${encodeURIComponent(`Olá Michelle, preciso de supervisão para o caso do(a) paciente: ${p.full_name}`)}`, "_blank")}>
                       <Stethoscope className="h-4 w-4" /> Pedir Supervisão deste Caso
                     </DropdownMenuItem>
@@ -727,6 +730,23 @@ const Patients = () => {
             <DialogDescription>Histórico de sessões e evolução do humor</DialogDescription>
           </DialogHeader>
           {historyPatient && <PatientSessionHistory patientId={historyPatient.id} patientName={historyPatient.full_name} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Child Anamnesis Dialog */}
+      <Dialog open={!!anamnesisPatient} onOpenChange={(o) => !o && setAnamnesisPatient(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{anamnesisPatient?.full_name}</DialogTitle>
+            <DialogDescription>Anamnese — Informações do paciente criança</DialogDescription>
+          </DialogHeader>
+          {anamnesisPatient && (
+            <ChildAnamnesisForm
+              patientId={anamnesisPatient.id}
+              patientName={anamnesisPatient.full_name}
+              onSaved={() => setAnamnesisPatient(null)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
