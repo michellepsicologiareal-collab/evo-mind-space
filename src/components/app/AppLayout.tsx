@@ -5,7 +5,7 @@ import logoSrc from "@/assets/logo-psireal.png";
 import {
   LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut,
   GraduationCap, ShieldCheck, Crown, Lock, BookOpen, Flower2, FileText,
-  FileCheck, Shield, UserCog, Sparkles, ClipboardList,
+  FileCheck, Shield, UserCog, Sparkles, ClipboardList, Baby,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -34,6 +34,7 @@ const allNavItems: NavItem[] = [
   { to: "/app/pacientes", label: "Pacientes", icon: Users },
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
   { to: "/app/registro-sessao", label: "Registro Sessão", icon: ClipboardList },
+  { to: "/app/anamneses", label: "Anamneses", icon: Baby },
   { to: "/app/financeiro", label: "Financeiro", icon: Wallet, premium: true },
   { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap, premium: true, visibleTo: ["supervisor"] },
   { to: "/app/biblioteca", label: "Biblioteca", icon: BookOpen },
@@ -125,7 +126,7 @@ export const AppLayout = () => {
           {(() => {
             const sections: { label: string; routes: string[] }[] = [
               { label: "INÍCIO", routes: ["/app/comece-por-aqui", "/app"] },
-              { label: "CLÍNICA", routes: ["/app/pacientes", "/app/agenda", "/app/registro-sessao", "/app/financeiro", "/app/supervisionandos"] },
+              { label: "CLÍNICA", routes: ["/app/pacientes", "/app/agenda", "/app/registro-sessao", "/app/anamneses", "/app/financeiro", "/app/supervisionandos"] },
               { label: "RECURSOS", routes: ["/app/biblioteca", "/app/autocuidado", "/app/contrato-modelo", "/app/contratos", "/app/perfil"] },
             ];
             return sections.map((sec) => {

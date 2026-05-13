@@ -29,6 +29,7 @@ const ContratoModelo = lazy(() => import("./pages/app/ContratoModelo"));
 const Contratos = lazy(() => import("./pages/app/Contratos"));
 const ComecePorAqui = lazy(() => import("./pages/app/ComecePorAqui"));
 const RegistroSessao = lazy(() => import("./pages/app/RegistroSessao"));
+const Anamneses = lazy(() => import("./pages/app/Anamneses"));
 const ContratoPublico = lazy(() => import("./pages/ContratoPublico"));
 
 const queryClient = new QueryClient();
@@ -135,6 +136,7 @@ const App = () => (
                 <Route path="contratos" element={<Contratos />} />
                 <Route path="comece-por-aqui" element={<ComecePorAqui />} />
                 <Route path="registro-sessao" element={<RegistroSessao />} />
+                <Route path="anamneses" element={<Anamneses />} />
                 <Route path="perfil" element={<Profile />} />
               </Route>
               <Route path="*" element={<NotFound />} />
