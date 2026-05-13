@@ -288,6 +288,39 @@ export const ChildAnamnesisForm = ({ patientId, patientName, onSaved }: Props) =
         <p className="mt-2 text-sm opacity-95">Seja bem-vindo(a) e saiba que estamos juntos nessa jornada.</p>
       </div>
 
+      {/* Status do rascunho */}
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          {!recordId && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-lilac/20 text-lilac-foreground px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider">
+              <FileEdit className="h-3 w-3" /> Rascunho
+            </span>
+          )}
+          {recordId && dirty && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 text-foreground px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider">
+              <FileEdit className="h-3 w-3" /> Alterações não salvas
+            </span>
+          )}
+          {recordId && !dirty && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider">
+              <CheckCircle2 className="h-3 w-3" /> Finalizada
+            </span>
+          )}
+          {draftSavedAt ? (
+            <span className="inline-flex items-center gap-1">
+              <Cloud className="h-3 w-3" /> Rascunho salvo automaticamente às {draftSavedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          ) : (
+            <span>Salvamento automático ativado</span>
+          )}
+        </div>
+        {hasDraft && (
+          <button type="button" onClick={discardDraft} className="text-muted-foreground hover:text-destructive underline-offset-2 hover:underline">
+            Descartar rascunho
+          </button>
+        )}
+      </div>
+
       <p className="text-xs text-muted-foreground">* Indica uma pergunta obrigatória</p>
 
       <Section title="Sobre a criança 🌿">
@@ -403,10 +436,13 @@ export const ChildAnamnesisForm = ({ patientId, patientName, onSaved }: Props) =
         CRP 93008
       </div>
 
-      <div className="flex justify-end gap-2 sticky bottom-0 bg-background/95 backdrop-blur py-3 -mx-1 px-1">
+      <div className="flex flex-wrap justify-end items-center gap-2 sticky bottom-0 bg-background/95 backdrop-blur py-3 -mx-1 px-1">
+        <span className="text-xs text-muted-foreground mr-auto">
+          {dirty ? "Alterações em rascunho local" : recordId ? "Tudo salvo" : "Pronto para finalizar"}
+        </span>
         <Button variant="accent" onClick={save} disabled={saving}>
-          {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-          {recordId ? "Salvar alteração" : "Salvar anamnese"}
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {recordId ? "Salvar alteração" : "Finalizar anamnese"}
         </Button>
       </div>
     </div>
