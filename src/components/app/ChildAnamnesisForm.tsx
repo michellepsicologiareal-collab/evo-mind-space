@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save, Cloud, CheckCircle2, FileEdit } from "lucide-react";
 
 interface Props {
   patientId: string;
@@ -74,15 +74,26 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </section>
 );
 
+const draftKey = (patientId: string) => `anamnese_crianca_rascunho_${patientId}`;
+
 export const ChildAnamnesisForm = ({ patientId, patientName, onSaved }: Props) => {
   const { user } = useAuth();
   const [form, setForm] = useState<Form>({ ...empty, child_name: patientName });
   const [recordId, setRecordId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<Date | null>(null);
+  const [hasDraft, setHasDraft] = useState(false);
+  const initialLoadRef = useRef(true);
+  const debounceRef = useRef<number | null>(null);
 
-  const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((p) => ({ ...p, [k]: v }));
+  const set = <K extends keyof Form>(k: K, v: Form[K]) => {
+    setForm((p) => ({ ...p, [k]: v }));
+    setDirty(true);
+  };
 
+  // Initial load: prefer the more recent of (DB record) vs (localStorage draft)
   useEffect(() => {
     let active = true;
     (async () => {
@@ -95,10 +106,14 @@ export const ChildAnamnesisForm = ({ patientId, patientName, onSaved }: Props) =
         .limit(1)
         .maybeSingle();
       if (!active) return;
+
+      let dbForm: Form | null = null;
+      let dbUpdatedAt: number = 0;
       if (data) {
-        setRecordId(data.id);
         const d = data as any;
-        setForm({
+        setRecordId(d.id);
+        dbUpdatedAt = new Date(d.updated_at ?? d.created_at).getTime();
+        dbForm = {
           email: d.email ?? "",
           child_name: d.child_name ?? patientName,
           child_birth_date: d.child_birth_date ?? "",
@@ -129,12 +144,96 @@ export const ChildAnamnesisForm = ({ patientId, patientName, onSaved }: Props) =
           parents_disorder: d.parents_disorder ?? "",
           parents_disorder_which: d.parents_disorder_which ?? "",
           authorized_lgpd: !!d.authorized_lgpd,
-        });
+        };
       }
+
+      // Read draft
+      let draftForm: Form | null = null;
+      let draftSaved = 0;
+      try {
+        const raw = localStorage.getItem(draftKey(patientId));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.form) {
+            draftForm = parsed.form as Form;
+            draftSaved = Number(parsed.savedAt ?? 0);
+          }
+        }
+      } catch {}
+
+      if (draftForm && draftSaved > dbUpdatedAt) {
+        setForm(draftForm);
+        setHasDraft(true);
+        setDraftSavedAt(new Date(draftSaved));
+        toast.info("Rascunho restaurado", { description: "Continuando de onde você parou." });
+      } else if (dbForm) {
+        setForm(dbForm);
+      }
+
+      // Allow auto-save effect to run after this initial load settles
+      setTimeout(() => { initialLoadRef.current = false; }, 100);
       setLoading(false);
     })();
     return () => { active = false; };
   }, [patientId, patientName]);
+
+  // Debounced auto-save draft to localStorage on every change
+  useEffect(() => {
+    if (loading || initialLoadRef.current || !dirty) return;
+    if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    debounceRef.current = window.setTimeout(() => {
+      try {
+        const now = Date.now();
+        localStorage.setItem(
+          draftKey(patientId),
+          JSON.stringify({ form, savedAt: now }),
+        );
+        setDraftSavedAt(new Date(now));
+        setHasDraft(true);
+      } catch {}
+    }, 600);
+    return () => {
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    };
+  }, [form, dirty, loading, patientId]);
+
+  const clearDraft = useCallback(() => {
+    try { localStorage.removeItem(draftKey(patientId)); } catch {}
+    setHasDraft(false);
+    setDraftSavedAt(null);
+  }, [patientId]);
+
+  const discardDraft = useCallback(async () => {
+    if (!confirm("Descartar o rascunho local e recarregar a versão salva?")) return;
+    clearDraft();
+    setDirty(false);
+    initialLoadRef.current = true;
+    // re-trigger initial load by toggling loading
+    setLoading(true);
+    const { data } = await supabase
+      .from("child_anamneses")
+      .select("*")
+      .eq("patient_id", patientId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data) {
+      const d = data as any;
+      setRecordId(d.id);
+      setForm({
+        ...empty,
+        child_name: d.child_name ?? patientName,
+        ...Object.fromEntries(Object.keys(empty).map((k) => [k, (d as any)[k] ?? (empty as any)[k]])) as any,
+        child_birth_date: d.child_birth_date ?? "",
+        authorized_lgpd: !!d.authorized_lgpd,
+      });
+    } else {
+      setForm({ ...empty, child_name: patientName });
+    }
+    setTimeout(() => { initialLoadRef.current = false; }, 100);
+    setLoading(false);
+    toast.success("Rascunho descartado");
+  }, [patientId, patientName, clearDraft]);
 
   const save = useCallback(async () => {
     if (!user) return;
@@ -162,9 +261,11 @@ export const ChildAnamnesisForm = ({ patientId, patientName, onSaved }: Props) =
       toast.error("Erro ao salvar anamnese");
       return;
     }
-    toast.success("Anamnese salva");
+    clearDraft();
+    setDirty(false);
+    toast.success("Anamnese finalizada e salva");
     onSaved?.();
-  }, [form, user, recordId, patientId, onSaved]);
+  }, [form, user, recordId, patientId, onSaved, clearDraft]);
 
   if (loading) {
     return <div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
