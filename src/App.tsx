@@ -31,6 +31,7 @@ const ComecePorAqui = lazy(() => import("./pages/app/ComecePorAqui"));
 const RegistroSessao = lazy(() => import("./pages/app/RegistroSessao"));
 const Anamneses = lazy(() => import("./pages/app/Anamneses"));
 const ContratoPublico = lazy(() => import("./pages/ContratoPublico"));
+const AnamnesePublica = lazy(() => import("./pages/AnamnesePublica"));
 
 const queryClient = new QueryClient();
 
