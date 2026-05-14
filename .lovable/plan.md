@@ -1,27 +1,38 @@
+## Objetivo
 
-## Redesign da Agenda
+Permitir que a psicóloga envie um link público (mesmo modelo do termo) para o paciente/responsável preencher a Anamnese da Criança pelo WhatsApp. O preenchimento deve cair direto no painel do app, vinculado ao paciente correto.
 
-### O que muda
+## Fluxo do usuário
 
-1. **Calendário mensal interativo** -- Um mini-calendário mensal (DayPicker) no topo ou lateral esquerda. Dias com sessões terão indicador visual (bolinha). Clicar em um dia mostra a lista de pacientes/sessões daquele dia.
+1. No card do paciente (página Pacientes) → menu "Anamnese (Criança)" ganha a opção **"Enviar link de preenchimento"**.
+2. Ao clicar, abre o WhatsApp já com a mensagem: *"Olá [nome], segue o link para preencher sua anamnese: https://psireal.app/anamnese-crianca/{patientId}"*.
+3. O paciente abre o link, vê uma página pública (sem login) com o mesmo formulário da anamnese — só os campos do "psi" e do paciente já vêm pré-preenchidos (nome da criança e nome da profissional).
+4. Ao enviar, os dados caem em `child_anamneses` vinculados ao `user_id` da psicóloga.
+5. A psicóloga vê a anamnese preenchida na tela **Anamneses** normalmente.
 
-2. **Visão semanal melhorada** -- Mantém a grade de 7 dias, mas com cards maiores mostrando o nome completo do paciente (não truncado), horário e status. No desktop, layout mais espaçoso.
+## Implementação técnica
 
-3. **Tabs Mês / Semana / Dia** -- Três abas para alternar entre visão mensal (calendário + lista do dia selecionado), semanal (grade atual melhorada) e dia (lista detalhada).
+### Backend
+- Nova edge function `public-anamnesis` (verify_jwt=false) com duas ações:
+  - `GET ?patient_id=...` → retorna `{ child_name, professional_name }` (lookup via service role na tabela `patients` + `profiles`).
+  - `POST` → recebe `patient_id` + payload do formulário, valida tamanhos (zod), descobre `user_id` do paciente e insere em `child_anamneses` com service role.
+- Validação: rejeita se LGPD não aceita ou campos obrigatórios vazios.
+- Sem alteração de RLS (mantemos `child_anamneses` restrito por `user_id`; só a edge function escreve em nome do dono).
 
-4. **Remover Google Calendar** -- Botão de sincronização com Google Calendar e todo código relacionado (gcal state, funções `syncSessionToGcal`, `deleteGcalEvent`, `startGcalAuth`, `disconnectGcal`, `checkGcalStatus`) serão removidos da Agenda. As edge functions ficam no projeto para uso futuro.
+### Frontend
+- Nova página pública `src/pages/AnamnesePublica.tsx` (rota `/anamnese-crianca/:patientId`) — visual igual ao `ContratoPublico.tsx` (header com logo, cards `border rounded-xl bg-card`, botão `variant="accent"`), reaproveitando as mesmas perguntas do `ChildAnamnesisForm.tsx`.
+- Tela de sucesso ao enviar (mesmo padrão `CheckCircle2` do contrato).
+- `src/App.tsx`: registrar a nova rota pública (fora do `ProtectedRoute`).
+- `src/pages/app/Patients.tsx`: no dropdown do card adicionar item **"Enviar link de anamnese"** que copia o link e abre `wa.me/{telefone}?text=...` com a URL.
 
-5. **Exclusão de pendências financeiras** -- No painel de Sessões Pendentes, adicionar botão de excluir (lixeira) em cada item, que remove a sessão e suas referências financeiras. No dialog de edição, botão "Excluir sessão" também disponível.
+## Arquivos afetados
+- `supabase/functions/public-anamnesis/index.ts` (novo)
+- `supabase/config.toml` (declarar a função com `verify_jwt = false`)
+- `src/pages/AnamnesePublica.tsx` (novo)
+- `src/App.tsx` (rota)
+- `src/pages/app/Patients.tsx` (botão WhatsApp no dropdown)
 
-6. **Filtros por data ou paciente** -- Ao clicar em uma sessão/paciente, abrir painel lateral ou seção expandida mostrando todas as sessões daquele paciente, com opção de ordenar por data (ascendente/descendente) ou agrupar por paciente. Dropdown de filtro no topo da lista.
-
-7. **Edição completa vinculada ao paciente** -- O dialog de edição já existe; será expandido para mostrar o nome do paciente, link para ficha, e permitir trocar paciente se necessário.
-
-### Detalhes técnicos
-
-- **Arquivo principal**: `src/pages/app/Agenda.tsx` (reescrever ~80%)
-- **Componentes**: Usar `Tabs`/`TabsList`/`TabsTrigger`/`TabsContent` do shadcn para as visões
-- **Calendário**: Usar `Calendar` (DayPicker) já existente no projeto com `pointer-events-auto`
-- **Dados**: Buscar sessões do mês inteiro (não só da semana) quando em visão mensal
-- **Sem migração de banco** necessária -- tudo usa tabelas existentes (`sessions`, `patients`, `patient_progress`)
-- **Sem mudanças em edge functions**
+## O que NÃO muda
+- Estrutura da tabela `child_anamneses` e RLS atual.
+- Formulário interno (`ChildAnamnesisForm.tsx`) e tela `Anamneses.tsx` continuam iguais.
+- Fluxo do termo/contrato.
