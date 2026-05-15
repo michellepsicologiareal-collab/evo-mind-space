@@ -23,9 +23,6 @@ interface Template {
   user_id: string;
   professional_name: string;
   professional_crp: string;
-  professional_cpf: string;
-  professional_address: string;
-  professional_email: string;
   clauses: Clause[];
   lgpd_clause: string;
 }
