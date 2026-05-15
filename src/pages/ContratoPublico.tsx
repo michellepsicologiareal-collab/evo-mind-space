@@ -23,9 +23,6 @@ interface Template {
   user_id: string;
   professional_name: string;
   professional_crp: string;
-  professional_cpf: string;
-  professional_address: string;
-  professional_email: string;
   clauses: Clause[];
   lgpd_clause: string;
 }
@@ -54,18 +51,19 @@ export default function ContratoPublico() {
   useEffect(() => {
     if (!templateId) return;
     (async () => {
-      const { data } = await supabase
-        .from("contract_templates")
-        .select("*")
-        .eq("id", templateId)
-        .maybeSingle();
-      if (data) {
-        const t = data as unknown as Template;
-        setTemplate(t);
-        // Initialize responses
+      let tpl: Template | null = null;
+      try {
+        const url = `https://fdixnrqzoyuyeaqurfdx.supabase.co/functions/v1/public-contract?template_id=${encodeURIComponent(templateId)}`;
+        const resp = await fetch(url);
+        if (resp.ok) tpl = (await resp.json()) as Template;
+      } catch {
+        // ignore
+      }
+      if (tpl && tpl.id) {
+        setTemplate(tpl);
         const init: Record<string, string | boolean> = {};
-        t.clauses.forEach((c) => {
-          if (c.type === "text") return; // display-only, no response needed
+        (tpl.clauses || []).forEach((c) => {
+          if (c.type === "text") return;
           init[c.key] = c.type === "agree" ? false : "";
         });
         setResponses(init);
@@ -111,20 +109,27 @@ export default function ContratoPublico() {
       readableResponses[c.title] = c.type === "agree" ? "Aceito" : String(val);
     });
 
-    const { error } = await supabase.from("signed_contracts").insert({
-      template_id: template.id,
-      user_id: template.user_id,
-      patient_name: patientName.trim(),
-      patient_whatsapp: patientWhatsapp.trim(),
-      patient_birth_date: patientBirthDate || null,
-      patient_cpf: patientCpf.trim(),
-      patient_address: patientAddress.trim(),
-      emergency_contact_name: emergencyName.trim(),
-      emergency_contact_relationship: emergencyRelationship.trim(),
-      emergency_contact_phone: emergencyPhone.trim(),
-      clause_responses: readableResponses,
-      accepted_lgpd: true,
-    });
+    const resp = await fetch(
+      `https://fdixnrqzoyuyeaqurfdx.supabase.co/functions/v1/public-contract`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          template_id: template.id,
+          patient_name: patientName.trim(),
+          patient_whatsapp: patientWhatsapp.trim(),
+          patient_birth_date: patientBirthDate || null,
+          patient_cpf: patientCpf.trim(),
+          patient_address: patientAddress.trim(),
+          emergency_contact_name: emergencyName.trim(),
+          emergency_contact_relationship: emergencyRelationship.trim(),
+          emergency_contact_phone: emergencyPhone.trim(),
+          clause_responses: readableResponses,
+          accepted_lgpd: true,
+        }),
+      },
+    );
+    const error = !resp.ok;
 
     setSubmitting(false);
 
@@ -181,9 +186,6 @@ export default function ContratoPublico() {
           <h2 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider">Contratada (Profissional)</h2>
           <p className="text-sm"><strong>{template.professional_name || "—"}</strong></p>
           {template.professional_crp && <p className="text-sm text-muted-foreground">CRP: {template.professional_crp}</p>}
-          {template.professional_cpf && <p className="text-sm text-muted-foreground">CPF: {template.professional_cpf}</p>}
-          {template.professional_address && <p className="text-sm text-muted-foreground">Endereço: {template.professional_address}</p>}
-          {template.professional_email && <p className="text-sm text-muted-foreground">E-mail: {template.professional_email}</p>}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

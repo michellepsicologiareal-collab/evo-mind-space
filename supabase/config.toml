@@ -12,3 +12,9 @@ verify_jwt = false
 
 [functions.auth-email-hook]
 verify_jwt = false
+
+[functions.public-contract]
+verify_jwt = false
+
+[functions.public-anamnesis]
+verify_jwt = false
