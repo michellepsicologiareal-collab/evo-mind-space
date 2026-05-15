@@ -822,7 +822,27 @@ const Patients = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Child Anamnesis Dialog */}
+      {/* Session Records Dialog */}
+      <Dialog open={!!recordsPatient} onOpenChange={(o) => !o && setRecordsPatient(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{recordsPatient?.full_name}</DialogTitle>
+            <DialogDescription>Registros de sessão (prontuário clínico)</DialogDescription>
+          </DialogHeader>
+          {recordsPatient && <PatientSessionRecords patientId={recordsPatient.id} patientName={recordsPatient.full_name} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Mood Chart Dialog */}
+      <Dialog open={!!moodPatient} onOpenChange={(o) => !o && setMoodPatient(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{moodPatient?.full_name}</DialogTitle>
+            <DialogDescription>Evolução do humor ao longo do tempo</DialogDescription>
+          </DialogHeader>
+          {moodPatient && <PatientMoodChart patientId={moodPatient.id} patientName={moodPatient.full_name} />}
+        </DialogContent>
+      </Dialog>
       <Dialog open={!!anamnesisPatient} onOpenChange={(o) => !o && setAnamnesisPatient(null)}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
