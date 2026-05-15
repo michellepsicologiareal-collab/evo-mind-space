@@ -109,20 +109,27 @@ export default function ContratoPublico() {
       readableResponses[c.title] = c.type === "agree" ? "Aceito" : String(val);
     });
 
-    const { error } = await supabase.from("signed_contracts").insert({
-      template_id: template.id,
-      user_id: template.user_id,
-      patient_name: patientName.trim(),
-      patient_whatsapp: patientWhatsapp.trim(),
-      patient_birth_date: patientBirthDate || null,
-      patient_cpf: patientCpf.trim(),
-      patient_address: patientAddress.trim(),
-      emergency_contact_name: emergencyName.trim(),
-      emergency_contact_relationship: emergencyRelationship.trim(),
-      emergency_contact_phone: emergencyPhone.trim(),
-      clause_responses: readableResponses,
-      accepted_lgpd: true,
-    });
+    const resp = await fetch(
+      `https://fdixnrqzoyuyeaqurfdx.supabase.co/functions/v1/public-contract`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          template_id: template.id,
+          patient_name: patientName.trim(),
+          patient_whatsapp: patientWhatsapp.trim(),
+          patient_birth_date: patientBirthDate || null,
+          patient_cpf: patientCpf.trim(),
+          patient_address: patientAddress.trim(),
+          emergency_contact_name: emergencyName.trim(),
+          emergency_contact_relationship: emergencyRelationship.trim(),
+          emergency_contact_phone: emergencyPhone.trim(),
+          clause_responses: readableResponses,
+          accepted_lgpd: true,
+        }),
+      },
+    );
+    const error = !resp.ok;
 
     setSubmitting(false);
 
