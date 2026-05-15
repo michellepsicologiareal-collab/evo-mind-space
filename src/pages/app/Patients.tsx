@@ -760,7 +760,7 @@ const Patients = () => {
                   variant="outline"
                   size="sm"
                   className="text-xs gap-1.5"
-                  onClick={() => navigate(`/app/registro-sessao?patient=${p.id}`)}
+                  onClick={() => setRecordsPatient(p)}
                 >
                   <FileText className="h-3.5 w-3.5" /> Registros de Sessão
                 </Button>
@@ -768,7 +768,7 @@ const Patients = () => {
                   variant="outline"
                   size="sm"
                   className="text-xs gap-1.5"
-                  onClick={() => navigate(`/app?patient=${p.id}#humor`)}
+                  onClick={() => setMoodPatient(p)}
                 >
                   <Smile className="h-3.5 w-3.5" /> Humor
                 </Button>
