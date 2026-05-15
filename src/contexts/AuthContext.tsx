@@ -82,21 +82,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    let lastCheckedUserId: string | null = null;
 
     const clearSession = () => {
       if (!mounted) return;
       setSession(null);
       setUser(null);
       setIsApproved(null);
+      lastCheckedUserId = null;
       setLoading(false);
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!mounted) return;
 
-      // Handle session expiry / sign out while using the app
       if (event === "SIGNED_OUT") {
-        // Only save return URL if user was previously logged in (session expired)
         if (user && window.location.pathname.startsWith("/app")) {
           sessionStorage.setItem(SESSION_RETURN_KEY, window.location.pathname + window.location.search);
           sessionStorage.setItem(SESSION_EXPIRED_KEY, "1");
@@ -105,23 +105,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // Always keep session/user fresh, but DO NOT re-trigger loading state
+      // for token refreshes or user updates — that would unmount the current page.
       setSession(newSession);
       setUser(newSession?.user ?? null);
 
-      if (newSession?.user) {
-        setLoading(true);
-      }
+      const newUserId = newSession?.user?.id ?? null;
+      const isNewUser = newUserId && newUserId !== lastCheckedUserId;
 
-      // defer to avoid deadlock with Supabase client
-      setTimeout(() => {
-        if (!mounted) return;
-        if (newSession?.user) {
-          checkApproval(newSession.user.id).finally(() => mounted && setLoading(false));
-        } else {
-          setIsApproved(null);
-          setLoading(false);
-        }
-      }, 0);
+      // Only re-check approval when the user actually changed (sign-in / account swap).
+      // TOKEN_REFRESHED, USER_UPDATED, INITIAL_SESSION (same user) → skip the loader.
+      if (isNewUser && event !== "TOKEN_REFRESHED") {
+        lastCheckedUserId = newUserId;
+        setTimeout(() => {
+          if (!mounted) return;
+          checkApproval(newUserId).finally(() => mounted && setLoading(false));
+        }, 0);
+      } else if (!newUserId) {
+        lastCheckedUserId = null;
+        setIsApproved(null);
+        setLoading(false);
+      }
     });
 
     supabase.auth.getSession().then(({ data: { session: existing }, error }) => {
@@ -136,6 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(existing?.user ?? null);
 
       if (existing?.user) {
+        lastCheckedUserId = existing.user.id;
         checkApproval(existing.user.id).finally(() => mounted && setLoading(false));
       } else {
         setLoading(false);
