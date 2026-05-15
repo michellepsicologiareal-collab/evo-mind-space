@@ -8,6 +8,8 @@ import { TccRecords } from "@/components/app/TccRecords";
 import { CaseFormulation } from "@/components/app/CaseFormulation";
 import { ChildAnamnesisForm } from "@/components/app/ChildAnamnesisForm";
 import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
+import { PatientMoodChart } from "@/components/app/PatientMoodChart";
+import { PatientSessionRecords } from "@/components/app/PatientSessionRecords";
 import { CardSkeleton } from "@/components/app/Skeletons";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
@@ -91,6 +93,8 @@ const Patients = () => {
   const [tccPatient, setTccPatient] = useState<Patient | null>(null);
   const [padeksyPatient, setPadeksyPatient] = useState<Patient | null>(null);
   const [historyPatient, setHistoryPatient] = useState<Patient | null>(null);
+  const [moodPatient, setMoodPatient] = useState<Patient | null>(null);
+  const [recordsPatient, setRecordsPatient] = useState<Patient | null>(null);
   const [anamnesisPatient, setAnamnesisPatient] = useState<Patient | null>(null);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
@@ -756,7 +760,7 @@ const Patients = () => {
                   variant="outline"
                   size="sm"
                   className="text-xs gap-1.5"
-                  onClick={() => navigate(`/app/registro-sessao?patient=${p.id}`)}
+                  onClick={() => setRecordsPatient(p)}
                 >
                   <FileText className="h-3.5 w-3.5" /> Registros de Sessão
                 </Button>
@@ -764,7 +768,7 @@ const Patients = () => {
                   variant="outline"
                   size="sm"
                   className="text-xs gap-1.5"
-                  onClick={() => navigate(`/app?patient=${p.id}#humor`)}
+                  onClick={() => setMoodPatient(p)}
                 >
                   <Smile className="h-3.5 w-3.5" /> Humor
                 </Button>
@@ -818,7 +822,27 @@ const Patients = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Child Anamnesis Dialog */}
+      {/* Session Records Dialog */}
+      <Dialog open={!!recordsPatient} onOpenChange={(o) => !o && setRecordsPatient(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{recordsPatient?.full_name}</DialogTitle>
+            <DialogDescription>Registros de sessão (prontuário clínico)</DialogDescription>
+          </DialogHeader>
+          {recordsPatient && <PatientSessionRecords patientId={recordsPatient.id} patientName={recordsPatient.full_name} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Mood Chart Dialog */}
+      <Dialog open={!!moodPatient} onOpenChange={(o) => !o && setMoodPatient(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{moodPatient?.full_name}</DialogTitle>
+            <DialogDescription>Evolução do humor ao longo do tempo</DialogDescription>
+          </DialogHeader>
+          {moodPatient && <PatientMoodChart patientId={moodPatient.id} patientName={moodPatient.full_name} />}
+        </DialogContent>
+      </Dialog>
       <Dialog open={!!anamnesisPatient} onOpenChange={(o) => !o && setAnamnesisPatient(null)}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
