@@ -646,6 +646,80 @@ const Patients = () => {
                 {p.phone && <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> {p.phone}</p>}
                 {p.session_price != null && <p className="text-foreground font-medium">R$ {Number(p.session_price).toFixed(2).replace(".", ",")} <span className="text-muted-foreground font-normal">/ sessão</span></p>}
               </div>
+
+              {/* Detalhes preenchidos do paciente */}
+              {(p.chief_complaint || p.treatment_plan || p.anamnesis || p.notes ||
+                p.treatment_start_date || p.treatment_end_date ||
+                (p.has_financial_responsible && (p.financial_responsible_name || p.financial_responsible_phone)) ||
+                (p.has_psychiatrist && (p.psychiatrist_name || p.psychiatrist_phone)) ||
+                p.medications) && (
+                <div className="mt-4 rounded-xl bg-[hsl(var(--accent)/0.08)] border border-[hsl(var(--accent)/0.2)] p-3 space-y-2.5 text-sm">
+                  {p.chief_complaint && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Queixa principal</p>
+                      <p className="text-foreground whitespace-pre-line">{p.chief_complaint}</p>
+                    </div>
+                  )}
+                  {p.treatment_plan && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Plano terapêutico</p>
+                      <p className="text-foreground whitespace-pre-line">{p.treatment_plan}</p>
+                    </div>
+                  )}
+                  {p.anamnesis && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Anamnese</p>
+                      <p className="text-foreground whitespace-pre-line">{p.anamnesis}</p>
+                    </div>
+                  )}
+                  {(p.treatment_start_date || p.treatment_end_date) && (
+                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                      {p.treatment_start_date && (
+                        <div>
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Início: </span>
+                          <span className="text-foreground">{format(new Date(p.treatment_start_date + "T00:00:00"), "dd/MM/yyyy")}</span>
+                        </div>
+                      )}
+                      {p.treatment_end_date && (
+                        <div>
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Encerramento: </span>
+                          <span className="text-foreground">{format(new Date(p.treatment_end_date + "T00:00:00"), "dd/MM/yyyy")}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {p.has_financial_responsible && (p.financial_responsible_name || p.financial_responsible_phone) && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Responsável financeiro</p>
+                      <p className="text-foreground">
+                        {p.financial_responsible_name}
+                        {p.financial_responsible_phone && <span className="text-muted-foreground"> · {p.financial_responsible_phone}</span>}
+                      </p>
+                    </div>
+                  )}
+                  {p.has_psychiatrist && (p.psychiatrist_name || p.psychiatrist_phone) && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Psiquiatra</p>
+                      <p className="text-foreground">
+                        {p.psychiatrist_name}
+                        {p.psychiatrist_phone && <span className="text-muted-foreground"> · {p.psychiatrist_phone}</span>}
+                      </p>
+                    </div>
+                  )}
+                  {p.medications && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Medicações</p>
+                      <p className="text-foreground whitespace-pre-line">{p.medications}</p>
+                    </div>
+                  )}
+                  {p.notes && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Observações</p>
+                      <p className="text-foreground whitespace-pre-line">{p.notes}</p>
+                    </div>
+                  )}
+                </div>
+              )}
               {/* WhatsApp billing button */}
               {p.phone && (
                 <div className="mt-3 border-t border-border/50 pt-3">
