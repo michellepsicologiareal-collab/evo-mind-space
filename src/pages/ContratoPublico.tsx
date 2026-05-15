@@ -54,11 +54,6 @@ export default function ContratoPublico() {
   useEffect(() => {
     if (!templateId) return;
     (async () => {
-      const { data, error } = await supabase.functions.invoke("public-contract", {
-        method: "GET",
-        headers: { "x-template-id": templateId },
-      });
-      // Edge function uses query string; invoke doesn't pass it, so call via fetch
       let tpl: Template | null = null;
       try {
         const url = `https://fdixnrqzoyuyeaqurfdx.supabase.co/functions/v1/public-contract?template_id=${encodeURIComponent(templateId)}`;
