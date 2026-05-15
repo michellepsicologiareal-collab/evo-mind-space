@@ -54,18 +54,24 @@ export default function ContratoPublico() {
   useEffect(() => {
     if (!templateId) return;
     (async () => {
-      const { data } = await supabase
-        .from("contract_templates")
-        .select("*")
-        .eq("id", templateId)
-        .maybeSingle();
-      if (data) {
-        const t = data as unknown as Template;
-        setTemplate(t);
-        // Initialize responses
+      const { data, error } = await supabase.functions.invoke("public-contract", {
+        method: "GET",
+        headers: { "x-template-id": templateId },
+      });
+      // Edge function uses query string; invoke doesn't pass it, so call via fetch
+      let tpl: Template | null = null;
+      try {
+        const url = `https://fdixnrqzoyuyeaqurfdx.supabase.co/functions/v1/public-contract?template_id=${encodeURIComponent(templateId)}`;
+        const resp = await fetch(url);
+        if (resp.ok) tpl = (await resp.json()) as Template;
+      } catch {
+        // ignore
+      }
+      if (tpl && tpl.id) {
+        setTemplate(tpl);
         const init: Record<string, string | boolean> = {};
-        t.clauses.forEach((c) => {
-          if (c.type === "text") return; // display-only, no response needed
+        (tpl.clauses || []).forEach((c) => {
+          if (c.type === "text") return;
           init[c.key] = c.type === "agree" ? false : "";
         });
         setResponses(init);
