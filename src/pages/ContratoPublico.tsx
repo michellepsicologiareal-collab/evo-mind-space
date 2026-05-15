@@ -179,9 +179,6 @@ export default function ContratoPublico() {
           <h2 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider">Contratada (Profissional)</h2>
           <p className="text-sm"><strong>{template.professional_name || "—"}</strong></p>
           {template.professional_crp && <p className="text-sm text-muted-foreground">CRP: {template.professional_crp}</p>}
-          {template.professional_cpf && <p className="text-sm text-muted-foreground">CPF: {template.professional_cpf}</p>}
-          {template.professional_address && <p className="text-sm text-muted-foreground">Endereço: {template.professional_address}</p>}
-          {template.professional_email && <p className="text-sm text-muted-foreground">E-mail: {template.professional_email}</p>}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
