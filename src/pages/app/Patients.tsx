@@ -768,13 +768,34 @@ const Patients = () => {
                 <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setRecordsPatient(p)}>
                   <FileText className="h-3.5 w-3.5" /> Registros
                 </Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setMoodPatient(p)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5 disabled:opacity-50"
+                  onClick={() => setMoodPatient(p)}
+                  disabled={!counts.mood[p.id]}
+                  title={!counts.mood[p.id] ? "Sem registros de humor ainda. Adicione um humor no Registro de Sessão." : undefined}
+                >
                   <Smile className="h-3.5 w-3.5" /> Humor
                 </Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setAnamnesisPatient(p)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5 disabled:opacity-50"
+                  onClick={() => setAnamnesisPatient(p)}
+                  disabled={!anamneseFilled[p.id]}
+                  title={!anamneseFilled[p.id] ? "Anamnese ainda não preenchida. Envie o link pelo WhatsApp para o responsável preencher." : undefined}
+                >
                   <Baby className="h-3.5 w-3.5" /> Anamnese
                 </Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setTccPatient(p)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5 disabled:opacity-50"
+                  onClick={() => setTccPatient(p)}
+                  disabled={!counts.tcc[p.id]}
+                  title={!counts.tcc[p.id] ? "Nenhum registro TCC ainda. Crie o primeiro pensamento automático no Registro de Sessão." : undefined}
+                >
                   <ClipboardList className="h-3.5 w-3.5" /> TCC
                 </Button>
                 <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setPadeksyPatient(p)}>
