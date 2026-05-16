@@ -102,6 +102,7 @@ const Patients = () => {
   const patientGuard = useUnsavedGuard();
   const [latestSessionDates, setLatestSessionDates] = useState<Record<string, string>>({});
   const [anamneseFilled, setAnamneseFilled] = useState<Record<string, string>>({});
+  const [counts, setCounts] = useState<{ mood: Record<string, number>; tcc: Record<string, number>; records: Record<string, number>; history: Record<string, number> }>({ mood: {}, tcc: {}, records: {}, history: {} });
 
   const DRAFT_KEY = "rascunho_novo_paciente";
   type FormState = { full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "adolescente" | "avaliacao" | "casal" | "crianca" | "grupo" | "individual" | "sessao_breve" | "supervisao"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string };
@@ -127,11 +128,15 @@ const Patients = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [patientsRes, profileRes, sessionsRes, anamRes] = await Promise.all([
+    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
       supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
       supabase.from("child_anamneses").select("patient_id, updated_at").eq("user_id", user.id),
+      supabase.from("patient_progress").select("patient_id").eq("user_id", user.id),
+      supabase.from("tcc_records").select("patient_id").eq("user_id", user.id),
+      supabase.from("session_records").select("patient_id").eq("user_id", user.id),
+      supabase.from("sessions").select("patient_id").eq("user_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
@@ -148,6 +153,17 @@ const Patients = () => {
       if (a.patient_id) anamMap[a.patient_id] = a.updated_at;
     });
     setAnamneseFilled(anamMap);
+    const countBy = (rows: any[] | null) => {
+      const m: Record<string, number> = {};
+      (rows ?? []).forEach((r: any) => { if (r.patient_id) m[r.patient_id] = (m[r.patient_id] ?? 0) + 1; });
+      return m;
+    };
+    setCounts({
+      mood: countBy(moodRes.data),
+      tcc: countBy(tccRes.data),
+      records: countBy(recordsRes.data),
+      history: countBy(historyRes.data),
+    });
     setLoading(false);
   };
 
@@ -752,13 +768,34 @@ const Patients = () => {
                 <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setRecordsPatient(p)}>
                   <FileText className="h-3.5 w-3.5" /> Registros
                 </Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setMoodPatient(p)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5 disabled:opacity-50"
+                  onClick={() => setMoodPatient(p)}
+                  disabled={!counts.mood[p.id]}
+                  title={!counts.mood[p.id] ? "Sem registros de humor ainda. Adicione um humor no Registro de Sessão." : undefined}
+                >
                   <Smile className="h-3.5 w-3.5" /> Humor
                 </Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setAnamnesisPatient(p)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5 disabled:opacity-50"
+                  onClick={() => setAnamnesisPatient(p)}
+                  disabled={!anamneseFilled[p.id]}
+                  title={!anamneseFilled[p.id] ? "Anamnese ainda não preenchida. Envie o link pelo WhatsApp para o responsável preencher." : undefined}
+                >
                   <Baby className="h-3.5 w-3.5" /> Anamnese
                 </Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setTccPatient(p)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5 disabled:opacity-50"
+                  onClick={() => setTccPatient(p)}
+                  disabled={!counts.tcc[p.id]}
+                  title={!counts.tcc[p.id] ? "Nenhum registro TCC ainda. Crie o primeiro pensamento automático no Registro de Sessão." : undefined}
+                >
                   <ClipboardList className="h-3.5 w-3.5" /> TCC
                 </Button>
                 <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setPadeksyPatient(p)}>
