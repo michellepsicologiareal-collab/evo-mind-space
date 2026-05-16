@@ -127,11 +127,15 @@ const Patients = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [patientsRes, profileRes, sessionsRes, anamRes] = await Promise.all([
+    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
       supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
       supabase.from("child_anamneses").select("patient_id, updated_at").eq("user_id", user.id),
+      supabase.from("patient_progress").select("patient_id").eq("user_id", user.id),
+      supabase.from("tcc_records").select("patient_id").eq("user_id", user.id),
+      supabase.from("session_records").select("patient_id").eq("user_id", user.id),
+      supabase.from("sessions").select("patient_id").eq("user_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
@@ -148,6 +152,17 @@ const Patients = () => {
       if (a.patient_id) anamMap[a.patient_id] = a.updated_at;
     });
     setAnamneseFilled(anamMap);
+    const countBy = (rows: any[] | null) => {
+      const m: Record<string, number> = {};
+      (rows ?? []).forEach((r: any) => { if (r.patient_id) m[r.patient_id] = (m[r.patient_id] ?? 0) + 1; });
+      return m;
+    };
+    setCounts({
+      mood: countBy(moodRes.data),
+      tcc: countBy(tccRes.data),
+      records: countBy(recordsRes.data),
+      history: countBy(historyRes.data),
+    });
     setLoading(false);
   };
 
