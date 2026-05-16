@@ -624,24 +624,6 @@ const Patients = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setHistoryPatient(p)}><CalendarDays className="h-4 w-4" /> Histórico de Sessões</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setTccPatient(p)}><ClipboardList className="h-4 w-4" /> Prontuário TCC</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><Brain className="h-4 w-4" /> Formulação Padesky</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setAnamnesisPatient(p)}><Baby className="h-4 w-4" /> Anamnese (Criança)</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      const link = `${window.location.origin}/anamnese-crianca/${p.id}`;
-                      const phone = normalizePhoneForWhatsApp(p.phone || "");
-                      const msg = encodeURIComponent(`Olá! Segue o link para você preencher a anamnese de ${p.full_name}: ${link}`);
-                      const url = phone ? `https://wa.me/${phone}?text=${msg}` : `https://wa.me/?text=${msg}`;
-                      navigator.clipboard?.writeText(link).catch(() => {});
-                      toast.success("Link copiado", { description: "Abrindo WhatsApp..." });
-                      window.open(url, "_blank");
-                    }}>
-                      <MessageCircle className="h-4 w-4" /> Enviar link de anamnese (WhatsApp)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => window.open(`https://wa.me/5511947388423?text=${encodeURIComponent(`Olá Michelle, preciso de supervisão para o caso do(a) paciente: ${p.full_name}`)}`, "_blank")}>
-                      <Stethoscope className="h-4 w-4" /> Pedir Supervisão deste Caso
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => toggleActive(p)}>
                       {p.is_active ? "Marcar inativo" : "Reativar"}
                     </DropdownMenuItem>
