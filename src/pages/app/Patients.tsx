@@ -101,6 +101,7 @@ const Patients = () => {
   const [profCrp, setProfCrp] = useState<string>("");
   const patientGuard = useUnsavedGuard();
   const [latestSessionDates, setLatestSessionDates] = useState<Record<string, string>>({});
+  const [anamneseFilled, setAnamneseFilled] = useState<Record<string, string>>({});
 
   const DRAFT_KEY = "rascunho_novo_paciente";
   type FormState = { full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "adolescente" | "avaliacao" | "casal" | "crianca" | "grupo" | "individual" | "sessao_breve" | "supervisao"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string };
@@ -126,22 +127,27 @@ const Patients = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [patientsRes, profileRes, sessionsRes] = await Promise.all([
+    const [patientsRes, profileRes, sessionsRes, anamRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
       supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
+      supabase.from("child_anamneses").select("patient_id, updated_at").eq("user_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
     setPixKey((profileRes.data as any)?.pix_key ?? "");
     setProfName(profileRes.data?.full_name ?? "");
     setProfCrp((profileRes.data as any)?.crp ?? "");
-    // Build map: patient_id -> most recent pending session date
     const dateMap: Record<string, string> = {};
     (sessionsRes.data ?? []).forEach((s: any) => {
       if (s.patient_id && !dateMap[s.patient_id]) dateMap[s.patient_id] = s.scheduled_at;
     });
     setLatestSessionDates(dateMap);
+    const anamMap: Record<string, string> = {};
+    (anamRes.data ?? []).forEach((a: any) => {
+      if (a.patient_id) anamMap[a.patient_id] = a.updated_at;
+    });
+    setAnamneseFilled(anamMap);
     setLoading(false);
   };
 
@@ -618,24 +624,6 @@ const Patients = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setHistoryPatient(p)}><CalendarDays className="h-4 w-4" /> Histórico de Sessões</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setTccPatient(p)}><ClipboardList className="h-4 w-4" /> Prontuário TCC</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><Brain className="h-4 w-4" /> Formulação Padesky</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setAnamnesisPatient(p)}><Baby className="h-4 w-4" /> Anamnese (Criança)</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      const link = `${window.location.origin}/anamnese-crianca/${p.id}`;
-                      const phone = normalizePhoneForWhatsApp(p.phone || "");
-                      const msg = encodeURIComponent(`Olá! Segue o link para você preencher a anamnese de ${p.full_name}: ${link}`);
-                      const url = phone ? `https://wa.me/${phone}?text=${msg}` : `https://wa.me/?text=${msg}`;
-                      navigator.clipboard?.writeText(link).catch(() => {});
-                      toast.success("Link copiado", { description: "Abrindo WhatsApp..." });
-                      window.open(url, "_blank");
-                    }}>
-                      <MessageCircle className="h-4 w-4" /> Enviar link de anamnese (WhatsApp)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => window.open(`https://wa.me/5511947388423?text=${encodeURIComponent(`Olá Michelle, preciso de supervisão para o caso do(a) paciente: ${p.full_name}`)}`, "_blank")}>
-                      <Stethoscope className="h-4 w-4" /> Pedir Supervisão deste Caso
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => toggleActive(p)}>
                       {p.is_active ? "Marcar inativo" : "Reativar"}
                     </DropdownMenuItem>
@@ -656,23 +644,33 @@ const Patients = () => {
                 p.treatment_start_date || p.treatment_end_date ||
                 (p.has_financial_responsible && (p.financial_responsible_name || p.financial_responsible_phone)) ||
                 (p.has_psychiatrist && (p.psychiatrist_name || p.psychiatrist_phone)) ||
-                p.medications) && (
-                <div className="mt-4 rounded-xl bg-[hsl(var(--accent)/0.08)] border border-[hsl(var(--accent)/0.2)] p-3 space-y-2.5 text-sm">
+                p.medications || anamneseFilled[p.id]) && (
+                <div className="mt-4 rounded-xl bg-[hsl(var(--sand))] border border-[hsl(var(--sand))] p-3 space-y-2.5 text-sm">
+                  {anamneseFilled[p.id] && (
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-semibold bg-[hsl(var(--moss))] text-[hsl(var(--moss-foreground))]">
+                        <Baby className="h-3 w-3" /> Anamnese preenchida
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">
+                        em {format(new Date(anamneseFilled[p.id]), "dd/MM/yyyy")}
+                      </span>
+                    </div>
+                  )}
                   {p.chief_complaint && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Queixa principal</p>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Queixa principal</p>
                       <p className="text-foreground whitespace-pre-line">{p.chief_complaint}</p>
                     </div>
                   )}
                   {p.treatment_plan && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Plano terapêutico</p>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Plano terapêutico</p>
                       <p className="text-foreground whitespace-pre-line">{p.treatment_plan}</p>
                     </div>
                   )}
                   {p.anamnesis && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Anamnese</p>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Anamnese</p>
                       <p className="text-foreground whitespace-pre-line">{p.anamnesis}</p>
                     </div>
                   )}
@@ -680,13 +678,13 @@ const Patients = () => {
                     <div className="flex flex-wrap gap-x-4 gap-y-1">
                       {p.treatment_start_date && (
                         <div>
-                          <span className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Início: </span>
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Início: </span>
                           <span className="text-foreground">{format(new Date(p.treatment_start_date + "T00:00:00"), "dd/MM/yyyy")}</span>
                         </div>
                       )}
                       {p.treatment_end_date && (
                         <div>
-                          <span className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Encerramento: </span>
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Encerramento: </span>
                           <span className="text-foreground">{format(new Date(p.treatment_end_date + "T00:00:00"), "dd/MM/yyyy")}</span>
                         </div>
                       )}
@@ -694,7 +692,7 @@ const Patients = () => {
                   )}
                   {p.has_financial_responsible && (p.financial_responsible_name || p.financial_responsible_phone) && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Responsável financeiro</p>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Responsável financeiro</p>
                       <p className="text-foreground">
                         {p.financial_responsible_name}
                         {p.financial_responsible_phone && <span className="text-muted-foreground"> · {p.financial_responsible_phone}</span>}
@@ -703,7 +701,7 @@ const Patients = () => {
                   )}
                   {p.has_psychiatrist && (p.psychiatrist_name || p.psychiatrist_phone) && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Psiquiatra</p>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Psiquiatra</p>
                       <p className="text-foreground">
                         {p.psychiatrist_name}
                         {p.psychiatrist_phone && <span className="text-muted-foreground"> · {p.psychiatrist_phone}</span>}
@@ -712,13 +710,13 @@ const Patients = () => {
                   )}
                   {p.medications && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Medicações</p>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Medicações</p>
                       <p className="text-foreground whitespace-pre-line">{p.medications}</p>
                     </div>
                   )}
                   {p.notes && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--accent))]">Observações</p>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Observações</p>
                       <p className="text-foreground whitespace-pre-line">{p.notes}</p>
                     </div>
                   )}
@@ -748,29 +746,47 @@ const Patients = () => {
                 </div>
               )}
               <div className="mt-3 flex items-center gap-2 border-t border-border/50 pt-3 flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs gap-1.5"
-                  onClick={() => setHistoryPatient(p)}
-                >
-                  <CalendarDays className="h-3.5 w-3.5" /> Histórico de Sessões
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setHistoryPatient(p)}>
+                  <CalendarDays className="h-3.5 w-3.5" /> Histórico
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs gap-1.5"
-                  onClick={() => setRecordsPatient(p)}
-                >
-                  <FileText className="h-3.5 w-3.5" /> Registros de Sessão
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setRecordsPatient(p)}>
+                  <FileText className="h-3.5 w-3.5" /> Registros
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs gap-1.5"
-                  onClick={() => setMoodPatient(p)}
-                >
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setMoodPatient(p)}>
                   <Smile className="h-3.5 w-3.5" /> Humor
+                </Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setAnamnesisPatient(p)}>
+                  <Baby className="h-3.5 w-3.5" /> Anamnese
+                </Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setTccPatient(p)}>
+                  <ClipboardList className="h-3.5 w-3.5" /> TCC
+                </Button>
+                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setPadeksyPatient(p)}>
+                  <Brain className="h-3.5 w-3.5" /> Padesky
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5"
+                  onClick={() => {
+                    const link = `${window.location.origin}/anamnese-crianca/${p.id}`;
+                    const phone = normalizePhoneForWhatsApp(p.phone || "");
+                    const msg = encodeURIComponent(`Olá! Segue o link para você preencher a anamnese de ${p.full_name}: ${link}`);
+                    const url = phone ? `https://wa.me/${phone}?text=${msg}` : `https://wa.me/?text=${msg}`;
+                    navigator.clipboard?.writeText(link).catch(() => {});
+                    toast.success("Link copiado", { description: "Abrindo WhatsApp..." });
+                    window.open(url, "_blank");
+                  }}
+                >
+                  <MessageCircle className="h-3.5 w-3.5" /> Enviar link anamnese
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs gap-1.5"
+                  onClick={() => window.open(`https://wa.me/5511947388423?text=${encodeURIComponent(`Olá Michelle, preciso de supervisão para o caso do(a) paciente: ${p.full_name}`)}`, "_blank")}
+                >
+                  <Stethoscope className="h-3.5 w-3.5" /> Pedir supervisão
                 </Button>
               </div>
               <div className="mt-2 flex items-center justify-between">
