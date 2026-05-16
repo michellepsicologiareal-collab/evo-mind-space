@@ -127,22 +127,27 @@ const Patients = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [patientsRes, profileRes, sessionsRes] = await Promise.all([
+    const [patientsRes, profileRes, sessionsRes, anamRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
       supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
+      supabase.from("child_anamneses").select("patient_id, updated_at").eq("user_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
     setPixKey((profileRes.data as any)?.pix_key ?? "");
     setProfName(profileRes.data?.full_name ?? "");
     setProfCrp((profileRes.data as any)?.crp ?? "");
-    // Build map: patient_id -> most recent pending session date
     const dateMap: Record<string, string> = {};
     (sessionsRes.data ?? []).forEach((s: any) => {
       if (s.patient_id && !dateMap[s.patient_id]) dateMap[s.patient_id] = s.scheduled_at;
     });
     setLatestSessionDates(dateMap);
+    const anamMap: Record<string, string> = {};
+    (anamRes.data ?? []).forEach((a: any) => {
+      if (a.patient_id) anamMap[a.patient_id] = a.updated_at;
+    });
+    setAnamneseFilled(anamMap);
     setLoading(false);
   };
 
