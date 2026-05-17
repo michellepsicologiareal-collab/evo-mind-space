@@ -774,8 +774,8 @@ const Patients = () => {
                 const cRec = counts.records[p.id] || 0;
                 const cHist = counts.history[p.id] || 0;
                 const hasAnam = !!anamneseFilled[p.id];
-                const CountPill = ({ n }: { n: number }) => (
-                  <span className="ml-1 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[hsl(var(--lilac))] text-[hsl(var(--lilac-foreground))] text-[10px] font-semibold leading-none">
+                const CountPill = ({ n, recent }: { n: number; recent?: boolean }) => (
+                  <span className={`ml-1 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-[10px] font-semibold leading-none ${recent ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] ring-2 ring-[hsl(var(--accent))]/30" : "bg-[hsl(var(--lilac))] text-[hsl(var(--lilac-foreground))]"}`}>
                     {n}
                   </span>
                 );
@@ -805,6 +805,9 @@ const Patients = () => {
                 ];
                 const newest = entries.reduce((a, b) => (b.ts > a.ts ? b : a), { key: "", ts: 0 });
                 const isNew = (k: string) => newest.ts > 0 && newest.key === k;
+                const btnCls = (recent: boolean) =>
+                  `text-xs gap-1.5 disabled:opacity-50 ${recent ? "border-[hsl(var(--accent))] border-2 bg-[hsl(var(--accent))]/5 text-[hsl(var(--accent))] shadow-sm" : ""}`;
+                const RecentSpark = ({ on }: { on: boolean }) => on ? <Sparkles className="h-3 w-3 text-[hsl(var(--accent))]" aria-label="Atividade mais recente" /> : null;
                 return (
                   <>
                     <div className="mt-3 flex items-center gap-1.5 flex-wrap text-[11px] text-muted-foreground border-t border-border/50 pt-3">
@@ -816,46 +819,51 @@ const Patients = () => {
                       <span>{hasAnam ? "anamnese ✓" : "sem anamnese"}</span>
                     </div>
                     <div className="mt-2 flex items-center gap-2 flex-wrap">
-                      <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setHistoryPatient(p)}>
-                        <CalendarDays className="h-3.5 w-3.5" /> Histórico{cHist > 0 && <CountPill n={cHist} />}
+                      <Button variant="outline" size="sm" className={btnCls(isNew("hist"))} onClick={() => setHistoryPatient(p)}>
+                        <CalendarDays className="h-3.5 w-3.5" /> Histórico{cHist > 0 && <CountPill n={cHist} recent={isNew("hist")} />}
                         <AgoTag iso={lastDates.history[p.id]} recent={isNew("hist")} />
+                        <RecentSpark on={isNew("hist")} />
                       </Button>
-                      <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setRecordsPatient(p)}>
-                        <FileText className="h-3.5 w-3.5" /> Registros{cRec > 0 && <CountPill n={cRec} />}
+                      <Button variant="outline" size="sm" className={btnCls(isNew("rec"))} onClick={() => setRecordsPatient(p)}>
+                        <FileText className="h-3.5 w-3.5" /> Registros{cRec > 0 && <CountPill n={cRec} recent={isNew("rec")} />}
                         <AgoTag iso={lastDates.records[p.id]} recent={isNew("rec")} />
+                        <RecentSpark on={isNew("rec")} />
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-xs gap-1.5 disabled:opacity-50"
+                        className={btnCls(isNew("mood"))}
                         onClick={() => setMoodPatient(p)}
                         disabled={!cMood}
                         title={!cMood ? "Sem registros de humor ainda. Adicione um humor no Registro de Sessão." : undefined}
                       >
-                        <Smile className="h-3.5 w-3.5" /> Humor{cMood > 0 && <CountPill n={cMood} />}
+                        <Smile className="h-3.5 w-3.5" /> Humor{cMood > 0 && <CountPill n={cMood} recent={isNew("mood")} />}
                         <AgoTag iso={lastDates.mood[p.id]} recent={isNew("mood")} />
+                        <RecentSpark on={isNew("mood")} />
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-xs gap-1.5 disabled:opacity-50"
+                        className={btnCls(isNew("anam"))}
                         onClick={() => setAnamnesisPatient(p)}
                         disabled={!hasAnam}
                         title={!hasAnam ? "Anamnese ainda não preenchida. Envie o link pelo WhatsApp para o responsável preencher." : undefined}
                       >
-                        <Baby className="h-3.5 w-3.5" /> Anamnese{hasAnam && <CountPill n={1} />}
+                        <Baby className="h-3.5 w-3.5" /> Anamnese{hasAnam && <CountPill n={1} recent={isNew("anam")} />}
                         <AgoTag iso={anamneseFilled[p.id]} recent={isNew("anam")} />
+                        <RecentSpark on={isNew("anam")} />
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-xs gap-1.5 disabled:opacity-50"
+                        className={btnCls(isNew("tcc"))}
                         onClick={() => setTccPatient(p)}
                         disabled={!cTcc}
                         title={!cTcc ? "Nenhum registro TCC ainda. Crie o primeiro pensamento automático no Registro de Sessão." : undefined}
                       >
-                        <ClipboardList className="h-3.5 w-3.5" /> TCC{cTcc > 0 && <CountPill n={cTcc} />}
+                        <ClipboardList className="h-3.5 w-3.5" /> TCC{cTcc > 0 && <CountPill n={cTcc} recent={isNew("tcc")} />}
                         <AgoTag iso={lastDates.tcc[p.id]} recent={isNew("tcc")} />
+                        <RecentSpark on={isNew("tcc")} />
                       </Button>
                 <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setPadeksyPatient(p)}>
                   <Brain className="h-3.5 w-3.5" /> Padesky
