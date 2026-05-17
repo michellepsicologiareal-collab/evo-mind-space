@@ -4,7 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays, Smile, FileText, Baby } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays, Smile, FileText, Baby, Sparkles } from "lucide-react";
 import { TccRecords } from "@/components/app/TccRecords";
 import { CaseFormulation } from "@/components/app/CaseFormulation";
 import { ChildAnamnesisForm } from "@/components/app/ChildAnamnesisForm";
