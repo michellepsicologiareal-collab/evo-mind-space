@@ -846,7 +846,10 @@ const Patients = () => {
                 >
                   <Stethoscope className="h-3.5 w-3.5" /> Pedir supervisão
                 </Button>
-              </div>
+                    </div>
+                  </>
+                );
+              })()}
               <div className="mt-2 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Eye className="h-3.5 w-3.5" />
