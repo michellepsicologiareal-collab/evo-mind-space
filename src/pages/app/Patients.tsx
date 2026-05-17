@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { format } from "date-fns";
+import { format, formatDistanceToNowStrict } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -103,6 +104,7 @@ const Patients = () => {
   const [latestSessionDates, setLatestSessionDates] = useState<Record<string, string>>({});
   const [anamneseFilled, setAnamneseFilled] = useState<Record<string, string>>({});
   const [counts, setCounts] = useState<{ mood: Record<string, number>; tcc: Record<string, number>; records: Record<string, number>; history: Record<string, number> }>({ mood: {}, tcc: {}, records: {}, history: {} });
+  const [lastDates, setLastDates] = useState<{ mood: Record<string, string>; tcc: Record<string, string>; records: Record<string, string>; history: Record<string, string> }>({ mood: {}, tcc: {}, records: {}, history: {} });
 
   const DRAFT_KEY = "rascunho_novo_paciente";
   type FormState = { full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "adolescente" | "avaliacao" | "casal" | "crianca" | "grupo" | "individual" | "sessao_breve" | "supervisao"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string };
@@ -133,10 +135,10 @@ const Patients = () => {
       supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
       supabase.from("child_anamneses").select("patient_id, updated_at").eq("user_id", user.id),
-      supabase.from("patient_progress").select("patient_id").eq("user_id", user.id),
-      supabase.from("tcc_records").select("patient_id").eq("user_id", user.id),
-      supabase.from("session_records").select("patient_id").eq("user_id", user.id),
-      supabase.from("sessions").select("patient_id").eq("user_id", user.id),
+      supabase.from("patient_progress").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("tcc_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("session_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
@@ -153,17 +155,22 @@ const Patients = () => {
       if (a.patient_id) anamMap[a.patient_id] = a.updated_at;
     });
     setAnamneseFilled(anamMap);
-    const countBy = (rows: any[] | null) => {
-      const m: Record<string, number> = {};
-      (rows ?? []).forEach((r: any) => { if (r.patient_id) m[r.patient_id] = (m[r.patient_id] ?? 0) + 1; });
-      return m;
+    const countAndLatest = (rows: any[] | null, dateKey: string) => {
+      const c: Record<string, number> = {};
+      const l: Record<string, string> = {};
+      (rows ?? []).forEach((r: any) => {
+        if (!r.patient_id) return;
+        c[r.patient_id] = (c[r.patient_id] ?? 0) + 1;
+        if (!l[r.patient_id] && r[dateKey]) l[r.patient_id] = r[dateKey];
+      });
+      return { c, l };
     };
-    setCounts({
-      mood: countBy(moodRes.data),
-      tcc: countBy(tccRes.data),
-      records: countBy(recordsRes.data),
-      history: countBy(historyRes.data),
-    });
+    const m = countAndLatest(moodRes.data, "created_at");
+    const t = countAndLatest(tccRes.data, "created_at");
+    const r = countAndLatest(recordsRes.data, "created_at");
+    const h = countAndLatest(historyRes.data, "scheduled_at");
+    setCounts({ mood: m.c, tcc: t.c, records: r.c, history: h.c });
+    setLastDates({ mood: m.l, tcc: t.l, records: r.l, history: h.l });
     setLoading(false);
   };
 
@@ -772,6 +779,32 @@ const Patients = () => {
                     {n}
                   </span>
                 );
+                const ago = (iso?: string) => {
+                  if (!iso) return null;
+                  try {
+                    const d = new Date(iso);
+                    if (isNaN(d.getTime())) return null;
+                    return formatDistanceToNowStrict(d, { locale: ptBR, addSuffix: false });
+                  } catch { return null; }
+                };
+                const AgoTag = ({ iso, recent }: { iso?: string; recent?: boolean }) => {
+                  const a = ago(iso);
+                  if (!a) return null;
+                  return (
+                    <span className={`ml-1 text-[10px] font-normal ${recent ? "text-[hsl(var(--accent))] font-semibold" : "text-muted-foreground"}`}>
+                      · há {a}
+                    </span>
+                  );
+                };
+                const entries: { key: string; ts: number }[] = [
+                  { key: "hist", ts: lastDates.history[p.id] ? new Date(lastDates.history[p.id]).getTime() : 0 },
+                  { key: "rec", ts: lastDates.records[p.id] ? new Date(lastDates.records[p.id]).getTime() : 0 },
+                  { key: "mood", ts: lastDates.mood[p.id] ? new Date(lastDates.mood[p.id]).getTime() : 0 },
+                  { key: "anam", ts: anamneseFilled[p.id] ? new Date(anamneseFilled[p.id]).getTime() : 0 },
+                  { key: "tcc", ts: lastDates.tcc[p.id] ? new Date(lastDates.tcc[p.id]).getTime() : 0 },
+                ];
+                const newest = entries.reduce((a, b) => (b.ts > a.ts ? b : a), { key: "", ts: 0 });
+                const isNew = (k: string) => newest.ts > 0 && newest.key === k;
                 return (
                   <>
                     <div className="mt-3 flex items-center gap-1.5 flex-wrap text-[11px] text-muted-foreground border-t border-border/50 pt-3">
@@ -785,9 +818,11 @@ const Patients = () => {
                     <div className="mt-2 flex items-center gap-2 flex-wrap">
                       <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setHistoryPatient(p)}>
                         <CalendarDays className="h-3.5 w-3.5" /> Histórico{cHist > 0 && <CountPill n={cHist} />}
+                        <AgoTag iso={lastDates.history[p.id]} recent={isNew("hist")} />
                       </Button>
                       <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setRecordsPatient(p)}>
                         <FileText className="h-3.5 w-3.5" /> Registros{cRec > 0 && <CountPill n={cRec} />}
+                        <AgoTag iso={lastDates.records[p.id]} recent={isNew("rec")} />
                       </Button>
                       <Button
                         variant="outline"
@@ -798,6 +833,7 @@ const Patients = () => {
                         title={!cMood ? "Sem registros de humor ainda. Adicione um humor no Registro de Sessão." : undefined}
                       >
                         <Smile className="h-3.5 w-3.5" /> Humor{cMood > 0 && <CountPill n={cMood} />}
+                        <AgoTag iso={lastDates.mood[p.id]} recent={isNew("mood")} />
                       </Button>
                       <Button
                         variant="outline"
@@ -808,6 +844,7 @@ const Patients = () => {
                         title={!hasAnam ? "Anamnese ainda não preenchida. Envie o link pelo WhatsApp para o responsável preencher." : undefined}
                       >
                         <Baby className="h-3.5 w-3.5" /> Anamnese{hasAnam && <CountPill n={1} />}
+                        <AgoTag iso={anamneseFilled[p.id]} recent={isNew("anam")} />
                       </Button>
                       <Button
                         variant="outline"
@@ -818,6 +855,7 @@ const Patients = () => {
                         title={!cTcc ? "Nenhum registro TCC ainda. Crie o primeiro pensamento automático no Registro de Sessão." : undefined}
                       >
                         <ClipboardList className="h-3.5 w-3.5" /> TCC{cTcc > 0 && <CountPill n={cTcc} />}
+                        <AgoTag iso={lastDates.tcc[p.id]} recent={isNew("tcc")} />
                       </Button>
                 <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setPadeksyPatient(p)}>
                   <Brain className="h-3.5 w-3.5" /> Padesky
