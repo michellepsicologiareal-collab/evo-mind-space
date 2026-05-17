@@ -104,6 +104,7 @@ const Patients = () => {
   const [latestSessionDates, setLatestSessionDates] = useState<Record<string, string>>({});
   const [anamneseFilled, setAnamneseFilled] = useState<Record<string, string>>({});
   const [counts, setCounts] = useState<{ mood: Record<string, number>; tcc: Record<string, number>; records: Record<string, number>; history: Record<string, number> }>({ mood: {}, tcc: {}, records: {}, history: {} });
+  const [lastDates, setLastDates] = useState<{ mood: Record<string, string>; tcc: Record<string, string>; records: Record<string, string>; history: Record<string, string> }>({ mood: {}, tcc: {}, records: {}, history: {} });
 
   const DRAFT_KEY = "rascunho_novo_paciente";
   type FormState = { full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "adolescente" | "avaliacao" | "casal" | "crianca" | "grupo" | "individual" | "sessao_breve" | "supervisao"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string };
