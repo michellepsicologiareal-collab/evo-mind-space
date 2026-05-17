@@ -135,10 +135,10 @@ const Patients = () => {
       supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
       supabase.from("child_anamneses").select("patient_id, updated_at").eq("user_id", user.id),
-      supabase.from("patient_progress").select("patient_id").eq("user_id", user.id),
-      supabase.from("tcc_records").select("patient_id").eq("user_id", user.id),
-      supabase.from("session_records").select("patient_id").eq("user_id", user.id),
-      supabase.from("sessions").select("patient_id").eq("user_id", user.id),
+      supabase.from("patient_progress").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("tcc_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("session_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
@@ -155,17 +155,22 @@ const Patients = () => {
       if (a.patient_id) anamMap[a.patient_id] = a.updated_at;
     });
     setAnamneseFilled(anamMap);
-    const countBy = (rows: any[] | null) => {
-      const m: Record<string, number> = {};
-      (rows ?? []).forEach((r: any) => { if (r.patient_id) m[r.patient_id] = (m[r.patient_id] ?? 0) + 1; });
-      return m;
+    const countAndLatest = (rows: any[] | null, dateKey: string) => {
+      const c: Record<string, number> = {};
+      const l: Record<string, string> = {};
+      (rows ?? []).forEach((r: any) => {
+        if (!r.patient_id) return;
+        c[r.patient_id] = (c[r.patient_id] ?? 0) + 1;
+        if (!l[r.patient_id] && r[dateKey]) l[r.patient_id] = r[dateKey];
+      });
+      return { c, l };
     };
-    setCounts({
-      mood: countBy(moodRes.data),
-      tcc: countBy(tccRes.data),
-      records: countBy(recordsRes.data),
-      history: countBy(historyRes.data),
-    });
+    const m = countAndLatest(moodRes.data, "created_at");
+    const t = countAndLatest(tccRes.data, "created_at");
+    const r = countAndLatest(recordsRes.data, "created_at");
+    const h = countAndLatest(historyRes.data, "scheduled_at");
+    setCounts({ mood: m.c, tcc: t.c, records: r.c, history: h.c });
+    setLastDates({ mood: m.l, tcc: t.l, records: r.l, history: h.l });
     setLoading(false);
   };
 
