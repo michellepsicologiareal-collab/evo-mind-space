@@ -779,6 +779,32 @@ const Patients = () => {
                     {n}
                   </span>
                 );
+                const ago = (iso?: string) => {
+                  if (!iso) return null;
+                  try {
+                    const d = new Date(iso);
+                    if (isNaN(d.getTime())) return null;
+                    return formatDistanceToNowStrict(d, { locale: ptBR, addSuffix: false });
+                  } catch { return null; }
+                };
+                const AgoTag = ({ iso, recent }: { iso?: string; recent?: boolean }) => {
+                  const a = ago(iso);
+                  if (!a) return null;
+                  return (
+                    <span className={`ml-1 text-[10px] font-normal ${recent ? "text-[hsl(var(--accent))] font-semibold" : "text-muted-foreground"}`}>
+                      · há {a}
+                    </span>
+                  );
+                };
+                const entries: { key: string; ts: number }[] = [
+                  { key: "hist", ts: lastDates.history[p.id] ? new Date(lastDates.history[p.id]).getTime() : 0 },
+                  { key: "rec", ts: lastDates.records[p.id] ? new Date(lastDates.records[p.id]).getTime() : 0 },
+                  { key: "mood", ts: lastDates.mood[p.id] ? new Date(lastDates.mood[p.id]).getTime() : 0 },
+                  { key: "anam", ts: anamneseFilled[p.id] ? new Date(anamneseFilled[p.id]).getTime() : 0 },
+                  { key: "tcc", ts: lastDates.tcc[p.id] ? new Date(lastDates.tcc[p.id]).getTime() : 0 },
+                ];
+                const newest = entries.reduce((a, b) => (b.ts > a.ts ? b : a), { key: "", ts: 0 });
+                const isNew = (k: string) => newest.ts > 0 && newest.key === k;
                 return (
                   <>
                     <div className="mt-3 flex items-center gap-1.5 flex-wrap text-[11px] text-muted-foreground border-t border-border/50 pt-3">
@@ -792,9 +818,11 @@ const Patients = () => {
                     <div className="mt-2 flex items-center gap-2 flex-wrap">
                       <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setHistoryPatient(p)}>
                         <CalendarDays className="h-3.5 w-3.5" /> Histórico{cHist > 0 && <CountPill n={cHist} />}
+                        <AgoTag iso={lastDates.history[p.id]} recent={isNew("hist")} />
                       </Button>
                       <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setRecordsPatient(p)}>
                         <FileText className="h-3.5 w-3.5" /> Registros{cRec > 0 && <CountPill n={cRec} />}
+                        <AgoTag iso={lastDates.records[p.id]} recent={isNew("rec")} />
                       </Button>
                       <Button
                         variant="outline"
@@ -805,6 +833,7 @@ const Patients = () => {
                         title={!cMood ? "Sem registros de humor ainda. Adicione um humor no Registro de Sessão." : undefined}
                       >
                         <Smile className="h-3.5 w-3.5" /> Humor{cMood > 0 && <CountPill n={cMood} />}
+                        <AgoTag iso={lastDates.mood[p.id]} recent={isNew("mood")} />
                       </Button>
                       <Button
                         variant="outline"
@@ -815,6 +844,7 @@ const Patients = () => {
                         title={!hasAnam ? "Anamnese ainda não preenchida. Envie o link pelo WhatsApp para o responsável preencher." : undefined}
                       >
                         <Baby className="h-3.5 w-3.5" /> Anamnese{hasAnam && <CountPill n={1} />}
+                        <AgoTag iso={anamneseFilled[p.id]} recent={isNew("anam")} />
                       </Button>
                       <Button
                         variant="outline"
@@ -825,6 +855,7 @@ const Patients = () => {
                         title={!cTcc ? "Nenhum registro TCC ainda. Crie o primeiro pensamento automático no Registro de Sessão." : undefined}
                       >
                         <ClipboardList className="h-3.5 w-3.5" /> TCC{cTcc > 0 && <CountPill n={cTcc} />}
+                        <AgoTag iso={lastDates.tcc[p.id]} recent={isNew("tcc")} />
                       </Button>
                 <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setPadeksyPatient(p)}>
                   <Brain className="h-3.5 w-3.5" /> Padesky
