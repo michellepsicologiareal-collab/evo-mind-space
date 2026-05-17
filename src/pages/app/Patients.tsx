@@ -761,43 +761,64 @@ const Patients = () => {
                   })()}
                 </div>
               )}
-              <div className="mt-3 flex items-center gap-2 border-t border-border/50 pt-3 flex-wrap">
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setHistoryPatient(p)}>
-                  <CalendarDays className="h-3.5 w-3.5" /> Histórico
-                </Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setRecordsPatient(p)}>
-                  <FileText className="h-3.5 w-3.5" /> Registros
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs gap-1.5 disabled:opacity-50"
-                  onClick={() => setMoodPatient(p)}
-                  disabled={!counts.mood[p.id]}
-                  title={!counts.mood[p.id] ? "Sem registros de humor ainda. Adicione um humor no Registro de Sessão." : undefined}
-                >
-                  <Smile className="h-3.5 w-3.5" /> Humor
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs gap-1.5 disabled:opacity-50"
-                  onClick={() => setAnamnesisPatient(p)}
-                  disabled={!anamneseFilled[p.id]}
-                  title={!anamneseFilled[p.id] ? "Anamnese ainda não preenchida. Envie o link pelo WhatsApp para o responsável preencher." : undefined}
-                >
-                  <Baby className="h-3.5 w-3.5" /> Anamnese
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs gap-1.5 disabled:opacity-50"
-                  onClick={() => setTccPatient(p)}
-                  disabled={!counts.tcc[p.id]}
-                  title={!counts.tcc[p.id] ? "Nenhum registro TCC ainda. Crie o primeiro pensamento automático no Registro de Sessão." : undefined}
-                >
-                  <ClipboardList className="h-3.5 w-3.5" /> TCC
-                </Button>
+              {(() => {
+                const cMood = counts.mood[p.id] || 0;
+                const cTcc = counts.tcc[p.id] || 0;
+                const cRec = counts.records[p.id] || 0;
+                const cHist = counts.history[p.id] || 0;
+                const hasAnam = !!anamneseFilled[p.id];
+                const CountPill = ({ n }: { n: number }) => (
+                  <span className="ml-1 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[hsl(var(--lilac))] text-[hsl(var(--lilac-foreground))] text-[10px] font-semibold leading-none">
+                    {n}
+                  </span>
+                );
+                return (
+                  <>
+                    <div className="mt-3 flex items-center gap-1.5 flex-wrap text-[11px] text-muted-foreground border-t border-border/50 pt-3">
+                      <span className="font-medium text-foreground/80">Resumo:</span>
+                      <span>{cHist} {cHist === 1 ? "sessão" : "sessões"}</span><span>·</span>
+                      <span>{cRec} {cRec === 1 ? "registro" : "registros"}</span><span>·</span>
+                      <span>{cMood} {cMood === 1 ? "humor" : "humores"}</span><span>·</span>
+                      <span>{cTcc} TCC</span><span>·</span>
+                      <span>{hasAnam ? "anamnese ✓" : "sem anamnese"}</span>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2 flex-wrap">
+                      <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setHistoryPatient(p)}>
+                        <CalendarDays className="h-3.5 w-3.5" /> Histórico{cHist > 0 && <CountPill n={cHist} />}
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setRecordsPatient(p)}>
+                        <FileText className="h-3.5 w-3.5" /> Registros{cRec > 0 && <CountPill n={cRec} />}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs gap-1.5 disabled:opacity-50"
+                        onClick={() => setMoodPatient(p)}
+                        disabled={!cMood}
+                        title={!cMood ? "Sem registros de humor ainda. Adicione um humor no Registro de Sessão." : undefined}
+                      >
+                        <Smile className="h-3.5 w-3.5" /> Humor{cMood > 0 && <CountPill n={cMood} />}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs gap-1.5 disabled:opacity-50"
+                        onClick={() => setAnamnesisPatient(p)}
+                        disabled={!hasAnam}
+                        title={!hasAnam ? "Anamnese ainda não preenchida. Envie o link pelo WhatsApp para o responsável preencher." : undefined}
+                      >
+                        <Baby className="h-3.5 w-3.5" /> Anamnese{hasAnam && <CountPill n={1} />}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs gap-1.5 disabled:opacity-50"
+                        onClick={() => setTccPatient(p)}
+                        disabled={!cTcc}
+                        title={!cTcc ? "Nenhum registro TCC ainda. Crie o primeiro pensamento automático no Registro de Sessão." : undefined}
+                      >
+                        <ClipboardList className="h-3.5 w-3.5" /> TCC{cTcc > 0 && <CountPill n={cTcc} />}
+                      </Button>
                 <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setPadeksyPatient(p)}>
                   <Brain className="h-3.5 w-3.5" /> Padesky
                 </Button>
