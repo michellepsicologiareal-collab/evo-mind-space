@@ -20,6 +20,12 @@ import { ptBR } from "date-fns/locale";
 
 type PlanStatus = "initial" | "in_progress" | "consolidated";
 
+interface ProgressEntry {
+  date: string; // ISO
+  score: number; // 1..10
+  note?: string;
+}
+
 interface TherapyPlan {
   id: string;
   objective: string;
@@ -28,6 +34,7 @@ interface TherapyPlan {
   homework: string[];
   indicators: string[];
   status: PlanStatus;
+  progress: ProgressEntry[];
 }
 
 interface Evolution {
@@ -61,6 +68,7 @@ const newPlan = (): TherapyPlan => ({
   homework: [],
   indicators: [],
   status: "initial",
+  progress: [],
 });
 
 // Migrate legacy goals (`{text, completed}[]`) to TherapyPlan[]
@@ -76,6 +84,7 @@ const normalizePlans = (raw: unknown): TherapyPlan[] => {
         homework: Array.isArray(g.homework) ? g.homework : [],
         indicators: Array.isArray(g.indicators) ? g.indicators : [],
         status: (["initial", "in_progress", "consolidated"].includes(g.status) ? g.status : "initial") as PlanStatus,
+        progress: Array.isArray(g.progress) ? g.progress.filter((x: any) => x && typeof x.score === "number" && typeof x.date === "string") : [],
       };
     }
     // Legacy {text, completed}
@@ -128,6 +137,105 @@ const ChipList = ({
             <Plus className="h-3.5 w-3.5" />
           </Button>
         </div>
+      )}
+    </div>
+  );
+};
+
+// Goal progress tracker (internal — score 1-10 + note + sparkline)
+const GoalProgress = ({
+  entries, onAdd, onRemove, readOnly,
+}: { entries: ProgressEntry[]; onAdd: (e: ProgressEntry) => void; onRemove: (idx: number) => void; readOnly?: boolean }) => {
+  const [score, setScore] = useState(5);
+  const [note, setNote] = useState("");
+  const sorted = [...entries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const last = sorted.length > 0 ? sorted[sorted.length - 1].score : null;
+  const first = sorted.length > 0 ? sorted[0].score : null;
+  const delta = last != null && first != null ? last - first : 0;
+
+  // sparkline path
+  const W = 200, H = 40, P = 2;
+  const pts = sorted.map((e, i) => {
+    const x = sorted.length === 1 ? W / 2 : P + (i * (W - 2 * P)) / (sorted.length - 1);
+    const y = H - P - ((e.score - 1) / 9) * (H - 2 * P);
+    return [x, y] as const;
+  });
+  const path = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+
+  return (
+    <div className="rounded-xl border border-border bg-secondary/30 p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-semibold text-foreground/80 flex items-center gap-1.5">
+          📈 Progresso (escala 1–10)
+        </Label>
+        {sorted.length >= 1 && last != null && (
+          <span className="text-xs text-muted-foreground">
+            Atual: <strong className="text-foreground">{last}</strong>
+            {sorted.length > 1 && (
+              <span className={cn("ml-2 font-medium", delta > 0 ? "text-sage" : delta < 0 ? "text-destructive" : "text-muted-foreground")}>
+                {delta > 0 ? "↑" : delta < 0 ? "↓" : "→"} {Math.abs(delta)}
+              </span>
+            )}
+          </span>
+        )}
+      </div>
+
+      {sorted.length > 0 && (
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-10 overflow-visible">
+          <line x1={P} y1={H - P} x2={W - P} y2={H - P} stroke="hsl(var(--border))" strokeWidth="1" />
+          {sorted.length > 1 && <path d={path} fill="none" stroke="hsl(var(--accent))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
+          {pts.map((pt, i) => (
+            <circle key={i} cx={pt[0]} cy={pt[1]} r="2.5" fill="hsl(var(--accent))" />
+          ))}
+        </svg>
+      )}
+
+      {!readOnly && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Input
+              type="range" min={1} max={10} step={1}
+              value={score}
+              onChange={(e) => setScore(Number(e.target.value))}
+              className="flex-1 h-2 p-0"
+            />
+            <span className="text-sm font-semibold text-accent w-8 text-center">{score}</span>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Observação (opcional)"
+              className="h-9 text-sm flex-1"
+            />
+            <Button
+              type="button" variant="outline" size="sm" className="h-9 shrink-0"
+              onClick={() => { onAdd({ date: new Date().toISOString(), score, note: note.trim() || undefined }); setNote(""); setScore(5); }}
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" /> Registrar
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {sorted.length > 0 && (
+        <ul className="space-y-1 max-h-40 overflow-y-auto">
+          {[...sorted].reverse().map((e, i) => {
+            const realIdx = entries.findIndex((x) => x.date === e.date && x.score === e.score);
+            return (
+              <li key={`${e.date}-${i}`} className="flex items-start gap-2 text-xs border-t border-border/60 pt-1.5 first:border-t-0 first:pt-0">
+                <span className="font-mono text-muted-foreground shrink-0 w-20">{format(new Date(e.date), "dd/MM HH:mm")}</span>
+                <span className="font-semibold text-accent shrink-0 w-6">{e.score}</span>
+                <span className="flex-1 text-foreground/80">{e.note || <span className="text-muted-foreground italic">—</span>}</span>
+                {!readOnly && (
+                  <button type="button" onClick={() => onRemove(realIdx)} className="text-muted-foreground hover:text-destructive shrink-0">
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );
@@ -480,6 +588,13 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
                         onChange={(next) => updatePlan(p.id, { indicators: next })}
                         placeholder="Adicionar indicador e Enter"
                         readOnly={readOnly}
+                      />
+
+                      <GoalProgress
+                        entries={p.progress}
+                        readOnly={readOnly}
+                        onAdd={(e) => updatePlan(p.id, { progress: [...p.progress, e] })}
+                        onRemove={(idx) => updatePlan(p.id, { progress: p.progress.filter((_, i) => i !== idx) })}
                       />
 
                       <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 sm:items-end">
