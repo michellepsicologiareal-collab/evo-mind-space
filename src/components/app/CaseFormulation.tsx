@@ -590,6 +590,13 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
                         readOnly={readOnly}
                       />
 
+                      <GoalProgress
+                        entries={p.progress}
+                        readOnly={readOnly}
+                        onAdd={(e) => updatePlan(p.id, { progress: [...p.progress, e] })}
+                        onRemove={(idx) => updatePlan(p.id, { progress: p.progress.filter((_, i) => i !== idx) })}
+                      />
+
                       <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 sm:items-end">
                         <div className="space-y-1.5">
                           <Label className="text-xs font-semibold text-foreground/80">Status</Label>
