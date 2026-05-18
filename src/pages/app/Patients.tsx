@@ -4,7 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays, Smile, FileText, Baby, Sparkles } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays, Smile, FileText, Baby, Sparkles, Maximize2, Minimize2 } from "lucide-react";
 import { TccRecords } from "@/components/app/TccRecords";
 import { CaseFormulation } from "@/components/app/CaseFormulation";
 import { ChildAnamnesisForm } from "@/components/app/ChildAnamnesisForm";
@@ -105,6 +105,16 @@ const Patients = () => {
   const [anamneseFilled, setAnamneseFilled] = useState<Record<string, string>>({});
   const [counts, setCounts] = useState<{ mood: Record<string, number>; tcc: Record<string, number>; records: Record<string, number>; history: Record<string, number> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [lastDates, setLastDates] = useState<{ mood: Record<string, string>; tcc: Record<string, string>; records: Record<string, string>; history: Record<string, string> }>({ mood: {}, tcc: {}, records: {}, history: {} });
+  const [fullscreen, setFullscreen] = useState<Record<string, boolean>>({});
+  const toggleFull = (k: string) => setFullscreen((s) => ({ ...s, [k]: !s[k] }));
+  const dlgCls = (k: string) => fullscreen[k]
+    ? "max-w-[98vw] w-[98vw] h-[95vh] max-h-[95vh] overflow-y-auto"
+    : "max-w-3xl max-h-[90vh] overflow-y-auto";
+  const FullBtn = ({ k }: { k: string }) => (
+    <Button type="button" variant="ghost" size="icon" className="absolute right-12 top-4 h-7 w-7" onClick={() => toggleFull(k)} title={fullscreen[k] ? "Reduzir" : "Abrir em página inteira"}>
+      {fullscreen[k] ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+    </Button>
+  );
 
   const DRAFT_KEY = "rascunho_novo_paciente";
   type FormState = { full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "adolescente" | "avaliacao" | "casal" | "crianca" | "grupo" | "individual" | "sessao_breve" | "supervisao"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string };
@@ -834,8 +844,7 @@ const Patients = () => {
                         size="sm"
                         className={btnCls(isNew("mood"))}
                         onClick={() => setMoodPatient(p)}
-                        disabled={!cMood}
-                        title={!cMood ? "Sem registros de humor ainda. Adicione um humor no Registro de Sessão." : undefined}
+                        title={!cMood ? "Sem registros de humor ainda — abra para começar." : undefined}
                       >
                         <Smile className="h-3.5 w-3.5" /> Humor{cMood > 0 && <CountPill n={cMood} recent={isNew("mood")} />}
                         <AgoTag iso={lastDates.mood[p.id]} recent={isNew("mood")} />
@@ -846,8 +855,7 @@ const Patients = () => {
                         size="sm"
                         className={btnCls(isNew("anam"))}
                         onClick={() => setAnamnesisPatient(p)}
-                        disabled={!hasAnam}
-                        title={!hasAnam ? "Anamnese ainda não preenchida. Envie o link pelo WhatsApp para o responsável preencher." : undefined}
+                        title={!hasAnam ? "Anamnese ainda não preenchida — abra para preencher ou enviar o link." : undefined}
                       >
                         <Baby className="h-3.5 w-3.5" /> Anamnese{hasAnam && <CountPill n={1} recent={isNew("anam")} />}
                         <AgoTag iso={anamneseFilled[p.id]} recent={isNew("anam")} />
@@ -858,8 +866,7 @@ const Patients = () => {
                         size="sm"
                         className={btnCls(isNew("tcc"))}
                         onClick={() => setTccPatient(p)}
-                        disabled={!cTcc}
-                        title={!cTcc ? "Nenhum registro TCC ainda. Crie o primeiro pensamento automático no Registro de Sessão." : undefined}
+                        title={!cTcc ? "Nenhum registro TCC ainda — abra para criar o primeiro." : undefined}
                       >
                         <ClipboardList className="h-3.5 w-3.5" /> TCC{cTcc > 0 && <CountPill n={cTcc} recent={isNew("tcc")} />}
                         <AgoTag iso={lastDates.tcc[p.id]} recent={isNew("tcc")} />
@@ -914,7 +921,8 @@ const Patients = () => {
 
       {/* TCC Record Dialog */}
       <Dialog open={!!tccPatient} onOpenChange={(o) => !o && setTccPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={dlgCls("tcc")}>
+          <FullBtn k="tcc" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{tccPatient?.full_name}</DialogTitle>
             <DialogDescription>Prontuário TCC — Registro de Pensamento</DialogDescription>
@@ -925,7 +933,8 @@ const Patients = () => {
 
       {/* Padesky Formulation Dialog */}
       <Dialog open={!!padeksyPatient} onOpenChange={(o) => !o && setPadeksyPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto [&_textarea]:scroll-mt-24 [&_input]:scroll-mt-24">
+        <DialogContent className={`${dlgCls("padesky")} [&_textarea]:scroll-mt-24 [&_input]:scroll-mt-24`}>
+          <FullBtn k="padesky" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{padeksyPatient?.full_name}</DialogTitle>
             <DialogDescription>Formulação de Caso — Modelo Padesky</DialogDescription>
@@ -936,7 +945,8 @@ const Patients = () => {
 
       {/* Session History Dialog */}
       <Dialog open={!!historyPatient} onOpenChange={(o) => !o && setHistoryPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={dlgCls("hist")}>
+          <FullBtn k="hist" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{historyPatient?.full_name}</DialogTitle>
             <DialogDescription>Histórico de sessões e evolução do humor</DialogDescription>
@@ -947,7 +957,8 @@ const Patients = () => {
 
       {/* Session Records Dialog */}
       <Dialog open={!!recordsPatient} onOpenChange={(o) => !o && setRecordsPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={dlgCls("rec")}>
+          <FullBtn k="rec" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{recordsPatient?.full_name}</DialogTitle>
             <DialogDescription>Registros de sessão (prontuário clínico)</DialogDescription>
@@ -958,7 +969,8 @@ const Patients = () => {
 
       {/* Mood Chart Dialog */}
       <Dialog open={!!moodPatient} onOpenChange={(o) => !o && setMoodPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={dlgCls("mood")}>
+          <FullBtn k="mood" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{moodPatient?.full_name}</DialogTitle>
             <DialogDescription>Evolução do humor ao longo do tempo</DialogDescription>
@@ -967,7 +979,8 @@ const Patients = () => {
         </DialogContent>
       </Dialog>
       <Dialog open={!!anamnesisPatient} onOpenChange={(o) => !o && setAnamnesisPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={dlgCls("anam")}>
+          <FullBtn k="anam" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{anamnesisPatient?.full_name}</DialogTitle>
             <DialogDescription>Anamnese — Informações do paciente criança</DialogDescription>
