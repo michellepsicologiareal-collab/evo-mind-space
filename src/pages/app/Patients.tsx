@@ -921,7 +921,8 @@ const Patients = () => {
 
       {/* TCC Record Dialog */}
       <Dialog open={!!tccPatient} onOpenChange={(o) => !o && setTccPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={dlgCls("tcc")}>
+          <FullBtn k="tcc" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{tccPatient?.full_name}</DialogTitle>
             <DialogDescription>Prontuário TCC — Registro de Pensamento</DialogDescription>
@@ -932,7 +933,8 @@ const Patients = () => {
 
       {/* Padesky Formulation Dialog */}
       <Dialog open={!!padeksyPatient} onOpenChange={(o) => !o && setPadeksyPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto [&_textarea]:scroll-mt-24 [&_input]:scroll-mt-24">
+        <DialogContent className={`${dlgCls("padesky")} [&_textarea]:scroll-mt-24 [&_input]:scroll-mt-24`}>
+          <FullBtn k="padesky" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{padeksyPatient?.full_name}</DialogTitle>
             <DialogDescription>Formulação de Caso — Modelo Padesky</DialogDescription>
@@ -943,7 +945,8 @@ const Patients = () => {
 
       {/* Session History Dialog */}
       <Dialog open={!!historyPatient} onOpenChange={(o) => !o && setHistoryPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={dlgCls("hist")}>
+          <FullBtn k="hist" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{historyPatient?.full_name}</DialogTitle>
             <DialogDescription>Histórico de sessões e evolução do humor</DialogDescription>
@@ -954,7 +957,8 @@ const Patients = () => {
 
       {/* Session Records Dialog */}
       <Dialog open={!!recordsPatient} onOpenChange={(o) => !o && setRecordsPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={dlgCls("rec")}>
+          <FullBtn k="rec" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{recordsPatient?.full_name}</DialogTitle>
             <DialogDescription>Registros de sessão (prontuário clínico)</DialogDescription>
@@ -965,7 +969,8 @@ const Patients = () => {
 
       {/* Mood Chart Dialog */}
       <Dialog open={!!moodPatient} onOpenChange={(o) => !o && setMoodPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={dlgCls("mood")}>
+          <FullBtn k="mood" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{moodPatient?.full_name}</DialogTitle>
             <DialogDescription>Evolução do humor ao longo do tempo</DialogDescription>
@@ -974,7 +979,8 @@ const Patients = () => {
         </DialogContent>
       </Dialog>
       <Dialog open={!!anamnesisPatient} onOpenChange={(o) => !o && setAnamnesisPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={dlgCls("anam")}>
+          <FullBtn k="anam" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{anamnesisPatient?.full_name}</DialogTitle>
             <DialogDescription>Anamnese — Informações do paciente criança</DialogDescription>
