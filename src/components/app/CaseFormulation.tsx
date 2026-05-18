@@ -84,6 +84,7 @@ const normalizePlans = (raw: unknown): TherapyPlan[] => {
         homework: Array.isArray(g.homework) ? g.homework : [],
         indicators: Array.isArray(g.indicators) ? g.indicators : [],
         status: (["initial", "in_progress", "consolidated"].includes(g.status) ? g.status : "initial") as PlanStatus,
+        progress: Array.isArray(g.progress) ? g.progress.filter((x: any) => x && typeof x.score === "number" && typeof x.date === "string") : [],
       };
     }
     // Legacy {text, completed}
