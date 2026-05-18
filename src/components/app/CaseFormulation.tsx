@@ -240,6 +240,8 @@ const GoalProgress = ({
     </div>
   );
 };
+
+export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: string; readOnly?: boolean }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
