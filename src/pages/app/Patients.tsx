@@ -834,8 +834,7 @@ const Patients = () => {
                         size="sm"
                         className={btnCls(isNew("mood"))}
                         onClick={() => setMoodPatient(p)}
-                        disabled={!cMood}
-                        title={!cMood ? "Sem registros de humor ainda. Adicione um humor no Registro de Sessão." : undefined}
+                        title={!cMood ? "Sem registros de humor ainda — abra para começar." : undefined}
                       >
                         <Smile className="h-3.5 w-3.5" /> Humor{cMood > 0 && <CountPill n={cMood} recent={isNew("mood")} />}
                         <AgoTag iso={lastDates.mood[p.id]} recent={isNew("mood")} />
@@ -846,8 +845,7 @@ const Patients = () => {
                         size="sm"
                         className={btnCls(isNew("anam"))}
                         onClick={() => setAnamnesisPatient(p)}
-                        disabled={!hasAnam}
-                        title={!hasAnam ? "Anamnese ainda não preenchida. Envie o link pelo WhatsApp para o responsável preencher." : undefined}
+                        title={!hasAnam ? "Anamnese ainda não preenchida — abra para preencher ou enviar o link." : undefined}
                       >
                         <Baby className="h-3.5 w-3.5" /> Anamnese{hasAnam && <CountPill n={1} recent={isNew("anam")} />}
                         <AgoTag iso={anamneseFilled[p.id]} recent={isNew("anam")} />
@@ -858,8 +856,7 @@ const Patients = () => {
                         size="sm"
                         className={btnCls(isNew("tcc"))}
                         onClick={() => setTccPatient(p)}
-                        disabled={!cTcc}
-                        title={!cTcc ? "Nenhum registro TCC ainda. Crie o primeiro pensamento automático no Registro de Sessão." : undefined}
+                        title={!cTcc ? "Nenhum registro TCC ainda — abra para criar o primeiro." : undefined}
                       >
                         <ClipboardList className="h-3.5 w-3.5" /> TCC{cTcc > 0 && <CountPill n={cTcc} recent={isNew("tcc")} />}
                         <AgoTag iso={lastDates.tcc[p.id]} recent={isNew("tcc")} />
