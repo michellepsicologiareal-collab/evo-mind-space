@@ -20,6 +20,12 @@ import { ptBR } from "date-fns/locale";
 
 type PlanStatus = "initial" | "in_progress" | "consolidated";
 
+interface ProgressEntry {
+  date: string; // ISO
+  score: number; // 1..10
+  note?: string;
+}
+
 interface TherapyPlan {
   id: string;
   objective: string;
@@ -28,6 +34,7 @@ interface TherapyPlan {
   homework: string[];
   indicators: string[];
   status: PlanStatus;
+  progress: ProgressEntry[];
 }
 
 interface Evolution {
@@ -61,6 +68,7 @@ const newPlan = (): TherapyPlan => ({
   homework: [],
   indicators: [],
   status: "initial",
+  progress: [],
 });
 
 // Migrate legacy goals (`{text, completed}[]`) to TherapyPlan[]
