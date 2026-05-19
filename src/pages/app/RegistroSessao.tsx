@@ -571,9 +571,8 @@ const RegistroSessao = () => {
 
       {/* ── Seção 3: Conteúdo da Sessão ── */}
       <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <h2 className="font-display text-base font-semibold text-foreground border-b border-border pb-2">
-          3. Conteúdo da Sessão
-        </h2>
+        <SectionHeader icon={FileText} title="Conteúdo da sessão" />
+
 
         <div className="space-y-2">
           <Label>Temas abordados</Label>
