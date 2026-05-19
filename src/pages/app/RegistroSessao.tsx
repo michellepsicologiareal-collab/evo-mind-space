@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2, X } from "lucide-react";
+import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, History } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -359,6 +359,20 @@ const RegistroSessao = () => {
 
   const getPatientName = (id: string) => patients.find((p) => p.id === id)?.full_name ?? "—";
 
+  const getInitials = (name: string) =>
+    name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((s) => s[0]?.toUpperCase())
+      .join("") || "?";
+
+  const selectedPatient = patients.find((p) => p.id === form.patient_id);
+  const patientRecords = form.patient_id
+    ? records.filter((r) => r.patient_id === form.patient_id)
+    : [];
+  const lastSessionDate = patientRecords[0]?.session_date;
+
   const filteredRecords = historyFilter && historyFilter !== "all"
     ? records.filter((r) => r.patient_id === historyFilter)
     : records;
@@ -371,8 +385,23 @@ const RegistroSessao = () => {
     );
   }
 
+  const SectionHeader = ({
+    icon: Icon,
+    title,
+  }: {
+    icon: React.ComponentType<{ className?: string }>;
+    title: string;
+  }) => (
+    <div className="flex items-center gap-3 mb-4">
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/15 text-accent">
+        <Icon className="h-4 w-4" />
+      </div>
+      <h2 className="font-display text-base font-semibold text-foreground">{title}</h2>
+    </div>
+  );
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
       <div>
         <h1 className="font-display text-2xl font-bold text-foreground">
           Registro de Sessão
@@ -400,59 +429,106 @@ const RegistroSessao = () => {
         </div>
       )}
 
-      {/* ── Seção 1: Identificação ── */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <h2 className="font-display text-base font-semibold text-foreground border-b border-border pb-2">
-          1. Identificação
-        </h2>
-
-        <div className="space-y-2">
-          <Label>Paciente</Label>
-          <Select
-            value={form.patient_id}
-            onValueChange={(v) => setForm({ ...form, patient_id: v })}
+      {/* ── Hero do paciente ── */}
+      <section
+        className={cn(
+          "rounded-2xl border bg-gradient-to-br from-card via-card to-accent/5 p-5 shadow-sm",
+          selectedPatient ? "border-accent/30" : "border-dashed border-border",
+        )}
+      >
+        <div className="flex items-start gap-4">
+          <div
+            className={cn(
+              "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-lg font-display font-semibold",
+              selectedPatient
+                ? "bg-accent text-accent-foreground shadow-sm"
+                : "bg-muted text-muted-foreground",
+            )}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione o paciente" />
-            </SelectTrigger>
-            <SelectContent>
-              {patients.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.full_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            {selectedPatient ? getInitials(selectedPatient.full_name) : <User className="h-6 w-6" />}
+          </div>
+
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                Paciente
+              </span>
+              {editingId && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-lilac/40 text-foreground font-medium">
+                  editando
+                </span>
+              )}
+            </div>
+
+            <Select
+              value={form.patient_id}
+              onValueChange={(v) => setForm({ ...form, patient_id: v })}
+            >
+              <SelectTrigger className="h-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 font-display text-xl font-semibold text-foreground hover:text-accent transition-colors [&>svg]:opacity-50">
+                <SelectValue placeholder="Selecione o paciente" />
+              </SelectTrigger>
+              <SelectContent>
+                {patients.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {selectedPatient && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pt-1">
+                <span className="inline-flex items-center gap-1">
+                  <History className="h-3.5 w-3.5" />
+                  {patientRecords.length} {patientRecords.length === 1 ? "sessão registrada" : "sessões registradas"}
+                </span>
+                {lastSessionDate && (
+                  <span className="inline-flex items-center gap-1">
+                    <CalendarDays className="h-3.5 w-3.5" />
+                    Última em {format(new Date(lastSessionDate), "dd/MM/yyyy")}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="space-y-2">
-            <Label>Data</Label>
+        {/* Linha rápida: data / nº / modalidade / duração */}
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 border-t border-border/60 pt-4">
+          <div className="space-y-1">
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+              <CalendarDays className="h-3 w-3" /> Data
+            </Label>
             <Input
               type="date"
               value={form.session_date}
               onChange={(e) => setForm({ ...form, session_date: e.target.value })}
+              className="h-9"
             />
           </div>
-          <div className="space-y-2">
-            <Label>Sessão nº</Label>
+          <div className="space-y-1">
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Sessão nº
+            </Label>
             <Input
               type="number"
               min="1"
               placeholder="—"
               value={form.session_number}
-              onChange={(e) =>
-                setForm({ ...form, session_number: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, session_number: e.target.value })}
+              className="h-9"
             />
           </div>
-          <div className="space-y-2">
-            <Label>Modalidade</Label>
+          <div className="space-y-1">
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+              {form.modality === "online" ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+              Modalidade
+            </Label>
             <Select
               value={form.modality}
               onValueChange={(v) => setForm({ ...form, modality: v })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -461,16 +537,17 @@ const RegistroSessao = () => {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Duração (min)</Label>
+          <div className="space-y-1">
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+              <Clock className="h-3 w-3" /> Duração (min)
+            </Label>
             <Input
               type="number"
               min="10"
               max="480"
               value={form.duration_minutes}
-              onChange={(e) =>
-                setForm({ ...form, duration_minutes: Number(e.target.value) })
-              }
+              onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })}
+              className="h-9"
             />
           </div>
         </div>
@@ -478,9 +555,7 @@ const RegistroSessao = () => {
 
       {/* ── Seção 2: Estado do Paciente ── */}
       <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <h2 className="font-display text-base font-semibold text-foreground border-b border-border pb-2">
-          2. Estado do Paciente
-        </h2>
+        <SectionHeader icon={Stethoscope} title="Estado do paciente" />
         <div className="space-y-2">
           <Label>Queixa principal / Tema trazido</Label>
           <Textarea
@@ -496,9 +571,8 @@ const RegistroSessao = () => {
 
       {/* ── Seção 3: Conteúdo da Sessão ── */}
       <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <h2 className="font-display text-base font-semibold text-foreground border-b border-border pb-2">
-          3. Conteúdo da Sessão
-        </h2>
+        <SectionHeader icon={FileText} title="Conteúdo da sessão" />
+
 
         <div className="space-y-2">
           <Label>Temas abordados</Label>
@@ -551,9 +625,8 @@ const RegistroSessao = () => {
 
       {/* ── Seção 4: Avaliação do Terapeuta ── */}
       <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <h2 className="font-display text-base font-semibold text-foreground border-b border-border pb-2">
-          4. Avaliação do Terapeuta
-        </h2>
+        <SectionHeader icon={ClipboardList} title="Avaliação do terapeuta" />
+
 
         <div className="space-y-2">
           <Label>
