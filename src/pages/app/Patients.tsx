@@ -687,6 +687,21 @@ const Patients = () => {
                       <span className="text-[11px] text-muted-foreground">
                         em {format(new Date(anamneseFilled[p.id]), "dd/MM/yyyy")}
                       </span>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!confirm(`Excluir a anamnese de ${p.full_name}? Esta ação não pode ser desfeita.`)) return;
+                          const { error } = await supabase.from("child_anamneses").delete().eq("patient_id", p.id).eq("user_id", user!.id);
+                          if (error) { toast.error("Erro ao excluir anamnese"); return; }
+                          toast.success("Anamnese excluída");
+                          load();
+                        }}
+                        className="ml-auto inline-flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        aria-label="Excluir anamnese"
+                        title="Excluir anamnese"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   )}
                   {p.chief_complaint && (

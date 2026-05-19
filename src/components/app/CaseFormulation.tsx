@@ -523,6 +523,35 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
         {plans.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground py-8">Nenhum objetivo terapêutico ainda. Adicione o primeiro abaixo.</p>
         ) : (
+          <>
+            {/* Consolidated progress summary */}
+            {plans.some((p) => p.progress.length > 0) && (
+              <div className="rounded-2xl border border-accent/20 bg-card p-4 space-y-2">
+                <h4 className="text-sm font-display font-bold text-foreground flex items-center gap-2">
+                  📊 Resumo da evolução
+                </h4>
+                <ul className="divide-y divide-border">
+                  {plans.map((p) => {
+                    if (p.progress.length === 0) return null;
+                    const sorted = [...p.progress].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                    const first = sorted[0].score;
+                    const last = sorted[sorted.length - 1].score;
+                    const delta = last - first;
+                    const trend = delta > 0 ? "↑" : delta < 0 ? "↓" : "→";
+                    const trendCls = delta > 0 ? "text-sage" : delta < 0 ? "text-destructive" : "text-muted-foreground";
+                    const label = delta > 0 ? "melhora" : delta < 0 ? "piora" : "estável";
+                    return (
+                      <li key={p.id} className="py-2 flex items-center gap-3 text-sm">
+                        <span className="flex-1 truncate text-foreground">{p.objective || <span className="italic text-muted-foreground">Sem título</span>}</span>
+                        <span className="text-xs text-muted-foreground tabular-nums">{first} → <strong className="text-foreground">{last}</strong></span>
+                        <span className={cn("text-xs font-semibold tabular-nums w-20 text-right", trendCls)}>{trend} {delta > 0 ? "+" : ""}{delta} <span className="font-normal">({label})</span></span>
+                        <span className="text-[10px] text-muted-foreground w-16 text-right">{sorted.length} reg.</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
           <ul className="space-y-3">
             {plans.map((p) => {
               const open = openPlanId === p.id;
@@ -631,6 +660,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
               );
             })}
           </ul>
+          </>
         )}
 
         {!readOnly && (
