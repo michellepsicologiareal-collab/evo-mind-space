@@ -660,6 +660,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
               );
             })}
           </ul>
+          </>
         )}
 
         {!readOnly && (
