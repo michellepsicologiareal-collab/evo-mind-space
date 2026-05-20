@@ -934,7 +934,12 @@ const RegistroSessao = () => {
                                       openEdit(r);
                                     }
                                   }}
-                                  className="p-4 pl-6 hover:bg-muted/30 transition-colors cursor-pointer focus:outline-none focus:bg-muted/30"
+                                  className={cn(
+                                    "p-4 pl-6 transition-colors cursor-pointer focus:outline-none border-l-2",
+                                    editingId === r.id
+                                      ? "bg-accent/10 border-accent shadow-[inset_0_0_0_1px_hsl(var(--accent)/0.25)]"
+                                      : "border-transparent hover:bg-muted/30 focus:bg-muted/30",
+                                  )}
                                 >
                                   <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
