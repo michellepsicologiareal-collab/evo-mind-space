@@ -912,59 +912,72 @@ const RegistroSessao = () => {
                         {isOpen && (
                           <ul className="bg-muted/10 divide-y divide-border/60 border-t border-border">
                             {items.map((r) => (
-                              <li key={r.id} className="p-4 pl-6 hover:bg-muted/20 transition-colors">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="text-xs text-muted-foreground">
-                                        {format(new Date(r.session_date), "dd/MM/yyyy")}
-                                      </span>
-                                      {r.session_number && (
-                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                                          Sessão {r.session_number}
+                              <li key={r.id}>
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() => openEdit(r)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      openEdit(r);
+                                    }
+                                  }}
+                                  className="p-4 pl-6 hover:bg-muted/30 transition-colors cursor-pointer focus:outline-none focus:bg-muted/30"
+                                >
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-xs text-muted-foreground">
+                                          {format(new Date(r.session_date), "dd/MM/yyyy")}
                                         </span>
-                                      )}
-                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
-                                        {r.modality}
-                                      </span>
-                                    </div>
-                                    {r.chief_complaint && (
-                                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                        {r.chief_complaint}
-                                      </p>
-                                    )}
-                                    {r.themes.length > 0 && (
-                                      <div className="flex flex-wrap gap-1 mt-1.5">
-                                        {r.themes.map((t) => (
-                                          <span
-                                            key={t}
-                                            className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary"
-                                          >
-                                            {t}
+                                        {r.session_number && (
+                                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                                            Sessão {r.session_number}
                                           </span>
-                                        ))}
+                                        )}
+                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
+                                          {r.modality}
+                                        </span>
                                       </div>
-                                    )}
-                                  </div>
-                                  <div className="flex gap-1 shrink-0">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8"
-                                      onClick={() => openEdit(r)}
-                                      title="Editar"
-                                    >
-                                      <Pencil className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-destructive hover:text-destructive"
-                                      onClick={() => handleDelete(r.id)}
-                                      title="Excluir"
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </Button>
+                                      {r.chief_complaint && (
+                                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                          {r.chief_complaint}
+                                        </p>
+                                      )}
+                                      {r.themes.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mt-1.5">
+                                          {r.themes.map((t) => (
+                                            <span
+                                              key={t}
+                                              className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary"
+                                            >
+                                              {t}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => openEdit(r)}
+                                        title="Editar"
+                                      >
+                                        <Pencil className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-destructive hover:text-destructive"
+                                        onClick={() => handleDelete(r.id)}
+                                        title="Excluir"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 </div>
                               </li>
