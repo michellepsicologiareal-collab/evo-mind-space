@@ -955,6 +955,11 @@ const RegistroSessao = () => {
                                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
                                           {r.modality}
                                         </span>
+                                        {editingId === r.id && (
+                                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-lilac/50 text-foreground font-medium">
+                                            editando
+                                          </span>
+                                        )}
                                       </div>
                                       {r.chief_complaint && (
                                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
