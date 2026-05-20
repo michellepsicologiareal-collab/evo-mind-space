@@ -332,6 +332,9 @@ const RegistroSessao = () => {
     }
   };
 
+  const chiefComplaintRef = useRef<HTMLTextAreaElement | null>(null);
+  const heroFormRef = useRef<HTMLElement | null>(null);
+
   const openEdit = (r: SavedRecord) => {
     setEditingId(r.id);
     setDraftRestored(false);
@@ -349,7 +352,13 @@ const RegistroSessao = () => {
       risk_indicator: r.risk_indicator ?? "none",
       private_notes: r.private_notes ?? "",
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Make sure the patient group is expanded so the highlight stays visible
+    setExpandedPatients((prev) => ({ ...prev, [r.patient_id]: true }));
+    // Scroll the form into view and focus the first editable field
+    requestAnimationFrame(() => {
+      heroFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => chiefComplaintRef.current?.focus({ preventScroll: true }), 350);
+    });
   };
 
   const handleDelete = async (id: string) => {
@@ -463,8 +472,9 @@ const RegistroSessao = () => {
 
       {/* ── Hero do paciente ── */}
       <section
+        ref={heroFormRef}
         className={cn(
-          "rounded-2xl border bg-gradient-to-br from-card via-card to-accent/5 p-5 shadow-sm",
+          "rounded-2xl border bg-gradient-to-br from-card via-card to-accent/5 p-5 shadow-sm scroll-mt-4",
           selectedPatient ? "border-accent/30" : "border-dashed border-border",
         )}
       >
@@ -591,6 +601,7 @@ const RegistroSessao = () => {
         <div className="space-y-2">
           <Label>Queixa principal / Tema trazido</Label>
           <Textarea
+            ref={chiefComplaintRef}
             rows={3}
             placeholder="Descreva a queixa ou tema central apresentado pelo paciente nesta sessão..."
             value={form.chief_complaint}
@@ -923,7 +934,12 @@ const RegistroSessao = () => {
                                       openEdit(r);
                                     }
                                   }}
-                                  className="p-4 pl-6 hover:bg-muted/30 transition-colors cursor-pointer focus:outline-none focus:bg-muted/30"
+                                  className={cn(
+                                    "p-4 pl-6 transition-colors cursor-pointer focus:outline-none border-l-2",
+                                    editingId === r.id
+                                      ? "bg-accent/10 border-accent shadow-[inset_0_0_0_1px_hsl(var(--accent)/0.25)]"
+                                      : "border-transparent hover:bg-muted/30 focus:bg-muted/30",
+                                  )}
                                 >
                                   <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
@@ -939,6 +955,11 @@ const RegistroSessao = () => {
                                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
                                           {r.modality}
                                         </span>
+                                        {editingId === r.id && (
+                                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-lilac/50 text-foreground font-medium">
+                                            editando
+                                          </span>
+                                        )}
                                       </div>
                                       {r.chief_complaint && (
                                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
