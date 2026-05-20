@@ -107,6 +107,10 @@ const RegistroSessao = () => {
   const [records, setRecords] = useState<SavedRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [historyFilter, setHistoryFilter] = useState("");
+  const [filterFrom, setFilterFrom] = useState("");
+  const [filterTo, setFilterTo] = useState("");
+  const [filterModality, setFilterModality] = useState("all");
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [expandedPatients, setExpandedPatients] = useState<Record<string, boolean>>({});
 
   // --- Draft auto-save ---
