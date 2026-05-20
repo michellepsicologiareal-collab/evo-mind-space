@@ -380,9 +380,26 @@ const RegistroSessao = () => {
     : [];
   const lastSessionDate = patientRecords[0]?.session_date;
 
-  const filteredRecords = historyFilter && historyFilter !== "all"
-    ? records.filter((r) => r.patient_id === historyFilter)
-    : records;
+  const filteredRecords = records.filter((r) => {
+    if (historyFilter && historyFilter !== "all" && r.patient_id !== historyFilter) return false;
+    if (filterModality !== "all" && r.modality !== filterModality) return false;
+    if (filterFrom && r.session_date < filterFrom) return false;
+    if (filterTo && r.session_date > filterTo) return false;
+    return true;
+  });
+
+  const hasActiveFilters =
+    (historyFilter && historyFilter !== "all") ||
+    filterModality !== "all" ||
+    !!filterFrom ||
+    !!filterTo;
+
+  const clearFilters = () => {
+    setHistoryFilter("");
+    setFilterFrom("");
+    setFilterTo("");
+    setFilterModality("all");
+  };
 
   if (loading) {
     return (
