@@ -332,6 +332,9 @@ const RegistroSessao = () => {
     }
   };
 
+  const chiefComplaintRef = useRef<HTMLTextAreaElement | null>(null);
+  const heroFormRef = useRef<HTMLElement | null>(null);
+
   const openEdit = (r: SavedRecord) => {
     setEditingId(r.id);
     setDraftRestored(false);
@@ -349,7 +352,13 @@ const RegistroSessao = () => {
       risk_indicator: r.risk_indicator ?? "none",
       private_notes: r.private_notes ?? "",
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Make sure the patient group is expanded so the highlight stays visible
+    setExpandedPatients((prev) => ({ ...prev, [r.patient_id]: true }));
+    // Scroll the form into view and focus the first editable field
+    requestAnimationFrame(() => {
+      heroFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setTimeout(() => chiefComplaintRef.current?.focus({ preventScroll: true }), 350);
+    });
   };
 
   const handleDelete = async (id: string) => {
