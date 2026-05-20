@@ -139,7 +139,10 @@ const RegistroSessao = () => {
   // Save draft on every meaningful change (covers typing pauses)
   useEffect(() => {
     if (hasMeaningfulData(form)) {
-      try { localStorage.setItem(draftKeyFor(editingId), JSON.stringify(form)); } catch {}
+      try {
+        localStorage.setItem(draftKeyFor(editingId), JSON.stringify(form));
+        setLastSavedAt(new Date());
+      } catch {}
     }
   }, [form, editingId, draftKeyFor]);
 
