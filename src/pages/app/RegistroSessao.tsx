@@ -601,6 +601,7 @@ const RegistroSessao = () => {
         <div className="space-y-2">
           <Label>Queixa principal / Tema trazido</Label>
           <Textarea
+            ref={chiefComplaintRef}
             rows={3}
             placeholder="Descreva a queixa ou tema central apresentado pelo paciente nesta sessão..."
             value={form.chief_complaint}
