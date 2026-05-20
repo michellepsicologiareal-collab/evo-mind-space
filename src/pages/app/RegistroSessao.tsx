@@ -787,7 +787,11 @@ const RegistroSessao = () => {
           className="w-full flex items-center justify-between p-5 hover:bg-muted/30 transition-colors"
         >
           <h2 className="font-display text-base font-semibold text-foreground">
-            Registros salvos ({records.length})
+            Registros salvos{" "}
+            <span className="text-muted-foreground font-normal">
+              ({filteredRecords.length}
+              {hasActiveFilters && filteredRecords.length !== records.length && ` de ${records.length}`})
+            </span>
           </h2>
           {showHistory ? (
             <ChevronUp className="h-5 w-5 text-muted-foreground" />
@@ -799,20 +803,62 @@ const RegistroSessao = () => {
         {showHistory && (
           <div className="border-t border-border">
             {records.length > 0 && (
-              <div className="p-4 pb-0">
-                <Select value={historyFilter} onValueChange={setHistoryFilter}>
-                  <SelectTrigger className="max-w-xs">
-                    <SelectValue placeholder="Filtrar por paciente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os pacientes</SelectItem>
-                    {patients.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="p-4 pb-0 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                  <Select value={historyFilter || "all"} onValueChange={(v) => setHistoryFilter(v === "all" ? "" : v)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Paciente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os pacientes</SelectItem>
+                      {patients.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.full_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterModality} onValueChange={setFilterModality}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Modalidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas modalidades</SelectItem>
+                      <SelectItem value="presencial">Presencial</SelectItem>
+                      <SelectItem value="online">Online</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="date"
+                    value={filterFrom}
+                    onChange={(e) => setFilterFrom(e.target.value)}
+                    className="h-9"
+                    placeholder="De"
+                    aria-label="Data inicial"
+                  />
+                  <Input
+                    type="date"
+                    value={filterTo}
+                    onChange={(e) => setFilterTo(e.target.value)}
+                    className="h-9"
+                    placeholder="Até"
+                    aria-label="Data final"
+                  />
+                </div>
+                {hasActiveFilters && (
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      {filteredRecords.length} {filteredRecords.length === 1 ? "resultado" : "resultados"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+                    >
+                      <X className="h-3 w-3" /> Limpar filtros
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
