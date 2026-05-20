@@ -426,13 +426,21 @@ const RegistroSessao = () => {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground">
-          Registro de Sessão
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-foreground">
+            Registro de Sessão
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
+          </p>
+        </div>
+        {lastSavedAt && (
+          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5 mt-1 shrink-0">
+            <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
+            Salvo automaticamente {format(lastSavedAt, "HH:mm:ss")}
+          </span>
+        )}
       </div>
 
       {/* Draft restored banner */}
