@@ -472,8 +472,9 @@ const RegistroSessao = () => {
 
       {/* ── Hero do paciente ── */}
       <section
+        ref={heroFormRef}
         className={cn(
-          "rounded-2xl border bg-gradient-to-br from-card via-card to-accent/5 p-5 shadow-sm",
+          "rounded-2xl border bg-gradient-to-br from-card via-card to-accent/5 p-5 shadow-sm scroll-mt-4",
           selectedPatient ? "border-accent/30" : "border-dashed border-border",
         )}
       >
