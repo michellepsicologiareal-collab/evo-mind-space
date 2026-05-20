@@ -107,6 +107,10 @@ const RegistroSessao = () => {
   const [records, setRecords] = useState<SavedRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [historyFilter, setHistoryFilter] = useState("");
+  const [filterFrom, setFilterFrom] = useState("");
+  const [filterTo, setFilterTo] = useState("");
+  const [filterModality, setFilterModality] = useState("all");
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [expandedPatients, setExpandedPatients] = useState<Record<string, boolean>>({});
 
   // --- Draft auto-save ---
@@ -135,7 +139,10 @@ const RegistroSessao = () => {
   // Save draft on every meaningful change (covers typing pauses)
   useEffect(() => {
     if (hasMeaningfulData(form)) {
-      try { localStorage.setItem(draftKeyFor(editingId), JSON.stringify(form)); } catch {}
+      try {
+        localStorage.setItem(draftKeyFor(editingId), JSON.stringify(form));
+        setLastSavedAt(new Date());
+      } catch {}
     }
   }, [form, editingId, draftKeyFor]);
 
@@ -373,9 +380,26 @@ const RegistroSessao = () => {
     : [];
   const lastSessionDate = patientRecords[0]?.session_date;
 
-  const filteredRecords = historyFilter && historyFilter !== "all"
-    ? records.filter((r) => r.patient_id === historyFilter)
-    : records;
+  const filteredRecords = records.filter((r) => {
+    if (historyFilter && historyFilter !== "all" && r.patient_id !== historyFilter) return false;
+    if (filterModality !== "all" && r.modality !== filterModality) return false;
+    if (filterFrom && r.session_date < filterFrom) return false;
+    if (filterTo && r.session_date > filterTo) return false;
+    return true;
+  });
+
+  const hasActiveFilters =
+    (historyFilter && historyFilter !== "all") ||
+    filterModality !== "all" ||
+    !!filterFrom ||
+    !!filterTo;
+
+  const clearFilters = () => {
+    setHistoryFilter("");
+    setFilterFrom("");
+    setFilterTo("");
+    setFilterModality("all");
+  };
 
   if (loading) {
     return (
@@ -402,13 +426,21 @@ const RegistroSessao = () => {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground">
-          Registro de Sessão
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-foreground">
+            Registro de Sessão
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
+          </p>
+        </div>
+        {lastSavedAt && (
+          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5 mt-1 shrink-0">
+            <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
+            Salvo automaticamente {format(lastSavedAt, "HH:mm:ss")}
+          </span>
+        )}
       </div>
 
       {/* Draft restored banner */}
@@ -755,7 +787,11 @@ const RegistroSessao = () => {
           className="w-full flex items-center justify-between p-5 hover:bg-muted/30 transition-colors"
         >
           <h2 className="font-display text-base font-semibold text-foreground">
-            Registros salvos ({records.length})
+            Registros salvos{" "}
+            <span className="text-muted-foreground font-normal">
+              ({filteredRecords.length}
+              {hasActiveFilters && filteredRecords.length !== records.length && ` de ${records.length}`})
+            </span>
           </h2>
           {showHistory ? (
             <ChevronUp className="h-5 w-5 text-muted-foreground" />
@@ -767,20 +803,62 @@ const RegistroSessao = () => {
         {showHistory && (
           <div className="border-t border-border">
             {records.length > 0 && (
-              <div className="p-4 pb-0">
-                <Select value={historyFilter} onValueChange={setHistoryFilter}>
-                  <SelectTrigger className="max-w-xs">
-                    <SelectValue placeholder="Filtrar por paciente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os pacientes</SelectItem>
-                    {patients.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="p-4 pb-0 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                  <Select value={historyFilter || "all"} onValueChange={(v) => setHistoryFilter(v === "all" ? "" : v)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Paciente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os pacientes</SelectItem>
+                      {patients.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.full_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterModality} onValueChange={setFilterModality}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Modalidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas modalidades</SelectItem>
+                      <SelectItem value="presencial">Presencial</SelectItem>
+                      <SelectItem value="online">Online</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="date"
+                    value={filterFrom}
+                    onChange={(e) => setFilterFrom(e.target.value)}
+                    className="h-9"
+                    placeholder="De"
+                    aria-label="Data inicial"
+                  />
+                  <Input
+                    type="date"
+                    value={filterTo}
+                    onChange={(e) => setFilterTo(e.target.value)}
+                    className="h-9"
+                    placeholder="Até"
+                    aria-label="Data final"
+                  />
+                </div>
+                {hasActiveFilters && (
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      {filteredRecords.length} {filteredRecords.length === 1 ? "resultado" : "resultados"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+                    >
+                      <X className="h-3 w-3" /> Limpar filtros
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -834,59 +912,72 @@ const RegistroSessao = () => {
                         {isOpen && (
                           <ul className="bg-muted/10 divide-y divide-border/60 border-t border-border">
                             {items.map((r) => (
-                              <li key={r.id} className="p-4 pl-6 hover:bg-muted/20 transition-colors">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="text-xs text-muted-foreground">
-                                        {format(new Date(r.session_date), "dd/MM/yyyy")}
-                                      </span>
-                                      {r.session_number && (
-                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                                          Sessão {r.session_number}
+                              <li key={r.id}>
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() => openEdit(r)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      openEdit(r);
+                                    }
+                                  }}
+                                  className="p-4 pl-6 hover:bg-muted/30 transition-colors cursor-pointer focus:outline-none focus:bg-muted/30"
+                                >
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-xs text-muted-foreground">
+                                          {format(new Date(r.session_date), "dd/MM/yyyy")}
                                         </span>
-                                      )}
-                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
-                                        {r.modality}
-                                      </span>
-                                    </div>
-                                    {r.chief_complaint && (
-                                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                        {r.chief_complaint}
-                                      </p>
-                                    )}
-                                    {r.themes.length > 0 && (
-                                      <div className="flex flex-wrap gap-1 mt-1.5">
-                                        {r.themes.map((t) => (
-                                          <span
-                                            key={t}
-                                            className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary"
-                                          >
-                                            {t}
+                                        {r.session_number && (
+                                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+                                            Sessão {r.session_number}
                                           </span>
-                                        ))}
+                                        )}
+                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
+                                          {r.modality}
+                                        </span>
                                       </div>
-                                    )}
-                                  </div>
-                                  <div className="flex gap-1 shrink-0">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8"
-                                      onClick={() => openEdit(r)}
-                                      title="Editar"
-                                    >
-                                      <Pencil className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 text-destructive hover:text-destructive"
-                                      onClick={() => handleDelete(r.id)}
-                                      title="Excluir"
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </Button>
+                                      {r.chief_complaint && (
+                                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                          {r.chief_complaint}
+                                        </p>
+                                      )}
+                                      {r.themes.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mt-1.5">
+                                          {r.themes.map((t) => (
+                                            <span
+                                              key={t}
+                                              className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary"
+                                            >
+                                              {t}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => openEdit(r)}
+                                        title="Editar"
+                                      >
+                                        <Pencil className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-destructive hover:text-destructive"
+                                        onClick={() => handleDelete(r.id)}
+                                        title="Excluir"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </div>
                                   </div>
                                 </div>
                               </li>
