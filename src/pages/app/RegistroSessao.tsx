@@ -937,10 +937,16 @@ const RegistroSessao = () => {
                           onClick={() =>
                             setExpandedPatients((prev) => ({ ...prev, [patientId]: !prev[patientId] }))
                           }
-                          className="w-full flex items-center justify-between gap-3 p-4 hover:bg-muted/30 transition-colors text-left"
+                          className={cn(
+                            "w-full flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors text-left group",
+                            isOpen && "bg-muted/20",
+                          )}
                         >
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent/15 to-lilac/15 text-accent font-display text-sm font-bold ring-1 ring-accent/15 group-hover:ring-accent/30 transition-all">
+                            {getInitials(getPatientName(patientId))}
+                          </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium text-sm text-foreground truncate">
+                            <p className="font-display font-semibold text-sm text-foreground truncate">
                               {getPatientName(patientId)}
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
@@ -948,13 +954,13 @@ const RegistroSessao = () => {
                               {lastDate && ` · último em ${format(new Date(lastDate), "dd/MM/yyyy")}`}
                             </p>
                           </div>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/12 text-accent shrink-0 ring-1 ring-accent/20">
                             {items.length}
                           </span>
                           {isOpen ? (
-                            <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <ChevronUp className="h-4 w-4 text-accent shrink-0" />
                           ) : (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 group-hover:text-accent transition-colors" />
                           )}
                         </button>
 
