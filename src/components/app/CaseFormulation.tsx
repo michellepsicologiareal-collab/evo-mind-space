@@ -270,6 +270,11 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   const [organizing, setOrganizing] = useState(false);
   const [aiResult, setAiResult] = useState<string | null>(null);
 
+  // Padesky coach state
+  const [coachLoading, setCoachLoading] = useState(false);
+  const [coachAnswer, setCoachAnswer] = useState<string | null>(null);
+  const [coachQuestion, setCoachQuestion] = useState("");
+
   const draftKey = `therapy-plan-draft::${patientId}`;
   const hasLoadedRef = useRef(false);
 
