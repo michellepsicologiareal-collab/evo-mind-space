@@ -270,6 +270,11 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   const [organizing, setOrganizing] = useState(false);
   const [aiResult, setAiResult] = useState<string | null>(null);
 
+  // Padesky coach state
+  const [coachLoading, setCoachLoading] = useState(false);
+  const [coachAnswer, setCoachAnswer] = useState<string | null>(null);
+  const [coachQuestion, setCoachQuestion] = useState("");
+
   const draftKey = `therapy-plan-draft::${patientId}`;
   const hasLoadedRef = useRef(false);
 
@@ -432,6 +437,22 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
     toast.success("Texto copiado para a evolução!");
   };
 
+  const askCoach = async () => {
+    setCoachLoading(true); setCoachAnswer(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("padesky-coach", {
+        body: { systems, coreBeliefs, question: coachQuestion },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      setCoachAnswer(data.result);
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao consultar a IA. Tente novamente.");
+    } finally { setCoachLoading(false); }
+  };
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -442,15 +463,18 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
 
   return (
     <Tabs defaultValue="formulation" className="space-y-4">
-      <TabsList className="w-full grid grid-cols-3">
+      <TabsList className="w-full grid grid-cols-4">
         <TabsTrigger value="formulation" className="text-xs sm:text-sm">
           <Brain className="h-4 w-4 mr-1 hidden sm:inline" /> 5 Sistemas
         </TabsTrigger>
         <TabsTrigger value="goals" className="text-xs sm:text-sm">
-          <ListChecks className="h-4 w-4 mr-1 hidden sm:inline" /> Plano Terapêutico
+          <ListChecks className="h-4 w-4 mr-1 hidden sm:inline" /> Plano
         </TabsTrigger>
         <TabsTrigger value="evolution" className="text-xs sm:text-sm">
           <BookOpen className="h-4 w-4 mr-1 hidden sm:inline" /> Evolução
+        </TabsTrigger>
+        <TabsTrigger value="coach" className="text-xs sm:text-sm">
+          <Sparkles className="h-4 w-4 mr-1 hidden sm:inline" /> Pensar c/ IA
         </TabsTrigger>
       </TabsList>
 
@@ -458,7 +482,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
       <TabsContent value="formulation" className="space-y-4">
         <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
           <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-1">
-            <Brain className="h-4 w-4 text-accent" /> Modelo de 5 Sistemas — Padesky
+            <Brain className="h-4 w-4 text-accent" /> Formulação de Caso — 5 Sistemas (Padesky)
           </h3>
           <p className="text-xs text-muted-foreground">Formulação cognitivo-comportamental integrada.</p>
         </div>
@@ -822,6 +846,55 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
               );
             })}
           </ul>
+        )}
+      </TabsContent>
+
+      {/* ── Coach IA Padesky ── */}
+      <TabsContent value="coach" className="space-y-4">
+        <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
+          <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-1">
+            <Sparkles className="h-4 w-4 text-accent" /> Pensar com IA — método Padesky
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            A IA atua como supervisora Socrática: lê os 5 sistemas que você preencheu e te devolve <strong>perguntas</strong>, hipóteses cognitivas e intervenções TCC para você raciocinar — não dá diagnóstico pronto.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold">Pergunta específica (opcional)</Label>
+          <Textarea
+            rows={2}
+            placeholder="Ex.: estou travada na hipótese cognitiva, o que pode estar mantendo o ciclo?"
+            value={coachQuestion}
+            onChange={(e) => setCoachQuestion(e.target.value)}
+          />
+          <Button variant="accent" className="w-full min-h-[44px]" onClick={askCoach} disabled={coachLoading}>
+            {coachLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {coachLoading ? "Pensando junto com você..." : "Pedir ajuda para pensar"}
+          </Button>
+        </div>
+
+        {coachAnswer && (
+          <div className="rounded-xl border border-accent/30 bg-background p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-accent flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5" /> Devolutiva da supervisora-IA
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { navigator.clipboard?.writeText(coachAnswer); toast.success("Copiado"); }}
+              >
+                <Copy className="h-3.5 w-3.5" /> Copiar
+              </Button>
+            </div>
+            <div className="prose prose-sm max-w-none text-sm text-foreground [&_h2]:font-display [&_h2]:text-accent [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:text-base [&_ul]:list-disc [&_ul]:pl-5 [&_p]:my-1">
+              <ReactMarkdown>{coachAnswer}</ReactMarkdown>
+            </div>
+            <p className="text-[10px] text-muted-foreground italic pt-2 border-t border-border">
+              Apoio à reflexão clínica. Não substitui supervisão humana nem decisão profissional.
+            </p>
+          </div>
         )}
       </TabsContent>
     </Tabs>
