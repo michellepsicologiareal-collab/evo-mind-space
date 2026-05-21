@@ -639,7 +639,7 @@ const RegistroSessao = () => {
 
       {/* ── Seção 3: Conteúdo da Sessão ── */}
       <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <SectionHeader icon={FileText} title="Conteúdo da sessão" />
+        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" />
 
 
         <div className="space-y-2">
