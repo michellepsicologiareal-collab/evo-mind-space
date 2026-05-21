@@ -888,7 +888,7 @@ const Patients = () => {
                         <RecentSpark on={isNew("tcc")} />
                       </Button>
                 <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setPadeksyPatient(p)}>
-                  <Brain className="h-3.5 w-3.5" /> Padesky
+                  <Brain className="h-3.5 w-3.5" /> Formulação de Caso
                 </Button>
                 <Button
                   variant="outline"
