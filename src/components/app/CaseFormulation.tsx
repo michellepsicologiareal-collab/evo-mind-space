@@ -463,15 +463,18 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
 
   return (
     <Tabs defaultValue="formulation" className="space-y-4">
-      <TabsList className="w-full grid grid-cols-3">
+      <TabsList className="w-full grid grid-cols-4">
         <TabsTrigger value="formulation" className="text-xs sm:text-sm">
           <Brain className="h-4 w-4 mr-1 hidden sm:inline" /> 5 Sistemas
         </TabsTrigger>
         <TabsTrigger value="goals" className="text-xs sm:text-sm">
-          <ListChecks className="h-4 w-4 mr-1 hidden sm:inline" /> Plano Terapêutico
+          <ListChecks className="h-4 w-4 mr-1 hidden sm:inline" /> Plano
         </TabsTrigger>
         <TabsTrigger value="evolution" className="text-xs sm:text-sm">
           <BookOpen className="h-4 w-4 mr-1 hidden sm:inline" /> Evolução
+        </TabsTrigger>
+        <TabsTrigger value="coach" className="text-xs sm:text-sm">
+          <Sparkles className="h-4 w-4 mr-1 hidden sm:inline" /> Pensar c/ IA
         </TabsTrigger>
       </TabsList>
 
