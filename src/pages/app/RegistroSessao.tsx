@@ -621,7 +621,7 @@ const RegistroSessao = () => {
       </section>
 
       {/* ── Seção 2: Estado do Paciente ── */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
+      <section className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm hover:shadow-md hover:border-accent/20 transition-all">
         <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" />
         <div className="space-y-2">
           <Label>Queixa principal / Tema trazido</Label>
@@ -638,7 +638,7 @@ const RegistroSessao = () => {
       </section>
 
       {/* ── Seção 3: Conteúdo da Sessão ── */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
+      <section className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm hover:shadow-md hover:border-accent/20 transition-all">
         <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" />
 
 
@@ -692,7 +692,7 @@ const RegistroSessao = () => {
       </section>
 
       {/* ── Seção 4: Avaliação do Terapeuta ── */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
+      <section className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm hover:shadow-md hover:border-accent/20 transition-all">
         <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" />
 
 
