@@ -653,10 +653,10 @@ const RegistroSessao = () => {
                   type="button"
                   onClick={() => toggleTheme(theme)}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200",
+                    "px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 hover:-translate-y-0.5",
                     selected
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                      : "bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
+                      ? "bg-gradient-to-br from-accent to-accent/85 text-accent-foreground border-accent shadow-sm"
+                      : "bg-muted/40 text-muted-foreground border-transparent hover:border-accent/30 hover:bg-card hover:text-foreground"
                   )}
                 >
                   {theme}
