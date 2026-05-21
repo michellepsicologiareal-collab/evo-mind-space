@@ -697,28 +697,34 @@ const RegistroSessao = () => {
 
 
         <div className="space-y-2">
-          <Label>
-            Engajamento do paciente:{" "}
-            <span className="font-semibold text-primary">
+          <div className="flex items-center justify-between">
+            <Label>Engajamento do paciente</Label>
+            <span className="text-xs font-display font-semibold text-accent">
               {ENGAGEMENT_LABELS[form.engagement - 1]}
             </span>
-          </Label>
-          <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map((level) => (
-              <button
-                key={level}
-                type="button"
-                onClick={() => setForm({ ...form, engagement: level })}
-                className={cn(
-                  "flex-1 h-9 rounded-lg text-sm font-medium transition-all duration-200 border",
-                  form.engagement >= level
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-muted/30 text-muted-foreground border-border hover:border-primary/40"
-                )}
-              >
-                {level}
-              </button>
-            ))}
+          </div>
+          <div className="flex gap-1.5">
+            {[1, 2, 3, 4, 5].map((level) => {
+              const active = form.engagement >= level;
+              const isCurrent = form.engagement === level;
+              return (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => setForm({ ...form, engagement: level })}
+                  className={cn(
+                    "flex-1 h-10 rounded-xl text-sm font-semibold transition-all duration-200 relative overflow-hidden",
+                    active
+                      ? "bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-sm"
+                      : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+                    isCurrent && "ring-2 ring-accent/40 ring-offset-2 ring-offset-card scale-[1.04]",
+                  )}
+                  aria-label={`Engajamento nível ${level}`}
+                >
+                  {level}
+                </button>
+              );
+            })}
           </div>
         </div>
 
