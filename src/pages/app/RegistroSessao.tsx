@@ -447,21 +447,29 @@ const RegistroSessao = () => {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">
-            Registro de Sessão
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
-          </p>
+      {/* Header com brilho sutil */}
+      <div className="relative overflow-hidden rounded-2xl border border-accent/15 bg-gradient-to-br from-card via-card to-accent/8 px-5 py-4 shadow-sm">
+        <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-accent/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-8 bottom-0 h-20 w-20 rounded-full bg-lilac/20 blur-2xl" />
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <span className="text-[10px] uppercase tracking-[0.18em] text-accent/80 font-semibold">
+              Prontuário
+            </span>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground leading-tight mt-0.5">
+              Registro de Sessão
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
+            </p>
+          </div>
+          {lastSavedAt && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-sage/30 bg-sage/10 px-2.5 py-1 text-[11px] font-medium text-sage shrink-0">
+              <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
+              Salvo {format(lastSavedAt, "HH:mm:ss")}
+            </span>
+          )}
         </div>
-        {lastSavedAt && (
-          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5 mt-1 shrink-0">
-            <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
-            Salvo automaticamente {format(lastSavedAt, "HH:mm:ss")}
-          </span>
-        )}
       </div>
 
       {/* Draft restored banner */}
