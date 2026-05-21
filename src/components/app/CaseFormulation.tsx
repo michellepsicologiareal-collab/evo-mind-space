@@ -437,6 +437,22 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
     toast.success("Texto copiado para a evolução!");
   };
 
+  const askCoach = async () => {
+    setCoachLoading(true); setCoachAnswer(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("padesky-coach", {
+        body: { systems, coreBeliefs, question: coachQuestion },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      setCoachAnswer(data.result);
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao consultar a IA. Tente novamente.");
+    } finally { setCoachLoading(false); }
+  };
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
