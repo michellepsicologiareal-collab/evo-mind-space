@@ -419,37 +419,57 @@ const RegistroSessao = () => {
   }
 
   const SectionHeader = ({
+    n,
     icon: Icon,
     title,
+    subtitle,
   }: {
+    n?: number;
     icon: React.ComponentType<{ className?: string }>;
     title: string;
+    subtitle?: string;
   }) => (
-    <div className="flex items-center gap-3 mb-4">
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/15 text-accent">
+    <div className="flex items-start gap-3 mb-4">
+      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 text-accent ring-1 ring-accent/20">
         <Icon className="h-4 w-4" />
+        {n != null && (
+          <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground shadow-sm">
+            {n}
+          </span>
+        )}
       </div>
-      <h2 className="font-display text-base font-semibold text-foreground">{title}</h2>
+      <div className="min-w-0 pt-0.5">
+        <h2 className="font-display text-base font-semibold text-foreground leading-tight">{title}</h2>
+        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+      </div>
     </div>
   );
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">
-            Registro de Sessão
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
-          </p>
+      {/* Header com brilho sutil */}
+      <div className="relative overflow-hidden rounded-2xl border border-accent/15 bg-gradient-to-br from-card via-card to-accent/8 px-5 py-4 shadow-sm">
+        <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-accent/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-8 bottom-0 h-20 w-20 rounded-full bg-lilac/20 blur-2xl" />
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <span className="text-[10px] uppercase tracking-[0.18em] text-accent/80 font-semibold">
+              Prontuário
+            </span>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground leading-tight mt-0.5">
+              Registro de Sessão
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
+            </p>
+          </div>
+          {lastSavedAt && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-sage/30 bg-sage/10 px-2.5 py-1 text-[11px] font-medium text-sage shrink-0">
+              <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
+              Salvo {format(lastSavedAt, "HH:mm:ss")}
+            </span>
+          )}
         </div>
-        {lastSavedAt && (
-          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5 mt-1 shrink-0">
-            <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
-            Salvo automaticamente {format(lastSavedAt, "HH:mm:ss")}
-          </span>
-        )}
       </div>
 
       {/* Draft restored banner */}
@@ -474,16 +494,21 @@ const RegistroSessao = () => {
       <section
         ref={heroFormRef}
         className={cn(
-          "rounded-2xl border bg-gradient-to-br from-card via-card to-accent/5 p-5 shadow-sm scroll-mt-4",
-          selectedPatient ? "border-accent/30" : "border-dashed border-border",
+          "relative overflow-hidden rounded-2xl border p-5 shadow-sm scroll-mt-4 transition-all",
+          selectedPatient
+            ? "border-accent/30 bg-gradient-to-br from-card via-card to-accent/8"
+            : "border-dashed border-border bg-card",
         )}
       >
-        <div className="flex items-start gap-4">
+        {selectedPatient && (
+          <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
+        )}
+        <div className="relative flex items-start gap-4">
           <div
             className={cn(
-              "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-lg font-display font-semibold",
+              "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-lg font-display font-bold transition-all",
               selectedPatient
-                ? "bg-accent text-accent-foreground shadow-sm"
+                ? "bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-lg ring-4 ring-accent/15"
                 : "bg-muted text-muted-foreground",
             )}
           >
@@ -596,8 +621,8 @@ const RegistroSessao = () => {
       </section>
 
       {/* ── Seção 2: Estado do Paciente ── */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <SectionHeader icon={Stethoscope} title="Estado do paciente" />
+      <section className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm hover:shadow-md hover:border-accent/20 transition-all">
+        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" />
         <div className="space-y-2">
           <Label>Queixa principal / Tema trazido</Label>
           <Textarea
@@ -613,8 +638,8 @@ const RegistroSessao = () => {
       </section>
 
       {/* ── Seção 3: Conteúdo da Sessão ── */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <SectionHeader icon={FileText} title="Conteúdo da sessão" />
+      <section className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm hover:shadow-md hover:border-accent/20 transition-all">
+        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" />
 
 
         <div className="space-y-2">
@@ -628,10 +653,10 @@ const RegistroSessao = () => {
                   type="button"
                   onClick={() => toggleTheme(theme)}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200",
+                    "px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 hover:-translate-y-0.5",
                     selected
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                      : "bg-muted/50 text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
+                      ? "bg-gradient-to-br from-accent to-accent/85 text-accent-foreground border-accent shadow-sm"
+                      : "bg-muted/40 text-muted-foreground border-transparent hover:border-accent/30 hover:bg-card hover:text-foreground"
                   )}
                 >
                   {theme}
@@ -667,33 +692,39 @@ const RegistroSessao = () => {
       </section>
 
       {/* ── Seção 4: Avaliação do Terapeuta ── */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <SectionHeader icon={ClipboardList} title="Avaliação do terapeuta" />
+      <section className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm hover:shadow-md hover:border-accent/20 transition-all">
+        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" />
 
 
         <div className="space-y-2">
-          <Label>
-            Engajamento do paciente:{" "}
-            <span className="font-semibold text-primary">
+          <div className="flex items-center justify-between">
+            <Label>Engajamento do paciente</Label>
+            <span className="text-xs font-display font-semibold text-accent">
               {ENGAGEMENT_LABELS[form.engagement - 1]}
             </span>
-          </Label>
-          <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map((level) => (
-              <button
-                key={level}
-                type="button"
-                onClick={() => setForm({ ...form, engagement: level })}
-                className={cn(
-                  "flex-1 h-9 rounded-lg text-sm font-medium transition-all duration-200 border",
-                  form.engagement >= level
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-muted/30 text-muted-foreground border-border hover:border-primary/40"
-                )}
-              >
-                {level}
-              </button>
-            ))}
+          </div>
+          <div className="flex gap-1.5">
+            {[1, 2, 3, 4, 5].map((level) => {
+              const active = form.engagement >= level;
+              const isCurrent = form.engagement === level;
+              return (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => setForm({ ...form, engagement: level })}
+                  className={cn(
+                    "flex-1 h-10 rounded-xl text-sm font-semibold transition-all duration-200 relative overflow-hidden",
+                    active
+                      ? "bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-sm"
+                      : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+                    isCurrent && "ring-2 ring-accent/40 ring-offset-2 ring-offset-card scale-[1.04]",
+                  )}
+                  aria-label={`Engajamento nível ${level}`}
+                >
+                  {level}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -740,29 +771,36 @@ const RegistroSessao = () => {
       </section>
 
       {/* ── Seção 5: IA — Revisão de texto ── */}
-      <section className="rounded-2xl border border-primary/20 bg-primary/5 p-5 space-y-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h2 className="font-display text-base font-semibold text-foreground">
-            Revisão com IA
-          </h2>
+      <section className="relative overflow-hidden rounded-2xl border border-lilac/30 bg-gradient-to-br from-lilac/10 via-card to-accent/5 p-5 space-y-3 shadow-sm">
+        <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-lilac/20 blur-3xl" />
+        <div className="relative">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-lilac/40 to-accent/20 text-foreground ring-1 ring-lilac/30">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="font-display text-base font-semibold text-foreground leading-tight">
+                Revisão com IA
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Ortografia, gramática e clareza — sem alterar o conteúdo clínico.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="accent"
+            className="w-full mt-4"
+            onClick={handlePolish}
+            disabled={polishing}
+          >
+            {polishing ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Sparkles className="h-4 w-4 mr-2" />
+            )}
+            {polishing ? "Revisando..." : "Revisar textos com IA"}
+          </Button>
         </div>
-        <p className="text-sm text-muted-foreground">
-          A IA revisa ortografia, gramática e clareza dos textos clínicos sem alterar o conteúdo.
-        </p>
-        <Button
-          variant="outline"
-          className="w-full border-primary/30 text-primary hover:bg-primary/10"
-          onClick={handlePolish}
-          disabled={polishing}
-        >
-          {polishing ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : (
-            <Sparkles className="h-4 w-4 mr-2" />
-          )}
-          {polishing ? "Revisando..." : "Revisar textos com IA"}
-        </Button>
       </section>
 
       {/* ── Ações ── */}
@@ -899,10 +937,16 @@ const RegistroSessao = () => {
                           onClick={() =>
                             setExpandedPatients((prev) => ({ ...prev, [patientId]: !prev[patientId] }))
                           }
-                          className="w-full flex items-center justify-between gap-3 p-4 hover:bg-muted/30 transition-colors text-left"
+                          className={cn(
+                            "w-full flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors text-left group",
+                            isOpen && "bg-muted/20",
+                          )}
                         >
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent/15 to-lilac/15 text-accent font-display text-sm font-bold ring-1 ring-accent/15 group-hover:ring-accent/30 transition-all">
+                            {getInitials(getPatientName(patientId))}
+                          </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium text-sm text-foreground truncate">
+                            <p className="font-display font-semibold text-sm text-foreground truncate">
                               {getPatientName(patientId)}
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
@@ -910,13 +954,13 @@ const RegistroSessao = () => {
                               {lastDate && ` · último em ${format(new Date(lastDate), "dd/MM/yyyy")}`}
                             </p>
                           </div>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/12 text-accent shrink-0 ring-1 ring-accent/20">
                             {items.length}
                           </span>
                           {isOpen ? (
-                            <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <ChevronUp className="h-4 w-4 text-accent shrink-0" />
                           ) : (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 group-hover:text-accent transition-colors" />
                           )}
                         </button>
 
