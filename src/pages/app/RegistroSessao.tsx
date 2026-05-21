@@ -693,7 +693,7 @@ const RegistroSessao = () => {
 
       {/* ── Seção 4: Avaliação do Terapeuta ── */}
       <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <SectionHeader icon={ClipboardList} title="Avaliação do terapeuta" />
+        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" />
 
 
         <div className="space-y-2">
