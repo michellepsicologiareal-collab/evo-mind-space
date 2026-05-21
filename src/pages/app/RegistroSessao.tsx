@@ -419,17 +419,29 @@ const RegistroSessao = () => {
   }
 
   const SectionHeader = ({
+    n,
     icon: Icon,
     title,
+    subtitle,
   }: {
+    n?: number;
     icon: React.ComponentType<{ className?: string }>;
     title: string;
+    subtitle?: string;
   }) => (
-    <div className="flex items-center gap-3 mb-4">
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/15 text-accent">
+    <div className="flex items-start gap-3 mb-4">
+      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 text-accent ring-1 ring-accent/20">
         <Icon className="h-4 w-4" />
+        {n != null && (
+          <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground shadow-sm">
+            {n}
+          </span>
+        )}
       </div>
-      <h2 className="font-display text-base font-semibold text-foreground">{title}</h2>
+      <div className="min-w-0 pt-0.5">
+        <h2 className="font-display text-base font-semibold text-foreground leading-tight">{title}</h2>
+        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+      </div>
     </div>
   );
 
