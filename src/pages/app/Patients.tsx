@@ -946,13 +946,13 @@ const Patients = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Padesky Formulation Dialog */}
+      {/* Formulação de Caso Dialog */}
       <Dialog open={!!padeksyPatient} onOpenChange={(o) => !o && setPadeksyPatient(null)}>
         <DialogContent className={`${dlgCls("padesky")} [&_textarea]:scroll-mt-24 [&_input]:scroll-mt-24`}>
           <FullBtn k="padesky" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{padeksyPatient?.full_name}</DialogTitle>
-            <DialogDescription>Formulação de Caso — Modelo Padesky</DialogDescription>
+            <DialogDescription>Formulação de Caso — com coach de IA baseada em Padesky</DialogDescription>
           </DialogHeader>
           {padeksyPatient && <CaseFormulation patientId={padeksyPatient.id} />}
         </DialogContent>
