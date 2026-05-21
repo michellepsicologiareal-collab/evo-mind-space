@@ -622,7 +622,7 @@ const RegistroSessao = () => {
 
       {/* ── Seção 2: Estado do Paciente ── */}
       <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <SectionHeader icon={Stethoscope} title="Estado do paciente" />
+        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" />
         <div className="space-y-2">
           <Label>Queixa principal / Tema trazido</Label>
           <Textarea
