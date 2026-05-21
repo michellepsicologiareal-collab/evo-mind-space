@@ -494,16 +494,21 @@ const RegistroSessao = () => {
       <section
         ref={heroFormRef}
         className={cn(
-          "rounded-2xl border bg-gradient-to-br from-card via-card to-accent/5 p-5 shadow-sm scroll-mt-4",
-          selectedPatient ? "border-accent/30" : "border-dashed border-border",
+          "relative overflow-hidden rounded-2xl border p-5 shadow-sm scroll-mt-4 transition-all",
+          selectedPatient
+            ? "border-accent/30 bg-gradient-to-br from-card via-card to-accent/8"
+            : "border-dashed border-border bg-card",
         )}
       >
-        <div className="flex items-start gap-4">
+        {selectedPatient && (
+          <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
+        )}
+        <div className="relative flex items-start gap-4">
           <div
             className={cn(
-              "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-lg font-display font-semibold",
+              "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-lg font-display font-bold transition-all",
               selectedPatient
-                ? "bg-accent text-accent-foreground shadow-sm"
+                ? "bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-lg ring-4 ring-accent/15"
                 : "bg-muted text-muted-foreground",
             )}
           >
