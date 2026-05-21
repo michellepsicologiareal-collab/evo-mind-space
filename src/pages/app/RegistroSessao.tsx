@@ -771,29 +771,36 @@ const RegistroSessao = () => {
       </section>
 
       {/* ── Seção 5: IA — Revisão de texto ── */}
-      <section className="rounded-2xl border border-primary/20 bg-primary/5 p-5 space-y-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <h2 className="font-display text-base font-semibold text-foreground">
-            Revisão com IA
-          </h2>
+      <section className="relative overflow-hidden rounded-2xl border border-lilac/30 bg-gradient-to-br from-lilac/10 via-card to-accent/5 p-5 space-y-3 shadow-sm">
+        <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-lilac/20 blur-3xl" />
+        <div className="relative">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-lilac/40 to-accent/20 text-foreground ring-1 ring-lilac/30">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="font-display text-base font-semibold text-foreground leading-tight">
+                Revisão com IA
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Ortografia, gramática e clareza — sem alterar o conteúdo clínico.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="accent"
+            className="w-full mt-4"
+            onClick={handlePolish}
+            disabled={polishing}
+          >
+            {polishing ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Sparkles className="h-4 w-4 mr-2" />
+            )}
+            {polishing ? "Revisando..." : "Revisar textos com IA"}
+          </Button>
         </div>
-        <p className="text-sm text-muted-foreground">
-          A IA revisa ortografia, gramática e clareza dos textos clínicos sem alterar o conteúdo.
-        </p>
-        <Button
-          variant="outline"
-          className="w-full border-primary/30 text-primary hover:bg-primary/10"
-          onClick={handlePolish}
-          disabled={polishing}
-        >
-          {polishing ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : (
-            <Sparkles className="h-4 w-4 mr-2" />
-          )}
-          {polishing ? "Revisando..." : "Revisar textos com IA"}
-        </Button>
       </section>
 
       {/* ── Ações ── */}
