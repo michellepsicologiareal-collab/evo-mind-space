@@ -482,7 +482,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
       <TabsContent value="formulation" className="space-y-4">
         <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
           <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-1">
-            <Brain className="h-4 w-4 text-accent" /> Modelo de 5 Sistemas — Padesky
+            <Brain className="h-4 w-4 text-accent" /> Formulação de Caso — 5 Sistemas (Padesky)
           </h3>
           <p className="text-xs text-muted-foreground">Formulação cognitivo-comportamental integrada.</p>
         </div>
