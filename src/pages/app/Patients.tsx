@@ -561,6 +561,16 @@ const Patients = () => {
                       <CalendarDays className="h-3 w-3" /> Histórico
                       {cHist > 0 && <span style={{ background: "rgba(109,79,194,0.18)", borderRadius: 40, padding: "0 6px", fontSize: 9 }}>{cHist}</span>}
                     </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setPadeksyPatient(p); }}
+                      title={formulationFilled[p.id] ? "Formulação preenchida" : "Criar formulação de caso"}
+                      className="inline-flex items-center gap-1.5 transition-colors"
+                      style={formulationFilled[p.id]
+                        ? { background: "rgba(109,79,194,0.10)", border: "0.5px solid rgba(109,79,194,0.25)", color: "#3d2b8a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
+                        : { background: "#f7f4ff", border: "0.5px dashed #c9a84c", color: "#7a5e1a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                    >
+                      <Stethoscope className="h-3 w-3" /> {formulationFilled[p.id] ? "Formulação" : "Sem formulação"}
+                    </button>
                     {p.category === "crianca" && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }}
