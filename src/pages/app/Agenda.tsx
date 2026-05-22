@@ -1909,7 +1909,7 @@ const Agenda = () => {
                           <p className="text-xs text-muted-foreground">{s.duration_minutes} min</p>
                         </div>
                         <div className="text-right">
-                          <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full", statusClass[s.status as Status])}>
+                          <span className={cn(PILL_BASE, statusClass[s.status as Status])}>
                             {statusLabel[s.status as Status]}
                           </span>
                           {s.price != null && (
@@ -1919,7 +1919,7 @@ const Agenda = () => {
                       </div>
                       {s.price != null && (
                         <div className="mt-1.5">
-                          <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full border", paymentStatusClass[s.payment_status as PaymentStatus])}>
+                          <span className={cn(PILL_BASE, paymentStatusClass[s.payment_status as PaymentStatus])}>
                             {paymentStatusLabel[s.payment_status as PaymentStatus]}
                             {s.payment_method && ` · ${s.payment_method === "pix" ? "PIX" : s.payment_method === "card" ? "Cartão" : s.payment_method === "cash" ? "Dinheiro" : ""}`}
                           </span>
@@ -1949,7 +1949,7 @@ const Agenda = () => {
                     <div key={s.id} className="rounded-xl border border-border bg-background p-3 flex items-center justify-between">
                       <div>
                         <p className="text-sm">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
-                        <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full border mt-1", paymentStatusClass[s.payment_status as PaymentStatus])}>
+                        <span className={cn(PILL_BASE, "mt-1", paymentStatusClass[s.payment_status as PaymentStatus])}>
                           {paymentStatusLabel[s.payment_status as PaymentStatus]}
                         </span>
                       </div>
