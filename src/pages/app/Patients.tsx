@@ -142,7 +142,7 @@ const Patients = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes] = await Promise.all([
+    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
       supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
@@ -151,6 +151,7 @@ const Patients = () => {
       supabase.from("tcc_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("session_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
+      supabase.from("case_formulations").select("patient_id, updated_at").eq("user_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
@@ -167,6 +168,11 @@ const Patients = () => {
       if (a.patient_id) anamMap[a.patient_id] = a.updated_at;
     });
     setAnamneseFilled(anamMap);
+    const formMap: Record<string, string> = {};
+    (formRes.data ?? []).forEach((f: any) => {
+      if (f.patient_id) formMap[f.patient_id] = f.updated_at;
+    });
+    setFormulationFilled(formMap);
     const countAndLatest = (rows: any[] | null, dateKey: string) => {
       const c: Record<string, number> = {};
       const l: Record<string, string> = {};
