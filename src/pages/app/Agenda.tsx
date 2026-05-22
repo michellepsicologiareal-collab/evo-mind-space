@@ -983,14 +983,14 @@ const Agenda = () => {
 
   return (
     <div className="space-y-6 animate-fade-up">
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-4xl font-medium">Agenda</h1>
-          <p className="mt-2 text-muted-foreground">Visualize e organize seus atendimentos.</p>
+          <h1 className="font-display text-2xl sm:text-4xl font-medium">Agenda</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-muted-foreground">Visualize e organize seus atendimentos.</p>
         </div>
         <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
-            <Button variant="accent" onClick={() => openNew()} className="rounded-[40px] font-display font-semibold">
+            <Button variant="accent" size="sm" onClick={() => openNew()} className="rounded-[40px] font-display font-semibold w-full sm:w-auto sm:size-default">
               <Plus className="h-4 w-4" /> Nova sessão
             </Button>
           </DialogTrigger>
@@ -1224,18 +1224,18 @@ const Agenda = () => {
             <TabsContent value="month">
               <div className="space-y-4">
                 {/* Month header */}
-                <div className="flex items-center justify-between rounded-2xl bg-card border border-border shadow-card p-4">
-                  <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+                <div className="flex items-center justify-between gap-2 rounded-2xl bg-card border border-border shadow-card p-3 sm:p-4">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <p className="font-display text-lg font-semibold capitalize">
+                  <p className="font-display text-sm sm:text-lg font-semibold capitalize text-center truncate">
                     {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
                   </p>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="rounded-[40px] font-display font-semibold bg-[rgba(109,79,194,0.06)] border-[rgba(109,79,194,0.25)] text-[#5c3db0] hover:bg-[rgba(109,79,194,0.12)] hover:text-[#5c3db0]" onClick={() => { setCurrentMonth(startOfMonth(new Date())); setSelectedDate(new Date()); }}>
+                  <div className="flex gap-1 sm:gap-2 shrink-0">
+                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(109,79,194,0.06)] border-[rgba(109,79,194,0.25)] text-[#5c3db0] hover:bg-[rgba(109,79,194,0.12)] hover:text-[#5c3db0]" onClick={() => { setCurrentMonth(startOfMonth(new Date())); setSelectedDate(new Date()); }}>
                       Hoje
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -1324,17 +1324,17 @@ const Agenda = () => {
             {/* ── WEEK VIEW ── */}
             <TabsContent value="week">
               <div className="space-y-4">
-                <div className="flex items-center justify-between rounded-2xl bg-card border border-border shadow-card p-4">
-                  <Button variant="ghost" size="icon" onClick={() => setWeekStart(addWeeks(weekStart, -1))}>
+                <div className="flex items-center justify-between gap-2 rounded-2xl bg-card border border-border shadow-card p-3 sm:p-4">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0" onClick={() => setWeekStart(addWeeks(weekStart, -1))}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <div className="text-center">
-                    <p className="font-display text-lg font-semibold capitalize">{format(weekStart, "MMMM yyyy", { locale: ptBR })}</p>
-                    <p className="text-xs text-muted-foreground">{format(weekStart, "dd/MM")} — {format(addDays(weekStart, 6), "dd/MM")}</p>
+                  <div className="text-center min-w-0">
+                    <p className="font-display text-sm sm:text-lg font-semibold capitalize truncate">{format(weekStart, "MMMM yyyy", { locale: ptBR })}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">{format(weekStart, "dd/MM")} — {format(addDays(weekStart, 6), "dd/MM")}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="rounded-[40px] font-display font-semibold bg-[rgba(109,79,194,0.06)] border-[rgba(109,79,194,0.25)] text-[#5c3db0] hover:bg-[rgba(109,79,194,0.12)] hover:text-[#5c3db0]" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>Hoje</Button>
-                    <Button variant="ghost" size="icon" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>
+                  <div className="flex gap-1 sm:gap-2 shrink-0">
+                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(109,79,194,0.06)] border-[rgba(109,79,194,0.25)] text-[#5c3db0] hover:bg-[rgba(109,79,194,0.12)] hover:text-[#5c3db0]" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>Hoje</Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -1351,14 +1351,14 @@ const Agenda = () => {
                         <div key={day.toISOString()} className="rounded-2xl bg-card border border-border shadow-card overflow-hidden">
                           {/* Day header */}
                           <div className={cn(
-                            "flex items-center justify-between px-5 py-3 border-b",
+                            "flex items-center justify-between gap-2 px-3 sm:px-5 py-2 sm:py-3 border-b",
                             isToday ? "bg-accent/10 border-accent/20" : "bg-secondary/30 border-border"
                           )}>
-                            <p className={cn("font-display font-semibold capitalize", isToday ? "text-accent" : "text-foreground")}>
+                            <p className={cn("font-display font-semibold capitalize text-sm sm:text-base truncate", isToday ? "text-accent" : "text-foreground")}>
                               {format(day, "EEEE", { locale: ptBR })}, {format(day, "dd/MM")}
                             </p>
-                            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-accent" onClick={() => openNew(day)}>
-                              <Plus className="h-3.5 w-3.5 mr-1" /> adicionar
+                            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-accent shrink-0 px-2" onClick={() => openNew(day)}>
+                              <Plus className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">adicionar</span>
                             </Button>
                           </div>
                           {/* Sessions rows */}
@@ -1375,26 +1375,26 @@ const Agenda = () => {
                                   <div
                                     key={s.id}
                                     onClick={() => openEdit(s)}
-                                    className="flex items-center gap-3 px-5 py-3 hover:bg-secondary/30 cursor-pointer transition-colors group"
+                                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 hover:bg-secondary/30 cursor-pointer transition-colors group"
                                   >
                                     {/* Time */}
-                                    <span className="font-display text-sm font-semibold text-primary w-12 shrink-0">
+                                    <span className="font-display text-xs sm:text-sm font-semibold text-primary w-10 sm:w-12 shrink-0">
                                       {format(new Date(s.scheduled_at), "HH:mm")}
                                     </span>
                                     {/* Divider */}
-                                    <div className="w-px h-8 bg-border shrink-0" />
+                                    <div className="w-px h-8 bg-border shrink-0 hidden sm:block" />
                                     {/* Name + type */}
                                     <div className="flex-1 min-w-0">
-                                      <p className="font-medium text-sm text-foreground truncate">
+                                      <p className="font-medium text-xs sm:text-sm text-foreground truncate">
                                         {isSupervisionRow ? "Supervisão" : s.patient_name || "Paciente"}
                                         {isSupervisionRow && s.discussed_patient_name && <span className="text-muted-foreground"> · {s.discussed_patient_name}</span>}
                                       </p>
                                       {svcName && !isSupervisionRow && (
-                                        <p className="text-xs text-muted-foreground">{svcName}</p>
+                                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{svcName}</p>
                                       )}
                                     </div>
                                     {/* Status + Payment */}
-                                    <div className="flex items-center gap-1.5 shrink-0">
+                                    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 flex-wrap justify-end max-w-[40%] sm:max-w-none">
                                       <span className={cn(PILL_BASE, isSupervisionRow ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
                                         {isSupervisionRow ? "Supervisão" : statusLabel[s.status]}
                                       </span>
@@ -1404,7 +1404,7 @@ const Agenda = () => {
                                         </span>
                                        )}
                                       {s.billing_sent_at && (
-                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                                        <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
                                           💸 {format(new Date(s.billing_sent_at), "dd/MM")}
                                         </span>
                                       )}
@@ -1425,17 +1425,17 @@ const Agenda = () => {
             {/* ── DAY VIEW ── */}
             <TabsContent value="day">
               <div className="space-y-4">
-                <div className="flex items-center justify-between rounded-2xl bg-card border border-border shadow-card p-4">
-                  <Button variant="ghost" size="icon" onClick={() => setSelectedDate(addDays(selectedDate, -1))}>
+                <div className="flex items-center justify-between gap-2 rounded-2xl bg-card border border-border shadow-card p-3 sm:p-4">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0" onClick={() => setSelectedDate(addDays(selectedDate, -1))}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <div className="text-center">
-                    <p className="font-display text-lg font-semibold capitalize">{format(selectedDate, "EEEE", { locale: ptBR })}</p>
-                    <p className="text-sm text-muted-foreground">{format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
+                  <div className="text-center min-w-0">
+                    <p className="font-display text-sm sm:text-lg font-semibold capitalize truncate">{format(selectedDate, "EEEE", { locale: ptBR })}</p>
+                    <p className="text-[10px] sm:text-sm text-muted-foreground truncate">{format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="rounded-[40px] font-display font-semibold bg-[rgba(109,79,194,0.06)] border-[rgba(109,79,194,0.25)] text-[#5c3db0] hover:bg-[rgba(109,79,194,0.12)] hover:text-[#5c3db0]" onClick={() => setSelectedDate(new Date())}>Hoje</Button>
-                    <Button variant="ghost" size="icon" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>
+                  <div className="flex gap-1 sm:gap-2 shrink-0">
+                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(109,79,194,0.06)] border-[rgba(109,79,194,0.25)] text-[#5c3db0] hover:bg-[rgba(109,79,194,0.12)] hover:text-[#5c3db0]" onClick={() => setSelectedDate(new Date())}>Hoje</Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -1503,8 +1503,8 @@ const Agenda = () => {
         <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
           <Select value={filterPatientId} onValueChange={setFilterPatientId}>
             <SelectTrigger
-              className="h-9 text-xs"
-              style={{ background: "#fff", border: "0.5px solid #ede9f8", borderRadius: 40, color: "#3d2b8a", fontFamily: "Instrument Sans, sans-serif", fontSize: 11, minWidth: 220 }}
+              className="h-9 text-xs w-full sm:w-auto"
+              style={{ background: "#fff", border: "0.5px solid #ede9f8", borderRadius: 40, color: "#3d2b8a", fontFamily: "Instrument Sans, sans-serif", fontSize: 11 }}
             >
               <Filter className="h-3 w-3 mr-1" style={{ color: "#a090c8" }} /><SelectValue placeholder="Todos os pacientes" />
             </SelectTrigger>
