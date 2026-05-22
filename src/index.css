@@ -151,6 +151,21 @@
 }
 
 @layer utilities {
+  /* Linha dourada universal no topo dos cards */
+  .gold-top { position: relative; }
+  .gold-top::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 0;
+    height: 3px; border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+    background: var(--gradient-gold); pointer-events: none;
+  }
+  .gold-top-urgent::before { background: var(--gradient-gold-urgent); }
+  .gold-bar { height: 3px; background: var(--gradient-gold); width: 100%; }
+  .bg-gradient-gold { background: var(--gradient-gold); }
+  .bg-gold-subtle { background: rgba(201,168,76,0.10); }
+  .border-gold-subtle { border-color: rgba(201,168,76,0.35); }
+  .text-gold-dark { color: #7a5e1a; }
+  .text-urgent { color: #854f0b; }
+  .bg-urgent-subtle { background: #fdf8f0; }
   .bg-gradient-hero { background: var(--gradient-hero); }
   .bg-gradient-soft { background: var(--gradient-soft); }
   .bg-gradient-card { background: var(--gradient-card); }
