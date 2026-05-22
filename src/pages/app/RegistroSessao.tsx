@@ -703,57 +703,62 @@ const RegistroSessao = () => {
       </section>
 
       {/* ── Seção 3: Conteúdo da Sessão ── */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm hover:shadow-md hover:border-accent/20 transition-all">
-        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" />
+      <section className={cn(
+        "rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all",
+        compactMode && !isOpen("conteudo") ? "p-3" : "p-5 space-y-4",
+      )}>
+        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" sectionKey="conteudo" />
+        {isOpen("conteudo") && (
+          <>
+            <div className="space-y-2">
+              <Label>Temas abordados</Label>
+              <div className="flex flex-wrap gap-2">
+                {THEME_CHIPS.map((theme) => {
+                  const selected = form.themes.includes(theme);
+                  return (
+                    <button
+                      key={theme}
+                      type="button"
+                      onClick={() => toggleTheme(theme)}
+                      className={cn(
+                        "px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 hover:-translate-y-0.5",
+                        selected
+                          ? "bg-gradient-to-br from-accent to-accent/85 text-accent-foreground border-accent shadow-sm"
+                          : "bg-muted/40 text-muted-foreground border-transparent hover:border-accent/30 hover:bg-card hover:text-foreground"
+                      )}
+                    >
+                      {theme}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
+            <div className="space-y-2">
+              <Label>Observações clínicas</Label>
+              <Textarea
+                rows={4}
+                placeholder="Registre observações relevantes sobre o conteúdo da sessão..."
+                value={form.clinical_observations}
+                onChange={(e) =>
+                  setForm({ ...form, clinical_observations: e.target.value })
+                }
+              />
+            </div>
 
-        <div className="space-y-2">
-          <Label>Temas abordados</Label>
-          <div className="flex flex-wrap gap-2">
-            {THEME_CHIPS.map((theme) => {
-              const selected = form.themes.includes(theme);
-              return (
-                <button
-                  key={theme}
-                  type="button"
-                  onClick={() => toggleTheme(theme)}
-                  className={cn(
-                    "px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 hover:-translate-y-0.5",
-                    selected
-                      ? "bg-gradient-to-br from-accent to-accent/85 text-accent-foreground border-accent shadow-sm"
-                      : "bg-muted/40 text-muted-foreground border-transparent hover:border-accent/30 hover:bg-card hover:text-foreground"
-                  )}
-                >
-                  {theme}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Observações clínicas</Label>
-          <Textarea
-            rows={4}
-            placeholder="Registre observações relevantes sobre o conteúdo da sessão..."
-            value={form.clinical_observations}
-            onChange={(e) =>
-              setForm({ ...form, clinical_observations: e.target.value })
-            }
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Combinados para a próxima sessão</Label>
-          <Textarea
-            rows={2}
-            placeholder="Tarefas, exercícios ou combinados com o paciente..."
-            value={form.next_session_plan}
-            onChange={(e) =>
-              setForm({ ...form, next_session_plan: e.target.value })
-            }
-          />
-        </div>
+            <div className="space-y-2">
+              <Label>Combinados para a próxima sessão</Label>
+              <Textarea
+                rows={2}
+                placeholder="Tarefas, exercícios ou combinados com o paciente..."
+                value={form.next_session_plan}
+                onChange={(e) =>
+                  setForm({ ...form, next_session_plan: e.target.value })
+                }
+              />
+            </div>
+          </>
+        )}
       </section>
 
       {/* ── Seção 4: Avaliação do Terapeuta ── */}
