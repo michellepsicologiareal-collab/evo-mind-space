@@ -681,20 +681,25 @@ const RegistroSessao = () => {
       </section>
 
       {/* ── Seção 2: Estado do Paciente ── */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm hover:shadow-md hover:border-accent/20 transition-all">
-        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" />
-        <div className="space-y-2">
-          <Label>Queixa principal / Tema trazido</Label>
-          <Textarea
-            ref={chiefComplaintRef}
-            rows={3}
-            placeholder="Descreva a queixa ou tema central apresentado pelo paciente nesta sessão..."
-            value={form.chief_complaint}
-            onChange={(e) =>
-              setForm({ ...form, chief_complaint: e.target.value })
-            }
-          />
-        </div>
+      <section className={cn(
+        "rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all",
+        compactMode && !isOpen("estado") ? "p-3" : "p-5 space-y-4",
+      )}>
+        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" sectionKey="estado" />
+        {isOpen("estado") && (
+          <div className="space-y-2">
+            <Label>Queixa principal / Tema trazido</Label>
+            <Textarea
+              ref={chiefComplaintRef}
+              rows={3}
+              placeholder="Descreva a queixa ou tema central apresentado pelo paciente nesta sessão..."
+              value={form.chief_complaint}
+              onChange={(e) =>
+                setForm({ ...form, chief_complaint: e.target.value })
+              }
+            />
+          </div>
+        )}
       </section>
 
       {/* ── Seção 3: Conteúdo da Sessão ── */}
