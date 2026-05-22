@@ -4,7 +4,8 @@ import { ptBR } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays, Smile, FileText, Baby, Sparkles, Maximize2, Minimize2 } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays, Smile, FileText, Baby, Sparkles, Maximize2, Minimize2, X } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { TccRecords } from "@/components/app/TccRecords";
 import { CaseFormulation } from "@/components/app/CaseFormulation";
 import { ChildAnamnesisForm } from "@/components/app/ChildAnamnesisForm";
@@ -97,6 +98,7 @@ const Patients = () => {
   const [moodPatient, setMoodPatient] = useState<Patient | null>(null);
   const [recordsPatient, setRecordsPatient] = useState<Patient | null>(null);
   const [anamnesisPatient, setAnamnesisPatient] = useState<Patient | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
   const [profCrp, setProfCrp] = useState<string>("");
@@ -397,544 +399,525 @@ const Patients = () => {
     );
 
   return (
-    <div className="space-y-8 animate-fade-up">
-      <header className="sticky top-0 md:-mx-6 lg:-mx-10 -mx-6 px-6 lg:px-10 py-4 bg-card border-b border-[hsl(var(--sidebar-border))] z-20 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl md:text-3xl font-medium">Pacientes</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Gerencie quem está sob seus cuidados.</p>
+    <div className="space-y-5 animate-fade-up" style={{ background: "#ffffff" }}>
+      {/* Top row */}
+      <div className="flex flex-wrap items-center gap-4 pt-2">
+        <div className="relative" style={{ width: 260 }}>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#a090c8" }} />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar paciente..."
+            className="w-full pl-9 pr-3 py-2 outline-none focus:outline-none"
+            style={{
+              background: "#f7f4ff",
+              border: "0.5px solid #ede9f8",
+              borderRadius: 40,
+              color: "#1a1030",
+              fontFamily: "Instrument Sans, sans-serif",
+              fontSize: 13,
+            }}
+          />
         </div>
-        <Dialog open={open} onOpenChange={(v) => { if (!v) { patientGuard.guardClose(() => { if (!editing) clearDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
-          <DialogTrigger asChild>
-            <Button className="min-h-[44px] bg-[#8B4A52] text-white hover:bg-[#7a4047]" onClick={openNew}>
-              <Plus className="h-4 w-4" /> Novo paciente
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto [&_input]:scroll-mt-24 [&_textarea]:scroll-mt-24">
-            <DialogHeader>
-              <DialogTitle className="font-display text-2xl">{editing ? "Editar paciente" : "Novo paciente"}</DialogTitle>
-              <DialogDescription>Cadastre as informações do paciente.</DialogDescription>
-            </DialogHeader>
-            {draftRestored && !editing && (
-              <div className="rounded-lg bg-accent/20 border border-accent/30 px-3 py-2 text-sm text-muted-foreground flex items-center justify-between gap-2">
-                <span>📝 Rascunho recuperado. Continue de onde parou.</span>
-                <Button type="button" variant="ghost" size="sm" className="h-auto py-1 px-2 text-xs" onClick={() => { clearDraft(); setFormRaw(emptyForm); }}>Descartar</Button>
-              </div>
-            )}
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="full_name">Nome completo *</Label>
-                <Input id="full_name" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="category">Categoria</Label>
-                <select
-                  id="category"
-                  value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value as typeof form.category })}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  {PATIENT_CATEGORIES.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone / WhatsApp</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={form.phone_ddi}
-                      onChange={(e) => {
-                        let v = e.target.value;
-                        if (v && !v.startsWith("+")) v = "+" + v;
-                        setForm({ ...form, phone_ddi: v });
-                      }}
-                      className="w-[80px] shrink-0 text-center"
-                      placeholder="+55"
-                      maxLength={5}
-                    />
-                    <Input id="phone" className="flex-1" placeholder="11 99988-7766" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="price">Valor da sessão (R$)</Label>
-                <Input id="price" type="number" step="0.01" min="0" value={form.session_price} onChange={(e) => setForm({ ...form, session_price: e.target.value })} />
-              </div>
-
-              {/* Financial Responsible Toggle */}
-              <div className="rounded-xl border border-border p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="has_financial_responsible" className="text-sm font-medium">Responsável financeiro é outra pessoa?</Label>
-                  <Switch
-                    id="has_financial_responsible"
-                    checked={form.has_financial_responsible}
-                    onCheckedChange={(checked) => setForm({ ...form, has_financial_responsible: checked })}
-                  />
-                </div>
-                {form.has_financial_responsible && (
-                  <div className="space-y-3 pt-2 border-t border-border">
-                    <div className="space-y-2">
-                      <Label htmlFor="fr_name">Nome do responsável</Label>
-                      <Input id="fr_name" placeholder="Nome completo" value={form.financial_responsible_name} onChange={(e) => setForm({ ...form, financial_responsible_name: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="fr_phone">Celular / WhatsApp do responsável</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={form.financial_responsible_ddi}
-                          onChange={(e) => {
-                            let v = e.target.value;
-                            if (v && !v.startsWith("+")) v = "+" + v;
-                            setForm({ ...form, financial_responsible_ddi: v });
-                          }}
-                          className="w-[80px] shrink-0 text-center"
-                          placeholder="+55"
-                          maxLength={5}
-                        />
-                        <Input id="fr_phone" className="flex-1" placeholder="11 99988-7766" value={form.financial_responsible_phone} onChange={(e) => setForm({ ...form, financial_responsible_phone: e.target.value })} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Datas de tratamento */}
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="treatment_start_date">Início do tratamento</Label>
-                  <Input id="treatment_start_date" type="date" value={form.treatment_start_date} onChange={(e) => setForm({ ...form, treatment_start_date: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="treatment_end_date">Término do tratamento</Label>
-                  <Input id="treatment_end_date" type="date" value={form.treatment_end_date} onChange={(e) => setForm({ ...form, treatment_end_date: e.target.value })} />
-                </div>
-              </div>
-
-              {/* Acompanhamento psiquiátrico */}
-              <div className="rounded-xl border border-border p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="has_psychiatrist" className="text-sm font-medium">Faz acompanhamento psiquiátrico?</Label>
-                  <Switch
-                    id="has_psychiatrist"
-                    checked={form.has_psychiatrist}
-                    onCheckedChange={(checked) => setForm({ ...form, has_psychiatrist: checked })}
-                  />
-                </div>
-                {form.has_psychiatrist && (
-                  <div className="space-y-3 pt-2 border-t border-border">
-                    <div className="space-y-2">
-                      <Label htmlFor="psychiatrist_name">Nome do médico</Label>
-                      <Input id="psychiatrist_name" placeholder="Nome do psiquiatra" value={form.psychiatrist_name} onChange={(e) => setForm({ ...form, psychiatrist_name: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="psychiatrist_phone">WhatsApp do médico</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          value={form.psychiatrist_phone_ddi}
-                          onChange={(e) => {
-                            let v = e.target.value;
-                            if (v && !v.startsWith("+")) v = "+" + v;
-                            setForm({ ...form, psychiatrist_phone_ddi: v });
-                          }}
-                          className="w-[80px] shrink-0 text-center"
-                          placeholder="+55"
-                          maxLength={5}
-                        />
-                        <Input id="psychiatrist_phone" className="flex-1" placeholder="11 99988-7766" value={form.psychiatrist_phone} onChange={(e) => setForm({ ...form, psychiatrist_phone: e.target.value })} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Medicamentos */}
-              <div className="space-y-2">
-                <Label htmlFor="medications">Medicamentos em uso</Label>
-                <Textarea id="medications" rows={3} className="min-h-[80px]" placeholder="Liste os medicamentos que o paciente toma atualmente..." value={form.medications} onChange={(e) => setForm({ ...form, medications: e.target.value })} />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="chief_complaint">Queixa Principal</Label>
-                <Textarea id="chief_complaint" rows={3} className="min-h-[80px]" placeholder="Descreva a queixa principal do paciente..." value={form.chief_complaint} onChange={(e) => setForm({ ...form, chief_complaint: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="treatment_plan">Plano de Tratamento</Label>
-                <Textarea id="treatment_plan" rows={4} className="min-h-[100px]" placeholder="Objetivos terapêuticos, intervenções planejadas..." value={form.treatment_plan} onChange={(e) => setForm({ ...form, treatment_plan: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="anamnesis">Histórico / Anamnese</Label>
-                <Textarea id="anamnesis" rows={5} className="min-h-[120px]" placeholder="Histórico pessoal, familiar, médico..." value={form.anamnesis} onChange={(e) => setForm({ ...form, anamnesis: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="notes">Observações</Label>
-                <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-              </div>
-              <DialogFooter className="gap-2">
-                <Button type="button" variant="outline" className="min-h-[44px]" onClick={() => patientGuard.guardClose(() => { if (!editing) clearDraft(); setOpen(false); }, () => setOpen(false))}>Cancelar</Button>
-                <Button type="submit" variant="accent" className="min-h-[44px]" disabled={saving}>
-                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {editing ? "Salvar" : "Cadastrar"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </header>
-
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Buscar paciente..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="flex items-center gap-5">
+          {[
+            { k: "active", label: "Ativos", n: activeCount },
+            { k: "inactive", label: "Inativos", n: inactiveCount },
+            { k: "all", label: "Todos", n: patients.length },
+          ].map((t) => {
+            const isActive = statusFilter === t.k;
+            return (
+              <button
+                key={t.k}
+                onClick={() => setStatusFilter(t.k as typeof statusFilter)}
+                className="pb-2 transition-colors"
+                style={{
+                  fontFamily: "Syne, sans-serif",
+                  fontWeight: isActive ? 700 : 400,
+                  fontSize: 12,
+                  color: isActive ? "#3d2b8a" : "#a090c8",
+                  borderBottom: isActive ? "2px solid #6d4fc2" : "2px solid transparent",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {t.label} · {t.n}
+              </button>
+            );
+          })}
         </div>
-        <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
-          <TabsList>
-            <TabsTrigger value="active">Ativos ({activeCount})</TabsTrigger>
-            <TabsTrigger value="inactive">Inativos ({inactiveCount})</TabsTrigger>
-            <TabsTrigger value="all">Todos ({patients.length})</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="ml-auto">
+          <button
+            onClick={openNew}
+            className="inline-flex items-center gap-1.5 px-4 py-2 transition-opacity hover:opacity-90"
+            style={{
+              background: "#6d4fc2",
+              color: "#fff",
+              borderRadius: 40,
+              fontFamily: "Syne, sans-serif",
+              fontWeight: 600,
+              fontSize: 12,
+            }}
+          >
+            <Plus className="h-3.5 w-3.5" /> Novo paciente
+          </button>
+        </div>
       </div>
 
       {loading ? (
         <CardSkeleton count={4} />
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card p-14 text-center">
-          <User className="h-12 w-12 mx-auto text-muted-foreground/40" />
-          <p className="mt-4 font-display text-lg font-medium text-foreground/70">
+        <div className="rounded-2xl border border-dashed p-14 text-center" style={{ borderColor: "#ede9f8", background: "#faf8ff" }}>
+          <User className="h-12 w-12 mx-auto" style={{ color: "#c0b0e0" }} />
+          <p className="mt-4" style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 16, color: "#3d2b8a" }}>
             {patients.length === 0 ? "Pronto para começar?" : "Nenhum resultado encontrado."}
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#8070a8" }}>
             {patients.length === 0 ? "Cadastre seu primeiro paciente e organize seu consultório." : "Tente outra busca ou limpe o filtro."}
           </p>
           {patients.length === 0 && (
-            <Button variant="accent" className="mt-5" onClick={openNew}>
-              <Plus className="h-4 w-4" /> Cadastrar primeiro paciente
-            </Button>
+            <button
+              onClick={openNew}
+              className="inline-flex items-center gap-1.5 mt-5 px-4 py-2"
+              style={{ background: "#6d4fc2", color: "#fff", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+            >
+              <Plus className="h-3.5 w-3.5" /> Cadastrar primeiro paciente
+            </button>
           )}
         </div>
       ) : (
-        <ul className="grid md:grid-cols-2 gap-4">
-          {filtered.map((p) => (
-            <li key={p.id} className="rounded-2xl bg-card border border-border shadow-card p-5 transition-all hover:-translate-y-0.5 hover:shadow-soft">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground font-display text-base">
-                    {p.full_name.charAt(0).toUpperCase()}
+        <div>
+          {/* Column header */}
+          <div
+            className="grid items-center px-5 py-2 uppercase"
+            style={{
+              gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 80px",
+              gap: 16,
+              borderBottom: "0.5px solid #ede9f8",
+              fontFamily: "Syne, sans-serif",
+              fontSize: 9,
+              fontWeight: 600,
+              letterSpacing: "0.12em",
+              color: "#a090c8",
+            }}
+          >
+            <span>Paciente</span>
+            <span>Tipo</span>
+            <span>Sessões</span>
+            <span>Humor</span>
+            <span>Valor</span>
+            <span className="text-right">Ações</span>
+          </div>
+          <ul>
+            {filtered.map((p) => {
+              const isAlert = p.notes ? /(crise|resist|abandon|suic|término)/i.test(p.notes) : false;
+              const cHist = counts.history[p.id] || 0;
+              const cMood = counts.mood[p.id] || 0;
+              const type = PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual";
+              const lastSession = lastDates.history[p.id];
+              const url = buildWhatsAppUrl(p);
+              return (
+                <li
+                  key={p.id}
+                  onClick={() => setSelectedPatient(p)}
+                  className="group grid items-center cursor-pointer transition-colors"
+                  style={{
+                    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 80px",
+                    gap: 16,
+                    height: 48,
+                    padding: "0 20px",
+                    borderBottom: "0.5px solid #f0ebff",
+                    background: isAlert ? "#fdf8f0" : "transparent",
+                    borderLeft: isAlert ? "2px solid #854f0b" : "2px solid transparent",
+                  }}
+                  onMouseEnter={(e) => { if (!isAlert) e.currentTarget.style.background = "#f7f4ff"; }}
+                  onMouseLeave={(e) => { if (!isAlert) e.currentTarget.style.background = "transparent"; }}
+                >
+                  <div className="flex items-center min-w-0">
+                    <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 28, height: 28, background: "rgba(109,79,194,0.08)", color: "#6d4fc2", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 11 }}>
+                      {p.full_name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="truncate" style={{ marginLeft: 10, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 13, color: isAlert ? "#633806" : "#1a1030" }}>
+                      {p.full_name}
+                    </span>
+                    {p.is_active && (
+                      <span style={{ marginLeft: 8, width: 6, height: 6, borderRadius: "50%", background: "#3b6d11", flexShrink: 0 }} />
+                    )}
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-foreground truncate">{p.full_name}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
-                      {p.is_active ? <span className="text-primary-glow">● Ativo</span> : <span>○ Inativo</span>}
-                      {(() => {
-                        const styles: Record<string, string> = {
-                          individual: "bg-primary/15 text-primary",
-                          crianca: "bg-lilac/20 text-lilac-foreground",
-                          adolescente: "bg-sage/15 text-sage",
-                          casal: "bg-accent/15 text-accent",
-                          avaliacao: "bg-serene/15 text-serene",
-                          grupo: "bg-moss/15 text-moss",
-                          sessao_breve: "bg-gold/20 text-foreground",
-                          supervisao: "bg-[hsl(var(--admin-accent))]/15 text-[hsl(var(--admin-accent))]",
-                        };
-                        const cls = styles[p.category] ?? styles.individual;
-                        return (
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-medium ${cls}`}>
-                            {PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual"}
-                          </span>
-                        );
-                      })()}
-                    </p>
+                  <div>
+                    <span className="uppercase inline-block" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "#7a5e1a", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 8px", letterSpacing: "0.04em" }}>
+                      {type}
+                    </span>
                   </div>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => toggleActive(p)}>
-                      {p.is_active ? "Marcar inativo" : "Reativar"}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDelete(p)} className="text-destructive">
-                      <Trash2 className="h-4 w-4" /> Excluir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <div className="mt-4 space-y-1 text-sm text-muted-foreground">
-                {p.email && <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /> {p.email}</p>}
-                {p.phone && <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" /> {p.phone}</p>}
-                {p.session_price != null && <p className="text-foreground font-medium">R$ {Number(p.session_price).toFixed(2).replace(".", ",")} <span className="text-muted-foreground font-normal">/ sessão</span></p>}
-              </div>
-
-              {/* Detalhes preenchidos do paciente */}
-              {(p.chief_complaint || p.treatment_plan || p.anamnesis || p.notes ||
-                p.treatment_start_date || p.treatment_end_date ||
-                (p.has_financial_responsible && (p.financial_responsible_name || p.financial_responsible_phone)) ||
-                (p.has_psychiatrist && (p.psychiatrist_name || p.psychiatrist_phone)) ||
-                p.medications || anamneseFilled[p.id]) && (
-                <div className="mt-4 rounded-xl bg-[hsl(var(--sand))] border border-[hsl(var(--sand))] p-3 space-y-2.5 text-sm">
-                  {anamneseFilled[p.id] && (
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-semibold bg-[hsl(var(--moss))] text-[hsl(var(--moss-foreground))]">
-                        <Baby className="h-3 w-3" /> Anamnese preenchida
+                  <div className="flex flex-col leading-tight">
+                    <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12, color: "#1a1030" }}>{cHist}</span>
+                    {lastSession && (
+                      <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "#a090c8" }}>
+                        há {formatDistanceToNowStrict(new Date(lastSession), { locale: ptBR })}
                       </span>
-                      <span className="text-[11px] text-muted-foreground">
-                        em {format(new Date(anamneseFilled[p.id]), "dd/MM/yyyy")}
+                    )}
+                  </div>
+                  <div>
+                    {cMood > 0 ? (
+                      <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "#3d2b8a", background: "rgba(109,79,194,0.08)", borderRadius: 40, padding: "2px 8px" }}>
+                        {cMood}
                       </span>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          if (!confirm(`Excluir a anamnese de ${p.full_name}? Esta ação não pode ser desfeita.`)) return;
-                          const { error } = await supabase.from("child_anamneses").delete().eq("patient_id", p.id).eq("user_id", user!.id);
-                          if (error) { toast.error("Erro ao excluir anamnese"); return; }
-                          toast.success("Anamnese excluída");
-                          load();
-                        }}
-                        className="ml-auto inline-flex items-center justify-center h-6 w-6 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                        aria-label="Excluir anamnese"
-                        title="Excluir anamnese"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
-                  {p.chief_complaint && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Queixa principal</p>
-                      <p className="text-foreground whitespace-pre-line">{p.chief_complaint}</p>
-                    </div>
-                  )}
-                  {p.treatment_plan && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Plano terapêutico</p>
-                      <p className="text-foreground whitespace-pre-line">{p.treatment_plan}</p>
-                    </div>
-                  )}
-                  {p.anamnesis && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Anamnese</p>
-                      <p className="text-foreground whitespace-pre-line">{p.anamnesis}</p>
-                    </div>
-                  )}
-                  {(p.treatment_start_date || p.treatment_end_date) && (
-                    <div className="flex flex-wrap gap-x-4 gap-y-1">
-                      {p.treatment_start_date && (
-                        <div>
-                          <span className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Início: </span>
-                          <span className="text-foreground">{format(new Date(p.treatment_start_date + "T00:00:00"), "dd/MM/yyyy")}</span>
-                        </div>
-                      )}
-                      {p.treatment_end_date && (
-                        <div>
-                          <span className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Encerramento: </span>
-                          <span className="text-foreground">{format(new Date(p.treatment_end_date + "T00:00:00"), "dd/MM/yyyy")}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {p.has_financial_responsible && (p.financial_responsible_name || p.financial_responsible_phone) && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Responsável financeiro</p>
-                      <p className="text-foreground">
-                        {p.financial_responsible_name}
-                        {p.financial_responsible_phone && <span className="text-muted-foreground"> · {p.financial_responsible_phone}</span>}
-                      </p>
-                    </div>
-                  )}
-                  {p.has_psychiatrist && (p.psychiatrist_name || p.psychiatrist_phone) && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Psiquiatra</p>
-                      <p className="text-foreground">
-                        {p.psychiatrist_name}
-                        {p.psychiatrist_phone && <span className="text-muted-foreground"> · {p.psychiatrist_phone}</span>}
-                      </p>
-                    </div>
-                  )}
-                  {p.medications && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Medicações</p>
-                      <p className="text-foreground whitespace-pre-line">{p.medications}</p>
-                    </div>
-                  )}
-                  {p.notes && (
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider font-semibold text-[hsl(var(--sand-foreground))]/70">Observações</p>
-                      <p className="text-foreground whitespace-pre-line">{p.notes}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* WhatsApp billing button */}
-              {p.phone && (
-                <div className="mt-3 border-t border-border/50 pt-3">
-                  {(() => {
-                    const url = buildWhatsAppUrl(p);
-                    return url ? (
+                    ) : (
+                      <span style={{ color: "#d0c8e8", fontFamily: "Syne, sans-serif", fontSize: 12 }}>—</span>
+                    )}
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    {p.session_price != null ? (
+                      <>
+                        <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12, color: "#1a1030" }}>
+                          R$ {Number(p.session_price).toFixed(2).replace(".", ",")}
+                        </span>
+                        <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "#a090c8" }}>/sessão</span>
+                      </>
+                    ) : (
+                      <span style={{ color: "#d0c8e8", fontFamily: "Syne, sans-serif", fontSize: 12 }}>—</span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {url && (
                       <a
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
-                        onClick={() => {
-                          if (!pixKey) {
-                            toast.info("Dica: cadastre sua chave Pix no Perfil para incluí-la automaticamente na mensagem de cobrança.");
-                          }
-                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        title="Cobrar via WhatsApp"
+                        className="flex items-center justify-center transition-colors"
+                        style={{ width: 26, height: 26, borderRadius: 6, color: "#c0b0e0" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "#f0ebff"; e.currentTarget.style.color = "#6d4fc2"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#c0b0e0"; }}
                       >
-                        <MessageCircle className="h-3.5 w-3.5" /> Cobrar via WhatsApp
+                        <MessageCircle className="h-3.5 w-3.5" />
                       </a>
-                    ) : null;
-                  })()}
-                </div>
-              )}
-              {(() => {
-                const cMood = counts.mood[p.id] || 0;
-                const cTcc = counts.tcc[p.id] || 0;
-                const cRec = counts.records[p.id] || 0;
-                const cHist = counts.history[p.id] || 0;
-                const hasAnam = !!anamneseFilled[p.id];
-                const CountPill = ({ n, recent }: { n: number; recent?: boolean }) => (
-                  <span className={`ml-1 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-[10px] font-semibold leading-none ${recent ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] ring-2 ring-[hsl(var(--accent))]/30" : "bg-[hsl(var(--lilac))] text-[hsl(var(--lilac-foreground))]"}`}>
-                    {n}
-                  </span>
-                );
-                const ago = (iso?: string) => {
-                  if (!iso) return null;
-                  try {
-                    const d = new Date(iso);
-                    if (isNaN(d.getTime())) return null;
-                    return formatDistanceToNowStrict(d, { locale: ptBR, addSuffix: false });
-                  } catch { return null; }
-                };
-                const AgoTag = ({ iso, recent }: { iso?: string; recent?: boolean }) => {
-                  const a = ago(iso);
-                  if (!a) return null;
-                  return (
-                    <span className={`ml-1 text-[10px] font-normal ${recent ? "text-[hsl(var(--accent))] font-semibold" : "text-muted-foreground"}`}>
-                      · há {a}
-                    </span>
-                  );
-                };
-                const entries: { key: string; ts: number }[] = [
-                  { key: "hist", ts: lastDates.history[p.id] ? new Date(lastDates.history[p.id]).getTime() : 0 },
-                  { key: "rec", ts: lastDates.records[p.id] ? new Date(lastDates.records[p.id]).getTime() : 0 },
-                  { key: "mood", ts: lastDates.mood[p.id] ? new Date(lastDates.mood[p.id]).getTime() : 0 },
-                  { key: "anam", ts: anamneseFilled[p.id] ? new Date(anamneseFilled[p.id]).getTime() : 0 },
-                  { key: "tcc", ts: lastDates.tcc[p.id] ? new Date(lastDates.tcc[p.id]).getTime() : 0 },
-                ];
-                const newest = entries.reduce((a, b) => (b.ts > a.ts ? b : a), { key: "", ts: 0 });
-                const isNew = (k: string) => newest.ts > 0 && newest.key === k;
-                const btnCls = (recent: boolean) =>
-                  `text-xs gap-1.5 disabled:opacity-50 ${recent ? "border-[hsl(var(--accent))] border-2 bg-[hsl(var(--accent))]/5 text-[hsl(var(--accent))] shadow-sm" : ""}`;
-                const RecentSpark = ({ on }: { on: boolean }) => on ? <Sparkles className="h-3 w-3 text-[hsl(var(--accent))]" aria-label="Atividade mais recente" /> : null;
-                return (
-                  <>
-                    <div className="mt-3 flex items-center gap-1.5 flex-wrap text-[11px] text-muted-foreground border-t border-border/50 pt-3">
-                      <span className="font-medium text-foreground/80">Resumo:</span>
-                      <span>{cHist} {cHist === 1 ? "sessão" : "sessões"}</span><span>·</span>
-                      <span>{cRec} {cRec === 1 ? "registro" : "registros"}</span><span>·</span>
-                      <span>{cMood} {cMood === 1 ? "humor" : "humores"}</span><span>·</span>
-                      <span>{cTcc} TCC</span><span>·</span>
-                      <span>{hasAnam ? "anamnese ✓" : "sem anamnese"}</span>
-                    </div>
-                    <div className="mt-2 flex items-center gap-2 flex-wrap">
-                      <Button variant="outline" size="sm" className={btnCls(isNew("hist"))} onClick={() => setHistoryPatient(p)}>
-                        <CalendarDays className="h-3.5 w-3.5" /> Histórico{cHist > 0 && <CountPill n={cHist} recent={isNew("hist")} />}
-                        <AgoTag iso={lastDates.history[p.id]} recent={isNew("hist")} />
-                        <RecentSpark on={isNew("hist")} />
-                      </Button>
-                      <Button variant="outline" size="sm" className={btnCls(isNew("rec"))} onClick={() => setRecordsPatient(p)}>
-                        <FileText className="h-3.5 w-3.5" /> Registros{cRec > 0 && <CountPill n={cRec} recent={isNew("rec")} />}
-                        <AgoTag iso={lastDates.records[p.id]} recent={isNew("rec")} />
-                        <RecentSpark on={isNew("rec")} />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={btnCls(isNew("mood"))}
-                        onClick={() => setMoodPatient(p)}
-                        title={!cMood ? "Sem registros de humor ainda — abra para começar." : undefined}
-                      >
-                        <Smile className="h-3.5 w-3.5" /> Humor{cMood > 0 && <CountPill n={cMood} recent={isNew("mood")} />}
-                        <AgoTag iso={lastDates.mood[p.id]} recent={isNew("mood")} />
-                        <RecentSpark on={isNew("mood")} />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={btnCls(isNew("anam"))}
-                        onClick={() => setAnamnesisPatient(p)}
-                        title={!hasAnam ? "Anamnese ainda não preenchida — abra para preencher ou enviar o link." : undefined}
-                      >
-                        <Baby className="h-3.5 w-3.5" /> Anamnese{hasAnam && <CountPill n={1} recent={isNew("anam")} />}
-                        <AgoTag iso={anamneseFilled[p.id]} recent={isNew("anam")} />
-                        <RecentSpark on={isNew("anam")} />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={btnCls(isNew("tcc"))}
-                        onClick={() => setTccPatient(p)}
-                        title={!cTcc ? "Nenhum registro TCC ainda — abra para criar o primeiro." : undefined}
-                      >
-                        <ClipboardList className="h-3.5 w-3.5" /> TCC{cTcc > 0 && <CountPill n={cTcc} recent={isNew("tcc")} />}
-                        <AgoTag iso={lastDates.tcc[p.id]} recent={isNew("tcc")} />
-                        <RecentSpark on={isNew("tcc")} />
-                      </Button>
-                <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => setPadeksyPatient(p)}>
-                  <Brain className="h-3.5 w-3.5" /> Formulação de Caso
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs gap-1.5"
-                  onClick={() => {
-                    const link = `${window.location.origin}/anamnese-crianca/${p.id}`;
-                    const phone = normalizePhoneForWhatsApp(p.phone || "");
-                    const msg = encodeURIComponent(`Olá! Segue o link para você preencher a anamnese de ${p.full_name}: ${link}`);
-                    const url = phone ? `https://wa.me/${phone}?text=${msg}` : `https://wa.me/?text=${msg}`;
-                    navigator.clipboard?.writeText(link).catch(() => {});
-                    toast.success("Link copiado", { description: "Abrindo WhatsApp..." });
-                    window.open(url, "_blank");
-                  }}
-                >
-                  <MessageCircle className="h-3.5 w-3.5" /> Enviar link anamnese
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs gap-1.5"
-                  onClick={() => window.open(`https://wa.me/5511947388423?text=${encodeURIComponent(`Olá Michelle, preciso de supervisão para o caso do(a) paciente: ${p.full_name}`)}`, "_blank")}
-                >
-                  <Stethoscope className="h-3.5 w-3.5" /> Pedir supervisão
-                </Button>
-                    </div>
-                  </>
-                );
-              })()}
-              <div className="mt-2 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Eye className="h-3.5 w-3.5" />
-                  Visível ao supervisor
-                </div>
-                <Switch
-                  checked={p.shared_with_supervisor}
-                  onCheckedChange={() => toggleSharing(p)}
-                  aria-label="Compartilhar com supervisor"
-                />
-              </div>
-            </li>
-          ))}
-        </ul>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setRecordsPatient(p); }}
+                      title="Registros"
+                      className="flex items-center justify-center transition-colors"
+                      style={{ width: 26, height: 26, borderRadius: 6, color: "#c0b0e0", background: "transparent" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "#f0ebff"; e.currentTarget.style.color = "#6d4fc2"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#c0b0e0"; }}
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center justify-center transition-colors"
+                          style={{ width: 26, height: 26, borderRadius: 6, color: "#c0b0e0", background: "transparent" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "#f0ebff"; e.currentTarget.style.color = "#6d4fc2"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#c0b0e0"; }}
+                        >
+                          <MoreHorizontal className="h-3.5 w-3.5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => toggleActive(p)}>{p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDelete(p)} className="text-destructive"><Trash2 className="h-4 w-4" /> Excluir</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
 
-      {/* TCC Record Dialog */}
+      {/* Side panel */}
+      <Sheet open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
+        <SheetContent side="right" className="w-[380px] sm:max-w-[380px] p-0" style={{ background: "#ffffff", borderLeft: "0.5px solid #ede9f8" }}>
+          {selectedPatient && (() => {
+            const p = selectedPatient;
+            const cHist = counts.history[p.id] || 0;
+            const cRec = counts.records[p.id] || 0;
+            const cMood = counts.mood[p.id] || 0;
+            const cTcc = counts.tcc[p.id] || 0;
+            const hasAnam = !!anamneseFilled[p.id];
+            const url = buildWhatsAppUrl(p);
+            const type = PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual";
+            const Chip = ({ label, count, onClick }: { label: string; count?: number; onClick: () => void }) => (
+              <button
+                onClick={onClick}
+                className="inline-flex items-center gap-1.5 transition-colors uppercase"
+                style={{ background: "#f7f4ff", border: "0.5px solid #ede9f8", color: "#3d2b8a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.04em" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#ede9f8"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#f7f4ff"; }}
+              >
+                {label}
+                {count != null && count > 0 && (
+                  <span style={{ background: "rgba(109,79,194,0.15)", borderRadius: 40, padding: "0 6px", fontSize: 9 }}>{count}</span>
+                )}
+              </button>
+            );
+            return (
+              <div className="h-full overflow-y-auto relative">
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
+                <button
+                  onClick={() => setSelectedPatient(null)}
+                  className="absolute right-4 top-4 flex items-center justify-center transition-colors"
+                  style={{ width: 28, height: 28, borderRadius: 6, color: "#a090c8" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#f7f4ff"; e.currentTarget.style.color = "#6d4fc2"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#a090c8"; }}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                <div className="p-6 pt-8">
+                  <div className="flex items-center gap-3 pr-8">
+                    <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(109,79,194,0.08)", color: "#6d4fc2", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
+                      {p.full_name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16, color: "#1a1030" }}>{p.full_name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="uppercase" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "#7a5e1a", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 8px", letterSpacing: "0.04em" }}>{type}</span>
+                        {p.is_active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#3b6d11" }} />}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 space-y-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#6a5880" }}>
+                    {p.phone && <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" style={{ color: "#c0b0e0" }} /> {p.phone}</p>}
+                    {p.email && <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" style={{ color: "#c0b0e0" }} /> {p.email}</p>}
+                    {p.session_price != null && (
+                      <p className="flex items-baseline gap-1">
+                        <span style={{ color: "#1a1030", fontWeight: 600 }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
+                        <span style={{ color: "#a090c8" }}>/ sessão</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-6">
+                    <p className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", color: "#a090c8" }}>Resumo clínico</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Chip label="Humor" count={cMood} onClick={() => { setSelectedPatient(null); setMoodPatient(p); }} />
+                      <Chip label="Histórico" count={cHist} onClick={() => { setSelectedPatient(null); setHistoryPatient(p); }} />
+                      <Chip label="Sessões" count={cRec} onClick={() => { setSelectedPatient(null); setRecordsPatient(p); }} />
+                      <Chip label="Anamnese" count={hasAnam ? 1 : 0} onClick={() => { setSelectedPatient(null); setAnamnesisPatient(p); }} />
+                      <Chip label="TCC" count={cTcc} onClick={() => { setSelectedPatient(null); setTccPatient(p); }} />
+                      <Chip label="Formulação" onClick={() => { setSelectedPatient(null); setPadeksyPatient(p); }} />
+                    </div>
+                  </div>
+
+                  <div className="mt-6 space-y-2">
+                    {url && (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full"
+                        style={{ background: "rgba(109,79,194,0.08)", color: "#6d4fc2", border: "0.5px solid rgba(109,79,194,0.25)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+                      >
+                        <MessageCircle className="h-4 w-4" /> Cobrar via WhatsApp
+                      </a>
+                    )}
+                    <button
+                      onClick={() => { setSelectedPatient(null); navigate("/app/agenda"); }}
+                      className="flex items-center justify-center gap-2 w-full"
+                      style={{ background: "#6d4fc2", color: "#fff", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+                    >
+                      <CalendarDays className="h-4 w-4" /> Nova sessão
+                    </button>
+                    <button
+                      onClick={() => window.open(`https://wa.me/5511947388423?text=${encodeURIComponent(`Olá Michelle, preciso de supervisão para o caso do(a) paciente: ${p.full_name}`)}`, "_blank")}
+                      className="flex items-center justify-center gap-2 w-full"
+                      style={{ background: "rgba(201,168,76,0.10)", color: "#7a5e1a", border: "0.5px solid rgba(201,168,76,0.3)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+                    >
+                      <Stethoscope className="h-4 w-4" /> Pedir supervisão
+                    </button>
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-between pt-4" style={{ borderTop: "0.5px solid #ede9f8" }}>
+                    <div className="flex items-center gap-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#a090c8" }}>
+                      <Eye className="h-3.5 w-3.5" /> Visível ao supervisor
+                    </div>
+                    <Switch checked={p.shared_with_supervisor} onCheckedChange={() => toggleSharing(p)} />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
+
+      {/* New/Edit patient dialog */}
+      <Dialog open={open} onOpenChange={(v) => { if (!v) { patientGuard.guardClose(() => { if (!editing) clearDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto [&_input]:scroll-mt-24 [&_textarea]:scroll-mt-24">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{editing ? "Editar paciente" : "Novo paciente"}</DialogTitle>
+            <DialogDescription>Cadastre as informações do paciente.</DialogDescription>
+          </DialogHeader>
+          {draftRestored && !editing && (
+            <div className="rounded-lg bg-accent/20 border border-accent/30 px-3 py-2 text-sm text-muted-foreground flex items-center justify-between gap-2">
+              <span>📝 Rascunho recuperado. Continue de onde parou.</span>
+              <Button type="button" variant="ghost" size="sm" className="h-auto py-1 px-2 text-xs" onClick={() => { clearDraft(); setFormRaw(emptyForm); }}>Descartar</Button>
+            </div>
+          )}
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="full_name">Nome completo *</Label>
+              <Input id="full_name" required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="category">Categoria</Label>
+              <select
+                id="category"
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value as typeof form.category })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {PATIENT_CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefone / WhatsApp</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={form.phone_ddi}
+                    onChange={(e) => {
+                      let v = e.target.value;
+                      if (v && !v.startsWith("+")) v = "+" + v;
+                      setForm({ ...form, phone_ddi: v });
+                    }}
+                    className="w-[80px] shrink-0 text-center"
+                    placeholder="+55"
+                    maxLength={5}
+                  />
+                  <Input id="phone" className="flex-1" placeholder="11 99988-7766" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="price">Valor da sessão (R$)</Label>
+              <Input id="price" type="number" step="0.01" min="0" value={form.session_price} onChange={(e) => setForm({ ...form, session_price: e.target.value })} />
+            </div>
+
+            <div className="rounded-xl border border-border p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="has_financial_responsible" className="text-sm font-medium">Responsável financeiro é outra pessoa?</Label>
+                <Switch
+                  id="has_financial_responsible"
+                  checked={form.has_financial_responsible}
+                  onCheckedChange={(checked) => setForm({ ...form, has_financial_responsible: checked })}
+                />
+              </div>
+              {form.has_financial_responsible && (
+                <div className="space-y-3 pt-2 border-t border-border">
+                  <div className="space-y-2">
+                    <Label htmlFor="fr_name">Nome do responsável</Label>
+                    <Input id="fr_name" placeholder="Nome completo" value={form.financial_responsible_name} onChange={(e) => setForm({ ...form, financial_responsible_name: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="fr_phone">Celular / WhatsApp do responsável</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={form.financial_responsible_ddi}
+                        onChange={(e) => {
+                          let v = e.target.value;
+                          if (v && !v.startsWith("+")) v = "+" + v;
+                          setForm({ ...form, financial_responsible_ddi: v });
+                        }}
+                        className="w-[80px] shrink-0 text-center"
+                        placeholder="+55"
+                        maxLength={5}
+                      />
+                      <Input id="fr_phone" className="flex-1" placeholder="11 99988-7766" value={form.financial_responsible_phone} onChange={(e) => setForm({ ...form, financial_responsible_phone: e.target.value })} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="treatment_start_date">Início do tratamento</Label>
+                <Input id="treatment_start_date" type="date" value={form.treatment_start_date} onChange={(e) => setForm({ ...form, treatment_start_date: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="treatment_end_date">Término do tratamento</Label>
+                <Input id="treatment_end_date" type="date" value={form.treatment_end_date} onChange={(e) => setForm({ ...form, treatment_end_date: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="has_psychiatrist" className="text-sm font-medium">Faz acompanhamento psiquiátrico?</Label>
+                <Switch
+                  id="has_psychiatrist"
+                  checked={form.has_psychiatrist}
+                  onCheckedChange={(checked) => setForm({ ...form, has_psychiatrist: checked })}
+                />
+              </div>
+              {form.has_psychiatrist && (
+                <div className="space-y-3 pt-2 border-t border-border">
+                  <div className="space-y-2">
+                    <Label htmlFor="psychiatrist_name">Nome do médico</Label>
+                    <Input id="psychiatrist_name" placeholder="Nome do psiquiatra" value={form.psychiatrist_name} onChange={(e) => setForm({ ...form, psychiatrist_name: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="psychiatrist_phone">WhatsApp do médico</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={form.psychiatrist_phone_ddi}
+                        onChange={(e) => {
+                          let v = e.target.value;
+                          if (v && !v.startsWith("+")) v = "+" + v;
+                          setForm({ ...form, psychiatrist_phone_ddi: v });
+                        }}
+                        className="w-[80px] shrink-0 text-center"
+                        placeholder="+55"
+                        maxLength={5}
+                      />
+                      <Input id="psychiatrist_phone" className="flex-1" placeholder="11 99988-7766" value={form.psychiatrist_phone} onChange={(e) => setForm({ ...form, psychiatrist_phone: e.target.value })} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="medications">Medicamentos em uso</Label>
+              <Textarea id="medications" rows={3} className="min-h-[80px]" placeholder="Liste os medicamentos que o paciente toma atualmente..." value={form.medications} onChange={(e) => setForm({ ...form, medications: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="chief_complaint">Queixa Principal</Label>
+              <Textarea id="chief_complaint" rows={3} className="min-h-[80px]" placeholder="Descreva a queixa principal do paciente..." value={form.chief_complaint} onChange={(e) => setForm({ ...form, chief_complaint: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="treatment_plan">Plano de Tratamento</Label>
+              <Textarea id="treatment_plan" rows={4} className="min-h-[100px]" placeholder="Objetivos terapêuticos, intervenções planejadas..." value={form.treatment_plan} onChange={(e) => setForm({ ...form, treatment_plan: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="anamnesis">Histórico / Anamnese</Label>
+              <Textarea id="anamnesis" rows={5} className="min-h-[120px]" placeholder="Histórico pessoal, familiar, médico..." value={form.anamnesis} onChange={(e) => setForm({ ...form, anamnesis: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Observações</Label>
+              <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+            </div>
+            <DialogFooter className="gap-2">
+              <Button type="button" variant="outline" className="min-h-[44px]" onClick={() => patientGuard.guardClose(() => { if (!editing) clearDraft(); setOpen(false); }, () => setOpen(false))}>Cancelar</Button>
+              <Button type="submit" variant="accent" className="min-h-[44px]" disabled={saving}>
+                {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                {editing ? "Salvar" : "Cadastrar"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!tccPatient} onOpenChange={(o) => !o && setTccPatient(null)}>
         <DialogContent className={dlgCls("tcc")}>
           <FullBtn k="tcc" />

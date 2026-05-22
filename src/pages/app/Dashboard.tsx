@@ -1174,7 +1174,8 @@ const Dashboard = () => {
                     {urgent.length > 0 && (
                       <>
                         <SectionLabel text="Atenção imediata" count={urgent.length} />
-                        <ul className="[className="divide-y" style={{ borderColor: "#f0ebff" }}>li]:border-b [className="divide-y" style={{ borderColor: "#f0ebff" }}>li]:border-[#f0ebff]">
+                        <ul className="[&>li]:border-b [&>li]:border-[#f0ebff]">
+
                           {urgent.map(m => <Card key={m.id} m={m} urgentCard />)}
                         </ul>
                       </>
@@ -1182,7 +1183,7 @@ const Dashboard = () => {
                     {stable.length > 0 && (
                       <>
                         <SectionLabel text="Estáveis" count={stable.length} />
-                        <ul className="[className="divide-y" style={{ borderColor: "#f0ebff" }}>li]:border-b [className="divide-y" style={{ borderColor: "#f0ebff" }}>li]:border-[#f0ebff]">
+                        <ul className="[&>li]:border-b [&>li]:border-[#f0ebff]">
                           {stable.map(m => <Card key={m.id} m={m} urgentCard={false} />)}
                         </ul>
                       </>
