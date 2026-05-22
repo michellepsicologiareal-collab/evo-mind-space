@@ -950,103 +950,104 @@ const Dashboard = () => {
             const pct = Math.max(0, Math.min(100, (m.mood_score / 10) * 100));
             return (
               <li
-                className="relative overflow-hidden rounded-[13px] p-4 transition-shadow hover:shadow-card"
+                className="group relative flex items-center gap-3 px-3 transition-colors"
                 style={{
-                  background: urgentCard ? "#fdf8f0" : "#ffffff",
-                  border: urgentCard ? "0.5px solid rgba(201,168,76,0.35)" : "0.5px solid #ede9f8",
+                  height: "52px",
+                  background: urgentCard ? "#fdf8f0" : "transparent",
+                  borderLeft: urgentCard ? "2px solid #854f0b" : "2px solid transparent",
                 }}
+                onMouseEnter={(e) => { if (!urgentCard) e.currentTarget.style.background = "#f7f4ff"; }}
+                onMouseLeave={(e) => { if (!urgentCard) e.currentTarget.style.background = "transparent"; }}
               >
                 <div
-                  className="absolute top-0 left-0 right-0"
+                  className="flex shrink-0 items-center justify-center rounded-full"
                   style={{
-                    height: "2.5px",
-                    background: urgentCard
-                      ? "linear-gradient(90deg, #854f0b, #c9a84c)"
-                      : "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)",
+                    width: 32,
+                    height: 32,
+                    background: urgentCard ? "rgba(201,168,76,0.12)" : "rgba(109,79,194,0.08)",
+                    color: urgentCard ? "#7a5e1a" : "#6d4fc2",
+                    fontFamily: "Syne, sans-serif",
+                    fontWeight: 700,
+                    fontSize: 12,
                   }}
-                />
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-                    style={{
-                      background: urgentCard ? "rgba(201,168,76,0.12)" : "rgba(109,79,194,0.08)",
-                      color: urgentCard ? "#7a5e1a" : "#6d4fc2",
-                      fontFamily: "Syne, sans-serif",
-                      fontWeight: 700,
-                      fontSize: 13,
-                    }}
-                  >
-                    {m.patient_initials}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: "13.5px", color: "#1a1030" }} className="truncate">
-                        {m.patient_name}
-                      </p>
-                      <span
-                        className="uppercase"
-                        style={{
-                          fontFamily: "Syne, sans-serif",
-                          fontSize: "9px",
-                          fontWeight: 600,
-                          padding: "3px 8px",
-                          borderRadius: "40px",
-                          background: chip.bg,
-                          color: chip.color,
-                          border: `0.5px solid ${chip.border}`,
-                          letterSpacing: "0.04em",
-                        }}
-                      >
-                        {chip.label}
-                      </span>
-                    </div>
-                    {m.note && (
-                      <p className="mt-1 truncate" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "11.5px", color: "#6a5880", fontStyle: "italic" }}>
-                        {m.note}
-                      </p>
-                    )}
-                    <div className="mt-1 flex items-center gap-1.5" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "10.5px", color: "#a090c8" }}>
-                      <Clock className="h-3 w-3" style={{ color: "#a090c8" }} />
-                      <span>{format(new Date(m.recorded_at), "dd/MM/yyyy · HH:mm", { locale: ptBR })}</span>
-                    </div>
-                  </div>
-
-                  {/* Score block */}
-                  <div className="shrink-0 text-right">
-                    <div className="flex items-baseline justify-end gap-1">
-                      <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: "17px", color: valueColor }}>
-                        {m.mood_score.toString().replace(".", ",")}
-                      </span>
-                      <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "10px", color: "#c0b0e0" }}>/10</span>
-                    </div>
-                    <div className="mt-1.5 ml-auto" style={{ width: "56px", height: "3px", background: "#f0ebff", borderRadius: "40px", overflow: "hidden" }}>
-                      <div style={{ width: `${pct}%`, height: "100%", background: fillColor, borderRadius: "40px" }} />
-                    </div>
-                    {delta !== null && (
-                      <div className="mt-1 flex items-center justify-end gap-1" style={{ fontSize: "10.5px", fontWeight: 500, color: delta > 0 ? "#6d4fc2" : delta < 0 ? "#854f0b" : "#a090c8" }}>
-                        {delta > 0 ? <TrendingUp className="h-3 w-3" /> : delta < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-                        <span>
-                          {delta > 0 ? `+${delta}` : delta < 0 ? `${delta}` : "sem variação"}
-                          {delta !== 0 && " vs anterior"}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <button
-                    title="Excluir registro"
-                    onClick={async () => {
-                      await supabase.from("patient_progress").delete().eq("id", m.id);
-                      setPatientMoods(prev => prev.filter(x => x.id !== m.id));
-                    }}
-                    className="shrink-0 flex items-center justify-center transition-colors"
-                    style={{ width: "26px", height: "26px", borderRadius: "7px", color: "#c0b0e0", background: "transparent" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = "#f7f4ff"; e.currentTarget.style.color = "#6d4fc2"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#c0b0e0"; }}
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
+                >
+                  {m.patient_initials}
                 </div>
+
+                <div className="flex items-center gap-2 min-w-0" style={{ flex: 2, minWidth: 200 }}>
+                  <p
+                    className="truncate"
+                    style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: urgentCard ? "#633806" : "#1a1030" }}
+                  >
+                    {m.patient_name}
+                  </p>
+                  <span
+                    className="uppercase shrink-0"
+                    style={{
+                      fontFamily: "Syne, sans-serif",
+                      fontSize: "9px",
+                      fontWeight: 600,
+                      padding: "3px 8px",
+                      borderRadius: "40px",
+                      background: chip.bg,
+                      color: chip.color,
+                      border: `0.5px solid ${chip.border}`,
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {chip.label}
+                  </span>
+                </div>
+
+                <div className="min-w-0 hidden md:block" style={{ flex: 2 }}>
+                  {m.note && (
+                    <p
+                      className="truncate"
+                      style={{ fontFamily: "Instrument Sans, sans-serif", fontStyle: "italic", fontSize: 12, color: "#6a5880" }}
+                    >
+                      {m.note}
+                    </p>
+                  )}
+                </div>
+
+                <div className="hidden lg:flex items-center gap-1.5 shrink-0" style={{ flex: 1, fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "#a090c8" }}>
+                  <Clock style={{ width: 12, height: 12, color: "#a090c8" }} />
+                  <span className="truncate">{format(new Date(m.recorded_at), "dd/MM · HH:mm", { locale: ptBR })}</span>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 justify-end" style={{ width: 140 }}>
+                  <div style={{ width: 48, height: 3, background: "#f0ebff", borderRadius: 40, overflow: "hidden" }}>
+                    <div style={{ width: `${pct}%`, height: "100%", background: fillColor, borderRadius: 40 }} />
+                  </div>
+                  <div className="flex items-baseline gap-0.5">
+                    <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: valueColor }}>
+                      {m.mood_score.toString().replace(".", ",")}
+                    </span>
+                    <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 10, color: "#c0b0e0" }}>/10</span>
+                  </div>
+                  {delta !== null && (
+                    <span
+                      className="flex items-center"
+                      style={{ fontSize: "10.5px", color: delta > 0 ? "#6d4fc2" : delta < 0 ? "#854f0b" : "#a090c8" }}
+                    >
+                      {delta > 0 ? <TrendingUp className="h-3 w-3" /> : delta < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  title="Excluir registro"
+                  onClick={async () => {
+                    await supabase.from("patient_progress").delete().eq("id", m.id);
+                    setPatientMoods(prev => prev.filter(x => x.id !== m.id));
+                  }}
+                  className="shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                  style={{ width: 26, height: 26, borderRadius: 6, color: "#c0b0e0", background: "transparent" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#6d4fc2"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "#c0b0e0"; }}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
               </li>
             );
           };
