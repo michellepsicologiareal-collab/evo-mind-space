@@ -485,99 +485,95 @@ const Patients = () => {
           )}
         </div>
       ) : (
-        <div>
-          {/* Column header */}
-          <div
-            className="grid items-center px-5 py-2 uppercase"
-            style={{
-              gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 80px",
-              gap: 16,
-              borderBottom: "0.5px solid #ede9f8",
-              fontFamily: "Syne, sans-serif",
-              fontSize: 9,
-              fontWeight: 600,
-              letterSpacing: "0.12em",
-              color: "#a090c8",
-            }}
-          >
-            <span>Paciente</span>
-            <span>Tipo</span>
-            <span>Sessões</span>
-            <span>Humor</span>
-            <span>Valor</span>
-            <span className="text-right">Ações</span>
-          </div>
-          <ul>
-            {filtered.map((p) => {
-              const isAlert = p.notes ? /(crise|resist|abandon|suic|término)/i.test(p.notes) : false;
-              const cHist = counts.history[p.id] || 0;
-              const cMood = counts.mood[p.id] || 0;
-              const type = PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual";
-              const lastSession = lastDates.history[p.id];
-              const url = buildWhatsAppUrl(p);
-              return (
-                <li
-                  key={p.id}
-                  onClick={() => setSelectedPatient(p)}
-                  className="group grid items-center cursor-pointer transition-colors"
-                  style={{
-                    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 80px",
-                    gap: 16,
-                    height: 48,
-                    padding: "0 20px",
-                    borderBottom: "0.5px solid #f0ebff",
-                    background: isAlert ? "#fdf8f0" : "transparent",
-                    borderLeft: isAlert ? "2px solid #854f0b" : "2px solid transparent",
-                  }}
-                  onMouseEnter={(e) => { if (!isAlert) e.currentTarget.style.background = "#f7f4ff"; }}
-                  onMouseLeave={(e) => { if (!isAlert) e.currentTarget.style.background = "transparent"; }}
-                >
-                  <div className="flex items-center min-w-0">
-                    <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 28, height: 28, background: "rgba(109,79,194,0.08)", color: "#6d4fc2", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 11 }}>
-                      {p.full_name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="truncate" style={{ marginLeft: 10, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 13, color: isAlert ? "#633806" : "#1a1030" }}>
-                      {p.full_name}
-                    </span>
-                    {p.is_active && (
-                      <span style={{ marginLeft: 8, width: 6, height: 6, borderRadius: "50%", background: "#3b6d11", flexShrink: 0 }} />
-                    )}
+        <ul className="space-y-3">
+          {filtered.map((p) => {
+            const isAlert = p.notes ? /(crise|resist|abandon|suic|término)/i.test(p.notes) : false;
+            const cHist = counts.history[p.id] || 0;
+            const cMood = counts.mood[p.id] || 0;
+            const hasAnam = !!anamneseFilled[p.id];
+            const type = PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual";
+            const url = buildWhatsAppUrl(p);
+            return (
+              <li
+                key={p.id}
+                onClick={() => setSelectedPatient(p)}
+                className="group relative cursor-pointer transition-all overflow-hidden"
+                style={{
+                  background: isAlert ? "#fdf8f0" : "#ffffff",
+                  border: "0.5px solid #ede9f8",
+                  borderLeft: isAlert ? "2px solid #854f0b" : "0.5px solid #ede9f8",
+                  borderRadius: 14,
+                  boxShadow: "0 1px 2px rgba(109,79,194,0.04)",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(109,79,194,0.10)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 2px rgba(109,79,194,0.04)"; }}
+              >
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
+                <div className="flex items-center gap-4 px-5" style={{ paddingTop: 18, paddingBottom: 16 }}>
+                  <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(109,79,194,0.08)", color: "#6d4fc2", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
+                    {p.full_name.charAt(0).toUpperCase()}
                   </div>
-                  <div>
-                    <span className="uppercase inline-block" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "#7a5e1a", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 8px", letterSpacing: "0.04em" }}>
+
+                  <div className="min-w-0" style={{ flex: "0 0 200px" }}>
+                    <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: isAlert ? "#633806" : "#1a1030" }}>
+                      {p.full_name}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="inline-flex items-center gap-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: p.is_active ? "#3b6d11" : "#a090c8" }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.is_active ? "#3b6d11" : "#c0b0e0" }} />
+                        {p.is_active ? "Ativo" : "Inativo"}
+                      </span>
+                    </div>
+                    <span className="uppercase inline-block mt-2" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "#7a5e1a", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 9px", letterSpacing: "0.06em" }}>
                       {type}
                     </span>
                   </div>
-                  <div className="flex flex-col leading-tight">
-                    <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12, color: "#1a1030" }}>{cHist}</span>
-                    {lastSession && (
-                      <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "#a090c8" }}>
-                        há {formatDistanceToNowStrict(new Date(lastSession), { locale: ptBR })}
+
+                  <div className="min-w-0 hidden md:flex items-center gap-2" style={{ flex: "0 0 140px", fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#6a5880" }}>
+                    {p.phone && (<><Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "#c0b0e0" }} /><span className="truncate">{p.phone}</span></>)}
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setMoodPatient(p); }}
+                      className="inline-flex items-center gap-1.5 transition-colors"
+                      style={{ background: "#f7f4ff", border: "0.5px solid #ede9f8", color: "#3d2b8a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "#ede9f8"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "#f7f4ff"; }}
+                    >
+                      <Smile className="h-3 w-3" /> Humor
+                      {cMood > 0 && <span style={{ background: "rgba(109,79,194,0.18)", borderRadius: 40, padding: "0 6px", fontSize: 9 }}>{cMood}</span>}
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setHistoryPatient(p); }}
+                      className="inline-flex items-center gap-1.5 transition-colors"
+                      style={{ background: "#f7f4ff", border: "0.5px solid #ede9f8", color: "#3d2b8a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "#ede9f8"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "#f7f4ff"; }}
+                    >
+                      <CalendarDays className="h-3 w-3" /> Histórico
+                      {cHist > 0 && <span style={{ background: "rgba(109,79,194,0.18)", borderRadius: 40, padding: "0 6px", fontSize: 9 }}>{cHist}</span>}
+                    </button>
+                    {p.category === "crianca" && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }}
+                        className="inline-flex items-center gap-1.5 transition-colors"
+                        style={hasAnam
+                          ? { background: "#f7f4ff", border: "0.5px solid #ede9f8", color: "#3d2b8a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
+                          : { background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "#7a5e1a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                      >
+                        <Baby className="h-3 w-3" /> {hasAnam ? "Anamnese" : "Sem anamnese"}
+                      </button>
+                    )}
+                    {p.session_price != null && (
+                      <span className="ml-auto flex items-baseline gap-1" style={{ fontFamily: "Syne, sans-serif" }}>
+                        <span style={{ fontWeight: 700, fontSize: 13, color: "#1a1030" }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
+                        <span style={{ fontSize: 10, color: "#a090c8", fontFamily: "Instrument Sans, sans-serif" }}>/sessão</span>
                       </span>
                     )}
                   </div>
-                  <div>
-                    {cMood > 0 ? (
-                      <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "#3d2b8a", background: "rgba(109,79,194,0.08)", borderRadius: 40, padding: "2px 8px" }}>
-                        {cMood}
-                      </span>
-                    ) : (
-                      <span style={{ color: "#d0c8e8", fontFamily: "Syne, sans-serif", fontSize: 12 }}>—</span>
-                    )}
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    {p.session_price != null ? (
-                      <>
-                        <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12, color: "#1a1030" }}>
-                          R$ {Number(p.session_price).toFixed(2).replace(".", ",")}
-                        </span>
-                        <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "#a090c8" }}>/sessão</span>
-                      </>
-                    ) : (
-                      <span style={{ color: "#d0c8e8", fontFamily: "Syne, sans-serif", fontSize: 12 }}>—</span>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {url && (
                       <a
                         href={url}
@@ -586,9 +582,9 @@ const Patients = () => {
                         onClick={(e) => e.stopPropagation()}
                         title="Cobrar via WhatsApp"
                         className="flex items-center justify-center transition-colors"
-                        style={{ width: 26, height: 26, borderRadius: 6, color: "#c0b0e0" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "#f0ebff"; e.currentTarget.style.color = "#6d4fc2"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#c0b0e0"; }}
+                        style={{ width: 32, height: 32, borderRadius: 8, color: "#6d4fc2", background: "#f7f4ff", border: "0.5px solid #ede9f8" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "#ede9f8"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "#f7f4ff"; }}
                       >
                         <MessageCircle className="h-3.5 w-3.5" />
                       </a>
@@ -597,9 +593,9 @@ const Patients = () => {
                       onClick={(e) => { e.stopPropagation(); setRecordsPatient(p); }}
                       title="Registros"
                       className="flex items-center justify-center transition-colors"
-                      style={{ width: 26, height: 26, borderRadius: 6, color: "#c0b0e0", background: "transparent" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "#f0ebff"; e.currentTarget.style.color = "#6d4fc2"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#c0b0e0"; }}
+                      style={{ width: 32, height: 32, borderRadius: 8, color: "#6d4fc2", background: "#f7f4ff", border: "0.5px solid #ede9f8" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "#ede9f8"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "#f7f4ff"; }}
                     >
                       <FileText className="h-3.5 w-3.5" />
                     </button>
@@ -608,9 +604,9 @@ const Patients = () => {
                         <button
                           onClick={(e) => e.stopPropagation()}
                           className="flex items-center justify-center transition-colors"
-                          style={{ width: 26, height: 26, borderRadius: 6, color: "#c0b0e0", background: "transparent" }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "#f0ebff"; e.currentTarget.style.color = "#6d4fc2"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#c0b0e0"; }}
+                          style={{ width: 32, height: 32, borderRadius: 8, color: "#6d4fc2", background: "#f7f4ff", border: "0.5px solid #ede9f8" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "#ede9f8"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "#f7f4ff"; }}
                         >
                           <MoreHorizontal className="h-3.5 w-3.5" />
                         </button>
@@ -618,15 +614,17 @@ const Patients = () => {
                       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => toggleActive(p)}>{p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setTccPatient(p)}><Brain className="h-4 w-4" /> Registros TCC</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><Stethoscope className="h-4 w-4" /> Formulação de caso</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDelete(p)} className="text-destructive"><Trash2 className="h-4 w-4" /> Excluir</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
 
       {/* Side panel */}
