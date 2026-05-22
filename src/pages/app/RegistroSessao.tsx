@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, History } from "lucide-react";
+import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, History, Minimize2, Maximize2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -112,6 +112,22 @@ const RegistroSessao = () => {
   const [filterModality, setFilterModality] = useState("all");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [expandedPatients, setExpandedPatients] = useState<Record<string, boolean>>({});
+
+  // Compact mode: collapses long sections to just headers; persists in localStorage
+  const [compactMode, setCompactMode] = useState<boolean>(() => {
+    try { return localStorage.getItem("registro_sessao_compact") === "1"; } catch { return false; }
+  });
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    try { localStorage.setItem("registro_sessao_compact", compactMode ? "1" : "0"); } catch {}
+  }, [compactMode]);
+  const toggleSection = useCallback((key: string) => {
+    setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+  const isOpen = useCallback(
+    (key: string) => !compactMode || expandedSections[key] === true,
+    [compactMode, expandedSections],
+  );
 
   // --- Draft auto-save ---
   // Keep a ref with the latest form so event listeners always read fresh data
@@ -423,27 +439,54 @@ const RegistroSessao = () => {
     icon: Icon,
     title,
     subtitle,
+    sectionKey,
   }: {
     n?: number;
     icon: React.ComponentType<{ className?: string }>;
     title: string;
     subtitle?: string;
-  }) => (
-    <div className="flex items-start gap-3 mb-4">
-      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 text-accent ring-1 ring-accent/20">
-        <Icon className="h-4 w-4" />
-        {n != null && (
-          <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground shadow-sm">
-            {n}
-          </span>
+    sectionKey?: string;
+  }) => {
+    const collapsible = compactMode && !!sectionKey;
+    const open = sectionKey ? isOpen(sectionKey) : true;
+    const content = (
+      <div className="flex items-start gap-3 w-full">
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 text-accent ring-1 ring-accent/20">
+          <Icon className="h-4 w-4" />
+          {n != null && (
+            <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground shadow-sm">
+              {n}
+            </span>
+          )}
+        </div>
+        <div className="min-w-0 pt-0.5 flex-1 text-left">
+          <h2 className="font-display text-base font-semibold text-foreground leading-tight">{title}</h2>
+          {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+        </div>
+        {collapsible && (
+          <ChevronDown
+            className={cn(
+              "h-5 w-5 text-muted-foreground transition-transform shrink-0 mt-1",
+              open && "rotate-180",
+            )}
+          />
         )}
       </div>
-      <div className="min-w-0 pt-0.5">
-        <h2 className="font-display text-base font-semibold text-foreground leading-tight">{title}</h2>
-        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
-      </div>
-    </div>
-  );
+    );
+    if (collapsible && sectionKey) {
+      return (
+        <button
+          type="button"
+          onClick={() => toggleSection(sectionKey)}
+          className={cn("w-full mb-0 rounded-xl -m-1 p-1 hover:bg-muted/30 transition-colors", open && "mb-4")}
+          aria-expanded={open}
+        >
+          {content}
+        </button>
+      );
+    }
+    return <div className="mb-4">{content}</div>;
+  };
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
@@ -463,12 +506,29 @@ const RegistroSessao = () => {
               {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
             </p>
           </div>
-          {lastSavedAt && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-sage/30 bg-sage/10 px-2.5 py-1 text-[11px] font-medium text-sage shrink-0">
-              <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
-              Salvo {format(lastSavedAt, "HH:mm:ss")}
-            </span>
-          )}
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setCompactMode((v) => !v)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
+                compactMode
+                  ? "border-accent/40 bg-accent/10 text-accent hover:bg-accent/15"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-accent/30",
+              )}
+              aria-pressed={compactMode}
+              title={compactMode ? "Sair do modo compacto" : "Ativar modo compacto"}
+            >
+              {compactMode ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
+              {compactMode ? "Modo expandido" : "Modo compacto"}
+            </button>
+            {lastSavedAt && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-sage/30 bg-sage/10 px-2.5 py-1 text-[11px] font-medium text-sage">
+                <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
+                Salvo {format(lastSavedAt, "HH:mm:ss")}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -621,153 +681,168 @@ const RegistroSessao = () => {
       </section>
 
       {/* ── Seção 2: Estado do Paciente ── */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm hover:shadow-md hover:border-accent/20 transition-all">
-        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" />
-        <div className="space-y-2">
-          <Label>Queixa principal / Tema trazido</Label>
-          <Textarea
-            ref={chiefComplaintRef}
-            rows={3}
-            placeholder="Descreva a queixa ou tema central apresentado pelo paciente nesta sessão..."
-            value={form.chief_complaint}
-            onChange={(e) =>
-              setForm({ ...form, chief_complaint: e.target.value })
-            }
-          />
-        </div>
+      <section className={cn(
+        "rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all",
+        compactMode && !isOpen("estado") ? "p-3" : "p-5 space-y-4",
+      )}>
+        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" sectionKey="estado" />
+        {isOpen("estado") && (
+          <div className="space-y-2">
+            <Label>Queixa principal / Tema trazido</Label>
+            <Textarea
+              ref={chiefComplaintRef}
+              rows={3}
+              placeholder="Descreva a queixa ou tema central apresentado pelo paciente nesta sessão..."
+              value={form.chief_complaint}
+              onChange={(e) =>
+                setForm({ ...form, chief_complaint: e.target.value })
+              }
+            />
+          </div>
+        )}
       </section>
 
       {/* ── Seção 3: Conteúdo da Sessão ── */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm hover:shadow-md hover:border-accent/20 transition-all">
-        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" />
+      <section className={cn(
+        "rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all",
+        compactMode && !isOpen("conteudo") ? "p-3" : "p-5 space-y-4",
+      )}>
+        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" sectionKey="conteudo" />
+        {isOpen("conteudo") && (
+          <>
+            <div className="space-y-2">
+              <Label>Temas abordados</Label>
+              <div className="flex flex-wrap gap-2">
+                {THEME_CHIPS.map((theme) => {
+                  const selected = form.themes.includes(theme);
+                  return (
+                    <button
+                      key={theme}
+                      type="button"
+                      onClick={() => toggleTheme(theme)}
+                      className={cn(
+                        "px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 hover:-translate-y-0.5",
+                        selected
+                          ? "bg-gradient-to-br from-accent to-accent/85 text-accent-foreground border-accent shadow-sm"
+                          : "bg-muted/40 text-muted-foreground border-transparent hover:border-accent/30 hover:bg-card hover:text-foreground"
+                      )}
+                    >
+                      {theme}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
+            <div className="space-y-2">
+              <Label>Observações clínicas</Label>
+              <Textarea
+                rows={4}
+                placeholder="Registre observações relevantes sobre o conteúdo da sessão..."
+                value={form.clinical_observations}
+                onChange={(e) =>
+                  setForm({ ...form, clinical_observations: e.target.value })
+                }
+              />
+            </div>
 
-        <div className="space-y-2">
-          <Label>Temas abordados</Label>
-          <div className="flex flex-wrap gap-2">
-            {THEME_CHIPS.map((theme) => {
-              const selected = form.themes.includes(theme);
-              return (
-                <button
-                  key={theme}
-                  type="button"
-                  onClick={() => toggleTheme(theme)}
-                  className={cn(
-                    "px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 hover:-translate-y-0.5",
-                    selected
-                      ? "bg-gradient-to-br from-accent to-accent/85 text-accent-foreground border-accent shadow-sm"
-                      : "bg-muted/40 text-muted-foreground border-transparent hover:border-accent/30 hover:bg-card hover:text-foreground"
-                  )}
-                >
-                  {theme}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Observações clínicas</Label>
-          <Textarea
-            rows={4}
-            placeholder="Registre observações relevantes sobre o conteúdo da sessão..."
-            value={form.clinical_observations}
-            onChange={(e) =>
-              setForm({ ...form, clinical_observations: e.target.value })
-            }
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Combinados para a próxima sessão</Label>
-          <Textarea
-            rows={2}
-            placeholder="Tarefas, exercícios ou combinados com o paciente..."
-            value={form.next_session_plan}
-            onChange={(e) =>
-              setForm({ ...form, next_session_plan: e.target.value })
-            }
-          />
-        </div>
+            <div className="space-y-2">
+              <Label>Combinados para a próxima sessão</Label>
+              <Textarea
+                rows={2}
+                placeholder="Tarefas, exercícios ou combinados com o paciente..."
+                value={form.next_session_plan}
+                onChange={(e) =>
+                  setForm({ ...form, next_session_plan: e.target.value })
+                }
+              />
+            </div>
+          </>
+        )}
       </section>
 
       {/* ── Seção 4: Avaliação do Terapeuta ── */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm hover:shadow-md hover:border-accent/20 transition-all">
-        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" />
+      <section className={cn(
+        "rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all",
+        compactMode && !isOpen("avaliacao") ? "p-3" : "p-5 space-y-4",
+      )}>
+        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" sectionKey="avaliacao" />
+        {isOpen("avaliacao") && (
+          <>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Engajamento do paciente</Label>
+                <span className="text-xs font-display font-semibold text-accent">
+                  {ENGAGEMENT_LABELS[form.engagement - 1]}
+                </span>
+              </div>
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((level) => {
+                  const active = form.engagement >= level;
+                  const isCurrent = form.engagement === level;
+                  return (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => setForm({ ...form, engagement: level })}
+                      className={cn(
+                        "flex-1 h-10 rounded-xl text-sm font-semibold transition-all duration-200 relative overflow-hidden",
+                        active
+                          ? "bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-sm"
+                          : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+                        isCurrent && "ring-2 ring-accent/40 ring-offset-2 ring-offset-card scale-[1.04]",
+                      )}
+                      aria-label={`Engajamento nível ${level}`}
+                    >
+                      {level}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label>Engajamento do paciente</Label>
-            <span className="text-xs font-display font-semibold text-accent">
-              {ENGAGEMENT_LABELS[form.engagement - 1]}
-            </span>
-          </div>
-          <div className="flex gap-1.5">
-            {[1, 2, 3, 4, 5].map((level) => {
-              const active = form.engagement >= level;
-              const isCurrent = form.engagement === level;
-              return (
-                <button
-                  key={level}
-                  type="button"
-                  onClick={() => setForm({ ...form, engagement: level })}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                Indicador de risco
+              </Label>
+              <Select
+                value={form.risk_indicator}
+                onValueChange={(v) => setForm({ ...form, risk_indicator: v })}
+              >
+                <SelectTrigger
                   className={cn(
-                    "flex-1 h-10 rounded-xl text-sm font-semibold transition-all duration-200 relative overflow-hidden",
-                    active
-                      ? "bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-sm"
-                      : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
-                    isCurrent && "ring-2 ring-accent/40 ring-offset-2 ring-offset-card scale-[1.04]",
+                    form.risk_indicator === "high" &&
+                      "border-destructive text-destructive",
+                    form.risk_indicator === "moderate" &&
+                      "border-amber-500 text-amber-700"
                   )}
-                  aria-label={`Engajamento nível ${level}`}
                 >
-                  {level}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RISK_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            Indicador de risco
-          </Label>
-          <Select
-            value={form.risk_indicator}
-            onValueChange={(v) => setForm({ ...form, risk_indicator: v })}
-          >
-            <SelectTrigger
-              className={cn(
-                form.risk_indicator === "high" &&
-                  "border-destructive text-destructive",
-                form.risk_indicator === "moderate" &&
-                  "border-amber-500 text-amber-700"
-              )}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {RISK_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Notas privadas do terapeuta</Label>
-          <Textarea
-            rows={3}
-            placeholder="Anotações pessoais que não fazem parte do prontuário formal..."
-            value={form.private_notes}
-            onChange={(e) =>
-              setForm({ ...form, private_notes: e.target.value })
-            }
-          />
-        </div>
+            <div className="space-y-2">
+              <Label>Notas privadas do terapeuta</Label>
+              <Textarea
+                rows={3}
+                placeholder="Anotações pessoais que não fazem parte do prontuário formal..."
+                value={form.private_notes}
+                onChange={(e) =>
+                  setForm({ ...form, private_notes: e.target.value })
+                }
+              />
+            </div>
+          </>
+        )}
       </section>
 
       {/* ── Resumo da sessão (revisão rápida) ── */}
