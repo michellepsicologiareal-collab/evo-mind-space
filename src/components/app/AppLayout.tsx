@@ -110,13 +110,18 @@ export const AppLayout = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
+      {/* Linha dourada absoluta no topo da tela */}
+      <div className="fixed top-0 inset-x-0 z-50 gold-bar pointer-events-none" />
+
       {/* ── Desktop sidebar (fixed) ── */}
-      <aside className="hidden md:flex md:w-[220px] fixed inset-y-0 left-0 z-30 bg-card border-r border-[hsl(var(--sidebar-border))] flex-col">
-        <div className="p-6 flex items-center justify-between border-b border-[hsl(var(--sidebar-border))]">
+      <aside className="hidden md:flex md:w-[220px] fixed inset-y-0 left-0 z-30 bg-[#faf8ff] border-r border-[#ede9f8] flex-col">
+        <div className="p-6 flex items-center justify-between border-b border-[#ede9f8]">
           <Link to="/app" className="flex items-center gap-2">
             <img src={logoSrc} alt="Psicologia Real" className="h-9 w-9 rounded-full object-cover" />
-            <span className="font-display text-xl font-semibold">
-              Psi <span className="font-extrabold text-accent">Real</span>
+            <span className="font-display text-xl font-bold tracking-tight flex items-center gap-1.5">
+              <span className="text-[#1a1030]">Psi</span>
+              <span className="text-[#6d4fc2]">Real</span>
+              <span className="inline-block h-2 w-2 rounded-full bg-[#c9a84c]" aria-hidden />
             </span>
           </Link>
           <NotificationBell />
@@ -136,7 +141,7 @@ export const AppLayout = () => {
               if (items.length === 0) return null;
               return (
                 <div key={sec.label} className="space-y-1">
-                  <div className="px-4 pt-3 pb-1 text-[10px] font-medium tracking-widest" style={{ color: "#C4A8A4" }}>
+                  <div className="px-4 pt-4 pb-1.5 font-display font-semibold text-[9px] uppercase text-[#a090c8]" style={{ letterSpacing: "0.14em" }}>
                     {sec.label}
                   </div>
                   {items.map((item) => renderNavLink(item))}
