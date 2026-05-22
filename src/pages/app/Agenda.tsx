@@ -6,7 +6,7 @@ import {
   Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon,
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
-  Video, MapPin,
+  Video, MapPin, CalendarDays, CalendarRange, CalendarCheck,
 } from "lucide-react";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
@@ -1215,9 +1215,9 @@ const Agenda = () => {
 
           <Tabs value={viewTab} onValueChange={setViewTab}>
             <TabsList className="w-full sm:w-auto bg-transparent gap-1 p-0">
-              <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none">📅 Mês</TabsTrigger>
-              <TabsTrigger value="week" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none">📋 Semana</TabsTrigger>
-              <TabsTrigger value="day" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none">📌 Dia</TabsTrigger>
+              <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarDays className="h-3.5 w-3.5 mr-1.5 inline" /> Mês</TabsTrigger>
+              <TabsTrigger value="week" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarRange className="h-3.5 w-3.5 mr-1.5 inline" /> Semana</TabsTrigger>
+              <TabsTrigger value="day" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarCheck className="h-3.5 w-3.5 mr-1.5 inline" /> Dia</TabsTrigger>
             </TabsList>
 
             {/* ── MONTH VIEW ── */}
