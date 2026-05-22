@@ -105,18 +105,19 @@ const statusLabel: Record<Status, string> = {
   no_show: "Falta", rescheduled: "Remarcada", cancelled: "Cancelada",
 };
 const statusClass: Record<Status, string> = {
-  scheduled: "bg-secondary text-secondary-foreground",
-  confirmed: "bg-emerald-100 text-emerald-700",
-  completed: "bg-lilac text-lilac-foreground",
-  no_show: "bg-destructive/15 text-destructive",
-  rescheduled: "bg-sand text-sand-foreground",
-  cancelled: "bg-muted text-muted-foreground line-through",
+  scheduled: "bg-[#f7f4ff] text-[#6d4fc2] border-[#ede9f8]",
+  confirmed: "bg-[rgba(109,79,194,0.08)] text-[#3d2b8a] border-[rgba(109,79,194,0.2)]",
+  completed: "bg-[rgba(109,79,194,0.10)] text-[#3d2b8a] border-[rgba(109,79,194,0.25)]",
+  no_show: "bg-destructive/15 text-destructive border-destructive/30",
+  rescheduled: "bg-sand text-sand-foreground border-sand",
+  cancelled: "bg-muted text-muted-foreground border-muted line-through",
 };
 const paymentStatusLabel: Record<PaymentStatus, string> = { pending: "Pendente", paid: "Pago" };
 const paymentStatusClass: Record<PaymentStatus, string> = {
-  pending: "bg-accent/15 text-accent border-accent/30",
-  paid: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  pending: "bg-[rgba(201,168,76,0.10)] text-[#7a5e1a] border-[rgba(201,168,76,0.3)]",
+  paid: "bg-[rgba(109,79,194,0.10)] text-[#3d2b8a] border-[rgba(109,79,194,0.25)]",
 };
+const PILL_BASE = "inline-flex items-center text-[11px] font-display font-semibold px-2.5 py-0.5 rounded-[40px] border";
 
 const WEEKDAY_NAMES = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
@@ -877,13 +878,13 @@ const Agenda = () => {
         className={cn(
           "rounded-xl border p-3 group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/20",
           isSupervisionCard ? "bg-serene/10 border-serene/40"
-            : s.status === "confirmed" ? "bg-emerald-50 border-emerald-200"
+            : s.status === "confirmed" ? "bg-[#f7f4ff] border-[rgba(109,79,194,0.15)]"
               : "bg-background border-border"
         )}
       >
         <div className="flex items-start justify-between gap-1">
           <div className="flex items-center gap-1.5 min-w-0">
-            {s.status === "confirmed" && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />}
+            {s.status === "confirmed" && <CheckCircle2 className="h-3.5 w-3.5 text-[#6d4fc2] shrink-0" />}
             {isSupervisionCard && <GraduationCap className="h-3.5 w-3.5 text-serene shrink-0" />}
             <p className="font-display text-sm text-primary">{format(new Date(s.scheduled_at), "HH:mm")}</p>
           </div>
@@ -944,7 +945,7 @@ const Agenda = () => {
         </div>
         {!compact && (
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full", isSupervisionCard ? "bg-serene/20 text-serene" : statusClass[s.status])}>
+            <span className={cn(PILL_BASE, isSupervisionCard ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
               {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
             </span>
             {(s as any).modality === "online" ? (
@@ -962,7 +963,7 @@ const Agenda = () => {
               </a>
             )}
             {!isSupervisionCard && s.price != null && (
-              <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full border", paymentStatusClass[s.payment_status])}>
+              <span className={cn(PILL_BASE, paymentStatusClass[s.payment_status])}>
                 {paymentStatusLabel[s.payment_status]}
               </span>
             )}
@@ -989,7 +990,7 @@ const Agenda = () => {
         </div>
         <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
-            <Button variant="accent" onClick={() => openNew()}>
+            <Button variant="accent" onClick={() => openNew()} className="rounded-[40px] font-display font-semibold">
               <Plus className="h-4 w-4" /> Nova sessão
             </Button>
           </DialogTrigger>
