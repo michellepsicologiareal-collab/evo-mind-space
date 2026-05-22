@@ -113,6 +113,22 @@ const RegistroSessao = () => {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [expandedPatients, setExpandedPatients] = useState<Record<string, boolean>>({});
 
+  // Compact mode: collapses long sections to just headers; persists in localStorage
+  const [compactMode, setCompactMode] = useState<boolean>(() => {
+    try { return localStorage.getItem("registro_sessao_compact") === "1"; } catch { return false; }
+  });
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    try { localStorage.setItem("registro_sessao_compact", compactMode ? "1" : "0"); } catch {}
+  }, [compactMode]);
+  const toggleSection = useCallback((key: string) => {
+    setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+  const isOpen = useCallback(
+    (key: string) => !compactMode || expandedSections[key] === true,
+    [compactMode, expandedSections],
+  );
+
   // --- Draft auto-save ---
   // Keep a ref with the latest form so event listeners always read fresh data
   const formRef = useRef(form);
