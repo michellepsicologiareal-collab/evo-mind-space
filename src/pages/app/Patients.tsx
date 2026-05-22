@@ -402,7 +402,7 @@ const Patients = () => {
     <div className="space-y-5 animate-fade-up" style={{ background: "#ffffff" }}>
       {/* Top row */}
       <div className="flex flex-wrap items-center gap-4 pt-2">
-        <div className="relative" style={{ width: 260 }}>
+        <div className="relative w-full sm:w-auto" style={{ maxWidth: 260 }}>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#a090c8" }} />
           <input
             value={search}
@@ -509,31 +509,31 @@ const Patients = () => {
                 onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 2px rgba(109,79,194,0.04)"; }}
               >
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
-                <div className="flex items-center gap-4 px-5" style={{ paddingTop: 18, paddingBottom: 16 }}>
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5" style={{ paddingTop: 18, paddingBottom: 16 }}>
                   <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(109,79,194,0.08)", color: "#6d4fc2", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
                     {p.full_name.charAt(0).toUpperCase()}
                   </div>
 
-                  <div className="min-w-0" style={{ flex: "0 0 200px" }}>
+                  <div className="min-w-0 flex-1 sm:flex-none" style={{ flexBasis: "auto" }}>
                     <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: isAlert ? "#633806" : "#1a1030" }}>
                       {p.full_name}
                     </p>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="inline-flex items-center gap-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: p.is_active ? "#3b6d11" : "#a090c8" }}>
                         <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.is_active ? "#3b6d11" : "#c0b0e0" }} />
                         {p.is_active ? "Ativo" : "Inativo"}
                       </span>
+                      <span className="uppercase inline-block" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "#7a5e1a", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 9px", letterSpacing: "0.06em" }}>
+                        {type}
+                      </span>
                     </div>
-                    <span className="uppercase inline-block mt-2" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "#7a5e1a", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 9px", letterSpacing: "0.06em" }}>
-                      {type}
-                    </span>
                   </div>
 
-                  <div className="min-w-0 hidden md:flex items-center gap-2" style={{ flex: "0 0 140px", fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#6a5880" }}>
+                  <div className="min-w-0 hidden lg:flex items-center gap-2" style={{ flex: "0 0 140px", fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#6a5880" }}>
                     {p.phone && (<><Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "#c0b0e0" }} /><span className="truncate">{p.phone}</span></>)}
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:flex-1 min-w-0 order-last sm:order-none">
                     <button
                       onClick={(e) => { e.stopPropagation(); setMoodPatient(p); }}
                       className="inline-flex items-center gap-1.5 transition-colors"
