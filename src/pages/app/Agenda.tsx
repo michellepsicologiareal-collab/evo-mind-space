@@ -1209,10 +1209,10 @@ const Agenda = () => {
         </Dialog>
       </header>
 
-      {/* ── Split layout ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6">
-        {/* ── LEFT: Calendar views ── */}
+      {/* ── ZONA SUPERIOR: Calendar + day sessions ── */}
+      <div className="space-y-4 pb-5" style={{ borderBottom: "0.5px solid #ede9f8" }}>
         <div className="space-y-4">
+
           <Tabs value={viewTab} onValueChange={setViewTab}>
             <TabsList className="w-full sm:w-auto bg-transparent gap-1 p-0">
               <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none">📅 Mês</TabsTrigger>
@@ -1464,95 +1464,145 @@ const Agenda = () => {
             </TabsContent>
           </Tabs>
         </div>
+      </div>
 
-        {/* ── RIGHT: Sessions Panel ── */}
-        <div className="space-y-4">
-          <div className="rounded-2xl bg-card border border-border shadow-card p-5">
-            <div className="mb-3">
-              <h2 className="font-display font-semibold text-lg">Sessões do Mês</h2>
-              <p className="text-xs text-muted-foreground">
-                {format(currentMonth, "MMMM yyyy", { locale: ptBR })} • <span className="font-semibold" style={{ color: "#854f0b" }}>Pendente: R$ {pendingTotal.toFixed(2)}</span> • <span className="font-semibold" style={{ color: "#6d4fc2" }}>Pago: R$ {paidTotal.toFixed(2)}</span>
-              </p>
-            </div>
-
-            {/* Payment status tabs */}
-            <div className="flex items-center gap-4 mb-3 border-b border-border">
-              {([["pending", "Pendentes"], ["paid", "Pagos"], ["all", "Todos"]] as const).map(([val, label]) => (
-                <button key={val} onClick={() => setPaymentFilter(val)} className={cn("text-xs py-2 px-1 font-display transition-colors -mb-px border-b-2", paymentFilter === val ? "border-[#6d4fc2] text-[#3d2b8a] font-semibold" : "border-transparent text-[#a090c8] hover:text-[#3d2b8a]")}>
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {/* Filters */}
-            <div className="flex items-center gap-2 mb-3">
-              <Select value={filterPatientId} onValueChange={setFilterPatientId}>
-                <SelectTrigger className="h-8 text-xs flex-1">
-                  <Filter className="h-3 w-3 mr-1" /><SelectValue placeholder="Todos" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os pacientes</SelectItem>
-                  {pendingPatients.map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Button
-                variant={pendingSort === "date" ? "secondary" : "ghost"}
-                size="sm" className="h-8 text-xs shrink-0"
-                onClick={() => setPendingSort(pendingSort === "date" ? "patient" : "date")}
-              >
-                <ArrowUpDown className="h-3 w-3 mr-1" />
-                {pendingSort === "date" ? "Data" : "Paciente"}
-              </Button>
-            </div>
-
-            {loadingPending ? (
-              <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" /></div>
-            ) : sortedPending.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground">
-                <CheckCircle2 className="h-10 w-10 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">{paymentFilter === "paid" ? "Nenhuma sessão paga neste mês" : paymentFilter === "all" ? "Nenhuma sessão neste mês" : "Nenhum pagamento pendente 🎉"}</p>
-              </div>
-            ) : (
-              <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-                {groupedPending.map((group) => {
-                  const s = group.session;
-                  return (
-                  <div key={group.key} className="rounded-xl border border-border bg-background p-3 space-y-2">
-                    <div className="min-w-0">
-                      {s.patient_id && s.patient_name ? (
-                        <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
-                      ) : (
-                        <p className="font-display text-sm font-medium truncate">{s.patient_name}</p>
-                      )}
-                      <div className="mt-1 space-y-1">
-                        {group.isSinglePayment && <p className="text-xs font-medium text-primary">Pagamento único · {group.sessions.length} sessões</p>}
-                        <p className="text-xs text-muted-foreground break-words">{group.isSinglePayment ? group.dates.join(", ") : format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
-                        <p className="font-display font-bold text-accent whitespace-nowrap">R$ {group.total.toFixed(2)}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Select value={s.payment_status} onValueChange={(v) => group.isSinglePayment ? updatePaymentGroup(group.sessions.map((item) => item.id), v as PaymentStatus) : updatePaymentStatus(s.id, v as PaymentStatus)}>
-                        <SelectTrigger className={cn("h-8 text-xs flex-1 border rounded-[40px] font-display font-semibold", paymentStatusClass[s.payment_status])}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending"><span className="font-medium" style={{ color: "#7a5e1a" }}>● Pendente</span></SelectItem>
-                          <SelectItem value="paid"><span className="font-medium" style={{ color: "#3d2b8a" }}>● Pago</span></SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 shrink-0" title="Cobrar via WhatsApp" onClick={() => sendWhatsAppReminder(s)}>
-                        <MessageCircle className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0" title="Excluir sessão" onClick={() => promptDelete(s.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );})}
-              </div>
-            )}
-          </div>
+      {/* ── ZONA INFERIOR: Sessões do Mês (largura total) ── */}
+      <div style={{ background: "#faf8ff", margin: "0 -1rem", padding: "20px 1rem 24px" }}>
+        <div className="flex flex-wrap items-center gap-3 mb-3">
+          <h2 style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "#1a1030" }}>Sessões do Mês</h2>
+          <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "#a090c8" }}>
+            {format(currentMonth, "MMM yyyy", { locale: ptBR })}
+          </span>
+          <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11, color: "#854f0b" }}>
+            · Pendente R$ {pendingTotal.toFixed(2)}
+          </span>
+          <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11, color: "#6d4fc2" }}>
+            · Pago R$ {paidTotal.toFixed(2)}
+          </span>
         </div>
+
+        <div className="flex items-center gap-5 mb-3" style={{ borderBottom: "0.5px solid #ede9f8" }}>
+          {([["pending", "Pendentes"], ["paid", "Pagos"], ["all", "Todos"]] as const).map(([val, label]) => (
+            <button
+              key={val}
+              onClick={() => setPaymentFilter(val)}
+              className="pb-2 -mb-px transition-colors"
+              style={{
+                fontFamily: "Syne, sans-serif",
+                fontWeight: paymentFilter === val ? 700 : 600,
+                fontSize: 11,
+                color: paymentFilter === val ? "#3d2b8a" : "#a090c8",
+                borderBottom: paymentFilter === val ? "2px solid #6d4fc2" : "2px solid transparent",
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+          <Select value={filterPatientId} onValueChange={setFilterPatientId}>
+            <SelectTrigger
+              className="h-9 text-xs"
+              style={{ background: "#fff", border: "0.5px solid #ede9f8", borderRadius: 40, color: "#3d2b8a", fontFamily: "Instrument Sans, sans-serif", fontSize: 11, minWidth: 220 }}
+            >
+              <Filter className="h-3 w-3 mr-1" style={{ color: "#a090c8" }} /><SelectValue placeholder="Todos os pacientes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os pacientes</SelectItem>
+              {pendingPatients.map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <button
+            onClick={() => setPendingSort(pendingSort === "date" ? "patient" : "date")}
+            className="inline-flex items-center gap-1.5 h-9 px-3"
+            style={{ background: "#fff", border: "0.5px solid #ede9f8", borderRadius: 40, color: "#3d2b8a", fontFamily: "Instrument Sans, sans-serif", fontSize: 11 }}
+          >
+            <ArrowUpDown className="h-3 w-3" style={{ color: "#a090c8" }} />
+            {pendingSort === "date" ? "Data" : "Paciente"}
+          </button>
+        </div>
+
+        {loadingPending ? (
+          <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" /></div>
+        ) : sortedPending.length === 0 ? (
+          <div className="py-10 text-center" style={{ color: "#a090c8" }}>
+            <CheckCircle2 className="h-10 w-10 mx-auto mb-2 opacity-40" />
+            <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13 }}>
+              {paymentFilter === "paid" ? "Nenhuma sessão paga neste mês" : paymentFilter === "all" ? "Nenhuma sessão neste mês" : "Nenhum pagamento pendente 🎉"}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {groupedPending.map((group) => {
+              const s = group.session;
+              return (
+                <div
+                  key={group.key}
+                  className="relative overflow-hidden transition-shadow"
+                  style={{ background: "#ffffff", border: "0.5px solid #ede9f8", borderRadius: 12, padding: "14px 16px" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(109,79,194,0.08)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
+                >
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2.5, background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
+                  <div className="min-w-0" style={{ paddingTop: 4 }}>
+                    {s.patient_id && s.patient_name ? (
+                      <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
+                    ) : (
+                      <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12.5, color: "#1a1030" }}>{s.patient_name}</p>
+                    )}
+                    <p className="mt-1 flex items-center gap-1.5" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 10.5, color: "#a090c8" }}>
+                      <CalendarIcon className="h-3 w-3" style={{ color: "#c0b0e0" }} />
+                      {group.isSinglePayment ? `${group.sessions.length} sessões` : format(new Date(s.scheduled_at), "dd/MM/yyyy")}
+                    </p>
+                    <p className="mt-2" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: "#6d4fc2" }}>
+                      R$ {group.total.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-3">
+                    <Select value={s.payment_status} onValueChange={(v) => group.isSinglePayment ? updatePaymentGroup(group.sessions.map((item) => item.id), v as PaymentStatus) : updatePaymentStatus(s.id, v as PaymentStatus)}>
+                      <SelectTrigger
+                        className="h-7 flex-1"
+                        style={{
+                          background: s.payment_status === "paid" ? "rgba(109,79,194,0.08)" : "rgba(201,168,76,0.08)",
+                          border: s.payment_status === "paid" ? "0.5px solid rgba(109,79,194,0.25)" : "0.5px solid rgba(201,168,76,0.25)",
+                          color: s.payment_status === "paid" ? "#3d2b8a" : "#7a5e1a",
+                          fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9.5, borderRadius: 40,
+                        }}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending"><span className="font-medium" style={{ color: "#7a5e1a" }}>● Pendente</span></SelectItem>
+                        <SelectItem value="paid"><span className="font-medium" style={{ color: "#3d2b8a" }}>● Pago</span></SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <button
+                      title="Cobrar via WhatsApp"
+                      onClick={() => sendWhatsAppReminder(s)}
+                      className="flex items-center justify-center transition-colors"
+                      style={{ width: 24, height: 24, borderRadius: 6, color: "#c0b0e0", background: "transparent" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "#f0ebff"; e.currentTarget.style.color = "#6d4fc2"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#c0b0e0"; }}
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      title="Excluir sessão"
+                      onClick={() => promptDelete(s.id)}
+                      className="flex items-center justify-center transition-colors"
+                      style={{ width: 24, height: 24, borderRadius: 6, color: "#c0b0e0", background: "transparent" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "#854f0b"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "#c0b0e0"; }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* ── Edit Session Dialog ── */}
