@@ -91,14 +91,14 @@ export const AppLayout = () => {
       onClick={(e) => handleNavClick(e, item)}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
+          "flex items-center gap-3 px-4 py-2.5 text-[12px] transition-colors font-sans",
           isActive
             ? isAdminSection
-              ? "bg-[hsl(var(--admin-accent))] text-white shadow-soft"
-              : "bg-[hsl(var(--sidebar-active))] text-primary"
+              ? "bg-[hsl(var(--admin-accent))] text-white shadow-soft rounded-xl"
+              : "bg-[rgba(109,79,194,0.08)] text-[#3d2b8a] font-medium border-l-[3px] border-l-[#6d4fc2] rounded-none"
             : isAdminSection
-            ? "text-[hsl(var(--admin-accent))]/80 hover:bg-[hsl(var(--admin-accent))]/10 hover:text-[hsl(var(--admin-accent))]"
-            : "text-muted-foreground hover:bg-[hsl(var(--sidebar-hover))] hover:text-foreground"
+            ? "text-[hsl(var(--admin-accent))]/80 hover:bg-[hsl(var(--admin-accent))]/10 hover:text-[hsl(var(--admin-accent))] rounded-xl"
+            : "text-[#8878b0] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[#3d2b8a] rounded-xl"
         )
       }
     >
