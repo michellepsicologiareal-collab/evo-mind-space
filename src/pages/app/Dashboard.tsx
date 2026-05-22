@@ -118,7 +118,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   pending: { label: "Pendente", className: "bg-amber-100 text-amber-700" },
 };
 
-const PIE_COLORS = ["hsl(var(--accent))", "hsl(var(--lilac))"];
+const PIE_COLORS = ["#6d4fc2", "#c9a84c"];
 
 /* ── date range helpers ── */
 const currentMonthStart = () => startOfMonth(new Date());
@@ -614,7 +614,7 @@ const Dashboard = () => {
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard
             icon={CalendarClock}
-            label={`Receita Prevista — ${periodLabel}`}
+            label="Receita Prevista"
             value={hideRevenue ? "•••••" : `R$ ${stats.previstoRevenue.toFixed(2).replace(".", ",")}`}
             action={
               <button
@@ -625,11 +625,11 @@ const Dashboard = () => {
                 {hideRevenue ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
               </button>
             }
-            tooltip={`Receita prevista: soma de todas as ${stats.previstos} sessões não canceladas no período.`}
+            tooltip={`Receita prevista — ${periodLabel}: soma de todas as ${stats.previstos} sessões não canceladas no período.`}
           />
           <KPICard
             icon={TrendingUp}
-            label={`Faturado (Realizado) — ${periodLabel}`}
+            label="Faturado (Realizado)"
             value={hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(2).replace(".", ",")}`}
             highlight
             tooltip="Soma dos valores de todas as sessões concluídas no período."
@@ -667,7 +667,7 @@ const Dashboard = () => {
               <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-serene via-serene/60 to-transparent" />
                 <div className="flex items-start justify-between gap-3 mb-1">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                  <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "#a090c8" }}>
                     Humor médio{selectedName}
                   </p>
                   {uniquePatients.length > 0 && (
@@ -684,9 +684,9 @@ const Dashboard = () => {
                     </Select>
                   )}
                 </div>
-                <p className="font-display text-3xl font-bold text-foreground">
+                <p style={{ fontFamily: "Syne, sans-serif", fontSize: "28px", fontWeight: 700, color: "#1a1030", lineHeight: 1.1 }}>
                   {chartAvg !== null ? chartAvg.toFixed(1).replace(".", ",") : "—"}
-                  <span className="text-lg text-muted-foreground font-normal"> / 10</span>
+                  <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "14px", fontWeight: 400, color: "#a090c8" }}> /10</span>
                 </p>
                 {chartSource.length > 1 ? (
                   <div className="mt-3 h-[80px]">
@@ -742,17 +742,17 @@ const Dashboard = () => {
           {/* Revenue Chart Card */}
           <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent" />
-            <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+            <p className="mb-1 uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "#a090c8" }}>
               Faturamento — {periodLabel}
             </p>
-            <p className="font-display text-3xl font-bold text-foreground">
+            <p style={{ fontFamily: "Syne, sans-serif", fontSize: "28px", fontWeight: 700, color: "#1a1030", lineHeight: 1.1 }}>
               {hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`}
             </p>
             {prevMonthRevenue > 0 && !hideRevenue && (() => {
               const pctChange = ((stats.monthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100;
               const isUp = pctChange >= 0;
               return (
-                <p className={`text-sm font-medium mt-1 ${isUp ? "text-emerald-600" : "text-destructive"}`}>
+                <p className="text-sm font-medium mt-1" style={{ color: isUp ? "#6d4fc2" : "hsl(var(--destructive))" }}>
                   {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(0)}% vs. {format(subMonths(new Date(), 1), "MMMM", { locale: ptBR })}
                 </p>
               );
@@ -763,11 +763,11 @@ const Dashboard = () => {
                   <AreaChart data={weeklyRevenue}>
                     <defs>
                       <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.4} />
-                        <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.05} />
+                        <stop offset="0%" stopColor="#6d4fc2" stopOpacity={0.18} />
+                        <stop offset="100%" stopColor="#6d4fc2" stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="week" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="week" tick={{ fontSize: 10, fill: "#a090c8" }} axisLine={false} tickLine={false} />
                     <RechartsTooltip
                       contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
                       formatter={(v: number) => [`R$ ${v.toFixed(0)}`, "Receita"]}
@@ -775,7 +775,7 @@ const Dashboard = () => {
                     <Area
                       type="monotone"
                       dataKey="value"
-                      stroke="hsl(var(--accent))"
+                      stroke="#6d4fc2"
                       strokeWidth={2.5}
                       fill="url(#revGrad)"
                       dot={false}
@@ -855,10 +855,10 @@ const Dashboard = () => {
               <div className="space-y-3">
                 {frequencyData.map((item, i) => (
                   <div key={item.name} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30">
-                    <div className="h-4 w-4 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                    <div className="flex-1">
-                      <p className="font-semibold text-foreground text-sm">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                    <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                    <div className="flex-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", color: "#6a5880" }}>
+                      <p className="font-semibold" style={{ color: "#6a5880" }}>{item.name}</p>
+                      <p style={{ color: "#6a5880" }}>
                         {item.value} paciente{item.value !== 1 ? "s" : ""} · Média: R$ {item.avgPrice.toFixed(2).replace(".", ",")}
                       </p>
                     </div>
