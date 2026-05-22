@@ -98,6 +98,7 @@ const Patients = () => {
   const [moodPatient, setMoodPatient] = useState<Patient | null>(null);
   const [recordsPatient, setRecordsPatient] = useState<Patient | null>(null);
   const [anamnesisPatient, setAnamnesisPatient] = useState<Patient | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
   const [profCrp, setProfCrp] = useState<string>("");
