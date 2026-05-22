@@ -500,8 +500,24 @@ const Agenda = () => {
       if (error) { toast.error("Erro ao gerar link"); return; }
     }
     const url = `${window.location.origin}/confirmar-sessao/${token}`;
-    await navigator.clipboard.writeText(url);
-    toast.success("Link de confirmação copiado!");
+    const message = `Olá, por favor, entre para confirmar sua sessão de terapia🤎\n\n${url}`;
+
+    // Open WhatsApp directly when we have the patient's phone, fall back to clipboard
+    const patient = patients.find((p) => p.id === s.patient_id);
+    let phoneNumber = "";
+    if (patient?.has_financial_responsible && patient.financial_responsible_phone) {
+      phoneNumber = patient.financial_responsible_phone.replace(/\D/g, "");
+    } else if (patient?.phone) {
+      phoneNumber = patient.phone.replace(/\D/g, "");
+    }
+
+    if (phoneNumber) {
+      window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
+      toast.success("Mensagem de confirmação aberta no WhatsApp");
+    } else {
+      await navigator.clipboard.writeText(message);
+      toast.success("Mensagem de confirmação copiada (paciente sem telefone cadastrado)");
+    }
     load();
   };
 
@@ -878,7 +894,7 @@ const Agenda = () => {
             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
               <DropdownMenuItem onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /> Editar sessão</DropdownMenuItem>
               {!isSupervisionCard && (
-                <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar link de confirmação</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar confirmação no WhatsApp</DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => updateStatus(s.id, "completed")}><Check className="h-4 w-4" /> Realizada</DropdownMenuItem>

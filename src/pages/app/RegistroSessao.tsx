@@ -770,7 +770,131 @@ const RegistroSessao = () => {
         </div>
       </section>
 
-      {/* ── Seção 5: IA — Revisão de texto ── */}
+      {/* ── Resumo da sessão (revisão rápida) ── */}
+      {(() => {
+        const hasContent =
+          form.patient_id ||
+          form.chief_complaint.trim() ||
+          form.themes.length > 0 ||
+          form.clinical_observations.trim() ||
+          form.next_session_plan.trim() ||
+          form.private_notes.trim();
+        if (!hasContent) return null;
+
+        const alerts: { tone: "danger" | "warn" | "info"; label: string }[] = [];
+        if (form.risk_indicator === "high")
+          alerts.push({ tone: "danger", label: "Risco alto identificado" });
+        if (form.risk_indicator === "moderate")
+          alerts.push({ tone: "warn", label: "Risco moderado" });
+        if (typeof form.engagement === "number" && form.engagement <= 2)
+          alerts.push({ tone: "warn", label: `Engajamento ${ENGAGEMENT_LABELS[form.engagement - 1] ?? form.engagement}` });
+        if (!form.patient_id) alerts.push({ tone: "warn", label: "Paciente não selecionado" });
+        if (!form.chief_complaint.trim())
+          alerts.push({ tone: "info", label: "Queixa principal vazia" });
+        if (!form.next_session_plan.trim())
+          alerts.push({ tone: "info", label: "Plano da próxima sessão em branco" });
+
+        const toneClass = (t: "danger" | "warn" | "info") =>
+          t === "danger"
+            ? "bg-destructive/10 text-destructive border-destructive/30"
+            : t === "warn"
+            ? "bg-amber-100 text-amber-800 border-amber-300"
+            : "bg-muted text-muted-foreground border-border";
+
+        const modalityLabel =
+          form.modality === "online" ? "Online" : form.modality === "domiciliar" ? "Domiciliar" : "Presencial";
+        const dateLabel = (() => {
+          try {
+            return format(new Date(form.session_date + "T00:00:00"), "dd 'de' MMMM", { locale: ptBR });
+          } catch {
+            return form.session_date;
+          }
+        })();
+
+        return (
+          <section className="rounded-2xl border border-sage/40 bg-gradient-to-br from-sage/10 via-card to-card p-5 space-y-4 shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sage/30 to-accent/10 text-foreground ring-1 ring-sage/30">
+                <ClipboardList className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="font-display text-base font-semibold text-foreground leading-tight">
+                  Resumo da sessão
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Revise antes de salvar ou enviar para a IA.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-3 text-sm">
+              <div className="rounded-xl border bg-card/60 p-3">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Paciente</p>
+                <p className="font-medium text-foreground truncate">
+                  {selectedPatient?.full_name ?? "—"}
+                </p>
+              </div>
+              <div className="rounded-xl border bg-card/60 p-3">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Sessão</p>
+                <p className="font-medium text-foreground">
+                  {dateLabel} · {modalityLabel} · {form.duration_minutes}min
+                  {form.session_number ? ` · nº ${form.session_number}` : ""}
+                </p>
+              </div>
+              <div className="rounded-xl border bg-card/60 p-3 sm:col-span-2">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Queixa principal</p>
+                <p className="text-foreground line-clamp-2">
+                  {form.chief_complaint.trim() || <span className="text-muted-foreground italic">não preenchida</span>}
+                </p>
+              </div>
+              {form.themes.length > 0 && (
+                <div className="rounded-xl border bg-card/60 p-3 sm:col-span-2">
+                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5">Temas</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {form.themes.map((t) => (
+                      <span key={t} className="inline-flex items-center rounded-full bg-accent/10 text-accent px-2 py-0.5 text-xs font-medium">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {form.next_session_plan.trim() && (
+                <div className="rounded-xl border bg-card/60 p-3 sm:col-span-2">
+                  <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Plano próxima sessão</p>
+                  <p className="text-foreground line-clamp-2">{form.next_session_plan}</p>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-2 flex items-center gap-1.5">
+                <AlertTriangle className="h-3.5 w-3.5" /> Sinais de alerta
+              </p>
+              {alerts.length === 0 ? (
+                <p className="text-sm text-sage font-medium">Tudo certo — nenhum sinal de alerta.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {alerts.map((a, i) => (
+                    <span
+                      key={i}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+                        toneClass(a.tone)
+                      )}
+                    >
+                      <AlertTriangle className="h-3 w-3" />
+                      {a.label}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        );
+      })()}
+
+      {/* ── Seção 6: IA — Revisão de texto ── */}
       <section className="relative overflow-hidden rounded-2xl border border-lilac/30 bg-gradient-to-br from-lilac/10 via-card to-accent/5 p-5 space-y-3 shadow-sm">
         <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-lilac/20 blur-3xl" />
         <div className="relative">
