@@ -402,7 +402,7 @@ const Patients = () => {
     <div className="space-y-5 animate-fade-up" style={{ background: "#ffffff" }}>
       {/* Top row */}
       <div className="flex flex-wrap items-center gap-4 pt-2">
-        <div className="relative" style={{ width: 260 }}>
+        <div className="relative w-full sm:w-auto" style={{ maxWidth: 260 }}>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#a090c8" }} />
           <input
             value={search}
