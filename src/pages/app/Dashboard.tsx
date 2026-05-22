@@ -530,7 +530,7 @@ const Dashboard = () => {
       <div className="space-y-8 animate-fade-up">
         {/* ── Welcome Header ── */}
         <header className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent" />
+          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
           <p
             className="uppercase"
             style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", color: "#c9a84c" }}
@@ -670,7 +670,7 @@ const Dashboard = () => {
               : ` · ${uniquePatients.find(([id]) => id === moodChartPatient)?.[1] ?? ""}`;
             return (
               <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-serene via-serene/60 to-transparent" />
+                <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
                 <div className="flex items-start justify-between gap-3 mb-1">
                   <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "#a090c8" }}>
                     Humor médio{selectedName}
@@ -746,7 +746,7 @@ const Dashboard = () => {
 
           {/* Revenue Chart Card */}
           <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent" />
+            <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
             <p className="mb-1 uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "#a090c8" }}>
               Faturamento — {periodLabel}
             </p>
@@ -795,8 +795,8 @@ const Dashboard = () => {
         </section>
 
         {/* ── Gráfico de Pizza: Frequência de Atendimentos ── */}
-        <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 relative">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-lilac via-accent/60 to-transparent" />
+        <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
           <div className="flex items-center gap-2 mb-4">
             <CalendarRange className="h-5 w-5 text-lilac" />
             <h2 className="font-display text-xl font-bold text-foreground">Tipo de Atendimento por Frequência</h2>
@@ -1069,9 +1069,10 @@ const Dashboard = () => {
 
           return (
             <section
-              className="rounded-2xl border shadow-card overflow-hidden"
+              className="rounded-2xl border shadow-card overflow-hidden relative"
               style={{ background: "#faf8ff", borderColor: "#ede9f8" }}
             >
+              <div className="absolute top-0 left-0 right-0 z-10" style={{ height: "3px", background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
               {/* Header */}
               <div className="flex items-center justify-between px-6 pt-6">
                 <div className="flex items-center gap-2">
@@ -1196,7 +1197,8 @@ const Dashboard = () => {
         })()}
 
         {/* ── Upcoming Sessions ── */}
-        <section className="rounded-2xl bg-card border border-border shadow-card p-8">
+        <section className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Próximas Sessões</h2>
             <Button variant="ghost" size="sm" asChild>
@@ -1251,7 +1253,8 @@ const Dashboard = () => {
         </section>
 
         {/* ── Goals / Gamification ── */}
-        <section className="rounded-2xl bg-card border border-border shadow-card p-8">
+        <section className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Metas do Mês</h2>
             <Button variant="ghost" size="sm" onClick={() => setEditGoalsOpen(true)}>
@@ -1359,10 +1362,11 @@ const KPICard = ({
   tooltip?: string;
 }) => (
   <div
-    className={`rounded-2xl border p-5 md:p-6 transition-all hover:-translate-y-0.5 hover:shadow-soft ${
+    className={`rounded-2xl border p-5 md:p-6 transition-all hover:-translate-y-0.5 hover:shadow-soft relative overflow-hidden ${
       highlight ? "bg-accent/5 border-accent/20" : "bg-card border-border"
     }`}
   >
+    <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
     <div className="flex items-center justify-between">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-accent">
         <Icon className="h-5 w-5" />
