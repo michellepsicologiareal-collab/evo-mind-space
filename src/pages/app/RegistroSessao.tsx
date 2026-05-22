@@ -762,82 +762,87 @@ const RegistroSessao = () => {
       </section>
 
       {/* ── Seção 4: Avaliação do Terapeuta ── */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm hover:shadow-md hover:border-accent/20 transition-all">
-        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" />
+      <section className={cn(
+        "rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all",
+        compactMode && !isOpen("avaliacao") ? "p-3" : "p-5 space-y-4",
+      )}>
+        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" sectionKey="avaliacao" />
+        {isOpen("avaliacao") && (
+          <>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Engajamento do paciente</Label>
+                <span className="text-xs font-display font-semibold text-accent">
+                  {ENGAGEMENT_LABELS[form.engagement - 1]}
+                </span>
+              </div>
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((level) => {
+                  const active = form.engagement >= level;
+                  const isCurrent = form.engagement === level;
+                  return (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => setForm({ ...form, engagement: level })}
+                      className={cn(
+                        "flex-1 h-10 rounded-xl text-sm font-semibold transition-all duration-200 relative overflow-hidden",
+                        active
+                          ? "bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-sm"
+                          : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
+                        isCurrent && "ring-2 ring-accent/40 ring-offset-2 ring-offset-card scale-[1.04]",
+                      )}
+                      aria-label={`Engajamento nível ${level}`}
+                    >
+                      {level}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label>Engajamento do paciente</Label>
-            <span className="text-xs font-display font-semibold text-accent">
-              {ENGAGEMENT_LABELS[form.engagement - 1]}
-            </span>
-          </div>
-          <div className="flex gap-1.5">
-            {[1, 2, 3, 4, 5].map((level) => {
-              const active = form.engagement >= level;
-              const isCurrent = form.engagement === level;
-              return (
-                <button
-                  key={level}
-                  type="button"
-                  onClick={() => setForm({ ...form, engagement: level })}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                Indicador de risco
+              </Label>
+              <Select
+                value={form.risk_indicator}
+                onValueChange={(v) => setForm({ ...form, risk_indicator: v })}
+              >
+                <SelectTrigger
                   className={cn(
-                    "flex-1 h-10 rounded-xl text-sm font-semibold transition-all duration-200 relative overflow-hidden",
-                    active
-                      ? "bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-sm"
-                      : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
-                    isCurrent && "ring-2 ring-accent/40 ring-offset-2 ring-offset-card scale-[1.04]",
+                    form.risk_indicator === "high" &&
+                      "border-destructive text-destructive",
+                    form.risk_indicator === "moderate" &&
+                      "border-amber-500 text-amber-700"
                   )}
-                  aria-label={`Engajamento nível ${level}`}
                 >
-                  {level}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RISK_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            Indicador de risco
-          </Label>
-          <Select
-            value={form.risk_indicator}
-            onValueChange={(v) => setForm({ ...form, risk_indicator: v })}
-          >
-            <SelectTrigger
-              className={cn(
-                form.risk_indicator === "high" &&
-                  "border-destructive text-destructive",
-                form.risk_indicator === "moderate" &&
-                  "border-amber-500 text-amber-700"
-              )}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {RISK_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Notas privadas do terapeuta</Label>
-          <Textarea
-            rows={3}
-            placeholder="Anotações pessoais que não fazem parte do prontuário formal..."
-            value={form.private_notes}
-            onChange={(e) =>
-              setForm({ ...form, private_notes: e.target.value })
-            }
-          />
-        </div>
+            <div className="space-y-2">
+              <Label>Notas privadas do terapeuta</Label>
+              <Textarea
+                rows={3}
+                placeholder="Anotações pessoais que não fazem parte do prontuário formal..."
+                value={form.private_notes}
+                onChange={(e) =>
+                  setForm({ ...form, private_notes: e.target.value })
+                }
+              />
+            </div>
+          </>
+        )}
       </section>
 
       {/* ── Resumo da sessão (revisão rápida) ── */}
