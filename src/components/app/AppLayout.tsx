@@ -91,14 +91,14 @@ export const AppLayout = () => {
       onClick={(e) => handleNavClick(e, item)}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors",
+          "flex items-center gap-3 px-4 py-2.5 text-[12px] transition-colors font-sans",
           isActive
             ? isAdminSection
-              ? "bg-[hsl(var(--admin-accent))] text-white shadow-soft"
-              : "bg-[hsl(var(--sidebar-active))] text-primary"
+              ? "bg-[hsl(var(--admin-accent))] text-white shadow-soft rounded-xl"
+              : "bg-[rgba(109,79,194,0.08)] text-[#3d2b8a] font-medium border-l-[3px] border-l-[#6d4fc2] rounded-none"
             : isAdminSection
-            ? "text-[hsl(var(--admin-accent))]/80 hover:bg-[hsl(var(--admin-accent))]/10 hover:text-[hsl(var(--admin-accent))]"
-            : "text-muted-foreground hover:bg-[hsl(var(--sidebar-hover))] hover:text-foreground"
+            ? "text-[hsl(var(--admin-accent))]/80 hover:bg-[hsl(var(--admin-accent))]/10 hover:text-[hsl(var(--admin-accent))] rounded-xl"
+            : "text-[#8878b0] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[#3d2b8a] rounded-xl"
         )
       }
     >
@@ -110,13 +110,18 @@ export const AppLayout = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
+      {/* Linha dourada absoluta no topo da tela */}
+      <div className="fixed top-0 inset-x-0 z-50 gold-bar pointer-events-none" />
+
       {/* ── Desktop sidebar (fixed) ── */}
-      <aside className="hidden md:flex md:w-[220px] fixed inset-y-0 left-0 z-30 bg-card border-r border-[hsl(var(--sidebar-border))] flex-col">
-        <div className="p-6 flex items-center justify-between border-b border-[hsl(var(--sidebar-border))]">
+      <aside className="hidden md:flex md:w-[220px] fixed inset-y-0 left-0 z-30 bg-[#faf8ff] border-r border-[#ede9f8] flex-col">
+        <div className="p-6 flex items-center justify-between border-b border-[#ede9f8]">
           <Link to="/app" className="flex items-center gap-2">
             <img src={logoSrc} alt="Psicologia Real" className="h-9 w-9 rounded-full object-cover" />
-            <span className="font-display text-xl font-semibold">
-              Psi <span className="font-extrabold text-accent">Real</span>
+            <span className="font-display text-xl font-bold tracking-tight flex items-center gap-1.5">
+              <span className="text-[#1a1030]">Psi</span>
+              <span className="text-[#6d4fc2]">Real</span>
+              <span className="inline-block h-2 w-2 rounded-full bg-[#c9a84c]" aria-hidden />
             </span>
           </Link>
           <NotificationBell />
@@ -136,7 +141,7 @@ export const AppLayout = () => {
               if (items.length === 0) return null;
               return (
                 <div key={sec.label} className="space-y-1">
-                  <div className="px-4 pt-3 pb-1 text-[10px] font-medium tracking-widest" style={{ color: "#C4A8A4" }}>
+                  <div className="px-4 pt-4 pb-1.5 font-display font-semibold text-[9px] uppercase text-[#a090c8]" style={{ letterSpacing: "0.14em" }}>
                     {sec.label}
                   </div>
                   {items.map((item) => renderNavLink(item))}
@@ -169,12 +174,17 @@ export const AppLayout = () => {
           )}
         </nav>
 
-        <div className="p-4 border-t border-[hsl(var(--sidebar-border))]">
+        <div className="p-4 border-t border-[#ede9f8]">
           <button
             onClick={() => setPlanOpen(true)}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors text-gold hover:bg-gold/10 w-full"
+            className="flex items-center gap-3 px-4 py-3 rounded-[10px] font-display font-semibold text-sm transition-colors w-full"
+            style={{
+              background: "rgba(201,168,76,0.08)",
+              border: "0.5px solid rgba(201,168,76,0.25)",
+              color: "#7a5e1a",
+            }}
           >
-            <Crown className="h-4 w-4" />
+            <Crown className="h-4 w-4" style={{ color: "#c9a84c" }} />
             Meu Plano
           </button>
           <p className="text-xs text-muted-foreground truncate mb-3 mt-3">{user?.email}</p>

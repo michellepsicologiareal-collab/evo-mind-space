@@ -11,45 +11,49 @@
 @layer base {
   :root {
     /* Surfaces */
-    --background: 0 0% 98%;                 /* #FAFAFA */
-    --foreground: 7 27% 13%;                /* #2A1A18 */
+    --background: 0 0% 100%;                /* #ffffff */
+    --foreground: 256 50% 13%;              /* #1a1030 */
 
-    --card: 0 0% 100%;                      /* branco puro */
-    --card-foreground: 7 27% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 256 50% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 7 27% 13%;
+    --popover-foreground: 256 50% 13%;
 
-    /* Brand — Rosê queimado */
-    --primary: 353 30% 42%;                 /* #8B4A52 */
+    /* Brand — Violeta */
+    --primary: 257 49% 53%;                 /* #6d4fc2 */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 353 30% 52%;
+    --primary-glow: 256 49% 47%;            /* #5c3db0 */
+    --primary-dark: 254 53% 35%;            /* #3d2b8a */
 
-    --secondary: 28 27% 95%;
-    --secondary-foreground: 353 30% 42%;
+    --secondary: 255 100% 98%;              /* #f7f4ff */
+    --secondary-foreground: 257 49% 53%;
 
-    --muted: 28 27% 95%;
-    --muted-foreground: 7 10% 49%;          /* #8A7370 */
+    --muted: 255 100% 98%;
+    --muted-foreground: 263 19% 43%;        /* #6a5880 */
 
-    /* Accent — mesmo tom rosê queimado para CTAs/Salvar/Novo */
-    --accent: 353 30% 42%;                  /* #8B4A52 */
+    /* Accent — mantém violeta para CTAs */
+    --accent: 257 49% 53%;
     --accent-foreground: 0 0% 100%;
 
-    /* Lilás — badges concluídas, supervisão */
-    --lilac: 260 23% 64%;
-    --lilac-foreground: 260 30% 18%;
+    /* Lilás — badges */
+    --lilac: 258 24% 55%;                   /* #8070a8 */
+    --lilac-foreground: 0 0% 100%;
 
-    --moss: 108 27% 28%;
+    --moss: 96 73% 25%;                     /* #3b6d11 — success */
     --moss-foreground: 0 0% 100%;
 
-    --sand: 28 27% 90%;
-    --sand-foreground: 7 27% 13%;
+    --sand: 255 100% 98%;
+    --sand-foreground: 256 50% 13%;
 
-    --gold: 38 45% 60%;
+    /* Gold — acento identidade */
+    --gold: 44 56% 54%;                     /* #c9a84c */
+    --gold-dark: 43 65% 29%;                /* #7a5e1a */
+    --gold-light: 41 71% 70%;               /* #e8c97a */
 
-    --sage: 140 20% 45%;
+    --sage: 96 73% 25%;
     --sage-foreground: 0 0% 100%;
-    --serene: 200 45% 50%;
+    --serene: 257 49% 53%;
     --serene-foreground: 0 0% 100%;
 
     --admin-accent: 220 60% 42%;
@@ -57,34 +61,41 @@
     --destructive: 0 65% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 28 27% 90%;                   /* #EDE6E0 */
-    --input: 28 27% 90%;
-    --ring: 353 30% 42%;
+    --border: 254 50% 94%;                  /* #ede9f8 */
+    --input: 254 50% 94%;
+    --ring: 257 49% 53%;
 
     /* Sidebar tokens */
-    --sidebar-hover: 13 53% 97%;            /* #FBF4F2 */
-    --sidebar-active: 9 48% 95%;            /* #F8EDEB */
-    --sidebar-border: 23 30% 92%;           /* #F0E8E3 */
+    --sidebar-hover: 255 100% 98%;
+    --sidebar-active: 257 49% 53% / 0.08;   /* violeta sutil */
+    --sidebar-border: 254 50% 94%;
 
     --radius: 1rem;
 
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(353 30% 42%) 0%, hsl(353 30% 52%) 60%, hsl(13 53% 97%) 130%);
-    --gradient-soft: linear-gradient(180deg, hsl(0 0% 99%) 0%, hsl(0 0% 98%) 100%);
-    --gradient-card: linear-gradient(160deg, hsl(0 0% 100%) 0%, hsl(28 27% 98%) 100%);
+    /* Text scale extras */
+    --text-secondary: 258 24% 55%;
+    --text-muted: 256 32% 67%;
+    --text-nav: 257 27% 58%;
 
-    /* Shadows — card elevation */
-    --shadow-elegant: 0 30px 60px -30px hsl(215 25% 15% / 0.12);
-    --shadow-soft: 0 4px 16px -4px hsl(215 20% 30% / 0.08), 0 1px 3px 0 hsl(215 20% 30% / 0.04);
-    --shadow-glow: 0 0 80px -20px hsl(108 22% 38% / 0.25);
-    --shadow-card: 0 2px 12px -3px hsl(215 20% 30% / 0.06), 0 1px 2px 0 hsl(215 20% 30% / 0.03);
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(257 49% 53%) 0%, hsl(256 49% 47%) 60%, hsl(255 100% 98%) 130%);
+    --gradient-soft: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(255 100% 99%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(0 0% 100%) 0%, hsl(255 100% 99%) 100%);
+    --gradient-gold: linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c);
+    --gradient-gold-urgent: linear-gradient(90deg, #854f0b, #c9a84c);
+
+    /* Shadows */
+    --shadow-elegant: 0 30px 60px -30px hsl(257 49% 30% / 0.18);
+    --shadow-soft: 0 4px 16px -4px hsl(257 30% 30% / 0.10), 0 1px 3px 0 hsl(257 30% 30% / 0.04);
+    --shadow-glow: 0 0 80px -20px hsl(257 49% 53% / 0.25);
+    --shadow-card: 0 2px 12px -3px hsl(257 30% 30% / 0.08), 0 1px 2px 0 hsl(257 30% 30% / 0.03);
 
     /* Motion */
     --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
 
-    /* Fonts — system sans-serif */
-    --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* Fonts */
+    --font-display: "Syne", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --font-body: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
 
   .dark {
@@ -127,28 +138,34 @@
     font-size: 15px;
     line-height: 1.6;
   }
-  h1, .font-display.text-4xl, .font-display.text-5xl {
+  h1, h2, h3, h4, h5, h6, .font-display {
     font-family: var(--font-display);
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    line-height: 1.15;
-  }
-  h2, .font-display.text-3xl {
-    font-family: var(--font-display);
-    font-weight: 500;
+    font-weight: 600;
     letter-spacing: -0.01em;
     line-height: 1.2;
+    color: hsl(var(--foreground));
   }
-  h3, h4, .font-display {
-    font-family: var(--font-display);
-    font-weight: 500;
-    letter-spacing: -0.005em;
-    line-height: 1.3;
-  }
+  button, .font-display-btn { font-family: var(--font-display); }
+  label.uppercase, .label-up { font-family: var(--font-display); font-weight: 600; letter-spacing: 0.14em; }
   ::selection { background: hsl(var(--primary) / 0.2); }
 }
 
 @layer utilities {
+  /* Linha dourada universal no topo dos cards */
+  .gold-top { position: relative; }
+  .gold-top::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 0;
+    height: 3px; border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+    background: var(--gradient-gold); pointer-events: none;
+  }
+  .gold-top-urgent::before { background: var(--gradient-gold-urgent); }
+  .gold-bar { height: 3px; background: var(--gradient-gold); width: 100%; }
+  .bg-gradient-gold { background: var(--gradient-gold); }
+  .bg-gold-subtle { background: rgba(201,168,76,0.10); }
+  .border-gold-subtle { border-color: rgba(201,168,76,0.35); }
+  .text-gold-dark { color: #7a5e1a; }
+  .text-urgent { color: #854f0b; }
+  .bg-urgent-subtle { background: #fdf8f0; }
   .bg-gradient-hero { background: var(--gradient-hero); }
   .bg-gradient-soft { background: var(--gradient-soft); }
   .bg-gradient-card { background: var(--gradient-card); }
