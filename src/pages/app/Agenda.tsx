@@ -1209,10 +1209,10 @@ const Agenda = () => {
         </Dialog>
       </header>
 
-      {/* ── Split layout ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6">
-        {/* ── LEFT: Calendar views ── */}
+      {/* ── ZONA SUPERIOR: Calendar + day sessions ── */}
+      <div className="space-y-4 pb-5" style={{ borderBottom: "0.5px solid #ede9f8" }}>
         <div className="space-y-4">
+
           <Tabs value={viewTab} onValueChange={setViewTab}>
             <TabsList className="w-full sm:w-auto bg-transparent gap-1 p-0">
               <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none">📅 Mês</TabsTrigger>
