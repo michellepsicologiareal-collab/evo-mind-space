@@ -20,8 +20,8 @@ export default {
       },
     extend: {
       fontFamily: {
-        display: ['"Plus Jakarta Sans"', "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ['"Syne"', "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ['"Instrument Sans"', "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
