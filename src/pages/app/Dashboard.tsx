@@ -26,6 +26,10 @@ import {
   Info,
   Filter,
   Pencil,
+  AlertTriangle,
+  TrendingDown,
+  Minus,
+  MoreHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -164,6 +168,7 @@ const Dashboard = () => {
   const [yearRevenue, setYearRevenue] = useState(0);
   const [frequencyData, setFrequencyData] = useState<FrequencyData[]>([]);
   const [moodFilterPatient, setMoodFilterPatient] = useState<string>("all");
+  const [moodPeriod, setMoodPeriod] = useState<"week" | "biweek" | "all">("all");
   const [moodChartPatient, setMoodChartPatient] = useState<string>("all");
 
   const [editGoalsOpen, setEditGoalsOpen] = useState(false);
@@ -870,102 +875,323 @@ const Dashboard = () => {
         </section>
 
         {/* ── Emoções dos Pacientes ── */}
-        <section className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-lilac via-lilac/60 to-transparent" />
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <SmilePlus className="h-5 w-5 text-lilac" />
-              <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Emoções dos Pacientes</h2>
-            </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/app/agenda" className="text-lilac hover:text-lilac/80">
-                Ver sessões <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
+        {(() => {
+          // Helpers
+          const CRISIS_RX = /(crise|término|termino|resist|não acei|nao acei|suic|abandon)/i;
+          const ANX_RX = /ansios/i;
+          const ENG_RX = /(engaj|rápido|rapido|vínculo|vinculo|evolu)/i;
 
-          {/* Patient filter */}
-          {patientMoods.length > 0 && (() => {
-            const uniquePatients = Array.from(
-              new Map(patientMoods.map(m => [m.patient_id, { id: m.patient_id, name: m.patient_name }])).values()
-            ).sort((a, b) => a.name.localeCompare(b.name));
+          const isUrgentMood = (m: PatientMoodEntry) =>
+            (m.mood_score ?? 10) <= 5 || (m.note ? CRISIS_RX.test(m.note) : false);
+
+          const classifyChip = (m: PatientMoodEntry) => {
+            const note = m.note ?? "";
+            if (/crise/i.test(note)) return { label: "Em crise", bg: "rgba(133,79,11,0.12)", color: "#633806", border: "rgba(133,79,11,0.25)" };
+            if (/(término|termino|resist|não acei|nao acei)/i.test(note)) return { label: "Resistente", bg: "rgba(201,168,76,0.12)", color: "#7a5e1a", border: "rgba(201,168,76,0.3)" };
+            if (ANX_RX.test(note)) return { label: "Ansioso", bg: "rgba(201,168,76,0.08)", color: "#9a7a28", border: "rgba(201,168,76,0.2)" };
+            if (ENG_RX.test(note)) return { label: "Engajado", bg: "rgba(109,79,194,0.12)", color: "#3d2b8a", border: "rgba(109,79,194,0.25)" };
+            return { label: "Estável", bg: "rgba(109,79,194,0.08)", color: "#3d2b8a", border: "rgba(109,79,194,0.2)" };
+          };
+
+          // Period filter
+          const now = new Date();
+          const cutoff = moodPeriod === "week" ? 7 : moodPeriod === "biweek" ? 14 : null;
+          const periodFiltered = cutoff
+            ? patientMoods.filter(m => (now.getTime() - new Date(m.recorded_at).getTime()) / 86400000 <= cutoff)
+            : patientMoods;
+
+          // Latest entry per patient (within filter)
+          const latestByPatient = new Map<string, PatientMoodEntry>();
+          [...periodFiltered]
+            .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())
+            .forEach(m => { if (!latestByPatient.has(m.patient_id)) latestByPatient.set(m.patient_id, m); });
+
+          // Previous score per patient (from full dataset, immediately before latest)
+          const prevScoreByPatient = new Map<string, number>();
+          latestByPatient.forEach((latest, pid) => {
+            const sorted = [...patientMoods]
+              .filter(m => m.patient_id === pid)
+              .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime());
+            const idx = sorted.findIndex(m => m.id === latest.id);
+            if (idx >= 0 && sorted[idx + 1]) prevScoreByPatient.set(pid, sorted[idx + 1].mood_score);
+          });
+
+          let listed = Array.from(latestByPatient.values());
+          if (moodFilterPatient !== "all") listed = listed.filter(m => m.patient_id === moodFilterPatient);
+
+          // Sort: urgent first, then score desc
+          listed.sort((a, b) => {
+            const ua = isUrgentMood(a) ? 0 : 1;
+            const ub = isUrgentMood(b) ? 0 : 1;
+            if (ua !== ub) return ua - ub;
+            return b.mood_score - a.mood_score;
+          });
+
+          const urgent = listed.filter(isUrgentMood);
+          const stable = listed.filter(m => !isUrgentMood(m));
+          const urgentCount = urgent.length;
+
+          const uniquePatients = Array.from(
+            new Map(patientMoods.map(m => [m.patient_id, { id: m.patient_id, name: m.patient_name }])).values()
+          ).sort((a, b) => a.name.localeCompare(b.name));
+
+          const PERIOD_CHIPS: { key: "week" | "biweek" | "all"; label: string }[] = [
+            { key: "week", label: "Esta semana" },
+            { key: "biweek", label: "Quinzenal" },
+            { key: "all", label: "Todos" },
+          ];
+
+          const Card = ({ m, urgentCard }: { m: PatientMoodEntry; urgentCard: boolean }) => {
+            const chip = classifyChip(m);
+            const prev = prevScoreByPatient.get(m.patient_id);
+            const delta = prev !== undefined ? +(m.mood_score - prev).toFixed(1) : null;
+            const fillColor = m.mood_score >= 7 ? "#6d4fc2" : m.mood_score >= 4 ? "#c9a84c" : "#854f0b";
+            const valueColor = m.mood_score >= 7 ? "#3d2b8a" : m.mood_score >= 4 ? "#1a1030" : "#854f0b";
+            const pct = Math.max(0, Math.min(100, (m.mood_score / 10) * 100));
             return (
-              <div className="mb-4">
-                <Select value={moodFilterPatient} onValueChange={setMoodFilterPatient}>
-                  <SelectTrigger className="w-[250px] h-9 text-sm">
-                    <SelectValue placeholder="Todos os pacientes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os pacientes</SelectItem>
-                    {uniquePatients.map(p => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            );
-          })()}
+              <li
+                className="relative overflow-hidden rounded-[13px] p-4 transition-shadow hover:shadow-card"
+                style={{
+                  background: urgentCard ? "#fdf8f0" : "#ffffff",
+                  border: urgentCard ? "0.5px solid rgba(201,168,76,0.35)" : "0.5px solid #ede9f8",
+                }}
+              >
+                <div
+                  className="absolute top-0 left-0 right-0"
+                  style={{
+                    height: "2.5px",
+                    background: urgentCard
+                      ? "linear-gradient(90deg, #854f0b, #c9a84c)"
+                      : "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)",
+                  }}
+                />
+                <div className="flex items-center gap-3">
+                  <div
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                    style={{
+                      background: urgentCard ? "rgba(201,168,76,0.12)" : "rgba(109,79,194,0.08)",
+                      color: urgentCard ? "#7a5e1a" : "#6d4fc2",
+                      fontFamily: "Syne, sans-serif",
+                      fontWeight: 700,
+                      fontSize: 13,
+                    }}
+                  >
+                    {m.patient_initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: "13.5px", color: "#1a1030" }} className="truncate">
+                        {m.patient_name}
+                      </p>
+                      <span
+                        className="uppercase"
+                        style={{
+                          fontFamily: "Syne, sans-serif",
+                          fontSize: "9px",
+                          fontWeight: 600,
+                          padding: "3px 8px",
+                          borderRadius: "40px",
+                          background: chip.bg,
+                          color: chip.color,
+                          border: `0.5px solid ${chip.border}`,
+                          letterSpacing: "0.04em",
+                        }}
+                      >
+                        {chip.label}
+                      </span>
+                    </div>
+                    {m.note && (
+                      <p className="mt-1 truncate" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "11.5px", color: "#6a5880", fontStyle: "italic" }}>
+                        {m.note}
+                      </p>
+                    )}
+                    <div className="mt-1 flex items-center gap-1.5" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "10.5px", color: "#a090c8" }}>
+                      <Clock className="h-3 w-3" style={{ color: "#a090c8" }} />
+                      <span>{format(new Date(m.recorded_at), "dd/MM/yyyy · HH:mm", { locale: ptBR })}</span>
+                    </div>
+                  </div>
 
-          {(() => {
-            const filtered = moodFilterPatient === "all"
-              ? patientMoods.slice(0, 15)
-              : patientMoods.filter(m => m.patient_id === moodFilterPatient);
-
-            if (filtered.length === 0) {
-              return (
-                <div className="text-center py-10 text-muted-foreground">
-                  <Heart className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                  <p className="font-display text-lg font-medium text-foreground/70">Nenhum registro de humor ainda</p>
-                  <p className="mt-1 text-sm">Registre o humor dos pacientes nas sessões para acompanhar a evolução emocional aqui ✨</p>
-                </div>
-              );
-            }
-
-            return (
-              <ul className="space-y-3">
-                {filtered.map((m) => {
-                  const moodEmoji = m.mood_score >= 8 ? "🤩" : m.mood_score >= 6 ? "🙂" : m.mood_score >= 4 ? "😐" : m.mood_score >= 2 ? "😔" : "😫";
-                  const moodColor = m.mood_score >= 7 ? "text-emerald-600 bg-emerald-100" : m.mood_score >= 4 ? "text-amber-600 bg-amber-100" : "text-rose-600 bg-rose-100";
-                  return (
-                    <li
-                      key={m.id}
-                      className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                    >
-                      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-bold text-sm ${getAvatarColor(m.patient_name)}`}>
-                        {m.patient_initials}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground truncate">{m.patient_name}</p>
-                        {m.note && <p className="text-sm text-muted-foreground truncate">{m.note}</p>}
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {format(new Date(m.recorded_at), "dd/MM/yyyy · HH:mm", { locale: ptBR })}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xl">{moodEmoji}</span>
-                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${moodColor}`}>
-                          {m.mood_score}/10
+                  {/* Score block */}
+                  <div className="shrink-0 text-right">
+                    <div className="flex items-baseline justify-end gap-1">
+                      <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: "17px", color: valueColor }}>
+                        {m.mood_score.toString().replace(".", ",")}
+                      </span>
+                      <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "10px", color: "#c0b0e0" }}>/10</span>
+                    </div>
+                    <div className="mt-1.5 ml-auto" style={{ width: "56px", height: "3px", background: "#f0ebff", borderRadius: "40px", overflow: "hidden" }}>
+                      <div style={{ width: `${pct}%`, height: "100%", background: fillColor, borderRadius: "40px" }} />
+                    </div>
+                    {delta !== null && (
+                      <div className="mt-1 flex items-center justify-end gap-1" style={{ fontSize: "10.5px", fontWeight: 500, color: delta > 0 ? "#6d4fc2" : delta < 0 ? "#854f0b" : "#a090c8" }}>
+                        {delta > 0 ? <TrendingUp className="h-3 w-3" /> : delta < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+                        <span>
+                          {delta > 0 ? `+${delta}` : delta < 0 ? `${delta}` : "sem variação"}
+                          {delta !== 0 && " vs anterior"}
                         </span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          title="Excluir registro"
-                          onClick={async () => {
-                            await supabase.from("patient_progress").delete().eq("id", m.id);
-                            setPatientMoods(prev => prev.filter(x => x.id !== m.id));
-                          }}
-                        >
-                          <XCircle className="h-3.5 w-3.5" />
-                        </Button>
                       </div>
-                    </li>
-                  );
-                })}
-              </ul>
+                    )}
+                  </div>
+
+                  <button
+                    title="Excluir registro"
+                    onClick={async () => {
+                      await supabase.from("patient_progress").delete().eq("id", m.id);
+                      setPatientMoods(prev => prev.filter(x => x.id !== m.id));
+                    }}
+                    className="shrink-0 flex items-center justify-center transition-colors"
+                    style={{ width: "26px", height: "26px", borderRadius: "7px", color: "#c0b0e0", background: "transparent" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "#f7f4ff"; e.currentTarget.style.color = "#6d4fc2"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#c0b0e0"; }}
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </button>
+                </div>
+              </li>
             );
-          })()}
-        </section>
+          };
+
+          const SectionLabel = ({ text, count }: { text: string; count: number }) => (
+            <div className="flex items-center gap-3 mt-2 mb-3">
+              <span
+                className="uppercase"
+                style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "9px", letterSpacing: "0.14em", color: "#a090c8" }}
+              >
+                {text}
+              </span>
+              <div className="flex-1" style={{ height: "0.5px", background: "#ede9f8" }} />
+              <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "9px", color: "#c0b0e0" }}>
+                {count.toString().padStart(2, "0")}
+              </span>
+            </div>
+          );
+
+          return (
+            <section
+              className="rounded-2xl border shadow-card overflow-hidden"
+              style={{ background: "#faf8ff", borderColor: "#ede9f8" }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 pt-6">
+                <div className="flex items-center gap-2">
+                  <SmilePlus className="h-5 w-5" style={{ color: "#6d4fc2" }} />
+                  <h2 style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: "18px", color: "#1a1030" }}>
+                    Emoções dos Pacientes
+                  </h2>
+                </div>
+              </div>
+
+              {/* Alert banner */}
+              {urgentCount > 0 && (
+                <div
+                  className="flex items-center gap-2 mt-4 flex-wrap"
+                  style={{
+                    background: "#fdf8f0",
+                    borderTop: "0.5px solid rgba(201,168,76,0.25)",
+                    borderBottom: "0.5px solid rgba(201,168,76,0.25)",
+                    padding: "10px 24px",
+                  }}
+                >
+                  <AlertTriangle style={{ width: "15px", height: "15px", color: "#854f0b" }} />
+                  <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "12px", color: "#854f0b" }}>
+                    {urgentCount} {urgentCount === 1 ? "paciente requer" : "pacientes requerem"} atenção clínica.
+                  </span>
+                  <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 400, color: "#a07030" }}>
+                    Crise relatada ou resistência ao processo terapêutico.
+                  </span>
+                </div>
+              )}
+
+              {/* Filters */}
+              <div className="px-6 pt-4 pb-3 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Select value={moodFilterPatient} onValueChange={setMoodFilterPatient}>
+                    <SelectTrigger
+                      className="h-9 w-[200px]"
+                      style={{
+                        background: "#fff",
+                        border: "0.5px solid #ede9f8",
+                        borderRadius: "40px",
+                        fontFamily: "Instrument Sans, sans-serif",
+                        fontSize: "12px",
+                        color: "#6a5880",
+                      }}
+                    >
+                      <Filter className="h-3 w-3 mr-1" style={{ color: "#a090c8" }} />
+                      <SelectValue placeholder="Todos os pacientes" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os pacientes</SelectItem>
+                      {uniquePatients.map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {PERIOD_CHIPS.map(c => {
+                    const active = moodPeriod === c.key;
+                    return (
+                      <button
+                        key={c.key}
+                        onClick={() => setMoodPeriod(c.key)}
+                        style={{
+                          background: active ? "rgba(109,79,194,0.06)" : "#ffffff",
+                          border: active ? "0.5px solid rgba(109,79,194,0.25)" : "0.5px solid #ede9f8",
+                          color: active ? "#3d2b8a" : "#8070a8",
+                          borderRadius: "40px",
+                          padding: "6px 14px",
+                          fontFamily: "Syne, sans-serif",
+                          fontWeight: 600,
+                          fontSize: "12px",
+                        }}
+                      >
+                        {c.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <Link to="/app/agenda" style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "12px", color: "#6d4fc2" }}>
+                  Ver sessões →
+                </Link>
+              </div>
+
+              {/* Content */}
+              <div className="px-6 pb-6">
+                {listed.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Heart className="h-12 w-12 mx-auto mb-4" style={{ color: "#c0b0e0" }} />
+                    <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "15px", color: "#3d2b8a" }}>
+                      Nenhum registro de humor ainda
+                    </p>
+                    <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "13px", color: "#8070a8" }}>
+                      Registre o humor dos pacientes nas sessões para acompanhar a evolução emocional aqui.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {urgent.length > 0 && (
+                      <>
+                        <SectionLabel text="Atenção imediata" count={urgent.length} />
+                        <ul className="space-y-2.5">
+                          {urgent.map(m => <Card key={m.id} m={m} urgentCard />)}
+                        </ul>
+                      </>
+                    )}
+                    {stable.length > 0 && (
+                      <>
+                        <SectionLabel text="Estáveis" count={stable.length} />
+                        <ul className="space-y-2.5">
+                          {stable.map(m => <Card key={m.id} m={m} urgentCard={false} />)}
+                        </ul>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            </section>
+          );
+        })()}
 
         {/* ── Upcoming Sessions ── */}
         <section className="rounded-2xl bg-card border border-border shadow-card p-8">
