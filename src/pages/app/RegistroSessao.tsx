@@ -439,27 +439,54 @@ const RegistroSessao = () => {
     icon: Icon,
     title,
     subtitle,
+    sectionKey,
   }: {
     n?: number;
     icon: React.ComponentType<{ className?: string }>;
     title: string;
     subtitle?: string;
-  }) => (
-    <div className="flex items-start gap-3 mb-4">
-      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 text-accent ring-1 ring-accent/20">
-        <Icon className="h-4 w-4" />
-        {n != null && (
-          <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground shadow-sm">
-            {n}
-          </span>
+    sectionKey?: string;
+  }) => {
+    const collapsible = compactMode && !!sectionKey;
+    const open = sectionKey ? isOpen(sectionKey) : true;
+    const content = (
+      <div className="flex items-start gap-3 w-full">
+        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 text-accent ring-1 ring-accent/20">
+          <Icon className="h-4 w-4" />
+          {n != null && (
+            <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground shadow-sm">
+              {n}
+            </span>
+          )}
+        </div>
+        <div className="min-w-0 pt-0.5 flex-1 text-left">
+          <h2 className="font-display text-base font-semibold text-foreground leading-tight">{title}</h2>
+          {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+        </div>
+        {collapsible && (
+          <ChevronDown
+            className={cn(
+              "h-5 w-5 text-muted-foreground transition-transform shrink-0 mt-1",
+              open && "rotate-180",
+            )}
+          />
         )}
       </div>
-      <div className="min-w-0 pt-0.5">
-        <h2 className="font-display text-base font-semibold text-foreground leading-tight">{title}</h2>
-        {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
-      </div>
-    </div>
-  );
+    );
+    if (collapsible && sectionKey) {
+      return (
+        <button
+          type="button"
+          onClick={() => toggleSection(sectionKey)}
+          className={cn("w-full mb-0 rounded-xl -m-1 p-1 hover:bg-muted/30 transition-colors", open && "mb-4")}
+          aria-expanded={open}
+        >
+          {content}
+        </button>
+      );
+    }
+    return <div className="mb-4">{content}</div>;
+  };
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
