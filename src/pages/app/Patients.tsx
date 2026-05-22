@@ -105,6 +105,7 @@ const Patients = () => {
   const patientGuard = useUnsavedGuard();
   const [latestSessionDates, setLatestSessionDates] = useState<Record<string, string>>({});
   const [anamneseFilled, setAnamneseFilled] = useState<Record<string, string>>({});
+  const [formulationFilled, setFormulationFilled] = useState<Record<string, string>>({});
   const [counts, setCounts] = useState<{ mood: Record<string, number>; tcc: Record<string, number>; records: Record<string, number>; history: Record<string, number> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [lastDates, setLastDates] = useState<{ mood: Record<string, string>; tcc: Record<string, string>; records: Record<string, string>; history: Record<string, string> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [fullscreen, setFullscreen] = useState<Record<string, boolean>>({});
@@ -142,7 +143,7 @@ const Patients = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes] = await Promise.all([
+    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
       supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
@@ -151,6 +152,7 @@ const Patients = () => {
       supabase.from("tcc_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("session_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
+      supabase.from("case_formulations").select("patient_id, updated_at").eq("user_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
@@ -167,6 +169,11 @@ const Patients = () => {
       if (a.patient_id) anamMap[a.patient_id] = a.updated_at;
     });
     setAnamneseFilled(anamMap);
+    const formMap: Record<string, string> = {};
+    (formRes.data ?? []).forEach((f: any) => {
+      if (f.patient_id) formMap[f.patient_id] = f.updated_at;
+    });
+    setFormulationFilled(formMap);
     const countAndLatest = (rows: any[] | null, dateKey: string) => {
       const c: Record<string, number> = {};
       const l: Record<string, string> = {};
@@ -553,6 +560,16 @@ const Patients = () => {
                     >
                       <CalendarDays className="h-3 w-3" /> Histórico
                       {cHist > 0 && <span style={{ background: "rgba(109,79,194,0.18)", borderRadius: 40, padding: "0 6px", fontSize: 9 }}>{cHist}</span>}
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setPadeksyPatient(p); }}
+                      title={formulationFilled[p.id] ? "Formulação preenchida" : "Criar formulação de caso"}
+                      className="inline-flex items-center gap-1.5 transition-colors"
+                      style={formulationFilled[p.id]
+                        ? { background: "rgba(109,79,194,0.10)", border: "0.5px solid rgba(109,79,194,0.25)", color: "#3d2b8a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
+                        : { background: "#f7f4ff", border: "0.5px dashed #c9a84c", color: "#7a5e1a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                    >
+                      <Stethoscope className="h-3 w-3" /> {formulationFilled[p.id] ? "Formulação" : "Sem formulação"}
                     </button>
                     {p.category === "crianca" && (
                       <button
