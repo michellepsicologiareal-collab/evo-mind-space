@@ -506,12 +506,29 @@ const RegistroSessao = () => {
               {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
             </p>
           </div>
-          {lastSavedAt && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-sage/30 bg-sage/10 px-2.5 py-1 text-[11px] font-medium text-sage shrink-0">
-              <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
-              Salvo {format(lastSavedAt, "HH:mm:ss")}
-            </span>
-          )}
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setCompactMode((v) => !v)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
+                compactMode
+                  ? "border-accent/40 bg-accent/10 text-accent hover:bg-accent/15"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-accent/30",
+              )}
+              aria-pressed={compactMode}
+              title={compactMode ? "Sair do modo compacto" : "Ativar modo compacto"}
+            >
+              {compactMode ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
+              {compactMode ? "Modo expandido" : "Modo compacto"}
+            </button>
+            {lastSavedAt && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-sage/30 bg-sage/10 px-2.5 py-1 text-[11px] font-medium text-sage">
+                <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
+                Salvo {format(lastSavedAt, "HH:mm:ss")}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
