@@ -105,18 +105,19 @@ const statusLabel: Record<Status, string> = {
   no_show: "Falta", rescheduled: "Remarcada", cancelled: "Cancelada",
 };
 const statusClass: Record<Status, string> = {
-  scheduled: "bg-secondary text-secondary-foreground",
-  confirmed: "bg-emerald-100 text-emerald-700",
-  completed: "bg-lilac text-lilac-foreground",
-  no_show: "bg-destructive/15 text-destructive",
-  rescheduled: "bg-sand text-sand-foreground",
-  cancelled: "bg-muted text-muted-foreground line-through",
+  scheduled: "bg-[#f7f4ff] text-[#6d4fc2] border-[#ede9f8]",
+  confirmed: "bg-[rgba(109,79,194,0.08)] text-[#3d2b8a] border-[rgba(109,79,194,0.2)]",
+  completed: "bg-[rgba(109,79,194,0.10)] text-[#3d2b8a] border-[rgba(109,79,194,0.25)]",
+  no_show: "bg-destructive/15 text-destructive border-destructive/30",
+  rescheduled: "bg-sand text-sand-foreground border-sand",
+  cancelled: "bg-muted text-muted-foreground border-muted line-through",
 };
 const paymentStatusLabel: Record<PaymentStatus, string> = { pending: "Pendente", paid: "Pago" };
 const paymentStatusClass: Record<PaymentStatus, string> = {
-  pending: "bg-accent/15 text-accent border-accent/30",
-  paid: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  pending: "bg-[rgba(201,168,76,0.10)] text-[#7a5e1a] border-[rgba(201,168,76,0.3)]",
+  paid: "bg-[rgba(109,79,194,0.10)] text-[#3d2b8a] border-[rgba(109,79,194,0.25)]",
 };
+const PILL_BASE = "inline-flex items-center text-[11px] font-display font-semibold px-2.5 py-0.5 rounded-[40px] border";
 
 const WEEKDAY_NAMES = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
@@ -877,13 +878,13 @@ const Agenda = () => {
         className={cn(
           "rounded-xl border p-3 group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/20",
           isSupervisionCard ? "bg-serene/10 border-serene/40"
-            : s.status === "confirmed" ? "bg-emerald-50 border-emerald-200"
+            : s.status === "confirmed" ? "bg-[#f7f4ff] border-[rgba(109,79,194,0.15)]"
               : "bg-background border-border"
         )}
       >
         <div className="flex items-start justify-between gap-1">
           <div className="flex items-center gap-1.5 min-w-0">
-            {s.status === "confirmed" && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />}
+            {s.status === "confirmed" && <CheckCircle2 className="h-3.5 w-3.5 text-[#6d4fc2] shrink-0" />}
             {isSupervisionCard && <GraduationCap className="h-3.5 w-3.5 text-serene shrink-0" />}
             <p className="font-display text-sm text-primary">{format(new Date(s.scheduled_at), "HH:mm")}</p>
           </div>
@@ -944,7 +945,7 @@ const Agenda = () => {
         </div>
         {!compact && (
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full", isSupervisionCard ? "bg-serene/20 text-serene" : statusClass[s.status])}>
+            <span className={cn(PILL_BASE, isSupervisionCard ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
               {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
             </span>
             {(s as any).modality === "online" ? (
@@ -962,7 +963,7 @@ const Agenda = () => {
               </a>
             )}
             {!isSupervisionCard && s.price != null && (
-              <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full border", paymentStatusClass[s.payment_status])}>
+              <span className={cn(PILL_BASE, paymentStatusClass[s.payment_status])}>
                 {paymentStatusLabel[s.payment_status]}
               </span>
             )}
@@ -989,7 +990,7 @@ const Agenda = () => {
         </div>
         <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
-            <Button variant="accent" onClick={() => openNew()}>
+            <Button variant="accent" onClick={() => openNew()} className="rounded-[40px] font-display font-semibold">
               <Plus className="h-4 w-4" /> Nova sessão
             </Button>
           </DialogTrigger>
@@ -1213,10 +1214,10 @@ const Agenda = () => {
         {/* ── LEFT: Calendar views ── */}
         <div className="space-y-4">
           <Tabs value={viewTab} onValueChange={setViewTab}>
-            <TabsList className="w-full sm:w-auto">
-              <TabsTrigger value="month" className="flex-1 sm:flex-none">📅 Mês</TabsTrigger>
-              <TabsTrigger value="week" className="flex-1 sm:flex-none">📋 Semana</TabsTrigger>
-              <TabsTrigger value="day" className="flex-1 sm:flex-none">📌 Dia</TabsTrigger>
+            <TabsList className="w-full sm:w-auto bg-transparent gap-1 p-0">
+              <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none">📅 Mês</TabsTrigger>
+              <TabsTrigger value="week" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none">📋 Semana</TabsTrigger>
+              <TabsTrigger value="day" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none">📌 Dia</TabsTrigger>
             </TabsList>
 
             {/* ── MONTH VIEW ── */}
@@ -1231,7 +1232,7 @@ const Agenda = () => {
                     {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
                   </p>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => { setCurrentMonth(startOfMonth(new Date())); setSelectedDate(new Date()); }}>
+                    <Button variant="outline" size="sm" className="rounded-[40px] font-display font-semibold bg-[rgba(109,79,194,0.06)] border-[rgba(109,79,194,0.25)] text-[#5c3db0] hover:bg-[rgba(109,79,194,0.12)] hover:text-[#5c3db0]" onClick={() => { setCurrentMonth(startOfMonth(new Date())); setSelectedDate(new Date()); }}>
                       Hoje
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
@@ -1275,9 +1276,9 @@ const Agenda = () => {
                                 <span className="flex items-center gap-0.5 h-3">
                                   <span className={cn(
                                     "w-1.5 h-1.5 rounded-full shrink-0",
-                                    isSelected ? "bg-accent-foreground" : "bg-accent"
+                                    isSelected ? "bg-accent-foreground" : "bg-[#6d4fc2]"
                                   )} />
-                                  {dayCount > 1 && <span className={cn("text-[8px] leading-none", isSelected ? "text-accent-foreground" : "text-accent")}>{dayCount}</span>}
+                                  {dayCount > 1 && <span className={cn("text-[8px] leading-none", isSelected ? "text-accent-foreground" : "text-[#6d4fc2]")}>{dayCount}</span>}
                                 </span>
                               ) : (
                                 <span className="h-3" />
@@ -1297,7 +1298,7 @@ const Agenda = () => {
                           </p>
                           <p className="text-sm text-muted-foreground">{format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}</p>
                         </div>
-                        <Button variant="accent" size="sm" onClick={() => openNew(selectedDate)}>
+                        <Button variant="accent" size="sm" className="rounded-[40px] font-display font-semibold" onClick={() => openNew(selectedDate)}>
                           <Plus className="h-3.5 w-3.5" /> Nova
                         </Button>
                       </div>
@@ -1332,7 +1333,7 @@ const Agenda = () => {
                     <p className="text-xs text-muted-foreground">{format(weekStart, "dd/MM")} — {format(addDays(weekStart, 6), "dd/MM")}</p>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>Hoje</Button>
+                    <Button variant="outline" size="sm" className="rounded-[40px] font-display font-semibold bg-[rgba(109,79,194,0.06)] border-[rgba(109,79,194,0.25)] text-[#5c3db0] hover:bg-[rgba(109,79,194,0.12)] hover:text-[#5c3db0]" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>Hoje</Button>
                     <Button variant="ghost" size="icon" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -1394,11 +1395,11 @@ const Agenda = () => {
                                     </div>
                                     {/* Status + Payment */}
                                     <div className="flex items-center gap-1.5 shrink-0">
-                                      <span className={cn("text-[10px] px-2 py-0.5 rounded-full", isSupervisionRow ? "bg-serene/20 text-serene" : statusClass[s.status])}>
+                                      <span className={cn(PILL_BASE, isSupervisionRow ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
                                         {isSupervisionRow ? "Supervisão" : statusLabel[s.status]}
                                       </span>
                                       {!isSupervisionRow && s.price != null && (
-                                        <span className={cn("text-[10px] px-2 py-0.5 rounded-full border", paymentStatusClass[s.payment_status])}>
+                                        <span className={cn(PILL_BASE, paymentStatusClass[s.payment_status])}>
                                           {paymentStatusLabel[s.payment_status]}
                                         </span>
                                        )}
@@ -1433,7 +1434,7 @@ const Agenda = () => {
                     <p className="text-sm text-muted-foreground">{format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setSelectedDate(new Date())}>Hoje</Button>
+                    <Button variant="outline" size="sm" className="rounded-[40px] font-display font-semibold bg-[rgba(109,79,194,0.06)] border-[rgba(109,79,194,0.25)] text-[#5c3db0] hover:bg-[rgba(109,79,194,0.12)] hover:text-[#5c3db0]" onClick={() => setSelectedDate(new Date())}>Hoje</Button>
                     <Button variant="ghost" size="icon" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -1441,7 +1442,7 @@ const Agenda = () => {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button variant="accent" size="sm" onClick={() => openNew(selectedDate)}>
+                  <Button variant="accent" size="sm" className="rounded-[40px] font-display font-semibold" onClick={() => openNew(selectedDate)}>
                     <Plus className="h-3.5 w-3.5" /> Nova sessão
                   </Button>
                 </div>
@@ -1470,14 +1471,14 @@ const Agenda = () => {
             <div className="mb-3">
               <h2 className="font-display font-semibold text-lg">Sessões do Mês</h2>
               <p className="text-xs text-muted-foreground">
-                {format(currentMonth, "MMMM yyyy", { locale: ptBR })} • <span className="text-accent font-semibold">Pendente: R$ {pendingTotal.toFixed(2)}</span> • <span className="text-emerald-600 font-semibold">Pago: R$ {paidTotal.toFixed(2)}</span>
+                {format(currentMonth, "MMMM yyyy", { locale: ptBR })} • <span className="font-semibold" style={{ color: "#854f0b" }}>Pendente: R$ {pendingTotal.toFixed(2)}</span> • <span className="font-semibold" style={{ color: "#6d4fc2" }}>Pago: R$ {paidTotal.toFixed(2)}</span>
               </p>
             </div>
 
             {/* Payment status tabs */}
-            <div className="flex items-center gap-1 mb-3 bg-muted/50 rounded-lg p-0.5">
+            <div className="flex items-center gap-4 mb-3 border-b border-border">
               {([["pending", "Pendentes"], ["paid", "Pagos"], ["all", "Todos"]] as const).map(([val, label]) => (
-                <button key={val} onClick={() => setPaymentFilter(val)} className={cn("flex-1 text-xs py-1.5 px-2 rounded-md font-medium transition-colors", paymentFilter === val ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>
+                <button key={val} onClick={() => setPaymentFilter(val)} className={cn("text-xs py-2 px-1 font-display transition-colors -mb-px border-b-2", paymentFilter === val ? "border-[#6d4fc2] text-[#3d2b8a] font-semibold" : "border-transparent text-[#a090c8] hover:text-[#3d2b8a]")}>
                   {label}
                 </button>
               ))}
@@ -1531,12 +1532,12 @@ const Agenda = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Select value={s.payment_status} onValueChange={(v) => group.isSinglePayment ? updatePaymentGroup(group.sessions.map((item) => item.id), v as PaymentStatus) : updatePaymentStatus(s.id, v as PaymentStatus)}>
-                        <SelectTrigger className={cn("h-8 text-xs flex-1 border", paymentStatusClass[s.payment_status])}>
+                        <SelectTrigger className={cn("h-8 text-xs flex-1 border rounded-[40px] font-display font-semibold", paymentStatusClass[s.payment_status])}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="pending"><span className="text-accent font-medium">● Pendente</span></SelectItem>
-                          <SelectItem value="paid"><span className="text-emerald-600 font-medium">● Pago</span></SelectItem>
+                          <SelectItem value="pending"><span className="font-medium" style={{ color: "#7a5e1a" }}>● Pendente</span></SelectItem>
+                          <SelectItem value="paid"><span className="font-medium" style={{ color: "#3d2b8a" }}>● Pago</span></SelectItem>
                         </SelectContent>
                       </Select>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 shrink-0" title="Cobrar via WhatsApp" onClick={() => sendWhatsAppReminder(s)}>
@@ -1908,7 +1909,7 @@ const Agenda = () => {
                           <p className="text-xs text-muted-foreground">{s.duration_minutes} min</p>
                         </div>
                         <div className="text-right">
-                          <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full", statusClass[s.status as Status])}>
+                          <span className={cn(PILL_BASE, statusClass[s.status as Status])}>
                             {statusLabel[s.status as Status]}
                           </span>
                           {s.price != null && (
@@ -1918,7 +1919,7 @@ const Agenda = () => {
                       </div>
                       {s.price != null && (
                         <div className="mt-1.5">
-                          <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full border", paymentStatusClass[s.payment_status as PaymentStatus])}>
+                          <span className={cn(PILL_BASE, paymentStatusClass[s.payment_status as PaymentStatus])}>
                             {paymentStatusLabel[s.payment_status as PaymentStatus]}
                             {s.payment_method && ` · ${s.payment_method === "pix" ? "PIX" : s.payment_method === "card" ? "Cartão" : s.payment_method === "cash" ? "Dinheiro" : ""}`}
                           </span>
@@ -1948,7 +1949,7 @@ const Agenda = () => {
                     <div key={s.id} className="rounded-xl border border-border bg-background p-3 flex items-center justify-between">
                       <div>
                         <p className="text-sm">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
-                        <span className={cn("inline-block text-[10px] px-2 py-0.5 rounded-full border mt-1", paymentStatusClass[s.payment_status as PaymentStatus])}>
+                        <span className={cn(PILL_BASE, "mt-1", paymentStatusClass[s.payment_status as PaymentStatus])}>
                           {paymentStatusLabel[s.payment_status as PaymentStatus]}
                         </span>
                       </div>
