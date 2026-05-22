@@ -174,12 +174,17 @@ export const AppLayout = () => {
           )}
         </nav>
 
-        <div className="p-4 border-t border-[hsl(var(--sidebar-border))]">
+        <div className="p-4 border-t border-[#ede9f8]">
           <button
             onClick={() => setPlanOpen(true)}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors text-gold hover:bg-gold/10 w-full"
+            className="flex items-center gap-3 px-4 py-3 rounded-[10px] font-display font-semibold text-sm transition-colors w-full"
+            style={{
+              background: "rgba(201,168,76,0.08)",
+              border: "0.5px solid rgba(201,168,76,0.25)",
+              color: "#7a5e1a",
+            }}
           >
-            <Crown className="h-4 w-4" />
+            <Crown className="h-4 w-4" style={{ color: "#c9a84c" }} />
             Meu Plano
           </button>
           <p className="text-xs text-muted-foreground truncate mb-3 mt-3">{user?.email}</p>
