@@ -526,16 +526,24 @@ const Dashboard = () => {
         {/* ── Welcome Header ── */}
         <header className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/60 to-transparent" />
-          {clinicName && (
-            <p className="text-xs uppercase tracking-[0.2em] text-accent font-semibold">{clinicName}</p>
-          )}
-          <p className={`text-sm text-muted-foreground capitalize ${clinicName ? "mt-1" : ""}`}>
+          <p
+            className="uppercase"
+            style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", color: "#c9a84c" }}
+          >
+            PSI REAL{clinicName ? ` · ${clinicName}` : ""}
+          </p>
+          <p className="mt-1 capitalize" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 300, color: "#8070a8" }}>
             {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
-          <h1 className="mt-2 font-display text-3xl md:text-4xl font-bold text-foreground">
+          <h1
+            className="mt-2"
+            style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 700, color: "#1a1030" }}
+          >
             {greeting}{firstName ? `, ${firstName}` : ""}.
           </h1>
-          <p className="mt-2 text-muted-foreground text-sm md:text-base">{summaryText}</p>
+          <p className="mt-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "13px", fontWeight: 300, color: "#8070a8" }}>
+            {summaryText}
+          </p>
         </header>
 
         {/* ── Period Filter ── */}
@@ -1145,8 +1153,23 @@ const KPICard = ({
         )}
       </div>
     </div>
-    <p className="mt-4 text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
-    <p className="mt-1 font-display text-2xl md:text-3xl font-bold text-foreground">{value}</p>
+    <p
+      className="mt-4 font-sans uppercase"
+      style={{ fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "#a090c8" }}
+    >
+      {label}
+    </p>
+    <p
+      className="mt-1 font-display"
+      style={{
+        fontFamily: "Syne, sans-serif",
+        fontSize: value.trim().startsWith("R$") ? "18px" : "28px",
+        fontWeight: 700,
+        color: "#1a1030",
+      }}
+    >
+      {value}
+    </p>
   </div>
 );
 
