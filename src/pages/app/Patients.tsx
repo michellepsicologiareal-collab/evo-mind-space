@@ -4,7 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays, Smile, FileText, Baby, Sparkles, Maximize2, Minimize2, X } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays, Smile, FileText, Baby, Sparkles, Maximize2, Minimize2, X, Printer, BookOpen } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { TccRecords } from "@/components/app/TccRecords";
 import { CaseFormulation } from "@/components/app/CaseFormulation";
@@ -106,6 +106,10 @@ const Patients = () => {
   const [latestSessionDates, setLatestSessionDates] = useState<Record<string, string>>({});
   const [anamneseFilled, setAnamneseFilled] = useState<Record<string, string>>({});
   const [formulationFilled, setFormulationFilled] = useState<Record<string, string>>({});
+  const [formulationSummaries, setFormulationSummaries] = useState<Record<string, string>>({});
+  const [formulationData, setFormulationData] = useState<Record<string, any>>({});
+  const [summarizing, setSummarizing] = useState<Record<string, boolean>>({});
+  const [readPatient, setReadPatient] = useState<Patient | null>(null);
   const [counts, setCounts] = useState<{ mood: Record<string, number>; tcc: Record<string, number>; records: Record<string, number>; history: Record<string, number> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [lastDates, setLastDates] = useState<{ mood: Record<string, string>; tcc: Record<string, string>; records: Record<string, string>; history: Record<string, string> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [fullscreen, setFullscreen] = useState<Record<string, boolean>>({});
@@ -152,7 +156,7 @@ const Patients = () => {
       supabase.from("tcc_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("session_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
-      supabase.from("case_formulations").select("patient_id, updated_at").eq("user_id", user.id),
+      supabase.from("case_formulations").select("patient_id, updated_at, ai_summary, environment, thoughts, emotions, behaviors, physical_reactions, core_beliefs, treatment_goals").eq("user_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
@@ -170,10 +174,17 @@ const Patients = () => {
     });
     setAnamneseFilled(anamMap);
     const formMap: Record<string, string> = {};
+    const sumMap: Record<string, string> = {};
+    const dataMap: Record<string, any> = {};
     (formRes.data ?? []).forEach((f: any) => {
-      if (f.patient_id) formMap[f.patient_id] = f.updated_at;
+      if (!f.patient_id) return;
+      formMap[f.patient_id] = f.updated_at;
+      if (f.ai_summary) sumMap[f.patient_id] = f.ai_summary;
+      dataMap[f.patient_id] = f;
     });
     setFormulationFilled(formMap);
+    setFormulationSummaries(sumMap);
+    setFormulationData(dataMap);
     const countAndLatest = (rows: any[] | null, dateKey: string) => {
       const c: Record<string, number> = {};
       const l: Record<string, string> = {};
@@ -198,6 +209,26 @@ const Patients = () => {
   }, [user]);
 
   useAutoRefresh(() => { if (user) load(); }, { routePath: "/app/pacientes" });
+
+  const summarizeFormulation = async (patientId: string) => {
+    if (summarizing[patientId]) return;
+    setSummarizing((s) => ({ ...s, [patientId]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke("summarize-formulation", { body: { patient_id: patientId } });
+      if (error) throw error;
+      const summary = (data as any)?.summary as string | undefined;
+      if (summary) {
+        setFormulationSummaries((m) => ({ ...m, [patientId]: summary }));
+        toast.success("Resumo de IA gerado");
+      } else {
+        toast.error((data as any)?.error || "Falha ao gerar resumo");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao gerar resumo");
+    } finally {
+      setSummarizing((s) => ({ ...s, [patientId]: false }));
+    }
+  };
 
   const openNew = () => {
     if (!isPremium && patients.length >= FREE_PATIENT_LIMIT) {
@@ -497,7 +528,10 @@ const Patients = () => {
             const isAlert = p.notes ? /(crise|resist|abandon|suic|término)/i.test(p.notes) : false;
             const cHist = counts.history[p.id] || 0;
             const cMood = counts.mood[p.id] || 0;
+            const cTcc = counts.tcc[p.id] || 0;
             const hasAnam = !!anamneseFilled[p.id];
+            const hasFormul = !!formulationFilled[p.id];
+            const aiSum = formulationSummaries[p.id];
             const type = PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual";
             const url = buildWhatsAppUrl(p);
             return (
@@ -571,6 +605,16 @@ const Patients = () => {
                     >
                       <Stethoscope className="h-3 w-3" /> {formulationFilled[p.id] ? "Formulação" : "Sem formulação"}
                     </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setTccPatient(p); }}
+                      title={cTcc > 0 ? `${cTcc} conceitualizações TCC` : "Criar conceitualização TCC"}
+                      className="inline-flex items-center gap-1.5 transition-colors"
+                      style={cTcc > 0
+                        ? { background: "rgba(109,79,194,0.10)", border: "0.5px solid rgba(109,79,194,0.25)", color: "#3d2b8a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
+                        : { background: "#f7f4ff", border: "0.5px dashed #c9a84c", color: "#7a5e1a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                    >
+                      <Brain className="h-3 w-3" /> {cTcc > 0 ? `Conceitualização TCC${cTcc > 1 ? ` · ${cTcc}` : ""}` : "Sem conceitualização TCC"}
+                    </button>
                     {p.category === "crianca" && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }}
@@ -638,6 +682,46 @@ const Patients = () => {
                     </DropdownMenu>
                   </div>
                 </div>
+
+                {hasFormul && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="mx-4 sm:mx-5 mb-3 -mt-1 flex flex-col sm:flex-row sm:items-start gap-2 rounded-xl px-3 py-2.5"
+                    style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.08), rgba(109,79,194,0.06))", border: "0.5px solid rgba(201,168,76,0.25)" }}
+                  >
+                    <div className="flex items-start gap-2 min-w-0 flex-1">
+                      <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "#c9a84c" }} />
+                      <div className="min-w-0">
+                        <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "#7a5e1a" }}>Resumo IA · Formulação</p>
+                        {aiSum ? (
+                          <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#3d2b1a", lineHeight: 1.5 }}>{aiSum}</p>
+                        ) : (
+                          <p className="mt-1 italic" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#8b7355" }}>
+                            Gere um resumo de IA com os destaques clínicos desta formulação.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0 sm:ml-2">
+                      <button
+                        onClick={() => summarizeFormulation(p.id)}
+                        disabled={!!summarizing[p.id]}
+                        className="inline-flex items-center gap-1.5 transition-colors disabled:opacity-60"
+                        style={{ background: "#fff", border: "0.5px solid rgba(201,168,76,0.4)", color: "#7a5e1a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10.5 }}
+                      >
+                        {summarizing[p.id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                        {aiSum ? "Atualizar" : "Gerar resumo IA"}
+                      </button>
+                      <button
+                        onClick={() => setReadPatient(p)}
+                        className="inline-flex items-center gap-1.5 transition-colors"
+                        style={{ background: "#6d4fc2", color: "#fff", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10.5 }}
+                      >
+                        <BookOpen className="h-3 w-3" /> Ler formulação
+                      </button>
+                    </div>
+                  </div>
+                )}
               </li>
             );
           })}
@@ -953,6 +1037,81 @@ const Patients = () => {
             <DialogDescription>Formulação de Caso — com coach de IA baseada em Padesky</DialogDescription>
           </DialogHeader>
           {padeksyPatient && <CaseFormulation patientId={padeksyPatient.id} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Ler Formulação (PDF-like) Dialog */}
+      <Dialog open={!!readPatient} onOpenChange={(o) => !o && setReadPatient(null)}>
+        <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0 bg-[#faf8f3]">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Formulação de Caso — {readPatient?.full_name}</DialogTitle>
+          </DialogHeader>
+          {readPatient && (() => {
+            const f = formulationData[readPatient.id] || {};
+            const goals: any[] = Array.isArray(f.treatment_goals) ? f.treatment_goals : [];
+            const sum = formulationSummaries[readPatient.id];
+            const updated = formulationFilled[readPatient.id];
+            const Section = ({ title, content }: { title: string; content?: string }) => (
+              <section className="mb-6">
+                <h2 className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "#7a5e1a", borderBottom: "0.5px solid rgba(201,168,76,0.4)", paddingBottom: 4 }}>{title}</h2>
+                <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#2a1a3a", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>{content?.trim() || <span className="italic text-muted-foreground">— não preenchido —</span>}</p>
+              </section>
+            );
+            return (
+              <>
+                <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-3 bg-white/90 backdrop-blur border-b border-[#ede9f8]">
+                  <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: "#3d2b8a" }}>Formulação de Caso</p>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => window.print()} className="inline-flex items-center gap-1.5" style={{ background: "#fff", border: "0.5px solid #ede9f8", color: "#3d2b8a", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
+                      <Printer className="h-3.5 w-3.5" /> Imprimir / PDF
+                    </button>
+                    <button onClick={() => { setReadPatient(null); setPadeksyPatient(readPatient); }} className="inline-flex items-center gap-1.5" style={{ background: "#6d4fc2", color: "#fff", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
+                      <Pencil className="h-3.5 w-3.5" /> Editar
+                    </button>
+                  </div>
+                </div>
+                <div id="formulation-print" className="px-10 py-10 bg-white mx-6 my-6 rounded-lg shadow-sm" style={{ minHeight: "60vh" }}>
+                  <div className="mb-8 pb-4 border-b border-[#ede9f8]">
+                    <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", color: "#a090c8" }}>Prontuário Clínico · Padesky</p>
+                    <h1 className="mt-2" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 26, color: "#1a1030" }}>{readPatient.full_name}</h1>
+                    {updated && (
+                      <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "#8070a8" }}>
+                        Atualizada em {format(new Date(updated), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                      </p>
+                    )}
+                  </div>
+                  {sum && (
+                    <section className="mb-6 rounded-xl p-4" style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.10), rgba(109,79,194,0.06))", border: "0.5px solid rgba(201,168,76,0.3)" }}>
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <Sparkles className="h-3.5 w-3.5" style={{ color: "#c9a84c" }} />
+                        <span className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "#7a5e1a" }}>Resumo IA · Destaques</span>
+                      </div>
+                      <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#3d2b1a", lineHeight: 1.6 }}>{sum}</p>
+                    </section>
+                  )}
+                  <Section title="Ambiente / Situação" content={f.environment} />
+                  <Section title="Pensamentos" content={f.thoughts} />
+                  <Section title="Emoções" content={f.emotions} />
+                  <Section title="Comportamentos" content={f.behaviors} />
+                  <Section title="Reações físicas" content={f.physical_reactions} />
+                  <Section title="Crenças centrais" content={f.core_beliefs} />
+                  <section className="mb-2">
+                    <h2 className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "#7a5e1a", borderBottom: "0.5px solid rgba(201,168,76,0.4)", paddingBottom: 4 }}>Metas terapêuticas</h2>
+                    {goals.length === 0 ? (
+                      <p className="italic text-muted-foreground" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13 }}>— não preenchido —</p>
+                    ) : (
+                      <ol className="list-decimal pl-5 space-y-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#2a1a3a", lineHeight: 1.6 }}>
+                        {goals.map((g, i) => (
+                          <li key={i}>{typeof g === "string" ? g : (g?.text || g?.title || JSON.stringify(g))}</li>
+                        ))}
+                      </ol>
+                    )}
+                  </section>
+                </div>
+                <style>{`@media print { body * { visibility: hidden; } #formulation-print, #formulation-print * { visibility: visible; } #formulation-print { position: absolute; left: 0; top: 0; margin: 0; box-shadow: none; } }`}</style>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 

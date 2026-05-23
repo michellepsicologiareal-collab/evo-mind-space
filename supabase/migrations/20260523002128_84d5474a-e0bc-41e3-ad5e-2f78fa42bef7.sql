@@ -1,0 +1,1 @@
+ALTER TABLE public.case_formulations ADD COLUMN IF NOT EXISTS ai_summary text;
