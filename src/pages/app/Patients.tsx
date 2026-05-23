@@ -528,7 +528,10 @@ const Patients = () => {
             const isAlert = p.notes ? /(crise|resist|abandon|suic|término)/i.test(p.notes) : false;
             const cHist = counts.history[p.id] || 0;
             const cMood = counts.mood[p.id] || 0;
+            const cTcc = counts.tcc[p.id] || 0;
             const hasAnam = !!anamneseFilled[p.id];
+            const hasFormul = !!formulationFilled[p.id];
+            const aiSum = formulationSummaries[p.id];
             const type = PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual";
             const url = buildWhatsAppUrl(p);
             return (
