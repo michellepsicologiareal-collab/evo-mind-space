@@ -1040,6 +1040,81 @@ const Patients = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Ler Formulação (PDF-like) Dialog */}
+      <Dialog open={!!readPatient} onOpenChange={(o) => !o && setReadPatient(null)}>
+        <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0 bg-[#faf8f3]">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Formulação de Caso — {readPatient?.full_name}</DialogTitle>
+          </DialogHeader>
+          {readPatient && (() => {
+            const f = formulationData[readPatient.id] || {};
+            const goals: any[] = Array.isArray(f.treatment_goals) ? f.treatment_goals : [];
+            const sum = formulationSummaries[readPatient.id];
+            const updated = formulationFilled[readPatient.id];
+            const Section = ({ title, content }: { title: string; content?: string }) => (
+              <section className="mb-6">
+                <h2 className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "#7a5e1a", borderBottom: "0.5px solid rgba(201,168,76,0.4)", paddingBottom: 4 }}>{title}</h2>
+                <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#2a1a3a", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>{content?.trim() || <span className="italic text-muted-foreground">— não preenchido —</span>}</p>
+              </section>
+            );
+            return (
+              <>
+                <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-3 bg-white/90 backdrop-blur border-b border-[#ede9f8]">
+                  <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: "#3d2b8a" }}>Formulação de Caso</p>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => window.print()} className="inline-flex items-center gap-1.5" style={{ background: "#fff", border: "0.5px solid #ede9f8", color: "#3d2b8a", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
+                      <Printer className="h-3.5 w-3.5" /> Imprimir / PDF
+                    </button>
+                    <button onClick={() => { setReadPatient(null); setPadeksyPatient(readPatient); }} className="inline-flex items-center gap-1.5" style={{ background: "#6d4fc2", color: "#fff", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
+                      <Pencil className="h-3.5 w-3.5" /> Editar
+                    </button>
+                  </div>
+                </div>
+                <div id="formulation-print" className="px-10 py-10 bg-white mx-6 my-6 rounded-lg shadow-sm" style={{ minHeight: "60vh" }}>
+                  <div className="mb-8 pb-4 border-b border-[#ede9f8]">
+                    <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", color: "#a090c8" }}>Prontuário Clínico · Padesky</p>
+                    <h1 className="mt-2" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 26, color: "#1a1030" }}>{readPatient.full_name}</h1>
+                    {updated && (
+                      <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "#8070a8" }}>
+                        Atualizada em {format(new Date(updated), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                      </p>
+                    )}
+                  </div>
+                  {sum && (
+                    <section className="mb-6 rounded-xl p-4" style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.10), rgba(109,79,194,0.06))", border: "0.5px solid rgba(201,168,76,0.3)" }}>
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <Sparkles className="h-3.5 w-3.5" style={{ color: "#c9a84c" }} />
+                        <span className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "#7a5e1a" }}>Resumo IA · Destaques</span>
+                      </div>
+                      <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#3d2b1a", lineHeight: 1.6 }}>{sum}</p>
+                    </section>
+                  )}
+                  <Section title="Ambiente / Situação" content={f.environment} />
+                  <Section title="Pensamentos" content={f.thoughts} />
+                  <Section title="Emoções" content={f.emotions} />
+                  <Section title="Comportamentos" content={f.behaviors} />
+                  <Section title="Reações físicas" content={f.physical_reactions} />
+                  <Section title="Crenças centrais" content={f.core_beliefs} />
+                  <section className="mb-2">
+                    <h2 className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "#7a5e1a", borderBottom: "0.5px solid rgba(201,168,76,0.4)", paddingBottom: 4 }}>Metas terapêuticas</h2>
+                    {goals.length === 0 ? (
+                      <p className="italic text-muted-foreground" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13 }}>— não preenchido —</p>
+                    ) : (
+                      <ol className="list-decimal pl-5 space-y-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#2a1a3a", lineHeight: 1.6 }}>
+                        {goals.map((g, i) => (
+                          <li key={i}>{typeof g === "string" ? g : (g?.text || g?.title || JSON.stringify(g))}</li>
+                        ))}
+                      </ol>
+                    )}
+                  </section>
+                </div>
+                <style>{`@media print { body * { visibility: hidden; } #formulation-print, #formulation-print * { visibility: visible; } #formulation-print { position: absolute; left: 0; top: 0; margin: 0; box-shadow: none; } }`}</style>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
       {/* Session History Dialog */}
       <Dialog open={!!historyPatient} onOpenChange={(o) => !o && setHistoryPatient(null)}>
         <DialogContent className={dlgCls("hist")}>
