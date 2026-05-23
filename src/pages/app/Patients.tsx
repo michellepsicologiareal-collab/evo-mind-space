@@ -605,6 +605,16 @@ const Patients = () => {
                     >
                       <Stethoscope className="h-3 w-3" /> {formulationFilled[p.id] ? "Formulação" : "Sem formulação"}
                     </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setTccPatient(p); }}
+                      title={cTcc > 0 ? `${cTcc} conceitualizações TCC` : "Criar conceitualização TCC"}
+                      className="inline-flex items-center gap-1.5 transition-colors"
+                      style={cTcc > 0
+                        ? { background: "rgba(109,79,194,0.10)", border: "0.5px solid rgba(109,79,194,0.25)", color: "#3d2b8a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
+                        : { background: "#f7f4ff", border: "0.5px dashed #c9a84c", color: "#7a5e1a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                    >
+                      <Brain className="h-3 w-3" /> {cTcc > 0 ? `Conceitualização TCC${cTcc > 1 ? ` · ${cTcc}` : ""}` : "Sem conceitualização TCC"}
+                    </button>
                     {p.category === "crianca" && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }}
