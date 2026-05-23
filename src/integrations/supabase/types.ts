@@ -58,6 +58,7 @@ export type Database = {
       }
       case_formulations: {
         Row: {
+          ai_summary: string | null
           behaviors: string | null
           core_beliefs: string | null
           created_at: string
@@ -72,6 +73,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_summary?: string | null
           behaviors?: string | null
           core_beliefs?: string | null
           created_at?: string
@@ -86,6 +88,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_summary?: string | null
           behaviors?: string | null
           core_beliefs?: string | null
           created_at?: string
