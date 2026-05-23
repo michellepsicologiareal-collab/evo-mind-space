@@ -682,6 +682,46 @@ const Patients = () => {
                     </DropdownMenu>
                   </div>
                 </div>
+
+                {hasFormul && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="mx-4 sm:mx-5 mb-3 -mt-1 flex flex-col sm:flex-row sm:items-start gap-2 rounded-xl px-3 py-2.5"
+                    style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.08), rgba(109,79,194,0.06))", border: "0.5px solid rgba(201,168,76,0.25)" }}
+                  >
+                    <div className="flex items-start gap-2 min-w-0 flex-1">
+                      <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "#c9a84c" }} />
+                      <div className="min-w-0">
+                        <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "#7a5e1a" }}>Resumo IA · Formulação</p>
+                        {aiSum ? (
+                          <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#3d2b1a", lineHeight: 1.5 }}>{aiSum}</p>
+                        ) : (
+                          <p className="mt-1 italic" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#8b7355" }}>
+                            Gere um resumo de IA com os destaques clínicos desta formulação.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0 sm:ml-2">
+                      <button
+                        onClick={() => summarizeFormulation(p.id)}
+                        disabled={!!summarizing[p.id]}
+                        className="inline-flex items-center gap-1.5 transition-colors disabled:opacity-60"
+                        style={{ background: "#fff", border: "0.5px solid rgba(201,168,76,0.4)", color: "#7a5e1a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10.5 }}
+                      >
+                        {summarizing[p.id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                        {aiSum ? "Atualizar" : "Gerar resumo IA"}
+                      </button>
+                      <button
+                        onClick={() => setReadPatient(p)}
+                        className="inline-flex items-center gap-1.5 transition-colors"
+                        style={{ background: "#6d4fc2", color: "#fff", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10.5 }}
+                      >
+                        <BookOpen className="h-3 w-3" /> Ler formulação
+                      </button>
+                    </div>
+                  </div>
+                )}
               </li>
             );
           })}
