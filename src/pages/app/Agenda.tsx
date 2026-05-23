@@ -983,7 +983,7 @@ const Agenda = () => {
 
   return (
     <div className="space-y-6 animate-fade-up">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="flex flex-wrap items-end justify-between gap-3 sticky top-16 md:static z-30 -mx-6 px-6 -mt-6 pt-6 md:m-0 md:p-0 bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none pb-3 md:pb-0">
         <div>
           <h1 className="font-display text-2xl sm:text-4xl font-medium">Agenda</h1>
           <p className="mt-1 sm:mt-2 text-sm sm:text-base text-muted-foreground">Visualize e organize seus atendimentos.</p>
