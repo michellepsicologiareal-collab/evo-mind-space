@@ -210,6 +210,26 @@ const Patients = () => {
 
   useAutoRefresh(() => { if (user) load(); }, { routePath: "/app/pacientes" });
 
+  const summarizeFormulation = async (patientId: string) => {
+    if (summarizing[patientId]) return;
+    setSummarizing((s) => ({ ...s, [patientId]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke("summarize-formulation", { body: { patient_id: patientId } });
+      if (error) throw error;
+      const summary = (data as any)?.summary as string | undefined;
+      if (summary) {
+        setFormulationSummaries((m) => ({ ...m, [patientId]: summary }));
+        toast.success("Resumo de IA gerado");
+      } else {
+        toast.error((data as any)?.error || "Falha ao gerar resumo");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao gerar resumo");
+    } finally {
+      setSummarizing((s) => ({ ...s, [patientId]: false }));
+    }
+  };
+
   const openNew = () => {
     if (!isPremium && patients.length >= FREE_PATIENT_LIMIT) {
       setGateOpen(true);
