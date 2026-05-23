@@ -156,7 +156,7 @@ const Patients = () => {
       supabase.from("tcc_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("session_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
-      supabase.from("case_formulations").select("patient_id, updated_at").eq("user_id", user.id),
+      supabase.from("case_formulations").select("patient_id, updated_at, ai_summary, environment, thoughts, emotions, behaviors, physical_reactions, core_beliefs, treatment_goals").eq("user_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
@@ -174,10 +174,17 @@ const Patients = () => {
     });
     setAnamneseFilled(anamMap);
     const formMap: Record<string, string> = {};
+    const sumMap: Record<string, string> = {};
+    const dataMap: Record<string, any> = {};
     (formRes.data ?? []).forEach((f: any) => {
-      if (f.patient_id) formMap[f.patient_id] = f.updated_at;
+      if (!f.patient_id) return;
+      formMap[f.patient_id] = f.updated_at;
+      if (f.ai_summary) sumMap[f.patient_id] = f.ai_summary;
+      dataMap[f.patient_id] = f;
     });
     setFormulationFilled(formMap);
+    setFormulationSummaries(sumMap);
+    setFormulationData(dataMap);
     const countAndLatest = (rows: any[] | null, dateKey: string) => {
       const c: Record<string, number> = {};
       const l: Record<string, string> = {};
