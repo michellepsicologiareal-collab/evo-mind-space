@@ -1214,7 +1214,7 @@ const Agenda = () => {
         <div className="space-y-4">
 
           <Tabs value={viewTab} onValueChange={setViewTab}>
-            <TabsList className="w-full sm:w-auto bg-transparent gap-1 p-0">
+            <TabsList className="w-full sm:w-auto bg-background/95 backdrop-blur sm:bg-transparent sm:backdrop-blur-none gap-1 p-0 sticky top-[124px] md:static z-20 -mx-6 px-6 py-2 sm:m-0 sm:p-0">
               <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarDays className="h-3.5 w-3.5 mr-1.5 inline" /> Mês</TabsTrigger>
               <TabsTrigger value="week" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarRange className="h-3.5 w-3.5 mr-1.5 inline" /> Semana</TabsTrigger>
               <TabsTrigger value="day" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#8878b0] data-[state=active]:bg-[#6d4fc2] data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarCheck className="h-3.5 w-3.5 mr-1.5 inline" /> Dia</TabsTrigger>
