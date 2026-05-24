@@ -46,7 +46,7 @@ export const Footer = () => {
               Privacidade
             </a>
 
-            <a href="/termos.html" className="hover:text-foreground">
+            <a href="/p%C3%BAblico/termos.html" className="hover:text-foreground">
               Termos
             </a>
           </nav>
