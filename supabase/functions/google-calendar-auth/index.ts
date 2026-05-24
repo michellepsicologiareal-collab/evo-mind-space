@@ -44,8 +44,25 @@ Deno.serve(async (req) => {
       });
     }
 
-    const state = crypto.randomUUID();
-    const statePayload = btoa(JSON.stringify({ uid: user.id, nonce: state }));
+    const nonce = crypto.randomUUID();
+
+    // Store nonce server-side for CSRF protection (verified in callback)
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    // Best-effort cleanup of expired nonces
+    await admin.from("google_oauth_states").delete().lt("expires_at", new Date().toISOString());
+    const { error: nonceErr } = await admin.from("google_oauth_states").insert({
+      user_id: user.id,
+      nonce,
+    });
+    if (nonceErr) {
+      console.error("Failed to store OAuth nonce:", nonceErr);
+      return new Response(JSON.stringify({ error: "Erro interno" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const statePayload = btoa(JSON.stringify({ uid: user.id, nonce }));
 
     const scopes = [
       "https://www.googleapis.com/auth/calendar.events",
