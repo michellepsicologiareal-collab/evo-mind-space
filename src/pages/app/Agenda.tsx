@@ -516,6 +516,7 @@ const Agenda = () => {
   const updateStatus = async (id: string, status: Status) => {
     const { error } = await supabase.from("sessions").update({ status }).eq("id", id);
     if (error) return toast.error("Erro ao atualizar");
+    if (status === "cancelled") { deleteSessionFromGcal(id); } else { syncSessionToGcal(id); }
     toast.success(`Marcada como ${statusLabel[status].toLowerCase()}`);
     load(); loadPending();
   };
