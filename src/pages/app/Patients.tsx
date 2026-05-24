@@ -92,6 +92,7 @@ const Patients = () => {
   const [editing, setEditing] = useState<Patient | null>(null);
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
+  const [formulFilter, setFormulFilter] = useState<"all" | "with" | "without">("all");
   const [tccPatient, setTccPatient] = useState<Patient | null>(null);
   const [padeksyPatient, setPadeksyPatient] = useState<Patient | null>(null);
   const [historyPatient, setHistoryPatient] = useState<Patient | null>(null);
@@ -432,9 +433,14 @@ const Patients = () => {
       statusFilter === "all" ? true : statusFilter === "active" ? p.is_active : !p.is_active
     )
     .filter((p) =>
+      formulFilter === "all" ? true : formulFilter === "with" ? !!formulationFilled[p.id] : !formulationFilled[p.id]
+    )
+    .filter((p) =>
       p.full_name.toLowerCase().includes(search.toLowerCase()) ||
       (p.email ?? "").toLowerCase().includes(search.toLowerCase())
     );
+  const withFormulCount = patients.filter((p) => !!formulationFilled[p.id]).length;
+  const withoutFormulCount = patients.filter((p) => !formulationFilled[p.id]).length;
 
   return (
     <div className="space-y-5 animate-fade-up" style={{ background: "#ffffff" }}>
@@ -479,6 +485,34 @@ const Patients = () => {
                 }}
               >
                 {t.label} · {t.n}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {[
+            { k: "all", label: "Todas formulações", n: patients.length },
+            { k: "with", label: "Com formulação", n: withFormulCount },
+            { k: "without", label: "Sem formulação", n: withoutFormulCount },
+          ].map((t) => {
+            const isActive = formulFilter === t.k;
+            return (
+              <button
+                key={t.k}
+                onClick={() => setFormulFilter(t.k as typeof formulFilter)}
+                className="inline-flex items-center gap-1.5 transition-colors"
+                style={{
+                  fontFamily: "Syne, sans-serif",
+                  fontWeight: isActive ? 700 : 500,
+                  fontSize: 11,
+                  padding: "5px 11px",
+                  borderRadius: 40,
+                  background: isActive ? "#6d4fc2" : "#f7f4ff",
+                  color: isActive ? "#fff" : "#6d4fc2",
+                  border: "0.5px solid " + (isActive ? "#6d4fc2" : "#ede9f8"),
+                }}
+              >
+                <Stethoscope className="h-3 w-3" /> {t.label} · {t.n}
               </button>
             );
           })}
@@ -1102,13 +1136,30 @@ const Patients = () => {
                     ) : (
                       <ol className="list-decimal pl-5 space-y-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#2a1a3a", lineHeight: 1.6 }}>
                         {goals.map((g, i) => (
-                          <li key={i}>{typeof g === "string" ? g : (g?.text || g?.title || JSON.stringify(g))}</li>
+                          <li key={i}>{typeof g === "string" ? g : (g?.objective || g?.text || g?.title || g?.description || "—")}</li>
                         ))}
                       </ol>
                     )}
                   </section>
                 </div>
-                <style>{`@media print { body * { visibility: hidden; } #formulation-print, #formulation-print * { visibility: visible; } #formulation-print { position: absolute; left: 0; top: 0; margin: 0; box-shadow: none; } }`}</style>
+                <style>{`@media print {
+                  @page { margin: 18mm; }
+                  html, body { background: #fff !important; }
+                  body * { visibility: hidden !important; }
+                  #formulation-print, #formulation-print * { visibility: visible !important; }
+                  #formulation-print {
+                    position: fixed !important;
+                    inset: 0 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    box-shadow: none !important;
+                    border-radius: 0 !important;
+                    background: #fff !important;
+                    overflow: visible !important;
+                  }
+                }`}</style>
               </>
             );
           })()}
