@@ -33,9 +33,6 @@ const Anamneses = lazy(() => import("./pages/app/Anamneses"));
 const ContratoPublico = lazy(() => import("./pages/ContratoPublico"));
 const AnamnesePublica = lazy(() => import("./pages/AnamnesePublica"));
 
-/* NOVA PÁGINA */
-const Termos = lazy(() => import("./pages/Termos"));
-
 const queryClient = new QueryClient();
 
 const PageLoader = () => (
@@ -122,9 +119,6 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
-
-                {/* NOVA ROTA */}
-                <Route path="/termos" element={<Termos />} />
 
                 <Route path="/reset-password" element={<ResetPassword />} />
 
