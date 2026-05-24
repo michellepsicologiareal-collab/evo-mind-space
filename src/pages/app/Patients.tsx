@@ -1142,7 +1142,24 @@ const Patients = () => {
                     )}
                   </section>
                 </div>
-                <style>{`@media print { body * { visibility: hidden; } #formulation-print, #formulation-print * { visibility: visible; } #formulation-print { position: absolute; left: 0; top: 0; margin: 0; box-shadow: none; } }`}</style>
+                <style>{`@media print {
+                  @page { margin: 18mm; }
+                  html, body { background: #fff !important; }
+                  body * { visibility: hidden !important; }
+                  #formulation-print, #formulation-print * { visibility: visible !important; }
+                  #formulation-print {
+                    position: fixed !important;
+                    inset: 0 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    box-shadow: none !important;
+                    border-radius: 0 !important;
+                    background: #fff !important;
+                    overflow: visible !important;
+                  }
+                }`}</style>
               </>
             );
           })()}
