@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     }
 
     const goalsText = Array.isArray(f.treatment_goals)
-      ? (f.treatment_goals as any[]).map((g: any) => typeof g === "string" ? g : g?.text || g?.title || "").filter(Boolean).join("; ")
+      ? (f.treatment_goals as any[]).map((g: any) => typeof g === "string" ? g : g?.objective || g?.text || g?.title || g?.description || "").filter(Boolean).join("; ")
       : "";
 
     const prompt = `Você é uma psicóloga clínica TCC. Resuma em 2-3 frases curtas (máx 320 caracteres) os destaques clínicos desta formulação de caso (Padesky), em português, tom profissional e acolhedor. Destaque o padrão central e direção terapêutica. Sem títulos, sem markdown.
