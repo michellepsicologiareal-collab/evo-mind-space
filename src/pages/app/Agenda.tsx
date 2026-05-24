@@ -483,6 +483,9 @@ const Agenda = () => {
 
     const { data: created, error } = await supabase.from("sessions").insert(sessionsToInsert).select("id");
     if (error) { setSaving(false); toast.error("Erro ao agendar sessão"); return; }
+    if (gcalConnected && created) {
+      Promise.all(created.map((row: any) => syncSessionToGcal(row.id))).catch(() => {});
+    }
 
     const moodNum = parsed.data.mood_score ? Number(parsed.data.mood_score) : null;
     const progressNote = parsed.data.progress_note?.trim() || null;
