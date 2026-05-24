@@ -1,103 +1,49 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Termos de Serviço — Psi Real</title>
+import { Instagram, MapPin } from "lucide-react"; import logoSrc from "@/assets/logo-psireal.png"; export const Footer =
+() => { return (
+<footer className="border-t border-border bg-background">
+  <div className="container py-12 flex flex-col md:flex-row items-center justify-between gap-6">
+    <div className="flex items-center gap-2">
+      <span className="flex h-8 w-8 items-center justify-center rounded-full overflow-hidden">
+        <img src="{logoSrc}" alt="Psicologia Real" className="h-8 w-8 object-cover" />
+      </span>
 
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 40px 20px;
-        line-height: 1.8;
-        color: #333;
-        background: #fff;
-      }
+      <span className="font-display text-lg font-semibold">
+        Psi <span className="font-extrabold text-accent">Real</span>
+      </span>
+    </div>
 
-      h1 {
-        color: #7a4d42;
-        border-bottom: 2px solid #7a4d42;
-        padding-bottom: 10px;
-      }
+    <div className="flex flex-col items-center gap-1 text-sm text-muted-foreground">
+      <p className="flex items-center gap-1.5">
+        <MapPin className="h-3.5 w-3.5" />
+        Presencial em Jarinu · Online
+      </p>
 
-      h2 {
-        color: #7a4d42;
-        margin-top: 40px;
-      }
+      <a
+        href="https://instagram.com/psimichelledonega"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-1.5 hover:text-accent transition-colors"
+      >
+        <Instagram className="h-3.5 w-3.5" />
+        @psimichelledonega
+      </a>
+    </div>
 
-      a {
-        color: #7a4d42;
-      }
+    <div className="flex flex-col items-center md:items-end gap-2">
+      <nav className="flex gap-6 text-sm text-muted-foreground">
+        <a href="#funcionalidades" className="hover:text-foreground"> Funcionalidades </a>
 
-      .logo {
-        font-size: 28px;
-        font-weight: bold;
-        color: #7a4d42;
-        margin-bottom: 30px;
-        display: block;
-      }
+        <a href="#cta" className="hover:text-foreground"> Começar </a>
 
-      footer {
-        margin-top: 60px;
-        border-top: 1px solid #ddd;
-        padding-top: 20px;
-        color: #777;
-        font-size: 14px;
-      }
-    </style>
-  </head>
+        <a href="/público/privacidade.html" className="hover:text-foreground"> Privacidade </a>
 
-  <body>
-    <span class="logo">Psi Real</span>
+        <a href="/público/termos.html" className="hover:text-foreground"> Termos </a>
+      </nav>
 
-    <h1>Termos de Serviço</h1>
-
-    <p><strong>Última atualização:</strong> 23 de maio de 2026</p>
-
-    <p>Ao utilizar o sistema Psi Real, você concorda com os presentes Termos de Serviço.</p>
-
-    <h2>1. Sobre o serviço</h2>
-
-    <p>
-      O Psi Real é uma plataforma de gestão clínica para psicólogos, com funcionalidades de agenda, prontuário,
-      financeiro, organização clínica e integração com serviços externos.
-    </p>
-
-    <h2>2. Uso profissional</h2>
-
-    <p>O sistema é destinado exclusivamente a profissionais regularmente habilitados.</p>
-
-    <h2>3. Responsabilidade dos dados</h2>
-
-    <p>
-      Cada usuário é responsável pelos dados inseridos na plataforma, incluindo informações clínicas e administrativas.
-    </p>
-
-    <h2>4. Privacidade</h2>
-
-    <p>O tratamento de dados segue a legislação brasileira aplicável, incluindo a LGPD.</p>
-
-    <h2>5. Integração com Google Calendar</h2>
-
-    <p>Ao conectar sua conta Google, o usuário autoriza a sincronização de eventos relacionados à agenda clínica.</p>
-
-    <h2>6. Disponibilidade</h2>
-
-    <p>O sistema poderá passar por atualizações e manutenções periódicas.</p>
-
-    <h2>7. Alterações</h2>
-
-    <p>Estes termos podem ser atualizados a qualquer momento.</p>
-
-    <h2>8. Contato</h2>
-
-    <p>
-      E-mail:
-      <a href="mailto:michellepsicologiareal@gmail.com"> michellepsicologiareal@gmail.com </a>
-    </p>
-
-    <footer>© 2026 Psi Real — Todos os direitos reservados.</footer>
-  </body>
-</html>
+      <p className="text-xs text-muted-foreground">
+        © {new Date().getFullYear()} Psi Real · Estrutura para a sua clínica.
+      </p>
+    </div>
+  </div>
+</footer>
+); };
