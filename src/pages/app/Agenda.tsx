@@ -1319,6 +1319,7 @@ const Agenda = () => {
             )}
           </DialogContent>
         </Dialog>
+        </div>
       </header>
 
       {/* ── ZONA SUPERIOR: Calendar + day sessions ── */}
