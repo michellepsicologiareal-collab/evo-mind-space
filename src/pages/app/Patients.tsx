@@ -489,6 +489,34 @@ const Patients = () => {
             );
           })}
         </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {[
+            { k: "all", label: "Todas formulações", n: patients.length },
+            { k: "with", label: "Com formulação", n: withFormulCount },
+            { k: "without", label: "Sem formulação", n: withoutFormulCount },
+          ].map((t) => {
+            const isActive = formulFilter === t.k;
+            return (
+              <button
+                key={t.k}
+                onClick={() => setFormulFilter(t.k as typeof formulFilter)}
+                className="inline-flex items-center gap-1.5 transition-colors"
+                style={{
+                  fontFamily: "Syne, sans-serif",
+                  fontWeight: isActive ? 700 : 500,
+                  fontSize: 11,
+                  padding: "5px 11px",
+                  borderRadius: 40,
+                  background: isActive ? "#6d4fc2" : "#f7f4ff",
+                  color: isActive ? "#fff" : "#6d4fc2",
+                  border: "0.5px solid " + (isActive ? "#6d4fc2" : "#ede9f8"),
+                }}
+              >
+                <Stethoscope className="h-3 w-3" /> {t.label} · {t.n}
+              </button>
+            );
+          })}
+        </div>
         <div className="ml-auto">
           <button
             onClick={openNew}
