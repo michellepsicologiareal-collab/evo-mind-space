@@ -224,7 +224,71 @@ const Agenda = () => {
   const [drawerSessions, setDrawerSessions] = useState<any[]>([]);
   const [drawerLoadingSessions, setDrawerLoadingSessions] = useState(false);
 
-  // Fetch pix key
+  // ── Google Calendar sync ──
+  const [gcalConnected, setGcalConnected] = useState(false);
+  const [gcalLoading, setGcalLoading] = useState(false);
+
+  const loadGcalStatus = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase.functions.invoke("google-calendar-sync", { body: { action: "status" } });
+      setGcalConnected(!!(data as any)?.connected);
+    } catch { /* ignore */ }
+  }, [user]);
+
+  const connectGcal = async () => {
+    setGcalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("google-calendar-auth", { body: {} });
+      if (error || !(data as any)?.url) { toast.error("Não foi possível iniciar a conexão com o Google"); return; }
+      window.location.href = (data as any).url;
+    } finally { setGcalLoading(false); }
+  };
+
+  const disconnectGcal = async () => {
+    setGcalLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke("google-calendar-sync", { body: { action: "disconnect" } });
+      if (error) { toast.error("Erro ao desconectar"); return; }
+      setGcalConnected(false);
+      toast.success("Google Calendar desconectado");
+    } finally { setGcalLoading(false); }
+  };
+
+  const syncSessionToGcal = useCallback(async (sessionId: string) => {
+    if (!gcalConnected || !sessionId) return;
+    try {
+      const { data: s } = await supabase
+        .from("sessions")
+        .select("id, scheduled_at, duration_minutes, notes, patient:patients!sessions_patient_id_fkey(full_name)")
+        .eq("id", sessionId)
+        .maybeSingle();
+      if (!s) return;
+      await supabase.functions.invoke("google-calendar-sync", {
+        body: {
+          action: "sync",
+          session: {
+            id: (s as any).id,
+            scheduled_at: (s as any).scheduled_at,
+            duration_minutes: (s as any).duration_minutes,
+            notes: (s as any).notes,
+            patient_name: (s as any).patient?.full_name || "Sessão",
+          },
+        },
+      });
+    } catch (e) { console.error("gcal sync failed", e); }
+  }, [gcalConnected]);
+
+  const deleteSessionFromGcal = useCallback(async (sessionId: string) => {
+    if (!gcalConnected || !sessionId) return;
+    try {
+      await supabase.functions.invoke("google-calendar-sync", {
+        body: { action: "delete", session: { id: sessionId } },
+      });
+    } catch (e) { console.error("gcal delete failed", e); }
+  }, [gcalConnected]);
+
+  // Fetch pix key + gcal status + handle OAuth callback
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("pix_key, full_name, crp").eq("id", user.id).single().then(({ data }) => {
@@ -232,7 +296,24 @@ const Agenda = () => {
       setPsiName(data?.full_name || "");
       setPsiCrp(data?.crp || "");
     });
-  }, [user]);
+    loadGcalStatus();
+
+    const params = new URLSearchParams(window.location.search);
+    const gcal = params.get("gcal");
+    if (gcal === "connected") {
+      toast.success("Google Calendar conectado! Suas sessões serão sincronizadas.");
+      setGcalConnected(true);
+      loadGcalStatus();
+      params.delete("gcal");
+      const qs = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : ""));
+    } else if (gcal === "error") {
+      toast.error("Não foi possível conectar ao Google Calendar. Tente novamente.");
+      params.delete("gcal");
+      const qs = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : ""));
+    }
+  }, [user, loadGcalStatus]);
 
   // Load all sessions for the current month
   const load = async () => {
