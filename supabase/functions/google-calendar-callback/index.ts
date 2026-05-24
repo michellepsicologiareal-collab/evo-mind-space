@@ -75,17 +75,12 @@ Deno.serve(async (req) => {
       return Response.redirect(redirectError, 302);
     }
 
-    // Store tokens using service role
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
+    // Store tokens using service role (reuse admin client)
     const expiresAt = new Date(
       Date.now() + (tokenData.expires_in || 3600) * 1000
     ).toISOString();
 
-    const { error: upsertError } = await supabase
+    const { error: upsertError } = await admin
       .from("google_calendar_tokens")
       .upsert(
         {
