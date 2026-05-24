@@ -1080,6 +1080,26 @@ const Agenda = () => {
           <h1 className="font-display text-2xl sm:text-4xl font-medium">Agenda</h1>
           <p className="mt-1 sm:mt-2 text-sm sm:text-base text-muted-foreground">Visualize e organize seus atendimentos.</p>
         </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button
+            type="button"
+            variant={gcalConnected ? "outline" : "secondary"}
+            size="sm"
+            onClick={gcalConnected ? disconnectGcal : connectGcal}
+            disabled={gcalLoading}
+            className="rounded-[40px] font-display font-semibold flex-1 sm:flex-none"
+            title={gcalConnected ? "Google Calendar conectado — clique para desconectar" : "Conectar Google Calendar"}
+          >
+            {gcalLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : gcalConnected ? (
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+            ) : (
+              <CalendarIcon className="h-4 w-4" />
+            )}
+            <span className="hidden sm:inline">{gcalConnected ? "Google Calendar" : "Conectar Google"}</span>
+            <span className="sm:hidden">{gcalConnected ? "Conectado" : "Google"}</span>
+          </Button>
         <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
             <Button variant="accent" size="sm" onClick={() => openNew()} className="rounded-[40px] font-display font-semibold w-full sm:w-auto sm:size-default">
