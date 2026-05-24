@@ -551,6 +551,9 @@ const Agenda = () => {
     if (!deleteSessionId) return;
     setDeleting(true);
 
+    // Remove from Google Calendar first (if connected) — needs mapping row to still exist
+    await deleteSessionFromGcal(deleteSessionId);
+
     // Delete related progress & gcal events
     await Promise.all([
       supabase.from("patient_progress").delete().eq("session_id", deleteSessionId),
