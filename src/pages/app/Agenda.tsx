@@ -813,6 +813,7 @@ const Agenda = () => {
           await supabase.from("sessions").update({
             scheduled_at: newSibDate.toISOString(),
           } as any).eq("id", sib.id);
+          syncSessionToGcal(sib.id);
         }
 
         if (packageSiblings.length > 0) {
@@ -820,6 +821,9 @@ const Agenda = () => {
         }
       }
     }
+
+    // Sync the edited session to Google Calendar
+    if (editSessionId) syncSessionToGcal(editSessionId);
 
     // Always update mood/progress if patient exists (even when clearing values)
     const moodNum = editForm.mood_score ? Number(editForm.mood_score) : null;
