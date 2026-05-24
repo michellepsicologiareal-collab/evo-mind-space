@@ -1,6 +1,8 @@
+import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, webhook-id, webhook-timestamp, webhook-signature',
 };
 
 const RESEND_API_URL = "https://api.resend.com/emails";
@@ -21,8 +23,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    const payload = await req.json();
-    console.log("Auth email hook payload:", JSON.stringify(payload));
+    // --- HMAC signature verification (CRITICAL: prevents open email relay abuse) ---
+    const HOOK_SECRET = Deno.env.get("SEND_EMAIL_HOOK_SECRET");
+    if (!HOOK_SECRET) {
+      console.error("SEND_EMAIL_HOOK_SECRET is not configured — refusing to process unsigned webhook");
+      return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const rawBody = await req.text();
+    let payload: any;
+    try {
+      const wh = new Webhook(HOOK_SECRET.replace(/^v1,whsec_/, ""));
+      payload = wh.verify(rawBody, {
+        "webhook-id": req.headers.get("webhook-id") ?? "",
+        "webhook-timestamp": req.headers.get("webhook-timestamp") ?? "",
+        "webhook-signature": req.headers.get("webhook-signature") ?? "",
+      });
+    } catch (verifyErr) {
+      console.error("Webhook signature verification failed:", verifyErr);
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Supabase Auth hook payload format
     const user = payload.user;

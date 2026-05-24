@@ -17,13 +17,39 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Decode state to get user_id
+    // Decode state to get user_id and nonce
     const statePayload = JSON.parse(atob(stateParam));
     const userId = statePayload.uid;
+    const nonce = statePayload.nonce;
 
-    if (!userId) {
+    if (!userId || !nonce) {
       return Response.redirect(redirectError, 302);
     }
+
+    // Verify nonce server-side (CSRF protection)
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const { data: nonceRow, error: nonceErr } = await admin
+      .from("google_oauth_states")
+      .select("user_id, expires_at")
+      .eq("user_id", userId)
+      .eq("nonce", nonce)
+      .maybeSingle();
+
+    if (nonceErr || !nonceRow) {
+      console.error("OAuth state nonce not found or invalid", { userId, nonceErr });
+      return Response.redirect(redirectError, 302);
+    }
+    if (new Date(nonceRow.expires_at).getTime() < Date.now()) {
+      console.error("OAuth state nonce expired", { userId });
+      await admin.from("google_oauth_states").delete().eq("user_id", userId).eq("nonce", nonce);
+      return Response.redirect(redirectError, 302);
+    }
+    // Consume nonce
+    await admin.from("google_oauth_states").delete().eq("user_id", userId).eq("nonce", nonce);
 
     // Exchange code for tokens
     const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID")!;
@@ -49,17 +75,12 @@ Deno.serve(async (req) => {
       return Response.redirect(redirectError, 302);
     }
 
-    // Store tokens using service role
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
+    // Store tokens using service role (reuse admin client)
     const expiresAt = new Date(
       Date.now() + (tokenData.expires_in || 3600) * 1000
     ).toISOString();
 
-    const { error: upsertError } = await supabase
+    const { error: upsertError } = await admin
       .from("google_calendar_tokens")
       .upsert(
         {

@@ -293,6 +293,27 @@ export type Database = {
         }
         Relationships: []
       }
+      google_oauth_states: {
+        Row: {
+          created_at: string
+          expires_at: string
+          nonce: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          nonce: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          nonce?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       library_materials: {
         Row: {
           category: Database["public"]["Enums"]["library_category"]
