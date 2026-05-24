@@ -1136,7 +1136,7 @@ const Patients = () => {
                     ) : (
                       <ol className="list-decimal pl-5 space-y-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#2a1a3a", lineHeight: 1.6 }}>
                         {goals.map((g, i) => (
-                          <li key={i}>{typeof g === "string" ? g : (g?.text || g?.title || JSON.stringify(g))}</li>
+                          <li key={i}>{typeof g === "string" ? g : (g?.objective || g?.text || g?.title || g?.description || "—")}</li>
                         ))}
                       </ol>
                     )}
