@@ -105,6 +105,14 @@ const SessionCard = ({ s }: { s: SessionRow }) => (
   </div>
 );
 
+const escapeHtml = (s: unknown): string =>
+  String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 const generatePDF = (sessions: SessionRow[], patientName: string) => {
   const completed = sessions.filter(s => s.status === "completed").length;
   const noShow = sessions.filter(s => s.status === "no_show").length;
@@ -112,42 +120,18 @@ const generatePDF = (sessions: SessionRow[], patientName: string) => {
   const totalRevenue = sessions.filter(s => s.payment_status === "paid" && s.price).reduce((sum, s) => sum + Number(s.price), 0);
   const totalPending = sessions.filter(s => s.payment_status === "pending" && s.price).reduce((sum, s) => sum + Number(s.price), 0);
 
-  const rows = sessions.map(s => {
-    const date = format(new Date(s.scheduled_at), "dd/MM/yyyy HH:mm");
-    const status = statusLabel[s.status] ?? s.status;
-    const payment = paymentLabel[s.payment_status] ?? s.payment_status;
-    const price = s.price != null ? `R$ ${Number(s.price).toFixed(2).replace(".", ",")}` : "-";
-    return `${date} | ${status} | ${payment} | ${price} | ${s.duration_minutes}min`;
-  });
-
-  const content = [
-    `HISTÓRICO DE SESSÕES`,
-    `Paciente: ${patientName}`,
-    `Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
-    ``,
-    `RESUMO`,
-    `Total de sessões: ${sessions.length}`,
-    `Realizadas: ${completed}`,
-    `Faltas: ${noShow}`,
-    `Total recebido: R$ ${totalRevenue.toFixed(2).replace(".", ",")}`,
-    `Total pendente: R$ ${totalPending.toFixed(2).replace(".", ",")}`,
-    ``,
-    `DETALHAMENTO`,
-    `Data/Hora | Status | Pagamento | Valor | Duração`,
-    `${"—".repeat(60)}`,
-    ...rows,
-  ].join("\n");
-
   // Create a printable HTML and trigger print (PDF)
   const printWindow = window.open("", "_blank");
   if (!printWindow) return;
+
+  const safeName = escapeHtml(patientName);
 
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="utf-8" />
-      <title>Histórico - ${patientName}</title>
+      <title>Histórico - ${safeName}</title>
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', Arial, sans-serif; padding: 40px; color: #333; font-size: 12px; }
@@ -178,34 +162,40 @@ const generatePDF = (sessions: SessionRow[], patientName: string) => {
     </head>
     <body>
       <h1>Histórico de Sessões</h1>
-      <p class="meta">Paciente: <strong>${patientName}</strong> · Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
-      
+      <p class="meta">Paciente: <strong>${safeName}</strong> · Gerado em ${escapeHtml(format(new Date(), "dd/MM/yyyy 'às' HH:mm"))}</p>
+
       <div class="summary">
         <div class="summary-card"><div class="value">${sessions.length}</div><div class="label">Total</div></div>
         <div class="summary-card"><div class="value" style="color:#2E7D32">${completed}</div><div class="label">Realizadas</div></div>
         <div class="summary-card"><div class="value" style="color:#C62828">${noShow}</div><div class="label">Faltas</div></div>
         <div class="summary-card"><div class="value" style="color:#2E7D32">R$ ${totalRevenue.toFixed(0)}</div><div class="label">Recebido</div></div>
       </div>
-      
+
       <h2>Detalhamento</h2>
       <table>
         <thead>
           <tr><th>Data</th><th>Horário</th><th>Duração</th><th>Status</th><th>Pagamento</th><th>Valor</th></tr>
         </thead>
         <tbody>
-          ${sessions.map(s => `
+          ${sessions.map(s => {
+            const statusKey = escapeHtml(s.status);
+            const paymentKey = escapeHtml(s.payment_status);
+            const statusText = escapeHtml(statusLabel[s.status] ?? s.status);
+            const paymentText = escapeHtml(paymentLabel[s.payment_status] ?? s.payment_status);
+            const priceText = s.price != null ? `R$ ${Number(s.price).toFixed(2).replace(".", ",")}` : "—";
+            return `
             <tr>
-              <td>${format(new Date(s.scheduled_at), "dd/MM/yyyy")}</td>
-              <td>${format(new Date(s.scheduled_at), "HH:mm")}</td>
-              <td>${s.duration_minutes} min</td>
-              <td><span class="badge badge-${s.status}">${statusLabel[s.status] ?? s.status}</span></td>
-              <td><span class="badge badge-${s.payment_status}">${paymentLabel[s.payment_status] ?? s.payment_status}</span></td>
-              <td>${s.price != null ? `R$ ${Number(s.price).toFixed(2).replace(".", ",")}` : "—"}</td>
+              <td>${escapeHtml(format(new Date(s.scheduled_at), "dd/MM/yyyy"))}</td>
+              <td>${escapeHtml(format(new Date(s.scheduled_at), "HH:mm"))}</td>
+              <td>${Number(s.duration_minutes) || 0} min</td>
+              <td><span class="badge badge-${statusKey}">${statusText}</span></td>
+              <td><span class="badge badge-${paymentKey}">${paymentText}</span></td>
+              <td>${priceText}</td>
             </tr>
-          `).join("")}
+          `;}).join("")}
         </tbody>
       </table>
-      
+
       <div class="footer">
         <p>Psi Real · Relatório gerado automaticamente</p>
       </div>
