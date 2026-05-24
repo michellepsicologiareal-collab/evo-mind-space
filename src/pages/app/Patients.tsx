@@ -433,9 +433,14 @@ const Patients = () => {
       statusFilter === "all" ? true : statusFilter === "active" ? p.is_active : !p.is_active
     )
     .filter((p) =>
+      formulFilter === "all" ? true : formulFilter === "with" ? !!formulationFilled[p.id] : !formulationFilled[p.id]
+    )
+    .filter((p) =>
       p.full_name.toLowerCase().includes(search.toLowerCase()) ||
       (p.email ?? "").toLowerCase().includes(search.toLowerCase())
     );
+  const withFormulCount = patients.filter((p) => !!formulationFilled[p.id]).length;
+  const withoutFormulCount = patients.filter((p) => !formulationFilled[p.id]).length;
 
   return (
     <div className="space-y-5 animate-fade-up" style={{ background: "#ffffff" }}>
