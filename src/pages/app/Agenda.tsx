@@ -43,6 +43,7 @@ interface Session {
   price: number | null;
   notes: string | null;
   confirmation_token: string | null;
+  confirmation_sent_at?: string | null;
   session_type: SessionType;
   discussed_patient_id: string | null;
   is_expense: boolean;
@@ -397,7 +398,7 @@ const Agenda = () => {
     const [sRes, pRes, svRes] = await Promise.all([
       supabase
         .from("sessions")
-        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .neq("status", "cancelled")
         .gte("scheduled_at", mStart.toISOString())
@@ -425,7 +426,7 @@ const Agenda = () => {
     const mEnd = endOfMonth(currentMonth).toISOString();
     const { data } = await supabase
       .from("sessions")
-      .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)")
+      .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)")
       .eq("user_id", user.id)
       .eq("session_type", "clinical")
       .not("patient_id", "is", null)
@@ -441,7 +442,7 @@ const Agenda = () => {
     if (packagePatientIds.length > 0) {
       const { data: packageData } = await supabase
         .from("sessions")
-        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .eq("session_type", "clinical")
         .in("patient_id", packagePatientIds)
@@ -675,11 +676,13 @@ const Agenda = () => {
 
     if (phoneNumber) {
       window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
-      toast.success("Mensagem de confirmação aberta no WhatsApp");
+      toast.success("Lembrete enviado pelo WhatsApp ✨");
     } else {
       await navigator.clipboard.writeText(message);
-      toast.success("Mensagem de confirmação copiada (paciente sem telefone cadastrado)");
+      toast.success("Lembrete copiado (paciente sem telefone cadastrado)");
     }
+    // Marca o envio do lembrete para destacar no card
+    await supabase.from("sessions").update({ confirmation_sent_at: new Date().toISOString() }).eq("id", s.id);
     load();
   };
 
@@ -1138,6 +1141,15 @@ const Agenda = () => {
             {s.billing_sent_at && (
               <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
                 💸 Cobrança enviada {format(new Date(s.billing_sent_at), "dd/MM")}
+              </span>
+            )}
+            {s.confirmation_sent_at && (
+              <span
+                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shadow-sm animate-fade-up"
+                style={{ background: "hsl(var(--accent) / 0.18)", color: "hsl(var(--accent-foreground, var(--foreground)))", borderColor: "hsl(var(--accent) / 0.45)" }}
+                title={`Lembrete enviado em ${format(new Date(s.confirmation_sent_at), "dd/MM 'às' HH:mm")}`}
+              >
+                ✨ Lembrete enviado · {format(new Date(s.confirmation_sent_at), "dd/MM HH:mm")}
               </span>
             )}
           </div>
@@ -1609,6 +1621,15 @@ const Agenda = () => {
                                       {s.billing_sent_at && (
                                         <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
                                           💸 {format(new Date(s.billing_sent_at), "dd/MM")}
+                                        </span>
+                                      )}
+                                      {s.confirmation_sent_at && (
+                                        <span
+                                          className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shadow-sm"
+                                          style={{ background: "hsl(var(--accent) / 0.18)", color: "hsl(var(--foreground))", borderColor: "hsl(var(--accent) / 0.45)" }}
+                                          title={`Lembrete enviado em ${format(new Date(s.confirmation_sent_at), "dd/MM 'às' HH:mm")}`}
+                                        >
+                                          ✨ Lembrete enviado
                                         </span>
                                       )}
                                     </div>
