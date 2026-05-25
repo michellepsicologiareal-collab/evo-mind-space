@@ -1623,6 +1623,15 @@ const Agenda = () => {
                                           💸 {format(new Date(s.billing_sent_at), "dd/MM")}
                                         </span>
                                       )}
+                                      {s.confirmation_sent_at && (
+                                        <span
+                                          className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shadow-sm"
+                                          style={{ background: "hsl(var(--accent) / 0.18)", color: "hsl(var(--foreground))", borderColor: "hsl(var(--accent) / 0.45)" }}
+                                          title={`Lembrete enviado em ${format(new Date(s.confirmation_sent_at), "dd/MM 'às' HH:mm")}`}
+                                        >
+                                          ✨ Lembrete enviado
+                                        </span>
+                                      )}
                                     </div>
                                   </div>
                                 );
