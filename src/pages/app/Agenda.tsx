@@ -1173,6 +1173,23 @@ const Agenda = () => {
             <span className="hidden sm:inline">{gcalConnected ? "Google Calendar" : "Conectar Google"}</span>
             <span className="sm:hidden">{gcalConnected ? "Conectado" : "Google"}</span>
           </Button>
+          {gcalConnected && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={syncAllExistingToGcal}
+              disabled={bulkSyncing}
+              className="rounded-[40px] font-display font-semibold flex-1 sm:flex-none"
+              title="Cria eventos no Google Calendar para todas as sessões futuras ainda não sincronizadas"
+            >
+              {bulkSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              <span className="hidden sm:inline">
+                {bulkSyncing && bulkProgress ? `Sincronizando ${bulkProgress.done}/${bulkProgress.total}` : "Sincronizar existentes"}
+              </span>
+              <span className="sm:hidden">{bulkSyncing ? "..." : "Sincronizar"}</span>
+            </Button>
+          )}
         <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
             <Button variant="accent" size="sm" onClick={() => openNew()} className="rounded-[40px] font-display font-semibold w-full sm:w-auto sm:size-default">
