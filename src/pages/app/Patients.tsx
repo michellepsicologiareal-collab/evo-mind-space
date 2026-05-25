@@ -429,9 +429,11 @@ const Patients = () => {
   };
 
   const filtered = patients
-    .filter((p) =>
-      statusFilter === "all" ? true : statusFilter === "active" ? p.is_active : !p.is_active
-    )
+    .filter((p) => {
+      // When filtering by formulation (with/without), always restrict to active patients
+      if (formulFilter !== "all") return p.is_active;
+      return statusFilter === "all" ? true : statusFilter === "active" ? p.is_active : !p.is_active;
+    })
     .filter((p) =>
       formulFilter === "all" ? true : formulFilter === "with" ? !!formulationFilled[p.id] : !formulationFilled[p.id]
     )
@@ -439,8 +441,11 @@ const Patients = () => {
       p.full_name.toLowerCase().includes(search.toLowerCase()) ||
       (p.email ?? "").toLowerCase().includes(search.toLowerCase())
     );
-  const withFormulCount = patients.filter((p) => !!formulationFilled[p.id]).length;
-  const withoutFormulCount = patients.filter((p) => !formulationFilled[p.id]).length;
+  // Formulation counts consider only active patients (com/sem formulação só faz sentido entre ativos)
+  const activePatients = patients.filter((p) => p.is_active);
+  const withFormulCount = activePatients.filter((p) => !!formulationFilled[p.id]).length;
+  const withoutFormulCount = activePatients.filter((p) => !formulationFilled[p.id]).length;
+  const totalFormulCount = activePatients.length;
 
   return (
     <div className="space-y-5 animate-fade-up" style={{ background: "#ffffff" }}>
