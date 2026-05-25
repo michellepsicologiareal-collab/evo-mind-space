@@ -43,6 +43,7 @@ interface Session {
   price: number | null;
   notes: string | null;
   confirmation_token: string | null;
+  confirmation_sent_at?: string | null;
   session_type: SessionType;
   discussed_patient_id: string | null;
   is_expense: boolean;
