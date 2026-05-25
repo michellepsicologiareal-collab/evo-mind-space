@@ -6,7 +6,7 @@ import {
   Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon,
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
-  Video, MapPin, CalendarDays, CalendarRange, CalendarCheck,
+  Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw,
 } from "lucide-react";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
@@ -287,6 +287,79 @@ const Agenda = () => {
       });
     } catch (e) { console.error("gcal delete failed", e); }
   }, [gcalConnected]);
+
+  // ── Bulk sync: envia todas as sessões futuras não canceladas que ainda não têm evento no Google ──
+  const [bulkSyncing, setBulkSyncing] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
+  const syncAllExistingToGcal = useCallback(async () => {
+    if (!user) return;
+    if (!gcalConnected) { toast.error("Conecte o Google Calendar primeiro."); return; }
+    setBulkSyncing(true);
+    setBulkProgress({ done: 0, total: 0 });
+    const tId = toast.loading("Buscando sessões para sincronizar...");
+    try {
+      const nowIso = new Date().toISOString();
+      const { data: futureSessions, error: sErr } = await supabase
+        .from("sessions")
+        .select("id, scheduled_at, duration_minutes, notes, status, patient:patients!sessions_patient_id_fkey(full_name)")
+        .eq("user_id", user.id)
+        .gte("scheduled_at", nowIso)
+        .not("status", "in", "(cancelled)")
+        .order("scheduled_at", { ascending: true });
+      if (sErr) throw sErr;
+
+      const sessions = (futureSessions || []) as any[];
+      if (sessions.length === 0) {
+        toast.dismiss(tId);
+        toast.info("Nenhuma sessão futura para sincronizar.");
+        return;
+      }
+
+      const { data: existing } = await supabase
+        .from("session_gcal_events")
+        .select("session_id")
+        .in("session_id", sessions.map((s) => s.id));
+      const alreadySynced = new Set((existing || []).map((e: any) => e.session_id));
+
+      const toSync = sessions.filter((s) => !alreadySynced.has(s.id));
+      if (toSync.length === 0) {
+        toast.dismiss(tId);
+        toast.success("Todas as sessões futuras já estão sincronizadas.");
+        return;
+      }
+
+      setBulkProgress({ done: 0, total: toSync.length });
+      let ok = 0, fail = 0;
+      for (let i = 0; i < toSync.length; i++) {
+        const s = toSync[i];
+        try {
+          const { error: invErr } = await supabase.functions.invoke("google-calendar-sync", {
+            body: {
+              action: "sync",
+              session: {
+                id: s.id,
+                scheduled_at: s.scheduled_at,
+                duration_minutes: s.duration_minutes,
+                notes: s.notes,
+                patient_name: s.patient?.full_name || "Sessão",
+              },
+            },
+          });
+          if (invErr) fail++; else ok++;
+        } catch { fail++; }
+        setBulkProgress({ done: i + 1, total: toSync.length });
+        toast.loading(`Sincronizando ${i + 1}/${toSync.length}...`, { id: tId });
+      }
+      toast.dismiss(tId);
+      toast.success(`${ok} ${ok === 1 ? "sessão sincronizada" : "sessões sincronizadas"} com sucesso. ${fail} não foram sincronizadas.`);
+    } catch (e: any) {
+      toast.dismiss(tId);
+      toast.error("Falha ao sincronizar sessões: " + (e?.message || "erro desconhecido"));
+    } finally {
+      setBulkSyncing(false);
+      setBulkProgress(null);
+    }
+  }, [user, gcalConnected]);
 
   // Fetch pix key + gcal status + handle OAuth callback
   useEffect(() => {
@@ -1100,6 +1173,23 @@ const Agenda = () => {
             <span className="hidden sm:inline">{gcalConnected ? "Google Calendar" : "Conectar Google"}</span>
             <span className="sm:hidden">{gcalConnected ? "Conectado" : "Google"}</span>
           </Button>
+          {gcalConnected && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={syncAllExistingToGcal}
+              disabled={bulkSyncing}
+              className="rounded-[40px] font-display font-semibold flex-1 sm:flex-none"
+              title="Cria eventos no Google Calendar para todas as sessões futuras ainda não sincronizadas"
+            >
+              {bulkSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              <span className="hidden sm:inline">
+                {bulkSyncing && bulkProgress ? `Sincronizando ${bulkProgress.done}/${bulkProgress.total}` : "Sincronizar existentes"}
+              </span>
+              <span className="sm:hidden">{bulkSyncing ? "..." : "Sincronizar"}</span>
+            </Button>
+          )}
         <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
             <Button variant="accent" size="sm" onClick={() => openNew()} className="rounded-[40px] font-display font-semibold w-full sm:w-auto sm:size-default">
