@@ -1101,7 +1101,20 @@ const Patients = () => {
                 <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-3 bg-white/90 backdrop-blur border-b border-[#ede9f8]">
                   <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: "#3d2b8a" }}>Formulação de Caso</p>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => window.print()} className="inline-flex items-center gap-1.5" style={{ background: "#fff", border: "0.5px solid #ede9f8", color: "#3d2b8a", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
+                    <button onClick={() => {
+                      const node = document.getElementById("formulation-print");
+                      if (!node) return;
+                      const w = window.open("", "_blank", "width=900,height=1000");
+                      if (!w) { toast.error("Permita pop-ups para gerar o PDF."); return; }
+                      const html = `<!doctype html><html><head><meta charset="utf-8"><title>Formulação - ${(readPatient?.full_name || "").replace(/[<>&"]/g, "")}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>@page{margin:18mm} *{box-sizing:border-box} body{margin:0;background:#fff;color:#1a1030;font-family:'Instrument Sans',sans-serif} .wrap{padding:0}</style>
+</head><body><div class="wrap">${node.innerHTML}</div>
+<script>window.addEventListener('load',()=>{setTimeout(()=>{window.focus();window.print();},300);});</script>
+</body></html>`;
+                      w.document.open(); w.document.write(html); w.document.close();
+                    }} className="inline-flex items-center gap-1.5" style={{ background: "#fff", border: "0.5px solid #ede9f8", color: "#3d2b8a", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
                       <Printer className="h-3.5 w-3.5" /> Imprimir / PDF
                     </button>
                     <button onClick={() => { setReadPatient(null); setPadeksyPatient(readPatient); }} className="inline-flex items-center gap-1.5" style={{ background: "#6d4fc2", color: "#fff", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
