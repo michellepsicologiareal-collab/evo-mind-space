@@ -496,7 +496,7 @@ const Patients = () => {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {[
-            { k: "all", label: "Todas formulações", n: patients.length },
+            { k: "all", label: "Todas formulações", n: totalFormulCount },
             { k: "with", label: "Com formulação", n: withFormulCount },
             { k: "without", label: "Sem formulação", n: withoutFormulCount },
           ].map((t) => {
