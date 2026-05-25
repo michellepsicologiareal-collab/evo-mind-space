@@ -43,11 +43,11 @@ export const Footer = () => {
             </a>
 
             <a href="/privacidade.html" className="hover:text-foreground">
-              Privacidade
+              Política de Privacidade
             </a>
 
             <a href="/p%C3%BAblico/termos.html" className="hover:text-foreground">
-              Termos
+              Termos de Uso
             </a>
           </nav>
 
