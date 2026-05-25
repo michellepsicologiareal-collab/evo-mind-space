@@ -6,7 +6,7 @@ import {
   Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon,
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
-  Video, MapPin, CalendarDays, CalendarRange, CalendarCheck,
+  Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw,
 } from "lucide-react";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
