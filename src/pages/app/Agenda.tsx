@@ -676,11 +676,13 @@ const Agenda = () => {
 
     if (phoneNumber) {
       window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
-      toast.success("Mensagem de confirmação aberta no WhatsApp");
+      toast.success("Lembrete enviado pelo WhatsApp ✨");
     } else {
       await navigator.clipboard.writeText(message);
-      toast.success("Mensagem de confirmação copiada (paciente sem telefone cadastrado)");
+      toast.success("Lembrete copiado (paciente sem telefone cadastrado)");
     }
+    // Marca o envio do lembrete para destacar no card
+    await supabase.from("sessions").update({ confirmation_sent_at: new Date().toISOString() }).eq("id", s.id);
     load();
   };
 
