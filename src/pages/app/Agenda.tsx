@@ -398,7 +398,7 @@ const Agenda = () => {
     const [sRes, pRes, svRes] = await Promise.all([
       supabase
         .from("sessions")
-        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .neq("status", "cancelled")
         .gte("scheduled_at", mStart.toISOString())
@@ -426,7 +426,7 @@ const Agenda = () => {
     const mEnd = endOfMonth(currentMonth).toISOString();
     const { data } = await supabase
       .from("sessions")
-      .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)")
+      .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)")
       .eq("user_id", user.id)
       .eq("session_type", "clinical")
       .not("patient_id", "is", null)
@@ -442,7 +442,7 @@ const Agenda = () => {
     if (packagePatientIds.length > 0) {
       const { data: packageData } = await supabase
         .from("sessions")
-        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)")
+        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .eq("session_type", "clinical")
         .in("patient_id", packagePatientIds)
