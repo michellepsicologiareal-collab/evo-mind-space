@@ -715,6 +715,48 @@ export type Database = {
         }
         Relationships: []
       }
+      session_plans: {
+        Row: {
+          created_at: string
+          id: string
+          meta_id: string | null
+          objetivo: string | null
+          observacoes: string | null
+          patient_id: string
+          retomar: string | null
+          session_id: string | null
+          tecnicas: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meta_id?: string | null
+          objetivo?: string | null
+          observacoes?: string | null
+          patient_id: string
+          retomar?: string | null
+          session_id?: string | null
+          tecnicas?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meta_id?: string | null
+          objetivo?: string | null
+          observacoes?: string | null
+          patient_id?: string
+          retomar?: string | null
+          session_id?: string | null
+          tecnicas?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       session_records: {
         Row: {
           chief_complaint: string | null
@@ -1130,6 +1172,129 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      treatment_goals: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          ordem: number
+          patient_id: string
+          tipo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          ordem?: number
+          patient_id: string
+          tipo?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          ordem?: number
+          patient_id?: string
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      treatment_plans: {
+        Row: {
+          abordagem: string[]
+          cid: string | null
+          conceitualizacao: string | null
+          created_at: string
+          id: string
+          patient_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          abordagem?: string[]
+          cid?: string | null
+          conceitualizacao?: string | null
+          created_at?: string
+          id?: string
+          patient_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          abordagem?: string[]
+          cid?: string | null
+          conceitualizacao?: string | null
+          created_at?: string
+          id?: string
+          patient_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      treatment_revisions: {
+        Row: {
+          created_at: string
+          data: string
+          descricao: string
+          id: string
+          patient_id: string
+          sessao_ref: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: string
+          descricao?: string
+          id?: string
+          patient_id: string
+          sessao_ref?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          descricao?: string
+          id?: string
+          patient_id?: string
+          sessao_ref?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      treatment_techniques: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          patient_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          patient_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          patient_id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

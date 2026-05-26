@@ -106,17 +106,17 @@ const statusLabel: Record<Status, string> = {
   no_show: "Falta", rescheduled: "Remarcada", cancelled: "Cancelada",
 };
 const statusClass: Record<Status, string> = {
-  scheduled: "bg-[#f7f4ff] text-[#6d4fc2] border-[#ede9f8]",
-  confirmed: "bg-[rgba(109,79,194,0.08)] text-[#3d2b8a] border-[rgba(109,79,194,0.2)]",
-  completed: "bg-[rgba(109,79,194,0.10)] text-[#3d2b8a] border-[rgba(109,79,194,0.25)]",
-  no_show: "bg-destructive/15 text-destructive border-destructive/30",
-  rescheduled: "bg-sand text-sand-foreground border-sand",
-  cancelled: "bg-muted text-muted-foreground border-muted line-through",
+  scheduled:   "bg-gray-100 text-gray-600 border-gray-200",
+  confirmed:   "bg-green-100 text-green-800 border-green-200",
+  completed:   "bg-gray-50 text-gray-400 border-gray-200",
+  no_show:     "bg-destructive/15 text-destructive border-destructive/30",
+  rescheduled: "bg-amber-100 text-amber-800 border-amber-200",
+  cancelled:   "bg-muted text-muted-foreground border-muted line-through",
 };
 const paymentStatusLabel: Record<PaymentStatus, string> = { pending: "Pendente", paid: "Pago" };
 const paymentStatusClass: Record<PaymentStatus, string> = {
-  pending: "bg-[rgba(201,168,76,0.10)] text-[#7a5e1a] border-[rgba(201,168,76,0.3)]",
-  paid: "bg-[rgba(109,79,194,0.10)] text-[#3d2b8a] border-[rgba(109,79,194,0.25)]",
+  pending: "bg-amber-50 text-amber-800 border-amber-200",
+  paid:    "bg-green-100 text-green-800 border-green-200",
 };
 const PILL_BASE = "inline-flex items-center text-[11px] font-display font-semibold px-2.5 py-0.5 rounded-[40px] border";
 

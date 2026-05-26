@@ -1,38 +1,100 @@
-## Objetivo
+## Escopo
 
-Permitir que a psicóloga envie um link público (mesmo modelo do termo) para o paciente/responsável preencher a Anamnese da Criança pelo WhatsApp. O preenchimento deve cair direto no painel do app, vinculado ao paciente correto.
+Criar página **Plano de Tratamento** dentro do perfil do paciente + aplicar ajustes de cor nos badges da Agenda (anexo).
 
-## Fluxo do usuário
+---
 
-1. No card do paciente (página Pacientes) → menu "Anamnese (Criança)" ganha a opção **"Enviar link de preenchimento"**.
-2. Ao clicar, abre o WhatsApp já com a mensagem: *"Olá [nome], segue o link para preencher sua anamnese: https://psireal.app/anamnese-crianca/{patientId}"*.
-3. O paciente abre o link, vê uma página pública (sem login) com o mesmo formulário da anamnese — só os campos do "psi" e do paciente já vêm pré-preenchidos (nome da criança e nome da profissional).
-4. Ao enviar, os dados caem em `child_anamneses` vinculados ao `user_id` da psicóloga.
-5. A psicóloga vê a anamnese preenchida na tela **Anamneses** normalmente.
+## 1. Banco de dados (migrations)
 
-## Implementação técnica
+Novas tabelas (todas com `patient_id`, `user_id`, RLS por `auth.uid() = user_id`):
 
-### Backend
-- Nova edge function `public-anamnesis` (verify_jwt=false) com duas ações:
-  - `GET ?patient_id=...` → retorna `{ child_name, professional_name }` (lookup via service role na tabela `patients` + `profiles`).
-  - `POST` → recebe `patient_id` + payload do formulário, valida tamanhos (zod), descobre `user_id` do paciente e insere em `child_anamneses` com service role.
-- Validação: rejeita se LGPD não aceita ou campos obrigatórios vazios.
-- Sem alteração de RLS (mantemos `child_anamneses` restrito por `user_id`; só a edge function escreve em nome do dono).
+- **treatment_plans** — `patient_id` (unique), `status` ('ativo'|'em_revisao'|'alta'), `cid`, `abordagem` (text[]), `conceitualizacao`
+- **treatment_goals** — `patient_id`, `tipo` ('geral'|'intermediaria'|'comportamental'), `descricao`, `ordem`
+- **treatment_techniques** — `patient_id`, `nome`
+- **session_plans** — `patient_id`, `session_id` (nullable), `objetivo`, `meta_id` (fk treatment_goals), `retomar`, `tecnicas` (text[]), `observacoes`
+- **treatment_revisions** — `patient_id`, `data` (timestamptz), `sessao_ref`, `descricao`
 
-### Frontend
-- Nova página pública `src/pages/AnamnesePublica.tsx` (rota `/anamnese-crianca/:patientId`) — visual igual ao `ContratoPublico.tsx` (header com logo, cards `border rounded-xl bg-card`, botão `variant="accent"`), reaproveitando as mesmas perguntas do `ChildAnamnesisForm.tsx`.
-- Tela de sucesso ao enviar (mesmo padrão `CheckCircle2` do contrato).
-- `src/App.tsx`: registrar a nova rota pública (fora do `ProtectedRoute`).
-- `src/pages/app/Patients.tsx`: no dropdown do card adicionar item **"Enviar link de anamnese"** que copia o link e abre `wa.me/{telefone}?text=...` com a URL.
+Cada uma com RLS completo (select/insert/update/delete via `auth.uid() = user_id`) + trigger `update_updated_at_column`.
 
-## Arquivos afetados
-- `supabase/functions/public-anamnesis/index.ts` (novo)
-- `supabase/config.toml` (declarar a função com `verify_jwt = false`)
-- `src/pages/AnamnesePublica.tsx` (novo)
+---
+
+## 2. Sidebar (`AppLayout.tsx`)
+
+Adicionar item na seção CLÍNICA, **após Agenda e antes de Registro Sessão**:
+- `{ to: "/app/plano-tratamento", label: "Plano de tratamento", icon: ClipboardList }`
+
+Nota: a navegação atual é global (não por paciente). A página vai abrir com seletor de paciente no topo (ou redirecionar a partir do perfil do paciente). Confirmo abaixo.
+
+---
+
+## 3. Página `/app/plano-tratamento` (`src/pages/app/PlanoTratamento.tsx`)
+
+Layout em blocos conforme spec:
+
+**Header**
+- Título + Select status (Ativo/Em revisão/Alta) + botões Exportar PDF (ghost) + Editar (accent)
+- Seletor de paciente (combobox) para escolher de qual paciente é o plano
+
+**Bloco 1 — Próxima sessão** (card com `border-l-4 border-l-[#6d4fc2]`)
+- Busca próxima sessão futura via `sessions` where `patient_id` + `scheduled_at > now()` order asc limit 1
+- Campos: objetivo, select de meta (lista de `treatment_goals`), retomar, tags de técnicas (com sugestões de `treatment_techniques`), observações
+- Salva em `session_plans` (upsert por `session_id`)
+
+**Bloco 2 — Diagnóstico e formulação**
+- Grid 2 colunas: esquerda CID + multi-select abordagem (TCC, TE, ACT, Outra); direita textarea conceitualização
+- Salva em `treatment_plans`
+
+**Bloco 3 — Metas terapêuticas**
+- Lista renderizada por tipo com cor da borda esquerda:
+  - geral → `border-l-[#6d4fc2]` (roxo)
+  - intermediaria → `border-l-[#BA7517]` (âmbar)
+  - comportamental → `border-l-[#1D9E75]` (verde)
+- Cada item: select tipo, textarea descrição, botão remover
+- Botão "Adicionar meta"
+
+**Bloco 4 — Técnicas do plano**
+- Tags/pills com X para remover, input inline "+ adicionar"
+
+**Bloco 5 — Histórico de revisões**
+- Timeline vertical (linha à esquerda, dots), header com botão "Nova revisão"
+- Cada item: data formatada, sessão_ref, descrição
+
+**Exportar PDF**
+- Abrir nova janela com HTML formatado e `window.print()` (mesmo padrão usado em Patients.tsx para formulação)
+
+**Autosave**: usar debounce 800ms por bloco (padrão de outros formulários longos) + indicador "Salvo" sutil.
+
+---
+
+## 4. Rota (`src/App.tsx`)
+
+Adicionar `<Route path="plano-tratamento" element={<PlanoTratamento />} />` dentro do AppLayout.
+
+---
+
+## 5. Ajustes de cor da Agenda (anexo)
+
+Aplicar diretamente em `src/pages/app/Agenda.tsx` (o script aponta para `components/app/Agenda.tsx` mas o arquivo real é em pages):
+
+- `statusClass`: scheduled cinza, confirmed verde, completed cinza claro, rescheduled âmbar
+- `paymentStatusClass`: pending âmbar, paid verde
+- Nome do paciente: `text-primary` → `text-foreground` (se existir nesse padrão)
+
+---
+
+## Arquivos a criar/editar
+
+**Criar:**
+- `supabase/migrations/<timestamp>_treatment_plan.sql`
+- `src/pages/app/PlanoTratamento.tsx`
+
+**Editar:**
+- `src/components/app/AppLayout.tsx` (novo item de nav)
 - `src/App.tsx` (rota)
-- `src/pages/app/Patients.tsx` (botão WhatsApp no dropdown)
+- `src/pages/app/Agenda.tsx` (cores)
 
-## O que NÃO muda
-- Estrutura da tabela `child_anamneses` e RLS atual.
-- Formulário interno (`ChildAnamnesisForm.tsx`) e tela `Anamneses.tsx` continuam iguais.
-- Fluxo do termo/contrato.
+---
+
+## Pergunta antes de executar
+
+A navegação atual é global por seção (Pacientes, Agenda, etc.), não dentro do perfil do paciente. A página vai abrir com **um seletor de paciente no topo** (combobox listando os pacientes ativos) e todo o conteúdo é filtrado por esse paciente selecionado. Está ok assim, ou prefere acessar via botão dentro de cada paciente em `/app/pacientes` (sem item dedicado na sidebar)?
