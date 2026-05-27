@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -56,8 +57,10 @@ const PURPLE = "#6d4fc2";
 const PlanoTratamento = () => {
   const { user } = useAuth();
   const uid = user?.id;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryPatient = searchParams.get("patient");
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [patientId, setPatientId] = useState<string>("");
+  const [patientId, setPatientId] = useState<string>(queryPatient || "");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -78,9 +81,16 @@ const PlanoTratamento = () => {
       .then(({ data }) => {
         const list = (data || []) as Patient[];
         setPatients(list);
-        if (list.length && !patientId) setPatientId(list[0].id);
+        if (!patientId && list.length) setPatientId(queryPatient || list[0].id);
       });
   }, [uid]);
+
+  // sync query param when patientId changes
+  useEffect(() => {
+    if (patientId && patientId !== queryPatient) {
+      setSearchParams({ patient: patientId }, { replace: true });
+    }
+  }, [patientId]);
 
   const loadAll = useCallback(async () => {
     if (!uid || !patientId) return;

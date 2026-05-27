@@ -5,8 +5,9 @@ import logoSrc from "@/assets/logo-psireal.png";
 import {
   LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut,
   GraduationCap, ShieldCheck, Crown, Lock, BookOpen, Flower2, FileText,
-  FileCheck, Shield, UserCog, Sparkles, ClipboardList, Baby,
+  FileCheck, Shield, UserCog, Sparkles, ClipboardList, Baby, MoreHorizontal,
 } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ interface NavItem {
   end?: boolean;
   premium?: boolean;
   visibleTo?: Array<"standard" | "supervisee" | "supervisor">;
+  hideFromNav?: boolean;
 }
 
 /* ── Navigation items for ALL users (including admin as regular user) ── */
@@ -33,7 +35,7 @@ const allNavItems: NavItem[] = [
   { to: "/app", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "/app/pacientes", label: "Pacientes", icon: Users },
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
-  { to: "/app/plano-tratamento", label: "Plano de tratamento", icon: ClipboardList },
+  { to: "/app/plano-tratamento", label: "Plano de tratamento", icon: ClipboardList, hideFromNav: true },
   { to: "/app/registro-sessao", label: "Registro Sessão", icon: ClipboardList },
   { to: "/app/anamneses", label: "Anamneses", icon: Baby },
   { to: "/app/financeiro", label: "Financeiro", icon: Wallet, premium: true },
@@ -60,14 +62,23 @@ export const AppLayout = () => {
 
   const navItems = useMemo(() => {
     return allNavItems.filter((item) => {
+      if (item.hideFromNav) return false;
       if (!item.visibleTo) return true;
       if (isAdmin) return true;
       return item.visibleTo.includes(profileType);
     });
   }, [profileType, isAdmin]);
 
-  // Mobile: show key items in bottom bar, rest accessible via "Mais" or scrollable
-  const mobileNavItems = navItems;
+  // Mobile: 4 key items + "Mais" sheet for the rest
+  const mobilePrimary = useMemo(() => {
+    const keys = ["/app", "/app/pacientes", "/app/agenda", "/app/registro-sessao"];
+    return keys.map((k) => navItems.find((n) => n.to === k)).filter(Boolean) as NavItem[];
+  }, [navItems]);
+  const mobileSecondary = useMemo(
+    () => navItems.filter((n) => !mobilePrimary.includes(n)),
+    [navItems, mobilePrimary]
+  );
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -132,7 +143,7 @@ export const AppLayout = () => {
           {(() => {
             const sections: { label: string; routes: string[] }[] = [
               { label: "INÍCIO", routes: ["/app/comece-por-aqui", "/app"] },
-              { label: "CLÍNICA", routes: ["/app/pacientes", "/app/agenda", "/app/plano-tratamento", "/app/registro-sessao", "/app/anamneses", "/app/financeiro", "/app/supervisionandos"] },
+              { label: "CLÍNICA", routes: ["/app/pacientes", "/app/agenda", "/app/registro-sessao", "/app/anamneses", "/app/financeiro", "/app/supervisionandos"] },
               { label: "RECURSOS", routes: ["/app/biblioteca", "/app/autocuidado", "/app/contrato-modelo", "/app/contratos", "/app/perfil"] },
             ];
             return sections.map((sec) => {
@@ -216,10 +227,10 @@ export const AppLayout = () => {
         </div>
       </div>
 
-      {/* ── Mobile bottom nav ── */}
+      {/* ── Mobile bottom nav (4 primary + Mais) ── */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
-        <div className="grid grid-cols-5 xs:grid-cols-6 py-1 px-1">
-          {mobileNavItems.map((item) => (
+        <div className="grid grid-cols-5 py-1.5 px-1">
+          {mobilePrimary.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -227,17 +238,66 @@ export const AppLayout = () => {
               onClick={(e) => handleNavClick(e, item)}
               className={({ isActive }) =>
                 cn(
-                  "flex flex-col items-center justify-center gap-0.5 min-h-[40px] py-1.5 text-[9px] leading-tight font-medium transition-colors rounded-lg",
-                  isActive ? "text-accent bg-accent/10" : "text-muted-foreground"
+                  "flex flex-col items-center justify-center gap-1 min-h-[52px] py-1.5 text-[10px] leading-tight font-medium transition-colors rounded-lg mx-0.5",
+                  isActive ? "text-[#6d4fc2] bg-[rgba(109,79,194,0.10)]" : "text-muted-foreground"
                 )
               }
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon className="h-[18px] w-[18px]" />
               <span className="text-center line-clamp-1 px-0.5">{item.label}</span>
             </NavLink>
           ))}
+          <button
+            onClick={() => setMoreOpen(true)}
+            className="flex flex-col items-center justify-center gap-1 min-h-[52px] py-1.5 text-[10px] leading-tight font-medium text-muted-foreground rounded-lg mx-0.5"
+          >
+            <MoreHorizontal className="h-[18px] w-[18px]" />
+            <span>Mais</span>
+          </button>
         </div>
       </nav>
+
+      {/* ── Mobile "Mais" sheet ── */}
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetContent side="bottom" className="md:hidden rounded-t-3xl max-h-[80vh] overflow-y-auto p-0">
+          <div className="p-5">
+            <div className="font-display text-base font-semibold text-[#1a1030] mb-4">Mais opções</div>
+            <div className="grid grid-cols-3 gap-2">
+              {mobileSecondary.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  onClick={(e) => { handleNavClick(e, item); setMoreOpen(false); }}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex flex-col items-center justify-center gap-1.5 min-h-[72px] p-2 rounded-xl border text-[11px] font-medium text-center leading-tight",
+                      isActive
+                        ? "bg-[rgba(109,79,194,0.10)] border-[#6d4fc2]/30 text-[#3d2b8a]"
+                        : "bg-[#faf8ff] border-[#ede9f8] text-[#5a4a7a]"
+                    )
+                  }
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span className="line-clamp-2">{item.label}</span>
+                  {item.premium && !isPremium && <Lock className="h-3 w-3 opacity-50" />}
+                </NavLink>
+              ))}
+              {isAdmin && adminNavItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMoreOpen(false)}
+                  className="flex flex-col items-center justify-center gap-1.5 min-h-[72px] p-2 rounded-xl border text-[11px] font-medium text-center leading-tight bg-[hsl(var(--admin-accent))]/10 border-[hsl(var(--admin-accent))]/30 text-[hsl(var(--admin-accent))]"
+                >
+                  <item.icon className="h-5 w-5" />
+                  <span className="line-clamp-2">{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* ── Main content ── */}
       <main className="flex-1 md:ml-[220px] pt-16 pb-28 md:pt-0 md:pb-0">
