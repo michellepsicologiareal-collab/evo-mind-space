@@ -25,6 +25,7 @@ interface NavItem {
   end?: boolean;
   premium?: boolean;
   visibleTo?: Array<"standard" | "supervisee" | "supervisor">;
+  hideFromNav?: boolean;
 }
 
 /* ── Navigation items for ALL users (including admin as regular user) ── */
