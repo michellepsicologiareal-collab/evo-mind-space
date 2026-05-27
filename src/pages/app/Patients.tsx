@@ -839,6 +839,7 @@ const Patients = () => {
                       <Chip label="Anamnese" count={hasAnam ? 1 : 0} onClick={() => { setSelectedPatient(null); setAnamnesisPatient(p); }} />
                       <Chip label="TCC" count={cTcc} onClick={() => { setSelectedPatient(null); setTccPatient(p); }} />
                       <Chip label="Formulação" onClick={() => { setSelectedPatient(null); setPadeksyPatient(p); }} />
+                      <Chip label="Plano" onClick={() => { setSelectedPatient(null); navigate(`/app/plano-tratamento?patient=${p.id}`); }} />
                     </div>
                   </div>
 
