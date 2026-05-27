@@ -61,14 +61,23 @@ export const AppLayout = () => {
 
   const navItems = useMemo(() => {
     return allNavItems.filter((item) => {
+      if (item.hideFromNav) return false;
       if (!item.visibleTo) return true;
       if (isAdmin) return true;
       return item.visibleTo.includes(profileType);
     });
   }, [profileType, isAdmin]);
 
-  // Mobile: show key items in bottom bar, rest accessible via "Mais" or scrollable
-  const mobileNavItems = navItems;
+  // Mobile: 4 key items + "Mais" sheet for the rest
+  const mobilePrimary = useMemo(() => {
+    const keys = ["/app", "/app/pacientes", "/app/agenda", "/app/registro-sessao"];
+    return keys.map((k) => navItems.find((n) => n.to === k)).filter(Boolean) as NavItem[];
+  }, [navItems]);
+  const mobileSecondary = useMemo(
+    () => navItems.filter((n) => !mobilePrimary.includes(n)),
+    [navItems, mobilePrimary]
+  );
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
