@@ -863,6 +863,23 @@ const Patients = () => {
                       <CalendarDays className="h-4 w-4" /> Nova sessão
                     </button>
                     <button
+                      onClick={() => {
+                        const link = `${window.location.origin}/anamnese-crianca/${p.id}`;
+                        const phone = (p.phone || "").replace(/\D/g, "");
+                        const msg = `Olá! Para iniciarmos o atendimento de ${p.full_name}, por favor preencha a anamnese neste link: ${link}`;
+                        if (phone) {
+                          window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+                        } else {
+                          navigator.clipboard.writeText(link);
+                          toast.success("Link da anamnese copiado!");
+                        }
+                      }}
+                      className="flex items-center justify-center gap-2 w-full"
+                      style={{ background: "rgba(29,158,117,0.10)", color: "#0e5e44", border: "0.5px solid rgba(29,158,117,0.3)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+                    >
+                      <Baby className="h-4 w-4" /> Enviar anamnese
+                    </button>
+                    <button
                       onClick={() => window.open(`https://wa.me/5511947388423?text=${encodeURIComponent(`Olá Michelle, preciso de supervisão para o caso do(a) paciente: ${p.full_name}`)}`, "_blank")}
                       className="flex items-center justify-center gap-2 w-full"
                       style={{ background: "rgba(201,168,76,0.10)", color: "#7a5e1a", border: "0.5px solid rgba(201,168,76,0.3)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
