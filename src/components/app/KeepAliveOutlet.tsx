@@ -11,6 +11,7 @@ const routeComponents: Record<string, ComponentType> = {
   "/app": lazy(() => import("@/pages/app/Dashboard")),
   "/app/pacientes": lazy(() => import("@/pages/app/Patients")),
   "/app/agenda": lazy(() => import("@/pages/app/Agenda")),
+  "/app/plano-tratamento": lazy(() => import("@/pages/app/PlanoTratamento")),
   "/app/financeiro": lazy(() => import("@/pages/app/Finance")),
   "/app/supervisionandos": lazy(() => import("@/pages/app/Supervisees")),
   "/app/biblioteca": lazy(() => import("@/pages/app/Library")),
@@ -19,6 +20,7 @@ const routeComponents: Record<string, ComponentType> = {
   "/app/contratos": lazy(() => import("@/pages/app/Contratos")),
   "/app/comece-por-aqui": lazy(() => import("@/pages/app/ComecePorAqui")),
   "/app/registro-sessao": lazy(() => import("@/pages/app/RegistroSessao")),
+  "/app/anamneses": lazy(() => import("@/pages/app/Anamneses")),
   "/app/perfil": lazy(() => import("@/pages/app/Profile")),
 };
 

@@ -14,9 +14,16 @@ import { Loader2, Plus, X, FileDown, ClipboardList, Target, Sparkles, History, S
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { jsPDF } from "jspdf";
 import { cn } from "@/lib/utils";
 
-type Patient = { id: string; full_name: string; is_active: boolean };
+type Patient = {
+  id: string;
+  full_name: string;
+  is_active: boolean;
+  treatment_start_date: string | null;
+  treatment_end_date: string | null;
+};
 type GoalType = "geral" | "intermediaria" | "comportamental";
 
 interface TreatmentPlan {
@@ -39,6 +46,7 @@ interface SessionPlan {
 }
 interface Revision { id: string; data: string; sessao_ref: string; descricao: string }
 interface NextSession { id: string; scheduled_at: string; duration_minutes: number }
+interface TreatmentSession { id: string; scheduled_at: string; duration_minutes: number; status: string; notes: string | null }
 
 const STATUS_OPTIONS = [
   { value: "ativo", label: "Ativo" },
@@ -46,6 +54,14 @@ const STATUS_OPTIONS = [
   { value: "alta", label: "Alta" },
 ];
 const ABORDAGEM_OPTIONS = ["TCC", "TE", "ACT", "Outra"];
+const SESSION_STATUS_LABEL: Record<string, string> = {
+  scheduled: "Agendada",
+  confirmed: "Confirmada",
+  completed: "Realizada",
+  no_show: "Falta",
+  rescheduled: "Remarcada",
+  cancelled: "Cancelada",
+};
 const GOAL_META = {
   geral:          { label: "Geral",          border: "border-l-[#6d4fc2]", chip: "bg-[#f0ebff] text-[#3d2b8a]" },
   intermediaria:  { label: "Intermediária",  border: "border-l-[#BA7517]", chip: "bg-[#fdf3e3] text-[#7a4a0a]" },
@@ -70,6 +86,7 @@ const PlanoTratamento = () => {
   const [newTech, setNewTech] = useState("");
   const [revisions, setRevisions] = useState<Revision[]>([]);
   const [nextSession, setNextSession] = useState<NextSession | null>(null);
+  const [treatmentSessions, setTreatmentSessions] = useState<TreatmentSession[]>([]);
   const [sessionPlan, setSessionPlan] = useState<SessionPlan>({
     session_id: null, objetivo: "", meta_id: null, retomar: "", tecnicas: [], observacoes: "",
   });
@@ -77,13 +94,17 @@ const PlanoTratamento = () => {
   // load patients
   useEffect(() => {
     if (!uid) return;
-    supabase.from("patients").select("id, full_name, is_active").eq("user_id", uid).eq("is_active", true).order("full_name")
+    supabase.from("patients").select("id, full_name, is_active, treatment_start_date, treatment_end_date").eq("user_id", uid).eq("is_active", true).order("full_name")
       .then(({ data }) => {
         const list = (data || []) as Patient[];
         setPatients(list);
         if (!patientId && list.length) setPatientId(queryPatient || list[0].id);
       });
-  }, [uid]);
+  }, [uid, patientId, queryPatient]);
+
+  useEffect(() => {
+    if (queryPatient && queryPatient !== patientId) setPatientId(queryPatient);
+  }, [queryPatient, patientId]);
 
   // sync query param when patientId changes
   useEffect(() => {
@@ -113,6 +134,14 @@ const PlanoTratamento = () => {
       setTechniques((t.data || []) as Technique[]);
       setRevisions((r.data || []) as Revision[]);
       setNextSession(ns.data as NextSession | null);
+
+      const { data: sessionsData } = await supabase.from("sessions")
+        .select("id, scheduled_at, duration_minutes, status, notes")
+        .eq("patient_id", patientId)
+        .eq("user_id", uid)
+        .neq("status", "cancelled")
+        .order("scheduled_at", { ascending: true });
+      setTreatmentSessions((sessionsData || []) as TreatmentSession[]);
 
       // load session_plan for next session
       if (ns.data?.id) {
@@ -207,45 +236,125 @@ const PlanoTratamento = () => {
 
   const exportPdf = () => {
     const patient = patients.find(p => p.id === patientId);
-    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Plano de Tratamento — ${patient?.full_name || ""}</title>
-<style>
-  body{font-family:Inter,system-ui,sans-serif;color:#222;padding:32px;max-width:780px;margin:auto;line-height:1.55}
-  h1{color:${PURPLE};font-size:24px;margin:0 0 4px}
-  h2{color:${PURPLE};font-size:16px;border-bottom:2px solid ${PURPLE}33;padding-bottom:4px;margin-top:28px}
-  .meta{color:#666;font-size:13px;margin-bottom:16px}
-  .tags span{display:inline-block;background:#f0ebff;color:#3d2b8a;padding:3px 10px;border-radius:12px;font-size:12px;margin:2px 4px 2px 0}
-  .goal{border-left:4px solid #6d4fc2;padding:8px 12px;margin:8px 0;background:#fafafa;border-radius:6px}
-  .goal.intermediaria{border-color:#BA7517}.goal.comportamental{border-color:#1D9E75}
-  .rev{padding:8px 0;border-bottom:1px solid #eee}
-  pre{white-space:pre-wrap;font-family:inherit;margin:6px 0}
-</style></head><body>
-<h1>Plano de Tratamento</h1>
-<div class="meta"><strong>${patient?.full_name || ""}</strong> · Status: ${STATUS_OPTIONS.find(s => s.value === plan.status)?.label} · Emitido em ${format(new Date(), "dd/MM/yyyy")}</div>
+    if (!patient) return toast.error("Selecione um paciente para exportar");
 
-<h2>Diagnóstico e Formulação</h2>
-<p><strong>CID:</strong> ${plan.cid || "—"}</p>
-<p><strong>Abordagem:</strong> ${plan.abordagem.join(", ") || "—"}</p>
-<pre>${plan.conceitualizacao || "—"}</pre>
+    const clean = (value?: string | null) => String(value || "").trim();
+    const displayDate = (value?: string | null) => value ? format(new Date(value), "dd/MM/yyyy", { locale: ptBR }) : "—";
+    const displayDateTime = (value: string) => format(new Date(value), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
 
-<h2>Metas Terapêuticas</h2>
-${goals.length ? goals.map(g => `<div class="goal ${g.tipo}"><strong>${GOAL_META[g.tipo].label}:</strong> ${g.descricao || "—"}</div>`).join("") : "<p>—</p>"}
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 16;
+    const contentWidth = pageWidth - margin * 2;
+    let y = 18;
 
-<h2>Técnicas do Plano</h2>
-<div class="tags">${techniques.map(t => `<span>${t.nome}</span>`).join("") || "—"}</div>
+    const ensureSpace = (height = 12) => {
+      if (y + height <= pageHeight - 18) return;
+      doc.addPage();
+      y = 18;
+    };
+    const text = (value: string | string[], x: number, yy: number, options?: Parameters<typeof doc.text>[3]) => doc.text(value, x, yy, options);
+    const paragraph = (value: string, size = 10, color: [number, number, number] = [26, 16, 48]) => {
+      const lines = doc.splitTextToSize(value || "—", contentWidth) as string[];
+      ensureSpace(lines.length * 5 + 3);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(size);
+      doc.setTextColor(...color);
+      text(lines, margin, y);
+      y += lines.length * 5 + 3;
+    };
+    const section = (title: string) => {
+      ensureSpace(16);
+      y += 3;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(109, 79, 194);
+      text(title, margin, y);
+      y += 3;
+      doc.setDrawColor(237, 233, 248);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 7;
+    };
+    const labelValue = (label: string, value: string, x: number, yy: number) => {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(106, 88, 128);
+      text(label.toUpperCase(), x, yy);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(26, 16, 48);
+      text(value || "—", x, yy + 5);
+    };
 
-${nextSession ? `<h2>Próxima Sessão — ${format(new Date(nextSession.scheduled_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</h2>
-<p><strong>Objetivo:</strong> ${sessionPlan.objetivo || "—"}</p>
-<p><strong>Retomar:</strong> ${sessionPlan.retomar || "—"}</p>
-<p><strong>Técnicas:</strong> ${sessionPlan.tecnicas.join(", ") || "—"}</p>
-<p><strong>Observações:</strong> ${sessionPlan.observacoes || "—"}</p>` : ""}
+    doc.setDrawColor(201, 168, 76);
+    doc.setLineWidth(1.2);
+    doc.line(margin, y - 5, pageWidth - margin, y - 5);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(109, 79, 194);
+    text("Plano de Tratamento", margin, y + 6);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(106, 88, 128);
+    text("Psi Real · Documento clínico", margin, y + 12);
+    y += 20;
 
-<h2>Histórico de Revisões</h2>
-${revisions.length ? revisions.map(r => `<div class="rev"><strong>${format(new Date(r.data), "dd/MM/yyyy")}</strong> ${r.sessao_ref ? `· ${r.sessao_ref}` : ""}<br/>${r.descricao}</div>`).join("") : "<p>—</p>"}
-</body></html>`;
-    const w = window.open("", "_blank");
-    if (!w) return toast.error("Bloqueador de pop-up impediu a impressão");
-    w.document.write(html); w.document.close();
-    setTimeout(() => w.print(), 400);
+    doc.setFillColor(250, 248, 255);
+    doc.setDrawColor(237, 233, 248);
+    doc.roundedRect(margin, y, contentWidth, 34, 4, 4, "FD");
+    const col = contentWidth / 2;
+    labelValue("Paciente", patient.full_name, margin + 4, y + 8);
+    labelValue("Status do plano", STATUS_OPTIONS.find(s => s.value === plan.status)?.label || plan.status, margin + col, y + 8);
+    labelValue("Início do tratamento", displayDate(patient.treatment_start_date), margin + 4, y + 22);
+    labelValue("Fim/alta", displayDate(patient.treatment_end_date), margin + col, y + 22);
+    y += 42;
+
+    section("Diagnóstico e formulação");
+    paragraph(`CID: ${clean(plan.cid) || "—"}`);
+    paragraph(`Abordagem: ${plan.abordagem.join(", ") || "—"}`);
+    paragraph(clean(plan.conceitualizacao) || "—");
+
+    section("Metas terapêuticas");
+    if (goals.length === 0) paragraph("Nenhuma meta cadastrada.", 10, [106, 88, 128]);
+    goals.forEach((goal) => paragraph(`${GOAL_META[goal.tipo].label}: ${clean(goal.descricao) || "—"}`));
+
+    section("Técnicas do plano");
+    paragraph(techniques.map(t => t.nome).join(", ") || "—");
+
+    if (nextSession) {
+      section("Planejamento da próxima sessão");
+      paragraph(`Data: ${displayDateTime(nextSession.scheduled_at)} · ${nextSession.duration_minutes} min`);
+      paragraph(`Objetivo: ${clean(sessionPlan.objetivo) || "—"}`);
+      paragraph(`Meta vinculada: ${clean(goals.find(g => g.id === sessionPlan.meta_id)?.descricao) || "—"}`);
+      paragraph(`Retomar: ${clean(sessionPlan.retomar) || "—"}`);
+      paragraph(`Técnicas: ${sessionPlan.tecnicas.join(", ") || "—"}`);
+      paragraph(`Observações: ${clean(sessionPlan.observacoes) || "—"}`);
+    }
+
+    section("Sessões e datas");
+    if (treatmentSessions.length === 0) paragraph("Nenhuma sessão registrada para este paciente.", 10, [106, 88, 128]);
+    treatmentSessions.forEach((session, index) => {
+      const row = `${index + 1}. ${displayDateTime(session.scheduled_at)} · ${session.duration_minutes} min · ${SESSION_STATUS_LABEL[session.status] || session.status}${session.notes ? ` · ${session.notes}` : ""}`;
+      paragraph(row, 9.5);
+    });
+
+    section("Histórico de revisões");
+    if (revisions.length === 0) paragraph("Nenhuma revisão registrada.", 10, [106, 88, 128]);
+    revisions.forEach((revision) => paragraph(`${displayDate(revision.data)}${revision.sessao_ref ? ` · Sessão ${revision.sessao_ref}` : ""}\n${revision.descricao}`));
+
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i += 1) {
+      doc.setPage(i);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(106, 88, 128);
+      text(`Gerado em ${format(new Date(), "dd/MM/yyyy")} · Página ${i}/${pageCount}`, margin, pageHeight - 9);
+    }
+
+    const fileName = `plano-tratamento-${patient.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "paciente"}.pdf`;
+    doc.save(fileName);
+    toast.success("PDF do plano de tratamento gerado.");
   };
 
   const goalsForSelect = useMemo(() => goals.filter(g => g.descricao.trim()), [goals]);
@@ -266,21 +375,21 @@ ${revisions.length ? revisions.map(r => `<div class="rev"><strong>${format(new D
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
           <Select value={patientId} onValueChange={setPatientId}>
-            <SelectTrigger className="w-[240px]"><SelectValue placeholder="Selecione um paciente" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[240px]"><SelectValue placeholder="Selecione um paciente" /></SelectTrigger>
             <SelectContent>{patients.map(p => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}</SelectContent>
           </Select>
 
           <Select value={plan.status} onValueChange={v => setPlan(p => ({ ...p, status: v }))}>
-            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>{STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
           </Select>
 
-          <Button variant="ghost" onClick={exportPdf} disabled={!patientId}>
+          <Button variant="ghost" className="w-full sm:w-auto" onClick={exportPdf} disabled={!patientId}>
             <FileDown className="h-4 w-4" /> Exportar PDF
           </Button>
-          <Button variant="accent" onClick={savePlan} disabled={!patientId || saving}>
+          <Button variant="accent" className="w-full sm:w-auto" onClick={savePlan} disabled={!patientId || saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Salvar plano
           </Button>
@@ -388,26 +497,26 @@ ${revisions.length ? revisions.map(r => `<div class="rev"><strong>${format(new D
 
           {/* BLOCO 3 — Metas */}
           <Card className="p-6 rounded-2xl">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-primary" />
                 <h2 className="font-display text-lg font-bold">Metas terapêuticas</h2>
               </div>
-              <Button variant="outline" size="sm" onClick={addGoal}><Plus className="h-4 w-4" /> Adicionar meta</Button>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={addGoal}><Plus className="h-4 w-4" /> Adicionar meta</Button>
             </div>
 
             <div className="space-y-3">
               {goals.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma meta cadastrada ainda.</p>}
               {goals.map(g => (
-                <div key={g.id} className={cn("border-l-4 bg-card border border-border rounded-xl p-3 flex gap-3 items-start", GOAL_META[g.tipo].border)}>
+                <div key={g.id} className={cn("border-l-4 bg-card border border-border rounded-xl p-3 grid gap-3 sm:flex sm:items-start", GOAL_META[g.tipo].border)}>
                   <Select value={g.tipo} onValueChange={(v) => updateGoal(g.id, { tipo: v as GoalType })}>
-                    <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {(Object.keys(GOAL_META) as GoalType[]).map(k => <SelectItem key={k} value={k}>{GOAL_META[k].label}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Textarea value={g.descricao} onChange={e => updateGoal(g.id, { descricao: e.target.value })} rows={2} className="flex-1" placeholder="Descreva a meta..." />
-                  <Button variant="ghost" size="icon" onClick={() => removeGoal(g.id)}><X className="h-4 w-4" /></Button>
+                  <Textarea value={g.descricao} onChange={e => updateGoal(g.id, { descricao: e.target.value })} rows={2} className="min-w-0 flex-1" placeholder="Descreva a meta..." />
+                  <Button variant="ghost" size="icon" className="justify-self-end" onClick={() => removeGoal(g.id)}><X className="h-4 w-4" /></Button>
                 </div>
               ))}
             </div>
@@ -428,21 +537,21 @@ ${revisions.length ? revisions.map(r => `<div class="rev"><strong>${format(new D
               ))}
               {techniques.length === 0 && <span className="text-sm text-muted-foreground">Adicione técnicas abaixo.</span>}
             </div>
-            <div className="flex gap-2 max-w-md">
+            <div className="grid gap-2 max-w-md sm:flex">
               <Input value={newTech} onChange={e => setNewTech(e.target.value)} placeholder="Ex: Reestruturação cognitiva"
                 onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addTechnique())} />
-              <Button variant="outline" onClick={addTechnique}><Plus className="h-4 w-4" /></Button>
+              <Button variant="outline" className="w-full sm:w-auto" onClick={addTechnique}><Plus className="h-4 w-4" /></Button>
             </div>
           </Card>
 
           {/* BLOCO 5 — Revisões */}
           <Card className="p-6 rounded-2xl">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
               <div className="flex items-center gap-2">
                 <History className="h-5 w-5 text-primary" />
                 <h2 className="font-display text-lg font-bold">Histórico de revisões</h2>
               </div>
-              <Button variant="outline" size="sm" onClick={addRevision}><Plus className="h-4 w-4" /> Nova revisão</Button>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={addRevision}><Plus className="h-4 w-4" /> Nova revisão</Button>
             </div>
 
             {revisions.length === 0 ? (

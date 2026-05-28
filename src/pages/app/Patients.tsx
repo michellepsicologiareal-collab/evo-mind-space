@@ -654,6 +654,14 @@ const Patients = () => {
                     >
                       <Brain className="h-3 w-3" /> {cTcc > 0 ? `Conceitualização TCC${cTcc > 1 ? ` · ${cTcc}` : ""}` : "Sem conceitualização TCC"}
                     </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }}
+                      title="Abrir plano de tratamento"
+                      className="inline-flex items-center gap-1.5 transition-colors"
+                      style={{ background: "rgba(109,79,194,0.10)", border: "0.5px solid rgba(109,79,194,0.25)", color: "#3d2b8a", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                    >
+                      <ClipboardList className="h-3 w-3" /> Plano
+                    </button>
                     {p.category === "crianca" && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }}
