@@ -235,45 +235,64 @@ const PlanoTratamento = () => {
 
   const exportPdf = () => {
     const patient = patients.find(p => p.id === patientId);
-    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Plano de Tratamento — ${patient?.full_name || ""}</title>
+    if (!patient) return toast.error("Selecione um paciente para exportar");
+
+    const safe = (value?: string | null) => String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+    const displayDate = (value?: string | null) => value ? format(new Date(value), "dd/MM/yyyy", { locale: ptBR }) : "—";
+    const displayDateTime = (value: string) => format(new Date(value), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+
+    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Plano de Tratamento — ${safe(patient.full_name)}</title>
 <style>
-  body{font-family:Inter,system-ui,sans-serif;color:#222;padding:32px;max-width:780px;margin:auto;line-height:1.55}
-  h1{color:${PURPLE};font-size:24px;margin:0 0 4px}
-  h2{color:${PURPLE};font-size:16px;border-bottom:2px solid ${PURPLE}33;padding-bottom:4px;margin-top:28px}
-  .meta{color:#666;font-size:13px;margin-bottom:16px}
-  .tags span{display:inline-block;background:#f0ebff;color:#3d2b8a;padding:3px 10px;border-radius:12px;font-size:12px;margin:2px 4px 2px 0}
-  .goal{border-left:4px solid #6d4fc2;padding:8px 12px;margin:8px 0;background:#fafafa;border-radius:6px}
-  .goal.intermediaria{border-color:#BA7517}.goal.comportamental{border-color:#1D9E75}
-  .rev{padding:8px 0;border-bottom:1px solid #eee}
-  pre{white-space:pre-wrap;font-family:inherit;margin:6px 0}
-</style></head><body>
-<h1>Plano de Tratamento</h1>
-<div class="meta"><strong>${patient?.full_name || ""}</strong> · Status: ${STATUS_OPTIONS.find(s => s.value === plan.status)?.label} · Emitido em ${format(new Date(), "dd/MM/yyyy")}</div>
+  @page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:Inter,Arial,sans-serif;color:#1a1030;margin:0;line-height:1.5;font-size:13px}.page{max-width:780px;margin:0 auto}header{border-bottom:3px solid ${PURPLE};padding-bottom:14px;margin-bottom:18px}.kicker{color:#6a5880;font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:700}h1{color:${PURPLE};font-size:26px;margin:4px 0 8px}h2{color:${PURPLE};font-size:16px;border-bottom:1px solid #ede9f8;padding-bottom:5px;margin:24px 0 10px}.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;background:#faf8ff;border:1px solid #ede9f8;border-radius:12px;padding:12px}.label{color:#6a5880;font-size:11px;text-transform:uppercase;letter-spacing:.08em}.value{font-weight:700}.tags span{display:inline-block;background:#f0ebff;color:#3d2b8a;padding:4px 10px;border-radius:999px;font-size:12px;margin:2px 4px 2px 0}.goal{border-left:4px solid #6d4fc2;padding:9px 12px;margin:8px 0;background:#fafafa;border-radius:8px;break-inside:avoid}.goal.intermediaria{border-color:#BA7517}.goal.comportamental{border-color:#1D9E75}.box{background:#fff;border:1px solid #ede9f8;border-radius:12px;padding:12px;margin:8px 0;break-inside:avoid}.rev{padding:9px 0;border-bottom:1px solid #ede9f8;break-inside:avoid}pre{white-space:pre-wrap;font-family:inherit;margin:6px 0;color:#2d2342}table{width:100%;border-collapse:collapse;margin-top:8px;break-inside:auto}th,td{border-bottom:1px solid #ede9f8;text-align:left;padding:8px;vertical-align:top}th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#6a5880;background:#faf8ff}tr{break-inside:avoid}.muted{color:#6a5880}.footer{margin-top:28px;padding-top:12px;border-top:1px solid #ede9f8;color:#6a5880;font-size:11px}@media(max-width:640px){.meta-grid{grid-template-columns:1fr}body{font-size:12px}}
+</style></head><body><main class="page">
+<header>
+  <div class="kicker">Psi Real · Documento clínico</div>
+  <h1>Plano de Tratamento</h1>
+  <div class="meta-grid">
+    <div><div class="label">Paciente</div><div class="value">${safe(patient.full_name)}</div></div>
+    <div><div class="label">Status do plano</div><div class="value">${safe(STATUS_OPTIONS.find(s => s.value === plan.status)?.label || plan.status)}</div></div>
+    <div><div class="label">Início do tratamento</div><div class="value">${displayDate(patient.treatment_start_date)}</div></div>
+    <div><div class="label">Fim/alta</div><div class="value">${displayDate(patient.treatment_end_date)}</div></div>
+    <div><div class="label">Emitido em</div><div class="value">${format(new Date(), "dd/MM/yyyy")}</div></div>
+    <div><div class="label">Sessões no plano</div><div class="value">${treatmentSessions.length}</div></div>
+  </div>
+</header>
 
-<h2>Diagnóstico e Formulação</h2>
-<p><strong>CID:</strong> ${plan.cid || "—"}</p>
-<p><strong>Abordagem:</strong> ${plan.abordagem.join(", ") || "—"}</p>
-<pre>${plan.conceitualizacao || "—"}</pre>
+<h2>Diagnóstico e formulação</h2>
+<p><strong>CID:</strong> ${safe(plan.cid) || "—"}</p>
+<p><strong>Abordagem:</strong> ${plan.abordagem.map(safe).join(", ") || "—"}</p>
+<pre>${safe(plan.conceitualizacao) || "—"}</pre>
 
-<h2>Metas Terapêuticas</h2>
-${goals.length ? goals.map(g => `<div class="goal ${g.tipo}"><strong>${GOAL_META[g.tipo].label}:</strong> ${g.descricao || "—"}</div>`).join("") : "<p>—</p>"}
+<h2>Metas terapêuticas</h2>
+${goals.length ? goals.map(g => `<div class="goal ${g.tipo}"><strong>${GOAL_META[g.tipo].label}:</strong> ${safe(g.descricao) || "—"}</div>`).join("") : "<p class=\"muted\">Nenhuma meta cadastrada.</p>"}
 
-<h2>Técnicas do Plano</h2>
-<div class="tags">${techniques.map(t => `<span>${t.nome}</span>`).join("") || "—"}</div>
+<h2>Técnicas do plano</h2>
+<div class="tags">${techniques.length ? techniques.map(t => `<span>${safe(t.nome)}</span>`).join("") : "<span>—</span>"}</div>
 
-${nextSession ? `<h2>Próxima Sessão — ${format(new Date(nextSession.scheduled_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</h2>
-<p><strong>Objetivo:</strong> ${sessionPlan.objetivo || "—"}</p>
-<p><strong>Retomar:</strong> ${sessionPlan.retomar || "—"}</p>
-<p><strong>Técnicas:</strong> ${sessionPlan.tecnicas.join(", ") || "—"}</p>
-<p><strong>Observações:</strong> ${sessionPlan.observacoes || "—"}</p>` : ""}
+${nextSession ? `<h2>Planejamento da próxima sessão</h2>
+<div class="box"><p><strong>Data:</strong> ${displayDateTime(nextSession.scheduled_at)} · ${nextSession.duration_minutes} min</p>
+<p><strong>Objetivo:</strong> ${safe(sessionPlan.objetivo) || "—"}</p>
+<p><strong>Meta vinculada:</strong> ${safe(goals.find(g => g.id === sessionPlan.meta_id)?.descricao) || "—"}</p>
+<p><strong>Retomar:</strong> ${safe(sessionPlan.retomar) || "—"}</p>
+<p><strong>Técnicas:</strong> ${sessionPlan.tecnicas.map(safe).join(", ") || "—"}</p>
+<p><strong>Observações:</strong> ${safe(sessionPlan.observacoes) || "—"}</p></div>` : ""}
 
-<h2>Histórico de Revisões</h2>
-${revisions.length ? revisions.map(r => `<div class="rev"><strong>${format(new Date(r.data), "dd/MM/yyyy")}</strong> ${r.sessao_ref ? `· ${r.sessao_ref}` : ""}<br/>${r.descricao}</div>`).join("") : "<p>—</p>"}
-</body></html>`;
+<h2>Sessões e datas</h2>
+${treatmentSessions.length ? `<table><thead><tr><th>Data</th><th>Duração</th><th>Status</th><th>Observações</th></tr></thead><tbody>${treatmentSessions.map(s => `<tr><td>${displayDateTime(s.scheduled_at)}</td><td>${s.duration_minutes} min</td><td>${safe(SESSION_STATUS_LABEL[s.status] || s.status)}</td><td>${safe(s.notes) || "—"}</td></tr>`).join("")}</tbody></table>` : "<p class=\"muted\">Nenhuma sessão registrada para este paciente.</p>"}
+
+<h2>Histórico de revisões</h2>
+${revisions.length ? revisions.map(r => `<div class="rev"><strong>${displayDate(r.data)}</strong>${r.sessao_ref ? ` · Sessão ${safe(r.sessao_ref)}` : ""}<br/>${safe(r.descricao)}</div>`).join("") : "<p class=\"muted\">Nenhuma revisão registrada.</p>"}
+<div class="footer">Documento gerado pelo Psi Real. Revise antes de compartilhar ou anexar ao prontuário.</div>
+</main></body></html>`;
     const w = window.open("", "_blank");
     if (!w) return toast.error("Bloqueador de pop-up impediu a impressão");
     w.document.write(html); w.document.close();
-    setTimeout(() => w.print(), 400);
+    setTimeout(() => { w.focus(); w.print(); }, 400);
   };
 
   const goalsForSelect = useMemo(() => goals.filter(g => g.descricao.trim()), [goals]);
