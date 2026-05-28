@@ -238,62 +238,123 @@ const PlanoTratamento = () => {
     const patient = patients.find(p => p.id === patientId);
     if (!patient) return toast.error("Selecione um paciente para exportar");
 
-    const safe = (value?: string | null) => String(value || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+    const clean = (value?: string | null) => String(value || "").trim();
     const displayDate = (value?: string | null) => value ? format(new Date(value), "dd/MM/yyyy", { locale: ptBR }) : "—";
     const displayDateTime = (value: string) => format(new Date(value), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
 
-    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Plano de Tratamento — ${safe(patient.full_name)}</title>
-<style>
-  @page{size:A4;margin:16mm}*{box-sizing:border-box}body{font-family:Inter,Arial,sans-serif;color:#1a1030;margin:0;line-height:1.5;font-size:13px}.page{max-width:780px;margin:0 auto}header{border-bottom:3px solid ${PURPLE};padding-bottom:14px;margin-bottom:18px}.kicker{color:#6a5880;font-size:11px;text-transform:uppercase;letter-spacing:.12em;font-weight:700}h1{color:${PURPLE};font-size:26px;margin:4px 0 8px}h2{color:${PURPLE};font-size:16px;border-bottom:1px solid #ede9f8;padding-bottom:5px;margin:24px 0 10px}.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;background:#faf8ff;border:1px solid #ede9f8;border-radius:12px;padding:12px}.label{color:#6a5880;font-size:11px;text-transform:uppercase;letter-spacing:.08em}.value{font-weight:700}.tags span{display:inline-block;background:#f0ebff;color:#3d2b8a;padding:4px 10px;border-radius:999px;font-size:12px;margin:2px 4px 2px 0}.goal{border-left:4px solid #6d4fc2;padding:9px 12px;margin:8px 0;background:#fafafa;border-radius:8px;break-inside:avoid}.goal.intermediaria{border-color:#BA7517}.goal.comportamental{border-color:#1D9E75}.box{background:#fff;border:1px solid #ede9f8;border-radius:12px;padding:12px;margin:8px 0;break-inside:avoid}.rev{padding:9px 0;border-bottom:1px solid #ede9f8;break-inside:avoid}pre{white-space:pre-wrap;font-family:inherit;margin:6px 0;color:#2d2342}table{width:100%;border-collapse:collapse;margin-top:8px;break-inside:auto}th,td{border-bottom:1px solid #ede9f8;text-align:left;padding:8px;vertical-align:top}th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#6a5880;background:#faf8ff}tr{break-inside:avoid}.muted{color:#6a5880}.footer{margin-top:28px;padding-top:12px;border-top:1px solid #ede9f8;color:#6a5880;font-size:11px}@media(max-width:640px){.meta-grid{grid-template-columns:1fr}body{font-size:12px}}
-</style></head><body><main class="page">
-<header>
-  <div class="kicker">Psi Real · Documento clínico</div>
-  <h1>Plano de Tratamento</h1>
-  <div class="meta-grid">
-    <div><div class="label">Paciente</div><div class="value">${safe(patient.full_name)}</div></div>
-    <div><div class="label">Status do plano</div><div class="value">${safe(STATUS_OPTIONS.find(s => s.value === plan.status)?.label || plan.status)}</div></div>
-    <div><div class="label">Início do tratamento</div><div class="value">${displayDate(patient.treatment_start_date)}</div></div>
-    <div><div class="label">Fim/alta</div><div class="value">${displayDate(patient.treatment_end_date)}</div></div>
-    <div><div class="label">Emitido em</div><div class="value">${format(new Date(), "dd/MM/yyyy")}</div></div>
-    <div><div class="label">Sessões no plano</div><div class="value">${treatmentSessions.length}</div></div>
-  </div>
-</header>
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 16;
+    const contentWidth = pageWidth - margin * 2;
+    let y = 18;
 
-<h2>Diagnóstico e formulação</h2>
-<p><strong>CID:</strong> ${safe(plan.cid) || "—"}</p>
-<p><strong>Abordagem:</strong> ${plan.abordagem.map(safe).join(", ") || "—"}</p>
-<pre>${safe(plan.conceitualizacao) || "—"}</pre>
+    const ensureSpace = (height = 12) => {
+      if (y + height <= pageHeight - 18) return;
+      doc.addPage();
+      y = 18;
+    };
+    const text = (value: string, x: number, yy: number, options?: Parameters<typeof doc.text>[3]) => doc.text(value, x, yy, options);
+    const paragraph = (value: string, size = 10, color: [number, number, number] = [26, 16, 48]) => {
+      const lines = doc.splitTextToSize(value || "—", contentWidth) as string[];
+      ensureSpace(lines.length * 5 + 3);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(size);
+      doc.setTextColor(...color);
+      text(lines, margin, y);
+      y += lines.length * 5 + 3;
+    };
+    const section = (title: string) => {
+      ensureSpace(16);
+      y += 3;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(109, 79, 194);
+      text(title, margin, y);
+      y += 3;
+      doc.setDrawColor(237, 233, 248);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 7;
+    };
+    const labelValue = (label: string, value: string, x: number, yy: number) => {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(106, 88, 128);
+      text(label.toUpperCase(), x, yy);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(26, 16, 48);
+      text(value || "—", x, yy + 5);
+    };
 
-<h2>Metas terapêuticas</h2>
-${goals.length ? goals.map(g => `<div class="goal ${g.tipo}"><strong>${GOAL_META[g.tipo].label}:</strong> ${safe(g.descricao) || "—"}</div>`).join("") : "<p class=\"muted\">Nenhuma meta cadastrada.</p>"}
+    doc.setDrawColor(201, 168, 76);
+    doc.setLineWidth(1.2);
+    doc.line(margin, y - 5, pageWidth - margin, y - 5);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(109, 79, 194);
+    text("Plano de Tratamento", margin, y + 6);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(106, 88, 128);
+    text("Psi Real · Documento clínico", margin, y + 12);
+    y += 20;
 
-<h2>Técnicas do plano</h2>
-<div class="tags">${techniques.length ? techniques.map(t => `<span>${safe(t.nome)}</span>`).join("") : "<span>—</span>"}</div>
+    doc.setFillColor(250, 248, 255);
+    doc.setDrawColor(237, 233, 248);
+    doc.roundedRect(margin, y, contentWidth, 34, 4, 4, "FD");
+    const col = contentWidth / 2;
+    labelValue("Paciente", patient.full_name, margin + 4, y + 8);
+    labelValue("Status do plano", STATUS_OPTIONS.find(s => s.value === plan.status)?.label || plan.status, margin + col, y + 8);
+    labelValue("Início do tratamento", displayDate(patient.treatment_start_date), margin + 4, y + 22);
+    labelValue("Fim/alta", displayDate(patient.treatment_end_date), margin + col, y + 22);
+    y += 42;
 
-${nextSession ? `<h2>Planejamento da próxima sessão</h2>
-<div class="box"><p><strong>Data:</strong> ${displayDateTime(nextSession.scheduled_at)} · ${nextSession.duration_minutes} min</p>
-<p><strong>Objetivo:</strong> ${safe(sessionPlan.objetivo) || "—"}</p>
-<p><strong>Meta vinculada:</strong> ${safe(goals.find(g => g.id === sessionPlan.meta_id)?.descricao) || "—"}</p>
-<p><strong>Retomar:</strong> ${safe(sessionPlan.retomar) || "—"}</p>
-<p><strong>Técnicas:</strong> ${sessionPlan.tecnicas.map(safe).join(", ") || "—"}</p>
-<p><strong>Observações:</strong> ${safe(sessionPlan.observacoes) || "—"}</p></div>` : ""}
+    section("Diagnóstico e formulação");
+    paragraph(`CID: ${clean(plan.cid) || "—"}`);
+    paragraph(`Abordagem: ${plan.abordagem.join(", ") || "—"}`);
+    paragraph(clean(plan.conceitualizacao) || "—");
 
-<h2>Sessões e datas</h2>
-${treatmentSessions.length ? `<table><thead><tr><th>Data</th><th>Duração</th><th>Status</th><th>Observações</th></tr></thead><tbody>${treatmentSessions.map(s => `<tr><td>${displayDateTime(s.scheduled_at)}</td><td>${s.duration_minutes} min</td><td>${safe(SESSION_STATUS_LABEL[s.status] || s.status)}</td><td>${safe(s.notes) || "—"}</td></tr>`).join("")}</tbody></table>` : "<p class=\"muted\">Nenhuma sessão registrada para este paciente.</p>"}
+    section("Metas terapêuticas");
+    if (goals.length === 0) paragraph("Nenhuma meta cadastrada.", 10, [106, 88, 128]);
+    goals.forEach((goal) => paragraph(`${GOAL_META[goal.tipo].label}: ${clean(goal.descricao) || "—"}`));
 
-<h2>Histórico de revisões</h2>
-${revisions.length ? revisions.map(r => `<div class="rev"><strong>${displayDate(r.data)}</strong>${r.sessao_ref ? ` · Sessão ${safe(r.sessao_ref)}` : ""}<br/>${safe(r.descricao)}</div>`).join("") : "<p class=\"muted\">Nenhuma revisão registrada.</p>"}
-<div class="footer">Documento gerado pelo Psi Real. Revise antes de compartilhar ou anexar ao prontuário.</div>
-</main></body></html>`;
-    const w = window.open("", "_blank");
-    if (!w) return toast.error("Bloqueador de pop-up impediu a impressão");
-    w.document.write(html); w.document.close();
-    setTimeout(() => { w.focus(); w.print(); }, 400);
+    section("Técnicas do plano");
+    paragraph(techniques.map(t => t.nome).join(", ") || "—");
+
+    if (nextSession) {
+      section("Planejamento da próxima sessão");
+      paragraph(`Data: ${displayDateTime(nextSession.scheduled_at)} · ${nextSession.duration_minutes} min`);
+      paragraph(`Objetivo: ${clean(sessionPlan.objetivo) || "—"}`);
+      paragraph(`Meta vinculada: ${clean(goals.find(g => g.id === sessionPlan.meta_id)?.descricao) || "—"}`);
+      paragraph(`Retomar: ${clean(sessionPlan.retomar) || "—"}`);
+      paragraph(`Técnicas: ${sessionPlan.tecnicas.join(", ") || "—"}`);
+      paragraph(`Observações: ${clean(sessionPlan.observacoes) || "—"}`);
+    }
+
+    section("Sessões e datas");
+    if (treatmentSessions.length === 0) paragraph("Nenhuma sessão registrada para este paciente.", 10, [106, 88, 128]);
+    treatmentSessions.forEach((session, index) => {
+      const row = `${index + 1}. ${displayDateTime(session.scheduled_at)} · ${session.duration_minutes} min · ${SESSION_STATUS_LABEL[session.status] || session.status}${session.notes ? ` · ${session.notes}` : ""}`;
+      paragraph(row, 9.5);
+    });
+
+    section("Histórico de revisões");
+    if (revisions.length === 0) paragraph("Nenhuma revisão registrada.", 10, [106, 88, 128]);
+    revisions.forEach((revision) => paragraph(`${displayDate(revision.data)}${revision.sessao_ref ? ` · Sessão ${revision.sessao_ref}` : ""}\n${revision.descricao}`));
+
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i += 1) {
+      doc.setPage(i);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(106, 88, 128);
+      text(`Gerado em ${format(new Date(), "dd/MM/yyyy")} · Página ${i}/${pageCount}`, margin, pageHeight - 9);
+    }
+
+    const fileName = `plano-tratamento-${patient.full_name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "paciente"}.pdf`;
+    doc.save(fileName);
+    toast.success("PDF do plano de tratamento gerado.");
   };
 
   const goalsForSelect = useMemo(() => goals.filter(g => g.descricao.trim()), [goals]);
