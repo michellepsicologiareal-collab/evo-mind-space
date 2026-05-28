@@ -313,21 +313,21 @@ ${revisions.length ? revisions.map(r => `<div class="rev"><strong>${displayDate(
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
           <Select value={patientId} onValueChange={setPatientId}>
-            <SelectTrigger className="w-[240px]"><SelectValue placeholder="Selecione um paciente" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[240px]"><SelectValue placeholder="Selecione um paciente" /></SelectTrigger>
             <SelectContent>{patients.map(p => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}</SelectContent>
           </Select>
 
           <Select value={plan.status} onValueChange={v => setPlan(p => ({ ...p, status: v }))}>
-            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>{STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
           </Select>
 
-          <Button variant="ghost" onClick={exportPdf} disabled={!patientId}>
+          <Button variant="ghost" className="w-full sm:w-auto" onClick={exportPdf} disabled={!patientId}>
             <FileDown className="h-4 w-4" /> Exportar PDF
           </Button>
-          <Button variant="accent" onClick={savePlan} disabled={!patientId || saving}>
+          <Button variant="accent" className="w-full sm:w-auto" onClick={savePlan} disabled={!patientId || saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Salvar plano
           </Button>
@@ -435,26 +435,26 @@ ${revisions.length ? revisions.map(r => `<div class="rev"><strong>${displayDate(
 
           {/* BLOCO 3 — Metas */}
           <Card className="p-6 rounded-2xl">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-primary" />
                 <h2 className="font-display text-lg font-bold">Metas terapêuticas</h2>
               </div>
-              <Button variant="outline" size="sm" onClick={addGoal}><Plus className="h-4 w-4" /> Adicionar meta</Button>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={addGoal}><Plus className="h-4 w-4" /> Adicionar meta</Button>
             </div>
 
             <div className="space-y-3">
               {goals.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma meta cadastrada ainda.</p>}
               {goals.map(g => (
-                <div key={g.id} className={cn("border-l-4 bg-card border border-border rounded-xl p-3 flex gap-3 items-start", GOAL_META[g.tipo].border)}>
+                <div key={g.id} className={cn("border-l-4 bg-card border border-border rounded-xl p-3 grid gap-3 sm:flex sm:items-start", GOAL_META[g.tipo].border)}>
                   <Select value={g.tipo} onValueChange={(v) => updateGoal(g.id, { tipo: v as GoalType })}>
-                    <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {(Object.keys(GOAL_META) as GoalType[]).map(k => <SelectItem key={k} value={k}>{GOAL_META[k].label}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <Textarea value={g.descricao} onChange={e => updateGoal(g.id, { descricao: e.target.value })} rows={2} className="flex-1" placeholder="Descreva a meta..." />
-                  <Button variant="ghost" size="icon" onClick={() => removeGoal(g.id)}><X className="h-4 w-4" /></Button>
+                  <Textarea value={g.descricao} onChange={e => updateGoal(g.id, { descricao: e.target.value })} rows={2} className="min-w-0 flex-1" placeholder="Descreva a meta..." />
+                  <Button variant="ghost" size="icon" className="justify-self-end" onClick={() => removeGoal(g.id)}><X className="h-4 w-4" /></Button>
                 </div>
               ))}
             </div>
@@ -475,21 +475,21 @@ ${revisions.length ? revisions.map(r => `<div class="rev"><strong>${displayDate(
               ))}
               {techniques.length === 0 && <span className="text-sm text-muted-foreground">Adicione técnicas abaixo.</span>}
             </div>
-            <div className="flex gap-2 max-w-md">
+            <div className="grid gap-2 max-w-md sm:flex">
               <Input value={newTech} onChange={e => setNewTech(e.target.value)} placeholder="Ex: Reestruturação cognitiva"
                 onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addTechnique())} />
-              <Button variant="outline" onClick={addTechnique}><Plus className="h-4 w-4" /></Button>
+              <Button variant="outline" className="w-full sm:w-auto" onClick={addTechnique}><Plus className="h-4 w-4" /></Button>
             </div>
           </Card>
 
           {/* BLOCO 5 — Revisões */}
           <Card className="p-6 rounded-2xl">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
               <div className="flex items-center gap-2">
                 <History className="h-5 w-5 text-primary" />
                 <h2 className="font-display text-lg font-bold">Histórico de revisões</h2>
               </div>
-              <Button variant="outline" size="sm" onClick={addRevision}><Plus className="h-4 w-4" /> Nova revisão</Button>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={addRevision}><Plus className="h-4 w-4" /> Nova revisão</Button>
             </div>
 
             {revisions.length === 0 ? (
