@@ -238,11 +238,11 @@ const PlanoTratamento = () => {
     if (!patient) return toast.error("Selecione um paciente para exportar");
 
     const safe = (value?: string | null) => String(value || "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
     const displayDate = (value?: string | null) => value ? format(new Date(value), "dd/MM/yyyy", { locale: ptBR }) : "—";
     const displayDateTime = (value: string) => format(new Date(value), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
 
