@@ -254,7 +254,7 @@ const PlanoTratamento = () => {
       doc.addPage();
       y = 18;
     };
-    const text = (value: string, x: number, yy: number, options?: Parameters<typeof doc.text>[3]) => doc.text(value, x, yy, options);
+    const text = (value: string | string[], x: number, yy: number, options?: Parameters<typeof doc.text>[3]) => doc.text(value, x, yy, options);
     const paragraph = (value: string, size = 10, color: [number, number, number] = [26, 16, 48]) => {
       const lines = doc.splitTextToSize(value || "—", contentWidth) as string[];
       ensureSpace(lines.length * 5 + 3);
