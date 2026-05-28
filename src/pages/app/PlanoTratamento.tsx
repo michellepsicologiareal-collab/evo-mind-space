@@ -14,6 +14,7 @@ import { Loader2, Plus, X, FileDown, ClipboardList, Target, Sparkles, History, S
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { jsPDF } from "jspdf";
 import { cn } from "@/lib/utils";
 
 type Patient = {
