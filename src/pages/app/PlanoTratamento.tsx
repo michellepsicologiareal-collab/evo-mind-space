@@ -16,7 +16,13 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
-type Patient = { id: string; full_name: string; is_active: boolean };
+type Patient = {
+  id: string;
+  full_name: string;
+  is_active: boolean;
+  treatment_start_date: string | null;
+  treatment_end_date: string | null;
+};
 type GoalType = "geral" | "intermediaria" | "comportamental";
 
 interface TreatmentPlan {
@@ -39,6 +45,7 @@ interface SessionPlan {
 }
 interface Revision { id: string; data: string; sessao_ref: string; descricao: string }
 interface NextSession { id: string; scheduled_at: string; duration_minutes: number }
+interface TreatmentSession { id: string; scheduled_at: string; duration_minutes: number; status: string; notes: string | null }
 
 const STATUS_OPTIONS = [
   { value: "ativo", label: "Ativo" },
@@ -46,6 +53,14 @@ const STATUS_OPTIONS = [
   { value: "alta", label: "Alta" },
 ];
 const ABORDAGEM_OPTIONS = ["TCC", "TE", "ACT", "Outra"];
+const SESSION_STATUS_LABEL: Record<string, string> = {
+  scheduled: "Agendada",
+  confirmed: "Confirmada",
+  completed: "Realizada",
+  no_show: "Falta",
+  rescheduled: "Remarcada",
+  cancelled: "Cancelada",
+};
 const GOAL_META = {
   geral:          { label: "Geral",          border: "border-l-[#6d4fc2]", chip: "bg-[#f0ebff] text-[#3d2b8a]" },
   intermediaria:  { label: "Intermediária",  border: "border-l-[#BA7517]", chip: "bg-[#fdf3e3] text-[#7a4a0a]" },
@@ -70,6 +85,7 @@ const PlanoTratamento = () => {
   const [newTech, setNewTech] = useState("");
   const [revisions, setRevisions] = useState<Revision[]>([]);
   const [nextSession, setNextSession] = useState<NextSession | null>(null);
+  const [treatmentSessions, setTreatmentSessions] = useState<TreatmentSession[]>([]);
   const [sessionPlan, setSessionPlan] = useState<SessionPlan>({
     session_id: null, objetivo: "", meta_id: null, retomar: "", tecnicas: [], observacoes: "",
   });
@@ -77,13 +93,17 @@ const PlanoTratamento = () => {
   // load patients
   useEffect(() => {
     if (!uid) return;
-    supabase.from("patients").select("id, full_name, is_active").eq("user_id", uid).eq("is_active", true).order("full_name")
+    supabase.from("patients").select("id, full_name, is_active, treatment_start_date, treatment_end_date").eq("user_id", uid).eq("is_active", true).order("full_name")
       .then(({ data }) => {
         const list = (data || []) as Patient[];
         setPatients(list);
         if (!patientId && list.length) setPatientId(queryPatient || list[0].id);
       });
-  }, [uid]);
+  }, [uid, patientId, queryPatient]);
+
+  useEffect(() => {
+    if (queryPatient && queryPatient !== patientId) setPatientId(queryPatient);
+  }, [queryPatient, patientId]);
 
   // sync query param when patientId changes
   useEffect(() => {
@@ -113,6 +133,14 @@ const PlanoTratamento = () => {
       setTechniques((t.data || []) as Technique[]);
       setRevisions((r.data || []) as Revision[]);
       setNextSession(ns.data as NextSession | null);
+
+      const { data: sessionsData } = await supabase.from("sessions")
+        .select("id, scheduled_at, duration_minutes, status, notes")
+        .eq("patient_id", patientId)
+        .eq("user_id", uid)
+        .neq("status", "cancelled")
+        .order("scheduled_at", { ascending: true });
+      setTreatmentSessions((sessionsData || []) as TreatmentSession[]);
 
       // load session_plan for next session
       if (ns.data?.id) {
