@@ -42,7 +42,8 @@ import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMin
 import { ptBR } from "date-fns/locale";
 import { CardSkeleton } from "@/components/app/Skeletons";
 import { toast } from "sonner";
-import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, PieChart, Pie, Cell, Legend } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Legend } from "recharts";
+
 import {
   Tooltip,
   TooltipContent,
