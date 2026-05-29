@@ -2032,16 +2032,17 @@ const Agenda = () => {
                       </Button>
                     )}
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-2 sm:col-span-1">
                       <Label>Humor (1-10)</Label>
                       <Input type="number" min="1" max="10" placeholder="—" value={editForm.mood_score} onChange={(e) => setEditForm({ ...editForm, mood_score: e.target.value })} />
                     </div>
-                    <div className="space-y-2 col-span-2">
+                    <div className="space-y-2 sm:col-span-2">
                       <Label>Observação</Label>
                       <Input maxLength={2000} placeholder="Ex.: melhora no sono" value={editForm.progress_note} onChange={(e) => setEditForm({ ...editForm, progress_note: e.target.value })} />
                     </div>
                   </div>
+
                   <div className="space-y-1.5">
                     <Label className="text-xs uppercase tracking-wider text-muted-foreground">Emoções predominantes</Label>
                     <EmotionChips note={editForm.progress_note} onChange={(v) => setEditForm({ ...editForm, progress_note: v })} />
