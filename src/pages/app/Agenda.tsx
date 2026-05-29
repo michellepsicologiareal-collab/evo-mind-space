@@ -29,6 +29,8 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
+import { EmotionChips } from "@/components/app/EmotionChips";
+
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
 type PaymentStatus = "pending" | "paid";
