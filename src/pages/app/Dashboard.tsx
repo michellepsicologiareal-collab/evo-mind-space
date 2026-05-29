@@ -1081,6 +1081,70 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   <>
+                    {(() => {
+                      const source = (moodFilterPatient === "all" ? periodFiltered : periodFiltered.filter(m => m.patient_id === moodFilterPatient))
+                        .slice()
+                        .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
+                        .map(m => ({
+                          name: format(new Date(m.recorded_at), "dd/MM"),
+                          score: Number(m.mood_score),
+                          patient: m.patient_name,
+                        }));
+                      if (source.length < 2) return null;
+                      const avg = source.reduce((s, d) => s + d.score, 0) / source.length;
+                      return (
+                        <div className="mb-6 rounded-2xl border border-border bg-gradient-card p-4 sm:p-6">
+                          <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+                            <div>
+                              <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.12em", color: "#8070a8" }}>
+                                Evolução do humor
+                              </p>
+                              <p style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 700, color: "#1a1030", lineHeight: 1.1 }}>
+                                Média {avg.toFixed(1).replace(".", ",")}<span style={{ fontSize: "13px", color: "#a090c8", fontWeight: 400 }}> /10</span>
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs" style={{ fontFamily: "Instrument Sans, sans-serif", color: "#6a5880" }}>
+                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#1D9E75" }} />Bem (7-10)</span>
+                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#c9a84c" }} />Atenção (4-6)</span>
+                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#854f0b" }} />Crítico (0-3)</span>
+                            </div>
+                          </div>
+                          <div className="h-[260px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={source} margin={{ top: 10, right: 16, left: -10, bottom: 0 }}>
+                                <defs>
+                                  <linearGradient id="moodGradBig" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#6d4fc2" stopOpacity={0.35} />
+                                    <stop offset="100%" stopColor="#6d4fc2" stopOpacity={0.02} />
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#ede9f8" vertical={false} />
+                                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#8070a8" }} axisLine={false} tickLine={false} />
+                                <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 11, fill: "#8070a8" }} axisLine={false} tickLine={false} width={28} />
+                                <RechartsTooltip
+                                  contentStyle={{ fontSize: 12, borderRadius: 12, border: "1px solid #ede9f8", background: "#fff" }}
+                                  formatter={(v: number) => [`${v}/10`, "Humor"]}
+                                  labelFormatter={(l, payload: any) => {
+                                    const p = payload?.[0]?.payload?.patient;
+                                    return p ? `${l} · ${p}` : l;
+                                  }}
+                                />
+                                <Area
+                                  type="monotone"
+                                  dataKey="score"
+                                  stroke="#6d4fc2"
+                                  strokeWidth={2.5}
+                                  fill="url(#moodGradBig)"
+                                  dot={{ r: 4, fill: "#6d4fc2", strokeWidth: 2, stroke: "#fff" }}
+                                  activeDot={{ r: 6 }}
+                                />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     {urgent.length > 0 && (
                       <>
                         <SectionLabel text="Atenção imediata" count={urgent.length} />
