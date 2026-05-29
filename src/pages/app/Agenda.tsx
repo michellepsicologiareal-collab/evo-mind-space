@@ -1409,8 +1409,13 @@ const Agenda = () => {
                         <Input id="prog" maxLength={2000} placeholder="Ex.: melhora no sono" value={form.progress_note} onChange={(e) => setForm({ ...form, progress_note: e.target.value })} />
                       </div>
                     </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Emoções predominantes</Label>
+                      <EmotionChips note={form.progress_note} onChange={(v) => setForm({ ...form, progress_note: v })} />
+                    </div>
                   </div>
                 )}
+
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false))}>Cancelar</Button>
                   <Button type="submit" variant="accent" disabled={saving}>
