@@ -1401,16 +1401,17 @@ const Agenda = () => {
                 {form.session_type === "clinical" && (
                   <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground">Dados do humor — preencher após sessão</p>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="space-y-2 sm:col-span-1">
                         <Label htmlFor="mood">Humor (1-10)</Label>
                         <Input id="mood" type="number" min="1" max="10" placeholder="—" value={form.mood_score} onChange={(e) => setForm({ ...form, mood_score: e.target.value })} />
                       </div>
-                      <div className="space-y-2 col-span-2">
+                      <div className="space-y-2 sm:col-span-2">
                         <Label htmlFor="prog">Observação</Label>
                         <Input id="prog" maxLength={2000} placeholder="Ex.: melhora no sono" value={form.progress_note} onChange={(e) => setForm({ ...form, progress_note: e.target.value })} />
                       </div>
                     </div>
+
                     <div className="space-y-1.5">
                       <Label className="text-xs uppercase tracking-wider text-muted-foreground">Emoções predominantes</Label>
                       <EmotionChips note={form.progress_note} onChange={(v) => setForm({ ...form, progress_note: v })} />
@@ -2031,16 +2032,17 @@ const Agenda = () => {
                       </Button>
                     )}
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-2 sm:col-span-1">
                       <Label>Humor (1-10)</Label>
                       <Input type="number" min="1" max="10" placeholder="—" value={editForm.mood_score} onChange={(e) => setEditForm({ ...editForm, mood_score: e.target.value })} />
                     </div>
-                    <div className="space-y-2 col-span-2">
+                    <div className="space-y-2 sm:col-span-2">
                       <Label>Observação</Label>
                       <Input maxLength={2000} placeholder="Ex.: melhora no sono" value={editForm.progress_note} onChange={(e) => setEditForm({ ...editForm, progress_note: e.target.value })} />
                     </div>
                   </div>
+
                   <div className="space-y-1.5">
                     <Label className="text-xs uppercase tracking-wider text-muted-foreground">Emoções predominantes</Label>
                     <EmotionChips note={editForm.progress_note} onChange={(v) => setEditForm({ ...editForm, progress_note: v })} />
