@@ -2041,6 +2041,11 @@ const Agenda = () => {
                       <Input maxLength={2000} placeholder="Ex.: melhora no sono" value={editForm.progress_note} onChange={(e) => setEditForm({ ...editForm, progress_note: e.target.value })} />
                     </div>
                   </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">Emoções predominantes</Label>
+                    <EmotionChips note={editForm.progress_note} onChange={(v) => setEditForm({ ...editForm, progress_note: v })} />
+                  </div>
+
                 </div>
               );
             })()}
