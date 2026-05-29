@@ -29,6 +29,8 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
+import { EmotionChips } from "@/components/app/EmotionChips";
+
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
 type PaymentStatus = "pending" | "paid";
@@ -1409,8 +1411,13 @@ const Agenda = () => {
                         <Input id="prog" maxLength={2000} placeholder="Ex.: melhora no sono" value={form.progress_note} onChange={(e) => setForm({ ...form, progress_note: e.target.value })} />
                       </div>
                     </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Emoções predominantes</Label>
+                      <EmotionChips note={form.progress_note} onChange={(v) => setForm({ ...form, progress_note: v })} />
+                    </div>
                   </div>
                 )}
+
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false))}>Cancelar</Button>
                   <Button type="submit" variant="accent" disabled={saving}>
@@ -2034,6 +2041,11 @@ const Agenda = () => {
                       <Input maxLength={2000} placeholder="Ex.: melhora no sono" value={editForm.progress_note} onChange={(e) => setEditForm({ ...editForm, progress_note: e.target.value })} />
                     </div>
                   </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">Emoções predominantes</Label>
+                    <EmotionChips note={editForm.progress_note} onChange={(v) => setEditForm({ ...editForm, progress_note: v })} />
+                  </div>
+
                 </div>
               );
             })()}
