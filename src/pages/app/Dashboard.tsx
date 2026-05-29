@@ -42,7 +42,8 @@ import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMin
 import { ptBR } from "date-fns/locale";
 import { CardSkeleton } from "@/components/app/Skeletons";
 import { toast } from "sonner";
-import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, PieChart, Pie, Cell, Legend } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Legend } from "recharts";
+
 import {
   Tooltip,
   TooltipContent,
@@ -650,99 +651,8 @@ const Dashboard = () => {
         </section>
 
         {/* ── Insight Charts ── */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Mood Chart Card */}
-          {(() => {
-            const uniquePatients = Array.from(
-              new Map(patientMoods.map((m) => [m.patient_id, m.patient_name])).entries()
-            );
-            const chartSource = moodChartPatient === "all"
-              ? moodData
-              : [...patientMoods]
-                  .filter((m) => m.patient_id === moodChartPatient)
-                  .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
-                  .map((m) => ({ name: format(new Date(m.recorded_at), "dd/MM"), score: m.mood_score }));
-            const chartAvg = chartSource.length > 0
-              ? Math.round((chartSource.reduce((s, d) => s + d.score, 0) / chartSource.length) * 10) / 10
-              : null;
-            const selectedName = moodChartPatient === "all"
-              ? (topMoodPatient ? ` · ${topMoodPatient}` : "")
-              : ` · ${uniquePatients.find(([id]) => id === moodChartPatient)?.[1] ?? ""}`;
-            return (
-              <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
-                <div className="flex items-start justify-between gap-3 mb-1">
-                  <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "#a090c8" }}>
-                    Humor médio{selectedName}
-                  </p>
-                  {uniquePatients.length > 0 && (
-                    <Select value={moodChartPatient} onValueChange={setMoodChartPatient}>
-                      <SelectTrigger className="h-7 text-xs w-[160px]">
-                        <SelectValue placeholder="Paciente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos os pacientes</SelectItem>
-                        {uniquePatients.map(([id, name]) => (
-                          <SelectItem key={id} value={id}>{name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-                <p style={{ fontFamily: "Syne, sans-serif", fontSize: "28px", fontWeight: 700, color: "#1a1030", lineHeight: 1.1 }}>
-                  {chartAvg !== null ? chartAvg.toFixed(1).replace(".", ",") : "—"}
-                  <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "14px", fontWeight: 400, color: "#a090c8" }}> /10</span>
-                </p>
-                {chartSource.length > 1 ? (
-                  <div className="mt-3 h-[80px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartSource}>
-                        <defs>
-                          <linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="hsl(var(--serene))" stopOpacity={0.4} />
-                            <stop offset="100%" stopColor="hsl(var(--serene))" stopOpacity={0.05} />
-                          </linearGradient>
-                        </defs>
-                        <RechartsTooltip
-                          contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
-                          formatter={(v: number) => [`${v}/10`, "Humor"]}
-                          labelFormatter={(l) => `Dia ${l}`}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="score"
-                          stroke="hsl(var(--serene))"
-                          strokeWidth={2.5}
-                          fill="url(#moodGrad)"
-                          dot={false}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    {moodChartPatient === "all"
-                      ? "Registre o humor dos pacientes para ver o gráfico aqui ✨"
-                      : "Este paciente ainda não tem registros suficientes."}
-                  </p>
-                )}
-                {chartSource.length > 1 && (
-                  <div className="flex gap-1 mt-2">
-                    {chartSource.slice(-7).map((d, i) => (
-                      <div
-                        key={i}
-                        className="h-2 w-2 rounded-full"
-                        style={{
-                          backgroundColor: d.score >= 7 ? "hsl(var(--serene))" : d.score >= 4 ? "hsl(var(--sand))" : "hsl(var(--destructive))",
-                          opacity: 0.5 + (i / 10),
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+        <section className="grid grid-cols-1 gap-4">
+
 
           {/* Revenue Chart Card */}
           <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
@@ -1172,6 +1082,70 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   <>
+                    {(() => {
+                      const source = (moodFilterPatient === "all" ? periodFiltered : periodFiltered.filter(m => m.patient_id === moodFilterPatient))
+                        .slice()
+                        .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
+                        .map(m => ({
+                          name: format(new Date(m.recorded_at), "dd/MM"),
+                          score: Number(m.mood_score),
+                          patient: m.patient_name,
+                        }));
+                      if (source.length < 2) return null;
+                      const avg = source.reduce((s, d) => s + d.score, 0) / source.length;
+                      return (
+                        <div className="mb-6 rounded-2xl border border-border bg-gradient-card p-4 sm:p-6">
+                          <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+                            <div>
+                              <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.12em", color: "#8070a8" }}>
+                                Evolução do humor
+                              </p>
+                              <p style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 700, color: "#1a1030", lineHeight: 1.1 }}>
+                                Média {avg.toFixed(1).replace(".", ",")}<span style={{ fontSize: "13px", color: "#a090c8", fontWeight: 400 }}> /10</span>
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs" style={{ fontFamily: "Instrument Sans, sans-serif", color: "#6a5880" }}>
+                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#1D9E75" }} />Bem (7-10)</span>
+                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#c9a84c" }} />Atenção (4-6)</span>
+                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#854f0b" }} />Crítico (0-3)</span>
+                            </div>
+                          </div>
+                          <div className="h-[260px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={source} margin={{ top: 10, right: 16, left: -10, bottom: 0 }}>
+                                <defs>
+                                  <linearGradient id="moodGradBig" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#6d4fc2" stopOpacity={0.35} />
+                                    <stop offset="100%" stopColor="#6d4fc2" stopOpacity={0.02} />
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#ede9f8" vertical={false} />
+                                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#8070a8" }} axisLine={false} tickLine={false} />
+                                <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 11, fill: "#8070a8" }} axisLine={false} tickLine={false} width={28} />
+                                <RechartsTooltip
+                                  contentStyle={{ fontSize: 12, borderRadius: 12, border: "1px solid #ede9f8", background: "#fff" }}
+                                  formatter={(v: number) => [`${v}/10`, "Humor"]}
+                                  labelFormatter={(l, payload: any) => {
+                                    const p = payload?.[0]?.payload?.patient;
+                                    return p ? `${l} · ${p}` : l;
+                                  }}
+                                />
+                                <Area
+                                  type="monotone"
+                                  dataKey="score"
+                                  stroke="#6d4fc2"
+                                  strokeWidth={2.5}
+                                  fill="url(#moodGradBig)"
+                                  dot={{ r: 4, fill: "#6d4fc2", strokeWidth: 2, stroke: "#fff" }}
+                                  activeDot={{ r: 6 }}
+                                />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     {urgent.length > 0 && (
                       <>
                         <SectionLabel text="Atenção imediata" count={urgent.length} />
