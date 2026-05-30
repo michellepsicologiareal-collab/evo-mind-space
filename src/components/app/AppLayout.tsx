@@ -300,8 +300,8 @@ export const AppLayout = () => {
       </Sheet>
 
       {/* ── Main content ── */}
-      <main className="flex-1 md:ml-[220px] pt-16 pb-28 md:pt-0 md:pb-0">
-        <div className="p-6 lg:p-10 max-w-6xl mx-auto">
+      <main className="flex-1 md:ml-[220px] pt-16 pb-28 md:pt-0 md:pb-0 min-w-0 overflow-x-hidden">
+        <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto">
           {showGateOverlay ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-6">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent/10">
