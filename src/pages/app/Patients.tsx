@@ -117,7 +117,7 @@ const Patients = () => {
   const toggleFull = (k: string) => setFullscreen((s) => ({ ...s, [k]: !s[k] }));
   const dlgCls = (k: string) => fullscreen[k]
     ? "max-w-[98vw] w-[98vw] h-[95vh] max-h-[95vh] overflow-y-auto"
-    : "max-w-3xl max-h-[90vh] overflow-y-auto";
+    : "w-[calc(100%-1rem)] sm:w-full max-w-3xl max-h-[90vh] overflow-y-auto";
   const FullBtn = ({ k }: { k: string }) => (
     <Button type="button" variant="ghost" size="icon" className="absolute right-12 top-4 h-7 w-7" onClick={() => toggleFull(k)} title={fullscreen[k] ? "Reduzir" : "Abrir em página inteira"}>
       {fullscreen[k] ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
@@ -777,7 +777,7 @@ const Patients = () => {
 
       {/* Side panel */}
       <Sheet open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
-        <SheetContent side="right" className="w-[380px] sm:max-w-[380px] p-0" style={{ background: "#ffffff", borderLeft: "0.5px solid #ede9f8" }}>
+        <SheetContent side="right" className="w-full sm:w-[380px] sm:max-w-[380px] p-0" style={{ background: "#ffffff", borderLeft: "0.5px solid #ede9f8" }}>
           {selectedPatient && (() => {
             const p = selectedPatient;
             const cHist = counts.history[p.id] || 0;

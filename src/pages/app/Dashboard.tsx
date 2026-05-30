@@ -1015,11 +1015,11 @@ const Dashboard = () => {
               )}
 
               {/* Filters */}
-              <div className="px-6 pt-4 pb-3 flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-2 flex-wrap">
+              <div className="px-4 sm:px-6 pt-4 pb-3 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                   <Select value={moodFilterPatient} onValueChange={setMoodFilterPatient}>
                     <SelectTrigger
-                      className="h-9 w-[200px]"
+                      className="h-9 w-full sm:w-[200px]"
                       style={{
                         background: "#fff",
                         border: "0.5px solid #ede9f8",
