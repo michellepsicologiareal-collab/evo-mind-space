@@ -997,7 +997,7 @@ const SessionsTable = ({
                 <span className="text-muted-foreground italic">Sem método</span>
               )}
               {s.payment_reference && (
-                <span className="text-muted-foreground truncate max-w-[280px]">· {s.payment_reference}</span>
+                <span className="text-muted-foreground truncate max-w-[160px] sm:max-w-[280px]">· {s.payment_reference}</span>
               )}
               {s.payment_status === "paid" &&
                 (s.payment_method === "pix" || s.payment_method === "card") &&
