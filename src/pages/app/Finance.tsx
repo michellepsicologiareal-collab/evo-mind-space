@@ -561,7 +561,7 @@ const Finance = () => {
             <Button variant="ghost" size="icon" onClick={() => setMonthCursor(subMonths(monthCursor, 1))}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm font-medium px-3 capitalize min-w-[140px] text-center">
+            <span className="text-xs sm:text-sm font-medium px-1 sm:px-3 capitalize min-w-[100px] sm:min-w-[140px] text-center">
               {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
             </span>
             <Button variant="ghost" size="icon" onClick={() => setMonthCursor(addMonths(monthCursor, 1))}>
@@ -997,7 +997,7 @@ const SessionsTable = ({
                 <span className="text-muted-foreground italic">Sem método</span>
               )}
               {s.payment_reference && (
-                <span className="text-muted-foreground truncate max-w-[280px]">· {s.payment_reference}</span>
+                <span className="text-muted-foreground truncate max-w-[160px] sm:max-w-[280px]">· {s.payment_reference}</span>
               )}
               {s.payment_status === "paid" &&
                 (s.payment_method === "pix" || s.payment_method === "card") &&
