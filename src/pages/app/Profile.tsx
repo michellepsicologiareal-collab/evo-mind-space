@@ -250,7 +250,63 @@ const Profile = () => {
     }
   };
 
-  const load = async () => {
+  const handleExportCsvZip = async () => {
+    setExportingCsvZip(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { toast.error("Faça login novamente"); return; }
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backup-export?format=csv`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      const dl = URL.createObjectURL(blob);
+      a.href = dl;
+      a.download = `psireal_exports_${new Date().toISOString().slice(0, 10)}.zip`;
+      a.click();
+      URL.revokeObjectURL(dl);
+      toast.success("Exportação CSV baixada!");
+    } catch {
+      toast.error("Erro ao exportar CSVs");
+    } finally {
+      setExportingCsvZip(false);
+    }
+  };
+
+  const loadHistory = async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("backup_history")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("backup_date", { ascending: false })
+      .limit(10);
+    setHistory(data ?? []);
+  };
+
+  const handleDownloadFromHistory = async (path: string, filename: string) => {
+    setDownloadingPath(path);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { toast.error("Faça login novamente"); return; }
+      const res = await supabase.functions.invoke("backup-download", {
+        body: { path },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.error || !res.data?.url) throw res.error ?? new Error("Sem URL");
+      const a = document.createElement("a");
+      a.href = res.data.url;
+      a.download = filename;
+      a.click();
+    } catch {
+      toast.error("Erro ao baixar arquivo");
+    } finally {
+      setDownloadingPath(null);
+    }
+  };
+
     if (!user) return;
     const { data } = await supabase
       .from("profiles")
