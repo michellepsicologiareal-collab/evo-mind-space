@@ -133,7 +133,7 @@ export const AppLayout = () => {
             <span className="font-display text-xl font-bold tracking-tight flex items-center gap-1.5">
               <span className="text-[#2a1f3d]">Psi</span>
               <span className="text-[#9675CE]">Real</span>
-              <span className="inline-block h-2 w-2 rounded-full bg-[#c9a84c]" aria-hidden />
+              <span className="inline-block h-2 w-2 rounded-full bg-[#D4AF37]" aria-hidden />
             </span>
           </Link>
           <NotificationBell />
@@ -193,10 +193,10 @@ export const AppLayout = () => {
             style={{
               background: "rgba(201,168,76,0.08)",
               border: "0.5px solid rgba(201,168,76,0.25)",
-              color: "#7B4F2C",
+              color: "#4B356F",
             }}
           >
-            <Crown className="h-4 w-4" style={{ color: "#c9a84c" }} />
+            <Crown className="h-4 w-4" style={{ color: "#D4AF37" }} />
             Meu Plano
           </button>
           <p className="text-xs text-muted-foreground truncate mb-3 mt-3">{user?.email}</p>
@@ -274,7 +274,7 @@ export const AppLayout = () => {
                       "flex flex-col items-center justify-center gap-1.5 min-h-[72px] p-2 rounded-xl border text-[11px] font-medium text-center leading-tight",
                       isActive
                         ? "bg-[rgba(150,117,206,0.10)] border-[#9675CE]/30 text-[#5d4198]"
-                        : "bg-[#FBF7F1] border-[#e8dfd2] text-[#7B4F2C]"
+                        : "bg-[#FBF7F1] border-[#e8dfd2] text-[#4B356F]"
                     )
                   }
                 >

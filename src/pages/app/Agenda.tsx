@@ -1110,7 +1110,7 @@ const Agenda = () => {
         className={cn(
           "rounded-xl border p-3 group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/20",
           isSupervisionCard ? "bg-serene/10 border-serene/40"
-            : s.status === "confirmed" ? "bg-[#F5EFE7] border-[rgba(150,117,206,0.15)]"
+            : s.status === "confirmed" ? "bg-[#FAFAFC] border-[rgba(150,117,206,0.15)]"
               : "bg-background border-border"
         )}
       >
@@ -1900,7 +1900,7 @@ const Agenda = () => {
           <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "#a090c8" }}>
             {format(currentMonth, "MMM yyyy", { locale: ptBR })}
           </span>
-          <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11, color: "#7B4F2C" }}>
+          <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11, color: "#4B356F" }}>
             · Pendente R$ {pendingTotal.toFixed(2)}
           </span>
           <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11, color: "#9675CE" }}>
@@ -1971,7 +1971,7 @@ const Agenda = () => {
                   onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(150,117,206,0.08)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
                 >
-                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2.5, background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2.5, background: "linear-gradient(90deg, #D4AF37, #E5C76B, #D4AF37)" }} />
                   <div className="min-w-0" style={{ paddingTop: 4 }}>
                     {s.patient_id && s.patient_name ? (
                       <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
@@ -1993,14 +1993,14 @@ const Agenda = () => {
                         style={{
                           background: s.payment_status === "paid" ? "rgba(150,117,206,0.08)" : "rgba(201,168,76,0.08)",
                           border: s.payment_status === "paid" ? "0.5px solid rgba(150,117,206,0.25)" : "0.5px solid rgba(201,168,76,0.25)",
-                          color: s.payment_status === "paid" ? "#5d4198" : "#7B4F2C",
+                          color: s.payment_status === "paid" ? "#5d4198" : "#4B356F",
                           fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9.5, borderRadius: 40,
                         }}
                       >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pending"><span className="font-medium" style={{ color: "#7B4F2C" }}>● Pendente</span></SelectItem>
+                        <SelectItem value="pending"><span className="font-medium" style={{ color: "#4B356F" }}>● Pendente</span></SelectItem>
                         <SelectItem value="paid"><span className="font-medium" style={{ color: "#5d4198" }}>● Pago</span></SelectItem>
                       </SelectContent>
                     </Select>
@@ -2019,7 +2019,7 @@ const Agenda = () => {
                       onClick={() => promptDelete(s.id)}
                       className="flex items-center justify-center transition-colors"
                       style={{ width: 24, height: 24, borderRadius: 6, color: "#c0b0e0", background: "transparent" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = "#7B4F2C"; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "#4B356F"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = "#c0b0e0"; }}
                     >
                       <Trash2 className="h-3.5 w-3.5" />

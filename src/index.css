@@ -11,90 +11,90 @@
 @layer base {
   :root {
     /* Surfaces */
-    --background: 0 0% 100%;                /* branco puro */
-    --foreground: 262 30% 18%;
+    --background: 240 17% 99%;              /* #FAFAFC fundo */
+    --foreground: 254 32% 20%;              /* #2A2342 texto principal */
 
 
-    --card: 34 41% 93%;                     /* #F5EFE7 bege nos cards */
-    --card-foreground: 262 30% 18%;
+    --card: 0 0% 100%;                      /* #FFFFFF cards */
+    --card-foreground: 254 32% 20%;
 
 
     --popover: 0 0% 100%;
-    --popover-foreground: 262 30% 18%;
+    --popover-foreground: 254 32% 20%;
 
-    /* Brand — Lilás */
-    --primary: 262 48% 63%;                 /* #9675CE lilás principal */
+    /* Brand — Roxo */
+    --primary: 262 48% 63%;                 /* #9675CE roxo principal */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 265 44% 77%;            /* #C0AADE lilás claro */
-    --primary-dark: 262 40% 45%;            /* lilás escuro */
+    --primary-glow: 265 44% 77%;            /* roxo claro */
+    --primary-dark: 262 35% 32%;            /* #4B356F roxo escuro */
 
-    --secondary: 34 41% 93%;                /* #F5EFE7 bege */
-    --secondary-foreground: 262 48% 50%;
+    --secondary: 258 41% 93%;               /* #EAE6F5 lilás suave */
+    --secondary-foreground: 262 35% 32%;
 
-    --muted: 34 35% 90%;
-    --muted-foreground: 27 25% 38%;         /* marrom suave */
+    --muted: 258 41% 95%;
+    --muted-foreground: 254 20% 45%;
 
-    /* Accent — Lilás principal para CTAs */
+    /* Accent — Roxo para CTAs */
     --accent: 262 48% 63%;
     --accent-foreground: 0 0% 100%;
 
     /* Lilás claro — badges */
-    --lilac: 265 44% 77%;                   /* #C0AADE */
-    --lilac-foreground: 262 40% 25%;
+    --lilac: 265 44% 77%;
+    --lilac-foreground: 262 35% 25%;
 
-    --moss: 96 73% 25%;
+    --moss: 96 50% 35%;
     --moss-foreground: 0 0% 100%;
 
-    --sand: 34 41% 93%;
-    --sand-foreground: 262 30% 18%;
+    --sand: 258 41% 95%;
+    --sand-foreground: 254 32% 20%;
 
-    /* Marrom elegante — acento neutro */
-    --brown: 27 47% 33%;                    /* #7B4F2C */
+    /* Roxo escuro — texto importante */
+    --brown: 262 35% 32%;                   /* #4B356F roxo escuro */
     --brown-foreground: 0 0% 100%;
 
     /* Gold — acento identidade */
-    --gold: 44 56% 54%;                     /* #c9a84c */
-    --gold-dark: 27 47% 33%;                /* #7B4F2C marrom */
-    --gold-light: 41 71% 70%;
+    --gold: 46 65% 52%;                     /* #D4AF37 dourado elegante */
+    --gold-dark: 262 35% 32%;               /* #4B356F roxo escuro */
+    --gold-light: 44 70% 66%;               /* #E5C76B dourado suave */
 
-    --sage: 96 73% 25%;
+    --sage: 96 50% 35%;
     --sage-foreground: 0 0% 100%;
     --serene: 262 48% 63%;
     --serene-foreground: 0 0% 100%;
 
-    --admin-accent: 27 47% 33%;
+    --admin-accent: 262 35% 32%;
 
     --destructive: 0 65% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 30% 86%;                   /* bege/borda neutra */
-    --input: 30 30% 86%;
+    --border: 258 41% 93%;                  /* #EAE6F5 bordas */
+    --input: 258 41% 93%;
     --ring: 262 48% 63%;
 
     /* Sidebar tokens */
-    --sidebar-hover: 34 41% 95%;
+    --sidebar-hover: 258 41% 96%;
     --sidebar-active: 262 48% 63% / 0.10;
-    --sidebar-border: 30 30% 86%;
+    --sidebar-border: 258 41% 93%;
 
     --radius: 1rem;
 
     /* Text scale extras */
-    --text-secondary: 265 25% 50%;
-    --text-muted: 27 20% 45%;
-    --text-nav: 262 27% 50%;
+    --text-secondary: 262 27% 40%;
+    --text-muted: 254 20% 45%;
+    --text-nav: 262 30% 35%;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(262 48% 63%) 0%, hsl(265 44% 77%) 60%, hsl(34 41% 93%) 130%);
-    --gradient-soft: linear-gradient(180deg, hsl(34 41% 95%) 0%, hsl(34 41% 93%) 100%);
-    --gradient-card: linear-gradient(160deg, hsl(0 0% 100%) 0%, hsl(34 41% 96%) 100%);
-    --gradient-gold: linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c);
-    --gradient-gold-urgent: linear-gradient(90deg, #7B4F2C, #c9a84c);
+    --gradient-hero: linear-gradient(135deg, hsl(262 48% 63%) 0%, hsl(265 44% 77%) 60%, hsl(258 41% 95%) 130%);
+    --gradient-soft: linear-gradient(180deg, hsl(258 41% 96%) 0%, hsl(258 41% 93%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(0 0% 100%) 0%, hsl(258 41% 98%) 100%);
+    --gradient-gold: linear-gradient(90deg, #D4AF37, #E5C76B, #D4AF37);
+    --gradient-gold-urgent: linear-gradient(90deg, #4B356F, #D4AF37);
 
     /* Shadows */
-    --shadow-elegant: 0 30px 60px -30px hsl(262 40% 30% / 0.18);
-    --shadow-soft: 0 4px 16px -4px hsl(27 30% 25% / 0.10), 0 1px 3px 0 hsl(27 30% 25% / 0.04);
+    --shadow-elegant: 0 30px 60px -30px hsl(262 35% 32% / 0.18);
+    --shadow-soft: 0 4px 16px -4px hsl(262 35% 32% / 0.10), 0 1px 3px 0 hsl(262 35% 32% / 0.04);
     --shadow-glow: 0 0 80px -20px hsl(262 48% 63% / 0.25);
-    --shadow-card: 0 2px 12px -3px hsl(27 30% 25% / 0.08), 0 1px 2px 0 hsl(27 30% 25% / 0.03);
+    --shadow-card: 0 2px 12px -3px hsl(262 35% 32% / 0.08), 0 1px 2px 0 hsl(262 35% 32% / 0.03);
 
 
     /* Motion */
@@ -170,9 +170,9 @@
   .bg-gradient-gold { background: var(--gradient-gold); }
   .bg-gold-subtle { background: rgba(201,168,76,0.10); }
   .border-gold-subtle { border-color: rgba(201,168,76,0.35); }
-  .text-gold-dark { color: #7B4F2C; }
-  .text-urgent { color: #7B4F2C; }
-  .bg-urgent-subtle { background: #fdf8f0; }
+  .text-gold-dark { color: #4B356F; }
+  .text-urgent { color: #4B356F; }
+  .bg-urgent-subtle { background: #F5F1FB; }
   .bg-gradient-hero { background: var(--gradient-hero); }
   .bg-gradient-soft { background: var(--gradient-soft); }
   .bg-gradient-card { background: var(--gradient-card); }
