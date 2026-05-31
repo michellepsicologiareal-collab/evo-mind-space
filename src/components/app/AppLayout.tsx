@@ -104,7 +104,7 @@ export const AppLayout = () => {
       onClick={(e) => handleNavClick(e, item)}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 px-4 py-2.5 text-[12px] transition-colors font-sans",
+          "flex items-center gap-3 px-4 py-3 text-[12.5px] transition-colors font-sans",
           isActive
             ? isAdminSection
               ? "bg-[hsl(var(--admin-accent))] text-white shadow-soft rounded-xl"
