@@ -76,16 +76,16 @@ export const Features = () => {
             >
               <div className={`grid lg:grid-cols-2 gap-0 items-center ${i % 2 === 1 ? "lg:grid-flow-col-dense" : ""}`}>
                 {/* Text side */}
-                <div className={`p-8 lg:p-12 ${i % 2 === 1 ? "lg:col-start-2" : ""}`}>
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                <div className={`p-6 sm:p-8 lg:p-12 ${i % 2 === 1 ? "lg:col-start-2" : ""}`}>
+                  <div className={`flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl ${
                     f.highlight ? "bg-primary-foreground/15 text-primary-foreground" : "bg-secondary text-primary"
                   }`}>
                     <f.icon className="h-5 w-5" />
                   </div>
-                  <p className={`mt-6 text-[11px] uppercase tracking-[0.18em] ${f.highlight ? "text-primary-foreground/70" : "text-accent"}`}>
+                  <p className={`mt-5 sm:mt-6 text-[11px] uppercase tracking-[0.18em] ${f.highlight ? "text-primary-foreground/70" : "text-accent"}`}>
                     {f.tag}
                   </p>
-                  <h3 className={`mt-2 font-display text-2xl lg:text-3xl font-semibold leading-snug ${f.highlight ? "" : "text-foreground"}`}>
+                  <h3 className={`mt-2 font-display text-xl sm:text-2xl lg:text-3xl font-semibold leading-snug ${f.highlight ? "" : "text-foreground"}`}>
                     {f.title}
                   </h3>
                   <p className={`mt-3 text-sm lg:text-base leading-relaxed max-w-md ${f.highlight ? "text-primary-foreground/85" : "text-muted-foreground"}`}>
