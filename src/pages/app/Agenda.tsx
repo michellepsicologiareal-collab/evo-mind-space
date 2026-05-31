@@ -1250,7 +1250,7 @@ const Agenda = () => {
           <h1 className="font-display text-2xl sm:text-4xl font-medium">Agenda</h1>
           <p className="mt-1 sm:mt-2 text-sm sm:text-base text-muted-foreground">Visualize e organize seus atendimentos.</p>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Button
             type="button"
             variant={gcalConnected ? "outline" : "secondary"}
