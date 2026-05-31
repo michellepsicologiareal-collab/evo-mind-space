@@ -393,9 +393,9 @@ const Agenda = () => {
   }, [user, loadGcalStatus]);
 
   // Load all sessions for the current month
-  const load = async () => {
+  const load = async (silent = false) => {
     if (!user) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     const mStart = startOfMonth(currentMonth);
     const mEnd = addDays(endOfMonth(currentMonth), 1);
     const [sRes, pRes, svRes] = await Promise.all([
@@ -419,12 +419,12 @@ const Agenda = () => {
     setSessions(mapped as Session[]);
     setPatients((pRes.data as Patient[]) ?? []);
     setServices((svRes.data as Service[]) ?? []);
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
-  const loadPending = async () => {
+  const loadPending = async (silent = false) => {
     if (!user) return;
-    setLoadingPending(true);
+    if (!silent) setLoadingPending(true);
     const mStart = startOfMonth(currentMonth).toISOString();
     const mEnd = endOfMonth(currentMonth).toISOString();
     const { data } = await supabase
@@ -458,12 +458,12 @@ const Agenda = () => {
       setPendingPackageSessions([]);
     }
     setPendingSessions(mapped as Session[]);
-    setLoadingPending(false);
+    if (!silent) setLoadingPending(false);
   };
 
   useEffect(() => { if (user) { load(); loadPending(); } }, [user, currentMonth]);
 
-  useAutoRefresh(() => { if (user) { load(); loadPending(); } }, { routePath: "/app/agenda" });
+  useAutoRefresh(() => { if (user) { load(true); loadPending(true); } }, { routePath: "/app/agenda" });
 
   // Patient month count for new session form
   useEffect(() => {
@@ -587,7 +587,7 @@ const Agenda = () => {
     clearSessionDraft();
     newGuard.resetDirty();
     setOpen(false);
-    load(); loadPending();
+    load(true); loadPending(true);
   };
 
   const updateStatus = async (id: string, status: Status) => {
@@ -595,7 +595,7 @@ const Agenda = () => {
     if (error) return toast.error("Erro ao atualizar");
     if (status === "cancelled") { deleteSessionFromGcal(id); } else { syncSessionToGcal(id); }
     toast.success(`Marcada como ${statusLabel[status].toLowerCase()}`);
-    load(); loadPending();
+    load(true); loadPending(true);
   };
 
   const updatePaymentStatus = async (id: string, paymentStatus: PaymentStatus) => {
@@ -605,7 +605,7 @@ const Agenda = () => {
     }).eq("id", id);
     if (error) return toast.error("Erro ao atualizar pagamento");
     toast.success(`Pagamento: ${paymentStatusLabel[paymentStatus]}`);
-    load(); loadPending();
+    load(true); loadPending(true);
   };
 
   const updatePaymentGroup = async (ids: string[], paymentStatus: PaymentStatus) => {
@@ -615,7 +615,7 @@ const Agenda = () => {
     }).in("id", ids);
     if (error) return toast.error("Erro ao atualizar pagamento");
     toast.success(`${ids.length} sessões marcadas como ${paymentStatusLabel[paymentStatus].toLowerCase()}`);
-    load(); loadPending();
+    load(true); loadPending(true);
   };
 
   // ── Delete with confirmation modal ──
@@ -655,7 +655,7 @@ const Agenda = () => {
     setDeleteConfirmOpen(false);
     setDeleteSessionId(null);
     if (editOpen) { editGuard.resetDirty(); setEditOpen(false); }
-    await load(); loadPending();
+    await load(true); loadPending(true);
   };
 
   const copyConfirmationLink = async (s: Session) => {
@@ -686,7 +686,7 @@ const Agenda = () => {
     }
     // Marca o envio do lembrete para destacar no card
     await supabase.from("sessions").update({ confirmation_sent_at: new Date().toISOString() }).eq("id", s.id);
-    load();
+    load(true);
   };
 
   const getGroupId = (notes: string | null): string | null => {
@@ -925,7 +925,7 @@ const Agenda = () => {
     }
     editGuard.resetDirty();
     setEditOpen(false);
-    load(); loadPending();
+    load(true); loadPending(true);
   };
 
   // ── Patient Drawer ──
