@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const signUpSchema = z.object({
   fullName: z.string().trim().min(2, "Nome muito curto").max(100),
@@ -18,6 +19,9 @@ const signUpSchema = z.object({
   phone: z.string().trim().min(8, "Telefone inválido").max(20),
   password: z.string().min(8, "Mínimo 8 caracteres").max(72),
   profileType: z.enum(["standard", "supervisee"]),
+  acceptTerms: z.literal(true, {
+    errorMap: () => ({ message: "Você precisa aceitar os Termos de Uso e a Política de Privacidade" }),
+  }),
 });
 
 const signInSchema = z.object({
