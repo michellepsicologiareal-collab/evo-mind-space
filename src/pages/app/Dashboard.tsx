@@ -1352,7 +1352,7 @@ const KPICard = ({
             <TooltipTrigger asChild>
               <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
             </TooltipTrigger>
-            <TooltipContent className="max-w-xs text-xs">
+            <TooltipContent side="top" align="end" collisionPadding={16} className="max-w-[calc(100vw-2rem)] sm:max-w-xs text-xs break-words whitespace-normal">
               <p>{tooltip}</p>
             </TooltipContent>
           </Tooltip>
