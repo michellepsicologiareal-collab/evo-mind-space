@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/app/AppLayout";
-import { Loader2 } from "lucide-react";
+import { SplashScreen } from "@/components/SplashScreen";
 
 /* ── Lazy-loaded pages ── */
 const Index = lazy(() => import("./pages/Index"));
