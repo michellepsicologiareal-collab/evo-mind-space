@@ -176,13 +176,13 @@ export function SupervisionRecords({ supervisorId, superviseeId, superviseeName 
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-accent" />
-          <h3 className="text-sm font-semibold text-foreground">Registros de Supervisão</h3>
-          <span className="text-xs text-muted-foreground">({records.length})</span>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <FileText className="h-4 w-4 text-accent shrink-0" />
+          <h3 className="text-sm font-semibold text-foreground truncate">Registros de Supervisão</h3>
+          <span className="text-xs text-muted-foreground shrink-0">({records.length})</span>
         </div>
-        <Button variant="accent" size="sm" onClick={() => { setForm(emptyForm); setFormOpen(true); }}>
+        <Button variant="accent" size="sm" className="w-full sm:w-auto shrink-0" onClick={() => { setForm(emptyForm); setFormOpen(true); }}>
           <Plus className="h-3.5 w-3.5 mr-1" /> Novo Registro
         </Button>
       </div>
