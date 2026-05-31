@@ -123,7 +123,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   pending: { label: "Pendente", className: "bg-amber-100 text-amber-700" },
 };
 
-const PIE_COLORS = ["#6d4fc2", "#c9a84c"];
+const PIE_COLORS = ["#9675CE", "#c9a84c"];
 
 /* ── date range helpers ── */
 const currentMonthStart = () => startOfMonth(new Date());
@@ -538,16 +538,16 @@ const Dashboard = () => {
           >
             PSI REAL{clinicName ? ` · ${clinicName}` : ""}
           </p>
-          <p className="mt-1 capitalize" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 300, color: "#8070a8" }}>
+          <p className="mt-1 capitalize" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 300, color: "#C0AADE" }}>
             {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
           <h1
             className="mt-2"
-            style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 700, color: "#1a1030" }}
+            style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 700, color: "#2a1f3d" }}
           >
             {greeting}{firstName ? `, ${firstName}` : ""}.
           </h1>
-          <p className="mt-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "13px", fontWeight: 300, color: "#8070a8" }}>
+          <p className="mt-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "13px", fontWeight: 300, color: "#C0AADE" }}>
             {summaryText}
           </p>
         </header>
@@ -660,14 +660,14 @@ const Dashboard = () => {
             <p className="mb-1 uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "#a090c8" }}>
               Faturamento — {periodLabel}
             </p>
-            <p style={{ fontFamily: "Syne, sans-serif", fontSize: "28px", fontWeight: 700, color: "#1a1030", lineHeight: 1.1 }}>
+            <p style={{ fontFamily: "Syne, sans-serif", fontSize: "28px", fontWeight: 700, color: "#2a1f3d", lineHeight: 1.1 }}>
               {hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`}
             </p>
             {prevMonthRevenue > 0 && !hideRevenue && (() => {
               const pctChange = ((stats.monthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100;
               const isUp = pctChange >= 0;
               return (
-                <p className="text-sm font-medium mt-1" style={{ color: isUp ? "#6d4fc2" : "hsl(var(--destructive))" }}>
+                <p className="text-sm font-medium mt-1" style={{ color: isUp ? "#9675CE" : "hsl(var(--destructive))" }}>
                   {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(0)}% vs. {format(subMonths(new Date(), 1), "MMMM", { locale: ptBR })}
                 </p>
               );
@@ -678,8 +678,8 @@ const Dashboard = () => {
                   <AreaChart data={weeklyRevenue}>
                     <defs>
                       <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#6d4fc2" stopOpacity={0.18} />
-                        <stop offset="100%" stopColor="#6d4fc2" stopOpacity={0.02} />
+                        <stop offset="0%" stopColor="#9675CE" stopOpacity={0.18} />
+                        <stop offset="100%" stopColor="#9675CE" stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
                     <XAxis dataKey="week" tick={{ fontSize: 10, fill: "#a090c8" }} axisLine={false} tickLine={false} />
@@ -690,7 +690,7 @@ const Dashboard = () => {
                     <Area
                       type="monotone"
                       dataKey="value"
-                      stroke="#6d4fc2"
+                      stroke="#9675CE"
                       strokeWidth={2.5}
                       fill="url(#revGrad)"
                       dot={false}
@@ -771,9 +771,9 @@ const Dashboard = () => {
                 {frequencyData.map((item, i) => (
                   <div key={item.name} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30">
                     <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                    <div className="flex-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", color: "#6a5880" }}>
-                      <p className="font-semibold" style={{ color: "#6a5880" }}>{item.name}</p>
-                      <p style={{ color: "#6a5880" }}>
+                    <div className="flex-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", color: "#7B4F2C" }}>
+                      <p className="font-semibold" style={{ color: "#7B4F2C" }}>{item.name}</p>
+                      <p style={{ color: "#7B4F2C" }}>
                         {item.value} paciente{item.value !== 1 ? "s" : ""} · Média: R$ {item.avgPrice.toFixed(2).replace(".", ",")}
                       </p>
                     </div>
@@ -797,10 +797,10 @@ const Dashboard = () => {
           const classifyChip = (m: PatientMoodEntry) => {
             const note = m.note ?? "";
             if (/crise/i.test(note)) return { label: "Em crise", bg: "rgba(133,79,11,0.12)", color: "#633806", border: "rgba(133,79,11,0.25)" };
-            if (/(término|termino|resist|não acei|nao acei)/i.test(note)) return { label: "Resistente", bg: "rgba(201,168,76,0.12)", color: "#7a5e1a", border: "rgba(201,168,76,0.3)" };
+            if (/(término|termino|resist|não acei|nao acei)/i.test(note)) return { label: "Resistente", bg: "rgba(201,168,76,0.12)", color: "#7B4F2C", border: "rgba(201,168,76,0.3)" };
             if (ANX_RX.test(note)) return { label: "Ansioso", bg: "rgba(201,168,76,0.08)", color: "#9a7a28", border: "rgba(201,168,76,0.2)" };
-            if (ENG_RX.test(note)) return { label: "Engajado", bg: "rgba(109,79,194,0.12)", color: "#3d2b8a", border: "rgba(109,79,194,0.25)" };
-            return { label: "Estável", bg: "rgba(109,79,194,0.08)", color: "#3d2b8a", border: "rgba(109,79,194,0.2)" };
+            if (ENG_RX.test(note)) return { label: "Engajado", bg: "rgba(150,117,206,0.12)", color: "#5d4198", border: "rgba(150,117,206,0.25)" };
+            return { label: "Estável", bg: "rgba(150,117,206,0.08)", color: "#5d4198", border: "rgba(150,117,206,0.2)" };
           };
 
           // Period filter
@@ -855,8 +855,8 @@ const Dashboard = () => {
             const chip = classifyChip(m);
             const prev = prevScoreByPatient.get(m.patient_id);
             const delta = prev !== undefined ? +(m.mood_score - prev).toFixed(1) : null;
-            const fillColor = m.mood_score >= 7 ? "#6d4fc2" : m.mood_score >= 4 ? "#c9a84c" : "#854f0b";
-            const valueColor = m.mood_score >= 7 ? "#3d2b8a" : m.mood_score >= 4 ? "#1a1030" : "#854f0b";
+            const fillColor = m.mood_score >= 7 ? "#9675CE" : m.mood_score >= 4 ? "#c9a84c" : "#7B4F2C";
+            const valueColor = m.mood_score >= 7 ? "#5d4198" : m.mood_score >= 4 ? "#2a1f3d" : "#7B4F2C";
             const pct = Math.max(0, Math.min(100, (m.mood_score / 10) * 100));
             return (
               <li
@@ -864,9 +864,9 @@ const Dashboard = () => {
                 style={{
                   height: "52px",
                   background: urgentCard ? "#fdf8f0" : "transparent",
-                  borderLeft: urgentCard ? "2px solid #854f0b" : "2px solid transparent",
+                  borderLeft: urgentCard ? "2px solid #7B4F2C" : "2px solid transparent",
                 }}
-                onMouseEnter={(e) => { if (!urgentCard) e.currentTarget.style.background = "#f7f4ff"; }}
+                onMouseEnter={(e) => { if (!urgentCard) e.currentTarget.style.background = "#F5EFE7"; }}
                 onMouseLeave={(e) => { if (!urgentCard) e.currentTarget.style.background = "transparent"; }}
               >
                 <div
@@ -874,8 +874,8 @@ const Dashboard = () => {
                   style={{
                     width: 32,
                     height: 32,
-                    background: urgentCard ? "rgba(201,168,76,0.12)" : "rgba(109,79,194,0.08)",
-                    color: urgentCard ? "#7a5e1a" : "#6d4fc2",
+                    background: urgentCard ? "rgba(201,168,76,0.12)" : "rgba(150,117,206,0.08)",
+                    color: urgentCard ? "#7B4F2C" : "#9675CE",
                     fontFamily: "Syne, sans-serif",
                     fontWeight: 700,
                     fontSize: 12,
@@ -887,7 +887,7 @@ const Dashboard = () => {
                 <div className="flex items-center gap-2 min-w-0" style={{ flex: 2, minWidth: 200 }}>
                   <p
                     className="truncate"
-                    style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: urgentCard ? "#633806" : "#1a1030" }}
+                    style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: urgentCard ? "#633806" : "#2a1f3d" }}
                   >
                     {m.patient_name}
                   </p>
@@ -913,7 +913,7 @@ const Dashboard = () => {
                   {m.note && (
                     <p
                       className="truncate"
-                      style={{ fontFamily: "Instrument Sans, sans-serif", fontStyle: "italic", fontSize: 12, color: "#6a5880" }}
+                      style={{ fontFamily: "Instrument Sans, sans-serif", fontStyle: "italic", fontSize: 12, color: "#7B4F2C" }}
                     >
                       {m.note}
                     </p>
@@ -926,7 +926,7 @@ const Dashboard = () => {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0 justify-end" style={{ width: 140 }}>
-                  <div style={{ width: 48, height: 3, background: "#f0ebff", borderRadius: 40, overflow: "hidden" }}>
+                  <div style={{ width: 48, height: 3, background: "#ebe0f3", borderRadius: 40, overflow: "hidden" }}>
                     <div style={{ width: `${pct}%`, height: "100%", background: fillColor, borderRadius: 40 }} />
                   </div>
                   <div className="flex items-baseline gap-0.5">
@@ -938,7 +938,7 @@ const Dashboard = () => {
                   {delta !== null && (
                     <span
                       className="flex items-center"
-                      style={{ fontSize: "10.5px", color: delta > 0 ? "#6d4fc2" : delta < 0 ? "#854f0b" : "#a090c8" }}
+                      style={{ fontSize: "10.5px", color: delta > 0 ? "#9675CE" : delta < 0 ? "#7B4F2C" : "#a090c8" }}
                     >
                       {delta > 0 ? <TrendingUp className="h-3 w-3" /> : delta < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
                     </span>
@@ -953,7 +953,7 @@ const Dashboard = () => {
                   }}
                   className="shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
                   style={{ width: 26, height: 26, borderRadius: 6, color: "#c0b0e0", background: "transparent" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#6d4fc2"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#9675CE"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = "#c0b0e0"; }}
                 >
                   <MoreHorizontal className="h-4 w-4" />
@@ -970,7 +970,7 @@ const Dashboard = () => {
               >
                 {text}
               </span>
-              <div className="flex-1" style={{ height: "0.5px", background: "#ede9f8" }} />
+              <div className="flex-1" style={{ height: "0.5px", background: "#e8dfd2" }} />
               <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "9px", color: "#c0b0e0" }}>
                 {count.toString().padStart(2, "0")}
               </span>
@@ -980,14 +980,14 @@ const Dashboard = () => {
           return (
             <section
               className="rounded-2xl border shadow-card overflow-hidden relative"
-              style={{ background: "#faf8ff", borderColor: "#ede9f8" }}
+              style={{ background: "#FBF7F1", borderColor: "#e8dfd2" }}
             >
               <div className="absolute top-0 left-0 right-0 z-10" style={{ height: "3px", background: "linear-gradient(90deg, #c9a84c, #e8c97a, #c9a84c)" }} />
               {/* Header */}
               <div className="flex items-center justify-between px-6 pt-6">
                 <div className="flex items-center gap-2">
-                  <SmilePlus className="h-5 w-5" style={{ color: "#6d4fc2" }} />
-                  <h2 style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: "18px", color: "#1a1030" }}>
+                  <SmilePlus className="h-5 w-5" style={{ color: "#9675CE" }} />
+                  <h2 style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: "18px", color: "#2a1f3d" }}>
                     Emoções dos Pacientes
                   </h2>
                 </div>
@@ -1004,8 +1004,8 @@ const Dashboard = () => {
                     padding: "10px 24px",
                   }}
                 >
-                  <AlertTriangle style={{ width: "15px", height: "15px", color: "#854f0b" }} />
-                  <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "12px", color: "#854f0b" }}>
+                  <AlertTriangle style={{ width: "15px", height: "15px", color: "#7B4F2C" }} />
+                  <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "12px", color: "#7B4F2C" }}>
                     {urgentCount} {urgentCount === 1 ? "paciente requer" : "pacientes requerem"} atenção clínica.
                   </span>
                   <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 400, color: "#a07030" }}>
@@ -1022,11 +1022,11 @@ const Dashboard = () => {
                       className="h-9 w-full sm:w-[200px]"
                       style={{
                         background: "#fff",
-                        border: "0.5px solid #ede9f8",
+                        border: "0.5px solid #e8dfd2",
                         borderRadius: "40px",
                         fontFamily: "Instrument Sans, sans-serif",
                         fontSize: "12px",
-                        color: "#6a5880",
+                        color: "#7B4F2C",
                       }}
                     >
                       <Filter className="h-3 w-3 mr-1" style={{ color: "#a090c8" }} />
@@ -1047,9 +1047,9 @@ const Dashboard = () => {
                         key={c.key}
                         onClick={() => setMoodPeriod(c.key)}
                         style={{
-                          background: active ? "rgba(109,79,194,0.06)" : "#ffffff",
-                          border: active ? "0.5px solid rgba(109,79,194,0.25)" : "0.5px solid #ede9f8",
-                          color: active ? "#3d2b8a" : "#8070a8",
+                          background: active ? "rgba(150,117,206,0.06)" : "#ffffff",
+                          border: active ? "0.5px solid rgba(150,117,206,0.25)" : "0.5px solid #e8dfd2",
+                          color: active ? "#5d4198" : "#C0AADE",
                           borderRadius: "40px",
                           padding: "6px 14px",
                           fontFamily: "Syne, sans-serif",
@@ -1063,7 +1063,7 @@ const Dashboard = () => {
                   })}
                 </div>
 
-                <Link to="/app/agenda" style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "12px", color: "#6d4fc2" }}>
+                <Link to="/app/agenda" style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "12px", color: "#9675CE" }}>
                   Ver sessões →
                 </Link>
               </div>
@@ -1073,10 +1073,10 @@ const Dashboard = () => {
                 {listed.length === 0 ? (
                   <div className="text-center py-12">
                     <Heart className="h-12 w-12 mx-auto mb-4" style={{ color: "#c0b0e0" }} />
-                    <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "15px", color: "#3d2b8a" }}>
+                    <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "15px", color: "#5d4198" }}>
                       Nenhum registro de humor ainda
                     </p>
-                    <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "13px", color: "#8070a8" }}>
+                    <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "13px", color: "#C0AADE" }}>
                       Registre o humor dos pacientes nas sessões para acompanhar a evolução emocional aqui.
                     </p>
                   </div>
@@ -1097,17 +1097,17 @@ const Dashboard = () => {
                         <div className="mb-6 rounded-2xl border border-border bg-gradient-card p-4 sm:p-6">
                           <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
                             <div>
-                              <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.12em", color: "#8070a8" }}>
+                              <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.12em", color: "#C0AADE" }}>
                                 Evolução do humor
                               </p>
-                              <p style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 700, color: "#1a1030", lineHeight: 1.1 }}>
+                              <p style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 700, color: "#2a1f3d", lineHeight: 1.1 }}>
                                 Média {avg.toFixed(1).replace(".", ",")}<span style={{ fontSize: "13px", color: "#a090c8", fontWeight: 400 }}> /10</span>
                               </p>
                             </div>
-                            <div className="flex items-center gap-3 text-xs" style={{ fontFamily: "Instrument Sans, sans-serif", color: "#6a5880" }}>
+                            <div className="flex items-center gap-3 text-xs" style={{ fontFamily: "Instrument Sans, sans-serif", color: "#7B4F2C" }}>
                               <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#1D9E75" }} />Bem (7-10)</span>
                               <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#c9a84c" }} />Atenção (4-6)</span>
-                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#854f0b" }} />Crítico (0-3)</span>
+                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#7B4F2C" }} />Crítico (0-3)</span>
                             </div>
                           </div>
                           <div className="h-[260px] w-full">
@@ -1115,15 +1115,15 @@ const Dashboard = () => {
                               <AreaChart data={source} margin={{ top: 10, right: 16, left: -10, bottom: 0 }}>
                                 <defs>
                                   <linearGradient id="moodGradBig" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#6d4fc2" stopOpacity={0.35} />
-                                    <stop offset="100%" stopColor="#6d4fc2" stopOpacity={0.02} />
+                                    <stop offset="0%" stopColor="#9675CE" stopOpacity={0.35} />
+                                    <stop offset="100%" stopColor="#9675CE" stopOpacity={0.02} />
                                   </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#ede9f8" vertical={false} />
-                                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#8070a8" }} axisLine={false} tickLine={false} />
-                                <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 11, fill: "#8070a8" }} axisLine={false} tickLine={false} width={28} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e8dfd2" vertical={false} />
+                                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#C0AADE" }} axisLine={false} tickLine={false} />
+                                <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 11, fill: "#C0AADE" }} axisLine={false} tickLine={false} width={28} />
                                 <RechartsTooltip
-                                  contentStyle={{ fontSize: 12, borderRadius: 12, border: "1px solid #ede9f8", background: "#fff" }}
+                                  contentStyle={{ fontSize: 12, borderRadius: 12, border: "1px solid #e8dfd2", background: "#fff" }}
                                   formatter={(v: number) => [`${v}/10`, "Humor"]}
                                   labelFormatter={(l, payload: any) => {
                                     const p = payload?.[0]?.payload?.patient;
@@ -1133,10 +1133,10 @@ const Dashboard = () => {
                                 <Area
                                   type="monotone"
                                   dataKey="score"
-                                  stroke="#6d4fc2"
+                                  stroke="#9675CE"
                                   strokeWidth={2.5}
                                   fill="url(#moodGradBig)"
-                                  dot={{ r: 4, fill: "#6d4fc2", strokeWidth: 2, stroke: "#fff" }}
+                                  dot={{ r: 4, fill: "#9675CE", strokeWidth: 2, stroke: "#fff" }}
                                   activeDot={{ r: 6 }}
                                 />
                               </AreaChart>
@@ -1149,7 +1149,7 @@ const Dashboard = () => {
                     {urgent.length > 0 && (
                       <>
                         <SectionLabel text="Atenção imediata" count={urgent.length} />
-                        <ul className="[&>li]:border-b [&>li]:border-[#f0ebff]">
+                        <ul className="[&>li]:border-b [&>li]:border-[#ebe0f3]">
 
                           {urgent.map(m => <Card key={m.id} m={m} urgentCard />)}
                         </ul>
@@ -1158,7 +1158,7 @@ const Dashboard = () => {
                     {stable.length > 0 && (
                       <>
                         <SectionLabel text="Estáveis" count={stable.length} />
-                        <ul className="[&>li]:border-b [&>li]:border-[#f0ebff]">
+                        <ul className="[&>li]:border-b [&>li]:border-[#ebe0f3]">
                           {stable.map(m => <Card key={m.id} m={m} urgentCard={false} />)}
                         </ul>
                       </>
@@ -1371,7 +1371,7 @@ const KPICard = ({
         fontFamily: "Syne, sans-serif",
         fontSize: value.trim().startsWith("R$") ? "18px" : "28px",
         fontWeight: 700,
-        color: "#1a1030",
+        color: "#2a1f3d",
       }}
     >
       {value}
