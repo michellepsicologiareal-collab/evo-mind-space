@@ -60,6 +60,9 @@ const Profile = () => {
   const [restoreConfirm, setRestoreConfirm] = useState("");
   const backupInputRef = useRef<HTMLInputElement>(null);
   const [pendingBackupFile, setPendingBackupFile] = useState<File | null>(null);
+  const [exportingCsvZip, setExportingCsvZip] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
+  const [downloadingPath, setDownloadingPath] = useState<string | null>(null);
 
   const fetchMyData = async () => {
     if (!user) return null;
