@@ -42,19 +42,19 @@ const plans = [
 
 export const Pricing = () => {
   return (
-    <section id="planos" className="py-24 lg:py-32 bg-background">
+    <section id="planos" className="py-16 sm:py-20 lg:py-32 bg-background">
       <div className="container max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-16 animate-fade-up">
+        <div className="text-center mb-12 sm:mb-16 animate-fade-up">
           <p className="text-sm font-medium tracking-wider uppercase text-accent mb-3">Planos</p>
-          <h2 className="font-display text-4xl md:text-5xl font-medium text-foreground text-balance">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium text-foreground text-balance">
             Invista na estrutura do seu consultório
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
+          <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
             Escolha o plano que acompanha o seu momento profissional. Sem surpresas, cancele quando quiser.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.name}
