@@ -129,18 +129,15 @@ export const AppLayout = () => {
       {/* ── Desktop sidebar (fixed) ── */}
       <aside className="hidden md:flex md:w-[220px] fixed inset-y-0 left-0 z-30 bg-muted border-r border-border flex-col">
         <div className="p-6 flex items-center justify-between border-b border-border">
-          <Link to="/app" className="flex items-center gap-2">
-            <img src={logoSrc} alt="Psicologia Real" className="h-9 w-9 rounded-full object-cover" />
-            <span className="font-display text-xl font-bold tracking-tight flex items-center gap-1.5">
+          <Link to="/app" className="flex items-center gap-2 min-w-0">
+            <img src={logoSrc} alt="Psicologia Real" className="h-9 w-9 rounded-full object-cover flex-shrink-0" />
+            <span className="font-display text-xl font-bold tracking-tight flex items-center gap-1.5 truncate">
               <span className="text-foreground">Psi</span>
               <span className="text-primary">Real</span>
-              <span className="inline-block h-2 w-2 rounded-full bg-gold" aria-hidden />
+              <span className="inline-block h-2 w-2 rounded-full bg-gold flex-shrink-0" aria-hidden />
             </span>
           </Link>
-          <div className="flex items-center gap-1">
-            <ThemeToggle />
-            <NotificationBell />
-          </div>
+          <NotificationBell />
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
