@@ -564,6 +564,7 @@ export type Database = {
           specialty: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status"]
           supervisor_id: string | null
+          terms_accepted_at: string | null
           updated_at: string
         }
         Insert: {
@@ -587,6 +588,7 @@ export type Database = {
           specialty?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           supervisor_id?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -610,6 +612,7 @@ export type Database = {
           specialty?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           supervisor_id?: string | null
+          terms_accepted_at?: string | null
           updated_at?: string
         }
         Relationships: [
