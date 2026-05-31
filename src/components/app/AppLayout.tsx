@@ -137,7 +137,10 @@ export const AppLayout = () => {
               <span className="inline-block h-2 w-2 rounded-full bg-gold" aria-hidden />
             </span>
           </Link>
-          <NotificationBell />
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <NotificationBell />
+          </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
