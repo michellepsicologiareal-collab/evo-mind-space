@@ -48,23 +48,23 @@ const smallFeatures = [
 
 export const Features = () => {
   return (
-    <section id="funcionalidades" className="py-24 lg:py-32 bg-gradient-soft">
+    <section id="funcionalidades" className="py-16 sm:py-20 lg:py-32 bg-gradient-soft">
       <div className="container">
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 max-w-5xl">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-accent font-medium">Funcionalidades</p>
-            <h2 className="mt-3 font-display text-4xl lg:text-5xl font-medium leading-tight text-balance">
+            <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-accent font-medium">Funcionalidades</p>
+            <h2 className="mt-3 font-display text-3xl sm:text-4xl lg:text-5xl font-medium leading-tight text-balance">
               Tudo que seu consultório precisa,<br className="hidden lg:block" />
               <span className="font-semibold text-muted-foreground">nada que ele não precisa.</span>
             </h2>
           </div>
-          <p className="text-muted-foreground max-w-md">
+          <p className="text-muted-foreground max-w-md text-sm sm:text-base">
             Um ambiente único, simples e funcional — desenhado para a prática real da psicologia clínica.
           </p>
         </div>
 
         {/* Featured cards with images */}
-        <div className="mt-16 space-y-8">
+        <div className="mt-12 sm:mt-16 space-y-6 sm:space-y-8">
           {features.map((f, i) => (
             <article
               key={f.title}
