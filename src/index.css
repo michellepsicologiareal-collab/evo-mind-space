@@ -11,8 +11,9 @@
 @layer base {
   :root {
     /* Surfaces */
-    --background: 34 41% 93%;               /* #F5EFE7 bege claro */
-    --foreground: 262 30% 18%;              /* lilás bem escuro */
+    --background: 0 0% 100%;                /* branco puro */
+    --foreground: 262 30% 18%;
+
 
     --card: 0 0% 100%;
     --card-foreground: 262 30% 18%;
