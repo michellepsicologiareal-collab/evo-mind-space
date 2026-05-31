@@ -6,7 +6,7 @@ import { ptBR } from "date-fns/locale";
 import { toZonedTime } from "date-fns-tz";
 import { Check, Loader2, Download, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import logoImg from "@/assets/logo-psireal.svg";
+import logoImg from "@/assets/logo-psireal.png";
 
 interface SessionData {
   id: string;
