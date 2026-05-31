@@ -448,7 +448,7 @@ const Patients = () => {
   const totalFormulCount = activePatients.length;
 
   return (
-    <div className="space-y-5 animate-fade-up" style={{ background: "#ffffff" }}>
+    <div className="space-y-5 animate-fade-up" style={{ background: "hsl(var(--card))" }}>
       {/* Top row */}
       <div className="flex flex-wrap items-center gap-4 pt-2">
         <div className="relative w-full sm:w-auto" style={{ maxWidth: 260 }}>
@@ -579,7 +579,7 @@ const Patients = () => {
                 onClick={() => setSelectedPatient(p)}
                 className="group relative cursor-pointer transition-all overflow-hidden"
                 style={{
-                  background: isAlert ? "hsl(var(--muted))" : "#ffffff",
+                  background: isAlert ? "hsl(var(--muted))" : "hsl(var(--card))",
                   border: "0.5px solid hsl(var(--border))",
                   borderLeft: isAlert ? "2px solid hsl(var(--brown))" : "0.5px solid hsl(var(--border))",
                   borderRadius: 14,
@@ -595,12 +595,12 @@ const Patients = () => {
                   </div>
 
                   <div className="min-w-0 flex-1 sm:flex-none" style={{ flexBasis: "auto" }}>
-                    <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: isAlert ? "#633806" : "hsl(var(--foreground))" }}>
+                    <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: isAlert ? "hsl(var(--brown))" : "hsl(var(--foreground))" }}>
                       {p.full_name}
                     </p>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="inline-flex items-center gap-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: p.is_active ? "#3b6d11" : "hsl(var(--muted-foreground))" }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.is_active ? "#3b6d11" : "hsl(var(--muted-foreground))" }} />
+                      <span className="inline-flex items-center gap-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }} />
                         {p.is_active ? "Ativo" : "Inativo"}
                       </span>
                       <span className="uppercase inline-block" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "hsl(var(--brown))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 9px", letterSpacing: "0.06em" }}>
@@ -741,9 +741,9 @@ const Patients = () => {
                       <div className="min-w-0">
                         <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "hsl(var(--brown))" }}>Resumo IA · Formulação</p>
                         {aiSum ? (
-                          <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#3d2b1a", lineHeight: 1.5 }}>{aiSum}</p>
+                          <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--foreground))", lineHeight: 1.5 }}>{aiSum}</p>
                         ) : (
-                          <p className="mt-1 italic" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#8b7355" }}>
+                          <p className="mt-1 italic" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
                             Gere um resumo de IA com os destaques clínicos desta formulação.
                           </p>
                         )}
@@ -777,7 +777,7 @@ const Patients = () => {
 
       {/* Side panel */}
       <Sheet open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
-        <SheetContent side="right" className="w-full sm:w-[380px] sm:max-w-[380px] p-0" style={{ background: "#ffffff", borderLeft: "0.5px solid hsl(var(--border))" }}>
+        <SheetContent side="right" className="w-full sm:w-[380px] sm:max-w-[380px] p-0" style={{ background: "hsl(var(--card))", borderLeft: "0.5px solid hsl(var(--border))" }}>
           {selectedPatient && (() => {
             const p = selectedPatient;
             const cHist = counts.history[p.id] || 0;
@@ -822,7 +822,7 @@ const Patients = () => {
                       <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16, color: "hsl(var(--foreground))" }}>{p.full_name}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="uppercase" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "hsl(var(--brown))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 8px", letterSpacing: "0.04em" }}>{type}</span>
-                        {p.is_active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#3b6d11" }} />}
+                        {p.is_active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "hsl(var(--moss))" }} />}
                       </div>
                     </div>
                   </div>
@@ -883,7 +883,7 @@ const Patients = () => {
                         }
                       }}
                       className="flex items-center justify-center gap-2 w-full"
-                      style={{ background: "rgba(29,158,117,0.10)", color: "#0e5e44", border: "0.5px solid rgba(29,158,117,0.3)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+                      style={{ background: "rgba(29,158,117,0.10)", color: "hsl(var(--moss))", border: "0.5px solid rgba(29,158,117,0.3)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
                     >
                       <Baby className="h-4 w-4" /> Enviar anamnese
                     </button>
@@ -1107,7 +1107,7 @@ const Patients = () => {
 
       {/* Ler Formulação (PDF-like) Dialog */}
       <Dialog open={!!readPatient} onOpenChange={(o) => !o && setReadPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0 bg-[#faf8f3]">
+        <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0 bg-muted">
           <DialogHeader className="sr-only">
             <DialogTitle>Formulação de Caso — {readPatient?.full_name}</DialogTitle>
           </DialogHeader>
@@ -1119,7 +1119,7 @@ const Patients = () => {
             const Section = ({ title, content }: { title: string; content?: string }) => (
               <section className="mb-6">
                 <h2 className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "hsl(var(--brown))", borderBottom: "0.5px solid rgba(201,168,76,0.4)", paddingBottom: 4 }}>{title}</h2>
-                <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#2a1a3a", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>{content?.trim() || <span className="italic text-muted-foreground">— não preenchido —</span>}</p>
+                <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--foreground))", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>{content?.trim() || <span className="italic text-muted-foreground">— não preenchido —</span>}</p>
               </section>
             );
             return (
@@ -1164,7 +1164,7 @@ const Patients = () => {
                         <Sparkles className="h-3.5 w-3.5" style={{ color: "hsl(var(--gold))" }} />
                         <span className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "hsl(var(--brown))" }}>Resumo IA · Destaques</span>
                       </div>
-                      <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#3d2b1a", lineHeight: 1.6 }}>{sum}</p>
+                      <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--foreground))", lineHeight: 1.6 }}>{sum}</p>
                     </section>
                   )}
                   <Section title="Ambiente / Situação" content={f.environment} />
@@ -1178,7 +1178,7 @@ const Patients = () => {
                     {goals.length === 0 ? (
                       <p className="italic text-muted-foreground" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13 }}>— não preenchido —</p>
                     ) : (
-                      <ol className="list-decimal pl-5 space-y-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#2a1a3a", lineHeight: 1.6 }}>
+                      <ol className="list-decimal pl-5 space-y-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--foreground))", lineHeight: 1.6 }}>
                         {goals.map((g, i) => (
                           <li key={i}>{typeof g === "string" ? g : (g?.objective || g?.text || g?.title || g?.description || "—")}</li>
                         ))}

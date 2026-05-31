@@ -796,7 +796,7 @@ const Dashboard = () => {
 
           const classifyChip = (m: PatientMoodEntry) => {
             const note = m.note ?? "";
-            if (/crise/i.test(note)) return { label: "Em crise", bg: "rgba(133,79,11,0.12)", color: "#633806", border: "rgba(133,79,11,0.25)" };
+            if (/crise/i.test(note)) return { label: "Em crise", bg: "rgba(133,79,11,0.12)", color: "hsl(var(--brown))", border: "rgba(133,79,11,0.25)" };
             if (/(término|termino|resist|não acei|nao acei)/i.test(note)) return { label: "Resistente", bg: "rgba(201,168,76,0.12)", color: "hsl(var(--brown))", border: "rgba(201,168,76,0.3)" };
             if (ANX_RX.test(note)) return { label: "Ansioso", bg: "rgba(201,168,76,0.08)", color: "#9a7a28", border: "rgba(201,168,76,0.2)" };
             if (ENG_RX.test(note)) return { label: "Engajado", bg: "rgba(150,117,206,0.12)", color: "hsl(var(--primary-dark))", border: "rgba(150,117,206,0.25)" };
@@ -887,7 +887,7 @@ const Dashboard = () => {
                 <div className="flex items-center gap-2 min-w-0" style={{ flex: 2, minWidth: 200 }}>
                   <p
                     className="truncate"
-                    style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: urgentCard ? "#633806" : "hsl(var(--foreground))" }}
+                    style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: urgentCard ? "hsl(var(--brown))" : "hsl(var(--foreground))" }}
                   >
                     {m.patient_name}
                   </p>
@@ -1008,7 +1008,7 @@ const Dashboard = () => {
                   <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "12px", color: "hsl(var(--brown))" }}>
                     {urgentCount} {urgentCount === 1 ? "paciente requer" : "pacientes requerem"} atenção clínica.
                   </span>
-                  <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 400, color: "#a07030" }}>
+                  <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 400, color: "hsl(var(--brown))" }}>
                     Crise relatada ou resistência ao processo terapêutico.
                   </span>
                 </div>
@@ -1047,7 +1047,7 @@ const Dashboard = () => {
                         key={c.key}
                         onClick={() => setMoodPeriod(c.key)}
                         style={{
-                          background: active ? "rgba(150,117,206,0.06)" : "#ffffff",
+                          background: active ? "rgba(150,117,206,0.06)" : "hsl(var(--card))",
                           border: active ? "0.5px solid rgba(150,117,206,0.25)" : "0.5px solid hsl(var(--border))",
                           color: active ? "hsl(var(--primary-dark))" : "hsl(var(--primary-glow))",
                           borderRadius: "40px",
@@ -1105,7 +1105,7 @@ const Dashboard = () => {
                               </p>
                             </div>
                             <div className="flex items-center gap-3 text-xs" style={{ fontFamily: "Instrument Sans, sans-serif", color: "hsl(var(--brown))" }}>
-                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#1D9E75" }} />Bem (7-10)</span>
+                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "hsl(var(--moss))" }} />Bem (7-10)</span>
                               <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "hsl(var(--gold))" }} />Atenção (4-6)</span>
                               <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "hsl(var(--brown))" }} />Crítico (0-3)</span>
                             </div>

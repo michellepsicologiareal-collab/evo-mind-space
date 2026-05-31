@@ -1967,7 +1967,7 @@ const Agenda = () => {
                 <div
                   key={group.key}
                   className="relative overflow-hidden transition-shadow"
-                  style={{ background: "#ffffff", border: "0.5px solid hsl(var(--border))", borderRadius: 12, padding: "14px 16px" }}
+                  style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))", borderRadius: 12, padding: "14px 16px" }}
                   onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(150,117,206,0.08)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
                 >

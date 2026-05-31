@@ -65,7 +65,7 @@ const SESSION_STATUS_LABEL: Record<string, string> = {
 const GOAL_META = {
   geral:          { label: "Geral",          border: "border-l-primary", chip: "bg-secondary text-primary-dark" },
   intermediaria:  { label: "Intermediária",  border: "border-l-[#BA7517]", chip: "bg-[#fdf3e3] text-[#7a4a0a]" },
-  comportamental: { label: "Comportamental", border: "border-l-[#1D9E75]", chip: "bg-[#e3f7ee] text-[#0e5e44]" },
+  comportamental: { label: "Comportamental", border: "border-l-moss", chip: "bg-[#e3f7ee] text-moss" },
 } as const;
 
 const PURPLE = "hsl(var(--primary))";
