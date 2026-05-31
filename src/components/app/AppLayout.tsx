@@ -201,9 +201,12 @@ export const AppLayout = () => {
             Meu Plano
           </button>
           <p className="text-xs text-muted-foreground truncate mb-3 mt-3">{user?.email}</p>
-          <Button variant="outline" size="sm" className="w-full" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4" /> Sair
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="flex-1" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4" /> Sair
+            </Button>
+            <ThemeToggle />
+          </div>
         </div>
       </aside>
 
