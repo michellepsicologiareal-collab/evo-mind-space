@@ -9,14 +9,14 @@ export const Hero = () => {
       <div className="absolute -top-32 -right-32 h-[420px] w-[420px] rounded-full bg-primary-glow/20 blur-3xl animate-float-slow" aria-hidden />
       <div className="absolute -bottom-32 -left-32 h-[380px] w-[380px] rounded-full bg-accent/15 blur-3xl animate-float-slow" aria-hidden />
 
-      <div className="container relative grid lg:grid-cols-12 gap-12 lg:gap-8 items-center py-20 lg:py-28">
+      <div className="container relative grid lg:grid-cols-12 gap-10 lg:gap-8 items-center py-14 sm:py-20 lg:py-28">
         <div className="lg:col-span-6 animate-fade-up">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-card/60 backdrop-blur px-4 py-1.5 text-xs text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-accent" />
-            Gestão clínica orientada a dados — para psicólogos
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-card/60 backdrop-blur px-3 py-1.5 text-[11px] sm:text-xs text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5 text-accent shrink-0" />
+            <span className="leading-snug">Gestão clínica orientada a dados — para psicólogos</span>
           </div>
 
-          <h1 className="mt-6 font-display text-5xl sm:text-6xl lg:text-7xl font-medium leading-[1.02] tracking-tight text-balance">
+          <h1 className="mt-5 sm:mt-6 font-display text-[2.25rem] sm:text-5xl lg:text-7xl font-medium leading-[1.05] tracking-tight text-balance">
             Seu consultório não precisa de mais{" "}
             <span className="font-semibold text-muted-foreground">esforço</span>.
             <br />
