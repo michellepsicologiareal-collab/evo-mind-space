@@ -1043,6 +1043,22 @@ const Agenda = () => {
   // ── Session card component ──
   const isMobile = useIsMobile();
 
+  // Default to compact "week" view the first time we detect mobile
+  const mobileDefaultedRef = useRef(false);
+  useEffect(() => {
+    if (isMobile && !mobileDefaultedRef.current) {
+      mobileDefaultedRef.current = true;
+      setViewTab("week");
+    }
+  }, [isMobile]);
+
+  // Keep selected day inside current week
+  useEffect(() => {
+    if (selectedDate < weekStart || selectedDate >= addDays(weekStart, 7)) {
+      setSelectedDate(weekStart);
+    }
+  }, [weekStart]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const SessionCard = ({ s, compact = false }: { s: Session; compact?: boolean }) => {
     const isSupervisionCard = s.session_type === "supervision";
     const [sheetOpen, setSheetOpen] = useState(false);
