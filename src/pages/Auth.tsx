@@ -3,7 +3,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import logoSrc from "@/assets/logo-psireal.png";
+import logoSrc from "@/assets/logo-psireal.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, getSessionExpiredFlag, getReturnUrl } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";

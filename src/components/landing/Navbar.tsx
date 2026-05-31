@@ -1,5 +1,5 @@
 import { MessageCircle } from "lucide-react";
-import logoSrc from "@/assets/logo-psireal.png";
+import logoSrc from "@/assets/logo-psireal.svg";
 
 export const Navbar = () => {
   return (
