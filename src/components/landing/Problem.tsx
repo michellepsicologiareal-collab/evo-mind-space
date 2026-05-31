@@ -1,10 +1,11 @@
-import { CalendarX, LineChart, Wallet, Brain } from "lucide-react";
+import { CalendarX, LineChart, Wallet } from "lucide-react";
+import { LogoIcon } from "@/components/LogoIcon";
 
 const pains = [
   { icon: CalendarX, title: "Agenda desorganizada", desc: "Faltas, remarcações e horários soltos que drenam sua energia toda semana." },
   { icon: Wallet, title: "Sem controle financeiro", desc: "Agenda cheia, mas sem clareza do que entrou de verdade no caixa." },
   { icon: LineChart, title: "Evolução nebulosa", desc: "Difícil acompanhar progresso real do paciente — fica no 'achismo'." },
-  { icon: Brain, title: "Trabalha muito, cresce pouco", desc: "Falta visão estratégica para escalar com sustentabilidade." },
+  { icon: LogoIcon, title: "Trabalha muito, cresce pouco", desc: "Falta visão estratégica para escalar com sustentabilidade." },
 ];
 
 export const Problem = () => {
