@@ -1,5 +1,5 @@
 import { Instagram, MapPin } from "lucide-react";
-import logoSrc from "@/assets/logo-psireal.svg";
+import logoSrc from "@/assets/logo-psireal.png";
 
 export const Footer = () => {
   return (

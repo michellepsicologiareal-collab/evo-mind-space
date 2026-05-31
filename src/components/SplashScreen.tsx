@@ -4,7 +4,7 @@ export const SplashScreen = () => {
       <div className="flex flex-col items-center gap-5">
         <div className="relative h-20 w-20">
           <img
-            src="/logo-psireal.svg"
+            src="/logo-psireal.png"
             alt="Psi Real"
             className="h-20 w-20 object-contain relative z-10"
             onError={(e) => {

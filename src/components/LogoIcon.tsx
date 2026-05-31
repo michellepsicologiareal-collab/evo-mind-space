@@ -1,4 +1,4 @@
-import logoSrc from "@/assets/logo-psireal.svg";
+import logoSrc from "@/assets/logo-psireal.png";
 
 interface LogoIconProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   className?: string;
