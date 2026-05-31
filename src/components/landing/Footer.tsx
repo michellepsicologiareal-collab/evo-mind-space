@@ -46,7 +46,7 @@ export const Footer = () => {
               Política de Privacidade
             </a>
 
-            <a href="/p%C3%BAblico/termos.html" className="hover:text-foreground">
+            <a href="/termos.html" className="hover:text-foreground">
               Termos de Uso
             </a>
           </nav>

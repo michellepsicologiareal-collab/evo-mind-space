@@ -333,7 +333,7 @@ const Auth = () => {
                   <Label htmlFor="su-terms" className="text-sm font-normal leading-relaxed cursor-pointer">
                     Li e aceito os{" "}
                     <a
-                      href="/p%C3%BAblico/termos.html"
+                      href="/termos.html"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-accent underline hover:no-underline"
