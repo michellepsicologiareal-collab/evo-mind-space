@@ -140,12 +140,20 @@ const Auth = () => {
           full_name: parsed.data.fullName,
           phone: parsed.data.phone,
           profile_type: parsed.data.profileType,
+          terms_accepted_at: new Date().toISOString(),
         },
       },
     });
     setLoading(false);
     if (error) {
-      toast.error(error.message.includes("already") ? "Este email já está cadastrado" : error.message);
+      const msg = error.message || "";
+      if (msg.includes("already")) {
+        toast.error("Este email já está cadastrado");
+      } else if (msg.toLowerCase().includes("termos")) {
+        toast.error("Você precisa aceitar os Termos de Uso e a Política de Privacidade");
+      } else {
+        toast.error(msg);
+      }
       return;
     }
     toast.success("Conta criada! Aguarde a aprovação da administradora para acessar o sistema.");
