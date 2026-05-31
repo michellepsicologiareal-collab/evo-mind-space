@@ -2,12 +2,12 @@ import mockupEmocoes from "@/assets/mockup-emocoes-v2.png";
 
 export const Differential = () => {
   return (
-    <section id="diferencial" className="py-24 lg:py-32 bg-background">
+    <section id="diferencial" className="py-16 sm:py-20 lg:py-32 bg-background">
       <div className="container">
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-5">
             <p className="text-xs uppercase tracking-[0.2em] text-accent font-medium">Diferencial real</p>
-            <h2 className="mt-3 font-display text-4xl lg:text-5xl font-medium leading-tight text-balance">
+            <h2 className="mt-3 font-display text-3xl sm:text-4xl lg:text-5xl font-medium leading-tight text-balance">
               Não é só gestão.
               <br />
               É <span className="font-bold text-accent">apoio ao raciocínio clínico</span>.

@@ -48,23 +48,23 @@ const smallFeatures = [
 
 export const Features = () => {
   return (
-    <section id="funcionalidades" className="py-24 lg:py-32 bg-gradient-soft">
+    <section id="funcionalidades" className="py-16 sm:py-20 lg:py-32 bg-gradient-soft">
       <div className="container">
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 max-w-5xl">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-accent font-medium">Funcionalidades</p>
-            <h2 className="mt-3 font-display text-4xl lg:text-5xl font-medium leading-tight text-balance">
+            <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-accent font-medium">Funcionalidades</p>
+            <h2 className="mt-3 font-display text-3xl sm:text-4xl lg:text-5xl font-medium leading-tight text-balance">
               Tudo que seu consultório precisa,<br className="hidden lg:block" />
               <span className="font-semibold text-muted-foreground">nada que ele não precisa.</span>
             </h2>
           </div>
-          <p className="text-muted-foreground max-w-md">
+          <p className="text-muted-foreground max-w-md text-sm sm:text-base">
             Um ambiente único, simples e funcional — desenhado para a prática real da psicologia clínica.
           </p>
         </div>
 
         {/* Featured cards with images */}
-        <div className="mt-16 space-y-8">
+        <div className="mt-12 sm:mt-16 space-y-6 sm:space-y-8">
           {features.map((f, i) => (
             <article
               key={f.title}
@@ -76,16 +76,16 @@ export const Features = () => {
             >
               <div className={`grid lg:grid-cols-2 gap-0 items-center ${i % 2 === 1 ? "lg:grid-flow-col-dense" : ""}`}>
                 {/* Text side */}
-                <div className={`p-8 lg:p-12 ${i % 2 === 1 ? "lg:col-start-2" : ""}`}>
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                <div className={`p-6 sm:p-8 lg:p-12 ${i % 2 === 1 ? "lg:col-start-2" : ""}`}>
+                  <div className={`flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl ${
                     f.highlight ? "bg-primary-foreground/15 text-primary-foreground" : "bg-secondary text-primary"
                   }`}>
                     <f.icon className="h-5 w-5" />
                   </div>
-                  <p className={`mt-6 text-[11px] uppercase tracking-[0.18em] ${f.highlight ? "text-primary-foreground/70" : "text-accent"}`}>
+                  <p className={`mt-5 sm:mt-6 text-[11px] uppercase tracking-[0.18em] ${f.highlight ? "text-primary-foreground/70" : "text-accent"}`}>
                     {f.tag}
                   </p>
-                  <h3 className={`mt-2 font-display text-2xl lg:text-3xl font-semibold leading-snug ${f.highlight ? "" : "text-foreground"}`}>
+                  <h3 className={`mt-2 font-display text-xl sm:text-2xl lg:text-3xl font-semibold leading-snug ${f.highlight ? "" : "text-foreground"}`}>
                     {f.title}
                   </h3>
                   <p className={`mt-3 text-sm lg:text-base leading-relaxed max-w-md ${f.highlight ? "text-primary-foreground/85" : "text-muted-foreground"}`}>
@@ -112,19 +112,19 @@ export const Features = () => {
         </div>
 
         {/* Smaller feature cards without images */}
-        <div className="mt-8 grid lg:grid-cols-2 gap-5">
+        <div className="mt-6 sm:mt-8 grid sm:grid-cols-2 gap-4 sm:gap-5">
           {smallFeatures.map((f) => (
             <article
               key={f.title}
-              className="group relative overflow-hidden rounded-3xl border border-border/70 bg-card p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-elegant"
+              className="group relative overflow-hidden rounded-3xl border border-border/70 bg-card p-6 sm:p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-elegant"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-primary">
+              <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-secondary text-primary">
                 <f.icon className="h-5 w-5" />
               </div>
-              <p className="mt-6 text-[11px] uppercase tracking-[0.18em] text-accent">
+              <p className="mt-5 sm:mt-6 text-[11px] uppercase tracking-[0.18em] text-accent">
                 {f.tag}
               </p>
-              <h3 className="mt-2 font-display text-2xl font-semibold leading-snug text-foreground">
+              <h3 className="mt-2 font-display text-xl sm:text-2xl font-semibold leading-snug text-foreground">
                 {f.title}
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">

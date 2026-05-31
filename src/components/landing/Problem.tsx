@@ -10,16 +10,16 @@ const pains = [
 
 export const Problem = () => {
   return (
-    <section id="problema" className="py-24 lg:py-32 bg-background">
+    <section id="problema" className="py-16 sm:py-20 lg:py-32 bg-background">
       <div className="container">
         <div className="max-w-2xl">
           <p className="text-xs uppercase tracking-[0.2em] text-accent font-medium">O problema</p>
-          <h2 className="mt-3 font-display text-4xl lg:text-5xl font-medium leading-tight text-balance">
+          <h2 className="mt-3 font-display text-3xl sm:text-4xl lg:text-5xl font-medium leading-tight text-balance">
             A maioria dos psicólogos sofre — em silêncio — com os mesmos quatro problemas.
           </h2>
         </div>
 
-        <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="mt-10 sm:mt-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {pains.map((p) => (
             <div
               key={p.title}
