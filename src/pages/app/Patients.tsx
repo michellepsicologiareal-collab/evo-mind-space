@@ -676,8 +676,8 @@ const Patients = () => {
                     )}
                     {p.session_price != null && (
                       <span className="ml-auto flex items-baseline gap-1" style={{ fontFamily: "Syne, sans-serif" }}>
-                        <span style={{ fontWeight: 700, fontSize: 13, color: "hsl(var(--foreground))" }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
-                        <span style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "Instrument Sans, sans-serif" }}>/sessão</span>
+                        <span style={{ fontWeight: 700, fontSize: 15, color: "hsl(var(--foreground))" }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
+                        <span style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", fontFamily: "Instrument Sans, sans-serif" }}>/sessão</span>
                       </span>
                     )}
                   </div>
