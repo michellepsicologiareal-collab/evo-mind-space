@@ -140,7 +140,7 @@ export const AppLayout = () => {
           <NotificationBell />
         </div>
 
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
           {(() => {
             const sections: { label: string; routes: string[] }[] = [
               { label: "INÍCIO", routes: ["/app/comece-por-aqui", "/app"] },
