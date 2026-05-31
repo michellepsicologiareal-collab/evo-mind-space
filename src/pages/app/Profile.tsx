@@ -307,6 +307,7 @@ const Profile = () => {
     }
   };
 
+  const load = async () => {
     if (!user) return;
     const { data } = await supabase
       .from("profiles")
