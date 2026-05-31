@@ -1181,7 +1181,7 @@ const Agenda = () => {
             </p>
           ) : s.patient_id && s.patient_name ? (
             <>
-              <p className={cn("text-left font-display font-medium text-primary hover:underline hover:text-accent transition-colors cursor-pointer", compact ? "text-xs leading-snug break-words" : "text-sm truncate")}
+              <p className={cn("text-left font-display font-semibold text-foreground hover:text-primary hover:underline transition-colors cursor-pointer", compact ? "text-xs leading-snug break-words" : "text-sm truncate")}
                  onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}>
                 {s.patient_name}
               </p>
