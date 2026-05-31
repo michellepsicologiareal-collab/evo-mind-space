@@ -589,14 +589,14 @@ const Patients = () => {
                 onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(150,117,206,0.10)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 2px rgba(150,117,206,0.04)"; }}
               >
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, hsl(var(--primary) / 0.6), hsl(var(--primary-glow) / 0.4), transparent)" }} />
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5" style={{ paddingTop: 18, paddingBottom: 16 }}>
                   <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
                     {p.full_name.charAt(0).toUpperCase()}
                   </div>
 
                   <div className="min-w-0 flex-1 sm:flex-none" style={{ flexBasis: "auto" }}>
-                    <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: isAlert ? "hsl(var(--brown))" : "hsl(var(--foreground))" }}>
+                    <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 15.5, color: isAlert ? "hsl(var(--brown))" : "hsl(var(--foreground))" }}>
                       {p.full_name}
                     </p>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -604,13 +604,13 @@ const Patients = () => {
                         <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }} />
                         {p.is_active ? "Ativo" : "Inativo"}
                       </span>
-                      <span className="uppercase inline-block" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "hsl(var(--brown))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 9px", letterSpacing: "0.06em" }}>
+                      <span className="uppercase inline-block" style={{ background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.28)", color: "hsl(var(--primary-dark))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 9px", letterSpacing: "0.06em" }}>
                         {type}
                       </span>
                     </div>
                   </div>
 
-                  <div className="min-w-0 hidden lg:flex items-center gap-2" style={{ flex: "0 0 140px", fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--brown))" }}>
+                  <div className="min-w-0 hidden lg:flex items-center gap-2" style={{ flex: "0 0 150px", fontFamily: "Instrument Sans, sans-serif", fontSize: 13, fontWeight: 500, color: "hsl(var(--foreground))" }}>
                     {p.phone && (<><Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} /><span className="truncate">{p.phone}</span></>)}
                   </div>
 
@@ -676,8 +676,8 @@ const Patients = () => {
                     )}
                     {p.session_price != null && (
                       <span className="ml-auto flex items-baseline gap-1" style={{ fontFamily: "Syne, sans-serif" }}>
-                        <span style={{ fontWeight: 700, fontSize: 13, color: "hsl(var(--foreground))" }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
-                        <span style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "Instrument Sans, sans-serif" }}>/sessão</span>
+                        <span style={{ fontWeight: 700, fontSize: 15, color: "hsl(var(--foreground))" }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
+                        <span style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", fontFamily: "Instrument Sans, sans-serif" }}>/sessão</span>
                       </span>
                     )}
                   </div>
@@ -734,17 +734,23 @@ const Patients = () => {
                 {hasFormul && (
                   <div
                     onClick={(e) => e.stopPropagation()}
-                    className="mx-4 sm:mx-5 mb-3 -mt-1 flex flex-col sm:flex-row sm:items-start gap-2 rounded-xl px-3 py-2.5"
-                    style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.08), rgba(150,117,206,0.06))", border: "0.5px solid rgba(201,168,76,0.25)" }}
+                    className="mx-4 sm:mx-5 mb-3 -mt-1 flex flex-col sm:flex-row sm:items-start gap-3 rounded-2xl px-4 py-3.5"
+                    style={{
+                      background: "linear-gradient(135deg, hsl(var(--primary) / 0.10), hsl(var(--primary-glow) / 0.06))",
+                      border: "1px solid hsl(var(--primary) / 0.22)",
+                      boxShadow: "inset 0 1px 0 hsl(var(--primary) / 0.08)",
+                    }}
                   >
-                    <div className="flex items-start gap-2 min-w-0 flex-1">
-                      <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "hsl(var(--gold))" }} />
+                    <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                      <div className="shrink-0 mt-0.5 flex items-center justify-center rounded-lg" style={{ width: 26, height: 26, background: "hsl(var(--primary) / 0.18)" }}>
+                        <Sparkles className="h-3.5 w-3.5" style={{ color: "hsl(var(--primary))" }} />
+                      </div>
                       <div className="min-w-0">
-                        <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "hsl(var(--brown))" }}>Resumo IA · Formulação</p>
+                        <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "hsl(var(--primary))" }}>Resumo IA · Formulação</p>
                         {aiSum ? (
-                          <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--foreground))", lineHeight: 1.5 }}>{aiSum}</p>
+                          <p className="mt-1.5" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13.5, color: "hsl(var(--foreground))", lineHeight: 1.55, fontWeight: 450 }}>{aiSum}</p>
                         ) : (
-                          <p className="mt-1 italic" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
+                          <p className="mt-1.5 italic" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
                             Gere um resumo de IA com os destaques clínicos desta formulação.
                           </p>
                         )}
@@ -755,7 +761,7 @@ const Patients = () => {
                         onClick={() => summarizeFormulation(p.id)}
                         disabled={!!summarizing[p.id]}
                         className="inline-flex items-center gap-1.5 transition-colors disabled:opacity-60"
-                        style={{ background: "#fff", border: "0.5px solid rgba(201,168,76,0.4)", color: "hsl(var(--brown))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10.5 }}
+                        style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--primary) / 0.35)", color: "hsl(var(--primary-dark))", padding: "6px 11px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
                       >
                         {summarizing[p.id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                         {aiSum ? "Atualizar" : "Gerar resumo IA"}
@@ -763,7 +769,7 @@ const Patients = () => {
                       <button
                         onClick={() => setReadPatient(p)}
                         className="inline-flex items-center gap-1.5 transition-colors"
-                        style={{ background: "hsl(var(--primary))", color: "#fff", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10.5 }}
+                        style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", padding: "6px 11px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
                       >
                         <BookOpen className="h-3 w-3" /> Ler formulação
                       </button>

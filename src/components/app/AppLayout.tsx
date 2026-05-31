@@ -104,7 +104,7 @@ export const AppLayout = () => {
       onClick={(e) => handleNavClick(e, item)}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 px-4 py-2.5 text-[12px] transition-colors font-sans",
+          "flex items-center gap-3 px-4 py-3 text-[12.5px] transition-colors font-sans",
           isActive
             ? isAdminSection
               ? "bg-[hsl(var(--admin-accent))] text-white shadow-soft rounded-xl"
@@ -140,7 +140,7 @@ export const AppLayout = () => {
           <NotificationBell />
         </div>
 
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
           {(() => {
             const sections: { label: string; routes: string[] }[] = [
               { label: "INÍCIO", routes: ["/app/comece-por-aqui", "/app"] },
@@ -153,8 +153,8 @@ export const AppLayout = () => {
                 .filter(Boolean) as NavItem[];
               if (items.length === 0) return null;
               return (
-                <div key={sec.label} className="space-y-1">
-                  <div className="px-4 pt-4 pb-1.5 font-display font-semibold text-[9px] uppercase text-muted-foreground" style={{ letterSpacing: "0.14em" }}>
+                <div key={sec.label} className="space-y-1.5">
+                  <div className="px-4 pt-5 pb-2.5 font-display font-semibold text-[9px] uppercase text-muted-foreground" style={{ letterSpacing: "0.16em" }}>
                     {sec.label}
                   </div>
                   {items.map((item) => renderNavLink(item))}
