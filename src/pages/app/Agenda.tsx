@@ -393,9 +393,9 @@ const Agenda = () => {
   }, [user, loadGcalStatus]);
 
   // Load all sessions for the current month
-  const load = async () => {
+  const load = async (silent = false) => {
     if (!user) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     const mStart = startOfMonth(currentMonth);
     const mEnd = addDays(endOfMonth(currentMonth), 1);
     const [sRes, pRes, svRes] = await Promise.all([
@@ -419,7 +419,7 @@ const Agenda = () => {
     setSessions(mapped as Session[]);
     setPatients((pRes.data as Patient[]) ?? []);
     setServices((svRes.data as Service[]) ?? []);
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
   const loadPending = async () => {
