@@ -719,11 +719,11 @@ const Patients = () => {
                         <Sparkles className="h-3.5 w-3.5" style={{ color: "hsl(var(--primary))" }} />
                       </div>
                       <div className="min-w-0">
-                        <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "hsl(var(--primary))" }}>Resumo IA · Formulação</p>
+                        <p className="uppercase" style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "hsl(var(--primary))" }}>Resumo IA · Formulação</p>
                         {aiSum ? (
-                          <p className="mt-1.5" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13.5, color: "hsl(var(--foreground))", lineHeight: 1.55, fontWeight: 450 }}>{aiSum}</p>
+                          <p className="mt-1.5" style={{ fontFamily: "Inter, sans-serif", fontSize: 13.5, color: "hsl(var(--foreground))", lineHeight: 1.55, fontWeight: 450 }}>{aiSum}</p>
                         ) : (
-                          <p className="mt-1.5 italic" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
+                          <p className="mt-1.5 italic" style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
                             Gere um resumo de IA com os destaques clínicos desta formulação.
                           </p>
                         )}
@@ -733,18 +733,18 @@ const Patients = () => {
                       <button
                         onClick={() => summarizeFormulation(p.id)}
                         disabled={!!summarizing[p.id]}
-                        className="inline-flex items-center gap-1.5 transition-colors disabled:opacity-60"
-                        style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--primary) / 0.35)", color: "hsl(var(--primary-dark))", padding: "6px 11px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                        className="inline-flex items-center gap-1.5 transition-colors disabled:opacity-60 hover:bg-muted"
+                        style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--foreground))", padding: "6px 12px", borderRadius: 10, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12 }}
                       >
-                        {summarizing[p.id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                        {aiSum ? "Atualizar" : "Gerar resumo IA"}
+                        {summarizing[p.id] ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                        {aiSum ? "Atualizar" : "Gerar"}
                       </button>
                       <button
                         onClick={() => setReadPatient(p)}
-                        className="inline-flex items-center gap-1.5 transition-colors"
-                        style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", padding: "6px 11px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                        className="inline-flex items-center gap-1.5 transition-colors hover:bg-muted"
+                        style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--foreground))", padding: "6px 12px", borderRadius: 10, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12 }}
                       >
-                        <BookOpen className="h-3 w-3" /> Ler formulação
+                        <Eye className="h-3.5 w-3.5" /> Ler
                       </button>
                     </div>
                   </div>
