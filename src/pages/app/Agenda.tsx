@@ -463,7 +463,7 @@ const Agenda = () => {
 
   useEffect(() => { if (user) { load(); loadPending(); } }, [user, currentMonth]);
 
-  useAutoRefresh(() => { if (user) { load(); loadPending(); } }, { routePath: "/app/agenda" });
+  useAutoRefresh(() => { if (user) { load(true); loadPending(true); } }, { routePath: "/app/agenda" });
 
   // Patient month count for new session form
   useEffect(() => {
