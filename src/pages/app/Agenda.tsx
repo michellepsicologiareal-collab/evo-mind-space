@@ -1648,6 +1648,107 @@ const Agenda = () => {
 
                 {loading ? (
                   <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                ) : isMobile ? (
+                  /* ── COMPACT MOBILE WEEK ── */
+                  <div className="space-y-3">
+                    {/* Weekday strip */}
+                    <div className="grid grid-cols-7 gap-1 rounded-2xl bg-card border border-border shadow-card p-2">
+                      {weekDays.map((day) => {
+                        const items = sessionsByDay(day);
+                        const isToday = isSameDay(day, new Date());
+                        const isSelected = isSameDay(day, selectedDate);
+                        return (
+                          <button
+                            key={day.toISOString()}
+                            onClick={() => setSelectedDate(day)}
+                            className={cn(
+                              "flex flex-col items-center gap-0.5 py-1.5 rounded-xl transition-colors",
+                              isSelected ? "bg-accent text-accent-foreground" :
+                                isToday ? "bg-accent/15 text-accent" : "hover:bg-secondary/40 text-foreground"
+                            )}
+                            aria-label={format(day, "EEEE dd/MM", { locale: ptBR })}
+                          >
+                            <span className="text-[10px] font-display font-semibold uppercase tracking-wide opacity-80">
+                              {format(day, "EEEEEE", { locale: ptBR })}
+                            </span>
+                            <span className="text-base font-display font-bold leading-none">
+                              {format(day, "dd")}
+                            </span>
+                            <span className={cn(
+                              "mt-0.5 h-1.5 w-1.5 rounded-full",
+                              items.length === 0 ? "bg-transparent" :
+                                isSelected ? "bg-accent-foreground" : "bg-accent"
+                            )} />
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Selected day header + add */}
+                    <div className="flex items-center justify-between gap-2 px-1">
+                      <p className="font-display text-sm font-semibold capitalize text-foreground truncate">
+                        {format(selectedDate, "EEEE, dd 'de' MMM", { locale: ptBR })}
+                      </p>
+                      <Button variant="accent" size="sm" className="h-8 px-3 rounded-[40px] font-display font-semibold text-xs" onClick={() => openNew(selectedDate)}>
+                        <Plus className="h-3.5 w-3.5" /> Nova
+                      </Button>
+                    </div>
+
+                    {/* Clickable time slots for selected day */}
+                    {selectedDaySessions.length === 0 ? (
+                      <button
+                        onClick={() => openNew(selectedDate)}
+                        className="w-full rounded-2xl border border-dashed border-border bg-card/50 py-8 text-sm text-muted-foreground hover:text-accent hover:border-accent/40 transition-colors text-center"
+                      >
+                        Dia livre — toque para agendar
+                      </button>
+                    ) : (
+                      <div className="rounded-2xl bg-card border border-border shadow-card overflow-hidden divide-y divide-border">
+                        {selectedDaySessions.map((s) => {
+                          const isSupervisionRow = s.session_type === "supervision";
+                          return (
+                            <button
+                              key={s.id}
+                              onClick={() => openEdit(s)}
+                              className="w-full flex items-center gap-3 px-3 py-3 hover:bg-secondary/30 active:bg-secondary/50 transition-colors text-left"
+                              aria-label={`Abrir sessão de ${format(new Date(s.scheduled_at), "HH:mm")}`}
+                            >
+                              <div className={cn(
+                                "flex flex-col items-center justify-center w-14 shrink-0 rounded-xl py-1.5 px-1",
+                                isSupervisionRow ? "bg-serene/15 text-serene" :
+                                  s.status === "confirmed" ? "bg-accent/15 text-accent" :
+                                    "bg-primary/10 text-primary"
+                              )}>
+                                <span className="font-display text-sm font-bold leading-none">
+                                  {format(new Date(s.scheduled_at), "HH:mm")}
+                                </span>
+                                <span className="text-[9px] font-medium opacity-70 mt-0.5">{s.duration_minutes}min</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm text-foreground truncate">
+                                  {isSupervisionRow ? "Supervisão" : s.patient_name || "Paciente"}
+                                  {isSupervisionRow && s.discussed_patient_name && (
+                                    <span className="text-muted-foreground"> · {s.discussed_patient_name}</span>
+                                  )}
+                                </p>
+                                <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                                  <span className={cn(PILL_BASE, isSupervisionRow ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
+                                    {isSupervisionRow ? "Supervisão" : statusLabel[s.status]}
+                                  </span>
+                                  {!isSupervisionRow && s.price != null && (
+                                    <span className={cn(PILL_BASE, paymentStatusClass[s.payment_status])}>
+                                      {paymentStatusLabel[s.payment_status]}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className="space-y-2">
                     {weekDays.map((day) => {
