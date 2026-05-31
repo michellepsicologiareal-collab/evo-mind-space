@@ -124,7 +124,63 @@
   <meta name="twitter:description" content="Gestão clínica para psicólogos: agenda, financeiro, evolução do paciente e raciocínio em TCC em um só lugar.">
 </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #FFFFFF;
+        font-family: 'Syne', sans-serif;
+      ">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+          <img
+            src="/logo-psireal.png"
+            alt="Psi Real"
+            style="height: 80px; width: 80px; object-fit: contain;"
+          />
+          <h1 style="
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #9675CE;
+            margin: 0;
+          ">Psi Real</h1>
+        </div>
+        <div style="margin-top: 40px; display: flex; align-items: center; gap: 8px;">
+          <span style="
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #9675CE;
+            animation: pwaBounce 1.2s infinite ease-in-out;
+          "></span>
+          <span style="
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #9675CE;
+            animation: pwaBounce 1.2s infinite ease-in-out;
+            animation-delay: 0.15s;
+          "></span>
+          <span style="
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #9675CE;
+            animation: pwaBounce 1.2s infinite ease-in-out;
+            animation-delay: 0.3s;
+          "></span>
+        </div>
+      </div>
+      <style>
+        @keyframes pwaBounce {
+          0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+          40% { transform: scale(1); opacity: 1; }
+        }
+      </style>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
