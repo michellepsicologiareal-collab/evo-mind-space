@@ -235,7 +235,7 @@ const Supervisees = () => {
         </div>
         <div className="space-y-2">
           <Label htmlFor="invite_email">Email</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               id="invite_email"
               type="email"
@@ -243,8 +243,9 @@ const Supervisees = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleInvite()}
+              className="flex-1 min-w-0"
             />
-            <Button onClick={handleInvite} disabled={linking || !email}>
+            <Button onClick={handleInvite} disabled={linking || !email} className="w-full sm:w-auto shrink-0">
               {linking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
               Vincular
             </Button>
