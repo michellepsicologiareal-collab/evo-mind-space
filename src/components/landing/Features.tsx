@@ -112,19 +112,19 @@ export const Features = () => {
         </div>
 
         {/* Smaller feature cards without images */}
-        <div className="mt-8 grid lg:grid-cols-2 gap-5">
+        <div className="mt-6 sm:mt-8 grid sm:grid-cols-2 gap-4 sm:gap-5">
           {smallFeatures.map((f) => (
             <article
               key={f.title}
-              className="group relative overflow-hidden rounded-3xl border border-border/70 bg-card p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-elegant"
+              className="group relative overflow-hidden rounded-3xl border border-border/70 bg-card p-6 sm:p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-elegant"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-primary">
+              <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-secondary text-primary">
                 <f.icon className="h-5 w-5" />
               </div>
-              <p className="mt-6 text-[11px] uppercase tracking-[0.18em] text-accent">
+              <p className="mt-5 sm:mt-6 text-[11px] uppercase tracking-[0.18em] text-accent">
                 {f.tag}
               </p>
-              <h3 className="mt-2 font-display text-2xl font-semibold leading-snug text-foreground">
+              <h3 className="mt-2 font-display text-xl sm:text-2xl font-semibold leading-snug text-foreground">
                 {f.title}
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
