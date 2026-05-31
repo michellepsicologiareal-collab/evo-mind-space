@@ -109,7 +109,7 @@ const App = () => (
         <AuthProvider>
           <RecoveryLinkRedirect />
 
-          <Suspense fallback={<PageLoader />}>
+          <Suspense fallback={<SplashScreen />}>
             <AppErrorBoundary>
               <Routes>
                 <Route path="/" element={<Index />} />
