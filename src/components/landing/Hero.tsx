@@ -23,18 +23,18 @@ export const Hero = () => {
             Precisa de <span className="text-accent font-bold">estrutura</span>.
           </h1>
 
-          <p className="mt-6 max-w-xl text-lg text-muted-foreground text-pretty">
+          <p className="mt-5 max-w-xl text-base sm:text-lg text-muted-foreground text-pretty">
             O Psi Real integra agenda, financeiro e raciocínio clínico em TCC num só ambiente.
             Saia do modo "apagando incêndio" e assuma o controle do consultório com clareza e estratégia.
           </p>
 
-          <div className="mt-10 flex flex-wrap gap-4">
-            <Button variant="hero" size="xl" asChild>
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
+            <Button variant="hero" size="xl" asChild className="w-full sm:w-auto">
               <a href="/auth?tab=signup">
                 Começar meus 14 dias grátis <ArrowRight className="ml-1" />
               </a>
             </Button>
-            <Button variant="outline" size="xl" asChild>
+            <Button variant="outline" size="xl" asChild className="w-full sm:w-auto">
               <a href="#funcionalidades">Ver funcionalidades</a>
             </Button>
           </div>
@@ -49,15 +49,15 @@ export const Hero = () => {
             Clique e crie sua conta grátis — leva menos de 1 minuto.
           </a>
 
-          <dl className="mt-12 grid grid-cols-3 gap-6 max-w-md">
+          <dl className="mt-10 sm:mt-12 grid grid-cols-3 gap-3 sm:gap-6 max-w-md">
             {[
               { k: "+38%", v: "faturamento real" },
               { k: "−62%", v: "faltas não previstas" },
               { k: "100%", v: "clareza clínica" },
             ].map((s) => (
               <div key={s.v}>
-                <dt className="font-display text-3xl font-semibold text-primary">{s.k}</dt>
-                <dd className="mt-1 text-xs text-muted-foreground leading-snug">{s.v}</dd>
+                <dt className="font-display text-2xl sm:text-3xl font-semibold text-primary">{s.k}</dt>
+                <dd className="mt-1 text-[11px] sm:text-xs text-muted-foreground leading-snug">{s.v}</dd>
               </div>
             ))}
           </dl>
