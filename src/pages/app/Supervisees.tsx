@@ -235,7 +235,7 @@ const Supervisees = () => {
         </div>
         <div className="space-y-2">
           <Label htmlFor="invite_email">Email</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               id="invite_email"
               type="email"
@@ -243,8 +243,9 @@ const Supervisees = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleInvite()}
+              className="flex-1 min-w-0"
             />
-            <Button onClick={handleInvite} disabled={linking || !email}>
+            <Button onClick={handleInvite} disabled={linking || !email} className="w-full sm:w-auto shrink-0">
               {linking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
               Vincular
             </Button>
@@ -288,60 +289,65 @@ const Supervisees = () => {
               return (
                 <li key={s.id} className="rounded-2xl bg-secondary/30 border border-border overflow-hidden">
                   {/* ── Profile Card ── */}
-                  <div className="p-5 flex items-start gap-4">
-                    {/* Avatar */}
-                    {s.avatar_url ? (
-                      <img
-                        src={s.avatar_url}
-                        alt={s.full_name || ""}
-                        className="h-16 w-16 rounded-full object-cover border-2 border-accent/30 shrink-0"
-                      />
-                    ) : (
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground shrink-0 text-xl font-bold font-display">
-                        {getInitials(s.full_name || "")}
-                      </div>
-                    )}
+                  <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-start gap-4">
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      {/* Avatar */}
+                      {s.avatar_url ? (
+                        <img
+                          src={s.avatar_url}
+                          alt={s.full_name || ""}
+                          className="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-accent/30 shrink-0"
+                        />
+                      ) : (
+                        <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground shrink-0 text-lg sm:text-xl font-bold font-display">
+                          {getInitials(s.full_name || "")}
+                        </div>
+                      )}
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-display text-lg font-semibold truncate">
-                        {s.full_name || "Sem nome"}
-                      </p>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
-                        {s.crp && (
-                          <span className="flex items-center gap-1">
-                            <Award className="h-3.5 w-3.5" /> CRP {s.crp}
-                          </span>
-                        )}
-                        {s.specialty && (
-                          <span className="flex items-center gap-1">
-                            <GraduationCap className="h-3.5 w-3.5" /> {s.specialty}
-                          </span>
-                        )}
-                        {s.phone && (
-                          <span className="flex items-center gap-1">
-                            <Phone className="h-3.5 w-3.5" /> {s.phone}
-                          </span>
-                        )}
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-display text-lg font-semibold truncate">
+                          {s.full_name || "Sem nome"}
+                        </p>
+                        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-sm text-muted-foreground">
+                          {s.crp && (
+                            <span className="flex items-center gap-1 min-w-0">
+                              <Award className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">CRP {s.crp}</span>
+                            </span>
+                          )}
+                          {s.specialty && (
+                            <span className="flex items-center gap-1 min-w-0">
+                              <GraduationCap className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">{s.specialty}</span>
+                            </span>
+                          )}
+                          {s.phone && (
+                            <span className="flex items-center gap-1 min-w-0">
+                              <Phone className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">{s.phone}</span>
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {activeCount} {activeCount === 1 ? "paciente ativo" : "pacientes ativos"} · {inactiveCount} {inactiveCount === 1 ? "inativo" : "inativos"}
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {activeCount} {activeCount === 1 ? "paciente ativo" : "pacientes ativos"} · {inactiveCount} {inactiveCount === 1 ? "inativo" : "inativos"}
-                      </p>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col gap-1 shrink-0">
-                      <Button variant="outline" size="sm" onClick={() => openGoals(s.id)}>
+                    <div className="flex flex-row sm:flex-col gap-2 sm:gap-1 shrink-0 flex-wrap">
+                      <Button variant="outline" size="sm" onClick={() => openGoals(s.id)} className="flex-1 sm:flex-none">
                         <Target className="h-3.5 w-3.5 mr-1" /> Metas
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => toggleExpand(s.id)}>
+                      <Button variant="ghost" size="sm" onClick={() => toggleExpand(s.id)} className="flex-1 sm:flex-none">
                         {isOpen ? <ChevronDown className="h-4 w-4 mr-1" /> : <ChevronRight className="h-4 w-4 mr-1" />}
                         Pacientes
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive flex-1 sm:flex-none"
                         onClick={() => handleRemove(s.id)}
                         disabled={removingId === s.id}
                       >
