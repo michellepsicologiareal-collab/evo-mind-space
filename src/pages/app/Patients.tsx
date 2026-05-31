@@ -734,17 +734,23 @@ const Patients = () => {
                 {hasFormul && (
                   <div
                     onClick={(e) => e.stopPropagation()}
-                    className="mx-4 sm:mx-5 mb-3 -mt-1 flex flex-col sm:flex-row sm:items-start gap-2 rounded-xl px-3 py-2.5"
-                    style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.08), rgba(150,117,206,0.06))", border: "0.5px solid rgba(201,168,76,0.25)" }}
+                    className="mx-4 sm:mx-5 mb-3 -mt-1 flex flex-col sm:flex-row sm:items-start gap-3 rounded-2xl px-4 py-3.5"
+                    style={{
+                      background: "linear-gradient(135deg, hsl(var(--primary) / 0.10), hsl(var(--primary-glow) / 0.06))",
+                      border: "1px solid hsl(var(--primary) / 0.22)",
+                      boxShadow: "inset 0 1px 0 hsl(var(--primary) / 0.08)",
+                    }}
                   >
-                    <div className="flex items-start gap-2 min-w-0 flex-1">
-                      <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "hsl(var(--gold))" }} />
+                    <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                      <div className="shrink-0 mt-0.5 flex items-center justify-center rounded-lg" style={{ width: 26, height: 26, background: "hsl(var(--primary) / 0.18)" }}>
+                        <Sparkles className="h-3.5 w-3.5" style={{ color: "hsl(var(--primary))" }} />
+                      </div>
                       <div className="min-w-0">
-                        <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "hsl(var(--brown))" }}>Resumo IA · Formulação</p>
+                        <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "hsl(var(--primary))" }}>Resumo IA · Formulação</p>
                         {aiSum ? (
-                          <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--foreground))", lineHeight: 1.5 }}>{aiSum}</p>
+                          <p className="mt-1.5" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13.5, color: "hsl(var(--foreground))", lineHeight: 1.55, fontWeight: 450 }}>{aiSum}</p>
                         ) : (
-                          <p className="mt-1 italic" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
+                          <p className="mt-1.5 italic" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
                             Gere um resumo de IA com os destaques clínicos desta formulação.
                           </p>
                         )}
@@ -755,7 +761,7 @@ const Patients = () => {
                         onClick={() => summarizeFormulation(p.id)}
                         disabled={!!summarizing[p.id]}
                         className="inline-flex items-center gap-1.5 transition-colors disabled:opacity-60"
-                        style={{ background: "#fff", border: "0.5px solid rgba(201,168,76,0.4)", color: "hsl(var(--brown))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10.5 }}
+                        style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--primary) / 0.35)", color: "hsl(var(--primary-dark))", padding: "6px 11px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
                       >
                         {summarizing[p.id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                         {aiSum ? "Atualizar" : "Gerar resumo IA"}
@@ -763,7 +769,7 @@ const Patients = () => {
                       <button
                         onClick={() => setReadPatient(p)}
                         className="inline-flex items-center gap-1.5 transition-colors"
-                        style={{ background: "hsl(var(--primary))", color: "#fff", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10.5 }}
+                        style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", padding: "6px 11px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
                       >
                         <BookOpen className="h-3 w-3" /> Ler formulação
                       </button>
