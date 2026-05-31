@@ -1033,7 +1033,7 @@ const Agenda = () => {
   const PatientNameLink = ({ patientId, name }: { patientId: string; name: string }) => (
     <button
       type="button"
-      className="text-left font-display text-sm font-medium text-primary hover:underline hover:text-accent transition-colors truncate"
+      className="text-left font-display text-sm font-semibold text-foreground hover:text-primary hover:underline transition-colors truncate"
       onClick={(e) => { e.stopPropagation(); openPatientDrawer(patientId); }}
     >
       {name}
