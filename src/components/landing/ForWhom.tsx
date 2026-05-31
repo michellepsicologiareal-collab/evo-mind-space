@@ -11,7 +11,7 @@ const audience = [
 
 export const ForWhom = () => {
   return (
-    <section id="para-quem" className="py-24 lg:py-32 bg-gradient-soft">
+    <section id="para-quem" className="py-16 sm:py-20 lg:py-32 bg-gradient-soft">
       <div className="container grid lg:grid-cols-2 gap-16 items-center">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-accent font-medium">Para quem é</p>

@@ -10,7 +10,7 @@ const pains = [
 
 export const Problem = () => {
   return (
-    <section id="problema" className="py-24 lg:py-32 bg-background">
+    <section id="problema" className="py-16 sm:py-20 lg:py-32 bg-background">
       <div className="container">
         <div className="max-w-2xl">
           <p className="text-xs uppercase tracking-[0.2em] text-accent font-medium">O problema</p>

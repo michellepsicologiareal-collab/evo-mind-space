@@ -35,7 +35,7 @@ const features = [
 
 export const Supervision = () => {
   return (
-    <section id="supervisao" className="py-24 lg:py-32 bg-gradient-soft">
+    <section id="supervisao" className="py-16 sm:py-20 lg:py-32 bg-gradient-soft">
       <div className="container">
         <div className="max-w-2xl mx-auto text-center mb-16 animate-fade-up">
           <p className="text-xs uppercase tracking-[0.2em] text-accent font-medium mb-3">

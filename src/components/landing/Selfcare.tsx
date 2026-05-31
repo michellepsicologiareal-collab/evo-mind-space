@@ -12,7 +12,7 @@ const pillars = [
 
 export const Selfcare = () => {
   return (
-    <section id="autocuidado" className="py-24 lg:py-32 bg-background relative overflow-hidden">
+    <section id="autocuidado" className="py-16 sm:py-20 lg:py-32 bg-background relative overflow-hidden">
       {/* Decorative blurs */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl" aria-hidden />
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl" aria-hidden />

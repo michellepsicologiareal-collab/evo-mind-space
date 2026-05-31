@@ -2,7 +2,7 @@ import mockupEmocoes from "@/assets/mockup-emocoes-v2.png";
 
 export const Differential = () => {
   return (
-    <section id="diferencial" className="py-24 lg:py-32 bg-background">
+    <section id="diferencial" className="py-16 sm:py-20 lg:py-32 bg-background">
       <div className="container">
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-5">
