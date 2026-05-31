@@ -458,7 +458,7 @@ const Agenda = () => {
       setPendingPackageSessions([]);
     }
     setPendingSessions(mapped as Session[]);
-    setLoadingPending(false);
+    if (!silent) setLoadingPending(false);
   };
 
   useEffect(() => { if (user) { load(); loadPending(); } }, [user, currentMonth]);
