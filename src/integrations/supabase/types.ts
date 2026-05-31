@@ -56,6 +56,48 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_history: {
+        Row: {
+          backup_date: string
+          created_at: string
+          csv_zip_path: string | null
+          error_message: string | null
+          id: string
+          json_path: string | null
+          kind: string
+          size_bytes: number
+          status: string
+          tables_count: number
+          user_id: string
+        }
+        Insert: {
+          backup_date?: string
+          created_at?: string
+          csv_zip_path?: string | null
+          error_message?: string | null
+          id?: string
+          json_path?: string | null
+          kind?: string
+          size_bytes?: number
+          status?: string
+          tables_count?: number
+          user_id: string
+        }
+        Update: {
+          backup_date?: string
+          created_at?: string
+          csv_zip_path?: string | null
+          error_message?: string | null
+          id?: string
+          json_path?: string | null
+          kind?: string
+          size_bytes?: number
+          status?: string
+          tables_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       case_formulations: {
         Row: {
           ai_summary: string | null

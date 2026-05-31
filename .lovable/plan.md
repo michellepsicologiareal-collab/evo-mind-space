@@ -1,42 +1,72 @@
-# Endurecer SECURITY DEFINER functions
+## Objetivo
 
-As 6 issues originais foram resolvidas. O scanner agora aponta 18 warnings (todas do linter Supabase) sobre `SECURITY DEFINER` functions executáveis por anon/authenticated. Algumas precisam ficar como estão (capability via token), outras dá pra revogar.
+Garantir recuperação rápida em caso de incidentes com:
+- Snapshot **JSON completo** diário (todas as tabelas do usuário) — restaurável.
+- Exports **CSV** legíveis (Pacientes, Sessões, Prontuários, Financeiro) — para auditoria/uso externo.
+- Tudo guardado em Lovable Cloud Storage privado, por usuário, com retenção de 7 dias.
 
-## Análise (rastreei cada função no código)
+## Como vai funcionar
 
-| Função | Quem chama | Ação |
-|---|---|---|
-| `has_role` | Apenas policies internas | **REVOKE** anon + auth |
-| `is_supervisor_of` | Apenas policies internas | **REVOKE** anon + auth |
-| `can_supervisor_see_patient` | Apenas policies internas | **REVOKE** anon + auth |
-| `auto_assign_admin_role` | Trigger | **REVOKE** anon + auth |
-| `protect_profile_access_fields` | Trigger | **REVOKE** anon (já sem auth) |
-| `ensure_current_profile` | Client logado (`AuthContext`) | **REVOKE anon** (mantém auth) |
-| `log_clinical_access` | Client logado | **REVOKE anon** (mantém auth) |
-| `log_supervision_access` | Client logado | **REVOKE anon** (mantém auth) |
-| `link_supervisee_by_email` | Supervisor logado | manter auth |
-| `unlink_supervisee` | Supervisor logado | manter auth |
-| `get_profile_id_by_email` | Supervisor logado | manter auth |
-| `get_session_by_token` | **anon intencional** (paciente sem login confirma sessão por link com UUID-token) | manter, ignorar warning |
-| `respond_to_confirmation` | **anon intencional** (idem) | manter, ignorar warning |
+```text
+┌─ Cron diário 03:00 BRT ─┐
+│ run-scheduled-backups   │  (edge function, service role)
+└────────┬────────────────┘
+         │ para cada usuário aprovado:
+         ▼
+   ┌─────────────────────────┐      ┌──────────────────────┐
+   │ Gera JSON completo      │─────▶│ Storage: backups/    │
+   │ Gera 4 CSVs (zipados)   │      │  {user_id}/{data}/   │
+   └─────────────────────────┘      │   backup.json        │
+         │                          │   exports.zip        │
+         ▼                          └──────────────────────┘
+   Insere linha em backup_history
+   Apaga arquivos > 7 dias
+```
 
-## Etapas
+## Backend
 
-### 1. Migration com REVOKE/GRANT
-- `REVOKE EXECUTE` de `anon, authenticated` nas 5 funções internas (`has_role`, `is_supervisor_of`, `can_supervisor_see_patient`, `auto_assign_admin_role`, `protect_profile_access_fields`).
-- `REVOKE EXECUTE` de `anon` nas 3 funções de uso autenticado (`ensure_current_profile`, `log_clinical_access`, `log_supervision_access`).
-- Manter intacto: `link_supervisee_by_email`, `unlink_supervisee`, `get_profile_id_by_email`, `get_session_by_token`, `respond_to_confirmation`.
+**Novo bucket privado `backups`** com RLS: usuário só lê pasta `{auth.uid()}/...`; escrita só via service role.
 
-### 2. Validação
-- Rodar scan de novo — esperado: 18 → 2 warnings (as duas funções de confirmação pública).
-- Smoke test mental: as 5 funções internas são chamadas em contexto de policy/trigger, onde o REVOKE não afeta (engine roda como dono); as 3 de log/profile continuam acessíveis ao client autenticado.
+**Nova tabela `backup_history`** (1 linha por backup gerado):
+- `user_id`, `backup_date`, `kind` ('auto' | 'manual'), `json_path`, `csv_zip_path`, `size_bytes`, `tables_count`, `status` ('success' | 'failed'), `error_message`
 
-### 3. Ignorar warnings intencionais
-- Marcar as 2 warnings restantes (`get_session_by_token` e `respond_to_confirmation`) como **ignored** no scanner, com explicação: "Função pública por design — autenticação é feita via UUID-token único enviado por e-mail/WhatsApp ao paciente para confirmar/cancelar sessão. Sem este acesso anon, a confirmação pública quebra."
-- Atualizar a security memory com esse contexto.
+**Edge functions:**
 
-## Resultado esperado
+1. `run-scheduled-backups` (nova, sem JWT, autenticada por header secret) — itera usuários aprovados, gera snapshot + CSVs, faz upload no storage, registra em `backup_history`, limpa arquivos antigos. Chamada pelo cron.
+2. `backup-export` (existente) — adiciona parâmetro `?format=csv` que retorna ZIP com 4 CSVs (pacientes, sessões, prontuários, financeiro). Mantém JSON como default.
+3. `backup-download` (nova) — gera URL assinada do storage para o usuário baixar arquivos do `backup_history`.
 
-- Linter Supabase: 18 → 0 (após ignore dos 2 intencionais).
-- Funcionalidade do app: 100% preservada (todos os RPCs do client continuam funcionando).
-- Fluxo público de confirmação de sessão: preservado.
+**Cron `pg_cron`** (via insert, não migration) — chama `run-scheduled-backups` todo dia 03:00 com header secret.
+
+## Frontend
+
+Nova aba **"Backups"** dentro de Perfil (`src/pages/app/Profile.tsx`):
+- Card explicando frequência e retenção.
+- Botão **"Baixar backup completo (JSON)"** — usa edge function existente.
+- Botão **"Baixar exportação (CSV)"** — novo, com select de qual entidade ou tudo zipado.
+- Lista dos últimos backups automáticos (de `backup_history`), com data, tamanho e botões "Baixar JSON" / "Baixar CSVs".
+- Mantém botão atual de importar backup.
+
+Sem mudanças em rotas, navegação ou outras telas.
+
+## Detalhes técnicos
+
+- CSV gerado server-side com headers em PT-BR; valores com vírgula/quebra de linha escapados conforme RFC 4180; encoding UTF-8 com BOM (Excel-friendly).
+- ZIP feito com `jszip` via `npm:` no Deno.
+- Financeiro = `sessions` com `payment_status`, valor, paciente, modalidade.
+- Limite de tamanho: se backup individual > 50 MB, divide JSON por tabela. (Improvável neste volume, mas previne timeout.)
+- Secret novo `BACKUP_CRON_SECRET` para autenticar o cron job.
+
+## Arquivos tocados
+
+- `supabase/migrations/...sql` — bucket `backups`, tabela `backup_history`, policies.
+- `supabase/functions/run-scheduled-backups/index.ts` (novo)
+- `supabase/functions/backup-download/index.ts` (novo)
+- `supabase/functions/backup-export/index.ts` (acrescentar CSV/ZIP)
+- `src/pages/app/Profile.tsx` (aba/seção de Backups)
+- `src/components/profile/BackupsPanel.tsx` (novo)
+
+## Você vai precisar fazer
+
+- Aprovar o secret `BACKUP_CRON_SECRET` quando for solicitado.
+- Aprovar a migração que cria bucket + tabela.
