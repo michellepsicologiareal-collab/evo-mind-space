@@ -4,67 +4,194 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Política de Privacidade — Psi Real</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: 'Inter', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; color: #333; line-height: 1.8; }
-    h1 { color: #A57164; border-bottom: 2px solid #A57164; padding-bottom: 10px; }
-    h2 { color: #5a3e36; margin-top: 40px; }
-    p { margin-bottom: 16px; }
-    a { color: #A57164; }
-    .logo { font-size: 24px; font-weight: bold; color: #A57164; margin-bottom: 40px; display: block; }
-    footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #eee; color: #888; font-size: 14px; }
+    :root {
+      --bg: #efe8dd;
+      --card: #ffffff;
+      --ink: #1f1b2e;
+      --ink-soft: #4a4458;
+      --muted: #7a7388;
+      --border: #ece6f1;
+      --lilac: #9B8DB8;
+      --lilac-deep: #6f5fa0;
+      --gold: #C9A961;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink-soft);
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+    }
+    .page { max-width: 820px; margin: 0 auto; padding: 48px 24px 80px; }
+    .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); margin-bottom: 32px; }
+    .brand-logo {
+      width: 44px; height: 44px; border-radius: 999px;
+      background: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(155, 141, 184, 0.18);
+    }
+    .brand-logo img { width: 34px; height: 34px; display: block; }
+    .brand-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.01em; }
+    .brand-name em { font-style: normal; color: var(--lilac-deep); font-weight: 800; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px 44px;
+      box-shadow: 0 24px 60px -28px rgba(111, 95, 160, 0.25);
+    }
+    .eyebrow {
+      display: inline-block;
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--lilac-deep);
+      background: rgba(155, 141, 184, 0.12);
+      padding: 6px 12px; border-radius: 999px;
+      margin-bottom: 18px;
+    }
+    h1 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      color: var(--ink);
+      font-size: clamp(28px, 4vw, 38px);
+      line-height: 1.15;
+      margin: 0 0 12px;
+      letter-spacing: -0.02em;
+    }
+    .updated { font-size: 14px; color: var(--muted); margin: 0 0 32px; }
+    .intro { font-size: 17px; color: var(--ink-soft); margin: 0 0 8px; }
+
+    h2 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      color: var(--ink);
+      font-size: 20px;
+      margin: 40px 0 12px;
+      letter-spacing: -0.01em;
+      position: relative;
+      padding-left: 16px;
+    }
+    h2::before {
+      content: "";
+      position: absolute; left: 0; top: 0.45em;
+      width: 4px; height: 1em;
+      background: linear-gradient(180deg, var(--lilac) 0%, var(--gold) 100%);
+      border-radius: 4px;
+    }
+    p { margin: 0 0 14px; }
+    ul { margin: 0 0 18px; padding-left: 0; list-style: none; }
+    li {
+      position: relative; padding-left: 22px; margin-bottom: 8px;
+    }
+    li::before {
+      content: ""; position: absolute; left: 0; top: 0.7em;
+      width: 7px; height: 7px; border-radius: 999px;
+      background: var(--lilac);
+    }
+    a { color: var(--lilac-deep); text-decoration: underline; text-decoration-color: rgba(155, 141, 184, 0.4); text-underline-offset: 3px; transition: color 0.2s; }
+    a:hover { color: var(--ink); }
+
+    .contact {
+      margin-top: 32px;
+      background: rgba(155, 141, 184, 0.08);
+      border: 1px solid rgba(155, 141, 184, 0.18);
+      border-radius: 16px;
+      padding: 20px 22px;
+    }
+    .contact p { margin: 4px 0; }
+
+    footer {
+      margin-top: 32px;
+      padding-top: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    footer a { color: var(--lilac-deep); }
+    .back {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 24px;
+      font-size: 14px; color: var(--muted); text-decoration: none;
+    }
+    .back:hover { color: var(--ink); }
+
+    @media (max-width: 600px) {
+      .page { padding: 28px 16px 60px; }
+      .card { padding: 32px 22px; border-radius: 20px; }
+    }
   </style>
 </head>
 <body>
-  <span class="logo">Psi Real</span>
-  <h1>Política de Privacidade</h1>
-  <p>Última atualização: 02 de maio de 2026</p>
+  <div class="page">
+    <a class="brand" href="/">
+      <span class="brand-logo"><img src="/logo-psireal.png" alt="Psi Real" /></span>
+      <span class="brand-name">Psi <em>Real</em></span>
+    </a>
 
-  <p>A Psi Real ("nós", "nosso") está comprometida com a proteção dos seus dados pessoais. Esta Política de Privacidade descreve como coletamos, usamos e protegemos as informações dos usuários do sistema Psi Real.</p>
+    <div class="card">
+      <span class="eyebrow">Privacidade</span>
+      <h1>Política de Privacidade</h1>
+      <p class="updated">Última atualização: 02 de maio de 2026</p>
 
-  <h2>1. Dados que coletamos</h2>
-  <p>Coletamos os seguintes dados para o funcionamento do sistema:</p>
-  <ul>
-    <li>Nome completo e e-mail para criação de conta</li>
-    <li>Dados de pacientes inseridos pelo próprio usuário (psicólogo)</li>
-    <li>Informações de agenda, sessões e registros financeiros</li>
-    <li>Dados de acesso ao Google Calendar, mediante autorização expressa do usuário</li>
-  </ul>
+      <p class="intro">A Psi Real ("nós", "nosso") está comprometida com a proteção dos seus dados pessoais. Esta Política de Privacidade descreve como coletamos, usamos e protegemos as informações dos usuários do sistema Psi Real.</p>
 
-  <h2>2. Como usamos seus dados</h2>
-  <p>Os dados coletados são utilizados exclusivamente para:</p>
-  <ul>
-    <li>Funcionamento do sistema de gestão clínica</li>
-    <li>Sincronização com o Google Calendar, quando autorizado</li>
-    <li>Comunicações relacionadas ao serviço</li>
-    <li>Melhoria contínua da plataforma</li>
-  </ul>
+      <h2>1. Dados que coletamos</h2>
+      <p>Coletamos os seguintes dados para o funcionamento do sistema:</p>
+      <ul>
+        <li>Nome completo e e-mail para criação de conta</li>
+        <li>Dados de pacientes inseridos pelo próprio usuário (psicólogo)</li>
+        <li>Informações de agenda, sessões e registros financeiros</li>
+        <li>Dados de acesso ao Google Calendar, mediante autorização expressa do usuário</li>
+      </ul>
 
-  <h2>3. Compartilhamento de dados</h2>
-  <p>Não vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros, exceto quando necessário para o funcionamento do serviço (ex: Google Calendar API) ou por obrigação legal.</p>
+      <h2>2. Como usamos seus dados</h2>
+      <p>Os dados coletados são utilizados exclusivamente para:</p>
+      <ul>
+        <li>Funcionamento do sistema de gestão clínica</li>
+        <li>Sincronização com o Google Calendar, quando autorizado</li>
+        <li>Comunicações relacionadas ao serviço</li>
+        <li>Melhoria contínua da plataforma</li>
+      </ul>
 
-  <h2>4. Google Calendar</h2>
-  <p>Quando você autoriza a integração com o Google Calendar, acessamos apenas os dados necessários para criar, editar e excluir eventos de sessões. Não acessamos outros dados da sua conta Google. Você pode revogar esse acesso a qualquer momento nas configurações do sistema.</p>
+      <h2>3. Compartilhamento de dados</h2>
+      <p>Não vendemos, alugamos ou compartilhamos seus dados pessoais com terceiros, exceto quando necessário para o funcionamento do serviço (ex: Google Calendar API) ou por obrigação legal.</p>
 
-  <h2>5. Segurança</h2>
-  <p>Utilizamos criptografia e boas práticas de segurança para proteger seus dados. As informações são armazenadas em servidores seguros via Supabase.</p>
+      <h2>4. Google Calendar</h2>
+      <p>Quando você autoriza a integração com o Google Calendar, acessamos apenas os dados necessários para criar, editar e excluir eventos de sessões. Não acessamos outros dados da sua conta Google. Você pode revogar esse acesso a qualquer momento nas configurações do sistema.</p>
 
-  <h2>6. Seus direitos (LGPD)</h2>
-  <p>Conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), você tem direito a:</p>
-  <ul>
-    <li>Acessar seus dados pessoais</li>
-    <li>Corrigir dados incompletos ou incorretos</li>
-    <li>Solicitar a exclusão dos seus dados</li>
-    <li>Revogar consentimentos dados</li>
-  </ul>
+      <h2>5. Segurança</h2>
+      <p>Utilizamos criptografia e boas práticas de segurança para proteger seus dados. As informações são armazenadas em servidores seguros.</p>
 
-  <h2>7. Contato</h2>
-  <p>Para dúvidas ou solicitações relacionadas à privacidade, entre em contato:</p>
-  <p>E-mail: <a href="mailto:michellepsicologiareal@gmail.com">michellepsicologiareal@gmail.com</a></p>
-  <p>WhatsApp: <a href="https://wa.me/5511947388423">+55 11 94738-8423</a></p>
+      <h2>6. Seus direitos (LGPD)</h2>
+      <p>Conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), você tem direito a:</p>
+      <ul>
+        <li>Acessar seus dados pessoais</li>
+        <li>Corrigir dados incompletos ou incorretos</li>
+        <li>Solicitar a exclusão dos seus dados</li>
+        <li>Revogar consentimentos dados</li>
+      </ul>
 
-  <footer>
-    <p>© 2026 Psi Real. Todos os direitos reservados.</p>
-    <p><a href="https://psireal.app">psireal.app</a></p>
-  </footer>
+      <h2>7. Contato</h2>
+      <div class="contact">
+        <p>Para dúvidas ou solicitações relacionadas à privacidade, entre em contato:</p>
+        <p>E-mail: <a href="mailto:michellepsicologiareal@gmail.com">michellepsicologiareal@gmail.com</a></p>
+        <p>WhatsApp: <a href="https://wa.me/5511947388423">+55 11 94738-8423</a></p>
+      </div>
+
+      <a class="back" href="/">← Voltar para o site</a>
+    </div>
+
+    <footer>
+      <p>© 2026 Psi Real · Todos os direitos reservados</p>
+      <p><a href="https://psireal.app">psireal.app</a></p>
+    </footer>
+  </div>
 </body>
 </html>
