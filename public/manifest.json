@@ -4,8 +4,8 @@
   "description": "Sistema de gestão clínica para psicólogos: agenda, financeiro, evolução do paciente e raciocínio clínico em TCC.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#993C1D",
-  "theme_color": "#993C1D",
+  "background_color": "#FFFFFF",
+  "theme_color": "#9675CE",
   "icons": [
     { "src": "/icon-192.png?v=3", "sizes": "192x192", "type": "image/png" },
     { "src": "/icon-512.png?v=3", "sizes": "512x512", "type": "image/png" },

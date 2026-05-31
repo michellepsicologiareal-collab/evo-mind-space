@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/app/AppLayout";
-import { Loader2 } from "lucide-react";
+import { SplashScreen } from "@/components/SplashScreen";
 
 /* ── Lazy-loaded pages ── */
 const Index = lazy(() => import("./pages/Index"));
@@ -36,12 +36,6 @@ const AnamnesePublica = lazy(() => import("./pages/AnamnesePublica"));
 
 const queryClient = new QueryClient();
 
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-  </div>
-);
-
 class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; retryCount: number }> {
   state = { hasError: false, retryCount: 0 };
 
@@ -68,19 +62,11 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: bo
     if (this.state.hasError && this.state.retryCount >= 3) {
       window.location.assign("/auth");
 
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
-      );
+      return <SplashScreen />;
     }
 
     if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
-      );
+      return <SplashScreen />;
     }
 
     return this.props.children;
@@ -115,7 +101,7 @@ const App = () => (
         <AuthProvider>
           <RecoveryLinkRedirect />
 
-          <Suspense fallback={<PageLoader />}>
+          <Suspense fallback={<SplashScreen />}>
             <AppErrorBoundary>
               <Routes>
                 <Route path="/" element={<Index />} />
