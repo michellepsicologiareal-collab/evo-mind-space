@@ -160,6 +160,20 @@ Deno.serve(async (req) => {
     }
 
     if (action === "sync" && session) {
+      const { data: ownedSession } = await supabaseAdmin
+        .from("sessions")
+        .select("id")
+        .eq("id", session.id)
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!ownedSession) {
+        return new Response(JSON.stringify({ error: "Sessão não encontrada" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const startTime = new Date(session.scheduled_at);
       const endTime = new Date(startTime.getTime() + (session.duration_minutes || 50) * 60 * 1000);
 
@@ -178,6 +192,7 @@ Deno.serve(async (req) => {
         .from("session_gcal_events")
         .select("gcal_event_id")
         .eq("session_id", session.id)
+        .eq("user_id", userId)
         .maybeSingle();
 
       let gcalEventId: string;
