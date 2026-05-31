@@ -349,6 +349,7 @@ const Profile = () => {
 
   useEffect(() => {
     load();
+    loadHistory();
     // eslint-disable-next-line
   }, [user]);
 
