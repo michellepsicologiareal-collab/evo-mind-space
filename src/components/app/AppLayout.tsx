@@ -218,6 +218,7 @@ export const AppLayout = () => {
             <span className="font-display text-lg font-semibold">Psi <span className="font-extrabold text-accent">Real</span></span>
           </Link>
           <div className="flex items-center gap-1">
+            <ThemeToggle />
             <NotificationBell />
             {isAdmin && (
               <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} className="text-[hsl(var(--admin-accent))]">
