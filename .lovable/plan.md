@@ -1,100 +1,53 @@
-## Escopo
+# Plano de correção de segurança (ordem de prioridade)
 
-Criar página **Plano de Tratamento** dentro do perfil do paciente + aplicar ajustes de cor nos badges da Agenda (anexo).
+Ordem definida por **impacto × facilidade de exploração**. Vou corrigir tudo em uma única rodada, mas nesta sequência para minimizar risco caso algo precise voltar.
 
----
+## 🔴 Prioridade 1 — Exploráveis com pouco esforço
 
-## 1. Banco de dados (migrations)
+### 1. IDOR no Google Calendar Sync
+**Por que primeiro:** qualquer usuário autenticado pode quebrar/duplicar sync de outro só passando um `session_id` alheio. Exploração trivial.
+- Em `supabase/functions/google-calendar-sync/index.ts`, adicionar `.eq('user_id', userId)` nas queries de select/delete sobre `session_gcal_events`.
+- Validar que `session.id` pertence ao usuário autenticado antes de qualquer ação (select em `sessions` filtrando por `user_id`).
 
-Novas tabelas (todas com `patient_id`, `user_id`, RLS por `auth.uid() = user_id`):
+### 2. Backup Import — sobrescrita por UUID
+**Por que segundo:** permite transferir posse de registros. Precisa do UUID alvo, mas o estrago é grave.
+- Em `supabase/functions/backup-import/index.ts`, remover `id`, `user_id`, `created_at`, `updated_at` de cada row antes de gravar.
+- Trocar `upsert({ onConflict: 'id' })` por `insert()` — backup deve sempre criar registros novos.
 
-- **treatment_plans** — `patient_id` (unique), `status` ('ativo'|'em_revisao'|'alta'), `cid`, `abordagem` (text[]), `conceitualizacao`
-- **treatment_goals** — `patient_id`, `tipo` ('geral'|'intermediaria'|'comportamental'), `descricao`, `ordem`
-- **treatment_techniques** — `patient_id`, `nome`
-- **session_plans** — `patient_id`, `session_id` (nullable), `objetivo`, `meta_id` (fk treatment_goals), `retomar`, `tecnicas` (text[]), `observacoes`
-- **treatment_revisions** — `patient_id`, `data` (timestamptz), `sessao_ref`, `descricao`
+## 🟠 Prioridade 2 — Vazamento de dados pagos
 
-Cada uma com RLS completo (select/insert/update/delete via `auth.uid() = user_id`) + trigger `update_updated_at_column`.
+### 3. Arquivos premium da `library` acessíveis a todo authenticated
+**Por que terceiro:** vaza conteúdo pago, mas exige conhecer/adivinhar o path do arquivo.
+- Migration: substituir a policy de SELECT no `storage.objects` do bucket `library` para exigir `subscription_status = 'active'` no `profiles` do usuário (ou ser admin).
 
----
+## 🟡 Prioridade 3 — Endurecimento (defesa em profundidade)
 
-## 2. Sidebar (`AppLayout.tsx`)
+### 4. `signed_contracts` sem policy de INSERT
+**Por que aqui:** RLS está habilitada e não há policy de INSERT → o PostgREST já bloqueia. É hardening explícito.
+- Migration: adicionar policy restritiva negando INSERT a `anon` e `authenticated` (service role da edge function continua passando).
 
-Adicionar item na seção CLÍNICA, **após Agenda e antes de Registro Sessão**:
-- `{ to: "/app/plano-tratamento", label: "Plano de tratamento", icon: ClipboardList }`
+### 5. Vazamento de detalhes de erro em `summarize-formulation`
+- Trocar `String(e)` por mensagem genérica `'Erro ao gerar resumo'` e `console.error` server-side.
+- Varrer outras edge functions com o mesmo padrão e aplicar o mesmo tratamento.
 
-Nota: a navegação atual é global (não por paciente). A página vai abrir com seletor de paciente no topo (ou redirecionar a partir do perfil do paciente). Confirmo abaixo.
+### 6. RLS habilitada sem policy (`google_oauth_states`)
+- Adicionar comentário/policy explícita bloqueando tudo para `anon`/`authenticated` (uso é só service role) — silencia o linter e documenta a intenção.
 
----
+## Detalhes técnicos resumidos
 
-## 3. Página `/app/plano-tratamento` (`src/pages/app/PlanoTratamento.tsx`)
+```text
+1. google-calendar-sync/index.ts → +.eq('user_id', userId) nas queries
+2. backup-import/index.ts        → strip id/user_id/timestamps + insert()
+3. migration                     → storage policy library checa subscription_status
+4. migration                     → policy restritiva INSERT em signed_contracts
+5. summarize-formulation         → erro genérico + log server-side
+6. migration                     → policies deny-all em google_oauth_states
+```
 
-Layout em blocos conforme spec:
+## Validação após implementar
 
-**Header**
-- Título + Select status (Ativo/Em revisão/Alta) + botões Exportar PDF (ghost) + Editar (accent)
-- Seletor de paciente (combobox) para escolher de qual paciente é o plano
+- Rodar o security scan novamente para confirmar que as 6 issues somem.
+- Testar sync do Google Calendar e import de backup com usuário real para garantir que nada regrediu.
+- Confirmar que usuário free não consegue baixar arquivo premium direto pela URL do storage.
 
-**Bloco 1 — Próxima sessão** (card com `border-l-4 border-l-[#6d4fc2]`)
-- Busca próxima sessão futura via `sessions` where `patient_id` + `scheduled_at > now()` order asc limit 1
-- Campos: objetivo, select de meta (lista de `treatment_goals`), retomar, tags de técnicas (com sugestões de `treatment_techniques`), observações
-- Salva em `session_plans` (upsert por `session_id`)
-
-**Bloco 2 — Diagnóstico e formulação**
-- Grid 2 colunas: esquerda CID + multi-select abordagem (TCC, TE, ACT, Outra); direita textarea conceitualização
-- Salva em `treatment_plans`
-
-**Bloco 3 — Metas terapêuticas**
-- Lista renderizada por tipo com cor da borda esquerda:
-  - geral → `border-l-[#6d4fc2]` (roxo)
-  - intermediaria → `border-l-[#BA7517]` (âmbar)
-  - comportamental → `border-l-[#1D9E75]` (verde)
-- Cada item: select tipo, textarea descrição, botão remover
-- Botão "Adicionar meta"
-
-**Bloco 4 — Técnicas do plano**
-- Tags/pills com X para remover, input inline "+ adicionar"
-
-**Bloco 5 — Histórico de revisões**
-- Timeline vertical (linha à esquerda, dots), header com botão "Nova revisão"
-- Cada item: data formatada, sessão_ref, descrição
-
-**Exportar PDF**
-- Abrir nova janela com HTML formatado e `window.print()` (mesmo padrão usado em Patients.tsx para formulação)
-
-**Autosave**: usar debounce 800ms por bloco (padrão de outros formulários longos) + indicador "Salvo" sutil.
-
----
-
-## 4. Rota (`src/App.tsx`)
-
-Adicionar `<Route path="plano-tratamento" element={<PlanoTratamento />} />` dentro do AppLayout.
-
----
-
-## 5. Ajustes de cor da Agenda (anexo)
-
-Aplicar diretamente em `src/pages/app/Agenda.tsx` (o script aponta para `components/app/Agenda.tsx` mas o arquivo real é em pages):
-
-- `statusClass`: scheduled cinza, confirmed verde, completed cinza claro, rescheduled âmbar
-- `paymentStatusClass`: pending âmbar, paid verde
-- Nome do paciente: `text-primary` → `text-foreground` (se existir nesse padrão)
-
----
-
-## Arquivos a criar/editar
-
-**Criar:**
-- `supabase/migrations/<timestamp>_treatment_plan.sql`
-- `src/pages/app/PlanoTratamento.tsx`
-
-**Editar:**
-- `src/components/app/AppLayout.tsx` (novo item de nav)
-- `src/App.tsx` (rota)
-- `src/pages/app/Agenda.tsx` (cores)
-
----
-
-## Pergunta antes de executar
-
-A navegação atual é global por seção (Pacientes, Agenda, etc.), não dentro do perfil do paciente. A página vai abrir com **um seletor de paciente no topo** (combobox listando os pacientes ativos) e todo o conteúdo é filtrado por esse paciente selecionado. Está ok assim, ou prefere acessar via botão dentro de cada paciente em `/app/pacientes` (sem item dedicado na sidebar)?
+Posso começar pela ordem acima assim que aprovar.

@@ -88,6 +88,7 @@ Metas: ${goalsText || "-"}`;
 
     return new Response(JSON.stringify({ summary }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    console.error("summarize-formulation error:", e);
+    return new Response(JSON.stringify({ error: "Erro ao gerar resumo" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

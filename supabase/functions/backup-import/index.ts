@@ -94,20 +94,16 @@ Deno.serve(async (req) => {
     const rows = body.tables[table];
     if (!rows || !Array.isArray(rows) || rows.length === 0) continue;
 
-    // Override user_id to current user for safety
+    // Always create new records: strip id and any auto/ownership fields
     const safeRows = rows.map((r: any) => {
-      const row = { ...r };
-      if ("user_id" in row) row.user_id = user.id;
-      // Remove auto-generated fields that might conflict
-      delete row.created_at;
-      delete row.updated_at;
-      return row;
+      const { id, user_id, created_at, updated_at, ...rest } = r;
+      return { ...rest, user_id: user.id };
     });
 
     // Insert in batches of 50
     for (let i = 0; i < safeRows.length; i += 50) {
       const batch = safeRows.slice(i, i + 50);
-      const { error } = await supabase.from(table).upsert(batch, { onConflict: "id" });
+      const { error } = await supabase.from(table).insert(batch);
       if (error) {
         results[table] = {
           ...results[table],
