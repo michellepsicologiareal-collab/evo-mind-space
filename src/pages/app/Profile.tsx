@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, Upload, User, Users, ShieldCheck, X, Building2, Trash2, FileText, Download, DatabaseBackup, UploadCloud } from "lucide-react";
+import { Loader2, Upload, User, Users, ShieldCheck, X, Building2, Trash2, FileText, Download, DatabaseBackup, UploadCloud, FileArchive, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { ServiceCatalog } from "@/components/app/ServiceCatalog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,6 +60,9 @@ const Profile = () => {
   const [restoreConfirm, setRestoreConfirm] = useState("");
   const backupInputRef = useRef<HTMLInputElement>(null);
   const [pendingBackupFile, setPendingBackupFile] = useState<File | null>(null);
+  const [exportingCsvZip, setExportingCsvZip] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
+  const [downloadingPath, setDownloadingPath] = useState<string | null>(null);
 
   const fetchMyData = async () => {
     if (!user) return null;
@@ -247,6 +250,63 @@ const Profile = () => {
     }
   };
 
+  const handleExportCsvZip = async () => {
+    setExportingCsvZip(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { toast.error("Faça login novamente"); return; }
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/backup-export?format=csv`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      const dl = URL.createObjectURL(blob);
+      a.href = dl;
+      a.download = `psireal_exports_${new Date().toISOString().slice(0, 10)}.zip`;
+      a.click();
+      URL.revokeObjectURL(dl);
+      toast.success("Exportação CSV baixada!");
+    } catch {
+      toast.error("Erro ao exportar CSVs");
+    } finally {
+      setExportingCsvZip(false);
+    }
+  };
+
+  const loadHistory = async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from("backup_history")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("backup_date", { ascending: false })
+      .limit(10);
+    setHistory(data ?? []);
+  };
+
+  const handleDownloadFromHistory = async (path: string, filename: string) => {
+    setDownloadingPath(path);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { toast.error("Faça login novamente"); return; }
+      const res = await supabase.functions.invoke("backup-download", {
+        body: { path },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.error || !res.data?.url) throw res.error ?? new Error("Sem URL");
+      const a = document.createElement("a");
+      a.href = res.data.url;
+      a.download = filename;
+      a.click();
+    } catch {
+      toast.error("Erro ao baixar arquivo");
+    } finally {
+      setDownloadingPath(null);
+    }
+  };
+
   const load = async () => {
     if (!user) return;
     const { data } = await supabase
@@ -289,6 +349,7 @@ const Profile = () => {
 
   useEffect(() => {
     load();
+    loadHistory();
     // eslint-disable-next-line
   }, [user]);
 
@@ -607,26 +668,114 @@ const Profile = () => {
           <div>
             <h2 className="font-display text-xl font-semibold">Backup de Dados</h2>
             <p className="text-xs text-muted-foreground">
-              Faça backups regulares para nunca perder seus dados.
+              Backups automáticos diários · retenção de 7 dias · armazenamento privado.
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
-          <div className="flex items-start gap-3">
-            <Download className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">Exportar backup completo</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Baixa um arquivo JSON com <strong>todos</strong> os seus dados: pacientes, sessões, registros clínicos, formulações, progresso, serviços e mais.
-              </p>
+        <div className="rounded-xl bg-lilac/10 border border-lilac/20 p-4 flex items-start gap-3">
+          <Clock className="h-4 w-4 text-lilac shrink-0 mt-0.5" />
+          <div className="flex-1 text-xs text-muted-foreground">
+            <p className="font-medium text-foreground">Backup automático diário às 03h</p>
+            <p className="mt-1">
+              Todos os dias geramos um snapshot completo (JSON) e uma exportação CSV (pacientes, sessões, prontuários, financeiro) e mantemos os últimos 7 dias disponíveis para download.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <Download className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">Snapshot agora (JSON)</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Backup completo restaurável.
+                </p>
+              </div>
+            </div>
+            <Button variant="accent" size="sm" onClick={handleBackupExport} disabled={backingUp} className="w-full">
+              {backingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Baixar JSON
+            </Button>
+          </div>
+
+          <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <FileArchive className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">Exportação CSV (ZIP)</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Pacientes, sessões, prontuários, financeiro.
+                </p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleExportCsvZip} disabled={exportingCsvZip} className="w-full">
+              {exportingCsvZip ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileArchive className="h-4 w-4" />}
+              Baixar CSVs
+            </Button>
+          </div>
+        </div>
+
+        {history.length > 0 && (
+          <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+            <p className="text-sm font-medium">Backups automáticos disponíveis</p>
+            <div className="divide-y divide-border">
+              {history.map((h) => {
+                const date = new Date(h.backup_date);
+                const formattedDate = date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+                const sizeKb = h.size_bytes ? Math.max(1, Math.round(h.size_bytes / 1024)) : 0;
+                return (
+                  <div key={h.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {h.status === "success" ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-moss shrink-0" />
+                      ) : (
+                        <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
+                      )}
+                      <span className="font-medium">{formattedDate}</span>
+                      <span className="text-muted-foreground">
+                        {h.kind === "auto" ? "automático" : "manual"}
+                        {sizeKb > 0 && ` · ${sizeKb} KB`}
+                      </span>
+                    </div>
+                    {h.status === "success" && (
+                      <div className="flex gap-1.5">
+                        {h.json_path && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            disabled={downloadingPath === h.json_path}
+                            onClick={() => handleDownloadFromHistory(h.json_path, `psireal_backup_${date.toISOString().slice(0,10)}.json`)}
+                          >
+                            {downloadingPath === h.json_path ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                            JSON
+                          </Button>
+                        )}
+                        {h.csv_zip_path && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            disabled={downloadingPath === h.csv_zip_path}
+                            onClick={() => handleDownloadFromHistory(h.csv_zip_path, `psireal_exports_${date.toISOString().slice(0,10)}.zip`)}
+                          >
+                            {downloadingPath === h.csv_zip_path ? <Loader2 className="h-3 w-3 animate-spin" /> : <FileArchive className="h-3 w-3" />}
+                            CSVs
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    {h.status === "failed" && h.error_message && (
+                      <span className="text-destructive truncate max-w-full">{h.error_message}</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
-          <Button variant="accent" size="sm" onClick={handleBackupExport} disabled={backingUp}>
-            {backingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Baixar backup completo (.json)
-          </Button>
-        </div>
+        )}
 
         <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
           <div className="flex items-start gap-3">
@@ -651,6 +800,7 @@ const Profile = () => {
           </Button>
         </div>
       </section>
+
 
       <section className="rounded-3xl bg-card border border-border shadow-card p-8 space-y-5">
         <div className="flex items-center gap-3">
