@@ -106,80 +106,85 @@
   }
 
   .dark {
-    /* Surfaces — dark roxo profundo */
-    --background: 258 25% 9%;               /* fundo escuro com tom roxo */
-    --foreground: 258 30% 95%;              /* texto claro */
+    /* Surfaces — dark roxo profundo (mais escuro p/ contraste premium) */
+    --background: 258 32% 5%;               /* fundo bem mais escuro */
+    --foreground: 258 25% 96%;
 
-    --card: 258 22% 13%;                    /* cards um tom acima do fundo */
-    --card-foreground: 258 30% 95%;
+    --card: 258 22% 11%;                    /* cards bem destacados sobre o fundo */
+    --card-foreground: 258 25% 96%;
 
-    --popover: 258 22% 13%;
-    --popover-foreground: 258 30% 95%;
+    --popover: 258 22% 11%;
+    --popover-foreground: 258 25% 96%;
 
     /* Brand — Roxo (mais luminoso no dark) */
-    --primary: 262 60% 72%;                 /* roxo mais claro p/ contraste */
-    --primary-foreground: 258 25% 9%;
-    --primary-glow: 265 55% 80%;
-    --primary-dark: 262 50% 55%;
+    --primary: 262 65% 74%;
+    --primary-foreground: 258 32% 6%;
+    --primary-glow: 265 60% 82%;
+    --primary-dark: 262 55% 62%;
 
-    --secondary: 258 20% 18%;
-    --secondary-foreground: 258 30% 95%;
+    --secondary: 258 22% 16%;
+    --secondary-foreground: 258 25% 95%;
 
-    --muted: 258 18% 16%;
-    --muted-foreground: 258 15% 65%;
+    --muted: 258 20% 13%;
+    --muted-foreground: 258 15% 68%;
 
-    --accent: 262 60% 72%;
-    --accent-foreground: 258 25% 9%;
+    --accent: 262 65% 74%;
+    --accent-foreground: 258 32% 6%;
 
-    --lilac: 265 50% 70%;
-    --lilac-foreground: 258 25% 12%;
+    --lilac: 265 55% 72%;
+    --lilac-foreground: 258 30% 10%;
 
-    --moss: 96 40% 55%;
-    --moss-foreground: 258 25% 9%;
+    --moss: 96 40% 58%;
+    --moss-foreground: 258 32% 6%;
 
-    --sand: 258 18% 16%;
-    --sand-foreground: 258 30% 95%;
+    --sand: 258 20% 13%;
+    --sand-foreground: 258 25% 95%;
 
-    --brown: 262 40% 65%;                   /* "roxo escuro" vira lilás médio no dark */
-    --brown-foreground: 258 25% 9%;
+    --brown: 262 50% 74%;
+    --brown-foreground: 258 32% 6%;
 
-    --gold: 46 70% 62%;                     /* dourado mais brilhante no dark */
-    --gold-dark: 262 40% 65%;
-    --gold-light: 44 75% 72%;
+    /* Gold — uso reservado a destaques premium */
+    --gold: 44 68% 60%;
+    --gold-dark: 262 50% 70%;
+    --gold-light: 42 70% 70%;
 
-    --sage: 96 40% 55%;
-    --sage-foreground: 258 25% 9%;
-    --serene: 262 60% 72%;
-    --serene-foreground: 258 25% 9%;
+    --sage: 96 40% 58%;
+    --sage-foreground: 258 32% 6%;
+    --serene: 262 65% 74%;
+    --serene-foreground: 258 32% 6%;
 
-    --admin-accent: 262 50% 60%;
+    --admin-accent: 262 55% 62%;
 
     --destructive: 0 65% 58%;
-    --destructive-foreground: 258 25% 9%;
+    --destructive-foreground: 258 32% 6%;
 
-    --border: 258 18% 22%;
-    --input: 258 18% 22%;
-    --ring: 262 60% 72%;
+    --border: 258 18% 20%;
+    --input: 258 18% 20%;
+    --ring: 262 65% 74%;
 
-    --sidebar-hover: 258 20% 16%;
-    --sidebar-active: 262 60% 72% / 0.18;
-    --sidebar-border: 258 18% 22%;
+    --sidebar-hover: 258 22% 14%;
+    --sidebar-active: 262 65% 74% / 0.18;
+    --sidebar-border: 258 18% 20%;
 
-    --text-secondary: 258 25% 75%;
-    --text-muted: 258 15% 65%;
-    --text-nav: 258 25% 78%;
+    --text-secondary: 258 25% 80%;
+    --text-muted: 258 15% 68%;
+    --text-nav: 258 25% 82%;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(262 60% 72%) 0%, hsl(265 55% 60%) 60%, hsl(258 22% 13%) 130%);
-    --gradient-soft: linear-gradient(180deg, hsl(258 22% 13%) 0%, hsl(258 20% 11%) 100%);
-    --gradient-card: linear-gradient(160deg, hsl(258 22% 13%) 0%, hsl(258 20% 11%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(262 65% 74%) 0%, hsl(265 55% 60%) 60%, hsl(258 22% 10%) 130%);
+    --gradient-soft: linear-gradient(180deg, hsl(258 22% 11%) 0%, hsl(258 25% 7%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(258 22% 12%) 0%, hsl(258 25% 9%) 100%);
 
     /* Shadows mais profundas no dark */
-    --shadow-elegant: 0 30px 60px -30px hsl(258 50% 4% / 0.6);
-    --shadow-soft: 0 4px 16px -4px hsl(258 50% 4% / 0.4), 0 1px 3px 0 hsl(258 50% 4% / 0.2);
-    --shadow-glow: 0 0 80px -20px hsl(262 60% 72% / 0.35);
-    --shadow-card: 0 2px 12px -3px hsl(258 50% 4% / 0.35), 0 1px 2px 0 hsl(258 50% 4% / 0.2);
+    --shadow-elegant: 0 30px 60px -30px hsl(258 60% 1% / 0.8);
+    --shadow-soft: 0 4px 16px -4px hsl(258 60% 1% / 0.6), 0 1px 3px 0 hsl(258 60% 1% / 0.35);
+    --shadow-glow: 0 0 80px -20px hsl(262 65% 74% / 0.35);
+    --shadow-card: 0 2px 12px -3px hsl(258 60% 1% / 0.5), 0 1px 2px 0 hsl(258 60% 1% / 0.3);
   }
+
+  /* Dark mode: reduzir presença do dourado em barras decorativas universais */
+  .dark .gold-top::before,
+  .dark .gold-bar { opacity: 0.35; }
 }
 
 @layer base {
