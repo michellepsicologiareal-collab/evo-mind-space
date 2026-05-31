@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 import { EmotionChips } from "@/components/app/EmotionChips";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
@@ -1040,8 +1041,53 @@ const Agenda = () => {
   );
 
   // ── Session card component ──
+  const isMobile = useIsMobile();
+
   const SessionCard = ({ s, compact = false }: { s: Session; compact?: boolean }) => {
     const isSupervisionCard = s.session_type === "supervision";
+    const [sheetOpen, setSheetOpen] = useState(false);
+
+    const actions = (
+      <>
+        <button onClick={() => { setSheetOpen(false); openEdit(s); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
+          <Pencil className="h-4 w-4 text-primary" /> Editar sessão
+        </button>
+        {!isSupervisionCard && (
+          <button onClick={() => { setSheetOpen(false); copyConfirmationLink(s); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
+            <Link2 className="h-4 w-4 text-primary" /> Enviar confirmação no WhatsApp
+          </button>
+        )}
+        <div className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Status da sessão</div>
+        <button onClick={() => { setSheetOpen(false); updateStatus(s.id, "completed"); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
+          <Check className="h-4 w-4 text-emerald-600" /> Realizada
+        </button>
+        <button onClick={() => { setSheetOpen(false); updateStatus(s.id, "no_show"); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
+          <X className="h-4 w-4 text-amber-600" /> Falta
+        </button>
+        <button onClick={() => { setSheetOpen(false); updateStatus(s.id, "rescheduled"); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
+          <RotateCcw className="h-4 w-4 text-sky-600" /> Remarcada
+        </button>
+        <button onClick={() => { setSheetOpen(false); updateStatus(s.id, "cancelled"); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
+          <X className="h-4 w-4 text-muted-foreground" /> Cancelada
+        </button>
+        {!isSupervisionCard && (
+          <>
+            <div className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Pagamento</div>
+            <button onClick={() => { setSheetOpen(false); updatePaymentStatus(s.id, "paid"); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm text-emerald-700">
+              <Check className="h-4 w-4" /> Marcar como pago
+            </button>
+            <button onClick={() => { setSheetOpen(false); sendWhatsAppReminder(s); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm text-green-700">
+              <MessageCircle className="h-4 w-4" /> Cobrar via WhatsApp
+            </button>
+          </>
+        )}
+        <div className="h-px bg-border my-2" />
+        <button onClick={() => { setSheetOpen(false); promptDelete(s.id); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-destructive/10 text-left text-sm text-destructive">
+          <Trash2 className="h-4 w-4" /> Excluir
+        </button>
+      </>
+    );
+
     return (
       <div
         onClick={() => openEdit(s)}
@@ -1058,37 +1104,58 @@ const Agenda = () => {
             {isSupervisionCard && <GraduationCap className="h-3.5 w-3.5 text-serene shrink-0" />}
             <p className="font-display text-sm text-primary">{format(new Date(s.scheduled_at), "HH:mm")}</p>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-8 sm:w-8 text-muted-foreground hover:text-foreground" aria-label="Ações da sessão" onClick={(e) => e.stopPropagation()}><MoreHorizontal className="h-5 w-5" /></Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-              <DropdownMenuItem onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /> Editar sessão</DropdownMenuItem>
-              {!isSupervisionCard && (
-                <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar confirmação no WhatsApp</DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => updateStatus(s.id, "completed")}><Check className="h-4 w-4" /> Realizada</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => updateStatus(s.id, "no_show")}><X className="h-4 w-4" /> Falta</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => updateStatus(s.id, "rescheduled")}><RotateCcw className="h-4 w-4" /> Remarcada</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => updateStatus(s.id, "cancelled")}>Cancelada</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {!isSupervisionCard && (
-                <>
-                  <DropdownMenuItem onClick={() => updatePaymentStatus(s.id, "paid")} className="text-emerald-600">
-                    <Check className="h-4 w-4" /> Marcar como pago
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => sendWhatsAppReminder(s)} className="text-green-600">
-                    <MessageCircle className="h-4 w-4" /> Cobrar via WhatsApp
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </>
-              )}
-              <DropdownMenuItem onClick={() => promptDelete(s.id)} className="text-destructive">
-                <Trash2 className="h-4 w-4" /> Excluir
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {isMobile ? (
+            <>
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" aria-label="Ações da sessão" onClick={(e) => { e.stopPropagation(); setSheetOpen(true); }}>
+                <MoreHorizontal className="h-5 w-5" />
+              </Button>
+              <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+                <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto p-0" onClick={(e) => e.stopPropagation()}>
+                  <SheetHeader className="px-5 pt-5 pb-2 text-left">
+                    <SheetTitle className="font-display text-base">
+                      {format(new Date(s.scheduled_at), "HH:mm")} · {s.patient_name || (isSupervisionCard ? "Supervisão" : "Sessão")}
+                    </SheetTitle>
+                    <SheetDescription className="text-xs">Escolha uma ação para esta sessão</SheetDescription>
+                  </SheetHeader>
+                  <div className="px-3 pb-6 pt-2">{actions}</div>
+                </SheetContent>
+              </Sheet>
+            </>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" aria-label="Ações da sessão" onClick={(e) => e.stopPropagation()}>
+                  <MoreHorizontal className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuItem onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /> Editar sessão</DropdownMenuItem>
+                {!isSupervisionCard && (
+                  <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar confirmação no WhatsApp</DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => updateStatus(s.id, "completed")}><Check className="h-4 w-4" /> Realizada</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateStatus(s.id, "no_show")}><X className="h-4 w-4" /> Falta</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateStatus(s.id, "rescheduled")}><RotateCcw className="h-4 w-4" /> Remarcada</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateStatus(s.id, "cancelled")}>Cancelada</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {!isSupervisionCard && (
+                  <>
+                    <DropdownMenuItem onClick={() => updatePaymentStatus(s.id, "paid")} className="text-emerald-600">
+                      <Check className="h-4 w-4" /> Marcar como pago
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => sendWhatsAppReminder(s)} className="text-green-600">
+                      <MessageCircle className="h-4 w-4" /> Cobrar via WhatsApp
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <DropdownMenuItem onClick={() => promptDelete(s.id)} className="text-destructive">
+                  <Trash2 className="h-4 w-4" /> Excluir
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
         <div className="mt-1 min-w-0">
           {isSupervisionCard ? (
