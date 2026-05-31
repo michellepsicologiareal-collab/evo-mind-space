@@ -264,3 +264,20 @@
 /* Hide scrollbar but keep scroll functionality */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Lilac communication badge (Lembrete/WhatsApp/E-mail/Formulário enviado) */
+.lilac-comm-badge {
+  background: #F3EEFF;
+  border-color: #D8C9FF;
+  color: #6D4FC2;
+  transition: background-color 0.18s ease;
+}
+.lilac-comm-badge:hover { background: #ECE3FF; }
+.lilac-comm-badge svg { color: #6D4FC2; }
+.dark .lilac-comm-badge {
+  background: hsl(265 35% 22%);
+  border-color: hsl(265 40% 38%);
+  color: hsl(265 80% 85%);
+}
+.dark .lilac-comm-badge svg { color: hsl(265 80% 85%); }
+.dark .lilac-comm-badge:hover { background: hsl(265 35% 28%); }
