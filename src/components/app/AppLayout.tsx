@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { PlanModal } from "@/components/app/PlanModal";
 import { PremiumGate } from "@/components/app/PremiumGate";
 import { NotificationBell } from "@/components/app/NotificationBell";
+import { ThemeToggle } from "@/components/app/ThemeToggle";
 
 const PREMIUM_ROUTES = new Set(["/app/financeiro", "/app/supervisionandos"]);
 
@@ -136,7 +137,10 @@ export const AppLayout = () => {
               <span className="inline-block h-2 w-2 rounded-full bg-gold" aria-hidden />
             </span>
           </Link>
-          <NotificationBell />
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <NotificationBell />
+          </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -214,6 +218,7 @@ export const AppLayout = () => {
             <span className="font-display text-lg font-semibold">Psi <span className="font-extrabold text-accent">Real</span></span>
           </Link>
           <div className="flex items-center gap-1">
+            <ThemeToggle />
             <NotificationBell />
             {isAdmin && (
               <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} className="text-[hsl(var(--admin-accent))]">
