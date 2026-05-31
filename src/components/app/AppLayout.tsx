@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { PlanModal } from "@/components/app/PlanModal";
 import { PremiumGate } from "@/components/app/PremiumGate";
 import { NotificationBell } from "@/components/app/NotificationBell";
+import { ThemeToggle } from "@/components/app/ThemeToggle";
 
 const PREMIUM_ROUTES = new Set(["/app/financeiro", "/app/supervisionandos"]);
 
