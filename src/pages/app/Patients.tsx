@@ -596,7 +596,7 @@ const Patients = () => {
                   </div>
 
                   <div className="min-w-0 flex-1 sm:flex-none" style={{ flexBasis: "auto" }}>
-                    <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: isAlert ? "hsl(var(--brown))" : "hsl(var(--foreground))" }}>
+                    <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 15.5, color: isAlert ? "hsl(var(--brown))" : "hsl(var(--foreground))" }}>
                       {p.full_name}
                     </p>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -604,13 +604,13 @@ const Patients = () => {
                         <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }} />
                         {p.is_active ? "Ativo" : "Inativo"}
                       </span>
-                      <span className="uppercase inline-block" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "hsl(var(--brown))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 9px", letterSpacing: "0.06em" }}>
+                      <span className="uppercase inline-block" style={{ background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.28)", color: "hsl(var(--primary-dark))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 9px", letterSpacing: "0.06em" }}>
                         {type}
                       </span>
                     </div>
                   </div>
 
-                  <div className="min-w-0 hidden lg:flex items-center gap-2" style={{ flex: "0 0 140px", fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--brown))" }}>
+                  <div className="min-w-0 hidden lg:flex items-center gap-2" style={{ flex: "0 0 150px", fontFamily: "Instrument Sans, sans-serif", fontSize: 13, fontWeight: 500, color: "hsl(var(--foreground))" }}>
                     {p.phone && (<><Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} /><span className="truncate">{p.phone}</span></>)}
                   </div>
 
