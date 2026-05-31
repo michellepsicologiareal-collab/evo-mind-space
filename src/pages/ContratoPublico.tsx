@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import logo from "@/assets/logo-psireal.png";
+import logo from "@/assets/logo-psireal.svg";
 
 interface Clause {
   key: string;
