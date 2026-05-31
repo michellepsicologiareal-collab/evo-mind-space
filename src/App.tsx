@@ -62,19 +62,11 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: bo
     if (this.state.hasError && this.state.retryCount >= 3) {
       window.location.assign("/auth");
 
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
-      );
+      return <SplashScreen />;
     }
 
     if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
-      );
+      return <SplashScreen />;
     }
 
     return this.props.children;
