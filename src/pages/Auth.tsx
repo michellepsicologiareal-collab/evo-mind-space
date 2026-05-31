@@ -61,6 +61,7 @@ const Auth = () => {
   const [suPhone, setSuPhone] = useState("");
   const [suPassword, setSuPassword] = useState("");
   const [suProfileType, setSuProfileType] = useState<"standard" | "supervisee">("standard");
+  const [suAcceptTerms, setSuAcceptTerms] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("forceLogin") === "1") {
