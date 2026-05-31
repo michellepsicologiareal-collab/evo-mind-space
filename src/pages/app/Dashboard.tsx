@@ -214,9 +214,13 @@ const Dashboard = () => {
             .eq("user_id", user.id)
             .eq("shared_with_supervisor", true),
           supabase
-            .from("tcc_records")
+            .from("sessions")
             .select("id", { count: "exact", head: true })
-            .eq("user_id", user.id),
+            .eq("user_id", user.id)
+            .gte("scheduled_at", periodStartISO)
+            .lte("scheduled_at", periodEndISO)
+            .not("notes", "is", null)
+            .neq("notes", ""),
           supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", weekStartDate.toISOString()).lte("scheduled_at", weekEndDate.toISOString()).in("status", ["scheduled", "confirmed", "completed"]),
           supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", periodStartISO).lte("scheduled_at", periodEndISO).in("status", ["scheduled", "confirmed", "completed"]),
           supabase.from("sessions").select("price, status, is_expense").eq("user_id", user.id).gte("scheduled_at", yearStart).lte("scheduled_at", yearEnd).eq("status", "completed"),
