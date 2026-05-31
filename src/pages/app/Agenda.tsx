@@ -1230,11 +1230,10 @@ const Agenda = () => {
             )}
             {s.confirmation_sent_at && (
               <span
-                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shadow-sm animate-fade-up"
-                style={{ background: "hsl(var(--accent) / 0.18)", color: "hsl(var(--accent-foreground, var(--foreground)))", borderColor: "hsl(var(--accent) / 0.45)" }}
+                className="lilac-comm-badge inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shadow-sm animate-fade-up"
                 title={`Lembrete enviado em ${format(new Date(s.confirmation_sent_at), "dd/MM 'às' HH:mm")}`}
               >
-                ✨ Lembrete enviado · {format(new Date(s.confirmation_sent_at), "dd/MM HH:mm")}
+                <Bell className="h-3 w-3" /> Lembrete enviado · {format(new Date(s.confirmation_sent_at), "dd/MM HH:mm")}
               </span>
             )}
           </div>
