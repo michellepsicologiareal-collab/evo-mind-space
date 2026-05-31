@@ -135,11 +135,28 @@
         font-family: 'Syne', sans-serif;
       ">
         <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
-          <img
-            src="/logo-psireal.png"
-            alt="Psi Real"
-            style="height: 80px; width: 80px; object-fit: contain;"
-          />
+          <div style="position: relative; width: 80px; height: 80px;">
+            <img
+              src="/logo-psireal.png"
+              alt="Psi Real"
+              style="height: 80px; width: 80px; object-fit: contain; position: relative; z-index: 1;"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            />
+            <div style="
+              display: none;
+              position: absolute;
+              top: 0; left: 0;
+              width: 80px; height: 80px;
+              border-radius: 50%;
+              background: #9675CE;
+              align-items: center;
+              justify-content: center;
+              color: #FFFFFF;
+              font-size: 40px;
+              font-weight: 700;
+              font-family: 'Syne', sans-serif;
+            ">Ψ</div>
+          </div>
           <h1 style="
             font-size: 28px;
             font-weight: 700;
