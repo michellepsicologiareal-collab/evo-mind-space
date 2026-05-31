@@ -124,6 +124,7 @@ const Auth = () => {
       phone: suPhone,
       password: suPassword,
       profileType: suProfileType,
+      acceptTerms: suAcceptTerms,
     });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
