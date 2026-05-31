@@ -323,7 +323,36 @@ const Auth = () => {
                     </label>
                   </RadioGroup>
                 </div>
-                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
+                <div className="flex items-start gap-3 rounded-xl border border-border bg-secondary/30 p-3">
+                  <Checkbox
+                    id="su-terms"
+                    checked={suAcceptTerms}
+                    onCheckedChange={(v) => setSuAcceptTerms(v === true)}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="su-terms" className="text-sm font-normal leading-relaxed cursor-pointer">
+                    Li e aceito os{" "}
+                    <a
+                      href="/p%C3%BAblico/termos.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent underline hover:no-underline"
+                    >
+                      Termos de Uso
+                    </a>{" "}
+                    e a{" "}
+                    <a
+                      href="/privacidade.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent underline hover:no-underline"
+                    >
+                      Política de Privacidade
+                    </a>
+                    .
+                  </Label>
+                </div>
+                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading || !suAcceptTerms}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Criar conta
                 </Button>
