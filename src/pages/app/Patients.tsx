@@ -4,7 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, CalendarDays, Smile, FileText, Baby, Sparkles, Maximize2, Minimize2, X, Printer, BookOpen } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, CalendarDays, Smile, FileText, Baby, Sparkles, Maximize2, Minimize2, X, Printer, BookOpen, RefreshCw } from "lucide-react";
 import { LogoIcon } from "@/components/LogoIcon";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { TccRecords } from "@/components/app/TccRecords";
@@ -589,95 +589,68 @@ const Patients = () => {
                 onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(150,117,206,0.10)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 2px rgba(150,117,206,0.04)"; }}
               >
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, hsl(var(--primary) / 0.6), hsl(var(--primary-glow) / 0.4), transparent)" }} />
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, hsl(var(--gold) / 0.85), hsl(var(--gold) / 0.55), transparent)" }} />
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5" style={{ paddingTop: 18, paddingBottom: 16 }}>
-                  <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
+                  <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.12)", color: "hsl(var(--primary))", fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 700, fontSize: 15 }}>
                     {p.full_name.charAt(0).toUpperCase()}
                   </div>
 
                   <div className="min-w-0 flex-1 sm:flex-none" style={{ flexBasis: "auto" }}>
-                    <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 15.5, color: isAlert ? "hsl(var(--brown))" : "hsl(var(--foreground))" }}>
+                    <p className="truncate" style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 700, fontSize: 16, color: isAlert ? "hsl(var(--brown))" : "hsl(var(--foreground))" }}>
                       {p.full_name}
                     </p>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="inline-flex items-center gap-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }} />
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <span className="inline-flex items-center" style={{ background: "rgba(61,92,53,0.10)", border: "0.5px solid rgba(61,92,53,0.30)", color: "hsl(var(--moss))", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 11, borderRadius: 40, padding: "3px 10px" }}>
                         {p.is_active ? "Ativo" : "Inativo"}
                       </span>
-                      <span className="uppercase inline-block" style={{ background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.28)", color: "hsl(var(--primary-dark))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 9px", letterSpacing: "0.06em" }}>
+                      <span className="inline-block" style={{ background: "hsl(var(--muted))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--muted-foreground))", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 11, borderRadius: 40, padding: "3px 10px" }}>
                         {type}
                       </span>
+                      {p.phone && (
+                        <span className="inline-flex items-center gap-1 min-w-0" style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
+                          <Phone className="h-3 w-3 shrink-0" />
+                          <span className="truncate max-w-[140px]">{p.phone}</span>
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  <div className="min-w-0 hidden lg:flex items-center gap-2" style={{ flex: "0 0 150px", fontFamily: "Instrument Sans, sans-serif", fontSize: 13, fontWeight: 500, color: "hsl(var(--foreground))" }}>
-                    {p.phone && (<><Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} /><span className="truncate">{p.phone}</span></>)}
-                  </div>
-
                   <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:flex-1 min-w-0 order-last sm:order-none">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setMoodPatient(p); }}
-                      className="inline-flex items-center gap-1.5 transition-colors"
-                      style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--border))"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; }}
-                    >
-                      <Smile className="h-3 w-3" /> Humor
-                      {cMood > 0 && <span style={{ background: "rgba(150,117,206,0.18)", borderRadius: 40, padding: "0 6px", fontSize: 9 }}>{cMood}</span>}
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setHistoryPatient(p); }}
-                      className="inline-flex items-center gap-1.5 transition-colors"
-                      style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--border))"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; }}
-                    >
-                      <CalendarDays className="h-3 w-3" /> Histórico
-                      {cHist > 0 && <span style={{ background: "rgba(150,117,206,0.18)", borderRadius: 40, padding: "0 6px", fontSize: 9 }}>{cHist}</span>}
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setPadeksyPatient(p); }}
-                      title={formulationFilled[p.id] ? "Formulação preenchida" : "Criar formulação de caso"}
-                      className="inline-flex items-center gap-1.5 transition-colors"
-                      style={formulationFilled[p.id]
-                        ? { background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.25)", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
-                        : { background: "hsl(var(--background))", border: "0.5px dashed hsl(var(--gold))", color: "hsl(var(--brown))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                    >
-                      <Stethoscope className="h-3 w-3" /> {formulationFilled[p.id] ? "Formulação" : "Sem formulação"}
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setTccPatient(p); }}
-                      title={cTcc > 0 ? `${cTcc} conceitualizações TCC` : "Criar conceitualização TCC"}
-                      className="inline-flex items-center gap-1.5 transition-colors"
-                      style={cTcc > 0
-                        ? { background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.25)", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
-                        : { background: "hsl(var(--background))", border: "0.5px dashed hsl(var(--gold))", color: "hsl(var(--brown))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                    >
-                      <LogoIcon className="h-3 w-3" /> {cTcc > 0 ? `Conceitualização TCC${cTcc > 1 ? ` · ${cTcc}` : ""}` : "Sem conceitualização TCC"}
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }}
-                      title="Abrir plano de tratamento"
-                      className="inline-flex items-center gap-1.5 transition-colors"
-                      style={{ background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.25)", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                    >
-                      <ClipboardList className="h-3 w-3" /> Plano
-                    </button>
-                    {p.category === "crianca" && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }}
-                        className="inline-flex items-center gap-1.5 transition-colors"
-                        style={hasAnam
-                          ? { background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
-                          : { background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "hsl(var(--brown))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                      >
-                        <Baby className="h-3 w-3" /> {hasAnam ? "Anamnese" : "Sem anamnese"}
-                      </button>
-                    )}
+                    {(() => {
+                      const greenChip = { background: "rgba(61,92,53,0.06)", border: "0.5px solid rgba(61,92,53,0.30)", color: "hsl(var(--moss))", padding: "5px 11px", borderRadius: 40, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 11 } as React.CSSProperties;
+                      const goldDashed = { background: "hsl(var(--background))", border: "0.5px dashed hsl(var(--gold))", color: "hsl(var(--brown))", padding: "5px 11px", borderRadius: 40, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 11 } as React.CSSProperties;
+                      const countBadge = { background: "hsl(var(--moss))", color: "white", borderRadius: 40, padding: "0 6px", fontSize: 9, fontWeight: 700, minWidth: 16, textAlign: "center" as const, marginLeft: 2 };
+                      return (
+                        <>
+                          <button onClick={(e) => { e.stopPropagation(); setMoodPatient(p); }} className="inline-flex items-center gap-1.5" style={greenChip}>
+                            <Smile className="h-3 w-3" /> Humor
+                            {cMood > 0 && <span style={countBadge}>{cMood}</span>}
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); setHistoryPatient(p); }} className="inline-flex items-center gap-1.5" style={greenChip}>
+                            <CalendarDays className="h-3 w-3" /> Histórico
+                            {cHist > 0 && <span style={countBadge}>{cHist}</span>}
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); setPadeksyPatient(p); }} title={formulationFilled[p.id] ? "Formulação preenchida" : "Criar formulação de caso"} className="inline-flex items-center gap-1.5" style={formulationFilled[p.id] ? greenChip : goldDashed}>
+                            <Stethoscope className="h-3 w-3" /> {formulationFilled[p.id] ? "Formulação" : "Sem formulação"}
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); setTccPatient(p); }} title={cTcc > 0 ? `${cTcc} conceitualizações TCC` : "Criar conceitualização TCC"} className="inline-flex items-center gap-1.5" style={cTcc > 0 ? greenChip : goldDashed}>
+                            <LogoIcon className="h-3 w-3" /> {cTcc > 0 ? `Conceitualização TCC${cTcc > 1 ? ` · ${cTcc}` : ""}` : "Sem conceitualização TCC"}
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }} title="Abrir plano de tratamento" className="inline-flex items-center gap-1.5" style={greenChip}>
+                            <ClipboardList className="h-3 w-3" /> Plano
+                          </button>
+                          {p.category === "crianca" && (
+                            <button onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }} className="inline-flex items-center gap-1.5" style={hasAnam ? greenChip : goldDashed}>
+                              <Baby className="h-3 w-3" /> {hasAnam ? "Anamnese" : "Sem anamnese"}
+                            </button>
+                          )}
+                        </>
+                      );
+                    })()}
                     {p.session_price != null && (
-                      <span className="ml-auto flex items-baseline gap-1" style={{ fontFamily: "Syne, sans-serif" }}>
-                        <span style={{ fontWeight: 700, fontSize: 15, color: "hsl(var(--foreground))" }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
-                        <span style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", fontFamily: "Instrument Sans, sans-serif" }}>/sessão</span>
+                      <span className="ml-auto flex items-baseline gap-1" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+                        <span style={{ fontWeight: 700, fontSize: 16, color: "hsl(var(--foreground))" }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
+                        <span style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", fontFamily: "Inter, sans-serif" }}>/sessão</span>
                       </span>
                     )}
                   </div>
@@ -746,11 +719,11 @@ const Patients = () => {
                         <Sparkles className="h-3.5 w-3.5" style={{ color: "hsl(var(--primary))" }} />
                       </div>
                       <div className="min-w-0">
-                        <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "hsl(var(--primary))" }}>Resumo IA · Formulação</p>
+                        <p className="uppercase" style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "hsl(var(--primary))" }}>Resumo IA · Formulação</p>
                         {aiSum ? (
-                          <p className="mt-1.5" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13.5, color: "hsl(var(--foreground))", lineHeight: 1.55, fontWeight: 450 }}>{aiSum}</p>
+                          <p className="mt-1.5" style={{ fontFamily: "Inter, sans-serif", fontSize: 13.5, color: "hsl(var(--foreground))", lineHeight: 1.55, fontWeight: 450 }}>{aiSum}</p>
                         ) : (
-                          <p className="mt-1.5 italic" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
+                          <p className="mt-1.5 italic" style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
                             Gere um resumo de IA com os destaques clínicos desta formulação.
                           </p>
                         )}
@@ -760,18 +733,18 @@ const Patients = () => {
                       <button
                         onClick={() => summarizeFormulation(p.id)}
                         disabled={!!summarizing[p.id]}
-                        className="inline-flex items-center gap-1.5 transition-colors disabled:opacity-60"
-                        style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--primary) / 0.35)", color: "hsl(var(--primary-dark))", padding: "6px 11px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                        className="inline-flex items-center gap-1.5 transition-colors disabled:opacity-60 hover:bg-muted"
+                        style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--foreground))", padding: "6px 12px", borderRadius: 10, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12 }}
                       >
-                        {summarizing[p.id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                        {aiSum ? "Atualizar" : "Gerar resumo IA"}
+                        {summarizing[p.id] ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                        {aiSum ? "Atualizar" : "Gerar"}
                       </button>
                       <button
                         onClick={() => setReadPatient(p)}
-                        className="inline-flex items-center gap-1.5 transition-colors"
-                        style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", padding: "6px 11px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                        className="inline-flex items-center gap-1.5 transition-colors hover:bg-muted"
+                        style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--foreground))", padding: "6px 12px", borderRadius: 10, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12 }}
                       >
-                        <BookOpen className="h-3 w-3" /> Ler formulação
+                        <Eye className="h-3.5 w-3.5" /> Ler
                       </button>
                     </div>
                   </div>
