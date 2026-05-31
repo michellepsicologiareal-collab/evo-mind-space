@@ -616,69 +616,41 @@ const Patients = () => {
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:flex-1 min-w-0 order-last sm:order-none">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setMoodPatient(p); }}
-                      className="inline-flex items-center gap-1.5 transition-colors"
-                      style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--border))"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; }}
-                    >
-                      <Smile className="h-3 w-3" /> Humor
-                      {cMood > 0 && <span style={{ background: "rgba(150,117,206,0.18)", borderRadius: 40, padding: "0 6px", fontSize: 9 }}>{cMood}</span>}
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setHistoryPatient(p); }}
-                      className="inline-flex items-center gap-1.5 transition-colors"
-                      style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--border))"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; }}
-                    >
-                      <CalendarDays className="h-3 w-3" /> Histórico
-                      {cHist > 0 && <span style={{ background: "rgba(150,117,206,0.18)", borderRadius: 40, padding: "0 6px", fontSize: 9 }}>{cHist}</span>}
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setPadeksyPatient(p); }}
-                      title={formulationFilled[p.id] ? "Formulação preenchida" : "Criar formulação de caso"}
-                      className="inline-flex items-center gap-1.5 transition-colors"
-                      style={formulationFilled[p.id]
-                        ? { background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.25)", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
-                        : { background: "hsl(var(--background))", border: "0.5px dashed hsl(var(--gold))", color: "hsl(var(--brown))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                    >
-                      <Stethoscope className="h-3 w-3" /> {formulationFilled[p.id] ? "Formulação" : "Sem formulação"}
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setTccPatient(p); }}
-                      title={cTcc > 0 ? `${cTcc} conceitualizações TCC` : "Criar conceitualização TCC"}
-                      className="inline-flex items-center gap-1.5 transition-colors"
-                      style={cTcc > 0
-                        ? { background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.25)", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
-                        : { background: "hsl(var(--background))", border: "0.5px dashed hsl(var(--gold))", color: "hsl(var(--brown))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                    >
-                      <LogoIcon className="h-3 w-3" /> {cTcc > 0 ? `Conceitualização TCC${cTcc > 1 ? ` · ${cTcc}` : ""}` : "Sem conceitualização TCC"}
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }}
-                      title="Abrir plano de tratamento"
-                      className="inline-flex items-center gap-1.5 transition-colors"
-                      style={{ background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.25)", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                    >
-                      <ClipboardList className="h-3 w-3" /> Plano
-                    </button>
-                    {p.category === "crianca" && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }}
-                        className="inline-flex items-center gap-1.5 transition-colors"
-                        style={hasAnam
-                          ? { background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
-                          : { background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "hsl(var(--brown))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                      >
-                        <Baby className="h-3 w-3" /> {hasAnam ? "Anamnese" : "Sem anamnese"}
-                      </button>
-                    )}
+                    {(() => {
+                      const greenChip = { background: "rgba(61,92,53,0.06)", border: "0.5px solid rgba(61,92,53,0.30)", color: "hsl(var(--moss))", padding: "5px 11px", borderRadius: 40, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 11 } as React.CSSProperties;
+                      const goldDashed = { background: "hsl(var(--background))", border: "0.5px dashed hsl(var(--gold))", color: "hsl(var(--brown))", padding: "5px 11px", borderRadius: 40, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 11 } as React.CSSProperties;
+                      const countBadge = { background: "hsl(var(--moss))", color: "white", borderRadius: 40, padding: "0 6px", fontSize: 9, fontWeight: 700, minWidth: 16, textAlign: "center" as const, marginLeft: 2 };
+                      return (
+                        <>
+                          <button onClick={(e) => { e.stopPropagation(); setMoodPatient(p); }} className="inline-flex items-center gap-1.5" style={greenChip}>
+                            <Smile className="h-3 w-3" /> Humor
+                            {cMood > 0 && <span style={countBadge}>{cMood}</span>}
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); setHistoryPatient(p); }} className="inline-flex items-center gap-1.5" style={greenChip}>
+                            <CalendarDays className="h-3 w-3" /> Histórico
+                            {cHist > 0 && <span style={countBadge}>{cHist}</span>}
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); setPadeksyPatient(p); }} title={formulationFilled[p.id] ? "Formulação preenchida" : "Criar formulação de caso"} className="inline-flex items-center gap-1.5" style={formulationFilled[p.id] ? greenChip : goldDashed}>
+                            <Stethoscope className="h-3 w-3" /> {formulationFilled[p.id] ? "Formulação" : "Sem formulação"}
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); setTccPatient(p); }} title={cTcc > 0 ? `${cTcc} conceitualizações TCC` : "Criar conceitualização TCC"} className="inline-flex items-center gap-1.5" style={cTcc > 0 ? greenChip : goldDashed}>
+                            <LogoIcon className="h-3 w-3" /> {cTcc > 0 ? `Conceitualização TCC${cTcc > 1 ? ` · ${cTcc}` : ""}` : "Sem conceitualização TCC"}
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }} title="Abrir plano de tratamento" className="inline-flex items-center gap-1.5" style={greenChip}>
+                            <ClipboardList className="h-3 w-3" /> Plano
+                          </button>
+                          {p.category === "crianca" && (
+                            <button onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }} className="inline-flex items-center gap-1.5" style={hasAnam ? greenChip : goldDashed}>
+                              <Baby className="h-3 w-3" /> {hasAnam ? "Anamnese" : "Sem anamnese"}
+                            </button>
+                          )}
+                        </>
+                      );
+                    })()}
                     {p.session_price != null && (
-                      <span className="ml-auto flex items-baseline gap-1" style={{ fontFamily: "Syne, sans-serif" }}>
-                        <span style={{ fontWeight: 700, fontSize: 15, color: "hsl(var(--foreground))" }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
-                        <span style={{ fontSize: 11, color: "hsl(var(--muted-foreground))", fontFamily: "Instrument Sans, sans-serif" }}>/sessão</span>
+                      <span className="ml-auto flex items-baseline gap-1" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
+                        <span style={{ fontWeight: 700, fontSize: 16, color: "hsl(var(--foreground))" }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
+                        <span style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", fontFamily: "Inter, sans-serif" }}>/sessão</span>
                       </span>
                     )}
                   </div>
