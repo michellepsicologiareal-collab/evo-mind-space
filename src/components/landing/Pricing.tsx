@@ -58,9 +58,9 @@ export const Pricing = () => {
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative rounded-3xl border p-8 flex flex-col transition-all hover:-translate-y-1 ${
+              className={`relative rounded-3xl border p-6 sm:p-8 flex flex-col transition-all hover:-translate-y-1 ${
                 plan.highlighted
-                  ? "bg-card border-accent shadow-elegant scale-[1.02]"
+                  ? "bg-card border-accent shadow-elegant md:scale-[1.02]"
                   : "bg-card border-border shadow-card"
               }`}
             >
