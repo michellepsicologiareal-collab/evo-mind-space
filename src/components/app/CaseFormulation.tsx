@@ -4,9 +4,10 @@ import { logClinicalAccess } from "@/utils/auditLog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
-  Loader2, Save, Plus, Trash2, Brain, MessageSquare, ListChecks, BookOpen,
+  Loader2, Save, Plus, Trash2, MessageSquare, ListChecks, BookOpen,
   Sparkles, Copy, ChevronDown, ChevronUp, Pencil, X,
 } from "lucide-react";
+import { LogoIcon } from "@/components/LogoIcon";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -465,7 +466,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
     <Tabs defaultValue="formulation" className="space-y-4">
       <TabsList className="w-full grid grid-cols-4">
         <TabsTrigger value="formulation" className="text-xs sm:text-sm">
-          <Brain className="h-4 w-4 mr-1 hidden sm:inline" /> 5 Sistemas
+          <LogoIcon className="h-4 w-4 mr-1 hidden sm:inline" /> 5 Sistemas
         </TabsTrigger>
         <TabsTrigger value="goals" className="text-xs sm:text-sm">
           <ListChecks className="h-4 w-4 mr-1 hidden sm:inline" /> Plano
@@ -482,7 +483,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
       <TabsContent value="formulation" className="space-y-4">
         <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
           <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-1">
-            <Brain className="h-4 w-4 text-accent" /> Formulação de Caso — 5 Sistemas (Padesky)
+            <LogoIcon className="h-4 w-4" /> Formulação de Caso — 5 Sistemas (Padesky)
           </h3>
           <p className="text-xs text-muted-foreground">Formulação cognitivo-comportamental integrada.</p>
         </div>

@@ -4,7 +4,8 @@ import { ptBR } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, Brain, CalendarDays, Smile, FileText, Baby, Sparkles, Maximize2, Minimize2, X, Printer, BookOpen } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, CalendarDays, Smile, FileText, Baby, Sparkles, Maximize2, Minimize2, X, Printer, BookOpen } from "lucide-react";
+import { LogoIcon } from "@/components/LogoIcon";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { TccRecords } from "@/components/app/TccRecords";
 import { CaseFormulation } from "@/components/app/CaseFormulation";
@@ -652,7 +653,7 @@ const Patients = () => {
                         ? { background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.25)", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
                         : { background: "hsl(var(--background))", border: "0.5px dashed hsl(var(--gold))", color: "hsl(var(--brown))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
                     >
-                      <Brain className="h-3 w-3" /> {cTcc > 0 ? `Conceitualização TCC${cTcc > 1 ? ` · ${cTcc}` : ""}` : "Sem conceitualização TCC"}
+                      <LogoIcon className="h-3 w-3" /> {cTcc > 0 ? `Conceitualização TCC${cTcc > 1 ? ` · ${cTcc}` : ""}` : "Sem conceitualização TCC"}
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }}
@@ -722,7 +723,7 @@ const Patients = () => {
                       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => toggleActive(p)}>{p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setTccPatient(p)}><Brain className="h-4 w-4" /> Registros TCC</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setTccPatient(p)}><LogoIcon className="h-4 w-4" /> Registros TCC</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><Stethoscope className="h-4 w-4" /> Formulação de caso</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDelete(p)} className="text-destructive"><Trash2 className="h-4 w-4" /> Excluir</DropdownMenuItem>
                       </DropdownMenuContent>
