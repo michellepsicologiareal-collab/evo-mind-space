@@ -24,7 +24,7 @@ export const Selfcare = () => {
             <Heart className="h-4 w-4 text-accent" />
             <span className="text-xs font-medium uppercase tracking-[0.18em] text-accent">Exclusivo</span>
           </div>
-          <h2 className="font-display text-4xl lg:text-5xl font-medium leading-tight">
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-medium leading-tight">
             Autocuidado do
             <span className="block font-bold text-accent mt-1">Terapeuta</span>
           </h2>
@@ -51,7 +51,7 @@ export const Selfcare = () => {
         </div>
 
         {/* Mockups showcase */}
-        <div className="mt-16 grid lg:grid-cols-2 gap-6 items-center">
+        <div className="mt-10 sm:mt-16 grid lg:grid-cols-2 gap-6 items-center">
           <div className="relative">
             <div className="absolute -inset-4 bg-gradient-to-br from-accent/8 via-primary/5 to-transparent rounded-[2rem] blur-xl" aria-hidden />
             <img

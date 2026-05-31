@@ -15,7 +15,7 @@ export const ForWhom = () => {
       <div className="container grid lg:grid-cols-2 gap-16 items-center">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-accent font-medium">Para quem é</p>
-          <h2 className="mt-3 font-display text-4xl lg:text-5xl font-medium leading-tight text-balance">
+          <h2 className="mt-3 font-display text-3xl sm:text-4xl lg:text-5xl font-medium leading-tight text-balance">
             Feito para psicólogos que querem <span className="font-bold text-accent">crescer com clareza</span>.
           </h2>
           <p className="mt-6 text-muted-foreground">
