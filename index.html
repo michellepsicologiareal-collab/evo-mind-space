@@ -11,10 +11,38 @@
     <meta name="msapplication-TileColor" content="#9675CE" />
     <title>Psi Real — Gestão Inteligente para Psicólogos</title>
     <meta name="description" content="Gestão clínica para psicólogos: agenda, financeiro, evolução do paciente e raciocínio em TCC em um só lugar.">
-    <link rel="icon" type="image/png" href="/favicon.png?v=5" />
-    <link rel="shortcut icon" href="/favicon.ico?v=5" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png?v=5" />
-    <link rel="manifest" href="/manifest.json?v=5" />
+    <!-- Favicons (versão atualizada via script abaixo para invalidar cache antigo automaticamente) -->
+    <link id="favicon-png" rel="icon" type="image/png" href="/favicon.png?v=psireal-2026-lilac" />
+    <link id="favicon-ico" rel="shortcut icon" href="/favicon.ico?v=psireal-2026-lilac" />
+    <link id="apple-icon" rel="apple-touch-icon" sizes="192x192" href="/icon-192.png?v=psireal-2026-lilac" />
+    <link rel="manifest" href="/manifest.json?v=psireal-2026-lilac" />
+    <script>
+      // Cache-bust automático do favicon: se a versão local ficou desatualizada,
+      // re-injeta os links com um query string novo para forçar o navegador a
+      // baixar o ícone novo sem precisar de hard refresh manual.
+      (function () {
+        try {
+          var CURRENT = "psireal-2026-lilac";
+          var KEY = "psireal:faviconVersion";
+          var stored = localStorage.getItem(KEY);
+          if (stored !== CURRENT) {
+            var bust = CURRENT + "-" + Date.now();
+            var swap = function (id, href) {
+              var el = document.getElementById(id);
+              if (!el) return;
+              var clone = el.cloneNode(true);
+              clone.setAttribute("href", href + "?v=" + bust);
+              el.parentNode.removeChild(el);
+              document.head.appendChild(clone);
+            };
+            swap("favicon-png", "/favicon.png");
+            swap("favicon-ico", "/favicon.ico");
+            swap("apple-icon", "/icon-192.png");
+            localStorage.setItem(KEY, CURRENT);
+          }
+        } catch (e) { /* noop */ }
+      })();
+    </script>
     <meta name="author" content="Psi Real" />
     <meta name="google-site-verification" content="qU0wenkIRkvfrLeocqCrKBJPq8u3IAj9vQ0OjMQiQXE" />
     <link rel="canonical" href="https://psireal.app/" />
