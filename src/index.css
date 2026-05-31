@@ -168,8 +168,8 @@
   .bg-gradient-gold { background: var(--gradient-gold); }
   .bg-gold-subtle { background: rgba(201,168,76,0.10); }
   .border-gold-subtle { border-color: rgba(201,168,76,0.35); }
-  .text-gold-dark { color: #7a5e1a; }
-  .text-urgent { color: #854f0b; }
+  .text-gold-dark { color: #7B4F2C; }
+  .text-urgent { color: #7B4F2C; }
   .bg-urgent-subtle { background: #fdf8f0; }
   .bg-gradient-hero { background: var(--gradient-hero); }
   .bg-gradient-soft { background: var(--gradient-soft); }

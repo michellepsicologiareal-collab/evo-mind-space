@@ -49,9 +49,9 @@ export const EmotionChips = ({ note, onChange }: Props) => {
             style={{
               fontFamily: "Syne, sans-serif",
               fontWeight: 600,
-              background: active ? "rgba(109,79,194,0.12)" : "#fff",
-              color: active ? "#3d2b8a" : "#8070a8",
-              border: active ? "0.5px solid rgba(109,79,194,0.35)" : "0.5px solid #ede9f8",
+              background: active ? "rgba(150,117,206,0.12)" : "#fff",
+              color: active ? "#5d4198" : "#C0AADE",
+              border: active ? "0.5px solid rgba(150,117,206,0.35)" : "0.5px solid #e8dfd2",
             }}
           >
             {emo}
