@@ -686,7 +686,7 @@ const Agenda = () => {
     }
     // Marca o envio do lembrete para destacar no card
     await supabase.from("sessions").update({ confirmation_sent_at: new Date().toISOString() }).eq("id", s.id);
-    load();
+    load(true);
   };
 
   const getGroupId = (notes: string | null): string | null => {
