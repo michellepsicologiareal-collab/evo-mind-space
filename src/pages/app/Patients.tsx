@@ -589,29 +589,30 @@ const Patients = () => {
                 onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(150,117,206,0.10)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 2px rgba(150,117,206,0.04)"; }}
               >
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, hsl(var(--primary) / 0.6), hsl(var(--primary-glow) / 0.4), transparent)" }} />
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, hsl(var(--gold) / 0.85), hsl(var(--gold) / 0.55), transparent)" }} />
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5" style={{ paddingTop: 18, paddingBottom: 16 }}>
-                  <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
+                  <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.12)", color: "hsl(var(--primary))", fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 700, fontSize: 15 }}>
                     {p.full_name.charAt(0).toUpperCase()}
                   </div>
 
                   <div className="min-w-0 flex-1 sm:flex-none" style={{ flexBasis: "auto" }}>
-                    <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 15.5, color: isAlert ? "hsl(var(--brown))" : "hsl(var(--foreground))" }}>
+                    <p className="truncate" style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 700, fontSize: 16, color: isAlert ? "hsl(var(--brown))" : "hsl(var(--foreground))" }}>
                       {p.full_name}
                     </p>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="inline-flex items-center gap-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }} />
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <span className="inline-flex items-center" style={{ background: "rgba(61,92,53,0.10)", border: "0.5px solid rgba(61,92,53,0.30)", color: "hsl(var(--moss))", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 11, borderRadius: 40, padding: "3px 10px" }}>
                         {p.is_active ? "Ativo" : "Inativo"}
                       </span>
-                      <span className="uppercase inline-block" style={{ background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.28)", color: "hsl(var(--primary-dark))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 9px", letterSpacing: "0.06em" }}>
+                      <span className="inline-block" style={{ background: "hsl(var(--muted))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--muted-foreground))", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 11, borderRadius: 40, padding: "3px 10px" }}>
                         {type}
                       </span>
+                      {p.phone && (
+                        <span className="inline-flex items-center gap-1 min-w-0" style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
+                          <Phone className="h-3 w-3 shrink-0" />
+                          <span className="truncate max-w-[140px]">{p.phone}</span>
+                        </span>
+                      )}
                     </div>
-                  </div>
-
-                  <div className="min-w-0 hidden lg:flex items-center gap-2" style={{ flex: "0 0 150px", fontFamily: "Instrument Sans, sans-serif", fontSize: 13, fontWeight: 500, color: "hsl(var(--foreground))" }}>
-                    {p.phone && (<><Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} /><span className="truncate">{p.phone}</span></>)}
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:flex-1 min-w-0 order-last sm:order-none">
