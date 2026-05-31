@@ -1110,13 +1110,13 @@ const Agenda = () => {
         className={cn(
           "rounded-xl border p-3 group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/20",
           isSupervisionCard ? "bg-serene/10 border-serene/40"
-            : s.status === "confirmed" ? "bg-[#FAFAFC] border-[rgba(150,117,206,0.15)]"
+            : s.status === "confirmed" ? "bg-background border-[rgba(150,117,206,0.15)]"
               : "bg-background border-border"
         )}
       >
         <div className="flex items-start justify-between gap-1">
           <div className="flex items-center gap-1.5 min-w-0">
-            {s.status === "confirmed" && <CheckCircle2 className="h-3.5 w-3.5 text-[#9675CE] shrink-0" />}
+            {s.status === "confirmed" && <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />}
             {isSupervisionCard && <GraduationCap className="h-3.5 w-3.5 text-serene shrink-0" />}
             <p className="font-display text-sm text-primary">{format(new Date(s.scheduled_at), "HH:mm")}</p>
           </div>
@@ -1527,14 +1527,14 @@ const Agenda = () => {
       </header>
 
       {/* ── ZONA SUPERIOR: Calendar + day sessions ── */}
-      <div className="space-y-4 pb-5" style={{ borderBottom: "0.5px solid #e8dfd2" }}>
+      <div className="space-y-4 pb-5" style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
         <div className="space-y-4">
 
           <Tabs value={viewTab} onValueChange={setViewTab}>
             <TabsList className="w-full sm:w-auto bg-background/95 backdrop-blur sm:bg-transparent sm:backdrop-blur-none gap-1 p-0 sticky top-[124px] md:static z-20 -mx-6 px-6 py-2 sm:m-0 sm:p-0">
-              <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#a090c8] data-[state=active]:bg-[#9675CE] data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarDays className="h-3.5 w-3.5 mr-1.5 inline" /> Mês</TabsTrigger>
-              <TabsTrigger value="week" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#a090c8] data-[state=active]:bg-[#9675CE] data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarRange className="h-3.5 w-3.5 mr-1.5 inline" /> Semana</TabsTrigger>
-              <TabsTrigger value="day" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-[#a090c8] data-[state=active]:bg-[#9675CE] data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarCheck className="h-3.5 w-3.5 mr-1.5 inline" /> Dia</TabsTrigger>
+              <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarDays className="h-3.5 w-3.5 mr-1.5 inline" /> Mês</TabsTrigger>
+              <TabsTrigger value="week" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarRange className="h-3.5 w-3.5 mr-1.5 inline" /> Semana</TabsTrigger>
+              <TabsTrigger value="day" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarCheck className="h-3.5 w-3.5 mr-1.5 inline" /> Dia</TabsTrigger>
             </TabsList>
 
             {/* ── MONTH VIEW ── */}
@@ -1549,7 +1549,7 @@ const Agenda = () => {
                     {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
                   </p>
                   <div className="flex gap-1 sm:gap-2 shrink-0">
-                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-[#7d5cb8] hover:bg-[rgba(150,117,206,0.12)] hover:text-[#7d5cb8]" onClick={() => { setCurrentMonth(startOfMonth(new Date())); setSelectedDate(new Date()); }}>
+                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-primary hover:bg-[rgba(150,117,206,0.12)] hover:text-primary" onClick={() => { setCurrentMonth(startOfMonth(new Date())); setSelectedDate(new Date()); }}>
                       Hoje
                     </Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
@@ -1593,9 +1593,9 @@ const Agenda = () => {
                                 <span className="flex items-center gap-0.5 h-3">
                                   <span className={cn(
                                     "w-1.5 h-1.5 rounded-full shrink-0",
-                                    isSelected ? "bg-accent-foreground" : "bg-[#9675CE]"
+                                    isSelected ? "bg-accent-foreground" : "bg-primary"
                                   )} />
-                                  {dayCount > 1 && <span className={cn("text-[8px] leading-none", isSelected ? "text-accent-foreground" : "text-[#9675CE]")}>{dayCount}</span>}
+                                  {dayCount > 1 && <span className={cn("text-[8px] leading-none", isSelected ? "text-accent-foreground" : "text-primary")}>{dayCount}</span>}
                                 </span>
                               ) : (
                                 <span className="h-3" />
@@ -1650,7 +1650,7 @@ const Agenda = () => {
                     <p className="text-[10px] sm:text-xs text-muted-foreground">{format(weekStart, "dd/MM")} — {format(addDays(weekStart, 6), "dd/MM")}</p>
                   </div>
                   <div className="flex gap-1 sm:gap-2 shrink-0">
-                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-[#7d5cb8] hover:bg-[rgba(150,117,206,0.12)] hover:text-[#7d5cb8]" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>Hoje</Button>
+                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-primary hover:bg-[rgba(150,117,206,0.12)] hover:text-primary" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>Hoje</Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -1861,7 +1861,7 @@ const Agenda = () => {
                     <p className="text-[10px] sm:text-sm text-muted-foreground truncate">{format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
                   </div>
                   <div className="flex gap-1 sm:gap-2 shrink-0">
-                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-[#7d5cb8] hover:bg-[rgba(150,117,206,0.12)] hover:text-[#7d5cb8]" onClick={() => setSelectedDate(new Date())}>Hoje</Button>
+                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-primary hover:bg-[rgba(150,117,206,0.12)] hover:text-primary" onClick={() => setSelectedDate(new Date())}>Hoje</Button>
                     <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -1894,21 +1894,21 @@ const Agenda = () => {
       </div>
 
       {/* ── ZONA INFERIOR: Sessões do Mês (largura total) ── */}
-      <div style={{ background: "#FBF7F1", margin: "0 -1rem", padding: "20px 1rem 24px" }}>
+      <div style={{ background: "hsl(var(--muted))", margin: "0 -1rem", padding: "20px 1rem 24px" }}>
         <div className="flex flex-wrap items-center gap-3 mb-3">
-          <h2 style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "#2a1f3d" }}>Sessões do Mês</h2>
-          <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "#a090c8" }}>
+          <h2 style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>Sessões do Mês</h2>
+          <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
             {format(currentMonth, "MMM yyyy", { locale: ptBR })}
           </span>
-          <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11, color: "#4B356F" }}>
+          <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11, color: "hsl(var(--brown))" }}>
             · Pendente R$ {pendingTotal.toFixed(2)}
           </span>
-          <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11, color: "#9675CE" }}>
+          <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11, color: "hsl(var(--primary))" }}>
             · Pago R$ {paidTotal.toFixed(2)}
           </span>
         </div>
 
-        <div className="flex items-center gap-5 mb-3" style={{ borderBottom: "0.5px solid #e8dfd2" }}>
+        <div className="flex items-center gap-5 mb-3" style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
           {([["pending", "Pendentes"], ["paid", "Pagos"], ["all", "Todos"]] as const).map(([val, label]) => (
             <button
               key={val}
@@ -1918,8 +1918,8 @@ const Agenda = () => {
                 fontFamily: "Syne, sans-serif",
                 fontWeight: paymentFilter === val ? 700 : 600,
                 fontSize: 11,
-                color: paymentFilter === val ? "#5d4198" : "#a090c8",
-                borderBottom: paymentFilter === val ? "2px solid #9675CE" : "2px solid transparent",
+                color: paymentFilter === val ? "hsl(var(--primary-dark))" : "hsl(var(--muted-foreground))",
+                borderBottom: paymentFilter === val ? "2px solid hsl(var(--primary))" : "2px solid transparent",
               }}
             >
               {label}
@@ -1931,9 +1931,9 @@ const Agenda = () => {
           <Select value={filterPatientId} onValueChange={setFilterPatientId}>
             <SelectTrigger
               className="h-9 text-xs w-full sm:w-auto"
-              style={{ background: "#fff", border: "0.5px solid #e8dfd2", borderRadius: 40, color: "#5d4198", fontFamily: "Instrument Sans, sans-serif", fontSize: 11 }}
+              style={{ background: "#fff", border: "0.5px solid hsl(var(--border))", borderRadius: 40, color: "hsl(var(--primary-dark))", fontFamily: "Instrument Sans, sans-serif", fontSize: 11 }}
             >
-              <Filter className="h-3 w-3 mr-1" style={{ color: "#a090c8" }} /><SelectValue placeholder="Todos os pacientes" />
+              <Filter className="h-3 w-3 mr-1" style={{ color: "hsl(var(--muted-foreground))" }} /><SelectValue placeholder="Todos os pacientes" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os pacientes</SelectItem>
@@ -1943,9 +1943,9 @@ const Agenda = () => {
           <button
             onClick={() => setPendingSort(pendingSort === "date" ? "patient" : "date")}
             className="inline-flex items-center gap-1.5 h-9 px-3"
-            style={{ background: "#fff", border: "0.5px solid #e8dfd2", borderRadius: 40, color: "#5d4198", fontFamily: "Instrument Sans, sans-serif", fontSize: 11 }}
+            style={{ background: "#fff", border: "0.5px solid hsl(var(--border))", borderRadius: 40, color: "hsl(var(--primary-dark))", fontFamily: "Instrument Sans, sans-serif", fontSize: 11 }}
           >
-            <ArrowUpDown className="h-3 w-3" style={{ color: "#a090c8" }} />
+            <ArrowUpDown className="h-3 w-3" style={{ color: "hsl(var(--muted-foreground))" }} />
             {pendingSort === "date" ? "Data" : "Paciente"}
           </button>
         </div>
@@ -1953,7 +1953,7 @@ const Agenda = () => {
         {loadingPending ? (
           <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" /></div>
         ) : sortedPending.length === 0 ? (
-          <div className="py-10 text-center" style={{ color: "#a090c8" }}>
+          <div className="py-10 text-center" style={{ color: "hsl(var(--muted-foreground))" }}>
             <CheckCircle2 className="h-10 w-10 mx-auto mb-2 opacity-40" />
             <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13 }}>
               {paymentFilter === "paid" ? "Nenhuma sessão paga neste mês" : paymentFilter === "all" ? "Nenhuma sessão neste mês" : "Nenhum pagamento pendente 🎉"}
@@ -1967,22 +1967,22 @@ const Agenda = () => {
                 <div
                   key={group.key}
                   className="relative overflow-hidden transition-shadow"
-                  style={{ background: "#ffffff", border: "0.5px solid #e8dfd2", borderRadius: 12, padding: "14px 16px" }}
+                  style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))", borderRadius: 12, padding: "14px 16px" }}
                   onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(150,117,206,0.08)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
                 >
-                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2.5, background: "linear-gradient(90deg, #D4AF37, #E5C76B, #D4AF37)" }} />
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2.5, background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
                   <div className="min-w-0" style={{ paddingTop: 4 }}>
                     {s.patient_id && s.patient_name ? (
                       <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
                     ) : (
-                      <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12.5, color: "#2a1f3d" }}>{s.patient_name}</p>
+                      <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12.5, color: "hsl(var(--foreground))" }}>{s.patient_name}</p>
                     )}
-                    <p className="mt-1 flex items-center gap-1.5" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 10.5, color: "#a090c8" }}>
-                      <CalendarIcon className="h-3 w-3" style={{ color: "#c0b0e0" }} />
+                    <p className="mt-1 flex items-center gap-1.5" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 10.5, color: "hsl(var(--muted-foreground))" }}>
+                      <CalendarIcon className="h-3 w-3" style={{ color: "hsl(var(--muted-foreground))" }} />
                       {group.isSinglePayment ? `${group.sessions.length} sessões` : format(new Date(s.scheduled_at), "dd/MM/yyyy")}
                     </p>
-                    <p className="mt-2" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: "#9675CE" }}>
+                    <p className="mt-2" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: "hsl(var(--primary))" }}>
                       R$ {group.total.toFixed(2)}
                     </p>
                   </div>
@@ -1993,24 +1993,24 @@ const Agenda = () => {
                         style={{
                           background: s.payment_status === "paid" ? "rgba(150,117,206,0.08)" : "rgba(201,168,76,0.08)",
                           border: s.payment_status === "paid" ? "0.5px solid rgba(150,117,206,0.25)" : "0.5px solid rgba(201,168,76,0.25)",
-                          color: s.payment_status === "paid" ? "#5d4198" : "#4B356F",
+                          color: s.payment_status === "paid" ? "hsl(var(--primary-dark))" : "hsl(var(--brown))",
                           fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9.5, borderRadius: 40,
                         }}
                       >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pending"><span className="font-medium" style={{ color: "#4B356F" }}>● Pendente</span></SelectItem>
-                        <SelectItem value="paid"><span className="font-medium" style={{ color: "#5d4198" }}>● Pago</span></SelectItem>
+                        <SelectItem value="pending"><span className="font-medium" style={{ color: "hsl(var(--brown))" }}>● Pendente</span></SelectItem>
+                        <SelectItem value="paid"><span className="font-medium" style={{ color: "hsl(var(--primary-dark))" }}>● Pago</span></SelectItem>
                       </SelectContent>
                     </Select>
                     <button
                       title="Cobrar via WhatsApp"
                       onClick={() => sendWhatsAppReminder(s)}
                       className="flex items-center justify-center transition-colors"
-                      style={{ width: 24, height: 24, borderRadius: 6, color: "#c0b0e0", background: "transparent" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "#ebe0f3"; e.currentTarget.style.color = "#9675CE"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#c0b0e0"; }}
+                      style={{ width: 24, height: 24, borderRadius: 6, color: "hsl(var(--muted-foreground))", background: "transparent" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--secondary))"; e.currentTarget.style.color = "hsl(var(--primary))"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
                     >
                       <MessageCircle className="h-3.5 w-3.5" />
                     </button>
@@ -2018,9 +2018,9 @@ const Agenda = () => {
                       title="Excluir sessão"
                       onClick={() => promptDelete(s.id)}
                       className="flex items-center justify-center transition-colors"
-                      style={{ width: 24, height: 24, borderRadius: 6, color: "#c0b0e0", background: "transparent" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = "#4B356F"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = "#c0b0e0"; }}
+                      style={{ width: 24, height: 24, borderRadius: 6, color: "hsl(var(--muted-foreground))", background: "transparent" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "hsl(var(--brown))"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

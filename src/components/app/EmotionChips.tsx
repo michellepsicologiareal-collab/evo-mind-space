@@ -50,8 +50,8 @@ export const EmotionChips = ({ note, onChange }: Props) => {
               fontFamily: "Syne, sans-serif",
               fontWeight: 600,
               background: active ? "rgba(150,117,206,0.12)" : "#fff",
-              color: active ? "#5d4198" : "#C0AADE",
-              border: active ? "0.5px solid rgba(150,117,206,0.35)" : "0.5px solid #e8dfd2",
+              color: active ? "hsl(var(--primary-dark))" : "hsl(var(--primary-glow))",
+              border: active ? "0.5px solid rgba(150,117,206,0.35)" : "0.5px solid hsl(var(--border))",
             }}
           >
             {emo}

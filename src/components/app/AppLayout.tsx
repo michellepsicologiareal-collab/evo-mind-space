@@ -107,10 +107,10 @@ export const AppLayout = () => {
           isActive
             ? isAdminSection
               ? "bg-[hsl(var(--admin-accent))] text-white shadow-soft rounded-xl"
-              : "bg-[rgba(150,117,206,0.08)] text-[#5d4198] font-medium border-l-[3px] border-l-[#9675CE] rounded-none"
+              : "bg-[rgba(150,117,206,0.08)] text-primary-dark font-medium border-l-[3px] border-l-primary rounded-none"
             : isAdminSection
             ? "text-[hsl(var(--admin-accent))]/80 hover:bg-[hsl(var(--admin-accent))]/10 hover:text-[hsl(var(--admin-accent))] rounded-xl"
-            : "text-[#a090c8] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[#5d4198] rounded-xl"
+            : "text-muted-foreground hover:bg-[hsl(var(--sidebar-hover))] hover:text-primary-dark rounded-xl"
         )
       }
     >
@@ -126,14 +126,14 @@ export const AppLayout = () => {
       <div className="fixed top-0 inset-x-0 z-50 gold-bar pointer-events-none" />
 
       {/* ── Desktop sidebar (fixed) ── */}
-      <aside className="hidden md:flex md:w-[220px] fixed inset-y-0 left-0 z-30 bg-[#FBF7F1] border-r border-[#e8dfd2] flex-col">
-        <div className="p-6 flex items-center justify-between border-b border-[#e8dfd2]">
+      <aside className="hidden md:flex md:w-[220px] fixed inset-y-0 left-0 z-30 bg-muted border-r border-border flex-col">
+        <div className="p-6 flex items-center justify-between border-b border-border">
           <Link to="/app" className="flex items-center gap-2">
             <img src={logoSrc} alt="Psicologia Real" className="h-9 w-9 rounded-full object-cover" />
             <span className="font-display text-xl font-bold tracking-tight flex items-center gap-1.5">
-              <span className="text-[#2a1f3d]">Psi</span>
-              <span className="text-[#9675CE]">Real</span>
-              <span className="inline-block h-2 w-2 rounded-full bg-[#D4AF37]" aria-hidden />
+              <span className="text-foreground">Psi</span>
+              <span className="text-primary">Real</span>
+              <span className="inline-block h-2 w-2 rounded-full bg-gold" aria-hidden />
             </span>
           </Link>
           <NotificationBell />
@@ -153,7 +153,7 @@ export const AppLayout = () => {
               if (items.length === 0) return null;
               return (
                 <div key={sec.label} className="space-y-1">
-                  <div className="px-4 pt-4 pb-1.5 font-display font-semibold text-[9px] uppercase text-[#a090c8]" style={{ letterSpacing: "0.14em" }}>
+                  <div className="px-4 pt-4 pb-1.5 font-display font-semibold text-[9px] uppercase text-muted-foreground" style={{ letterSpacing: "0.14em" }}>
                     {sec.label}
                   </div>
                   {items.map((item) => renderNavLink(item))}
@@ -186,17 +186,17 @@ export const AppLayout = () => {
           )}
         </nav>
 
-        <div className="p-4 border-t border-[#e8dfd2]">
+        <div className="p-4 border-t border-border">
           <button
             onClick={() => setPlanOpen(true)}
             className="flex items-center gap-3 px-4 py-3 rounded-[10px] font-display font-semibold text-sm transition-colors w-full"
             style={{
               background: "rgba(201,168,76,0.08)",
               border: "0.5px solid rgba(201,168,76,0.25)",
-              color: "#4B356F",
+              color: "hsl(var(--brown))",
             }}
           >
-            <Crown className="h-4 w-4" style={{ color: "#D4AF37" }} />
+            <Crown className="h-4 w-4" style={{ color: "hsl(var(--gold))" }} />
             Meu Plano
           </button>
           <p className="text-xs text-muted-foreground truncate mb-3 mt-3">{user?.email}</p>
@@ -239,7 +239,7 @@ export const AppLayout = () => {
               className={({ isActive }) =>
                 cn(
                   "flex flex-col items-center justify-center gap-1 min-h-[52px] py-1.5 text-[10px] leading-tight font-medium transition-colors rounded-lg mx-0.5",
-                  isActive ? "text-[#9675CE] bg-[rgba(150,117,206,0.10)]" : "text-muted-foreground"
+                  isActive ? "text-primary bg-[rgba(150,117,206,0.10)]" : "text-muted-foreground"
                 )
               }
             >
@@ -261,7 +261,7 @@ export const AppLayout = () => {
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent side="bottom" className="md:hidden rounded-t-3xl max-h-[80vh] overflow-y-auto p-0">
           <div className="p-5">
-            <div className="font-display text-base font-semibold text-[#2a1f3d] mb-4">Mais opções</div>
+            <div className="font-display text-base font-semibold text-foreground mb-4">Mais opções</div>
             <div className="grid grid-cols-3 gap-2">
               {mobileSecondary.map((item) => (
                 <NavLink
@@ -273,8 +273,8 @@ export const AppLayout = () => {
                     cn(
                       "flex flex-col items-center justify-center gap-1.5 min-h-[72px] p-2 rounded-xl border text-[11px] font-medium text-center leading-tight",
                       isActive
-                        ? "bg-[rgba(150,117,206,0.10)] border-[#9675CE]/30 text-[#5d4198]"
-                        : "bg-[#FBF7F1] border-[#e8dfd2] text-[#4B356F]"
+                        ? "bg-[rgba(150,117,206,0.10)] border-primary/30 text-primary-dark"
+                        : "bg-muted border-border text-brown"
                     )
                   }
                 >

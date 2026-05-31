@@ -448,21 +448,21 @@ const Patients = () => {
   const totalFormulCount = activePatients.length;
 
   return (
-    <div className="space-y-5 animate-fade-up" style={{ background: "#ffffff" }}>
+    <div className="space-y-5 animate-fade-up" style={{ background: "hsl(var(--card))" }}>
       {/* Top row */}
       <div className="flex flex-wrap items-center gap-4 pt-2">
         <div className="relative w-full sm:w-auto" style={{ maxWidth: 260 }}>
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#a090c8" }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "hsl(var(--muted-foreground))" }} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar paciente..."
             className="w-full pl-9 pr-3 py-2 outline-none focus:outline-none"
             style={{
-              background: "#FAFAFC",
-              border: "0.5px solid #e8dfd2",
+              background: "hsl(var(--background))",
+              border: "0.5px solid hsl(var(--border))",
               borderRadius: 40,
-              color: "#2a1f3d",
+              color: "hsl(var(--foreground))",
               fontFamily: "Instrument Sans, sans-serif",
               fontSize: 13,
             }}
@@ -484,8 +484,8 @@ const Patients = () => {
                   fontFamily: "Syne, sans-serif",
                   fontWeight: isActive ? 700 : 400,
                   fontSize: 12,
-                  color: isActive ? "#5d4198" : "#a090c8",
-                  borderBottom: isActive ? "2px solid #9675CE" : "2px solid transparent",
+                  color: isActive ? "hsl(var(--primary-dark))" : "hsl(var(--muted-foreground))",
+                  borderBottom: isActive ? "2px solid hsl(var(--primary))" : "2px solid transparent",
                   letterSpacing: "0.02em",
                 }}
               >
@@ -512,9 +512,9 @@ const Patients = () => {
                   fontSize: 11,
                   padding: "5px 11px",
                   borderRadius: 40,
-                  background: isActive ? "#9675CE" : "#FAFAFC",
-                  color: isActive ? "#fff" : "#9675CE",
-                  border: "0.5px solid " + (isActive ? "#9675CE" : "#e8dfd2"),
+                  background: isActive ? "hsl(var(--primary))" : "hsl(var(--background))",
+                  color: isActive ? "#fff" : "hsl(var(--primary))",
+                  border: "0.5px solid " + (isActive ? "hsl(var(--primary))" : "hsl(var(--border))"),
                 }}
               >
                 <Stethoscope className="h-3 w-3" /> {t.label} · {t.n}
@@ -527,7 +527,7 @@ const Patients = () => {
             onClick={openNew}
             className="inline-flex items-center gap-1.5 px-4 py-2 transition-opacity hover:opacity-90"
             style={{
-              background: "#9675CE",
+              background: "hsl(var(--primary))",
               color: "#fff",
               borderRadius: 40,
               fontFamily: "Syne, sans-serif",
@@ -543,19 +543,19 @@ const Patients = () => {
       {loading ? (
         <CardSkeleton count={4} />
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed p-14 text-center" style={{ borderColor: "#e8dfd2", background: "#FBF7F1" }}>
-          <User className="h-12 w-12 mx-auto" style={{ color: "#c0b0e0" }} />
-          <p className="mt-4" style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 16, color: "#5d4198" }}>
+        <div className="rounded-2xl border border-dashed p-14 text-center" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted))" }}>
+          <User className="h-12 w-12 mx-auto" style={{ color: "hsl(var(--muted-foreground))" }} />
+          <p className="mt-4" style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 16, color: "hsl(var(--primary-dark))" }}>
             {patients.length === 0 ? "Pronto para começar?" : "Nenhum resultado encontrado."}
           </p>
-          <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#C0AADE" }}>
+          <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--primary-glow))" }}>
             {patients.length === 0 ? "Cadastre seu primeiro paciente e organize seu consultório." : "Tente outra busca ou limpe o filtro."}
           </p>
           {patients.length === 0 && (
             <button
               onClick={openNew}
               className="inline-flex items-center gap-1.5 mt-5 px-4 py-2"
-              style={{ background: "#9675CE", color: "#fff", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+              style={{ background: "hsl(var(--primary))", color: "#fff", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
             >
               <Plus className="h-3.5 w-3.5" /> Cadastrar primeiro paciente
             </button>
@@ -579,47 +579,47 @@ const Patients = () => {
                 onClick={() => setSelectedPatient(p)}
                 className="group relative cursor-pointer transition-all overflow-hidden"
                 style={{
-                  background: isAlert ? "#F5F1FB" : "#ffffff",
-                  border: "0.5px solid #e8dfd2",
-                  borderLeft: isAlert ? "2px solid #4B356F" : "0.5px solid #e8dfd2",
+                  background: isAlert ? "hsl(var(--muted))" : "hsl(var(--card))",
+                  border: "0.5px solid hsl(var(--border))",
+                  borderLeft: isAlert ? "2px solid hsl(var(--brown))" : "0.5px solid hsl(var(--border))",
                   borderRadius: 14,
                   boxShadow: "0 1px 2px rgba(150,117,206,0.04)",
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(150,117,206,0.10)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 2px rgba(150,117,206,0.04)"; }}
               >
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, #D4AF37, #E5C76B, #D4AF37)" }} />
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5" style={{ paddingTop: 18, paddingBottom: 16 }}>
-                  <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.08)", color: "#9675CE", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
+                  <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
                     {p.full_name.charAt(0).toUpperCase()}
                   </div>
 
                   <div className="min-w-0 flex-1 sm:flex-none" style={{ flexBasis: "auto" }}>
-                    <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: isAlert ? "#633806" : "#2a1f3d" }}>
+                    <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: isAlert ? "hsl(var(--brown))" : "hsl(var(--foreground))" }}>
                       {p.full_name}
                     </p>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="inline-flex items-center gap-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: p.is_active ? "#3b6d11" : "#a090c8" }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.is_active ? "#3b6d11" : "#c0b0e0" }} />
+                      <span className="inline-flex items-center gap-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }} />
                         {p.is_active ? "Ativo" : "Inativo"}
                       </span>
-                      <span className="uppercase inline-block" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "#4B356F", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 9px", letterSpacing: "0.06em" }}>
+                      <span className="uppercase inline-block" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "hsl(var(--brown))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 9px", letterSpacing: "0.06em" }}>
                         {type}
                       </span>
                     </div>
                   </div>
 
-                  <div className="min-w-0 hidden lg:flex items-center gap-2" style={{ flex: "0 0 140px", fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#4B356F" }}>
-                    {p.phone && (<><Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "#c0b0e0" }} /><span className="truncate">{p.phone}</span></>)}
+                  <div className="min-w-0 hidden lg:flex items-center gap-2" style={{ flex: "0 0 140px", fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--brown))" }}>
+                    {p.phone && (<><Phone className="h-3.5 w-3.5 shrink-0" style={{ color: "hsl(var(--muted-foreground))" }} /><span className="truncate">{p.phone}</span></>)}
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:flex-1 min-w-0 order-last sm:order-none">
                     <button
                       onClick={(e) => { e.stopPropagation(); setMoodPatient(p); }}
                       className="inline-flex items-center gap-1.5 transition-colors"
-                      style={{ background: "#FAFAFC", border: "0.5px solid #e8dfd2", color: "#5d4198", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "#e8dfd2"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "#FAFAFC"; }}
+                      style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--border))"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; }}
                     >
                       <Smile className="h-3 w-3" /> Humor
                       {cMood > 0 && <span style={{ background: "rgba(150,117,206,0.18)", borderRadius: 40, padding: "0 6px", fontSize: 9 }}>{cMood}</span>}
@@ -627,9 +627,9 @@ const Patients = () => {
                     <button
                       onClick={(e) => { e.stopPropagation(); setHistoryPatient(p); }}
                       className="inline-flex items-center gap-1.5 transition-colors"
-                      style={{ background: "#FAFAFC", border: "0.5px solid #e8dfd2", color: "#5d4198", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "#e8dfd2"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "#FAFAFC"; }}
+                      style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--border))"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; }}
                     >
                       <CalendarDays className="h-3 w-3" /> Histórico
                       {cHist > 0 && <span style={{ background: "rgba(150,117,206,0.18)", borderRadius: 40, padding: "0 6px", fontSize: 9 }}>{cHist}</span>}
@@ -639,8 +639,8 @@ const Patients = () => {
                       title={formulationFilled[p.id] ? "Formulação preenchida" : "Criar formulação de caso"}
                       className="inline-flex items-center gap-1.5 transition-colors"
                       style={formulationFilled[p.id]
-                        ? { background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.25)", color: "#5d4198", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
-                        : { background: "#FAFAFC", border: "0.5px dashed #D4AF37", color: "#4B356F", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                        ? { background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.25)", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
+                        : { background: "hsl(var(--background))", border: "0.5px dashed hsl(var(--gold))", color: "hsl(var(--brown))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
                     >
                       <Stethoscope className="h-3 w-3" /> {formulationFilled[p.id] ? "Formulação" : "Sem formulação"}
                     </button>
@@ -649,8 +649,8 @@ const Patients = () => {
                       title={cTcc > 0 ? `${cTcc} conceitualizações TCC` : "Criar conceitualização TCC"}
                       className="inline-flex items-center gap-1.5 transition-colors"
                       style={cTcc > 0
-                        ? { background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.25)", color: "#5d4198", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
-                        : { background: "#FAFAFC", border: "0.5px dashed #D4AF37", color: "#4B356F", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                        ? { background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.25)", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
+                        : { background: "hsl(var(--background))", border: "0.5px dashed hsl(var(--gold))", color: "hsl(var(--brown))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
                     >
                       <Brain className="h-3 w-3" /> {cTcc > 0 ? `Conceitualização TCC${cTcc > 1 ? ` · ${cTcc}` : ""}` : "Sem conceitualização TCC"}
                     </button>
@@ -658,7 +658,7 @@ const Patients = () => {
                       onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }}
                       title="Abrir plano de tratamento"
                       className="inline-flex items-center gap-1.5 transition-colors"
-                      style={{ background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.25)", color: "#5d4198", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                      style={{ background: "rgba(150,117,206,0.10)", border: "0.5px solid rgba(150,117,206,0.25)", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
                     >
                       <ClipboardList className="h-3 w-3" /> Plano
                     </button>
@@ -667,16 +667,16 @@ const Patients = () => {
                         onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }}
                         className="inline-flex items-center gap-1.5 transition-colors"
                         style={hasAnam
-                          ? { background: "#FAFAFC", border: "0.5px solid #e8dfd2", color: "#5d4198", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
-                          : { background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "#4B356F", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
+                          ? { background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }
+                          : { background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "hsl(var(--brown))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}
                       >
                         <Baby className="h-3 w-3" /> {hasAnam ? "Anamnese" : "Sem anamnese"}
                       </button>
                     )}
                     {p.session_price != null && (
                       <span className="ml-auto flex items-baseline gap-1" style={{ fontFamily: "Syne, sans-serif" }}>
-                        <span style={{ fontWeight: 700, fontSize: 13, color: "#2a1f3d" }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
-                        <span style={{ fontSize: 10, color: "#a090c8", fontFamily: "Instrument Sans, sans-serif" }}>/sessão</span>
+                        <span style={{ fontWeight: 700, fontSize: 13, color: "hsl(var(--foreground))" }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
+                        <span style={{ fontSize: 10, color: "hsl(var(--muted-foreground))", fontFamily: "Instrument Sans, sans-serif" }}>/sessão</span>
                       </span>
                     )}
                   </div>
@@ -690,9 +690,9 @@ const Patients = () => {
                         onClick={(e) => e.stopPropagation()}
                         title="Cobrar via WhatsApp"
                         className="flex items-center justify-center transition-colors"
-                        style={{ width: 32, height: 32, borderRadius: 8, color: "#9675CE", background: "#FAFAFC", border: "0.5px solid #e8dfd2" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "#e8dfd2"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "#FAFAFC"; }}
+                        style={{ width: 32, height: 32, borderRadius: 8, color: "hsl(var(--primary))", background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--border))"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; }}
                       >
                         <MessageCircle className="h-3.5 w-3.5" />
                       </a>
@@ -701,9 +701,9 @@ const Patients = () => {
                       onClick={(e) => { e.stopPropagation(); setRecordsPatient(p); }}
                       title="Registros"
                       className="flex items-center justify-center transition-colors"
-                      style={{ width: 32, height: 32, borderRadius: 8, color: "#9675CE", background: "#FAFAFC", border: "0.5px solid #e8dfd2" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "#e8dfd2"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "#FAFAFC"; }}
+                      style={{ width: 32, height: 32, borderRadius: 8, color: "hsl(var(--primary))", background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--border))"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; }}
                     >
                       <FileText className="h-3.5 w-3.5" />
                     </button>
@@ -712,9 +712,9 @@ const Patients = () => {
                         <button
                           onClick={(e) => e.stopPropagation()}
                           className="flex items-center justify-center transition-colors"
-                          style={{ width: 32, height: 32, borderRadius: 8, color: "#9675CE", background: "#FAFAFC", border: "0.5px solid #e8dfd2" }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "#e8dfd2"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "#FAFAFC"; }}
+                          style={{ width: 32, height: 32, borderRadius: 8, color: "hsl(var(--primary))", background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--border))"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; }}
                         >
                           <MoreHorizontal className="h-3.5 w-3.5" />
                         </button>
@@ -737,13 +737,13 @@ const Patients = () => {
                     style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.08), rgba(150,117,206,0.06))", border: "0.5px solid rgba(201,168,76,0.25)" }}
                   >
                     <div className="flex items-start gap-2 min-w-0 flex-1">
-                      <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "#D4AF37" }} />
+                      <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "hsl(var(--gold))" }} />
                       <div className="min-w-0">
-                        <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "#4B356F" }}>Resumo IA · Formulação</p>
+                        <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "hsl(var(--brown))" }}>Resumo IA · Formulação</p>
                         {aiSum ? (
-                          <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#3d2b1a", lineHeight: 1.5 }}>{aiSum}</p>
+                          <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--foreground))", lineHeight: 1.5 }}>{aiSum}</p>
                         ) : (
-                          <p className="mt-1 italic" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#8b7355" }}>
+                          <p className="mt-1 italic" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
                             Gere um resumo de IA com os destaques clínicos desta formulação.
                           </p>
                         )}
@@ -754,7 +754,7 @@ const Patients = () => {
                         onClick={() => summarizeFormulation(p.id)}
                         disabled={!!summarizing[p.id]}
                         className="inline-flex items-center gap-1.5 transition-colors disabled:opacity-60"
-                        style={{ background: "#fff", border: "0.5px solid rgba(201,168,76,0.4)", color: "#4B356F", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10.5 }}
+                        style={{ background: "#fff", border: "0.5px solid rgba(201,168,76,0.4)", color: "hsl(var(--brown))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10.5 }}
                       >
                         {summarizing[p.id] ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                         {aiSum ? "Atualizar" : "Gerar resumo IA"}
@@ -762,7 +762,7 @@ const Patients = () => {
                       <button
                         onClick={() => setReadPatient(p)}
                         className="inline-flex items-center gap-1.5 transition-colors"
-                        style={{ background: "#9675CE", color: "#fff", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10.5 }}
+                        style={{ background: "hsl(var(--primary))", color: "#fff", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10.5 }}
                       >
                         <BookOpen className="h-3 w-3" /> Ler formulação
                       </button>
@@ -777,7 +777,7 @@ const Patients = () => {
 
       {/* Side panel */}
       <Sheet open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
-        <SheetContent side="right" className="w-full sm:w-[380px] sm:max-w-[380px] p-0" style={{ background: "#ffffff", borderLeft: "0.5px solid #e8dfd2" }}>
+        <SheetContent side="right" className="w-full sm:w-[380px] sm:max-w-[380px] p-0" style={{ background: "hsl(var(--card))", borderLeft: "0.5px solid hsl(var(--border))" }}>
           {selectedPatient && (() => {
             const p = selectedPatient;
             const cHist = counts.history[p.id] || 0;
@@ -791,9 +791,9 @@ const Patients = () => {
               <button
                 onClick={onClick}
                 className="inline-flex items-center gap-1.5 transition-colors uppercase"
-                style={{ background: "#FAFAFC", border: "0.5px solid #e8dfd2", color: "#5d4198", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.04em" }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#e8dfd2"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "#FAFAFC"; }}
+                style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--primary-dark))", padding: "5px 10px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 10, letterSpacing: "0.04em" }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--border))"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; }}
               >
                 {label}
                 {count != null && count > 0 && (
@@ -803,43 +803,43 @@ const Patients = () => {
             );
             return (
               <div className="h-full overflow-y-auto relative">
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, #D4AF37, #E5C76B, #D4AF37)" }} />
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
                 <button
                   onClick={() => setSelectedPatient(null)}
                   className="absolute right-4 top-4 flex items-center justify-center transition-colors"
-                  style={{ width: 28, height: 28, borderRadius: 6, color: "#a090c8" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "#FAFAFC"; e.currentTarget.style.color = "#9675CE"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#a090c8"; }}
+                  style={{ width: 28, height: 28, borderRadius: 6, color: "hsl(var(--muted-foreground))" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; e.currentTarget.style.color = "hsl(var(--primary))"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
                 >
                   <X className="h-4 w-4" />
                 </button>
                 <div className="p-6 pt-8">
                   <div className="flex items-center gap-3 pr-8">
-                    <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.08)", color: "#9675CE", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
+                    <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
                       {p.full_name.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16, color: "#2a1f3d" }}>{p.full_name}</p>
+                      <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16, color: "hsl(var(--foreground))" }}>{p.full_name}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="uppercase" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "#4B356F", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 8px", letterSpacing: "0.04em" }}>{type}</span>
-                        {p.is_active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#3b6d11" }} />}
+                        <span className="uppercase" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "hsl(var(--brown))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 8px", letterSpacing: "0.04em" }}>{type}</span>
+                        {p.is_active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "hsl(var(--moss))" }} />}
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-5 space-y-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#4B356F" }}>
-                    {p.phone && <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" style={{ color: "#c0b0e0" }} /> {p.phone}</p>}
-                    {p.email && <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" style={{ color: "#c0b0e0" }} /> {p.email}</p>}
+                  <div className="mt-5 space-y-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--brown))" }}>
+                    {p.phone && <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" style={{ color: "hsl(var(--muted-foreground))" }} /> {p.phone}</p>}
+                    {p.email && <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" style={{ color: "hsl(var(--muted-foreground))" }} /> {p.email}</p>}
                     {p.session_price != null && (
                       <p className="flex items-baseline gap-1">
-                        <span style={{ color: "#2a1f3d", fontWeight: 600 }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
-                        <span style={{ color: "#a090c8" }}>/ sessão</span>
+                        <span style={{ color: "hsl(var(--foreground))", fontWeight: 600 }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
+                        <span style={{ color: "hsl(var(--muted-foreground))" }}>/ sessão</span>
                       </p>
                     )}
                   </div>
 
                   <div className="mt-6">
-                    <p className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", color: "#a090c8" }}>Resumo clínico</p>
+                    <p className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", color: "hsl(var(--muted-foreground))" }}>Resumo clínico</p>
                     <div className="flex flex-wrap gap-1.5">
                       <Chip label="Humor" count={cMood} onClick={() => { setSelectedPatient(null); setMoodPatient(p); }} />
                       <Chip label="Histórico" count={cHist} onClick={() => { setSelectedPatient(null); setHistoryPatient(p); }} />
@@ -858,7 +858,7 @@ const Patients = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center justify-center gap-2 w-full"
-                        style={{ background: "rgba(150,117,206,0.08)", color: "#9675CE", border: "0.5px solid rgba(150,117,206,0.25)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+                        style={{ background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", border: "0.5px solid rgba(150,117,206,0.25)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
                       >
                         <MessageCircle className="h-4 w-4" /> Cobrar via WhatsApp
                       </a>
@@ -866,7 +866,7 @@ const Patients = () => {
                     <button
                       onClick={() => { setSelectedPatient(null); navigate("/app/agenda"); }}
                       className="flex items-center justify-center gap-2 w-full"
-                      style={{ background: "#9675CE", color: "#fff", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+                      style={{ background: "hsl(var(--primary))", color: "#fff", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
                     >
                       <CalendarDays className="h-4 w-4" /> Nova sessão
                     </button>
@@ -883,21 +883,21 @@ const Patients = () => {
                         }
                       }}
                       className="flex items-center justify-center gap-2 w-full"
-                      style={{ background: "rgba(29,158,117,0.10)", color: "#0e5e44", border: "0.5px solid rgba(29,158,117,0.3)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+                      style={{ background: "rgba(29,158,117,0.10)", color: "hsl(var(--moss))", border: "0.5px solid rgba(29,158,117,0.3)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
                     >
                       <Baby className="h-4 w-4" /> Enviar anamnese
                     </button>
                     <button
                       onClick={() => window.open(`https://wa.me/5511947388423?text=${encodeURIComponent(`Olá Michelle, preciso de supervisão para o caso do(a) paciente: ${p.full_name}`)}`, "_blank")}
                       className="flex items-center justify-center gap-2 w-full"
-                      style={{ background: "rgba(201,168,76,0.10)", color: "#4B356F", border: "0.5px solid rgba(201,168,76,0.3)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+                      style={{ background: "rgba(201,168,76,0.10)", color: "hsl(var(--brown))", border: "0.5px solid rgba(201,168,76,0.3)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
                     >
                       <Stethoscope className="h-4 w-4" /> Pedir supervisão
                     </button>
                   </div>
 
-                  <div className="mt-6 flex items-center justify-between pt-4" style={{ borderTop: "0.5px solid #e8dfd2" }}>
-                    <div className="flex items-center gap-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#a090c8" }}>
+                  <div className="mt-6 flex items-center justify-between pt-4" style={{ borderTop: "0.5px solid hsl(var(--border))" }}>
+                    <div className="flex items-center gap-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
                       <Eye className="h-3.5 w-3.5" /> Visível ao supervisor
                     </div>
                     <Switch checked={p.shared_with_supervisor} onCheckedChange={() => toggleSharing(p)} />
@@ -1107,7 +1107,7 @@ const Patients = () => {
 
       {/* Ler Formulação (PDF-like) Dialog */}
       <Dialog open={!!readPatient} onOpenChange={(o) => !o && setReadPatient(null)}>
-        <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0 bg-[#faf8f3]">
+        <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0 bg-muted">
           <DialogHeader className="sr-only">
             <DialogTitle>Formulação de Caso — {readPatient?.full_name}</DialogTitle>
           </DialogHeader>
@@ -1118,14 +1118,14 @@ const Patients = () => {
             const updated = formulationFilled[readPatient.id];
             const Section = ({ title, content }: { title: string; content?: string }) => (
               <section className="mb-6">
-                <h2 className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "#4B356F", borderBottom: "0.5px solid rgba(201,168,76,0.4)", paddingBottom: 4 }}>{title}</h2>
-                <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#2a1a3a", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>{content?.trim() || <span className="italic text-muted-foreground">— não preenchido —</span>}</p>
+                <h2 className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "hsl(var(--brown))", borderBottom: "0.5px solid rgba(201,168,76,0.4)", paddingBottom: 4 }}>{title}</h2>
+                <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--foreground))", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>{content?.trim() || <span className="italic text-muted-foreground">— não preenchido —</span>}</p>
               </section>
             );
             return (
               <>
-                <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-3 bg-white/90 backdrop-blur border-b border-[#e8dfd2]">
-                  <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: "#5d4198" }}>Formulação de Caso</p>
+                <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-3 bg-white/90 backdrop-blur border-b border-border">
+                  <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: "hsl(var(--primary-dark))" }}>Formulação de Caso</p>
                   <div className="flex items-center gap-2">
                     <button onClick={() => {
                       const node = document.getElementById("formulation-print");
@@ -1135,25 +1135,25 @@ const Patients = () => {
                       const html = `<!doctype html><html><head><meta charset="utf-8"><title>Formulação - ${(readPatient?.full_name || "").replace(/[<>&"]/g, "")}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<style>@page{margin:18mm} *{box-sizing:border-box} body{margin:0;background:#fff;color:#2a1f3d;font-family:'Instrument Sans',sans-serif} .wrap{padding:0}</style>
+<style>@page{margin:18mm} *{box-sizing:border-box} body{margin:0;background:#fff;color:hsl(var(--foreground));font-family:'Instrument Sans',sans-serif} .wrap{padding:0}</style>
 </head><body><div class="wrap">${node.innerHTML}</div>
 <script>window.addEventListener('load',()=>{setTimeout(()=>{window.focus();window.print();},300);});</script>
 </body></html>`;
                       w.document.open(); w.document.write(html); w.document.close();
-                    }} className="inline-flex items-center gap-1.5" style={{ background: "#fff", border: "0.5px solid #e8dfd2", color: "#5d4198", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
+                    }} className="inline-flex items-center gap-1.5" style={{ background: "#fff", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--primary-dark))", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
                       <Printer className="h-3.5 w-3.5" /> Imprimir / PDF
                     </button>
-                    <button onClick={() => { setReadPatient(null); setPadeksyPatient(readPatient); }} className="inline-flex items-center gap-1.5" style={{ background: "#9675CE", color: "#fff", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
+                    <button onClick={() => { setReadPatient(null); setPadeksyPatient(readPatient); }} className="inline-flex items-center gap-1.5" style={{ background: "hsl(var(--primary))", color: "#fff", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
                       <Pencil className="h-3.5 w-3.5" /> Editar
                     </button>
                   </div>
                 </div>
                 <div id="formulation-print" className="px-10 py-10 bg-white mx-6 my-6 rounded-lg shadow-sm" style={{ minHeight: "60vh" }}>
-                  <div className="mb-8 pb-4 border-b border-[#e8dfd2]">
-                    <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", color: "#a090c8" }}>Prontuário Clínico · Padesky</p>
-                    <h1 className="mt-2" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 26, color: "#2a1f3d" }}>{readPatient.full_name}</h1>
+                  <div className="mb-8 pb-4 border-b border-border">
+                    <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", color: "hsl(var(--muted-foreground))" }}>Prontuário Clínico · Padesky</p>
+                    <h1 className="mt-2" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 26, color: "hsl(var(--foreground))" }}>{readPatient.full_name}</h1>
                     {updated && (
-                      <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "#C0AADE" }}>
+                      <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--primary-glow))" }}>
                         Atualizada em {format(new Date(updated), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                       </p>
                     )}
@@ -1161,10 +1161,10 @@ const Patients = () => {
                   {sum && (
                     <section className="mb-6 rounded-xl p-4" style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.10), rgba(150,117,206,0.06))", border: "0.5px solid rgba(201,168,76,0.3)" }}>
                       <div className="flex items-center gap-1.5 mb-1.5">
-                        <Sparkles className="h-3.5 w-3.5" style={{ color: "#D4AF37" }} />
-                        <span className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "#4B356F" }}>Resumo IA · Destaques</span>
+                        <Sparkles className="h-3.5 w-3.5" style={{ color: "hsl(var(--gold))" }} />
+                        <span className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", color: "hsl(var(--brown))" }}>Resumo IA · Destaques</span>
                       </div>
-                      <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#3d2b1a", lineHeight: 1.6 }}>{sum}</p>
+                      <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--foreground))", lineHeight: 1.6 }}>{sum}</p>
                     </section>
                   )}
                   <Section title="Ambiente / Situação" content={f.environment} />
@@ -1174,11 +1174,11 @@ const Patients = () => {
                   <Section title="Reações físicas" content={f.physical_reactions} />
                   <Section title="Crenças centrais" content={f.core_beliefs} />
                   <section className="mb-2">
-                    <h2 className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "#4B356F", borderBottom: "0.5px solid rgba(201,168,76,0.4)", paddingBottom: 4 }}>Metas terapêuticas</h2>
+                    <h2 className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", color: "hsl(var(--brown))", borderBottom: "0.5px solid rgba(201,168,76,0.4)", paddingBottom: 4 }}>Metas terapêuticas</h2>
                     {goals.length === 0 ? (
                       <p className="italic text-muted-foreground" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13 }}>— não preenchido —</p>
                     ) : (
-                      <ol className="list-decimal pl-5 space-y-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "#2a1a3a", lineHeight: 1.6 }}>
+                      <ol className="list-decimal pl-5 space-y-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--foreground))", lineHeight: 1.6 }}>
                         {goals.map((g, i) => (
                           <li key={i}>{typeof g === "string" ? g : (g?.objective || g?.text || g?.title || g?.description || "—")}</li>
                         ))}
