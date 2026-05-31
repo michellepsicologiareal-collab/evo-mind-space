@@ -422,9 +422,9 @@ const Agenda = () => {
     if (!silent) setLoading(false);
   };
 
-  const loadPending = async () => {
+  const loadPending = async (silent = false) => {
     if (!user) return;
-    setLoadingPending(true);
+    if (!silent) setLoadingPending(true);
     const mStart = startOfMonth(currentMonth).toISOString();
     const mEnd = endOfMonth(currentMonth).toISOString();
     const { data } = await supabase
