@@ -106,33 +106,79 @@
   }
 
   .dark {
-    --background: 215 28% 8%;
-    --foreground: 210 20% 95%;
-    --card: 215 25% 12%;
-    --card-foreground: 210 20% 95%;
-    --popover: 215 25% 12%;
-    --popover-foreground: 210 20% 95%;
-    --primary: 353 30% 52%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 353 30% 60%;
-    --secondary: 215 20% 18%;
-    --secondary-foreground: 210 20% 95%;
-    --muted: 215 20% 16%;
-    --muted-foreground: 210 12% 65%;
-    --accent: 353 30% 52%;
-    --accent-foreground: 0 0% 100%;
-    --lilac: 260 20% 58%;
-    --lilac-foreground: 260 30% 90%;
-    --moss: 108 30% 45%;
-    --moss-foreground: 215 28% 8%;
-    --sand: 215 15% 20%;
-    --sand-foreground: 210 20% 95%;
-    --border: 215 20% 20%;
-    --input: 215 20% 20%;
-    --ring: 353 30% 52%;
-    --sidebar-hover: 215 20% 16%;
-    --sidebar-active: 353 30% 22%;
-    --sidebar-border: 215 20% 20%;
+    /* Surfaces — dark roxo profundo */
+    --background: 258 25% 9%;               /* fundo escuro com tom roxo */
+    --foreground: 258 30% 95%;              /* texto claro */
+
+    --card: 258 22% 13%;                    /* cards um tom acima do fundo */
+    --card-foreground: 258 30% 95%;
+
+    --popover: 258 22% 13%;
+    --popover-foreground: 258 30% 95%;
+
+    /* Brand — Roxo (mais luminoso no dark) */
+    --primary: 262 60% 72%;                 /* roxo mais claro p/ contraste */
+    --primary-foreground: 258 25% 9%;
+    --primary-glow: 265 55% 80%;
+    --primary-dark: 262 50% 55%;
+
+    --secondary: 258 20% 18%;
+    --secondary-foreground: 258 30% 95%;
+
+    --muted: 258 18% 16%;
+    --muted-foreground: 258 15% 65%;
+
+    --accent: 262 60% 72%;
+    --accent-foreground: 258 25% 9%;
+
+    --lilac: 265 50% 70%;
+    --lilac-foreground: 258 25% 12%;
+
+    --moss: 96 40% 55%;
+    --moss-foreground: 258 25% 9%;
+
+    --sand: 258 18% 16%;
+    --sand-foreground: 258 30% 95%;
+
+    --brown: 262 40% 65%;                   /* "roxo escuro" vira lilás médio no dark */
+    --brown-foreground: 258 25% 9%;
+
+    --gold: 46 70% 62%;                     /* dourado mais brilhante no dark */
+    --gold-dark: 262 40% 65%;
+    --gold-light: 44 75% 72%;
+
+    --sage: 96 40% 55%;
+    --sage-foreground: 258 25% 9%;
+    --serene: 262 60% 72%;
+    --serene-foreground: 258 25% 9%;
+
+    --admin-accent: 262 50% 60%;
+
+    --destructive: 0 65% 58%;
+    --destructive-foreground: 258 25% 9%;
+
+    --border: 258 18% 22%;
+    --input: 258 18% 22%;
+    --ring: 262 60% 72%;
+
+    --sidebar-hover: 258 20% 16%;
+    --sidebar-active: 262 60% 72% / 0.18;
+    --sidebar-border: 258 18% 22%;
+
+    --text-secondary: 258 25% 75%;
+    --text-muted: 258 15% 65%;
+    --text-nav: 258 25% 78%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(262 60% 72%) 0%, hsl(265 55% 60%) 60%, hsl(258 22% 13%) 130%);
+    --gradient-soft: linear-gradient(180deg, hsl(258 22% 13%) 0%, hsl(258 20% 11%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(258 22% 13%) 0%, hsl(258 20% 11%) 100%);
+
+    /* Shadows mais profundas no dark */
+    --shadow-elegant: 0 30px 60px -30px hsl(258 50% 4% / 0.6);
+    --shadow-soft: 0 4px 16px -4px hsl(258 50% 4% / 0.4), 0 1px 3px 0 hsl(258 50% 4% / 0.2);
+    --shadow-glow: 0 0 80px -20px hsl(262 60% 72% / 0.35);
+    --shadow-card: 0 2px 12px -3px hsl(258 50% 4% / 0.35), 0 1px 2px 0 hsl(258 50% 4% / 0.2);
   }
 }
 
