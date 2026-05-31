@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const signUpSchema = z.object({
   fullName: z.string().trim().min(2, "Nome muito curto").max(100),
@@ -18,6 +19,9 @@ const signUpSchema = z.object({
   phone: z.string().trim().min(8, "Telefone inválido").max(20),
   password: z.string().min(8, "Mínimo 8 caracteres").max(72),
   profileType: z.enum(["standard", "supervisee"]),
+  acceptTerms: z.literal(true, {
+    errorMap: () => ({ message: "Você precisa aceitar os Termos de Uso e a Política de Privacidade" }),
+  }),
 });
 
 const signInSchema = z.object({
@@ -57,6 +61,7 @@ const Auth = () => {
   const [suPhone, setSuPhone] = useState("");
   const [suPassword, setSuPassword] = useState("");
   const [suProfileType, setSuProfileType] = useState<"standard" | "supervisee">("standard");
+  const [suAcceptTerms, setSuAcceptTerms] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("forceLogin") === "1") {
@@ -119,6 +124,7 @@ const Auth = () => {
       phone: suPhone,
       password: suPassword,
       profileType: suProfileType,
+      acceptTerms: suAcceptTerms,
     });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
@@ -317,7 +323,36 @@ const Auth = () => {
                     </label>
                   </RadioGroup>
                 </div>
-                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
+                <div className="flex items-start gap-3 rounded-xl border border-border bg-secondary/30 p-3">
+                  <Checkbox
+                    id="su-terms"
+                    checked={suAcceptTerms}
+                    onCheckedChange={(v) => setSuAcceptTerms(v === true)}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="su-terms" className="text-sm font-normal leading-relaxed cursor-pointer">
+                    Li e aceito os{" "}
+                    <a
+                      href="/p%C3%BAblico/termos.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent underline hover:no-underline"
+                    >
+                      Termos de Uso
+                    </a>{" "}
+                    e a{" "}
+                    <a
+                      href="/privacidade.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent underline hover:no-underline"
+                    >
+                      Política de Privacidade
+                    </a>
+                    .
+                  </Label>
+                </div>
+                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading || !suAcceptTerms}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Criar conta
                 </Button>
