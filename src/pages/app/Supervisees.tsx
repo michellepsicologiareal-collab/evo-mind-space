@@ -11,7 +11,6 @@ import {
   UserRound,
   ChevronDown,
   ChevronRight,
-  Brain,
   Phone,
   Award,
   GraduationCap,
