@@ -63,12 +63,12 @@ const SESSION_STATUS_LABEL: Record<string, string> = {
   cancelled: "Cancelada",
 };
 const GOAL_META = {
-  geral:          { label: "Geral",          border: "border-l-[#9675CE]", chip: "bg-[#ebe0f3] text-[#5d4198]" },
+  geral:          { label: "Geral",          border: "border-l-primary", chip: "bg-secondary text-primary-dark" },
   intermediaria:  { label: "Intermediária",  border: "border-l-[#BA7517]", chip: "bg-[#fdf3e3] text-[#7a4a0a]" },
   comportamental: { label: "Comportamental", border: "border-l-[#1D9E75]", chip: "bg-[#e3f7ee] text-[#0e5e44]" },
 } as const;
 
-const PURPLE = "#9675CE";
+const PURPLE = "hsl(var(--primary))";
 
 const PlanoTratamento = () => {
   const { user } = useAuth();
@@ -445,8 +445,8 @@ const PlanoTratamento = () => {
                     <button key={t.id} type="button" onClick={() => toggleSessionTech(t.nome)}
                       className={cn("px-3 py-1 rounded-full text-xs border transition-colors",
                         sessionPlan.tecnicas.includes(t.nome)
-                          ? "bg-[#9675CE] text-white border-[#9675CE]"
-                          : "bg-white text-[#9675CE] border-[#9675CE]/30 hover:bg-[#ebe0f3]")}>
+                          ? "bg-primary text-white border-primary"
+                          : "bg-white text-primary border-primary/30 hover:bg-secondary")}>
                       {t.nome}
                     </button>
                   ))}
@@ -557,10 +557,10 @@ const PlanoTratamento = () => {
             {revisions.length === 0 ? (
               <p className="text-sm text-muted-foreground">Nenhuma revisão registrada ainda.</p>
             ) : (
-              <div className="relative pl-6 space-y-4 border-l-2 border-[#e8dfd2]">
+              <div className="relative pl-6 space-y-4 border-l-2 border-border">
                 {revisions.map(r => (
                   <div key={r.id} className="relative">
-                    <span className="absolute -left-[29px] top-1 h-3 w-3 rounded-full bg-[#9675CE] border-2 border-background" />
+                    <span className="absolute -left-[29px] top-1 h-3 w-3 rounded-full bg-primary border-2 border-background" />
                     <div className="text-xs text-muted-foreground mb-1">
                       {format(new Date(r.data), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                       {r.sessao_ref && <span> · Sessão {r.sessao_ref}</span>}
