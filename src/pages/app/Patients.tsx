@@ -204,6 +204,19 @@ const Patients = () => {
     const h = countAndLatest(historyRes.data, "scheduled_at");
     setCounts({ mood: m.c, tcc: t.c, records: r.c, history: h.c });
     setLastDates({ mood: m.l, tcc: t.l, records: r.l, history: h.l });
+    // attendance: only consider past sessions
+    const att: Record<string, { total: number; attended: number; pct: number }> = {};
+    const nowTs = Date.now();
+    (historyRes.data ?? []).forEach((s: any) => {
+      if (!s.patient_id || !s.scheduled_at) return;
+      if (new Date(s.scheduled_at).getTime() > nowTs) return;
+      const cur = att[s.patient_id] ?? { total: 0, attended: 0, pct: 0 };
+      cur.total += 1;
+      if (s.status === "completed" || s.status === "done" || s.status === "attended") cur.attended += 1;
+      att[s.patient_id] = cur;
+    });
+    Object.keys(att).forEach((k) => { att[k].pct = att[k].total > 0 ? Math.round((att[k].attended / att[k].total) * 100) : 0; });
+    setAttendance(att);
     setLoading(false);
   };
 
