@@ -462,28 +462,138 @@ const Patients = () => {
   const withoutFormulCount = activePatients.filter((p) => !formulationFilled[p.id]).length;
   const totalFormulCount = activePatients.length;
 
+  // ───────── Insight strip computations ─────────
+  const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+  const nowMs = Date.now();
+  const attentionPatients = activePatients.filter((p) => {
+    const formDate = formulationFilled[p.id];
+    if (!formDate) {
+      const startMs = p.treatment_start_date ? new Date(p.treatment_start_date).getTime() : 0;
+      return !p.treatment_start_date || nowMs - startMs > THIRTY_DAYS;
+    }
+    return nowMs - new Date(formDate).getTime() > THIRTY_DAYS;
+  });
+  const lowAdherencePatients = activePatients.filter((p) => {
+    const a = attendance[p.id];
+    return a && a.total >= 3 && a.pct < 50;
+  });
+
+  const todayLabel = format(new Date(), "EEEE',' d 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const todayLabelCap = todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1);
+
+  // ───────── Color palette (per spec) ─────────
+  const C = {
+    pageBg: "#F7F6F3",
+    card: "#FFFFFF",
+    ink: "#1A1A2E",
+    muted: "#6B7280",
+    border: "#E5E7EB",
+    purple: "#534AB7",
+    purpleSoft: "#EEEDFE",
+    purpleInk: "#3C3489",
+    gold: "#B8860B",
+    goldSoft: "#FDF6E3",
+    goldBorder: "#E8C97A",
+    green: "#2D6A4F",
+    greenSoft: "#EAF3DE",
+    greenBorder: "#74C69D",
+    red: "#C0392B",
+    redSoft: "#FDECEA",
+    neutralBg: "#F9FAFB",
+    avatarA: "#EEEDFE",
+    avatarB: "#FDF6E3",
+    avatarC: "#EAF3DE",
+  };
+  const avatarPalette = [C.avatarA, C.avatarB, C.avatarC];
+
   return (
-    <div className="space-y-5 animate-fade-up" style={{ background: "hsl(var(--card))" }}>
-      {/* Top row */}
-      <div className="flex flex-wrap items-center gap-4 pt-2">
-        <div className="relative w-full sm:w-auto" style={{ maxWidth: 260 }}>
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "hsl(var(--muted-foreground))" }} />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar paciente..."
-            className="w-full pl-9 pr-3 py-2 outline-none focus:outline-none"
-            style={{
-              background: "hsl(var(--background))",
-              border: "0.5px solid hsl(var(--border))",
-              borderRadius: 40,
-              color: "hsl(var(--foreground))",
-              fontFamily: "Instrument Sans, sans-serif",
-              fontSize: 13,
-            }}
-          />
+    <div
+      className="animate-fade-up -mx-3 sm:-mx-6 -mt-3 sm:-mt-6 px-3 sm:px-6 pt-4 sm:pt-6 pb-10 min-h-screen"
+      style={{ background: C.pageBg, fontFamily: "Inter, sans-serif", color: C.ink }}
+    >
+      {/* ─────────── TOPBAR ─────────── */}
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        <div className="flex items-baseline gap-3 min-w-0">
+          <h1 style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.3px", color: C.ink }}>Pacientes</h1>
+          <span style={{ fontSize: 13, color: C.muted }}>{todayLabelCap}</span>
         </div>
-        <div className="flex items-center gap-5">
+        <div className="ml-auto flex items-center gap-2 flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: C.muted }} />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar paciente..."
+              style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px 8px 34px", fontSize: 13, color: C.ink, width: 220, outline: "none" }}
+            />
+          </div>
+          <button
+            onClick={openNew}
+            className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-90"
+            style={{ background: C.ink, color: "#fff", borderRadius: 8, padding: "9px 14px", fontWeight: 600, fontSize: 13 }}
+          >
+            <Plus className="h-4 w-4" /> Novo paciente
+          </button>
+        </div>
+      </div>
+
+      {/* ─────────── INSIGHT STRIP ─────────── */}
+      {(attentionPatients.length > 0 || lowAdherencePatients.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+          {attentionPatients.length > 0 && (
+            <div style={{ background: C.goldSoft, borderLeft: `3px solid ${C.gold}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+              <div className="flex items-start gap-2.5">
+                <div className="shrink-0 flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(184,134,11,0.18)", color: C.gold, fontWeight: 700, fontSize: 13 }}>!</div>
+                <div className="min-w-0 flex-1">
+                  <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: "0.08em" }}>Atenção Clínica</p>
+                  <p className="mt-0.5" style={{ fontSize: 13, color: C.ink, lineHeight: 1.45 }}>
+                    {attentionPatients.length} {attentionPatients.length === 1 ? "paciente sem formulação" : "pacientes sem formulação"} há mais de 30 dias.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {attentionPatients.slice(0, 3).map((p) => (
+                      <span key={p.id} style={{ background: "rgba(184,134,11,0.14)", color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
+                        {p.full_name.split(" ").slice(0, 2).join(" ")}
+                      </span>
+                    ))}
+                    {attentionPatients.length > 3 && (
+                      <span style={{ background: "rgba(184,134,11,0.14)", color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>+ {attentionPatients.length - 3}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {lowAdherencePatients.length > 0 && (
+            <div style={{ background: C.purpleSoft, borderLeft: `3px solid ${C.purple}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+              <div className="flex items-start gap-2.5">
+                <div className="shrink-0 flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(83,74,183,0.18)", color: C.purple }}>
+                  <Sparkles className="h-3 w-3" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p style={{ fontSize: 11, fontWeight: 700, color: C.purple, textTransform: "uppercase", letterSpacing: "0.08em" }}>Baixa Adesão</p>
+                  <p className="mt-0.5" style={{ fontSize: 13, color: C.ink, lineHeight: 1.45 }}>
+                    {lowAdherencePatients.length} {lowAdherencePatients.length === 1 ? "paciente com menos" : "pacientes com menos"} de 50% de comparecimento este mês.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {lowAdherencePatients.slice(0, 3).map((p) => (
+                      <span key={p.id} style={{ background: "rgba(83,74,183,0.14)", color: C.purple, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
+                        {p.full_name.split(" ").slice(0, 2).join(" ")}
+                      </span>
+                    ))}
+                    {lowAdherencePatients.length > 3 && (
+                      <span style={{ background: "rgba(83,74,183,0.14)", color: C.purple, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>+ {lowAdherencePatients.length - 3}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─────────── FILTER TABS ─────────── */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="inline-flex items-center gap-1 p-1" style={{ background: C.neutralBg, borderRadius: 10, border: `1px solid ${C.border}` }}>
           {[
             { k: "active", label: "Ativos", n: activeCount },
             { k: "inactive", label: "Inativos", n: inactiveCount },
@@ -494,14 +604,44 @@ const Patients = () => {
               <button
                 key={t.k}
                 onClick={() => setStatusFilter(t.k as typeof statusFilter)}
-                className="pb-2 transition-colors"
                 style={{
-                  fontFamily: "Syne, sans-serif",
-                  fontWeight: isActive ? 700 : 400,
+                  background: isActive ? C.card : "transparent",
+                  border: isActive ? `1px solid ${C.border}` : "1px solid transparent",
+                  color: isActive ? C.ink : C.muted,
+                  fontWeight: isActive ? 600 : 500,
+                  fontSize: 13,
+                  padding: "6px 12px",
+                  borderRadius: 7,
+                  boxShadow: isActive ? "0 1px 2px rgba(0,0,0,0.04)" : "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                {t.label}
+                <span style={{ background: isActive ? C.purpleSoft : C.border, color: isActive ? C.purple : C.muted, fontSize: 11, fontWeight: 700, padding: "1px 7px", borderRadius: 40 }}>{t.n}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="ml-auto flex items-center gap-2 flex-wrap">
+          {[
+            { k: "with" as const, label: "Com formulação", n: withFormulCount, highlight: false },
+            { k: "without" as const, label: "Sem formulação", n: withoutFormulCount, highlight: true },
+          ].map((t) => {
+            const isActive = formulFilter === t.k;
+            return (
+              <button
+                key={t.k}
+                onClick={() => setFormulFilter(isActive ? "all" : t.k)}
+                style={{
+                  background: t.highlight ? C.goldSoft : (isActive ? C.purpleSoft : C.card),
+                  border: `1px solid ${t.highlight ? C.goldBorder : C.border}`,
+                  color: t.highlight ? C.gold : (isActive ? C.purple : C.muted),
+                  fontWeight: 600,
                   fontSize: 12,
-                  color: isActive ? "hsl(var(--primary-dark))" : "hsl(var(--muted-foreground))",
-                  borderBottom: isActive ? "2px solid hsl(var(--primary))" : "2px solid transparent",
-                  letterSpacing: "0.02em",
+                  padding: "6px 12px",
+                  borderRadius: 8,
                 }}
               >
                 {t.label} · {t.n}
@@ -509,235 +649,183 @@ const Patients = () => {
             );
           })}
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {[
-            { k: "all", label: "Todas formulações", n: totalFormulCount },
-            { k: "with", label: "Com formulação", n: withFormulCount },
-            { k: "without", label: "Sem formulação", n: withoutFormulCount },
-          ].map((t) => {
-            const isActive = formulFilter === t.k;
-            return (
-              <button
-                key={t.k}
-                onClick={() => setFormulFilter(t.k as typeof formulFilter)}
-                className="inline-flex items-center gap-1.5 transition-colors"
-                style={{
-                  fontFamily: "Syne, sans-serif",
-                  fontWeight: isActive ? 700 : 500,
-                  fontSize: 11,
-                  padding: "5px 11px",
-                  borderRadius: 40,
-                  background: isActive ? "hsl(var(--primary))" : "hsl(var(--background))",
-                  color: isActive ? "#fff" : "hsl(var(--primary))",
-                  border: "0.5px solid " + (isActive ? "hsl(var(--primary))" : "hsl(var(--border))"),
-                }}
-              >
-                <Stethoscope className="h-3 w-3" /> {t.label} · {t.n}
-              </button>
-            );
-          })}
-        </div>
-        <div className="ml-auto">
-          <button
-            onClick={openNew}
-            className="inline-flex items-center gap-1.5 px-4 py-2 transition-opacity hover:opacity-90"
-            style={{
-              background: "hsl(var(--primary))",
-              color: "#fff",
-              borderRadius: 40,
-              fontFamily: "Syne, sans-serif",
-              fontWeight: 600,
-              fontSize: 12,
-            }}
-          >
-            <Plus className="h-3.5 w-3.5" /> Novo paciente
-          </button>
-        </div>
       </div>
 
+      {/* ─────────── PATIENT LIST ─────────── */}
       {loading ? (
         <CardSkeleton count={4} />
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed p-14 text-center" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted))" }}>
-          <User className="h-12 w-12 mx-auto" style={{ color: "hsl(var(--muted-foreground))" }} />
-          <p className="mt-4" style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 16, color: "hsl(var(--primary-dark))" }}>
+        <div style={{ background: C.card, border: `1px dashed ${C.border}`, borderRadius: 10, padding: 56, textAlign: "center" }}>
+          <User className="h-12 w-12 mx-auto" style={{ color: C.muted }} />
+          <p className="mt-4" style={{ fontWeight: 700, fontSize: 16, color: C.ink }}>
             {patients.length === 0 ? "Pronto para começar?" : "Nenhum resultado encontrado."}
           </p>
-          <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--primary-glow))" }}>
+          <p className="mt-1" style={{ fontSize: 13, color: C.muted }}>
             {patients.length === 0 ? "Cadastre seu primeiro paciente e organize seu consultório." : "Tente outra busca ou limpe o filtro."}
           </p>
           {patients.length === 0 && (
-            <button
-              onClick={openNew}
-              className="inline-flex items-center gap-1.5 mt-5 px-4 py-2"
-              style={{ background: "hsl(var(--primary))", color: "#fff", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
-            >
-              <Plus className="h-3.5 w-3.5" /> Cadastrar primeiro paciente
+            <button onClick={openNew} className="inline-flex items-center gap-1.5 mt-5" style={{ background: C.ink, color: "#fff", borderRadius: 8, padding: "9px 14px", fontWeight: 600, fontSize: 13 }}>
+              <Plus className="h-4 w-4" /> Cadastrar primeiro paciente
             </button>
           )}
         </div>
       ) : (
         <ul className="space-y-3">
-          {filtered.map((p) => {
-            const isAlert = p.notes ? /(crise|resist|abandon|suic|término)/i.test(p.notes) : false;
+          {filtered.map((p, idx) => {
+            const isCriticalAlert = p.notes ? /(crise|resist|abandon|suic|término)/i.test(p.notes) : false;
+            const isAttention = attentionPatients.some((x) => x.id === p.id);
+            const isLowAdherence = lowAdherencePatients.some((x) => x.id === p.id);
+            const borderColor = isCriticalAlert ? C.red : isAttention ? C.gold : C.purple;
             const cHist = counts.history[p.id] || 0;
             const cMood = counts.mood[p.id] || 0;
             const cTcc = counts.tcc[p.id] || 0;
             const hasAnam = !!anamneseFilled[p.id];
             const hasFormul = !!formulationFilled[p.id];
             const aiSum = formulationSummaries[p.id];
-            const type = PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual";
+            const type = PATIENT_CATEGORIES.find((c) => c.value === p.category)?.label ?? "Individual";
+            const isSupervision = p.category === "supervisao";
+            const initials = p.full_name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+            const avatarBg = avatarPalette[idx % avatarPalette.length];
             const url = buildWhatsAppUrl(p);
+            const att = attendance[p.id];
+
+            const Pill = ({ label, kind, count }: { label: string; kind: "filled" | "pending" | "neutral"; count?: number }) => {
+              const styles = kind === "filled"
+                ? { background: C.greenSoft, color: C.green, border: `1px solid ${C.greenBorder}` }
+                : kind === "pending"
+                ? { background: C.goldSoft, color: C.gold, border: `1px solid ${C.goldBorder}` }
+                : { background: C.neutralBg, color: C.muted, border: `1px solid ${C.border}` };
+              return (
+                <span className="inline-flex items-center gap-1" style={{ ...styles, fontSize: 11, fontWeight: 500, padding: "3px 9px", borderRadius: 6 }}>
+                  {label}
+                  {count != null && count > 0 && (
+                    <span style={{ background: kind === "filled" ? C.green : "rgba(0,0,0,0.08)", color: kind === "filled" ? "#fff" : "inherit", borderRadius: 4, padding: "0 5px", fontSize: 10, fontWeight: 700 }}>{count}</span>
+                  )}
+                </span>
+              );
+            };
+
             return (
               <li
                 key={p.id}
                 onClick={() => setSelectedPatient(p)}
-                className="group relative cursor-pointer transition-all overflow-hidden"
-                style={{
-                  background: isAlert ? "hsl(var(--muted))" : "hsl(var(--card))",
-                  border: "0.5px solid hsl(var(--border))",
-                  borderLeft: isAlert ? "2px solid hsl(var(--brown))" : "0.5px solid hsl(var(--border))",
-                  borderRadius: 14,
-                  boxShadow: "0 1px 2px rgba(150,117,206,0.04)",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(150,117,206,0.10)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 2px rgba(150,117,206,0.04)"; }}
+                className="cursor-pointer transition-shadow overflow-hidden"
+                style={{ background: C.card, borderRadius: 10, borderLeft: `3px solid ${borderColor}`, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.06)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)"; }}
               >
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, hsl(var(--gold) / 0.85), hsl(var(--gold) / 0.55), transparent)" }} />
-                <div className="flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-5" style={{ paddingTop: 18, paddingBottom: 16 }}>
-                  <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.12)", color: "hsl(var(--primary))", fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 700, fontSize: 15 }}>
-                    {p.full_name.charAt(0).toUpperCase()}
+                <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-4">
+                  <div className="shrink-0 flex items-center justify-center" style={{ width: 42, height: 42, borderRadius: "50%", background: avatarBg, color: C.ink, fontWeight: 700, fontSize: 13 }}>
+                    {initials}
                   </div>
 
-                  <div className="min-w-0 flex-1 sm:flex-none" style={{ flexBasis: "auto" }}>
-                    <p className="truncate" style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontWeight: 700, fontSize: 16, color: isAlert ? "hsl(var(--brown))" : "hsl(var(--foreground))" }}>
-                      {p.full_name}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      <span className="inline-flex items-center" style={{ background: "rgba(61,92,53,0.10)", border: "0.5px solid rgba(61,92,53,0.30)", color: "hsl(var(--moss))", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 11, borderRadius: 40, padding: "3px 10px" }}>
+                  <div className="min-w-0 flex-1 sm:flex-none">
+                    <p className="truncate" style={{ fontWeight: 700, fontSize: 15, color: C.ink }}>{p.full_name}</p>
+                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                      <span style={{ background: C.greenSoft, color: C.green, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6 }}>
                         {p.is_active ? "Ativo" : "Inativo"}
                       </span>
-                      <span className="inline-block" style={{ background: "hsl(var(--muted))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--muted-foreground))", fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 11, borderRadius: 40, padding: "3px 10px" }}>
-                        {type}
-                      </span>
+                      {isSupervision ? (
+                        <span style={{ background: C.goldSoft, color: C.gold, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6 }}>Supervisão</span>
+                      ) : (
+                        <span style={{ background: "#F3F4F6", color: C.muted, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6 }}>{type}</span>
+                      )}
                       {p.phone && (
-                        <span className="inline-flex items-center gap-1 min-w-0" style={{ fontFamily: "Inter, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
-                          <Phone className="h-3 w-3 shrink-0" />
+                        <span className="inline-flex items-center gap-1" style={{ fontSize: 12, color: C.muted }}>
+                          <Phone className="h-3 w-3" />
                           <span className="truncate max-w-[140px]">{p.phone}</span>
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:flex-1 min-w-0 order-last sm:order-none">
-                    {(() => {
-                      const greenChip = { background: "rgba(61,92,53,0.06)", border: "0.5px solid rgba(61,92,53,0.30)", color: "hsl(var(--moss))", padding: "5px 11px", borderRadius: 40, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 11 } as React.CSSProperties;
-                      const goldDashed = { background: "hsl(var(--background))", border: "0.5px dashed hsl(var(--gold))", color: "hsl(var(--brown))", padding: "5px 11px", borderRadius: 40, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 11 } as React.CSSProperties;
-                      const countBadge = { background: "hsl(var(--moss))", color: "white", borderRadius: 40, padding: "0 6px", fontSize: 9, fontWeight: 700, minWidth: 16, textAlign: "center" as const, marginLeft: 2 };
-                      return (
-                        <>
-                          <button onClick={(e) => { e.stopPropagation(); setMoodPatient(p); }} className="inline-flex items-center gap-1.5" style={greenChip}>
-                            <Smile className="h-3 w-3" /> Humor
-                            {cMood > 0 && <span style={countBadge}>{cMood}</span>}
-                          </button>
-                          <button onClick={(e) => { e.stopPropagation(); setHistoryPatient(p); }} className="inline-flex items-center gap-1.5" style={greenChip}>
-                            <CalendarDays className="h-3 w-3" /> Histórico
-                            {cHist > 0 && <span style={countBadge}>{cHist}</span>}
-                          </button>
-                          <button onClick={(e) => { e.stopPropagation(); setPadeksyPatient(p); }} title={formulationFilled[p.id] ? "Formulação preenchida" : "Criar formulação de caso"} className="inline-flex items-center gap-1.5" style={formulationFilled[p.id] ? greenChip : goldDashed}>
-                            <Stethoscope className="h-3 w-3" /> {formulationFilled[p.id] ? "Formulação" : "Sem formulação"}
-                          </button>
-                          <button onClick={(e) => { e.stopPropagation(); setTccPatient(p); }} title={cTcc > 0 ? `${cTcc} conceitualizações TCC` : "Criar conceitualização TCC"} className="inline-flex items-center gap-1.5" style={cTcc > 0 ? greenChip : goldDashed}>
-                            <LogoIcon className="h-3 w-3" /> {cTcc > 0 ? `Conceitualização TCC${cTcc > 1 ? ` · ${cTcc}` : ""}` : "Sem conceitualização TCC"}
-                          </button>
-                          <button onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }} title="Abrir plano de tratamento" className="inline-flex items-center gap-1.5" style={greenChip}>
-                            <ClipboardList className="h-3 w-3" /> Plano
-                          </button>
-                          {p.category === "crianca" && (
-                            <button onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }} className="inline-flex items-center gap-1.5" style={hasAnam ? greenChip : goldDashed}>
-                              <Baby className="h-3 w-3" /> {hasAnam ? "Anamnese" : "Sem anamnese"}
-                            </button>
-                          )}
-                        </>
-                      );
-                    })()}
-                    {p.session_price != null && (
-                      <span className="ml-auto flex items-baseline gap-1" style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}>
-                        <span style={{ fontWeight: 700, fontSize: 16, color: "hsl(var(--foreground))" }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>
-                        <span style={{ fontSize: 12, color: "hsl(var(--muted-foreground))", fontFamily: "Inter, sans-serif" }}>/sessão</span>
-                      </span>
+                  <div className="flex items-center gap-1.5 flex-wrap w-full sm:w-auto sm:flex-1 min-w-0">
+                    <button onClick={(e) => { e.stopPropagation(); setMoodPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
+                      <Pill label={cMood > 0 ? "Humor" : "Humor —"} kind={cMood > 0 ? "filled" : "neutral"} count={cMood > 0 ? cMood : undefined} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setHistoryPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
+                      <Pill label="Histórico" kind={cHist > 0 ? "filled" : "neutral"} count={cHist > 0 ? cHist : undefined} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setPadeksyPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
+                      <Pill label={hasFormul ? "Formulação" : "Sem formulação"} kind={hasFormul ? "filled" : "pending"} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setTccPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
+                      <Pill label={cTcc > 0 ? "Conceitualização TCC" : "Sem conceitualização"} kind={cTcc > 0 ? "filled" : "pending"} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }} style={{ all: "unset", cursor: "pointer" }}>
+                      <Pill label="Sem plano" kind="neutral" />
+                    </button>
+                    {p.category === "crianca" && (
+                      <button onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
+                        <Pill label={hasAnam ? "Anamnese" : "Sem anamnese"} kind={hasAnam ? "filled" : "pending"} />
+                      </button>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {url && (
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        title="Cobrar via WhatsApp"
-                        className="flex items-center justify-center transition-colors"
-                        style={{ width: 32, height: 32, borderRadius: 8, color: "hsl(var(--primary))", background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--border))"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; }}
-                      >
-                        <MessageCircle className="h-3.5 w-3.5" />
-                      </a>
+                  <div className="flex items-center gap-3 shrink-0 ml-auto">
+                    {p.session_price != null && (
+                      <div className="text-right">
+                        <span style={{ fontWeight: 700, fontSize: 16, color: C.ink }}>R$ {Number(p.session_price).toFixed(0)}</span>
+                        <span style={{ fontSize: 12, color: C.muted, marginLeft: 2 }}>/sessão</span>
+                      </div>
                     )}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setRecordsPatient(p); }}
-                      title="Registros"
-                      className="flex items-center justify-center transition-colors"
-                      style={{ width: 32, height: 32, borderRadius: 8, color: "hsl(var(--primary))", background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--border))"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; }}
-                    >
-                      <FileText className="h-3.5 w-3.5" />
-                    </button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex items-center justify-center transition-colors"
-                          style={{ width: 32, height: 32, borderRadius: 8, color: "hsl(var(--primary))", background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--border))"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; }}
+                    <div className="flex items-center gap-1.5">
+                      <button onClick={(e) => { e.stopPropagation(); setPadeksyPatient(p); }} title="Resumo IA / Formulação"
+                        className="flex items-center justify-center transition-opacity hover:opacity-90"
+                        style={{ width: 32, height: 32, borderRadius: 7, background: C.purple, color: "#fff" }}
+                      >
+                        <Sparkles className="h-4 w-4" />
+                      </button>
+                      {url && (
+                        <a href={url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title="WhatsApp"
+                          className="flex items-center justify-center"
+                          style={{ width: 32, height: 32, borderRadius: 7, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
                         >
-                          <MoreHorizontal className="h-3.5 w-3.5" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toggleActive(p)}>{p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setTccPatient(p)}><LogoIcon className="h-4 w-4" /> Registros TCC</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><Stethoscope className="h-4 w-4" /> Formulação de caso</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDelete(p)} className="text-destructive"><Trash2 className="h-4 w-4" /> Excluir</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          <MessageCircle className="h-3.5 w-3.5" />
+                        </a>
+                      )}
+                      <button onClick={(e) => { e.stopPropagation(); setRecordsPatient(p); }} title="Registros"
+                        className="flex items-center justify-center"
+                        style={{ width: 32, height: 32, borderRadius: 7, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button onClick={(e) => e.stopPropagation()}
+                            className="flex items-center justify-center"
+                            style={{ width: 32, height: 32, borderRadius: 7, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
+                          >
+                            <MoreHorizontal className="h-3.5 w-3.5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenuItem onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /> Editar</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toggleActive(p)}>{p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setTccPatient(p)}><LogoIcon className="h-4 w-4" /> Registros TCC</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><Stethoscope className="h-4 w-4" /> Formulação de caso</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(p)} className="text-destructive"><Trash2 className="h-4 w-4" /> Excluir</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </div>
 
                 {hasFormul && (
-                  <div
-                    onClick={(e) => e.stopPropagation()}
-                    className="mx-4 sm:mx-5 mb-3 -mt-1 flex flex-col sm:flex-row sm:items-start gap-3 rounded-2xl px-4 py-3.5"
-                    style={{
-                      background: "linear-gradient(135deg, hsl(var(--primary) / 0.10), hsl(var(--primary-glow) / 0.06))",
-                      border: "1px solid hsl(var(--primary) / 0.22)",
-                      boxShadow: "inset 0 1px 0 hsl(var(--primary) / 0.08)",
-                    }}
+                  <div onClick={(e) => e.stopPropagation()}
+                    className="flex flex-col sm:flex-row sm:items-start gap-3 px-4 sm:px-5 py-3.5"
+                    style={{ background: C.purpleSoft, borderTop: `1px solid ${C.border}` }}
                   >
                     <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                      <div className="shrink-0 mt-0.5 flex items-center justify-center rounded-lg" style={{ width: 26, height: 26, background: "hsl(var(--primary) / 0.18)" }}>
-                        <Sparkles className="h-3.5 w-3.5" style={{ color: "hsl(var(--primary))" }} />
+                      <div className="shrink-0 mt-0.5 flex items-center justify-center" style={{ width: 24, height: 24, borderRadius: 6, background: C.purple, color: "#fff" }}>
+                        <Sparkles className="h-3.5 w-3.5" />
                       </div>
                       <div className="min-w-0">
-                        <p className="uppercase" style={{ fontFamily: "Plus Jakarta Sans, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "hsl(var(--primary))" }}>Resumo IA · Formulação</p>
+                        <p style={{ fontSize: 11, fontWeight: 700, color: C.purple, textTransform: "uppercase", letterSpacing: "0.08em" }}>Resumo IA · Formulação</p>
                         {aiSum ? (
-                          <p className="mt-1.5" style={{ fontFamily: "Inter, sans-serif", fontSize: 13.5, color: "hsl(var(--foreground))", lineHeight: 1.55, fontWeight: 450 }}>{aiSum}</p>
+                          <p className="mt-1" style={{ fontSize: 12, color: C.purpleInk, lineHeight: 1.5 }}>{aiSum}</p>
                         ) : (
-                          <p className="mt-1.5 italic" style={{ fontFamily: "Inter, sans-serif", fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
+                          <p className="mt-1 italic" style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
                             Gere um resumo de IA com os destaques clínicos desta formulação.
                           </p>
                         )}
@@ -747,20 +835,45 @@ const Patients = () => {
                       <button
                         onClick={() => summarizeFormulation(p.id)}
                         disabled={!!summarizing[p.id]}
-                        className="inline-flex items-center gap-1.5 transition-colors disabled:opacity-60 hover:bg-muted"
-                        style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--foreground))", padding: "6px 12px", borderRadius: 10, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12 }}
+                        className="inline-flex items-center gap-1.5 transition-opacity disabled:opacity-60"
+                        style={{ background: C.card, border: `1px solid ${C.purple}`, color: C.purple, padding: "6px 12px", borderRadius: 7, fontWeight: 600, fontSize: 12 }}
                       >
                         {summarizing[p.id] ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
                         {aiSum ? "Atualizar" : "Gerar"}
                       </button>
                       <button
                         onClick={() => setReadPatient(p)}
-                        className="inline-flex items-center gap-1.5 transition-colors hover:bg-muted"
-                        style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--foreground))", padding: "6px 12px", borderRadius: 10, fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 12 }}
+                        className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-90"
+                        style={{ background: C.purple, color: "#fff", border: `1px solid ${C.purple}`, padding: "6px 12px", borderRadius: 7, fontWeight: 600, fontSize: 12 }}
                       >
-                        <Eye className="h-3.5 w-3.5" /> Ler
+                        <Eye className="h-3.5 w-3.5" /> Ler formulação
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {isCriticalAlert && (
+                  <div style={{ background: C.redSoft, borderTop: `1px solid ${C.border}`, padding: "9px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ color: C.red, fontWeight: 700, fontSize: 13 }}>!</span>
+                    <p style={{ color: C.red, fontWeight: 500, fontSize: 12 }}>
+                      Sinais de alerta nas notas — considerar revisar plano clínico na próxima sessão.
+                    </p>
+                  </div>
+                )}
+                {!isCriticalAlert && isAttention && !hasFormul && (
+                  <div style={{ background: C.goldSoft, borderTop: `1px solid ${C.border}`, padding: "9px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ color: C.gold, fontWeight: 700, fontSize: 13 }}>!</span>
+                    <p style={{ color: C.gold, fontWeight: 500, fontSize: 12 }}>
+                      Sem formulação há mais de 30 dias — considerar iniciar conceitualização na próxima sessão.
+                    </p>
+                  </div>
+                )}
+                {!isCriticalAlert && isLowAdherence && att && (
+                  <div style={{ background: C.purpleSoft, borderTop: `1px solid ${C.border}`, padding: "9px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+                    <Sparkles className="h-3 w-3" style={{ color: C.purple }} />
+                    <p style={{ color: C.purple, fontWeight: 500, fontSize: 12 }}>
+                      Comparecimento em {att.pct}% — considerar conversar sobre vínculo terapêutico.
+                    </p>
                   </div>
                 )}
               </li>
@@ -768,6 +881,7 @@ const Patients = () => {
           })}
         </ul>
       )}
+
 
       {/* Side panel */}
       <Sheet open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
