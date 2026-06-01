@@ -157,7 +157,7 @@ const Patients = () => {
       supabase.from("patient_progress").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("tcc_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("session_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
+      supabase.from("sessions").select("patient_id, scheduled_at, status").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
       supabase.from("case_formulations").select("patient_id, updated_at, ai_summary, environment, thoughts, emotions, behaviors, physical_reactions, core_beliefs, treatment_goals").eq("user_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
