@@ -38,6 +38,7 @@ const allNavItems: NavItem[] = [
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
   { to: "/app/plano-tratamento", label: "Plano de tratamento", icon: ClipboardList, hideFromNav: true },
   { to: "/app/registro-sessao", label: "Registro Sessão", icon: ClipboardList },
+  { to: "/app/formulacao-ia", label: "Formulação IA", icon: Sparkles },
   { to: "/app/anamneses", label: "Anamneses", icon: Baby },
   { to: "/app/financeiro", label: "Financeiro", icon: Wallet, premium: true },
   { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap, premium: true, visibleTo: ["supervisor"] },
