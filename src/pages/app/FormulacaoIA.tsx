@@ -169,18 +169,42 @@ export default function FormulacaoIA() {
             </div>
           </div>
 
+          {patientId && (
+            <div className="rounded-lg border bg-muted/40 p-3 flex items-start gap-3">
+              <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-3">
+                  <Label htmlFor="use-clinical" className="text-sm font-medium cursor-pointer">
+                    Usar sessões e notas recentes
+                  </Label>
+                  <Switch id="use-clinical" checked={useClinical} onCheckedChange={setUseClinical} disabled={!hasAnyClinical} />
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {contextCounts ? (
+                    hasAnyClinical
+                      ? `Disponível: ${contextCounts.records} registros, ${contextCounts.evolutions} evoluções, ${contextCounts.sessions} notas de sessão, ${contextCounts.progress} de humor.`
+                      : "Este paciente ainda não tem registros clínicos. Escreva o relato abaixo."
+                  ) : "Carregando registros..."}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Relato livre do caso
+              Relato livre {useClinical && hasAnyClinical ? "(opcional, complementa os registros)" : "do caso"}
             </Label>
             <Textarea
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
-              placeholder="Ex: paciente de 32 anos, queixa de ansiedade no trabalho, evita reuniões, sente coração acelerado, pensa 'vou fracassar', tem histórico de pai crítico..."
-              className="min-h-[180px] resize-y"
+              placeholder={useClinical && hasAnyClinical
+                ? "Acrescente observações que não estão nos registros: hipóteses, contexto extra, crenças que você percebeu..."
+                : "Ex: paciente de 32 anos, queixa de ansiedade no trabalho, evita reuniões, sente coração acelerado, pensa 'vou fracassar', tem histórico de pai crítico..."}
+              className="min-h-[160px] resize-y"
             />
-            <p className="text-[11px] text-muted-foreground">{rawText.length} caracteres • escreva à vontade, a IA estrutura.</p>
+            <p className="text-[11px] text-muted-foreground">{rawText.length} caracteres</p>
           </div>
+
 
           <div className="flex flex-wrap gap-2">
             <Button onClick={generate} disabled={loading || !patientId} variant="accent">
