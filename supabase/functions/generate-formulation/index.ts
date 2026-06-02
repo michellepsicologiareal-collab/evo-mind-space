@@ -26,10 +26,103 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Token inválido" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { patient_id, raw_text, save = true } = await req.json();
-    if (!patient_id || !raw_text || typeof raw_text !== "string" || raw_text.trim().length < 20) {
-      return new Response(JSON.stringify({ error: "Informe patient_id e um texto descritivo (mín. 20 caracteres)." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const { patient_id, raw_text = "", save = true, include_clinical_context = true } = await req.json();
+    if (!patient_id) {
+      return new Response(JSON.stringify({ error: "Informe patient_id." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    const hasText = typeof raw_text === "string" && raw_text.trim().length >= 20;
+    if (!hasText && !include_clinical_context) {
+      return new Response(JSON.stringify({ error: "Escreva ao menos 20 caracteres ou inclua os registros clínicos." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Verify patient ownership early (also enforced by RLS).
+    const { data: patient } = await supabase
+      .from("patients")
+      .select("id, full_name, chief_complaint, anamnesis, notes, treatment_plan")
+      .eq("id", patient_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!patient) {
+      return new Response(JSON.stringify({ error: "Paciente não encontrado." }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Optionally pull recent clinical context.
+    let clinicalContext = "";
+    if (include_clinical_context) {
+      const [sessionsRes, recordsRes, evolutionsRes, progressRes] = await Promise.all([
+        supabase
+          .from("sessions")
+          .select("scheduled_at, notes, status")
+          .eq("user_id", user.id)
+          .eq("patient_id", patient_id)
+          .not("notes", "is", null)
+          .order("scheduled_at", { ascending: false })
+          .limit(10),
+        supabase
+          .from("session_records")
+          .select("session_date, chief_complaint, themes, clinical_observations, next_session_plan, risk_indicator, engagement")
+          .eq("user_id", user.id)
+          .eq("patient_id", patient_id)
+          .order("session_date", { ascending: false })
+          .limit(8),
+        supabase
+          .from("session_evolutions")
+          .select("created_at, session_summary, homework")
+          .eq("user_id", user.id)
+          .eq("patient_id", patient_id)
+          .order("created_at", { ascending: false })
+          .limit(8),
+        supabase
+          .from("patient_progress")
+          .select("recorded_at, mood_score, note")
+          .eq("user_id", user.id)
+          .eq("patient_id", patient_id)
+          .order("recorded_at", { ascending: false })
+          .limit(10),
+      ]);
+
+      const trim = (s?: string | null, n = 800) => (s ?? "").toString().trim().slice(0, n);
+      const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString("pt-BR") : "");
+
+      const parts: string[] = [];
+      parts.push(`Paciente: ${patient.full_name}`);
+      if (patient.chief_complaint) parts.push(`Queixa principal cadastrada: ${trim(patient.chief_complaint, 600)}`);
+      if (patient.anamnesis) parts.push(`Anamnese resumida: ${trim(patient.anamnesis, 1200)}`);
+      if (patient.notes) parts.push(`Notas gerais do paciente: ${trim(patient.notes, 800)}`);
+      if (patient.treatment_plan) parts.push(`Plano de tratamento atual: ${trim(patient.treatment_plan, 800)}`);
+
+      if (recordsRes.data?.length) {
+        parts.push("\nRegistros de sessão recentes:");
+        recordsRes.data.forEach((r: any, i: number) => {
+          const themes = Array.isArray(r.themes) ? r.themes.join(", ") : "";
+          parts.push(`- (${fmtDate(r.session_date)}) Queixa: ${trim(r.chief_complaint, 240)} | Temas: ${themes} | Observações: ${trim(r.clinical_observations, 400)} | Próximo plano: ${trim(r.next_session_plan, 240)} | Risco: ${r.risk_indicator ?? "none"} | Engajamento: ${r.engagement ?? "-"}`);
+        });
+      }
+
+      if (evolutionsRes.data?.length) {
+        parts.push("\nEvoluções de sessão recentes:");
+        evolutionsRes.data.forEach((e: any) => {
+          parts.push(`- (${fmtDate(e.created_at)}) Resumo: ${trim(e.session_summary, 400)} | Tarefa: ${trim(e.homework, 240)}`);
+        });
+      }
+
+      if (sessionsRes.data?.length) {
+        parts.push("\nNotas livres de sessões recentes:");
+        sessionsRes.data.forEach((s: any) => {
+          parts.push(`- (${fmtDate(s.scheduled_at)} • ${s.status}) ${trim(s.notes, 500)}`);
+        });
+      }
+
+      if (progressRes.data?.length) {
+        parts.push("\nRegistros de humor/progresso:");
+        progressRes.data.forEach((p: any) => {
+          parts.push(`- (${fmtDate(p.recorded_at)}) Humor: ${p.mood_score ?? "-"} | Nota: ${trim(p.note, 240)}`);
+        });
+      }
+
+      clinicalContext = parts.join("\n");
+    }
+
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY não configurada");
@@ -76,7 +169,14 @@ Em treatment_goals, gere 3 a 5 objetivos terapêuticos SMART (específicos, mens
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Relato livre da terapeuta:\n\n${raw_text}` },
+          {
+            role: "user",
+            content: [
+              clinicalContext ? `Contexto clínico do paciente (registros e notas mais recentes):\n${clinicalContext}` : "",
+              hasText ? `Relato livre adicional da terapeuta:\n${raw_text}` : "",
+              "Com base no que está disponível acima, gere a formulação TCC estruturada chamando a função save_formulation.",
+            ].filter(Boolean).join("\n\n"),
+          },
         ],
         tools,
         tool_choice: { type: "function", function: { name: "save_formulation" } },
@@ -115,12 +215,6 @@ Em treatment_goals, gere 3 a 5 objetivos terapêuticos SMART (específicos, mens
     };
 
     if (save) {
-      // Verify the patient belongs to this user (RLS will enforce too)
-      const { data: pat } = await supabase.from("patients").select("id").eq("id", patient_id).eq("user_id", user.id).maybeSingle();
-      if (!pat) {
-        return new Response(JSON.stringify({ error: "Paciente não encontrado." }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-
       const { error: upErr } = await supabase
         .from("case_formulations")
         .upsert({ patient_id, user_id: user.id, ...formulation }, { onConflict: "patient_id,user_id" });
@@ -130,7 +224,7 @@ Em treatment_goals, gere 3 a 5 objetivos terapêuticos SMART (específicos, mens
       }
     }
 
-    return new Response(JSON.stringify({ formulation }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ formulation, used_clinical_context: !!clinicalContext }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("generate-formulation error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });

@@ -4,11 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Loader2, Save, RefreshCw, Brain } from "lucide-react";
+import { Sparkles, Loader2, Save, RefreshCw, Brain, FileText } from "lucide-react";
 import { toast } from "sonner";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 type Patient = { id: string; full_name: string };
 
@@ -39,6 +40,8 @@ export default function FormulacaoIA() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formulation, setFormulation] = useState<Formulation | null>(null);
+  const [useClinical, setUseClinical] = useState(true);
+  const [contextCounts, setContextCounts] = useState<{ sessions: number; records: number; evolutions: number; progress: number } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -53,13 +56,35 @@ export default function FormulacaoIA() {
     })();
   }, [user]);
 
+  // Count how much clinical context is available for the selected patient.
+  useEffect(() => {
+    if (!user || !patientId) { setContextCounts(null); return; }
+    (async () => {
+      const [s, r, e, p] = await Promise.all([
+        supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("patient_id", patientId).not("notes", "is", null).neq("notes", ""),
+        supabase.from("session_records").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("patient_id", patientId),
+        supabase.from("session_evolutions").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("patient_id", patientId),
+        supabase.from("patient_progress").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("patient_id", patientId),
+      ]);
+      setContextCounts({
+        sessions: s.count ?? 0,
+        records: r.count ?? 0,
+        evolutions: e.count ?? 0,
+        progress: p.count ?? 0,
+      });
+    })();
+  }, [user, patientId]);
+
+  const hasAnyClinical = !!contextCounts && (contextCounts.sessions + contextCounts.records + contextCounts.evolutions + contextCounts.progress) > 0;
+
   const generate = async () => {
     if (!patientId) { toast.error("Selecione um paciente."); return; }
-    if (rawText.trim().length < 20) { toast.error("Escreva ao menos algumas frases sobre o caso."); return; }
+    const includeCtx = useClinical && hasAnyClinical;
+    if (!includeCtx && rawText.trim().length < 20) { toast.error("Inclua os registros clínicos ou escreva ao menos algumas frases."); return; }
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-formulation", {
-        body: { patient_id: patientId, raw_text: rawText, save: true },
+        body: { patient_id: patientId, raw_text: rawText, save: true, include_clinical_context: includeCtx },
       });
       if (error) throw error;
       const f = (data as any)?.formulation as Formulation | undefined;
@@ -72,6 +97,7 @@ export default function FormulacaoIA() {
       setLoading(false);
     }
   };
+
 
   const saveEdits = async () => {
     if (!formulation || !patientId || !user) return;
@@ -143,18 +169,42 @@ export default function FormulacaoIA() {
             </div>
           </div>
 
+          {patientId && (
+            <div className="rounded-lg border bg-muted/40 p-3 flex items-start gap-3">
+              <FileText className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-3">
+                  <Label htmlFor="use-clinical" className="text-sm font-medium cursor-pointer">
+                    Usar sessões e notas recentes
+                  </Label>
+                  <Switch id="use-clinical" checked={useClinical} onCheckedChange={setUseClinical} disabled={!hasAnyClinical} />
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {contextCounts ? (
+                    hasAnyClinical
+                      ? `Disponível: ${contextCounts.records} registros, ${contextCounts.evolutions} evoluções, ${contextCounts.sessions} notas de sessão, ${contextCounts.progress} de humor.`
+                      : "Este paciente ainda não tem registros clínicos. Escreva o relato abaixo."
+                  ) : "Carregando registros..."}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Relato livre do caso
+              Relato livre {useClinical && hasAnyClinical ? "(opcional, complementa os registros)" : "do caso"}
             </Label>
             <Textarea
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
-              placeholder="Ex: paciente de 32 anos, queixa de ansiedade no trabalho, evita reuniões, sente coração acelerado, pensa 'vou fracassar', tem histórico de pai crítico..."
-              className="min-h-[180px] resize-y"
+              placeholder={useClinical && hasAnyClinical
+                ? "Acrescente observações que não estão nos registros: hipóteses, contexto extra, crenças que você percebeu..."
+                : "Ex: paciente de 32 anos, queixa de ansiedade no trabalho, evita reuniões, sente coração acelerado, pensa 'vou fracassar', tem histórico de pai crítico..."}
+              className="min-h-[160px] resize-y"
             />
-            <p className="text-[11px] text-muted-foreground">{rawText.length} caracteres • escreva à vontade, a IA estrutura.</p>
+            <p className="text-[11px] text-muted-foreground">{rawText.length} caracteres</p>
           </div>
+
 
           <div className="flex flex-wrap gap-2">
             <Button onClick={generate} disabled={loading || !patientId} variant="accent">
