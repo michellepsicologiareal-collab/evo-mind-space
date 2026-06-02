@@ -169,7 +169,14 @@ Em treatment_goals, gere 3 a 5 objetivos terapêuticos SMART (específicos, mens
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Relato livre da terapeuta:\n\n${raw_text}` },
+          {
+            role: "user",
+            content: [
+              clinicalContext ? `Contexto clínico do paciente (registros e notas mais recentes):\n${clinicalContext}` : "",
+              hasText ? `Relato livre adicional da terapeuta:\n${raw_text}` : "",
+              "Com base no que está disponível acima, gere a formulação TCC estruturada chamando a função save_formulation.",
+            ].filter(Boolean).join("\n\n"),
+          },
         ],
         tools,
         tool_choice: { type: "function", function: { name: "save_formulation" } },
