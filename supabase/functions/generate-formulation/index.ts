@@ -215,12 +215,6 @@ Em treatment_goals, gere 3 a 5 objetivos terapêuticos SMART (específicos, mens
     };
 
     if (save) {
-      // Verify the patient belongs to this user (RLS will enforce too)
-      const { data: pat } = await supabase.from("patients").select("id").eq("id", patient_id).eq("user_id", user.id).maybeSingle();
-      if (!pat) {
-        return new Response(JSON.stringify({ error: "Paciente não encontrado." }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-
       const { error: upErr } = await supabase
         .from("case_formulations")
         .upsert({ patient_id, user_id: user.id, ...formulation }, { onConflict: "patient_id,user_id" });
@@ -230,7 +224,7 @@ Em treatment_goals, gere 3 a 5 objetivos terapêuticos SMART (específicos, mens
       }
     }
 
-    return new Response(JSON.stringify({ formulation }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ formulation, used_clinical_context: !!clinicalContext }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("generate-formulation error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
