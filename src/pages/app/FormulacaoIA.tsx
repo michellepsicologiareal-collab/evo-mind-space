@@ -40,6 +40,8 @@ export default function FormulacaoIA() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formulation, setFormulation] = useState<Formulation | null>(null);
+  const [useClinical, setUseClinical] = useState(true);
+  const [contextCounts, setContextCounts] = useState<{ sessions: number; records: number; evolutions: number; progress: number } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -54,13 +56,35 @@ export default function FormulacaoIA() {
     })();
   }, [user]);
 
+  // Count how much clinical context is available for the selected patient.
+  useEffect(() => {
+    if (!user || !patientId) { setContextCounts(null); return; }
+    (async () => {
+      const [s, r, e, p] = await Promise.all([
+        supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("patient_id", patientId).not("notes", "is", null).neq("notes", ""),
+        supabase.from("session_records").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("patient_id", patientId),
+        supabase.from("session_evolutions").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("patient_id", patientId),
+        supabase.from("patient_progress").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("patient_id", patientId),
+      ]);
+      setContextCounts({
+        sessions: s.count ?? 0,
+        records: r.count ?? 0,
+        evolutions: e.count ?? 0,
+        progress: p.count ?? 0,
+      });
+    })();
+  }, [user, patientId]);
+
+  const hasAnyClinical = !!contextCounts && (contextCounts.sessions + contextCounts.records + contextCounts.evolutions + contextCounts.progress) > 0;
+
   const generate = async () => {
     if (!patientId) { toast.error("Selecione um paciente."); return; }
-    if (rawText.trim().length < 20) { toast.error("Escreva ao menos algumas frases sobre o caso."); return; }
+    const includeCtx = useClinical && hasAnyClinical;
+    if (!includeCtx && rawText.trim().length < 20) { toast.error("Inclua os registros clínicos ou escreva ao menos algumas frases."); return; }
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-formulation", {
-        body: { patient_id: patientId, raw_text: rawText, save: true },
+        body: { patient_id: patientId, raw_text: rawText, save: true, include_clinical_context: includeCtx },
       });
       if (error) throw error;
       const f = (data as any)?.formulation as Formulation | undefined;
@@ -73,6 +97,7 @@ export default function FormulacaoIA() {
       setLoading(false);
     }
   };
+
 
   const saveEdits = async () => {
     if (!formulation || !patientId || !user) return;
