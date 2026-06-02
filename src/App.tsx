@@ -31,6 +31,7 @@ const ComecePorAqui = lazy(() => import("./pages/app/ComecePorAqui"));
 const RegistroSessao = lazy(() => import("./pages/app/RegistroSessao"));
 const Anamneses = lazy(() => import("./pages/app/Anamneses"));
 const PlanoTratamento = lazy(() => import("./pages/app/PlanoTratamento"));
+const FormulacaoIA = lazy(() => import("./pages/app/FormulacaoIA"));
 const ContratoPublico = lazy(() => import("./pages/ContratoPublico"));
 const AnamnesePublica = lazy(() => import("./pages/AnamnesePublica"));
 
@@ -131,6 +132,7 @@ const App = () => (
                   <Route path="pacientes" element={<Patients />} />
                   <Route path="agenda" element={<Agenda />} />
                   <Route path="plano-tratamento" element={<PlanoTratamento />} />
+                  <Route path="formulacao-ia" element={<FormulacaoIA />} />
                   <Route path="financeiro" element={<Finance />} />
                   <Route path="supervisionandos" element={<Supervisees />} />
                   <Route path="biblioteca" element={<Library />} />
