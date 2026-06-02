@@ -4,11 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Loader2, Save, RefreshCw, Brain } from "lucide-react";
+import { Sparkles, Loader2, Save, RefreshCw, Brain, FileText } from "lucide-react";
 import { toast } from "sonner";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 type Patient = { id: string; full_name: string };
 
