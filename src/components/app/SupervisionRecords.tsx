@@ -72,9 +72,13 @@ export function SupervisionRecords({ supervisorId, superviseeId, superviseeName 
   const [records, setRecords] = useState<SupervisionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [expandedRecord, setExpandedRecord] = useState<string | null>(null);
+
+  // Auto-save state
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [autoStatus, setAutoStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   // Share modal
   const [shareTarget, setShareTarget] = useState<SupervisionRecord | null>(null);
@@ -98,33 +102,61 @@ export function SupervisionRecords({ supervisorId, superviseeId, superviseeName 
 
   useEffect(() => { load(); }, [supervisorId, superviseeId]);
 
-  const handleSave = async () => {
-    if (!form.patient_name.trim()) {
-      toast.error("Informe o nome do paciente");
-      return;
-    }
-    setSaving(true);
-    const { error } = await supabase.from("supervision_records").insert({
-      supervisor_id: supervisorId,
-      supervisee_id: superviseeId,
-      supervision_date: form.supervision_date,
-      patient_name: form.patient_name.trim(),
-      chief_complaint: form.chief_complaint.trim(),
-      problem_list: form.problem_list.trim(),
-      identified_beliefs: form.identified_beliefs.trim(),
-      planned_interventions: form.planned_interventions.trim(),
-      general_observations: form.general_observations.trim(),
-    } as any);
-    setSaving(false);
-    if (error) {
-      toast.error("Erro ao salvar registro");
-      return;
-    }
-    toast.success("Registro salvo");
+  // Debounced auto-save while dialog is open
+  useEffect(() => {
+    if (!formOpen) return;
+    if (!form.patient_name.trim()) return; // need at least patient name to create the row
+    setAutoStatus("saving");
+    const t = setTimeout(async () => {
+      const payload = {
+        supervision_date: form.supervision_date,
+        patient_name: form.patient_name.trim(),
+        chief_complaint: form.chief_complaint.trim(),
+        problem_list: form.problem_list.trim(),
+        identified_beliefs: form.identified_beliefs.trim(),
+        planned_interventions: form.planned_interventions.trim(),
+        general_observations: form.general_observations.trim(),
+      };
+      if (!draftId) {
+        const { data, error } = await supabase
+          .from("supervision_records")
+          .insert({ supervisor_id: supervisorId, supervisee_id: superviseeId, ...payload } as any)
+          .select("id")
+          .single();
+        if (error || !data) { setAutoStatus("error"); return; }
+        setDraftId((data as any).id);
+      } else {
+        const { error } = await supabase
+          .from("supervision_records")
+          .update(payload as any)
+          .eq("id", draftId);
+        if (error) { setAutoStatus("error"); return; }
+      }
+      setAutoStatus("saved");
+      setLastSavedAt(new Date());
+    }, 800);
+    return () => clearTimeout(t);
+  }, [form, formOpen, draftId, supervisorId, superviseeId]);
+
+  const openNew = () => {
     setForm(emptyForm);
-    setFormOpen(false);
-    load();
+    setDraftId(null);
+    setAutoStatus("idle");
+    setLastSavedAt(null);
+    setFormOpen(true);
   };
+
+  const finishDialog = () => {
+    setFormOpen(false);
+    if (draftId) {
+      toast.success("Registro salvo automaticamente");
+      load();
+    }
+    setDraftId(null);
+    setAutoStatus("idle");
+  };
+
+
 
   const handleDelete = async (id: string) => {
     await supabase.from("supervision_records").delete().eq("id", id);
