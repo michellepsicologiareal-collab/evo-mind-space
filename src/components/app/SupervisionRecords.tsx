@@ -374,11 +374,15 @@ export function SupervisionRecords({ supervisorId, superviseeId, superviseeName 
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
-            <Button variant="accent" onClick={handleSave} disabled={saving || !form.patient_name.trim()}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
-              Salvar Registro
+          <DialogFooter className="sm:items-center sm:justify-between gap-2">
+            <span className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
+              {autoStatus === "saving" && (<><Loader2 className="h-3 w-3 animate-spin" /> Salvando…</>)}
+              {autoStatus === "saved" && (<><Check className="h-3 w-3 text-green-600" /> Salvo automaticamente{lastSavedAt ? ` às ${format(lastSavedAt, "HH:mm:ss")}` : ""}</>)}
+              {autoStatus === "error" && (<span className="text-destructive">Erro ao salvar — verifique a conexão</span>)}
+              {autoStatus === "idle" && !form.patient_name.trim() && (<span>Preencha o nome do paciente para iniciar o salvamento automático</span>)}
+            </span>
+            <Button variant="accent" onClick={finishDialog} disabled={autoStatus === "saving"}>
+              <Check className="h-4 w-4 mr-1" /> Concluir
             </Button>
           </DialogFooter>
         </DialogContent>
