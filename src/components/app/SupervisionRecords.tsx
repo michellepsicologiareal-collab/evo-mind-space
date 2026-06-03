@@ -214,7 +214,7 @@ export function SupervisionRecords({ supervisorId, superviseeId, superviseeName 
           <h3 className="text-sm font-semibold text-foreground truncate">Registros de Supervisão</h3>
           <span className="text-xs text-muted-foreground shrink-0">({records.length})</span>
         </div>
-        <Button variant="accent" size="sm" className="w-full sm:w-auto shrink-0" onClick={() => { setForm(emptyForm); setFormOpen(true); }}>
+        <Button variant="accent" size="sm" className="w-full sm:w-auto shrink-0" onClick={openNew}>
           <Plus className="h-3.5 w-3.5 mr-1" /> Novo Registro
         </Button>
       </div>
