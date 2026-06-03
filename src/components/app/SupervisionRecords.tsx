@@ -298,7 +298,7 @@ export function SupervisionRecords({ supervisorId, superviseeId, superviseeName 
       )}
 
       {/* New record form dialog */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+      <Dialog open={formOpen} onOpenChange={(o) => (o ? setFormOpen(true) : finishDialog())}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-xl flex items-center gap-2">
