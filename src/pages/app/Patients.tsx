@@ -811,6 +811,30 @@ const Patients = () => {
                   </div>
                 </div>
 
+                {(() => {
+                  const trunc = (t: string, n = 180) => (t.length > n ? t.slice(0, n).trimEnd() + "…" : t);
+                  const items: Array<{ label: string; text: string }> = [];
+                  if (p.chief_complaint?.trim()) items.push({ label: "Queixa principal", text: trunc(p.chief_complaint.trim()) });
+                  if (p.anamnesis?.trim()) items.push({ label: "Anamnese", text: trunc(p.anamnesis.trim()) });
+                  if (p.notes?.trim()) items.push({ label: "Notas", text: trunc(p.notes.trim()) });
+                  if (p.treatment_plan?.trim()) items.push({ label: "Plano", text: trunc(p.treatment_plan.trim()) });
+                  if (p.medications?.trim()) items.push({ label: "Medicações", text: trunc(p.medications.trim(), 120) });
+                  if (items.length === 0) return null;
+                  return (
+                    <div onClick={(e) => e.stopPropagation()} className="px-4 sm:px-5 py-3 space-y-2" style={{ background: "#FAFAF7", borderTop: `1px solid ${C.border}` }}>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Resumo do cadastro</p>
+                      <div className="space-y-1.5">
+                        {items.map((it) => (
+                          <div key={it.label} className="flex gap-2">
+                            <span className="shrink-0" style={{ fontSize: 11, fontWeight: 700, color: C.ink, minWidth: 110 }}>{it.label}</span>
+                            <span style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{it.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {hasFormul && (
                   <div onClick={(e) => e.stopPropagation()}
                     className="flex flex-col sm:flex-row sm:items-start gap-3 px-4 sm:px-5 py-3.5"
