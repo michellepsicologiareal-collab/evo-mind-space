@@ -72,9 +72,13 @@ export function SupervisionRecords({ supervisorId, superviseeId, superviseeName 
   const [records, setRecords] = useState<SupervisionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [expandedRecord, setExpandedRecord] = useState<string | null>(null);
+
+  // Auto-save state
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [autoStatus, setAutoStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   // Share modal
   const [shareTarget, setShareTarget] = useState<SupervisionRecord | null>(null);
@@ -98,33 +102,61 @@ export function SupervisionRecords({ supervisorId, superviseeId, superviseeName 
 
   useEffect(() => { load(); }, [supervisorId, superviseeId]);
 
-  const handleSave = async () => {
-    if (!form.patient_name.trim()) {
-      toast.error("Informe o nome do paciente");
-      return;
-    }
-    setSaving(true);
-    const { error } = await supabase.from("supervision_records").insert({
-      supervisor_id: supervisorId,
-      supervisee_id: superviseeId,
-      supervision_date: form.supervision_date,
-      patient_name: form.patient_name.trim(),
-      chief_complaint: form.chief_complaint.trim(),
-      problem_list: form.problem_list.trim(),
-      identified_beliefs: form.identified_beliefs.trim(),
-      planned_interventions: form.planned_interventions.trim(),
-      general_observations: form.general_observations.trim(),
-    } as any);
-    setSaving(false);
-    if (error) {
-      toast.error("Erro ao salvar registro");
-      return;
-    }
-    toast.success("Registro salvo");
+  // Debounced auto-save while dialog is open
+  useEffect(() => {
+    if (!formOpen) return;
+    if (!form.patient_name.trim()) return; // need at least patient name to create the row
+    setAutoStatus("saving");
+    const t = setTimeout(async () => {
+      const payload = {
+        supervision_date: form.supervision_date,
+        patient_name: form.patient_name.trim(),
+        chief_complaint: form.chief_complaint.trim(),
+        problem_list: form.problem_list.trim(),
+        identified_beliefs: form.identified_beliefs.trim(),
+        planned_interventions: form.planned_interventions.trim(),
+        general_observations: form.general_observations.trim(),
+      };
+      if (!draftId) {
+        const { data, error } = await supabase
+          .from("supervision_records")
+          .insert({ supervisor_id: supervisorId, supervisee_id: superviseeId, ...payload } as any)
+          .select("id")
+          .single();
+        if (error || !data) { setAutoStatus("error"); return; }
+        setDraftId((data as any).id);
+      } else {
+        const { error } = await supabase
+          .from("supervision_records")
+          .update(payload as any)
+          .eq("id", draftId);
+        if (error) { setAutoStatus("error"); return; }
+      }
+      setAutoStatus("saved");
+      setLastSavedAt(new Date());
+    }, 800);
+    return () => clearTimeout(t);
+  }, [form, formOpen, draftId, supervisorId, superviseeId]);
+
+  const openNew = () => {
     setForm(emptyForm);
-    setFormOpen(false);
-    load();
+    setDraftId(null);
+    setAutoStatus("idle");
+    setLastSavedAt(null);
+    setFormOpen(true);
   };
+
+  const finishDialog = () => {
+    setFormOpen(false);
+    if (draftId) {
+      toast.success("Registro salvo automaticamente");
+      load();
+    }
+    setDraftId(null);
+    setAutoStatus("idle");
+  };
+
+
 
   const handleDelete = async (id: string) => {
     await supabase.from("supervision_records").delete().eq("id", id);
@@ -182,7 +214,7 @@ export function SupervisionRecords({ supervisorId, superviseeId, superviseeName 
           <h3 className="text-sm font-semibold text-foreground truncate">Registros de Supervisão</h3>
           <span className="text-xs text-muted-foreground shrink-0">({records.length})</span>
         </div>
-        <Button variant="accent" size="sm" className="w-full sm:w-auto shrink-0" onClick={() => { setForm(emptyForm); setFormOpen(true); }}>
+        <Button variant="accent" size="sm" className="w-full sm:w-auto shrink-0" onClick={openNew}>
           <Plus className="h-3.5 w-3.5 mr-1" /> Novo Registro
         </Button>
       </div>
@@ -266,7 +298,7 @@ export function SupervisionRecords({ supervisorId, superviseeId, superviseeName 
       )}
 
       {/* New record form dialog */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+      <Dialog open={formOpen} onOpenChange={(o) => (o ? setFormOpen(true) : finishDialog())}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-xl flex items-center gap-2">
@@ -342,11 +374,15 @@ export function SupervisionRecords({ supervisorId, superviseeId, superviseeName 
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
-            <Button variant="accent" onClick={handleSave} disabled={saving || !form.patient_name.trim()}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
-              Salvar Registro
+          <DialogFooter className="sm:items-center sm:justify-between gap-2">
+            <span className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
+              {autoStatus === "saving" && (<><Loader2 className="h-3 w-3 animate-spin" /> Salvando…</>)}
+              {autoStatus === "saved" && (<><Check className="h-3 w-3 text-green-600" /> Salvo automaticamente{lastSavedAt ? ` às ${format(lastSavedAt, "HH:mm:ss")}` : ""}</>)}
+              {autoStatus === "error" && (<span className="text-destructive">Erro ao salvar — verifique a conexão</span>)}
+              {autoStatus === "idle" && !form.patient_name.trim() && (<span>Preencha o nome do paciente para iniciar o salvamento automático</span>)}
+            </span>
+            <Button variant="accent" onClick={finishDialog} disabled={autoStatus === "saving"}>
+              <Check className="h-4 w-4 mr-1" /> Concluir
             </Button>
           </DialogFooter>
         </DialogContent>
