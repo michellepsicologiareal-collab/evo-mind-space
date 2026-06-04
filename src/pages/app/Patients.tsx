@@ -713,6 +713,9 @@ const Patients = () => {
             const hasAnam = !!anamneseFilled[p.id];
             const hasFormul = !!formulationFilled[p.id];
             const aiSum = formulationSummaries[p.id];
+            const tp = treatmentPlans[p.id];
+            const planMetasCount = tp?.goals_count || 0;
+            const hasPlan = !!(tp && (planMetasCount > 0 || tp.conceitualizacao?.trim() || tp.techniques_count > 0));
             const type = PATIENT_CATEGORIES.find((c) => c.value === p.category)?.label ?? "Individual";
             const isSupervision = p.category === "supervisao";
             const initials = p.full_name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
