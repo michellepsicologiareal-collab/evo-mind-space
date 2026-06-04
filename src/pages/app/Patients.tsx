@@ -1283,6 +1283,49 @@ const Patients = () => {
       </Dialog>
 
       {/* Ler Formulação (PDF-like) Dialog */}
+      {/* Full "Resumo do cadastro" dialog */}
+      <Dialog open={!!summaryPatient} onOpenChange={(o) => !o && setSummaryPatient(null)}>
+        <DialogContent className="w-[calc(100%-1rem)] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Resumo do cadastro — {summaryPatient?.full_name}</DialogTitle>
+            <DialogDescription>Dados completos cadastrados para este paciente.</DialogDescription>
+          </DialogHeader>
+          {summaryPatient && (() => {
+            const tp2 = treatmentPlans[summaryPatient.id];
+            const planText = tp2?.conceitualizacao?.trim() || summaryPatient.treatment_plan?.trim() || "";
+            const blocks: Array<{ label: string; text: string }> = [];
+            if (summaryPatient.chief_complaint?.trim()) blocks.push({ label: "Queixa principal", text: summaryPatient.chief_complaint });
+            if (summaryPatient.anamnesis?.trim()) blocks.push({ label: "Anamnese", text: summaryPatient.anamnesis });
+            if (summaryPatient.notes?.trim()) blocks.push({ label: "Notas clínicas", text: summaryPatient.notes });
+            if (planText) blocks.push({ label: "Plano de tratamento", text: planText });
+            if (summaryPatient.medications?.trim()) blocks.push({ label: "Medicações", text: summaryPatient.medications });
+            if (summaryPatient.psychiatrist_name?.trim()) blocks.push({ label: "Psiquiatra", text: `${summaryPatient.psychiatrist_name}${summaryPatient.psychiatrist_phone ? ` · ${summaryPatient.psychiatrist_phone}` : ""}` });
+            if (summaryPatient.financial_responsible_name?.trim()) blocks.push({ label: "Responsável financeiro", text: `${summaryPatient.financial_responsible_name}${summaryPatient.financial_responsible_phone ? ` · ${summaryPatient.financial_responsible_phone}` : ""}` });
+            if (blocks.length === 0) {
+              return <p className="text-sm text-muted-foreground">Nenhum dado preenchido ainda.</p>;
+            }
+            return (
+              <div className="space-y-4 mt-2">
+                {blocks.map((b) => (
+                  <div key={b.label} className="rounded-xl border border-border bg-muted/20 p-4">
+                    <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-1">{b.label}</p>
+                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{b.text}</p>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            {summaryPatient && (
+              <Button variant="outline" onClick={() => { const p = summaryPatient; setSummaryPatient(null); openEdit(p); }}>
+                <Pencil className="h-4 w-4" /> Editar cadastro
+              </Button>
+            )}
+            <Button variant="accent" onClick={() => setSummaryPatient(null)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!readPatient} onOpenChange={(o) => !o && setReadPatient(null)}>
         <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0 bg-muted">
           <DialogHeader className="sr-only">
