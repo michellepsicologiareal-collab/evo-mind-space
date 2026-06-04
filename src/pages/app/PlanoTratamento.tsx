@@ -406,6 +406,22 @@ const PlanoTratamento = () => {
         <Card className="p-10 text-center text-muted-foreground">Cadastre um paciente para começar.</Card>
       ) : (
         <>
+          {/* Resumo rápido do plano */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            {[
+              { label: "Status", value: STATUS_OPTIONS.find(s => s.value === plan.status)?.label || plan.status, color: PURPLE },
+              { label: "Metas", value: String(goals.length), color: "hsl(var(--primary))" },
+              { label: "Técnicas", value: String(techniques.length), color: "#BA7517" },
+              { label: "Revisões", value: String(revisions.length), color: "hsl(var(--moss, 150 30% 30%))" },
+              { label: "Sessões", value: String(treatmentSessions.length), color: PURPLE },
+            ].map((s) => (
+              <Card key={s.label} className="p-3 rounded-xl">
+                <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">{s.label}</p>
+                <p className="text-lg font-display font-bold mt-1" style={{ color: s.color }}>{s.value}</p>
+              </Card>
+            ))}
+          </div>
+
           {/* BLOCO 1 — Próxima sessão */}
           <Card className="p-6 rounded-2xl border-l-4" style={{ borderLeftColor: PURPLE }}>
             <div className="flex items-center gap-2 mb-4">
