@@ -194,6 +194,31 @@ const Patients = () => {
     setFormulationFilled(formMap);
     setFormulationSummaries(sumMap);
     setFormulationData(dataMap);
+
+    const plansMap: Record<string, any> = {};
+    (plansRes.data ?? []).forEach((p: any) => {
+      if (!p.patient_id) return;
+      plansMap[p.patient_id] = {
+        status: p.status || "",
+        cid: p.cid || "",
+        abordagem: p.abordagem || [],
+        conceitualizacao: p.conceitualizacao || "",
+        goals_count: 0,
+        techniques_count: 0,
+        revisions_count: 0,
+      };
+    });
+    const bump = (rows: any[] | null, key: "goals_count" | "techniques_count" | "revisions_count") => {
+      (rows ?? []).forEach((r: any) => {
+        if (!r.patient_id) return;
+        if (!plansMap[r.patient_id]) plansMap[r.patient_id] = { status: "", cid: "", abordagem: [], conceitualizacao: "", goals_count: 0, techniques_count: 0, revisions_count: 0 };
+        plansMap[r.patient_id][key] += 1;
+      });
+    };
+    bump(goalsRes.data, "goals_count");
+    bump(techRes.data, "techniques_count");
+    bump(revRes.data, "revisions_count");
+    setTreatmentPlans(plansMap);
     const countAndLatest = (rows: any[] | null, dateKey: string) => {
       const c: Record<string, number> = {};
       const l: Record<string, string> = {};
