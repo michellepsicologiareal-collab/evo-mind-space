@@ -112,6 +112,8 @@ const Patients = () => {
   const [formulationData, setFormulationData] = useState<Record<string, any>>({});
   const [summarizing, setSummarizing] = useState<Record<string, boolean>>({});
   const [readPatient, setReadPatient] = useState<Patient | null>(null);
+  const [summaryPatient, setSummaryPatient] = useState<Patient | null>(null);
+  const [treatmentPlans, setTreatmentPlans] = useState<Record<string, { status: string; cid: string; abordagem: string[]; conceitualizacao: string; goals_count: number; techniques_count: number; revisions_count: number }>>({});
   const [counts, setCounts] = useState<{ mood: Record<string, number>; tcc: Record<string, number>; records: Record<string, number>; history: Record<string, number> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [lastDates, setLastDates] = useState<{ mood: Record<string, string>; tcc: Record<string, string>; records: Record<string, string>; history: Record<string, string> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [attendance, setAttendance] = useState<Record<string, { total: number; attended: number; pct: number }>>({});
@@ -150,7 +152,7 @@ const Patients = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes] = await Promise.all([
+    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes, plansRes, goalsRes, techRes, revRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
       supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
@@ -160,6 +162,10 @@ const Patients = () => {
       supabase.from("session_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("sessions").select("patient_id, scheduled_at, status").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
       supabase.from("case_formulations").select("patient_id, updated_at, ai_summary, environment, thoughts, emotions, behaviors, physical_reactions, core_beliefs, treatment_goals").eq("user_id", user.id),
+      supabase.from("treatment_plans").select("patient_id, status, cid, abordagem, conceitualizacao").eq("user_id", user.id),
+      supabase.from("treatment_goals").select("patient_id").eq("user_id", user.id),
+      supabase.from("treatment_techniques").select("patient_id").eq("user_id", user.id),
+      supabase.from("treatment_revisions").select("patient_id").eq("user_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
@@ -188,6 +194,31 @@ const Patients = () => {
     setFormulationFilled(formMap);
     setFormulationSummaries(sumMap);
     setFormulationData(dataMap);
+
+    const plansMap: Record<string, any> = {};
+    (plansRes.data ?? []).forEach((p: any) => {
+      if (!p.patient_id) return;
+      plansMap[p.patient_id] = {
+        status: p.status || "",
+        cid: p.cid || "",
+        abordagem: p.abordagem || [],
+        conceitualizacao: p.conceitualizacao || "",
+        goals_count: 0,
+        techniques_count: 0,
+        revisions_count: 0,
+      };
+    });
+    const bump = (rows: any[] | null, key: "goals_count" | "techniques_count" | "revisions_count") => {
+      (rows ?? []).forEach((r: any) => {
+        if (!r.patient_id) return;
+        if (!plansMap[r.patient_id]) plansMap[r.patient_id] = { status: "", cid: "", abordagem: [], conceitualizacao: "", goals_count: 0, techniques_count: 0, revisions_count: 0 };
+        plansMap[r.patient_id][key] += 1;
+      });
+    };
+    bump(goalsRes.data, "goals_count");
+    bump(techRes.data, "techniques_count");
+    bump(revRes.data, "revisions_count");
+    setTreatmentPlans(plansMap);
     const countAndLatest = (rows: any[] | null, dateKey: string) => {
       const c: Record<string, number> = {};
       const l: Record<string, string> = {};
@@ -682,6 +713,9 @@ const Patients = () => {
             const hasAnam = !!anamneseFilled[p.id];
             const hasFormul = !!formulationFilled[p.id];
             const aiSum = formulationSummaries[p.id];
+            const tp = treatmentPlans[p.id];
+            const planMetasCount = tp?.goals_count || 0;
+            const hasPlan = !!(tp && (planMetasCount > 0 || tp.conceitualizacao?.trim() || tp.techniques_count > 0));
             const type = PATIENT_CATEGORIES.find((c) => c.value === p.category)?.label ?? "Individual";
             const isSupervision = p.category === "supervisao";
             const initials = p.full_name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
@@ -753,7 +787,7 @@ const Patients = () => {
                       <Pill label={cTcc > 0 ? "Conceitualização TCC" : "Sem conceitualização"} kind={cTcc > 0 ? "filled" : "pending"} />
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }} style={{ all: "unset", cursor: "pointer" }}>
-                      <Pill label="Sem plano" kind="neutral" />
+                      <Pill label={hasPlan ? "Plano" : "Sem plano"} kind={hasPlan ? "filled" : "pending"} count={planMetasCount > 0 ? planMetasCount : undefined} />
                     </button>
                     {p.category === "crianca" && (
                       <button onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
@@ -813,16 +847,27 @@ const Patients = () => {
 
                 {(() => {
                   const trunc = (t: string, n = 180) => (t.length > n ? t.slice(0, n).trimEnd() + "…" : t);
+                  const planText = tp?.conceitualizacao?.trim() || p.treatment_plan?.trim() || "";
                   const items: Array<{ label: string; text: string }> = [];
                   if (p.chief_complaint?.trim()) items.push({ label: "Queixa principal", text: trunc(p.chief_complaint.trim()) });
                   if (p.anamnesis?.trim()) items.push({ label: "Anamnese", text: trunc(p.anamnesis.trim()) });
                   if (p.notes?.trim()) items.push({ label: "Notas", text: trunc(p.notes.trim()) });
-                  if (p.treatment_plan?.trim()) items.push({ label: "Plano", text: trunc(p.treatment_plan.trim()) });
+                  if (planText) items.push({ label: "Plano", text: trunc(planText) });
                   if (p.medications?.trim()) items.push({ label: "Medicações", text: trunc(p.medications.trim(), 120) });
                   if (items.length === 0) return null;
                   return (
                     <div onClick={(e) => e.stopPropagation()} className="px-4 sm:px-5 py-3 space-y-2" style={{ background: "#FAFAF7", borderTop: `1px solid ${C.border}` }}>
-                      <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Resumo do cadastro</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Resumo do cadastro</p>
+                        <button
+                          onClick={() => setSummaryPatient(p)}
+                          title="Ver resumo completo"
+                          className="inline-flex items-center gap-1 transition-opacity hover:opacity-80"
+                          style={{ background: "transparent", color: C.purple, fontSize: 11, fontWeight: 600, padding: "2px 6px", borderRadius: 6 }}
+                        >
+                          <Eye className="h-3.5 w-3.5" /> Ver tudo
+                        </button>
+                      </div>
                       <div className="space-y-1.5">
                         {items.map((it) => (
                           <div key={it.label} className="flex gap-2">
@@ -1238,6 +1283,49 @@ const Patients = () => {
       </Dialog>
 
       {/* Ler Formulação (PDF-like) Dialog */}
+      {/* Full "Resumo do cadastro" dialog */}
+      <Dialog open={!!summaryPatient} onOpenChange={(o) => !o && setSummaryPatient(null)}>
+        <DialogContent className="w-[calc(100%-1rem)] sm:w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Resumo do cadastro — {summaryPatient?.full_name}</DialogTitle>
+            <DialogDescription>Dados completos cadastrados para este paciente.</DialogDescription>
+          </DialogHeader>
+          {summaryPatient && (() => {
+            const tp2 = treatmentPlans[summaryPatient.id];
+            const planText = tp2?.conceitualizacao?.trim() || summaryPatient.treatment_plan?.trim() || "";
+            const blocks: Array<{ label: string; text: string }> = [];
+            if (summaryPatient.chief_complaint?.trim()) blocks.push({ label: "Queixa principal", text: summaryPatient.chief_complaint });
+            if (summaryPatient.anamnesis?.trim()) blocks.push({ label: "Anamnese", text: summaryPatient.anamnesis });
+            if (summaryPatient.notes?.trim()) blocks.push({ label: "Notas clínicas", text: summaryPatient.notes });
+            if (planText) blocks.push({ label: "Plano de tratamento", text: planText });
+            if (summaryPatient.medications?.trim()) blocks.push({ label: "Medicações", text: summaryPatient.medications });
+            if (summaryPatient.psychiatrist_name?.trim()) blocks.push({ label: "Psiquiatra", text: `${summaryPatient.psychiatrist_name}${summaryPatient.psychiatrist_phone ? ` · ${summaryPatient.psychiatrist_phone}` : ""}` });
+            if (summaryPatient.financial_responsible_name?.trim()) blocks.push({ label: "Responsável financeiro", text: `${summaryPatient.financial_responsible_name}${summaryPatient.financial_responsible_phone ? ` · ${summaryPatient.financial_responsible_phone}` : ""}` });
+            if (blocks.length === 0) {
+              return <p className="text-sm text-muted-foreground">Nenhum dado preenchido ainda.</p>;
+            }
+            return (
+              <div className="space-y-4 mt-2">
+                {blocks.map((b) => (
+                  <div key={b.label} className="rounded-xl border border-border bg-muted/20 p-4">
+                    <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground mb-1">{b.label}</p>
+                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{b.text}</p>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            {summaryPatient && (
+              <Button variant="outline" onClick={() => { const p = summaryPatient; setSummaryPatient(null); openEdit(p); }}>
+                <Pencil className="h-4 w-4" /> Editar cadastro
+              </Button>
+            )}
+            <Button variant="accent" onClick={() => setSummaryPatient(null)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!readPatient} onOpenChange={(o) => !o && setReadPatient(null)}>
         <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0 bg-muted">
           <DialogHeader className="sr-only">

@@ -85,6 +85,9 @@ const PlanoTratamento = () => {
   const [techniques, setTechniques] = useState<Technique[]>([]);
   const [newTech, setNewTech] = useState("");
   const [revisions, setRevisions] = useState<Revision[]>([]);
+  const [newRevisionOpen, setNewRevisionOpen] = useState(false);
+  const [newRevisionDesc, setNewRevisionDesc] = useState("");
+  const [newRevisionRef, setNewRevisionRef] = useState("");
   const [nextSession, setNextSession] = useState<NextSession | null>(null);
   const [treatmentSessions, setTreatmentSessions] = useState<TreatmentSession[]>([]);
   const [sessionPlan, setSessionPlan] = useState<SessionPlan>({
@@ -216,13 +219,14 @@ const PlanoTratamento = () => {
 
   const addRevision = async () => {
     if (!uid || !patientId) return;
-    const desc = window.prompt("Descrição da revisão:");
-    if (!desc?.trim()) return;
-    const ref = window.prompt("Número/referência da sessão (opcional):") || "";
+    if (!newRevisionDesc.trim()) return toast.error("Descreva a revisão");
     const { data, error } = await supabase.from("treatment_revisions")
-      .insert({ user_id: uid, patient_id: patientId, descricao: desc.trim(), sessao_ref: ref }).select().single();
+      .insert({ user_id: uid, patient_id: patientId, descricao: newRevisionDesc.trim(), sessao_ref: newRevisionRef.trim() }).select().single();
     if (error) return toast.error("Erro");
     setRevisions([data as Revision, ...revisions]);
+    setNewRevisionDesc("");
+    setNewRevisionRef("");
+    setNewRevisionOpen(false);
     toast.success("Revisão registrada");
   };
 
@@ -402,6 +406,22 @@ const PlanoTratamento = () => {
         <Card className="p-10 text-center text-muted-foreground">Cadastre um paciente para começar.</Card>
       ) : (
         <>
+          {/* Resumo rápido do plano */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            {[
+              { label: "Status", value: STATUS_OPTIONS.find(s => s.value === plan.status)?.label || plan.status, color: PURPLE },
+              { label: "Metas", value: String(goals.length), color: "hsl(var(--primary))" },
+              { label: "Técnicas", value: String(techniques.length), color: "#BA7517" },
+              { label: "Revisões", value: String(revisions.length), color: "hsl(var(--moss, 150 30% 30%))" },
+              { label: "Sessões", value: String(treatmentSessions.length), color: PURPLE },
+            ].map((s) => (
+              <Card key={s.label} className="p-3 rounded-xl">
+                <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">{s.label}</p>
+                <p className="text-lg font-display font-bold mt-1" style={{ color: s.color }}>{s.value}</p>
+              </Card>
+            ))}
+          </div>
+
           {/* BLOCO 1 — Próxima sessão */}
           <Card className="p-6 rounded-2xl border-l-4" style={{ borderLeftColor: PURPLE }}>
             <div className="flex items-center gap-2 mb-4">
@@ -501,20 +521,31 @@ const PlanoTratamento = () => {
               <div className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-primary" />
                 <h2 className="font-display text-lg font-bold">Metas terapêuticas</h2>
+                <Badge variant="secondary" className="ml-1">{goals.length}</Badge>
               </div>
               <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={addGoal}><Plus className="h-4 w-4" /> Adicionar meta</Button>
             </div>
 
             <div className="space-y-3">
-              {goals.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma meta cadastrada ainda.</p>}
+              {goals.length === 0 && (
+                <div className="rounded-xl border border-dashed border-border p-6 text-center">
+                  <Target className="h-6 w-6 mx-auto text-muted-foreground/40 mb-2" />
+                  <p className="text-sm text-muted-foreground">Comece adicionando metas gerais, intermediárias e comportamentais.</p>
+                </div>
+              )}
               {goals.map(g => (
                 <div key={g.id} className={cn("border-l-4 bg-card border border-border rounded-xl p-3 grid gap-3 sm:flex sm:items-start", GOAL_META[g.tipo].border)}>
-                  <Select value={g.tipo} onValueChange={(v) => updateGoal(g.id, { tipo: v as GoalType })}>
-                    <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {(Object.keys(GOAL_META) as GoalType[]).map(k => <SelectItem key={k} value={k}>{GOAL_META[k].label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-col gap-2 sm:w-[160px] shrink-0">
+                    <span className={cn("inline-flex items-center justify-center text-[10px] uppercase tracking-wide font-bold rounded-full px-2 py-0.5", GOAL_META[g.tipo].chip)}>
+                      {GOAL_META[g.tipo].label}
+                    </span>
+                    <Select value={g.tipo} onValueChange={(v) => updateGoal(g.id, { tipo: v as GoalType })}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {(Object.keys(GOAL_META) as GoalType[]).map(k => <SelectItem key={k} value={k}>{GOAL_META[k].label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Textarea value={g.descricao} onChange={e => updateGoal(g.id, { descricao: e.target.value })} rows={2} className="min-w-0 flex-1" placeholder="Descreva a meta..." />
                   <Button variant="ghost" size="icon" className="justify-self-end" onClick={() => removeGoal(g.id)}><X className="h-4 w-4" /></Button>
                 </div>
@@ -527,6 +558,7 @@ const PlanoTratamento = () => {
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="h-5 w-5 text-primary" />
               <h2 className="font-display text-lg font-bold">Técnicas do plano</h2>
+              <Badge variant="secondary" className="ml-1">{techniques.length}</Badge>
             </div>
             <div className="flex flex-wrap gap-2 mb-3">
               {techniques.map(t => (
@@ -535,12 +567,12 @@ const PlanoTratamento = () => {
                   <button onClick={() => removeTechnique(t.id)} className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"><X className="h-3 w-3" /></button>
                 </Badge>
               ))}
-              {techniques.length === 0 && <span className="text-sm text-muted-foreground">Adicione técnicas abaixo.</span>}
+              {techniques.length === 0 && <span className="text-sm text-muted-foreground">Adicione técnicas abaixo — elas ficam disponíveis para vincular em cada sessão.</span>}
             </div>
             <div className="grid gap-2 max-w-md sm:flex">
               <Input value={newTech} onChange={e => setNewTech(e.target.value)} placeholder="Ex: Reestruturação cognitiva"
                 onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addTechnique())} />
-              <Button variant="outline" className="w-full sm:w-auto" onClick={addTechnique}><Plus className="h-4 w-4" /></Button>
+              <Button variant="outline" className="w-full sm:w-auto" onClick={addTechnique}><Plus className="h-4 w-4" /> Adicionar</Button>
             </div>
           </Card>
 
@@ -550,12 +582,36 @@ const PlanoTratamento = () => {
               <div className="flex items-center gap-2">
                 <History className="h-5 w-5 text-primary" />
                 <h2 className="font-display text-lg font-bold">Histórico de revisões</h2>
+                <Badge variant="secondary" className="ml-1">{revisions.length}</Badge>
               </div>
-              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={addRevision}><Plus className="h-4 w-4" /> Nova revisão</Button>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setNewRevisionOpen(o => !o)}>
+                <Plus className="h-4 w-4" /> Nova revisão
+              </Button>
             </div>
 
+            {newRevisionOpen && (
+              <div className="mb-4 rounded-xl border border-border bg-muted/30 p-4 space-y-3">
+                <div>
+                  <Label>Descrição da revisão</Label>
+                  <Textarea value={newRevisionDesc} onChange={e => setNewRevisionDesc(e.target.value)} rows={3}
+                    placeholder="Ex: revisão das metas após 8 sessões; ajustes nas técnicas..." />
+                </div>
+                <div>
+                  <Label>Referência da sessão (opcional)</Label>
+                  <Input value={newRevisionRef} onChange={e => setNewRevisionRef(e.target.value)} placeholder="Ex: #8 ou 10/06/2026" />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => { setNewRevisionOpen(false); setNewRevisionDesc(""); setNewRevisionRef(""); }}>Cancelar</Button>
+                  <Button variant="accent" size="sm" onClick={addRevision}>Salvar revisão</Button>
+                </div>
+              </div>
+            )}
+
             {revisions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma revisão registrada ainda.</p>
+              <div className="rounded-xl border border-dashed border-border p-6 text-center">
+                <History className="h-6 w-6 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="text-sm text-muted-foreground">Registre revisões periódicas para acompanhar a evolução do tratamento.</p>
+              </div>
             ) : (
               <div className="relative pl-6 space-y-4 border-l-2 border-border">
                 {revisions.map(r => (
