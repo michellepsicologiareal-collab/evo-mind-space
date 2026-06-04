@@ -112,6 +112,8 @@ const Patients = () => {
   const [formulationData, setFormulationData] = useState<Record<string, any>>({});
   const [summarizing, setSummarizing] = useState<Record<string, boolean>>({});
   const [readPatient, setReadPatient] = useState<Patient | null>(null);
+  const [summaryPatient, setSummaryPatient] = useState<Patient | null>(null);
+  const [treatmentPlans, setTreatmentPlans] = useState<Record<string, { status: string; cid: string; abordagem: string[]; conceitualizacao: string; goals_count: number; techniques_count: number; revisions_count: number }>>({});
   const [counts, setCounts] = useState<{ mood: Record<string, number>; tcc: Record<string, number>; records: Record<string, number>; history: Record<string, number> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [lastDates, setLastDates] = useState<{ mood: Record<string, string>; tcc: Record<string, string>; records: Record<string, string>; history: Record<string, string> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [attendance, setAttendance] = useState<Record<string, { total: number; attended: number; pct: number }>>({});
