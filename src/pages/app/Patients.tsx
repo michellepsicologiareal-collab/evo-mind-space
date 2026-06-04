@@ -152,7 +152,7 @@ const Patients = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes] = await Promise.all([
+    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes, plansRes, goalsRes, techRes, revRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
       supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
@@ -162,6 +162,10 @@ const Patients = () => {
       supabase.from("session_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("sessions").select("patient_id, scheduled_at, status").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
       supabase.from("case_formulations").select("patient_id, updated_at, ai_summary, environment, thoughts, emotions, behaviors, physical_reactions, core_beliefs, treatment_goals").eq("user_id", user.id),
+      supabase.from("treatment_plans").select("patient_id, status, cid, abordagem, conceitualizacao").eq("user_id", user.id),
+      supabase.from("treatment_goals").select("patient_id").eq("user_id", user.id),
+      supabase.from("treatment_techniques").select("patient_id").eq("user_id", user.id),
+      supabase.from("treatment_revisions").select("patient_id").eq("user_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
