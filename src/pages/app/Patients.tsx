@@ -787,7 +787,7 @@ const Patients = () => {
                       <Pill label={cTcc > 0 ? "Conceitualização TCC" : "Sem conceitualização"} kind={cTcc > 0 ? "filled" : "pending"} />
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }} style={{ all: "unset", cursor: "pointer" }}>
-                      <Pill label="Sem plano" kind="neutral" />
+                      <Pill label={hasPlan ? "Plano" : "Sem plano"} kind={hasPlan ? "filled" : "pending"} count={planMetasCount > 0 ? planMetasCount : undefined} />
                     </button>
                     {p.category === "crianca" && (
                       <button onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
