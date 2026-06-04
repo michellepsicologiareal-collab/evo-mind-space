@@ -85,6 +85,9 @@ const PlanoTratamento = () => {
   const [techniques, setTechniques] = useState<Technique[]>([]);
   const [newTech, setNewTech] = useState("");
   const [revisions, setRevisions] = useState<Revision[]>([]);
+  const [newRevisionOpen, setNewRevisionOpen] = useState(false);
+  const [newRevisionDesc, setNewRevisionDesc] = useState("");
+  const [newRevisionRef, setNewRevisionRef] = useState("");
   const [nextSession, setNextSession] = useState<NextSession | null>(null);
   const [treatmentSessions, setTreatmentSessions] = useState<TreatmentSession[]>([]);
   const [sessionPlan, setSessionPlan] = useState<SessionPlan>({
