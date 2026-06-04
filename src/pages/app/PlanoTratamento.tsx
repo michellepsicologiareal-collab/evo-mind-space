@@ -219,13 +219,14 @@ const PlanoTratamento = () => {
 
   const addRevision = async () => {
     if (!uid || !patientId) return;
-    const desc = window.prompt("Descrição da revisão:");
-    if (!desc?.trim()) return;
-    const ref = window.prompt("Número/referência da sessão (opcional):") || "";
+    if (!newRevisionDesc.trim()) return toast.error("Descreva a revisão");
     const { data, error } = await supabase.from("treatment_revisions")
-      .insert({ user_id: uid, patient_id: patientId, descricao: desc.trim(), sessao_ref: ref }).select().single();
+      .insert({ user_id: uid, patient_id: patientId, descricao: newRevisionDesc.trim(), sessao_ref: newRevisionRef.trim() }).select().single();
     if (error) return toast.error("Erro");
     setRevisions([data as Revision, ...revisions]);
+    setNewRevisionDesc("");
+    setNewRevisionRef("");
+    setNewRevisionOpen(false);
     toast.success("Revisão registrada");
   };
 
