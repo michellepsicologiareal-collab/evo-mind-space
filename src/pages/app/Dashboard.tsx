@@ -697,19 +697,19 @@ const Dashboard = () => {
                   <AreaChart data={weeklyRevenue}>
                     <defs>
                       <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.18} />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                        <stop offset="0%" stopColor="#534AB7" stopOpacity={0.18} />
+                        <stop offset="100%" stopColor="#534AB7" stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="week" tick={{ fontSize: 10, fill: "#6B7280" }} axisLine={false} tickLine={false} />
                     <RechartsTooltip
-                      contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+                      contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E5E7EB" }}
                       formatter={(v: number) => [`R$ ${v.toFixed(0)}`, "Receita"]}
                     />
                     <Area
                       type="monotone"
                       dataKey="value"
-                      stroke="hsl(var(--primary))"
+                      stroke="#534AB7"
                       strokeWidth={2.5}
                       fill="url(#revGrad)"
                       dot={false}
@@ -764,7 +764,7 @@ const Dashboard = () => {
                         const x = cx + radius * Math.cos(-midAngle * RADIAN);
                         const y = cy + radius * Math.sin(-midAngle * RADIAN);
                         return (
-                          <text x={x} y={y} fill="hsl(var(--foreground))" textAnchor={x > cx ? "start" : "end"} dominantBaseline="central" fontSize={12}>
+                          <text x={x} y={y} fill="#1A1A2E" textAnchor={x > cx ? "start" : "end"} dominantBaseline="central" fontSize={12}>
                             {name} {(percent * 100).toFixed(0)}%
                           </text>
                         );
@@ -776,7 +776,7 @@ const Dashboard = () => {
                       ))}
                     </Pie>
                     <RechartsTooltip
-                      contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+                      contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E5E7EB" }}
                       formatter={(value: number, name: string, props: any) => [
                         `${value} paciente${value !== 1 ? "s" : ""} · Média R$ ${props.payload.avgPrice}`,
                         name,
@@ -815,11 +815,11 @@ const Dashboard = () => {
 
           const classifyChip = (m: PatientMoodEntry) => {
             const note = m.note ?? "";
-            if (/crise/i.test(note)) return { label: "Em crise", bg: "rgba(133,79,11,0.12)", color: "hsl(var(--brown))", border: "rgba(133,79,11,0.25)" };
-            if (/(término|termino|resist|não acei|nao acei)/i.test(note)) return { label: "Resistente", bg: "rgba(201,168,76,0.12)", color: "hsl(var(--brown))", border: "rgba(201,168,76,0.3)" };
+            if (/crise/i.test(note)) return { label: "Em crise", bg: "rgba(133,79,11,0.12)", color: "#1A1A2E", border: "rgba(133,79,11,0.25)" };
+            if (/(término|termino|resist|não acei|nao acei)/i.test(note)) return { label: "Resistente", bg: "rgba(201,168,76,0.12)", color: "#1A1A2E", border: "rgba(201,168,76,0.3)" };
             if (ANX_RX.test(note)) return { label: "Ansioso", bg: "rgba(201,168,76,0.08)", color: "#9a7a28", border: "rgba(201,168,76,0.2)" };
-            if (ENG_RX.test(note)) return { label: "Engajado", bg: "rgba(150,117,206,0.12)", color: "hsl(var(--primary-dark))", border: "rgba(150,117,206,0.25)" };
-            return { label: "Estável", bg: "rgba(150,117,206,0.08)", color: "hsl(var(--primary-dark))", border: "rgba(150,117,206,0.2)" };
+            if (ENG_RX.test(note)) return { label: "Engajado", bg: "rgba(150,117,206,0.12)", color: "#3C3489", border: "rgba(150,117,206,0.25)" };
+            return { label: "Estável", bg: "rgba(150,117,206,0.08)", color: "#3C3489", border: "rgba(150,117,206,0.2)" };
           };
 
           // Period filter
@@ -874,18 +874,18 @@ const Dashboard = () => {
             const chip = classifyChip(m);
             const prev = prevScoreByPatient.get(m.patient_id);
             const delta = prev !== undefined ? +(m.mood_score - prev).toFixed(1) : null;
-            const fillColor = m.mood_score >= 7 ? "hsl(var(--primary))" : m.mood_score >= 4 ? "hsl(var(--gold))" : "hsl(var(--brown))";
-            const valueColor = m.mood_score >= 7 ? "hsl(var(--primary-dark))" : m.mood_score >= 4 ? "hsl(var(--foreground))" : "hsl(var(--brown))";
+            const fillColor = m.mood_score >= 7 ? "#534AB7" : m.mood_score >= 4 ? "#B8860B" : "#1A1A2E";
+            const valueColor = m.mood_score >= 7 ? "#3C3489" : m.mood_score >= 4 ? "#1A1A2E" : "#1A1A2E";
             const pct = Math.max(0, Math.min(100, (m.mood_score / 10) * 100));
             return (
               <li
                 className="group relative flex items-center gap-3 px-3 transition-colors"
                 style={{
                   height: "52px",
-                  background: urgentCard ? "hsl(var(--muted))" : "transparent",
+                  background: urgentCard ? "#F5F5F0" : "transparent",
                   borderLeft: urgentCard ? "2px solid #1A1A2E" : "2px solid transparent",
                 }}
-                onMouseEnter={(e) => { if (!urgentCard) e.currentTarget.style.background = "hsl(var(--background))"; }}
+                onMouseEnter={(e) => { if (!urgentCard) e.currentTarget.style.background = "#F7F6F3"; }}
                 onMouseLeave={(e) => { if (!urgentCard) e.currentTarget.style.background = "transparent"; }}
               >
                 <div
@@ -972,8 +972,8 @@ const Dashboard = () => {
                   }}
                   className="shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
                   style={{ width: 26, height: 26, borderRadius: 6, color: "#6B7280", background: "transparent" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "hsl(var(--primary))"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#534AB7"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "#6B7280"; }}
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </button>
@@ -999,7 +999,7 @@ const Dashboard = () => {
           return (
             <section
               className="rounded-2xl border shadow-card overflow-hidden relative"
-              style={{ background: "hsl(var(--muted))", borderColor: "#E5E7EB" }}
+              style={{ background: "#F5F5F0", borderColor: "#E5E7EB" }}
             >
               <div className="absolute top-0 left-0 right-0 z-10" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
               {/* Header */}
@@ -1017,7 +1017,7 @@ const Dashboard = () => {
                 <div
                   className="flex items-center gap-2 mt-4 flex-wrap"
                   style={{
-                    background: "hsl(var(--muted))",
+                    background: "#F5F5F0",
                     borderTop: "0.5px solid rgba(201,168,76,0.25)",
                     borderBottom: "0.5px solid rgba(201,168,76,0.25)",
                     padding: "10px 24px",
@@ -1066,9 +1066,9 @@ const Dashboard = () => {
                         key={c.key}
                         onClick={() => setMoodPeriod(c.key)}
                         style={{
-                          background: active ? "rgba(150,117,206,0.06)" : "hsl(var(--card))",
+                          background: active ? "rgba(150,117,206,0.06)" : "#FFFFFF",
                           border: active ? "0.5px solid rgba(150,117,206,0.25)" : "0.5px solid #E5E7EB",
-                          color: active ? "hsl(var(--primary-dark))" : "#6B7280",
+                          color: active ? "#3C3489" : "#6B7280",
                           borderRadius: "40px",
                           padding: "6px 14px",
                           fontFamily: "Syne, sans-serif",
@@ -1092,7 +1092,7 @@ const Dashboard = () => {
                 {listed.length === 0 ? (
                   <div className="text-center py-12">
                     <Heart className="h-12 w-12 mx-auto mb-4" style={{ color: "#6B7280" }} />
-                    <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "15px", color: "hsl(var(--primary-dark))" }}>
+                    <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "15px", color: "#3C3489" }}>
                       Nenhum registro de humor ainda
                     </p>
                     <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "13px", color: "#6B7280" }}>
@@ -1124,7 +1124,7 @@ const Dashboard = () => {
                               </p>
                             </div>
                             <div className="flex items-center gap-3 text-xs" style={{ fontFamily: "Instrument Sans, sans-serif", color: "#1A1A2E" }}>
-                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "hsl(var(--moss))" }} />Bem (7-10)</span>
+                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#2D6A4F" }} />Bem (7-10)</span>
                               <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#B8860B" }} />Atenção (4-6)</span>
                               <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#1A1A2E" }} />Crítico (0-3)</span>
                             </div>
@@ -1134,15 +1134,15 @@ const Dashboard = () => {
                               <AreaChart data={source} margin={{ top: 10, right: 16, left: -10, bottom: 0 }}>
                                 <defs>
                                   <linearGradient id="moodGradBig" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
-                                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                                    <stop offset="0%" stopColor="#534AB7" stopOpacity={0.35} />
+                                    <stop offset="100%" stopColor="#534AB7" stopOpacity={0.02} />
                                   </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--primary-glow))" }} axisLine={false} tickLine={false} />
-                                <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 11, fill: "hsl(var(--primary-glow))" }} axisLine={false} tickLine={false} width={28} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
+                                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} />
+                                <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} width={28} />
                                 <RechartsTooltip
-                                  contentStyle={{ fontSize: 12, borderRadius: 12, border: "1px solid hsl(var(--border))", background: "#fff" }}
+                                  contentStyle={{ fontSize: 12, borderRadius: 12, border: "1px solid #E5E7EB", background: "#fff" }}
                                   formatter={(v: number) => [`${v}/10`, "Humor"]}
                                   labelFormatter={(l, payload: any) => {
                                     const p = payload?.[0]?.payload?.patient;
@@ -1152,10 +1152,10 @@ const Dashboard = () => {
                                 <Area
                                   type="monotone"
                                   dataKey="score"
-                                  stroke="hsl(var(--primary))"
+                                  stroke="#534AB7"
                                   strokeWidth={2.5}
                                   fill="url(#moodGradBig)"
-                                  dot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "#fff" }}
+                                  dot={{ r: 4, fill: "#534AB7", strokeWidth: 2, stroke: "#fff" }}
                                   activeDot={{ r: 6 }}
                                 />
                               </AreaChart>
