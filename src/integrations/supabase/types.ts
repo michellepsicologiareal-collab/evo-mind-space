@@ -1400,6 +1400,18 @@ export type Database = {
       }
       is_supervisor_of: { Args: { _supervisee_id: string }; Returns: boolean }
       link_supervisee_by_email: { Args: { _email: string }; Returns: string }
+      list_my_supervisees: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          crp: string
+          full_name: string
+          id: string
+          phone: string
+          profile_type: Database["public"]["Enums"]["profile_type"]
+          specialty: string
+        }[]
+      }
       log_clinical_access: {
         Args: {
           _access_type?: Database["public"]["Enums"]["audit_access_type"]
