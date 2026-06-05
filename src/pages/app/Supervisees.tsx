@@ -89,11 +89,7 @@ const Supervisees = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const { data: profs, error } = await supabase
-      .from("profiles")
-      .select("id, full_name, crp, phone, specialty, avatar_url")
-      .eq("supervisor_id", user.id)
-      .eq("profile_type", "supervisee");
+    const { data: profs, error } = await (supabase as any).rpc("list_my_supervisees");
 
     if (error) {
       toast.error("Erro ao carregar supervisionandos");
