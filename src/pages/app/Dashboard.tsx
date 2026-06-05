@@ -553,20 +553,20 @@ const Dashboard = () => {
           <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
           <p
             className="uppercase"
-            style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", color: "hsl(var(--gold))" }}
+            style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", color: "#B8860B" }}
           >
             PSI REAL{clinicName ? ` · ${clinicName}` : ""}
           </p>
-          <p className="mt-1 capitalize" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 300, color: "hsl(var(--primary-glow))" }}>
+          <p className="mt-1 capitalize" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 300, color: "#6B7280" }}>
             {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
           <h1
             className="mt-2"
-            style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 700, color: "hsl(var(--foreground))" }}
+            style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 700, color: "#1A1A2E" }}
           >
             {greeting}{firstName ? `, ${firstName}` : ""}.
           </h1>
-          <p className="mt-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "13px", fontWeight: 300, color: "hsl(var(--primary-glow))" }}>
+          <p className="mt-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "13px", fontWeight: 300, color: "#6B7280" }}>
             {summaryText}
           </p>
         </header>
@@ -676,17 +676,17 @@ const Dashboard = () => {
           {/* Revenue Chart Card */}
           <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
-            <p className="mb-1 uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "hsl(var(--muted-foreground))" }}>
+            <p className="mb-1 uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "#6B7280" }}>
               Faturamento — {periodLabel}
             </p>
-            <p style={{ fontFamily: "Syne, sans-serif", fontSize: "28px", fontWeight: 700, color: "hsl(var(--foreground))", lineHeight: 1.1 }}>
+            <p style={{ fontFamily: "Syne, sans-serif", fontSize: "28px", fontWeight: 700, color: "#1A1A2E", lineHeight: 1.1 }}>
               {hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`}
             </p>
             {prevMonthRevenue > 0 && !hideRevenue && (() => {
               const pctChange = ((stats.monthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100;
               const isUp = pctChange >= 0;
               return (
-                <p className="text-sm font-medium mt-1" style={{ color: isUp ? "hsl(var(--primary))" : "hsl(var(--destructive))" }}>
+                <p className="text-sm font-medium mt-1" style={{ color: isUp ? "#534AB7" : "hsl(var(--destructive))" }}>
                   {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(0)}% vs. {format(subMonths(new Date(), 1), "MMMM", { locale: ptBR })}
                 </p>
               );
@@ -790,9 +790,9 @@ const Dashboard = () => {
                 {frequencyData.map((item, i) => (
                   <div key={item.name} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30">
                     <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                    <div className="flex-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", color: "hsl(var(--brown))" }}>
-                      <p className="font-semibold" style={{ color: "hsl(var(--brown))" }}>{item.name}</p>
-                      <p style={{ color: "hsl(var(--brown))" }}>
+                    <div className="flex-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", color: "#1A1A2E" }}>
+                      <p className="font-semibold" style={{ color: "#1A1A2E" }}>{item.name}</p>
+                      <p style={{ color: "#1A1A2E" }}>
                         {item.value} paciente{item.value !== 1 ? "s" : ""} · Média: R$ {item.avgPrice.toFixed(2).replace(".", ",")}
                       </p>
                     </div>
@@ -883,7 +883,7 @@ const Dashboard = () => {
                 style={{
                   height: "52px",
                   background: urgentCard ? "hsl(var(--muted))" : "transparent",
-                  borderLeft: urgentCard ? "2px solid hsl(var(--brown))" : "2px solid transparent",
+                  borderLeft: urgentCard ? "2px solid #1A1A2E" : "2px solid transparent",
                 }}
                 onMouseEnter={(e) => { if (!urgentCard) e.currentTarget.style.background = "hsl(var(--background))"; }}
                 onMouseLeave={(e) => { if (!urgentCard) e.currentTarget.style.background = "transparent"; }}
@@ -894,7 +894,7 @@ const Dashboard = () => {
                     width: 32,
                     height: 32,
                     background: urgentCard ? "rgba(201,168,76,0.12)" : "rgba(150,117,206,0.08)",
-                    color: urgentCard ? "hsl(var(--brown))" : "hsl(var(--primary))",
+                    color: urgentCard ? "#1A1A2E" : "#534AB7",
                     fontFamily: "Syne, sans-serif",
                     fontWeight: 700,
                     fontSize: 12,
@@ -906,7 +906,7 @@ const Dashboard = () => {
                 <div className="flex items-center gap-2 min-w-0" style={{ flex: 2, minWidth: 200 }}>
                   <p
                     className="truncate"
-                    style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: urgentCard ? "hsl(var(--brown))" : "hsl(var(--foreground))" }}
+                    style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: urgentCard ? "#1A1A2E" : "#1A1A2E" }}
                   >
                     {m.patient_name}
                   </p>
@@ -932,32 +932,32 @@ const Dashboard = () => {
                   {m.note && (
                     <p
                       className="truncate"
-                      style={{ fontFamily: "Instrument Sans, sans-serif", fontStyle: "italic", fontSize: 12, color: "hsl(var(--brown))" }}
+                      style={{ fontFamily: "Instrument Sans, sans-serif", fontStyle: "italic", fontSize: 12, color: "#1A1A2E" }}
                     >
                       {m.note}
                     </p>
                   )}
                 </div>
 
-                <div className="hidden lg:flex items-center gap-1.5 shrink-0" style={{ flex: 1, fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
-                  <Clock style={{ width: 12, height: 12, color: "hsl(var(--muted-foreground))" }} />
+                <div className="hidden lg:flex items-center gap-1.5 shrink-0" style={{ flex: 1, fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "#6B7280" }}>
+                  <Clock style={{ width: 12, height: 12, color: "#6B7280" }} />
                   <span className="truncate">{format(new Date(m.recorded_at), "dd/MM · HH:mm", { locale: ptBR })}</span>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0 justify-end" style={{ width: 140 }}>
-                  <div style={{ width: 48, height: 3, background: "hsl(var(--secondary))", borderRadius: 40, overflow: "hidden" }}>
+                  <div style={{ width: 48, height: 3, background: "#EAE6F5", borderRadius: 40, overflow: "hidden" }}>
                     <div style={{ width: `${pct}%`, height: "100%", background: fillColor, borderRadius: 40 }} />
                   </div>
                   <div className="flex items-baseline gap-0.5">
                     <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: valueColor }}>
                       {m.mood_score.toString().replace(".", ",")}
                     </span>
-                    <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 10, color: "hsl(var(--muted-foreground))" }}>/10</span>
+                    <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 10, color: "#6B7280" }}>/10</span>
                   </div>
                   {delta !== null && (
                     <span
                       className="flex items-center"
-                      style={{ fontSize: "10.5px", color: delta > 0 ? "hsl(var(--primary))" : delta < 0 ? "hsl(var(--brown))" : "hsl(var(--muted-foreground))" }}
+                      style={{ fontSize: "10.5px", color: delta > 0 ? "#534AB7" : delta < 0 ? "#1A1A2E" : "#6B7280" }}
                     >
                       {delta > 0 ? <TrendingUp className="h-3 w-3" /> : delta < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
                     </span>
@@ -971,7 +971,7 @@ const Dashboard = () => {
                     setPatientMoods(prev => prev.filter(x => x.id !== m.id));
                   }}
                   className="shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
-                  style={{ width: 26, height: 26, borderRadius: 6, color: "hsl(var(--muted-foreground))", background: "transparent" }}
+                  style={{ width: 26, height: 26, borderRadius: 6, color: "#6B7280", background: "transparent" }}
                   onMouseEnter={(e) => { e.currentTarget.style.color = "hsl(var(--primary))"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
                 >
@@ -985,12 +985,12 @@ const Dashboard = () => {
             <div className="flex items-center gap-3 mt-2 mb-3">
               <span
                 className="uppercase"
-                style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "9px", letterSpacing: "0.14em", color: "hsl(var(--muted-foreground))" }}
+                style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "9px", letterSpacing: "0.14em", color: "#6B7280" }}
               >
                 {text}
               </span>
-              <div className="flex-1" style={{ height: "0.5px", background: "hsl(var(--border))" }} />
-              <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "9px", color: "hsl(var(--muted-foreground))" }}>
+              <div className="flex-1" style={{ height: "0.5px", background: "#E5E7EB" }} />
+              <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "9px", color: "#6B7280" }}>
                 {count.toString().padStart(2, "0")}
               </span>
             </div>
@@ -999,14 +999,14 @@ const Dashboard = () => {
           return (
             <section
               className="rounded-2xl border shadow-card overflow-hidden relative"
-              style={{ background: "hsl(var(--muted))", borderColor: "hsl(var(--border))" }}
+              style={{ background: "hsl(var(--muted))", borderColor: "#E5E7EB" }}
             >
               <div className="absolute top-0 left-0 right-0 z-10" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
               {/* Header */}
               <div className="flex items-center justify-between px-6 pt-6">
                 <div className="flex items-center gap-2">
-                  <SmilePlus className="h-5 w-5" style={{ color: "hsl(var(--primary))" }} />
-                  <h2 style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: "18px", color: "hsl(var(--foreground))" }}>
+                  <SmilePlus className="h-5 w-5" style={{ color: "#534AB7" }} />
+                  <h2 style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: "18px", color: "#1A1A2E" }}>
                     Emoções dos Pacientes
                   </h2>
                 </div>
@@ -1023,11 +1023,11 @@ const Dashboard = () => {
                     padding: "10px 24px",
                   }}
                 >
-                  <AlertTriangle style={{ width: "15px", height: "15px", color: "hsl(var(--brown))" }} />
-                  <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "12px", color: "hsl(var(--brown))" }}>
+                  <AlertTriangle style={{ width: "15px", height: "15px", color: "#1A1A2E" }} />
+                  <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "12px", color: "#1A1A2E" }}>
                     {urgentCount} {urgentCount === 1 ? "paciente requer" : "pacientes requerem"} atenção clínica.
                   </span>
-                  <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 400, color: "hsl(var(--brown))" }}>
+                  <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 400, color: "#1A1A2E" }}>
                     Crise relatada ou resistência ao processo terapêutico.
                   </span>
                 </div>
@@ -1040,15 +1040,15 @@ const Dashboard = () => {
                     <SelectTrigger
                       className="h-9 w-full sm:w-[200px]"
                       style={{
-                        background: "#fff",
-                        border: "0.5px solid hsl(var(--border))",
+                        background: "#FFFFFF",
+                        border: "0.5px solid #E5E7EB",
                         borderRadius: "40px",
                         fontFamily: "Instrument Sans, sans-serif",
                         fontSize: "12px",
-                        color: "hsl(var(--brown))",
+                        color: "#1A1A2E",
                       }}
                     >
-                      <Filter className="h-3 w-3 mr-1" style={{ color: "hsl(var(--muted-foreground))" }} />
+                      <Filter className="h-3 w-3 mr-1" style={{ color: "#6B7280" }} />
                       <SelectValue placeholder="Todos os pacientes" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1067,8 +1067,8 @@ const Dashboard = () => {
                         onClick={() => setMoodPeriod(c.key)}
                         style={{
                           background: active ? "rgba(150,117,206,0.06)" : "hsl(var(--card))",
-                          border: active ? "0.5px solid rgba(150,117,206,0.25)" : "0.5px solid hsl(var(--border))",
-                          color: active ? "hsl(var(--primary-dark))" : "hsl(var(--primary-glow))",
+                          border: active ? "0.5px solid rgba(150,117,206,0.25)" : "0.5px solid #E5E7EB",
+                          color: active ? "hsl(var(--primary-dark))" : "#6B7280",
                           borderRadius: "40px",
                           padding: "6px 14px",
                           fontFamily: "Syne, sans-serif",
@@ -1082,7 +1082,7 @@ const Dashboard = () => {
                   })}
                 </div>
 
-                <Link to="/app/agenda" style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "12px", color: "hsl(var(--primary))" }}>
+                <Link to="/app/agenda" style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "12px", color: "#534AB7" }}>
                   Ver sessões →
                 </Link>
               </div>
@@ -1091,11 +1091,11 @@ const Dashboard = () => {
               <div className="px-6 pb-6">
                 {listed.length === 0 ? (
                   <div className="text-center py-12">
-                    <Heart className="h-12 w-12 mx-auto mb-4" style={{ color: "hsl(var(--muted-foreground))" }} />
+                    <Heart className="h-12 w-12 mx-auto mb-4" style={{ color: "#6B7280" }} />
                     <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "15px", color: "hsl(var(--primary-dark))" }}>
                       Nenhum registro de humor ainda
                     </p>
-                    <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "13px", color: "hsl(var(--primary-glow))" }}>
+                    <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "13px", color: "#6B7280" }}>
                       Registre o humor dos pacientes nas sessões para acompanhar a evolução emocional aqui.
                     </p>
                   </div>
@@ -1116,17 +1116,17 @@ const Dashboard = () => {
                         <div className="mb-6 rounded-2xl border border-border bg-gradient-card p-4 sm:p-6">
                           <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
                             <div>
-                              <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.12em", color: "hsl(var(--primary-glow))" }}>
+                              <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.12em", color: "#6B7280" }}>
                                 Evolução do humor
                               </p>
-                              <p style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 700, color: "hsl(var(--foreground))", lineHeight: 1.1 }}>
-                                Média {avg.toFixed(1).replace(".", ",")}<span style={{ fontSize: "13px", color: "hsl(var(--muted-foreground))", fontWeight: 400 }}> /10</span>
+                              <p style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 700, color: "#1A1A2E", lineHeight: 1.1 }}>
+                                Média {avg.toFixed(1).replace(".", ",")}<span style={{ fontSize: "13px", color: "#6B7280", fontWeight: 400 }}> /10</span>
                               </p>
                             </div>
-                            <div className="flex items-center gap-3 text-xs" style={{ fontFamily: "Instrument Sans, sans-serif", color: "hsl(var(--brown))" }}>
+                            <div className="flex items-center gap-3 text-xs" style={{ fontFamily: "Instrument Sans, sans-serif", color: "#1A1A2E" }}>
                               <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "hsl(var(--moss))" }} />Bem (7-10)</span>
-                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "hsl(var(--gold))" }} />Atenção (4-6)</span>
-                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "hsl(var(--brown))" }} />Crítico (0-3)</span>
+                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#B8860B" }} />Atenção (4-6)</span>
+                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#1A1A2E" }} />Crítico (0-3)</span>
                             </div>
                           </div>
                           <div className="h-[260px] w-full">
@@ -1380,7 +1380,7 @@ const KPICard = ({
     </div>
     <p
       className="mt-4 font-sans uppercase"
-      style={{ fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "hsl(var(--muted-foreground))" }}
+      style={{ fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "#6B7280" }}
     >
       {label}
     </p>
@@ -1390,7 +1390,7 @@ const KPICard = ({
         fontFamily: "Syne, sans-serif",
         fontSize: value.trim().startsWith("R$") ? "18px" : "28px",
         fontWeight: 700,
-        color: "hsl(var(--foreground))",
+        color: "#1A1A2E",
       }}
     >
       {value}
