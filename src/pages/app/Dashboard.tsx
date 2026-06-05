@@ -123,7 +123,19 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   pending: { label: "Pendente", className: "bg-amber-100 text-amber-700" },
 };
 
-const PIE_COLORS = ["hsl(var(--primary))", "hsl(var(--gold))"];
+const PIE_COLORS = ["#534AB7", "#B8860B"];
+
+const C = {
+  pageBg: "#F7F6F3",
+  ink: "#1A1A2E",
+  muted: "#6B7280",
+  purple: "#534AB7",
+  gold: "#B8860B",
+  border: "#E5E7EB",
+  card: "#FFFFFF",
+  green: "#2D6A4F",
+  red: "#C0392B",
+};
 
 /* ── date range helpers ── */
 const currentMonthStart = () => startOfMonth(new Date());
@@ -532,10 +544,13 @@ const Dashboard = () => {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="space-y-8 animate-fade-up">
+      <div
+        className="space-y-8 animate-fade-up -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 pt-4 sm:pt-6 pb-10 min-h-screen"
+        style={{ background: C.pageBg }}
+      >
         {/* ── Welcome Header ── */}
         <header className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
+          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
           <p
             className="uppercase"
             style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", color: "hsl(var(--gold))" }}
@@ -660,7 +675,7 @@ const Dashboard = () => {
 
           {/* Revenue Chart Card */}
           <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
+            <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
             <p className="mb-1 uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "hsl(var(--muted-foreground))" }}>
               Faturamento — {periodLabel}
             </p>
@@ -710,7 +725,7 @@ const Dashboard = () => {
 
         {/* ── Gráfico de Pizza: Frequência de Atendimentos ── */}
         <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
+          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
           <div className="flex items-center gap-2 mb-4">
             <CalendarRange className="h-5 w-5 text-lilac" />
             <h2 className="font-display text-xl font-bold text-foreground">Tipo de Atendimento por Frequência</h2>
@@ -986,7 +1001,7 @@ const Dashboard = () => {
               className="rounded-2xl border shadow-card overflow-hidden relative"
               style={{ background: "hsl(var(--muted))", borderColor: "hsl(var(--border))" }}
             >
-              <div className="absolute top-0 left-0 right-0 z-10" style={{ height: "3px", background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
+              <div className="absolute top-0 left-0 right-0 z-10" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
               {/* Header */}
               <div className="flex items-center justify-between px-6 pt-6">
                 <div className="flex items-center gap-2">
@@ -1176,7 +1191,7 @@ const Dashboard = () => {
 
         {/* ── Upcoming Sessions ── */}
         <section className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
+          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Próximas Sessões</h2>
             <Button variant="ghost" size="sm" asChild>
@@ -1232,7 +1247,7 @@ const Dashboard = () => {
 
         {/* ── Goals / Gamification ── */}
         <section className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
+          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Metas do Mês</h2>
             <Button variant="ghost" size="sm" onClick={() => setEditGoalsOpen(true)}>
@@ -1344,7 +1359,7 @@ const KPICard = ({
       highlight ? "bg-accent/5 border-accent/20" : "bg-card border-border"
     }`}
   >
-    <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
+    <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
     <div className="flex items-center justify-between">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-accent">
         <Icon className="h-5 w-5" />
