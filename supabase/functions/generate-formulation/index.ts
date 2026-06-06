@@ -229,7 +229,7 @@ Em treatment_goals, gere 3 a 5 objetivos terapêuticos SMART (específicos, mens
       }
     }
 
-    return new Response(JSON.stringify({ formulation, used_clinical_context: !!clinicalContext }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ formulation, used_clinical_context: !!clinicalContext, abordagem, abordagem_label: getAbordagemLabel(abordagem) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("generate-formulation error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
