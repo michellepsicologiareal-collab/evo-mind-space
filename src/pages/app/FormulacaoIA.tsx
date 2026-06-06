@@ -150,7 +150,7 @@ export default function FormulacaoIA() {
             Formulação com IA
           </h1>
           <p className="text-sm text-muted-foreground">
-            Escreva livremente sobre o caso. A IA organiza em uma formulação TCC (Padesky) e salva no paciente.
+            Escreva livremente sobre o caso. A IA organiza em uma formulação TCC — 5 Aspectos e salva no paciente.
           </p>
         </header>
 
@@ -223,7 +223,7 @@ export default function FormulacaoIA() {
           <section className="bg-white rounded-[10px] p-5 space-y-5" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
             <div className="flex items-center gap-2">
               <Brain className="h-4 w-4 text-primary" />
-              <h2 className="font-display" style={{ fontWeight: 700, fontSize: 16 }}>Formulação TCC (Padesky)</h2>
+              <h2 className="font-display" style={{ fontWeight: 700, fontSize: 16 }}>Formulação TCC — 5 Aspectos</h2>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">

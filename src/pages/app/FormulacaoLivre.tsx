@@ -81,7 +81,7 @@ export default function FormulacaoLivre() {
             Formulação livre · Supervisão IA
           </h1>
           <p className="text-sm text-muted-foreground">
-            Escreva o caso do jeito que vier — bagunçado, fragmentado, em rascunho. A IA devolve uma supervisão TCC no estilo Padesky/Beck.
+            Escreva o caso do jeito que vier — bagunçado, fragmentado, em rascunho. A IA devolve uma supervisão TCC no estilo 5 Aspectos/Beck.
           </p>
         </header>
 
