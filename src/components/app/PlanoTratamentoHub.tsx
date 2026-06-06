@@ -13,11 +13,12 @@ import { cn } from "@/lib/utils";
 interface PatientRow {
   id: string;
   full_name: string;
-  next_session: { scheduled_at: string } | null;
+  next_session: { id: string; scheduled_at: string } | null;
   plan_status: string | null;
   goals_count: number;
   has_conceptualization: boolean;
   has_plan: boolean;
+  next_plan: { objetivo: string | null; retomar: string | null; tecnicas: string[] | null } | null;
 }
 
 type FilterKey = "all" | "today" | "week" | "no_next" | "no_plan" | "no_concept";
@@ -48,7 +49,7 @@ export const PlanoTratamentoHub = () => {
         supabase.from("patients").select("id, full_name").eq("user_id", uid).eq("is_active", true).order("full_name"),
         supabase.from("treatment_plans").select("patient_id, status, conceitualizacao").eq("user_id", uid),
         supabase.from("treatment_goals").select("patient_id").eq("user_id", uid),
-        supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", uid)
+        supabase.from("sessions").select("id, patient_id, scheduled_at").eq("user_id", uid)
           .gte("scheduled_at", new Date().toISOString())
           .not("status", "in", "(cancelled,no_show)")
           .order("scheduled_at"),
@@ -56,26 +57,41 @@ export const PlanoTratamentoHub = () => {
       const patients = (pRes.data || []) as { id: string; full_name: string }[];
       const plans = (plansRes.data || []) as { patient_id: string; status: string; conceitualizacao: string | null }[];
       const goals = (goalsRes.data || []) as { patient_id: string }[];
-      const sessions = (sessRes.data || []) as { patient_id: string; scheduled_at: string }[];
+      const sessions = (sessRes.data || []) as { id: string; patient_id: string; scheduled_at: string }[];
 
       const goalsMap = new Map<string, number>();
       goals.forEach(g => goalsMap.set(g.patient_id, (goalsMap.get(g.patient_id) || 0) + 1));
       const planMap = new Map(plans.map(p => [p.patient_id, p]));
-      const nextMap = new Map<string, string>();
-      sessions.forEach(s => { if (!nextMap.has(s.patient_id)) nextMap.set(s.patient_id, s.scheduled_at); });
+      const nextMap = new Map<string, { id: string; scheduled_at: string }>();
+      sessions.forEach(s => { if (!nextMap.has(s.patient_id)) nextMap.set(s.patient_id, { id: s.id, scheduled_at: s.scheduled_at }); });
+
+      const nextSessionIds = Array.from(nextMap.values()).map(v => v.id);
+      let sessionPlans: { session_id: string; objetivo: string | null; retomar: string | null; tecnicas: string[] | null }[] = [];
+      if (nextSessionIds.length > 0) {
+        const { data: spData } = await supabase
+          .from("session_plans")
+          .select("session_id, objetivo, retomar, tecnicas")
+          .eq("user_id", uid)
+          .in("session_id", nextSessionIds);
+        sessionPlans = (spData || []) as typeof sessionPlans;
+      }
+      const planBySession = new Map(sessionPlans.map(sp => [sp.session_id, sp]));
 
       const out: PatientRow[] = patients.map(p => {
         const plan = planMap.get(p.id);
         const goalsCount = goalsMap.get(p.id) || 0;
         const hasConcept = !!plan?.conceitualizacao?.trim();
+        const ns = nextMap.get(p.id) || null;
+        const sp = ns ? planBySession.get(ns.id) : undefined;
         return {
           id: p.id,
           full_name: p.full_name,
-          next_session: nextMap.get(p.id) ? { scheduled_at: nextMap.get(p.id)! } : null,
+          next_session: ns,
           plan_status: plan?.status ?? null,
           goals_count: goalsCount,
           has_conceptualization: hasConcept,
           has_plan: !!plan,
+          next_plan: sp ? { objetivo: sp.objetivo, retomar: sp.retomar, tecnicas: sp.tecnicas } : null,
         };
       });
       setRows(out);
@@ -171,37 +187,84 @@ export const PlanoTratamentoHub = () => {
           <Card className="p-8 text-center text-muted-foreground">Nenhum paciente neste filtro.</Card>
         ) : filtered.map(r => {
           const pl = planLabel(r);
+          const np = r.next_plan;
+          const hasPlanning = !!(np && (np.objetivo?.trim() || np.retomar?.trim() || (np.tecnicas && np.tecnicas.length > 0)));
+          const borderColor = !r.has_plan
+            ? "#E5E7EB"
+            : hasPlanning ? "#2D6A4F" : "#B8860B";
           return (
-            <Card
+            <div
               key={r.id}
               onClick={() => navigate(`/app/plano-tratamento?patient=${r.id}`)}
-              className="p-4 rounded-xl cursor-pointer hover:shadow-md transition-shadow flex items-center gap-3"
+              className="bg-white cursor-pointer transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] flex items-start gap-3 p-4"
+              style={{ borderRadius: 10, borderLeft: `3px solid ${borderColor}` }}
             >
               <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
                 {r.full_name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold truncate">{r.full_name}</p>
-                <div className="flex flex-wrap gap-2 mt-1 text-xs text-muted-foreground items-center">
+                {/* Line 1 */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-bold truncate text-foreground">{r.full_name}</p>
                   <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full border text-[11px] font-medium", pl.cls)}>
                     {pl.label}
                   </span>
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <Target className="h-3 w-3" /> {r.goals_count} metas
                   </span>
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
                     {r.next_session
                       ? format(new Date(r.next_session.scheduled_at), "dd/MM 'às' HH:mm", { locale: ptBR })
                       : "Sem próxima"}
                   </span>
-                  {!r.has_conceptualization && (
-                    <span className="text-[11px] text-amber-700">Sem RPD</span>
-                  )}
                 </div>
+
+                {/* Line 2 or 3 */}
+                {hasPlanning ? (
+                  <div className="mt-2 space-y-1">
+                    <p className="uppercase tracking-wide font-semibold" style={{ fontSize: 10, color: "#534AB7" }}>
+                      Próxima sessão:
+                    </p>
+                    {np?.objetivo?.trim() && (
+                      <p className="truncate" style={{ fontSize: 12, color: "#374151" }}>
+                        {np.objetivo}
+                      </p>
+                    )}
+                    {np?.retomar?.trim() && (
+                      <p className="truncate" style={{ fontSize: 12, color: "#6B7280" }}>
+                        Retomar: {np.retomar}
+                      </p>
+                    )}
+                    {np?.tecnicas && np.tecnicas.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {np.tecnicas.map((t, i) => (
+                          <span
+                            key={i}
+                            className="px-2 py-0.5 rounded-full"
+                            style={{ background: "#EEEDFE", color: "#534AB7", fontSize: 11 }}
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : r.next_session ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span style={{ fontSize: 12, color: "#B8860B" }}>Nenhuma sessão planejada</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${r.id}`); }}
+                      className="text-primary hover:underline"
+                      style={{ fontSize: 12 }}
+                    >
+                      Planejar agora →
+                    </button>
+                  </div>
+                ) : null}
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-            </Card>
+              <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 mt-1" />
+            </div>
           );
         })}
       </div>
