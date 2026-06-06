@@ -146,7 +146,7 @@ export const AppLayout = () => {
           {(() => {
             const sections: { label: string; routes: string[] }[] = [
               { label: "INÍCIO", routes: ["/app/comece-por-aqui", "/app"] },
-              { label: "CLÍNICA", routes: ["/app/pacientes", "/app/agenda", "/app/registro-sessao", "/app/plano-tratamento", "/app/anamneses", "/app/financeiro", "/app/supervisionandos"] },
+              { label: "CLÍNICA", routes: ["/app/pacientes", "/app/agenda", "/app/registro-sessao", "/app/anamneses", "/app/financeiro", "/app/supervisionandos"] },
               { label: "RECURSOS", routes: ["/app/biblioteca", "/app/autocuidado", "/app/contrato-modelo", "/app/contratos", "/app/perfil"] },
             ];
             return sections.map((sec) => {
