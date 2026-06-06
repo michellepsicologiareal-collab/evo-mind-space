@@ -13,11 +13,12 @@ import { cn } from "@/lib/utils";
 interface PatientRow {
   id: string;
   full_name: string;
-  next_session: { scheduled_at: string } | null;
+  next_session: { id: string; scheduled_at: string } | null;
   plan_status: string | null;
   goals_count: number;
   has_conceptualization: boolean;
   has_plan: boolean;
+  next_plan: { objetivo: string | null; retomar: string | null; tecnicas: string[] | null } | null;
 }
 
 type FilterKey = "all" | "today" | "week" | "no_next" | "no_plan" | "no_concept";
