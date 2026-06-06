@@ -422,12 +422,13 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   const organizeNotes = async () => {
     const notes = evoSummary.trim();
     if (!notes) { toast.error("Escreva suas anotações antes de organizar."); return; }
-    setOrganizing(true); setAiResult(null);
+    setOrganizing(true); setAiResult(null); setAiNotesMeta(null);
     try {
       const { data, error } = await supabase.functions.invoke("organize-notes", { body: { notes, patient_id: patientId } });
       if (error) throw error;
       if (data?.error) { toast.error(data.error); return; }
       setAiResult(data.result);
+      setAiNotesMeta({ abordagem: data.abordagem, label: data.abordagem_label });
     } catch (e: any) {
       console.error(e);
       toast.error("Erro ao organizar notas. Tente novamente.");
