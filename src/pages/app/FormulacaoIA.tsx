@@ -10,6 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { AbordagemBadge } from "@/components/app/AbordagemBadge";
 
 type Patient = { id: string; full_name: string };
 
