@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      act_formulations: {
+        Row: {
+          apresentacao_problema: Json
+          barreiras_geradas: string | null
+          created_at: string
+          direcionamento_gerado: string | null
+          hexaflex: Json
+          id: string
+          matriz_act: Json
+          observacoes_terapeuta: string | null
+          patient_id: string
+          therapist_id: string
+          updated_at: string
+          valores: Json
+        }
+        Insert: {
+          apresentacao_problema?: Json
+          barreiras_geradas?: string | null
+          created_at?: string
+          direcionamento_gerado?: string | null
+          hexaflex?: Json
+          id?: string
+          matriz_act?: Json
+          observacoes_terapeuta?: string | null
+          patient_id: string
+          therapist_id: string
+          updated_at?: string
+          valores?: Json
+        }
+        Update: {
+          apresentacao_problema?: Json
+          barreiras_geradas?: string | null
+          created_at?: string
+          direcionamento_gerado?: string | null
+          hexaflex?: Json
+          id?: string
+          matriz_act?: Json
+          observacoes_terapeuta?: string | null
+          patient_id?: string
+          therapist_id?: string
+          updated_at?: string
+          valores?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "act_formulations_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           access_type: Database["public"]["Enums"]["audit_access_type"]
