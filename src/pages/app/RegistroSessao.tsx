@@ -115,71 +115,105 @@ const RegistroSessao = () => {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [expandedPatients, setExpandedPatients] = useState<Record<string, boolean>>({});
 
-  // Planning from PlanoTratamento for selected patient
-  const [plannedSession, setPlannedSession] = useState<{
+  // Active treatment plan + next session planning for selected patient
+  const [activePlan, setActivePlan] = useState<{
+    plan_id: string | null;
+    plan_status: string | null;
     objetivo: string;
     retomar: string;
     tecnicas: string[];
     observacoes: string;
     meta_descricao: string | null;
     scheduled_at: string | null;
-  } | null>(null);
+    loaded: boolean;
+  }>({ plan_id: null, plan_status: null, objetivo: "", retomar: "", tecnicas: [], observacoes: "", meta_descricao: null, scheduled_at: null, loaded: false });
+  const [planPanelCollapsed, setPlanPanelCollapsed] = useState(false);
+  const [planLoadedIntoForm, setPlanLoadedIntoForm] = useState(false);
 
   useEffect(() => {
-    if (!user || !form.patient_id) { setPlannedSession(null); return; }
+    if (!user || !form.patient_id) {
+      setActivePlan({ plan_id: null, plan_status: null, objetivo: "", retomar: "", tecnicas: [], observacoes: "", meta_descricao: null, scheduled_at: null, loaded: false });
+      setPlanPanelCollapsed(false);
+      setPlanLoadedIntoForm(false);
+      return;
+    }
     (async () => {
+      // 1. Active treatment plan for this patient
+      const { data: tp } = await supabase
+        .from("treatment_plans")
+        .select("id, status")
+        .eq("patient_id", form.patient_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      // 2. Next session + plan content
       const { data: ns } = await supabase
         .from("sessions")
         .select("id, scheduled_at")
         .eq("patient_id", form.patient_id)
         .eq("user_id", user.id)
-        .gte("scheduled_at", new Date(new Date().setHours(0,0,0,0)).toISOString())
+        .gte("scheduled_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
         .not("status", "in", "(cancelled,no_show)")
         .order("scheduled_at")
         .limit(1)
         .maybeSingle();
-      if (!ns?.id) { setPlannedSession(null); return; }
-      const { data: sp } = await supabase
-        .from("session_plans")
-        .select("objetivo, retomar, tecnicas, observacoes, meta_id")
-        .eq("session_id", ns.id)
-        .maybeSingle();
-      if (!sp) { setPlannedSession(null); return; }
+
+      let sp: any = null;
+      if (ns?.id) {
+        const { data } = await supabase
+          .from("session_plans")
+          .select("objetivo, retomar, tecnicas, observacoes, meta_id")
+          .eq("session_id", ns.id)
+          .maybeSingle();
+        sp = data;
+      }
+
       let meta_descricao: string | null = null;
-      if (sp.meta_id) {
+      if (sp?.meta_id) {
         const { data: m } = await supabase.from("treatment_goals").select("descricao").eq("id", sp.meta_id).maybeSingle();
         meta_descricao = m?.descricao ?? null;
       }
-      setPlannedSession({
-        objetivo: sp.objetivo || "",
-        retomar: sp.retomar || "",
-        tecnicas: sp.tecnicas || [],
-        observacoes: sp.observacoes || "",
+
+      setActivePlan({
+        plan_id: tp?.id ?? null,
+        plan_status: tp?.status ?? null,
+        objetivo: sp?.objetivo || "",
+        retomar: sp?.retomar || "",
+        tecnicas: sp?.tecnicas || [],
+        observacoes: sp?.observacoes || "",
         meta_descricao,
-        scheduled_at: ns.scheduled_at,
+        scheduled_at: ns?.scheduled_at ?? null,
+        loaded: true,
       });
+      setPlanPanelCollapsed(false);
+      setPlanLoadedIntoForm(false);
     })();
   }, [user, form.patient_id]);
 
   const applyPlanningToForm = () => {
-    if (!plannedSession) return;
-    const blocks: string[] = [];
-    if (plannedSession.objetivo) blocks.push(`Objetivo planejado: ${plannedSession.objetivo}`);
-    if (plannedSession.meta_descricao) blocks.push(`Meta vinculada: ${plannedSession.meta_descricao}`);
-    if (plannedSession.retomar) blocks.push(`Retomar: ${plannedSession.retomar}`);
-    if (plannedSession.tecnicas.length) blocks.push(`Técnicas previstas: ${plannedSession.tecnicas.join(", ")}`);
-    const clinical = blocks.join("\n");
-    setForm(prev => ({
-      ...prev,
-      clinical_observations: prev.clinical_observations
-        ? prev.clinical_observations + "\n\n" + clinical
-        : clinical,
-      private_notes: plannedSession.observacoes
-        ? (prev.private_notes ? prev.private_notes + "\n" + plannedSession.observacoes : plannedSession.observacoes)
-        : prev.private_notes,
-    }));
-    toast.success("Planejamento aplicado ao registro.");
+    setForm((prev) => {
+      const next = { ...prev, plan_id: activePlan.plan_id ?? prev.plan_id };
+      // Queixa principal ← meta vinculada (não sobrescreve se já houver texto)
+      if (!prev.chief_complaint.trim() && activePlan.meta_descricao) {
+        next.chief_complaint = activePlan.meta_descricao;
+      }
+      // Observações clínicas ← retomar (não sobrescreve)
+      if (!prev.clinical_observations.trim() && activePlan.retomar) {
+        next.clinical_observations = activePlan.retomar;
+      }
+      // Temas ← técnicas planejadas (mescla sem duplicar)
+      if (activePlan.tecnicas.length) {
+        const merged = Array.from(new Set([...prev.themes, ...activePlan.tecnicas]));
+        next.themes = merged;
+      }
+      // next_session_plan permanece em branco para preenchimento
+      return next;
+    });
+    setPlanLoadedIntoForm(true);
+    setPlanPanelCollapsed(true);
+    toast.success("Plano carregado com sucesso");
   };
+
 
   // Compact mode: collapses long sections to just headers; persists in localStorage
   const [compactMode, setCompactMode] = useState<boolean>(() => {
