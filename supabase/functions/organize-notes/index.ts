@@ -107,7 +107,7 @@ Regras:
     const data = await response.json();
     const result = data.choices?.[0]?.message?.content || "";
 
-    return new Response(JSON.stringify({ result }), {
+    return new Response(JSON.stringify({ result, abordagem, abordagem_label: getAbordagemLabel(abordagem) }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
