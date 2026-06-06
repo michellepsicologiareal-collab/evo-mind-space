@@ -904,7 +904,14 @@ const Patients = () => {
                       <div className="min-w-0">
                         <p style={{ fontSize: 11, fontWeight: 700, color: C.purple, textTransform: "uppercase", letterSpacing: "0.08em" }}>Resumo IA · Formulação</p>
                         {aiSum ? (
-                          <p className="mt-1" style={{ fontSize: 12, color: C.purpleInk, lineHeight: 1.5 }}>{aiSum}</p>
+                          <>
+                            <p className="mt-1" style={{ fontSize: 12, color: C.purpleInk, lineHeight: 1.5 }}>{aiSum}</p>
+                            {summaryMeta[p.id]?.abordagem && (
+                              <div className="mt-1.5">
+                                <AbordagemBadge abordagem={summaryMeta[p.id].abordagem} label={summaryMeta[p.id].label} />
+                              </div>
+                            )}
+                          </>
                         ) : (
                           <p className="mt-1 italic" style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
                             Gere um resumo de IA com os destaques clínicos desta formulação.
