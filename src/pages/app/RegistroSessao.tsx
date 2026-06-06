@@ -545,28 +545,34 @@ const RegistroSessao = () => {
     title,
     subtitle,
     sectionKey,
+    color = "#534AB7",
   }: {
     n?: number;
     icon: React.ComponentType<{ className?: string }>;
     title: string;
     subtitle?: string;
     sectionKey?: string;
+    color?: string;
   }) => {
     const collapsible = compactMode && !!sectionKey;
     const open = sectionKey ? isOpen(sectionKey) : true;
     const content = (
       <div className="flex items-start gap-3 w-full">
-        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 text-accent ring-1 ring-accent/20">
-          <Icon className="h-4 w-4" />
-          {n != null && (
-            <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground shadow-sm">
-              {n}
-            </span>
+        <div
+          className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white"
+          style={{ backgroundColor: color }}
+        >
+          {n != null ? (
+            <span className="text-[11px] font-bold leading-none">{n}</span>
+          ) : (
+            <Icon className="h-3.5 w-3.5" />
           )}
         </div>
-        <div className="min-w-0 pt-0.5 flex-1 text-left">
-          <h2 className="font-display text-base font-semibold text-foreground leading-tight">{title}</h2>
-          {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+        <div className="min-w-0 pt-0 flex-1 text-left">
+          <h2 className="font-display font-bold leading-tight" style={{ fontSize: 15, color: "#1A1A2E" }}>
+            {title}
+          </h2>
+          {subtitle && <p className="mt-0.5" style={{ fontSize: 12, color: "#6B7280" }}>{subtitle}</p>}
         </div>
         {collapsible && (
           <ChevronDown
@@ -592,6 +598,7 @@ const RegistroSessao = () => {
     }
     return <div className="mb-4">{content}</div>;
   };
+
 
   // Hub view: when no patient is selected and not editing, show the patient list
   if (!form.patient_id && !editingId) {
