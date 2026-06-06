@@ -93,6 +93,8 @@ export const PlanoTratamentoHub = () => {
           goals_count: goalsCount,
           has_conceptualization: hasConcept,
           has_plan: !!plan,
+          plan_created_at: plan?.created_at ?? null,
+          plan_updated_at: plan?.updated_at ?? null,
           next_plan: sp ? { objetivo: sp.objetivo, retomar: sp.retomar, tecnicas: sp.tecnicas } : null,
         };
       });
