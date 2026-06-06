@@ -18,6 +18,8 @@ interface PatientRow {
   goals_count: number;
   has_conceptualization: boolean;
   has_plan: boolean;
+  plan_created_at: string | null;
+  plan_updated_at: string | null;
   next_plan: { objetivo: string | null; retomar: string | null; tecnicas: string[] | null } | null;
 }
 
