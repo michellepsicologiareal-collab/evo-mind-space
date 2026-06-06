@@ -813,6 +813,7 @@ export type Database = {
           modality: string
           next_session_plan: string | null
           patient_id: string
+          plan_id: string | null
           private_notes: string | null
           risk_indicator: string
           session_date: string
@@ -832,6 +833,7 @@ export type Database = {
           modality?: string
           next_session_plan?: string | null
           patient_id: string
+          plan_id?: string | null
           private_notes?: string | null
           risk_indicator?: string
           session_date?: string
@@ -851,6 +853,7 @@ export type Database = {
           modality?: string
           next_session_plan?: string | null
           patient_id?: string
+          plan_id?: string | null
           private_notes?: string | null
           risk_indicator?: string
           session_date?: string
@@ -860,7 +863,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "session_records_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "treatment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sessions: {
         Row: {
