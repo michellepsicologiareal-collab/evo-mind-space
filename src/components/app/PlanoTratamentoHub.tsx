@@ -49,7 +49,7 @@ export const PlanoTratamentoHub = () => {
       const uid = user.id;
       const [pRes, plansRes, goalsRes, sessRes] = await Promise.all([
         supabase.from("patients").select("id, full_name").eq("user_id", uid).eq("is_active", true).order("full_name"),
-        supabase.from("treatment_plans").select("patient_id, status, conceitualizacao").eq("user_id", uid),
+        supabase.from("treatment_plans").select("patient_id, status, conceitualizacao, created_at, updated_at").eq("user_id", uid),
         supabase.from("treatment_goals").select("patient_id").eq("user_id", uid),
         supabase.from("sessions").select("id, patient_id, scheduled_at").eq("user_id", uid)
           .gte("scheduled_at", new Date().toISOString())
