@@ -21,7 +21,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Token inválido" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { raw_text = "", patient_name = "" } = await req.json();
+    const { raw_text = "", patient_name = "", patient_id = null } = await req.json();
     if (typeof raw_text !== "string" || raw_text.trim().length < 30) {
       return new Response(JSON.stringify({ error: "Escreva ao menos 30 caracteres descrevendo o caso." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
