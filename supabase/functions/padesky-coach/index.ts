@@ -30,7 +30,9 @@ serve(async (req) => {
       });
     }
 
-    const { systems, coreBeliefs, question } = await req.json();
+    const { systems, coreBeliefs, question, patient_id = null, patient_name = "" } = await req.json();
+    const abordagem = await fetchAbordagem(supabase, patient_id);
+    const abordagemBlock = buildAbordagemBlock(abordagem, patient_name);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
