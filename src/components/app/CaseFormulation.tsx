@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { LogoIcon } from "@/components/LogoIcon";
 import ReactMarkdown from "react-markdown";
+import { AbordagemBadge } from "@/components/app/AbordagemBadge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -270,11 +271,13 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   // AI organize state
   const [organizing, setOrganizing] = useState(false);
   const [aiResult, setAiResult] = useState<string | null>(null);
+  const [aiNotesMeta, setAiNotesMeta] = useState<{ abordagem: string; label: string } | null>(null);
 
   // Padesky coach state
   const [coachLoading, setCoachLoading] = useState(false);
   const [coachAnswer, setCoachAnswer] = useState<string | null>(null);
   const [coachQuestion, setCoachQuestion] = useState("");
+  const [coachMeta, setCoachMeta] = useState<{ abordagem: string; label: string } | null>(null);
 
   const draftKey = `therapy-plan-draft::${patientId}`;
   const hasLoadedRef = useRef(false);
@@ -420,12 +423,13 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   const organizeNotes = async () => {
     const notes = evoSummary.trim();
     if (!notes) { toast.error("Escreva suas anotações antes de organizar."); return; }
-    setOrganizing(true); setAiResult(null);
+    setOrganizing(true); setAiResult(null); setAiNotesMeta(null);
     try {
       const { data, error } = await supabase.functions.invoke("organize-notes", { body: { notes, patient_id: patientId } });
       if (error) throw error;
       if (data?.error) { toast.error(data.error); return; }
       setAiResult(data.result);
+      setAiNotesMeta({ abordagem: data.abordagem, label: data.abordagem_label });
     } catch (e: any) {
       console.error(e);
       toast.error("Erro ao organizar notas. Tente novamente.");
@@ -439,7 +443,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   };
 
   const askCoach = async () => {
-    setCoachLoading(true); setCoachAnswer(null);
+    setCoachLoading(true); setCoachAnswer(null); setCoachMeta(null);
     try {
       const { data, error } = await supabase.functions.invoke("padesky-coach", {
         body: { systems, coreBeliefs, question: coachQuestion, patient_id: patientId },
@@ -447,6 +451,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
       if (error) throw error;
       if (data?.error) { toast.error(data.error); return; }
       setCoachAnswer(data.result);
+      setCoachMeta({ abordagem: data.abordagem, label: data.abordagem_label });
     } catch (e) {
       console.error(e);
       toast.error("Erro ao consultar a IA. Tente novamente.");
@@ -759,13 +764,16 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
         {/* AI Result */}
         {aiResult && (
           <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-5 space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <h4 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" /> Notas Organizadas
               </h4>
-              <Button size="sm" variant="accent" className="min-h-[36px]" onClick={copyToEvolution}>
-                <Copy className="h-3.5 w-3.5 mr-1" /> Copiar para a Evolução
-              </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <AbordagemBadge abordagem={aiNotesMeta?.abordagem} label={aiNotesMeta?.label} />
+                <Button size="sm" variant="accent" className="min-h-[36px]" onClick={copyToEvolution}>
+                  <Copy className="h-3.5 w-3.5 mr-1" /> Copiar para a Evolução
+                </Button>
+              </div>
             </div>
             <div className="prose prose-sm max-w-none text-foreground [&_h2]:text-sm [&_h2]:font-display [&_h2]:font-bold [&_h2]:text-primary [&_h2]:mt-3 [&_h2]:mb-1 [&_p]:text-sm [&_p]:leading-relaxed [&_ul]:text-sm [&_li]:text-sm">
               <ReactMarkdown>{aiResult}</ReactMarkdown>
@@ -877,17 +885,20 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
 
         {coachAnswer && (
           <div className="rounded-xl border border-accent/30 bg-background p-4 space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <p className="text-xs font-semibold text-accent flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5" /> Devolutiva da supervisora-IA
               </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { navigator.clipboard?.writeText(coachAnswer); toast.success("Copiado"); }}
-              >
-                <Copy className="h-3.5 w-3.5" /> Copiar
-              </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <AbordagemBadge abordagem={coachMeta?.abordagem} label={coachMeta?.label} />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { navigator.clipboard?.writeText(coachAnswer); toast.success("Copiado"); }}
+                >
+                  <Copy className="h-3.5 w-3.5" /> Copiar
+                </Button>
+              </div>
             </div>
             <div className="prose prose-sm max-w-none text-sm text-foreground [&_h2]:font-display [&_h2]:text-accent [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:text-base [&_ul]:list-disc [&_ul]:pl-5 [&_p]:my-1">
               <ReactMarkdown>{coachAnswer}</ReactMarkdown>

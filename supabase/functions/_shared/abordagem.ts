@@ -47,6 +47,15 @@ export async function fetchAbordagem(supabase: any, patient_id?: string | null):
     return "TCC";
   }
 }
+export function getAbordagemLabel(abordagem: Abordagem): string {
+  switch (abordagem) {
+    case "TE": return "Terapia do Esquema (Young)";
+    case "ACT": return "Aceitação e Compromisso (Hayes)";
+    case "TCC":
+    default: return "Terapia Cognitivo-Comportamental (Beck)";
+  }
+}
+
 
 export function getContextoClinico(abordagem: Abordagem): string {
   switch (abordagem) {

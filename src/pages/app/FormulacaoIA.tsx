@@ -10,6 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { AbordagemBadge } from "@/components/app/AbordagemBadge";
 
 type Patient = { id: string; full_name: string };
 
@@ -40,6 +41,7 @@ export default function FormulacaoIA() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formulation, setFormulation] = useState<Formulation | null>(null);
+  const [aiMeta, setAiMeta] = useState<{ abordagem: string; label: string } | null>(null);
   const [useClinical, setUseClinical] = useState(true);
   const [contextCounts, setContextCounts] = useState<{ sessions: number; records: number; evolutions: number; progress: number } | null>(null);
 
@@ -90,6 +92,7 @@ export default function FormulacaoIA() {
       const f = (data as any)?.formulation as Formulation | undefined;
       if (!f) { toast.error((data as any)?.error || "Não foi possível gerar."); return; }
       setFormulation(f);
+      setAiMeta({ abordagem: (data as any)?.abordagem, label: (data as any)?.abordagem_label });
       toast.success("Formulação gerada e salva.");
     } catch (e: any) {
       toast.error(e?.message || "Erro ao gerar formulação.");
@@ -221,9 +224,12 @@ export default function FormulacaoIA() {
 
         {formulation && (
           <section className="bg-white rounded-[10px] p-5 space-y-5" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-            <div className="flex items-center gap-2">
-              <Brain className="h-4 w-4 text-primary" />
-              <h2 className="font-display" style={{ fontWeight: 700, fontSize: 16 }}>Formulação TCC — 5 Aspectos</h2>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Brain className="h-4 w-4 text-primary" />
+                <h2 className="font-display" style={{ fontWeight: 700, fontSize: 16 }}>Formulação — 5 Aspectos</h2>
+              </div>
+              <AbordagemBadge abordagem={aiMeta?.abordagem} label={aiMeta?.label} />
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">

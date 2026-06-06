@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Sparkles, Loader2, Copy, Eraser, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AbordagemBadge } from "@/components/app/AbordagemBadge";
 
 type Patient = { id: string; full_name: string };
 
@@ -19,6 +20,7 @@ export default function FormulacaoLivre() {
   const [rawText, setRawText] = useState("");
   const [loading, setLoading] = useState(false);
   const [supervision, setSupervision] = useState("");
+  const [aiMeta, setAiMeta] = useState<{ abordagem: string; label: string } | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -56,7 +58,8 @@ export default function FormulacaoLivre() {
         return;
       }
       setSupervision(sup);
-      toast.success("Supervisão TCC gerada.");
+      setAiMeta({ abordagem: (data as any)?.abordagem, label: (data as any)?.abordagem_label });
+      toast.success("Supervisão gerada.");
     } catch (e: any) {
       toast.error(e?.message || "Erro ao gerar.");
     } finally {
@@ -133,12 +136,15 @@ export default function FormulacaoLivre() {
 
         {supervision && (
           <section className="bg-white rounded-[10px] p-5 sm:p-6 space-y-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-4 w-4 text-primary" />
-                <h2 className="font-display" style={{ fontWeight: 700, fontSize: 16 }}>Devolutiva da supervisora TCC</h2>
+                <h2 className="font-display" style={{ fontWeight: 700, fontSize: 16 }}>Devolutiva da supervisora</h2>
               </div>
-              <Button variant="outline" size="sm" onClick={copyMd}><Copy className="h-3.5 w-3.5" /> Copiar</Button>
+              <div className="flex items-center gap-2">
+                <AbordagemBadge abordagem={aiMeta?.abordagem} label={aiMeta?.label} />
+                <Button variant="outline" size="sm" onClick={copyMd}><Copy className="h-3.5 w-3.5" /> Copiar</Button>
+              </div>
             </div>
             <article
               className="prose prose-sm max-w-none prose-headings:font-display prose-headings:text-foreground prose-h2:text-base prose-h2:mt-5 prose-h2:mb-2 prose-strong:text-foreground"

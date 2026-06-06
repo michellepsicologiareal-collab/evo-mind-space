@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, CalendarDays, Smile, FileText, Baby, Sparkles, Maximize2, Minimize2, X, Printer, BookOpen, RefreshCw } from "lucide-react";
+import { AbordagemBadge } from "@/components/app/AbordagemBadge";
 import { LogoIcon } from "@/components/LogoIcon";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { TccRecords } from "@/components/app/TccRecords";
@@ -109,6 +110,7 @@ const Patients = () => {
   const [anamneseFilled, setAnamneseFilled] = useState<Record<string, string>>({});
   const [formulationFilled, setFormulationFilled] = useState<Record<string, string>>({});
   const [formulationSummaries, setFormulationSummaries] = useState<Record<string, string>>({});
+  const [summaryMeta, setSummaryMeta] = useState<Record<string, { abordagem: string; label: string }>>({});
   const [formulationData, setFormulationData] = useState<Record<string, any>>({});
   const [summarizing, setSummarizing] = useState<Record<string, boolean>>({});
   const [readPatient, setReadPatient] = useState<Patient | null>(null);
@@ -266,6 +268,7 @@ const Patients = () => {
       const summary = (data as any)?.summary as string | undefined;
       if (summary) {
         setFormulationSummaries((m) => ({ ...m, [patientId]: summary }));
+        setSummaryMeta((m) => ({ ...m, [patientId]: { abordagem: (data as any)?.abordagem, label: (data as any)?.abordagem_label } }));
         toast.success("Resumo de IA gerado");
       } else {
         toast.error((data as any)?.error || "Falha ao gerar resumo");
@@ -901,7 +904,14 @@ const Patients = () => {
                       <div className="min-w-0">
                         <p style={{ fontSize: 11, fontWeight: 700, color: C.purple, textTransform: "uppercase", letterSpacing: "0.08em" }}>Resumo IA · Formulação</p>
                         {aiSum ? (
-                          <p className="mt-1" style={{ fontSize: 12, color: C.purpleInk, lineHeight: 1.5 }}>{aiSum}</p>
+                          <>
+                            <p className="mt-1" style={{ fontSize: 12, color: C.purpleInk, lineHeight: 1.5 }}>{aiSum}</p>
+                            {summaryMeta[p.id]?.abordagem && (
+                              <div className="mt-1.5">
+                                <AbordagemBadge abordagem={summaryMeta[p.id].abordagem} label={summaryMeta[p.id].label} />
+                              </div>
+                            )}
+                          </>
                         ) : (
                           <p className="mt-1 italic" style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
                             Gere um resumo de IA com os destaques clínicos desta formulação.

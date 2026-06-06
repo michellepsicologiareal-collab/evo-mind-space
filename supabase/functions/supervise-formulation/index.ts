@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { fetchAbordagem, buildAbordagemBlock } from "../_shared/abordagem.ts";
+import { fetchAbordagem, buildAbordagemBlock, getAbordagemLabel } from "../_shared/abordagem.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -93,7 +93,7 @@ Regras: nunca invente dados que não estão no relato — marque como "a investi
       return new Response(JSON.stringify({ error: "IA não retornou resposta." }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    return new Response(JSON.stringify({ supervision }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ supervision, abordagem, abordagem_label: getAbordagemLabel(abordagem) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("supervise-formulation error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });

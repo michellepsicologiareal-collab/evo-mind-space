@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { fetchAbordagem, buildAbordagemBlock } from "../_shared/abordagem.ts";
+import { fetchAbordagem, buildAbordagemBlock, getAbordagemLabel } from "../_shared/abordagem.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -93,7 +93,7 @@ Metas: ${goalsText || "-"}`;
         .eq("user_id", user.id);
     }
 
-    return new Response(JSON.stringify({ summary }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ summary, abordagem, abordagem_label: getAbordagemLabel(abordagem) }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("summarize-formulation error:", e);
     return new Response(JSON.stringify({ error: "Erro ao gerar resumo" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
