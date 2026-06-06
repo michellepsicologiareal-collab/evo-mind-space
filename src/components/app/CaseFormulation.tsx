@@ -885,17 +885,20 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
 
         {coachAnswer && (
           <div className="rounded-xl border border-accent/30 bg-background p-4 space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <p className="text-xs font-semibold text-accent flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5" /> Devolutiva da supervisora-IA
               </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { navigator.clipboard?.writeText(coachAnswer); toast.success("Copiado"); }}
-              >
-                <Copy className="h-3.5 w-3.5" /> Copiar
-              </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <AbordagemBadge abordagem={coachMeta?.abordagem} label={coachMeta?.label} />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { navigator.clipboard?.writeText(coachAnswer); toast.success("Copiado"); }}
+                >
+                  <Copy className="h-3.5 w-3.5" /> Copiar
+                </Button>
+              </div>
             </div>
             <div className="prose prose-sm max-w-none text-sm text-foreground [&_h2]:font-display [&_h2]:text-accent [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:text-base [&_ul]:list-disc [&_ul]:pl-5 [&_p]:my-1">
               <ReactMarkdown>{coachAnswer}</ReactMarkdown>
