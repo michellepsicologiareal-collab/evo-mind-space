@@ -150,7 +150,7 @@ export default function FormulacaoIA() {
             Formulação com IA
           </h1>
           <p className="text-sm text-muted-foreground">
-            Escreva livremente sobre o caso. A IA organiza em uma formulação TCC (Padesky) e salva no paciente.
+            Escreva livremente sobre o caso. A IA organiza em uma formulação TCC — 5 Aspectos e salva no paciente.
           </p>
         </header>
 
