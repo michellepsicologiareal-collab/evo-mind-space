@@ -768,9 +768,9 @@ const RegistroSessao = () => {
 
 
         {/* Linha rápida: data / nº / modalidade / duração */}
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 border-t border-border/60 pt-4">
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4" style={{ borderTop: "1px solid #E5E7EB" }}>
           <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#6B7280" }}>
               <CalendarDays className="h-3 w-3" /> Data
             </Label>
             <Input
@@ -778,10 +778,11 @@ const RegistroSessao = () => {
               value={form.session_date}
               onChange={(e) => setForm({ ...form, session_date: e.target.value })}
               className="h-9"
+              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB" }}
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            <Label className="uppercase" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#6B7280" }}>
               Sessão nº
             </Label>
             <Input
@@ -791,10 +792,11 @@ const RegistroSessao = () => {
               value={form.session_number}
               onChange={(e) => setForm({ ...form, session_number: e.target.value })}
               className="h-9"
+              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB" }}
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#6B7280" }}>
               {form.modality === "online" ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
               Modalidade
             </Label>
@@ -802,7 +804,7 @@ const RegistroSessao = () => {
               value={form.modality}
               onValueChange={(v) => setForm({ ...form, modality: v })}
             >
-              <SelectTrigger className="h-9">
+              <SelectTrigger className="h-9" style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB" }}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -812,7 +814,7 @@ const RegistroSessao = () => {
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#6B7280" }}>
               <Clock className="h-3 w-3" /> Duração (min)
             </Label>
             <Input
@@ -822,9 +824,11 @@ const RegistroSessao = () => {
               value={form.duration_minutes}
               onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })}
               className="h-9"
+              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB" }}
             />
           </div>
         </div>
+
       </section>
 
       {/* ── Plano de Tratamento Ativo ── */}
