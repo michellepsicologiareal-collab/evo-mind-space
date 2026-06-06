@@ -938,6 +938,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
           </div>
         )}
       </TabsContent>
-    </Tabs>
+      </Tabs>
+    </div>
   );
 };
