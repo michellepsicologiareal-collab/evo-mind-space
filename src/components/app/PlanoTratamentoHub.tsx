@@ -18,6 +18,8 @@ interface PatientRow {
   goals_count: number;
   has_conceptualization: boolean;
   has_plan: boolean;
+  plan_created_at: string | null;
+  plan_updated_at: string | null;
   next_plan: { objetivo: string | null; retomar: string | null; tecnicas: string[] | null } | null;
 }
 
@@ -47,7 +49,7 @@ export const PlanoTratamentoHub = () => {
       const uid = user.id;
       const [pRes, plansRes, goalsRes, sessRes] = await Promise.all([
         supabase.from("patients").select("id, full_name").eq("user_id", uid).eq("is_active", true).order("full_name"),
-        supabase.from("treatment_plans").select("patient_id, status, conceitualizacao").eq("user_id", uid),
+        supabase.from("treatment_plans").select("patient_id, status, conceitualizacao, created_at, updated_at").eq("user_id", uid),
         supabase.from("treatment_goals").select("patient_id").eq("user_id", uid),
         supabase.from("sessions").select("id, patient_id, scheduled_at").eq("user_id", uid)
           .gte("scheduled_at", new Date().toISOString())
@@ -55,7 +57,7 @@ export const PlanoTratamentoHub = () => {
           .order("scheduled_at"),
       ]);
       const patients = (pRes.data || []) as { id: string; full_name: string }[];
-      const plans = (plansRes.data || []) as { patient_id: string; status: string; conceitualizacao: string | null }[];
+      const plans = (plansRes.data || []) as { patient_id: string; status: string; conceitualizacao: string | null; created_at: string; updated_at: string }[];
       const goals = (goalsRes.data || []) as { patient_id: string }[];
       const sessions = (sessRes.data || []) as { id: string; patient_id: string; scheduled_at: string }[];
 
@@ -91,6 +93,8 @@ export const PlanoTratamentoHub = () => {
           goals_count: goalsCount,
           has_conceptualization: hasConcept,
           has_plan: !!plan,
+          plan_created_at: plan?.created_at ?? null,
+          plan_updated_at: plan?.updated_at ?? null,
           next_plan: sp ? { objetivo: sp.objetivo, retomar: sp.retomar, tecnicas: sp.tecnicas } : null,
         };
       });
@@ -218,6 +222,11 @@ export const PlanoTratamentoHub = () => {
                       ? format(new Date(r.next_session.scheduled_at), "dd/MM 'às' HH:mm", { locale: ptBR })
                       : "Sem próxima"}
                   </span>
+                  {r.has_plan && r.plan_updated_at && (
+                    <span className="text-[10px] text-muted-foreground/70">
+                      Atualizado em {format(new Date(r.plan_updated_at), "dd/MM/yyyy", { locale: ptBR })}
+                    </span>
+                  )}
                 </div>
 
                 {/* Line 2 or 3 */}
