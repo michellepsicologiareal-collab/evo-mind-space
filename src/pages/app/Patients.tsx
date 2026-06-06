@@ -267,6 +267,7 @@ const Patients = () => {
       const summary = (data as any)?.summary as string | undefined;
       if (summary) {
         setFormulationSummaries((m) => ({ ...m, [patientId]: summary }));
+        setSummaryMeta((m) => ({ ...m, [patientId]: { abordagem: (data as any)?.abordagem, label: (data as any)?.abordagem_label } }));
         toast.success("Resumo de IA gerado");
       } else {
         toast.error((data as any)?.error || "Falha ao gerar resumo");
