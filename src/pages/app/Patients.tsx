@@ -786,9 +786,18 @@ const Patients = () => {
                     <button onClick={(e) => { e.stopPropagation(); setTccPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
                       <Pill label={cTcc > 0 ? "Conceitualização TCC" : "Sem conceitualização"} kind={cTcc > 0 ? "filled" : "pending"} />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }} style={{ all: "unset", cursor: "pointer" }}>
-                      <Pill label={hasPlan ? "Plano" : "Sem plano"} kind={hasPlan ? "filled" : "pending"} count={planMetasCount > 0 ? planMetasCount : undefined} />
-                    </button>
+                    {(() => {
+                      const planStatus = tp?.status;
+                      const isRevision = planStatus === "em_revisao";
+                      const isActive = hasPlan && planStatus !== "em_revisao";
+                      const label = isRevision ? "Revisão Pendente" : isActive ? "Plano Ativo" : "Sem Plano";
+                      const kind = isActive ? "filled" : "pending";
+                      return (
+                        <button onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }} style={{ all: "unset", cursor: "pointer" }}>
+                          <Pill label={label} kind={kind as any} count={planMetasCount > 0 ? planMetasCount : undefined} />
+                        </button>
+                      );
+                    })()}
                     {p.category === "crianca" && (
                       <button onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
                         <Pill label={hasAnam ? "Anamnese" : "Sem anamnese"} kind={hasAnam ? "filled" : "pending"} />

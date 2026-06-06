@@ -113,6 +113,72 @@ const RegistroSessao = () => {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [expandedPatients, setExpandedPatients] = useState<Record<string, boolean>>({});
 
+  // Planning from PlanoTratamento for selected patient
+  const [plannedSession, setPlannedSession] = useState<{
+    objetivo: string;
+    retomar: string;
+    tecnicas: string[];
+    observacoes: string;
+    meta_descricao: string | null;
+    scheduled_at: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!user || !form.patient_id) { setPlannedSession(null); return; }
+    (async () => {
+      const { data: ns } = await supabase
+        .from("sessions")
+        .select("id, scheduled_at")
+        .eq("patient_id", form.patient_id)
+        .eq("user_id", user.id)
+        .gte("scheduled_at", new Date(new Date().setHours(0,0,0,0)).toISOString())
+        .not("status", "in", "(cancelled,no_show)")
+        .order("scheduled_at")
+        .limit(1)
+        .maybeSingle();
+      if (!ns?.id) { setPlannedSession(null); return; }
+      const { data: sp } = await supabase
+        .from("session_plans")
+        .select("objetivo, retomar, tecnicas, observacoes, meta_id")
+        .eq("session_id", ns.id)
+        .maybeSingle();
+      if (!sp) { setPlannedSession(null); return; }
+      let meta_descricao: string | null = null;
+      if (sp.meta_id) {
+        const { data: m } = await supabase.from("treatment_goals").select("descricao").eq("id", sp.meta_id).maybeSingle();
+        meta_descricao = m?.descricao ?? null;
+      }
+      setPlannedSession({
+        objetivo: sp.objetivo || "",
+        retomar: sp.retomar || "",
+        tecnicas: sp.tecnicas || [],
+        observacoes: sp.observacoes || "",
+        meta_descricao,
+        scheduled_at: ns.scheduled_at,
+      });
+    })();
+  }, [user, form.patient_id]);
+
+  const applyPlanningToForm = () => {
+    if (!plannedSession) return;
+    const blocks: string[] = [];
+    if (plannedSession.objetivo) blocks.push(`Objetivo planejado: ${plannedSession.objetivo}`);
+    if (plannedSession.meta_descricao) blocks.push(`Meta vinculada: ${plannedSession.meta_descricao}`);
+    if (plannedSession.retomar) blocks.push(`Retomar: ${plannedSession.retomar}`);
+    if (plannedSession.tecnicas.length) blocks.push(`Técnicas previstas: ${plannedSession.tecnicas.join(", ")}`);
+    const clinical = blocks.join("\n");
+    setForm(prev => ({
+      ...prev,
+      clinical_observations: prev.clinical_observations
+        ? prev.clinical_observations + "\n\n" + clinical
+        : clinical,
+      private_notes: plannedSession.observacoes
+        ? (prev.private_notes ? prev.private_notes + "\n" + plannedSession.observacoes : plannedSession.observacoes)
+        : prev.private_notes,
+    }));
+    toast.success("Planejamento aplicado ao registro.");
+  };
+
   // Compact mode: collapses long sections to just headers; persists in localStorage
   const [compactMode, setCompactMode] = useState<boolean>(() => {
     try { return localStorage.getItem("registro_sessao_compact") === "1"; } catch { return false; }
@@ -679,6 +745,46 @@ const RegistroSessao = () => {
           </div>
         </div>
       </section>
+
+      {/* ── Planejamento do Plano de Tratamento ── */}
+      {plannedSession && form.patient_id && (
+        <section className="rounded-2xl border border-primary/30 bg-primary/5 p-5 space-y-3">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-primary" />
+              <h3 className="font-display font-semibold text-sm">Planejado no Plano de Tratamento</h3>
+            </div>
+            <Button type="button" variant="accent" size="sm" onClick={applyPlanningToForm}>
+              Carregar no registro
+            </Button>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 text-sm">
+            {plannedSession.objetivo && (
+              <div><span className="text-[10px] uppercase text-muted-foreground">Objetivo</span><p className="whitespace-pre-wrap">{plannedSession.objetivo}</p></div>
+            )}
+            {plannedSession.meta_descricao && (
+              <div><span className="text-[10px] uppercase text-muted-foreground">Meta vinculada</span><p className="whitespace-pre-wrap">{plannedSession.meta_descricao}</p></div>
+            )}
+            {plannedSession.retomar && (
+              <div className="sm:col-span-2"><span className="text-[10px] uppercase text-muted-foreground">Retomar da sessão anterior</span><p className="whitespace-pre-wrap">{plannedSession.retomar}</p></div>
+            )}
+            {plannedSession.tecnicas.length > 0 && (
+              <div className="sm:col-span-2">
+                <span className="text-[10px] uppercase text-muted-foreground">Técnicas previstas</span>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {plannedSession.tecnicas.map(t => (
+                    <span key={t} className="text-[11px] px-2 py-0.5 rounded-full bg-white border border-primary/30 text-primary">{t}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {plannedSession.observacoes && (
+              <div className="sm:col-span-2"><span className="text-[10px] uppercase text-muted-foreground">Observações / lembretes</span><p className="whitespace-pre-wrap">{plannedSession.observacoes}</p></div>
+            )}
+          </div>
+        </section>
+      )}
+
 
       {/* ── Seção 2: Estado do Paciente ── */}
       <section className={cn(
