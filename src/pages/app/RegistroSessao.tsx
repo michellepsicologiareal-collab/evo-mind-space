@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, History, Minimize2, Maximize2, Target, ExternalLink } from "lucide-react";
+import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, History, Minimize2, Maximize2, Target, ExternalLink, ArrowLeft } from "lucide-react";
+import { RegistroSessaoHub } from "@/components/app/RegistroSessaoHub";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -592,6 +593,26 @@ const RegistroSessao = () => {
     return <div className="mb-4">{content}</div>;
   };
 
+  // Hub view: when no patient is selected and not editing, show the patient list
+  if (!form.patient_id && !editingId) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-6 space-y-5 animate-fade-up">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-2xl flex items-center justify-center bg-accent/15 text-accent">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-bold">Registro de Sessão</h1>
+            <p className="text-sm text-muted-foreground">
+              Selecione um paciente para registrar a sessão
+            </p>
+          </div>
+        </div>
+        <RegistroSessaoHub onSelectPatient={(id) => setForm((f) => ({ ...f, patient_id: id }))} />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
       {/* Header com brilho sutil */}
@@ -600,6 +621,13 @@ const RegistroSessao = () => {
         <div className="pointer-events-none absolute -left-8 bottom-0 h-20 w-20 rounded-full bg-lilac/20 blur-2xl" />
         <div className="relative flex items-start justify-between gap-3">
           <div className="min-w-0">
+            <button
+              type="button"
+              onClick={() => { handleClear(); }}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline mb-1"
+            >
+              <ArrowLeft className="h-3 w-3" /> Voltar à lista
+            </button>
             <span className="text-[10px] uppercase tracking-[0.18em] text-accent/80 font-semibold">
               Prontuário
             </span>
@@ -635,6 +663,7 @@ const RegistroSessao = () => {
           </div>
         </div>
       </div>
+
 
       {/* Draft restored banner */}
       {draftRestored && !editingId && (
