@@ -136,12 +136,15 @@ export default function FormulacaoLivre() {
 
         {supervision && (
           <section className="bg-white rounded-[10px] p-5 sm:p-6 space-y-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-4 w-4 text-primary" />
-                <h2 className="font-display" style={{ fontWeight: 700, fontSize: 16 }}>Devolutiva da supervisora TCC</h2>
+                <h2 className="font-display" style={{ fontWeight: 700, fontSize: 16 }}>Devolutiva da supervisora</h2>
               </div>
-              <Button variant="outline" size="sm" onClick={copyMd}><Copy className="h-3.5 w-3.5" /> Copiar</Button>
+              <div className="flex items-center gap-2">
+                <AbordagemBadge abordagem={aiMeta?.abordagem} label={aiMeta?.label} />
+                <Button variant="outline" size="sm" onClick={copyMd}><Copy className="h-3.5 w-3.5" /> Copiar</Button>
+              </div>
             </div>
             <article
               className="prose prose-sm max-w-none prose-headings:font-display prose-headings:text-foreground prose-h2:text-base prose-h2:mt-5 prose-h2:mb-2 prose-strong:text-foreground"
