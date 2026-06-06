@@ -371,41 +371,53 @@ const PlanoTratamento = () => {
       {/* Header */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
+          {patientId && (
+            <Button variant="ghost" size="sm" onClick={() => { setPatientId(""); setSearchParams({}, { replace: true }); }}>
+              <ArrowLeft className="h-4 w-4" /> Voltar à lista
+            </Button>
+          )}
           <div className="h-10 w-10 rounded-2xl flex items-center justify-center" style={{ background: `${PURPLE}15`, color: PURPLE }}>
             <ClipboardList className="h-5 w-5" />
           </div>
           <div>
             <h1 className="font-display text-2xl font-bold">Plano de tratamento</h1>
-            <p className="text-sm text-muted-foreground">Organize objetivos, técnicas e revisões do tratamento</p>
+            <p className="text-sm text-muted-foreground">
+              {patientId ? "Organize objetivos, técnicas e revisões do tratamento" : "Centro de organização clínica — selecione um paciente para abrir seu plano"}
+            </p>
           </div>
         </div>
 
-        <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
-          <Select value={patientId} onValueChange={setPatientId}>
-            <SelectTrigger className="w-full sm:w-[240px]"><SelectValue placeholder="Selecione um paciente" /></SelectTrigger>
-            <SelectContent>{patients.map(p => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}</SelectContent>
-          </Select>
+        {patientId && (
+          <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
+            <Select value={patientId} onValueChange={setPatientId}>
+              <SelectTrigger className="w-full sm:w-[240px]"><SelectValue placeholder="Selecione um paciente" /></SelectTrigger>
+              <SelectContent>{patients.map(p => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}</SelectContent>
+            </Select>
 
-          <Select value={plan.status} onValueChange={v => setPlan(p => ({ ...p, status: v }))}>
-            <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
-            <SelectContent>{STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-          </Select>
+            <Select value={plan.status} onValueChange={v => setPlan(p => ({ ...p, status: v }))}>
+              <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectContent>{STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+            </Select>
 
-          <Button variant="ghost" className="w-full sm:w-auto" onClick={exportPdf} disabled={!patientId}>
-            <FileDown className="h-4 w-4" /> Exportar PDF
-          </Button>
-          <Button variant="accent" className="w-full sm:w-auto" onClick={savePlan} disabled={!patientId || saving}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Salvar plano
-          </Button>
-        </div>
+            <Button variant="ghost" className="w-full sm:w-auto" onClick={exportPdf} disabled={!patientId}>
+              <FileDown className="h-4 w-4" /> Exportar PDF
+            </Button>
+            <Button variant="accent" className="w-full sm:w-auto" onClick={savePlan} disabled={!patientId || saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Salvar plano
+            </Button>
+          </div>
+        )}
       </div>
 
-      {loading ? (
+      {!patientId ? (
+        <PlanoTratamentoHub />
+      ) : loading ? (
         <div className="py-16 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
-      ) : !patientId ? (
-        <Card className="p-10 text-center text-muted-foreground">Cadastre um paciente para começar.</Card>
       ) : (
+        <></>
+      )}
+      {patientId && !loading && (
         <>
           {/* Resumo rápido do plano */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
