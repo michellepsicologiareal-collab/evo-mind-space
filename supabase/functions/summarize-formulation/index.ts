@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { fetchAbordagem, buildAbordagemBlock } from "../_shared/abordagem.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,7 +43,10 @@ Deno.serve(async (req) => {
       ? (f.treatment_goals as any[]).map((g: any) => typeof g === "string" ? g : g?.objective || g?.text || g?.title || g?.description || "").filter(Boolean).join("; ")
       : "";
 
-    const prompt = `Você é uma psicóloga clínica TCC. Resuma em 2-3 frases curtas (máx 320 caracteres) os destaques clínicos desta formulação de caso (Padesky), em português, tom profissional e acolhedor. Destaque o padrão central e direção terapêutica. Sem títulos, sem markdown.
+    const abordagem = await fetchAbordagem(supabase, patient_id);
+    const abordagemBlock = buildAbordagemBlock(abordagem);
+
+    const prompt = `Resuma em 2-3 frases curtas (máx 320 caracteres) os destaques clínicos desta formulação de caso, em português, tom profissional e acolhedor, usando obrigatoriamente a linguagem técnica da abordagem ${abordagem}. Destaque o padrão central e direção terapêutica. Sem títulos, sem markdown.
 
 Ambiente/Situação: ${f.environment || "-"}
 Pensamentos: ${f.thoughts || "-"}
@@ -60,7 +64,10 @@ Metas: ${goalsText || "-"}`;
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        messages: [{ role: "user", content: prompt }],
+        messages: [
+          { role: "system", content: abordagemBlock },
+          { role: "user", content: prompt },
+        ],
       }),
     });
 

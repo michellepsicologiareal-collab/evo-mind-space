@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { fetchAbordagem, buildAbordagemBlock } from "../_shared/abordagem.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -127,8 +128,12 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY não configurada");
 
-    const systemPrompt = `Você é uma psicóloga clínica especialista em Terapia Cognitivo-Comportamental, no estilo Christine Padesky (Modelo de 5 Sistemas + Mind Over Mood).
-A partir do relato livre da terapeuta sobre um caso, organize uma FORMULAÇÃO TCC estruturada em português, profissional, acolhedora e clinicamente útil.
+    const abordagem = await fetchAbordagem(supabase, patient_id);
+    const abordagemBlock = buildAbordagemBlock(abordagem, patient.full_name);
+
+    const systemPrompt = `${abordagemBlock}
+
+A partir do relato livre da terapeuta sobre um caso, organize uma FORMULAÇÃO DE CASO estruturada em português, profissional, acolhedora e clinicamente útil, usando obrigatoriamente a linguagem técnica da abordagem ${abordagem} indicada acima.
 
 Preencha cada campo com 2-4 frases curtas e claras. NÃO use markdown, NÃO use bullets, apenas texto corrido por campo.
 Se algum campo não tiver informação suficiente no relato, escreva "A investigar." em vez de inventar.

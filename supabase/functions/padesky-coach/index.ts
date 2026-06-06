@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { fetchAbordagem, buildAbordagemBlock } from "../_shared/abordagem.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,7 +30,9 @@ serve(async (req) => {
       });
     }
 
-    const { systems, coreBeliefs, question } = await req.json();
+    const { systems, coreBeliefs, question, patient_id = null, patient_name = "" } = await req.json();
+    const abordagem = await fetchAbordagem(supabase, patient_id);
+    const abordagemBlock = buildAbordagemBlock(abordagem, patient_name);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -58,25 +61,26 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Você é um(a) supervisor(a) clínico(a) experiente em Terapia Cognitivo-Comportamental, treinado(a) na abordagem de Christine Padesky (Modelo de 5 Sistemas + Mind Over Mood). Seu papel **NÃO é responder pela psicóloga**, mas **ensiná-la a pensar** clinicamente.
+            content: `${abordagemBlock}
+
+Você atua como supervisor(a) clínico(a) experiente NA ABORDAGEM ${abordagem}. Seu papel **NÃO é responder pela psicóloga**, mas **ensiná-la a pensar** clinicamente dentro desta abordagem.
 
 Princípios:
 - Use **questionamento Socrático**: faça perguntas que abram hipóteses ao invés de dar diagnósticos prontos.
-- Conecte os 5 sistemas (Ambiente, Pensamentos, Emoções, Comportamentos, Reações Físicas) mostrando ciclos de manutenção.
-- Sugira hipóteses cognitivas tentativas ("uma possibilidade é..."), nunca afirmações fechadas.
+- Conecte os elementos da formulação mostrando ciclos de manutenção típicos da abordagem ${abordagem}.
+- Sugira hipóteses tentativas ("uma possibilidade é..."), nunca afirmações fechadas.
 - Aponte o que está faltando na formulação para clarear o caso.
 - Sugira perguntas-chave que a psi pode levar para a próxima sessão.
-- Sugira possíveis intervenções TCC (registro de pensamentos, experimentos comportamentais, ativação, exposição, etc.) e POR QUE fariam sentido aqui.
-- NÃO faça diagnóstico DSM/CID. NÃO use jargão sem explicar.
+- Sugira possíveis intervenções usando APENAS técnicas válidas da abordagem ${abordagem} (listadas acima) e POR QUE fariam sentido aqui.
+- NÃO faça diagnóstico DSM/CID. NÃO misture vocabulário de outras abordagens.
 - Linguagem acolhedora, profissional e didática — como uma supervisora gentil.
 
 Formato de saída em markdown, usando estas seções quando fizer sentido:
 ## Leitura do caso
-(síntese socrática do que se vê nos 5 sistemas)
-## Hipóteses cognitivas a considerar
+## Hipóteses a considerar
 ## Ciclo de manutenção
 ## Perguntas Socráticas para a próxima sessão
-## Intervenções TCC sugeridas
+## Intervenções sugeridas (abordagem ${abordagem})
 ## O que ainda falta investigar`,
           },
           { role: "user", content: userPrompt },
