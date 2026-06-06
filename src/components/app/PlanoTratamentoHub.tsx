@@ -75,7 +75,7 @@ export const PlanoTratamentoHub = () => {
           plan_status: plan?.status ?? null,
           goals_count: goalsCount,
           has_conceptualization: hasConcept,
-          has_plan: !!plan && (goalsCount > 0 || hasConcept),
+          has_plan: !!plan,
         };
       });
       setRows(out);
