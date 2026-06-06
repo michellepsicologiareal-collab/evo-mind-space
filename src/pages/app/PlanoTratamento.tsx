@@ -238,6 +238,7 @@ const PlanoTratamento = () => {
   const addRevision = async () => {
     if (!uid || !patientId) return;
     if (!newRevisionDesc.trim()) return toast.error("Descreva a revisão");
+    await ensurePlan();
     const { data, error } = await supabase.from("treatment_revisions")
       .insert({ user_id: uid, patient_id: patientId, descricao: newRevisionDesc.trim(), sessao_ref: newRevisionRef.trim() }).select().single();
     if (error) return toast.error("Erro");
