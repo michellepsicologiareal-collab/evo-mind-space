@@ -442,7 +442,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
     setCoachLoading(true); setCoachAnswer(null);
     try {
       const { data, error } = await supabase.functions.invoke("padesky-coach", {
-        body: { systems, coreBeliefs, question: coachQuestion },
+        body: { systems, coreBeliefs, question: coachQuestion, patient_id: patientId },
       });
       if (error) throw error;
       if (data?.error) { toast.error(data.error); return; }
