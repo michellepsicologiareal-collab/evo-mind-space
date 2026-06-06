@@ -20,6 +20,7 @@ export default function FormulacaoLivre() {
   const [rawText, setRawText] = useState("");
   const [loading, setLoading] = useState(false);
   const [supervision, setSupervision] = useState("");
+  const [aiMeta, setAiMeta] = useState<{ abordagem: string; label: string } | null>(null);
 
   useEffect(() => {
     if (!user) return;
