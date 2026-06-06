@@ -166,6 +166,20 @@ const PlanoTratamento = () => {
   useEffect(() => { loadAll(); }, [loadAll]);
 
   /* ── save handlers ── */
+  const ensurePlan = async () => {
+    if (!uid || !patientId) return;
+    if (plan.id) return;
+    const { data } = await supabase
+      .from("treatment_plans")
+      .upsert(
+        { user_id: uid, patient_id: patientId, status: plan.status || "ativo" },
+        { onConflict: "patient_id" }
+      )
+      .select()
+      .single();
+    if (data) setPlan(p => ({ ...p, id: data.id, status: data.status }));
+  };
+
   const savePlan = async () => {
     if (!uid || !patientId) return;
     setSaving(true);
@@ -180,6 +194,7 @@ const PlanoTratamento = () => {
   const saveSessionPlan = async () => {
     if (!uid || !patientId) return;
     setSaving(true);
+    await ensurePlan();
     const payload = { ...sessionPlan, user_id: uid, patient_id: patientId };
     const { error } = sessionPlan.id
       ? await supabase.from("session_plans").update(payload).eq("id", sessionPlan.id)
@@ -190,6 +205,7 @@ const PlanoTratamento = () => {
 
   const addGoal = async () => {
     if (!uid || !patientId) return;
+    await ensurePlan();
     const { data, error } = await supabase.from("treatment_goals")
       .insert({ user_id: uid, patient_id: patientId, tipo: "geral", descricao: "", ordem: goals.length })
       .select().single();
@@ -207,6 +223,7 @@ const PlanoTratamento = () => {
 
   const addTechnique = async () => {
     if (!newTech.trim() || !uid || !patientId) return;
+    await ensurePlan();
     const { data, error } = await supabase.from("treatment_techniques")
       .insert({ user_id: uid, patient_id: patientId, nome: newTech.trim() }).select().single();
     if (error) return toast.error("Erro");
@@ -221,6 +238,7 @@ const PlanoTratamento = () => {
   const addRevision = async () => {
     if (!uid || !patientId) return;
     if (!newRevisionDesc.trim()) return toast.error("Descreva a revisão");
+    await ensurePlan();
     const { data, error } = await supabase.from("treatment_revisions")
       .insert({ user_id: uid, patient_id: patientId, descricao: newRevisionDesc.trim(), sessao_ref: newRevisionRef.trim() }).select().single();
     if (error) return toast.error("Erro");
