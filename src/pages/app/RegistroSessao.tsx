@@ -79,6 +79,7 @@ const emptyForm = {
   engagement: 3,
   risk_indicator: "none",
   private_notes: "",
+  plan_id: null as string | null,
 };
 
 type FormState = typeof emptyForm;
