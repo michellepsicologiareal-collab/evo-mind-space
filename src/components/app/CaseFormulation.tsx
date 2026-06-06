@@ -442,7 +442,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   };
 
   const askCoach = async () => {
-    setCoachLoading(true); setCoachAnswer(null);
+    setCoachLoading(true); setCoachAnswer(null); setCoachMeta(null);
     try {
       const { data, error } = await supabase.functions.invoke("padesky-coach", {
         body: { systems, coreBeliefs, question: coachQuestion, patient_id: patientId },
@@ -450,6 +450,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
       if (error) throw error;
       if (data?.error) { toast.error(data.error); return; }
       setCoachAnswer(data.result);
+      setCoachMeta({ abordagem: data.abordagem, label: data.abordagem_label });
     } catch (e) {
       console.error(e);
       toast.error("Erro ao consultar a IA. Tente novamente.");
