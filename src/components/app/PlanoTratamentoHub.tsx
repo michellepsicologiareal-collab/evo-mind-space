@@ -57,7 +57,7 @@ export const PlanoTratamentoHub = () => {
           .order("scheduled_at"),
       ]);
       const patients = (pRes.data || []) as { id: string; full_name: string }[];
-      const plans = (plansRes.data || []) as { patient_id: string; status: string; conceitualizacao: string | null }[];
+      const plans = (plansRes.data || []) as { patient_id: string; status: string; conceitualizacao: string | null; created_at: string; updated_at: string }[];
       const goals = (goalsRes.data || []) as { patient_id: string }[];
       const sessions = (sessRes.data || []) as { id: string; patient_id: string; scheduled_at: string }[];
 
