@@ -707,24 +707,20 @@ const RegistroSessao = () => {
         }}
       >
 
-        {selectedPatient && (
-          <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
-        )}
-        <div className="relative flex items-start gap-4">
+        <div className="flex items-start gap-4">
           <div
-            className={cn(
-              "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-lg font-display font-bold transition-all",
-              selectedPatient
-                ? "bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-lg ring-4 ring-accent/15"
-                : "bg-muted text-muted-foreground",
-            )}
+            className="flex h-14 w-14 shrink-0 items-center justify-center text-base font-display font-bold"
+            style={{ borderRadius: "50%", backgroundColor: "#EEEDFE", color: "#534AB7", fontWeight: 700 }}
           >
             {selectedPatient ? getInitials(selectedPatient.full_name) : <User className="h-6 w-6" />}
           </div>
 
-          <div className="min-w-0 flex-1 space-y-2">
+          <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              <span
+                className="uppercase"
+                style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: "#6B7280" }}
+              >
                 Paciente
               </span>
               {editingId && (
@@ -738,7 +734,10 @@ const RegistroSessao = () => {
               value={form.patient_id}
               onValueChange={(v) => setForm({ ...form, patient_id: v })}
             >
-              <SelectTrigger className="h-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 font-display text-xl font-semibold text-foreground hover:text-accent transition-colors [&>svg]:opacity-50">
+              <SelectTrigger
+                className="h-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 font-display hover:opacity-80 transition-opacity [&>svg]:opacity-50"
+                style={{ fontSize: 16, fontWeight: 700, color: "#1A1A2E" }}
+              >
                 <SelectValue placeholder="Selecione o paciente" />
               </SelectTrigger>
               <SelectContent>
@@ -751,7 +750,7 @@ const RegistroSessao = () => {
             </Select>
 
             {selectedPatient && (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pt-1">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1" style={{ fontSize: 12, color: "#6B7280" }}>
                 <span className="inline-flex items-center gap-1">
                   <History className="h-3.5 w-3.5" />
                   {patientRecords.length} {patientRecords.length === 1 ? "sessão registrada" : "sessões registradas"}
@@ -766,6 +765,7 @@ const RegistroSessao = () => {
             )}
           </div>
         </div>
+
 
         {/* Linha rápida: data / nº / modalidade / duração */}
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 border-t border-border/60 pt-4">
