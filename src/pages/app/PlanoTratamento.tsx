@@ -101,7 +101,7 @@ const PlanoTratamento = () => {
       .then(({ data }) => {
         const list = (data || []) as Patient[];
         setPatients(list);
-        if (!patientId && list.length) setPatientId(queryPatient || list[0].id);
+        if (!patientId && queryPatient) setPatientId(queryPatient);
       });
   }, [uid, patientId, queryPatient]);
 
