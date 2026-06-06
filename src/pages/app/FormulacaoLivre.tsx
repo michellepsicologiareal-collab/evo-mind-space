@@ -58,7 +58,8 @@ export default function FormulacaoLivre() {
         return;
       }
       setSupervision(sup);
-      toast.success("Supervisão TCC gerada.");
+      setAiMeta({ abordagem: (data as any)?.abordagem, label: (data as any)?.abordagem_label });
+      toast.success("Supervisão gerada.");
     } catch (e: any) {
       toast.error(e?.message || "Erro ao gerar.");
     } finally {
