@@ -222,6 +222,11 @@ export const PlanoTratamentoHub = () => {
                       ? format(new Date(r.next_session.scheduled_at), "dd/MM 'às' HH:mm", { locale: ptBR })
                       : "Sem próxima"}
                   </span>
+                  {r.has_plan && r.plan_updated_at && (
+                    <span className="text-[10px] text-muted-foreground/70">
+                      Atualizado em {format(new Date(r.plan_updated_at), "dd/MM/yyyy", { locale: ptBR })}
+                    </span>
+                  )}
                 </div>
 
                 {/* Line 2 or 3 */}
