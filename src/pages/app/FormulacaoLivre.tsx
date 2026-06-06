@@ -47,7 +47,7 @@ export default function FormulacaoLivre() {
     setSupervision("");
     try {
       const { data, error } = await supabase.functions.invoke("supervise-formulation", {
-        body: { raw_text: rawText, patient_name: selectedName },
+        body: { raw_text: rawText, patient_name: selectedName, patient_id: patientId === "none" ? null : patientId },
       });
       if (error) throw error;
       const sup = (data as any)?.supervision as string | undefined;
