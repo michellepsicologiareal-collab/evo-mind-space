@@ -764,13 +764,16 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
         {/* AI Result */}
         {aiResult && (
           <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-5 space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <h4 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" /> Notas Organizadas
               </h4>
-              <Button size="sm" variant="accent" className="min-h-[36px]" onClick={copyToEvolution}>
-                <Copy className="h-3.5 w-3.5 mr-1" /> Copiar para a Evolução
-              </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <AbordagemBadge abordagem={aiNotesMeta?.abordagem} label={aiNotesMeta?.label} />
+                <Button size="sm" variant="accent" className="min-h-[36px]" onClick={copyToEvolution}>
+                  <Copy className="h-3.5 w-3.5 mr-1" /> Copiar para a Evolução
+                </Button>
+              </div>
             </div>
             <div className="prose prose-sm max-w-none text-foreground [&_h2]:text-sm [&_h2]:font-display [&_h2]:font-bold [&_h2]:text-primary [&_h2]:mt-3 [&_h2]:mb-1 [&_p]:text-sm [&_p]:leading-relaxed [&_ul]:text-sm [&_li]:text-sm">
               <ReactMarkdown>{aiResult}</ReactMarkdown>
