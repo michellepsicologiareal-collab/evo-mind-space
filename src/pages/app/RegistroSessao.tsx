@@ -974,12 +974,12 @@ const RegistroSessao = () => {
 
 
 
-      {/* ── Seção 2: Estado do Paciente ── */}
-      <section className={cn(
-        "rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all",
-        compactMode && !isOpen("estado") ? "p-3" : "p-5 space-y-4",
-      )}>
-        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" sectionKey="estado" />
+      {/* ── Seção 1: Estado do Paciente ── */}
+      <section
+        className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("estado") ? "p-3" : "p-5 space-y-4")}
+        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #534AB7" }}
+      >
+        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" sectionKey="estado" color="#534AB7" />
         {isOpen("estado") && (
           <div className="space-y-2">
             <Label>Queixa principal / Tema trazido</Label>
@@ -991,10 +991,12 @@ const RegistroSessao = () => {
               onChange={(e) =>
                 setForm({ ...form, chief_complaint: e.target.value })
               }
+              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
             />
           </div>
         )}
       </section>
+
 
       {/* ── Seção 3: Conteúdo da Sessão ── */}
       <section className={cn(
