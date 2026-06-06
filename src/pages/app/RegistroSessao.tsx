@@ -621,68 +621,73 @@ const RegistroSessao = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
-      {/* Header com brilho sutil */}
-      <div className="relative overflow-hidden rounded-2xl border border-accent/15 bg-gradient-to-br from-card via-card to-accent/8 px-5 py-4 shadow-sm">
-        <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-accent/15 blur-3xl" />
-        <div className="pointer-events-none absolute -left-8 bottom-0 h-20 w-20 rounded-full bg-lilac/20 blur-2xl" />
-        <div className="relative flex items-start justify-between gap-3">
+    <div className="max-w-3xl mx-auto px-4 py-6 space-y-5" style={{ backgroundColor: "#F7F6F3", minHeight: "100%" }}>
+      {/* Topbar */}
+      <div
+        className="px-5 py-4"
+        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+      >
+        <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
             <button
               type="button"
               onClick={() => { handleClear(); }}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline mb-1"
+              className="inline-flex items-center gap-1 text-[11px] font-medium hover:underline mb-1"
+              style={{ color: "#534AB7" }}
             >
               <ArrowLeft className="h-3 w-3" /> Voltar à lista
             </button>
-            <span className="text-[10px] uppercase tracking-[0.18em] text-accent/80 font-semibold">
-              Prontuário
-            </span>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground leading-tight mt-0.5">
+            <h1
+              className="font-display leading-tight"
+              style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.3px", color: "#1A1A2E" }}
+            >
               Registro de Sessão
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="mt-1" style={{ fontSize: 13, color: "#6B7280" }}>
               {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
             </p>
           </div>
-          <div className="flex flex-col items-end gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
+            {lastSavedAt && (
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1"
+                style={{ backgroundColor: "#EAF3DE", color: "#2D6A4F", borderRadius: 20, fontSize: 11, fontWeight: 600 }}
+              >
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#2D6A4F" }} />
+                Salvo {format(lastSavedAt, "HH:mm")}
+              </span>
+            )}
             <button
               type="button"
               onClick={() => setCompactMode((v) => !v)}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
-                compactMode
-                  ? "border-accent/40 bg-accent/10 text-accent hover:bg-accent/15"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-accent/30",
-              )}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium hover:bg-muted/40 transition-colors"
+              style={{ border: "1px solid #E5E7EB", borderRadius: 8, color: "#6B7280" }}
               aria-pressed={compactMode}
-              title={compactMode ? "Sair do modo compacto" : "Ativar modo compacto"}
             >
               {compactMode ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
               {compactMode ? "Modo expandido" : "Modo compacto"}
             </button>
-            {lastSavedAt && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-sage/30 bg-sage/10 px-2.5 py-1 text-[11px] font-medium text-sage">
-                <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
-                Salvo {format(lastSavedAt, "HH:mm:ss")}
-              </span>
-            )}
           </div>
         </div>
       </div>
 
-
       {/* Draft restored banner */}
       {draftRestored && !editingId && (
-        <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
-          <span>Rascunho recuperado. Continue de onde parou.</span>
+        <div
+          className="flex items-center justify-between px-4 py-3"
+          style={{ backgroundColor: "#EEEDFE", borderLeft: "3px solid #534AB7", borderRadius: 10 }}
+        >
+          <span style={{ color: "#3C3489", fontWeight: 500, fontSize: 13 }}>
+            Rascunho recuperado. Continue de onde parou.
+          </span>
           <button
             type="button"
             onClick={() => {
               clearDraft();
               setForm({ ...emptyForm });
             }}
-            className="ml-3 flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium hover:bg-primary/10 transition-colors"
+            className="ml-3 flex items-center gap-1 px-2 py-1 text-xs font-medium hover:bg-white/60 rounded-md transition-colors"
+            style={{ color: "#534AB7" }}
           >
             <X className="h-3 w-3" />
             Descartar
@@ -693,13 +698,15 @@ const RegistroSessao = () => {
       {/* ── Hero do paciente ── */}
       <section
         ref={heroFormRef}
-        className={cn(
-          "relative overflow-hidden rounded-2xl border p-5 shadow-sm scroll-mt-4 transition-all",
-          selectedPatient
-            ? "border-accent/30 bg-gradient-to-br from-card via-card to-accent/8"
-            : "border-dashed border-border bg-card",
-        )}
+        className="p-5 scroll-mt-4"
+        style={{
+          backgroundColor: "#FFFFFF",
+          borderRadius: 10,
+          boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+          borderLeft: "3px solid #534AB7",
+        }}
       >
+
         {selectedPatient && (
           <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
         )}
