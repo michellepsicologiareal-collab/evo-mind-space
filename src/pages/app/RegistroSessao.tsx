@@ -545,28 +545,34 @@ const RegistroSessao = () => {
     title,
     subtitle,
     sectionKey,
+    color = "#534AB7",
   }: {
     n?: number;
     icon: React.ComponentType<{ className?: string }>;
     title: string;
     subtitle?: string;
     sectionKey?: string;
+    color?: string;
   }) => {
     const collapsible = compactMode && !!sectionKey;
     const open = sectionKey ? isOpen(sectionKey) : true;
     const content = (
       <div className="flex items-start gap-3 w-full">
-        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 text-accent ring-1 ring-accent/20">
-          <Icon className="h-4 w-4" />
-          {n != null && (
-            <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground shadow-sm">
-              {n}
-            </span>
+        <div
+          className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white"
+          style={{ backgroundColor: color }}
+        >
+          {n != null ? (
+            <span className="text-[11px] font-bold leading-none">{n}</span>
+          ) : (
+            <Icon className="h-3.5 w-3.5" />
           )}
         </div>
-        <div className="min-w-0 pt-0.5 flex-1 text-left">
-          <h2 className="font-display text-base font-semibold text-foreground leading-tight">{title}</h2>
-          {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+        <div className="min-w-0 pt-0 flex-1 text-left">
+          <h2 className="font-display font-bold leading-tight" style={{ fontSize: 15, color: "#1A1A2E" }}>
+            {title}
+          </h2>
+          {subtitle && <p className="mt-0.5" style={{ fontSize: 12, color: "#6B7280" }}>{subtitle}</p>}
         </div>
         {collapsible && (
           <ChevronDown
@@ -593,6 +599,7 @@ const RegistroSessao = () => {
     return <div className="mb-4">{content}</div>;
   };
 
+
   // Hub view: when no patient is selected and not editing, show the patient list
   if (!form.patient_id && !editingId) {
     return (
@@ -614,68 +621,73 @@ const RegistroSessao = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
-      {/* Header com brilho sutil */}
-      <div className="relative overflow-hidden rounded-2xl border border-accent/15 bg-gradient-to-br from-card via-card to-accent/8 px-5 py-4 shadow-sm">
-        <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-accent/15 blur-3xl" />
-        <div className="pointer-events-none absolute -left-8 bottom-0 h-20 w-20 rounded-full bg-lilac/20 blur-2xl" />
-        <div className="relative flex items-start justify-between gap-3">
+    <div className="max-w-3xl mx-auto px-4 py-6 space-y-5" style={{ backgroundColor: "#F7F6F3", minHeight: "100%" }}>
+      {/* Topbar */}
+      <div
+        className="px-5 py-4"
+        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+      >
+        <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
             <button
               type="button"
               onClick={() => { handleClear(); }}
-              className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline mb-1"
+              className="inline-flex items-center gap-1 text-[11px] font-medium hover:underline mb-1"
+              style={{ color: "#534AB7" }}
             >
               <ArrowLeft className="h-3 w-3" /> Voltar à lista
             </button>
-            <span className="text-[10px] uppercase tracking-[0.18em] text-accent/80 font-semibold">
-              Prontuário
-            </span>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground leading-tight mt-0.5">
+            <h1
+              className="font-display leading-tight"
+              style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.3px", color: "#1A1A2E" }}
+            >
               Registro de Sessão
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="mt-1" style={{ fontSize: 13, color: "#6B7280" }}>
               {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
             </p>
           </div>
-          <div className="flex flex-col items-end gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
+            {lastSavedAt && (
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1"
+                style={{ backgroundColor: "#EAF3DE", color: "#2D6A4F", borderRadius: 20, fontSize: 11, fontWeight: 600 }}
+              >
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#2D6A4F" }} />
+                Salvo {format(lastSavedAt, "HH:mm")}
+              </span>
+            )}
             <button
               type="button"
               onClick={() => setCompactMode((v) => !v)}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
-                compactMode
-                  ? "border-accent/40 bg-accent/10 text-accent hover:bg-accent/15"
-                  : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-accent/30",
-              )}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium hover:bg-muted/40 transition-colors"
+              style={{ border: "1px solid #E5E7EB", borderRadius: 8, color: "#6B7280" }}
               aria-pressed={compactMode}
-              title={compactMode ? "Sair do modo compacto" : "Ativar modo compacto"}
             >
               {compactMode ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
               {compactMode ? "Modo expandido" : "Modo compacto"}
             </button>
-            {lastSavedAt && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-sage/30 bg-sage/10 px-2.5 py-1 text-[11px] font-medium text-sage">
-                <span className="h-1.5 w-1.5 rounded-full bg-sage animate-pulse" />
-                Salvo {format(lastSavedAt, "HH:mm:ss")}
-              </span>
-            )}
           </div>
         </div>
       </div>
 
-
       {/* Draft restored banner */}
       {draftRestored && !editingId && (
-        <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
-          <span>Rascunho recuperado. Continue de onde parou.</span>
+        <div
+          className="flex items-center justify-between px-4 py-3"
+          style={{ backgroundColor: "#EEEDFE", borderLeft: "3px solid #534AB7", borderRadius: 10 }}
+        >
+          <span style={{ color: "#3C3489", fontWeight: 500, fontSize: 13 }}>
+            Rascunho recuperado. Continue de onde parou.
+          </span>
           <button
             type="button"
             onClick={() => {
               clearDraft();
               setForm({ ...emptyForm });
             }}
-            className="ml-3 flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium hover:bg-primary/10 transition-colors"
+            className="ml-3 flex items-center gap-1 px-2 py-1 text-xs font-medium hover:bg-white/60 rounded-md transition-colors"
+            style={{ color: "#534AB7" }}
           >
             <X className="h-3 w-3" />
             Descartar
@@ -686,31 +698,29 @@ const RegistroSessao = () => {
       {/* ── Hero do paciente ── */}
       <section
         ref={heroFormRef}
-        className={cn(
-          "relative overflow-hidden rounded-2xl border p-5 shadow-sm scroll-mt-4 transition-all",
-          selectedPatient
-            ? "border-accent/30 bg-gradient-to-br from-card via-card to-accent/8"
-            : "border-dashed border-border bg-card",
-        )}
+        className="p-5 scroll-mt-4"
+        style={{
+          backgroundColor: "#FFFFFF",
+          borderRadius: 10,
+          boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+          borderLeft: "3px solid #534AB7",
+        }}
       >
-        {selectedPatient && (
-          <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
-        )}
-        <div className="relative flex items-start gap-4">
+
+        <div className="flex items-start gap-4">
           <div
-            className={cn(
-              "relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-lg font-display font-bold transition-all",
-              selectedPatient
-                ? "bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-lg ring-4 ring-accent/15"
-                : "bg-muted text-muted-foreground",
-            )}
+            className="flex h-14 w-14 shrink-0 items-center justify-center text-base font-display font-bold"
+            style={{ borderRadius: "50%", backgroundColor: "#EEEDFE", color: "#534AB7", fontWeight: 700 }}
           >
             {selectedPatient ? getInitials(selectedPatient.full_name) : <User className="h-6 w-6" />}
           </div>
 
-          <div className="min-w-0 flex-1 space-y-2">
+          <div className="min-w-0 flex-1 space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+              <span
+                className="uppercase"
+                style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: "#6B7280" }}
+              >
                 Paciente
               </span>
               {editingId && (
@@ -724,7 +734,10 @@ const RegistroSessao = () => {
               value={form.patient_id}
               onValueChange={(v) => setForm({ ...form, patient_id: v })}
             >
-              <SelectTrigger className="h-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 font-display text-xl font-semibold text-foreground hover:text-accent transition-colors [&>svg]:opacity-50">
+              <SelectTrigger
+                className="h-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 font-display hover:opacity-80 transition-opacity [&>svg]:opacity-50"
+                style={{ fontSize: 16, fontWeight: 700, color: "#1A1A2E" }}
+              >
                 <SelectValue placeholder="Selecione o paciente" />
               </SelectTrigger>
               <SelectContent>
@@ -737,7 +750,7 @@ const RegistroSessao = () => {
             </Select>
 
             {selectedPatient && (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pt-1">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1" style={{ fontSize: 12, color: "#6B7280" }}>
                 <span className="inline-flex items-center gap-1">
                   <History className="h-3.5 w-3.5" />
                   {patientRecords.length} {patientRecords.length === 1 ? "sessão registrada" : "sessões registradas"}
@@ -753,10 +766,11 @@ const RegistroSessao = () => {
           </div>
         </div>
 
+
         {/* Linha rápida: data / nº / modalidade / duração */}
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 border-t border-border/60 pt-4">
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4" style={{ borderTop: "1px solid #E5E7EB" }}>
           <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#6B7280" }}>
               <CalendarDays className="h-3 w-3" /> Data
             </Label>
             <Input
@@ -764,10 +778,11 @@ const RegistroSessao = () => {
               value={form.session_date}
               onChange={(e) => setForm({ ...form, session_date: e.target.value })}
               className="h-9"
+              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB" }}
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            <Label className="uppercase" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#6B7280" }}>
               Sessão nº
             </Label>
             <Input
@@ -777,10 +792,11 @@ const RegistroSessao = () => {
               value={form.session_number}
               onChange={(e) => setForm({ ...form, session_number: e.target.value })}
               className="h-9"
+              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB" }}
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#6B7280" }}>
               {form.modality === "online" ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
               Modalidade
             </Label>
@@ -788,7 +804,7 @@ const RegistroSessao = () => {
               value={form.modality}
               onValueChange={(v) => setForm({ ...form, modality: v })}
             >
-              <SelectTrigger className="h-9">
+              <SelectTrigger className="h-9" style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB" }}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -798,7 +814,7 @@ const RegistroSessao = () => {
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#6B7280" }}>
               <Clock className="h-3 w-3" /> Duração (min)
             </Label>
             <Input
@@ -808,9 +824,11 @@ const RegistroSessao = () => {
               value={form.duration_minutes}
               onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })}
               className="h-9"
+              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB" }}
             />
           </div>
         </div>
+
       </section>
 
       {/* ── Plano de Tratamento Ativo ── */}
@@ -956,12 +974,12 @@ const RegistroSessao = () => {
 
 
 
-      {/* ── Seção 2: Estado do Paciente ── */}
-      <section className={cn(
-        "rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all",
-        compactMode && !isOpen("estado") ? "p-3" : "p-5 space-y-4",
-      )}>
-        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" sectionKey="estado" />
+      {/* ── Seção 1: Estado do Paciente ── */}
+      <section
+        className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("estado") ? "p-3" : "p-5 space-y-4")}
+        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #534AB7" }}
+      >
+        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" sectionKey="estado" color="#534AB7" />
         {isOpen("estado") && (
           <div className="space-y-2">
             <Label>Queixa principal / Tema trazido</Label>
@@ -973,17 +991,19 @@ const RegistroSessao = () => {
               onChange={(e) =>
                 setForm({ ...form, chief_complaint: e.target.value })
               }
+              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
             />
           </div>
         )}
       </section>
 
-      {/* ── Seção 3: Conteúdo da Sessão ── */}
-      <section className={cn(
-        "rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all",
-        compactMode && !isOpen("conteudo") ? "p-3" : "p-5 space-y-4",
-      )}>
-        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" sectionKey="conteudo" />
+
+      {/* ── Seção 2: Conteúdo da Sessão ── */}
+      <section
+        className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("conteudo") ? "p-3" : "p-5 space-y-4")}
+        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #B8860B" }}
+      >
+        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" sectionKey="conteudo" color="#B8860B" />
         {isOpen("conteudo") && (
           <>
             <div className="space-y-2">
@@ -996,12 +1016,12 @@ const RegistroSessao = () => {
                       key={theme}
                       type="button"
                       onClick={() => toggleTheme(theme)}
-                      className={cn(
-                        "px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 hover:-translate-y-0.5",
+                      className="px-3 py-1 transition-colors"
+                      style={
                         selected
-                          ? "bg-gradient-to-br from-accent to-accent/85 text-accent-foreground border-accent shadow-sm"
-                          : "bg-muted/40 text-muted-foreground border-transparent hover:border-accent/30 hover:bg-card hover:text-foreground"
-                      )}
+                          ? { backgroundColor: "#EEEDFE", color: "#534AB7", border: "1px solid #AFA9EC", borderRadius: 6, fontSize: 13, fontWeight: 600 }
+                          : { backgroundColor: "#F3F4F6", color: "#6B7280", border: "1px solid #E5E7EB", borderRadius: 6, fontSize: 13, fontWeight: 500 }
+                      }
                     >
                       {theme}
                     </button>
@@ -1019,6 +1039,7 @@ const RegistroSessao = () => {
                 onChange={(e) =>
                   setForm({ ...form, clinical_observations: e.target.value })
                 }
+                style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
               />
             </div>
 
@@ -1031,43 +1052,43 @@ const RegistroSessao = () => {
                 onChange={(e) =>
                   setForm({ ...form, next_session_plan: e.target.value })
                 }
+                style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
               />
             </div>
           </>
         )}
       </section>
 
-      {/* ── Seção 4: Avaliação do Terapeuta ── */}
-      <section className={cn(
-        "rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all",
-        compactMode && !isOpen("avaliacao") ? "p-3" : "p-5 space-y-4",
-      )}>
-        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" sectionKey="avaliacao" />
+
+      {/* ── Seção 3: Avaliação do Terapeuta ── */}
+      <section
+        className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("avaliacao") ? "p-3" : "p-5 space-y-4")}
+        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #2D6A4F" }}
+      >
+        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" sectionKey="avaliacao" color="#2D6A4F" />
         {isOpen("avaliacao") && (
           <>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Engajamento do paciente</Label>
-                <span className="text-xs font-display font-semibold text-accent">
+                <span className="font-display font-semibold" style={{ fontSize: 12, color: "#534AB7", fontWeight: 700 }}>
                   {ENGAGEMENT_LABELS[form.engagement - 1]}
                 </span>
               </div>
               <div className="flex gap-1.5">
                 {[1, 2, 3, 4, 5].map((level) => {
-                  const active = form.engagement >= level;
                   const isCurrent = form.engagement === level;
                   return (
                     <button
                       key={level}
                       type="button"
                       onClick={() => setForm({ ...form, engagement: level })}
-                      className={cn(
-                        "flex-1 h-10 rounded-xl text-sm font-semibold transition-all duration-200 relative overflow-hidden",
-                        active
-                          ? "bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-sm"
-                          : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
-                        isCurrent && "ring-2 ring-accent/40 ring-offset-2 ring-offset-card scale-[1.04]",
-                      )}
+                      className="flex-1 h-10 transition-colors"
+                      style={
+                        isCurrent
+                          ? { backgroundColor: "#534AB7", color: "#FFFFFF", border: "1px solid #534AB7", borderRadius: 8, fontSize: 14, fontWeight: 700 }
+                          : { backgroundColor: "#FFFFFF", color: "#6B7280", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 14, fontWeight: 600 }
+                      }
                       aria-label={`Engajamento nível ${level}`}
                     >
                       {level}
@@ -1076,6 +1097,7 @@ const RegistroSessao = () => {
                 })}
               </div>
             </div>
+
 
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
