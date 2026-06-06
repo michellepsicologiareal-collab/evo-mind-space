@@ -998,12 +998,12 @@ const RegistroSessao = () => {
       </section>
 
 
-      {/* ── Seção 3: Conteúdo da Sessão ── */}
-      <section className={cn(
-        "rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all",
-        compactMode && !isOpen("conteudo") ? "p-3" : "p-5 space-y-4",
-      )}>
-        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" sectionKey="conteudo" />
+      {/* ── Seção 2: Conteúdo da Sessão ── */}
+      <section
+        className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("conteudo") ? "p-3" : "p-5 space-y-4")}
+        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #B8860B" }}
+      >
+        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" sectionKey="conteudo" color="#B8860B" />
         {isOpen("conteudo") && (
           <>
             <div className="space-y-2">
@@ -1016,12 +1016,12 @@ const RegistroSessao = () => {
                       key={theme}
                       type="button"
                       onClick={() => toggleTheme(theme)}
-                      className={cn(
-                        "px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 hover:-translate-y-0.5",
+                      className="px-3 py-1 transition-colors"
+                      style={
                         selected
-                          ? "bg-gradient-to-br from-accent to-accent/85 text-accent-foreground border-accent shadow-sm"
-                          : "bg-muted/40 text-muted-foreground border-transparent hover:border-accent/30 hover:bg-card hover:text-foreground"
-                      )}
+                          ? { backgroundColor: "#EEEDFE", color: "#534AB7", border: "1px solid #AFA9EC", borderRadius: 6, fontSize: 13, fontWeight: 600 }
+                          : { backgroundColor: "#F3F4F6", color: "#6B7280", border: "1px solid #E5E7EB", borderRadius: 6, fontSize: 13, fontWeight: 500 }
+                      }
                     >
                       {theme}
                     </button>
@@ -1039,6 +1039,7 @@ const RegistroSessao = () => {
                 onChange={(e) =>
                   setForm({ ...form, clinical_observations: e.target.value })
                 }
+                style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
               />
             </div>
 
@@ -1051,11 +1052,13 @@ const RegistroSessao = () => {
                 onChange={(e) =>
                   setForm({ ...form, next_session_plan: e.target.value })
                 }
+                style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
               />
             </div>
           </>
         )}
       </section>
+
 
       {/* ── Seção 4: Avaliação do Terapeuta ── */}
       <section className={cn(
