@@ -33,6 +33,7 @@ const Anamneses = lazy(() => import("./pages/app/Anamneses"));
 const PlanoTratamento = lazy(() => import("./pages/app/PlanoTratamento"));
 const FormulacaoIA = lazy(() => import("./pages/app/FormulacaoIA"));
 const FormulacaoLivre = lazy(() => import("./pages/app/FormulacaoLivre"));
+const FormulacaoTE = lazy(() => import("./pages/app/FormulacaoTE"));
 const ContratoPublico = lazy(() => import("./pages/ContratoPublico"));
 const AnamnesePublica = lazy(() => import("./pages/AnamnesePublica"));
 
