@@ -49,7 +49,7 @@ export const PlanoTratamentoHub = () => {
         supabase.from("patients").select("id, full_name").eq("user_id", uid).eq("is_active", true).order("full_name"),
         supabase.from("treatment_plans").select("patient_id, status, conceitualizacao").eq("user_id", uid),
         supabase.from("treatment_goals").select("patient_id").eq("user_id", uid),
-        supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", uid)
+        supabase.from("sessions").select("id, patient_id, scheduled_at").eq("user_id", uid)
           .gte("scheduled_at", new Date().toISOString())
           .not("status", "in", "(cancelled,no_show)")
           .order("scheduled_at"),
@@ -57,26 +57,41 @@ export const PlanoTratamentoHub = () => {
       const patients = (pRes.data || []) as { id: string; full_name: string }[];
       const plans = (plansRes.data || []) as { patient_id: string; status: string; conceitualizacao: string | null }[];
       const goals = (goalsRes.data || []) as { patient_id: string }[];
-      const sessions = (sessRes.data || []) as { patient_id: string; scheduled_at: string }[];
+      const sessions = (sessRes.data || []) as { id: string; patient_id: string; scheduled_at: string }[];
 
       const goalsMap = new Map<string, number>();
       goals.forEach(g => goalsMap.set(g.patient_id, (goalsMap.get(g.patient_id) || 0) + 1));
       const planMap = new Map(plans.map(p => [p.patient_id, p]));
-      const nextMap = new Map<string, string>();
-      sessions.forEach(s => { if (!nextMap.has(s.patient_id)) nextMap.set(s.patient_id, s.scheduled_at); });
+      const nextMap = new Map<string, { id: string; scheduled_at: string }>();
+      sessions.forEach(s => { if (!nextMap.has(s.patient_id)) nextMap.set(s.patient_id, { id: s.id, scheduled_at: s.scheduled_at }); });
+
+      const nextSessionIds = Array.from(nextMap.values()).map(v => v.id);
+      let sessionPlans: { session_id: string; objetivo: string | null; retomar: string | null; tecnicas: string[] | null }[] = [];
+      if (nextSessionIds.length > 0) {
+        const { data: spData } = await supabase
+          .from("session_plans")
+          .select("session_id, objetivo, retomar, tecnicas")
+          .eq("user_id", uid)
+          .in("session_id", nextSessionIds);
+        sessionPlans = (spData || []) as typeof sessionPlans;
+      }
+      const planBySession = new Map(sessionPlans.map(sp => [sp.session_id, sp]));
 
       const out: PatientRow[] = patients.map(p => {
         const plan = planMap.get(p.id);
         const goalsCount = goalsMap.get(p.id) || 0;
         const hasConcept = !!plan?.conceitualizacao?.trim();
+        const ns = nextMap.get(p.id) || null;
+        const sp = ns ? planBySession.get(ns.id) : undefined;
         return {
           id: p.id,
           full_name: p.full_name,
-          next_session: nextMap.get(p.id) ? { scheduled_at: nextMap.get(p.id)! } : null,
+          next_session: ns,
           plan_status: plan?.status ?? null,
           goals_count: goalsCount,
           has_conceptualization: hasConcept,
           has_plan: !!plan,
+          next_plan: sp ? { objetivo: sp.objetivo, retomar: sp.retomar, tecnicas: sp.tecnicas } : null,
         };
       });
       setRows(out);
