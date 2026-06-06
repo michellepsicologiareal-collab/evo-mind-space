@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { LogoIcon } from "@/components/LogoIcon";
 import ReactMarkdown from "react-markdown";
+import { AbordagemBadge } from "@/components/app/AbordagemBadge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
