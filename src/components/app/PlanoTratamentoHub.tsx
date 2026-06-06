@@ -114,9 +114,13 @@ export const PlanoTratamentoHub = () => {
   }
 
   const planLabel = (r: PatientRow) => {
-    if (r.plan_status === "em_revisao") return { label: "Revisão Pendente", cls: "bg-[#fdf3e3] text-[#7a4a0a] border-[#e8c98a]" };
+    const s = (r.plan_status || "").toLowerCase();
+    const isRevision = /revis|pending|revision/.test(s);
+    const isActive = /ativ|active/.test(s);
+    if (r.has_plan && isRevision) return { label: "Revisão Pendente", cls: "bg-[#fdf3e3] text-[#7a4a0a] border-[#e8c98a]" };
+    if (r.has_plan && (isActive || !s)) return { label: "Plano Ativo", cls: "bg-[#e3f7ee] text-[#1f5132] border-[#a7e1c1]" };
     if (r.has_plan) return { label: "Plano Ativo", cls: "bg-[#e3f7ee] text-[#1f5132] border-[#a7e1c1]" };
-    return { label: "Sem Plano", cls: "bg-[#fdf3e3] text-[#7a4a0a] border-[#e8c98a]" };
+    return { label: "Sem Plano", cls: "bg-muted text-muted-foreground border-border" };
   };
 
   return (
