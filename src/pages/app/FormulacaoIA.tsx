@@ -41,6 +41,7 @@ export default function FormulacaoIA() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formulation, setFormulation] = useState<Formulation | null>(null);
+  const [aiMeta, setAiMeta] = useState<{ abordagem: string; label: string } | null>(null);
   const [useClinical, setUseClinical] = useState(true);
   const [contextCounts, setContextCounts] = useState<{ sessions: number; records: number; evolutions: number; progress: number } | null>(null);
 
