@@ -1060,37 +1060,35 @@ const RegistroSessao = () => {
       </section>
 
 
-      {/* ── Seção 4: Avaliação do Terapeuta ── */}
-      <section className={cn(
-        "rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-accent/20 transition-all",
-        compactMode && !isOpen("avaliacao") ? "p-3" : "p-5 space-y-4",
-      )}>
-        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" sectionKey="avaliacao" />
+      {/* ── Seção 3: Avaliação do Terapeuta ── */}
+      <section
+        className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("avaliacao") ? "p-3" : "p-5 space-y-4")}
+        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #2D6A4F" }}
+      >
+        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" sectionKey="avaliacao" color="#2D6A4F" />
         {isOpen("avaliacao") && (
           <>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Engajamento do paciente</Label>
-                <span className="text-xs font-display font-semibold text-accent">
+                <span className="font-display font-semibold" style={{ fontSize: 12, color: "#534AB7", fontWeight: 700 }}>
                   {ENGAGEMENT_LABELS[form.engagement - 1]}
                 </span>
               </div>
               <div className="flex gap-1.5">
                 {[1, 2, 3, 4, 5].map((level) => {
-                  const active = form.engagement >= level;
                   const isCurrent = form.engagement === level;
                   return (
                     <button
                       key={level}
                       type="button"
                       onClick={() => setForm({ ...form, engagement: level })}
-                      className={cn(
-                        "flex-1 h-10 rounded-xl text-sm font-semibold transition-all duration-200 relative overflow-hidden",
-                        active
-                          ? "bg-gradient-to-br from-accent to-accent/80 text-accent-foreground shadow-sm"
-                          : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground",
-                        isCurrent && "ring-2 ring-accent/40 ring-offset-2 ring-offset-card scale-[1.04]",
-                      )}
+                      className="flex-1 h-10 transition-colors"
+                      style={
+                        isCurrent
+                          ? { backgroundColor: "#534AB7", color: "#FFFFFF", border: "1px solid #534AB7", borderRadius: 8, fontSize: 14, fontWeight: 700 }
+                          : { backgroundColor: "#FFFFFF", color: "#6B7280", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 14, fontWeight: 600 }
+                      }
                       aria-label={`Engajamento nível ${level}`}
                     >
                       {level}
@@ -1099,6 +1097,7 @@ const RegistroSessao = () => {
                 })}
               </div>
             </div>
+
 
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
