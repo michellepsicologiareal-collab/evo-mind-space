@@ -784,7 +784,7 @@ const Patients = () => {
                       <Pill label={hasFormul ? "Formulação" : "Sem formulação"} kind={hasFormul ? "filled" : "pending"} />
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setTccPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
-                      <Pill label={cTcc > 0 ? "Conceitualização TCC" : "Sem conceitualização"} kind={cTcc > 0 ? "filled" : "pending"} />
+                      <Pill label={cTcc > 0 ? "RPD" : "Sem RPD"} kind={cTcc > 0 ? "filled" : "pending"} />
                     </button>
                     {(() => {
                       const planStatus = tp?.status;
@@ -942,7 +942,7 @@ const Patients = () => {
                   <div style={{ background: C.goldSoft, borderTop: `1px solid ${C.border}`, padding: "9px 16px", display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ color: C.gold, fontWeight: 700, fontSize: 13 }}>!</span>
                     <p style={{ color: C.gold, fontWeight: 500, fontSize: 12 }}>
-                      Sem formulação há mais de 30 dias — considerar iniciar conceitualização na próxima sessão.
+                      Sem formulação há mais de 30 dias — considerar iniciar RPD na próxima sessão.
                     </p>
                   </div>
                 )}
@@ -1285,7 +1285,7 @@ const Patients = () => {
           <FullBtn k="padesky" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{padeksyPatient?.full_name}</DialogTitle>
-            <DialogDescription>Formulação de Caso — com coach de IA baseada em Padesky</DialogDescription>
+            <DialogDescription>Formulação de Caso — com coach de IA baseada em 5 Aspectos</DialogDescription>
           </DialogHeader>
           {padeksyPatient && <CaseFormulation patientId={padeksyPatient.id} />}
         </DialogContent>
@@ -1379,7 +1379,7 @@ const Patients = () => {
                 </div>
                 <div id="formulation-print" className="px-10 py-10 bg-white mx-6 my-6 rounded-lg shadow-sm" style={{ minHeight: "60vh" }}>
                   <div className="mb-8 pb-4 border-b border-border">
-                    <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", color: "hsl(var(--muted-foreground))" }}>Prontuário Clínico · Padesky</p>
+                    <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.16em", color: "hsl(var(--muted-foreground))" }}>Prontuário Clínico · 5 Aspectos</p>
                     <h1 className="mt-2" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 26, color: "hsl(var(--foreground))" }}>{readPatient.full_name}</h1>
                     {updated && (
                       <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--primary-glow))" }}>
