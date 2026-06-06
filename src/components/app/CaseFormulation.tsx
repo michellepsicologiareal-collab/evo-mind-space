@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { logClinicalAccess } from "@/utils/auditLog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -257,6 +258,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   const [openPlanId, setOpenPlanId] = useState<string | null>(null);
   const [formId, setFormId] = useState<string | null>(null);
   const [planSavedAt, setPlanSavedAt] = useState<string | null>(null);
+  const [hasTE, setHasTE] = useState(false);
 
   // Evolutions state
   const [evolutions, setEvolutions] = useState<Evolution[]>([]);
@@ -286,10 +288,15 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
     if (!user) return;
     const load = async () => {
       setLoading(true);
-      const [formRes, evoRes] = await Promise.all([
+      const [formRes, evoRes, planRes] = await Promise.all([
         supabase.from("case_formulations").select("*").eq("patient_id", patientId).eq("user_id", user.id).maybeSingle(),
         supabase.from("session_evolutions").select("*").eq("patient_id", patientId).eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
+        supabase.from("treatment_plans").select("abordagem,status").eq("patient_id", patientId).maybeSingle(),
       ]);
+
+      const abord = (planRes.data as any)?.abordagem;
+      const list: string[] = Array.isArray(abord) ? abord.map((a: any) => String(a).toUpperCase()) : [];
+      setHasTE(list.some((a) => a === "TE" || a.includes("ESQUEMA")));
 
       if (formRes.data) {
         const f = formRes.data;
@@ -468,7 +475,29 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   }
 
   return (
-    <Tabs defaultValue="formulation" className="space-y-4">
+    <div className="space-y-4">
+      {hasTE && !readOnly && (
+        <div
+          className="rounded-[10px] p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+          style={{ background: "#FDF6E3", border: "1px solid #E8C97A" }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Sparkles className="h-4 w-4" style={{ color: "#B8860B" }} />
+            <div className="min-w-0">
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#1A1A2E" }}>Este paciente tem abordagem TE no plano</p>
+              <p style={{ fontSize: 12, color: "#6B7280" }}>A Formulação TCC abaixo permanece disponível. Você pode também abrir a Formulação de Esquema dedicada.</p>
+            </div>
+          </div>
+          <Link
+            to={`/app/pacientes/${patientId}/formulacao-te`}
+            className="inline-flex items-center gap-1.5 shrink-0"
+            style={{ background: "#B8860B", color: "#fff", padding: "8px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600 }}
+          >
+            Abrir Formulação TE →
+          </Link>
+        </div>
+      )}
+      <Tabs defaultValue="formulation" className="space-y-4">
       <TabsList className="w-full grid grid-cols-4">
         <TabsTrigger value="formulation" className="text-xs sm:text-sm">
           <LogoIcon className="h-4 w-4 mr-1 hidden sm:inline" /> 5 Sistemas
@@ -909,6 +938,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
           </div>
         )}
       </TabsContent>
-    </Tabs>
+      </Tabs>
+    </div>
   );
 };

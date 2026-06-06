@@ -625,6 +625,77 @@ export type Database = {
           },
         ]
       }
+      schema_formulations: {
+        Row: {
+          adulto_saudavel_forca: number | null
+          ambiente_familiar: string | null
+          conexao_gerada: string | null
+          created_at: string
+          esquemas: Json
+          eventos_marcantes: string | null
+          figuras_vinculacao: string | null
+          foco_terapeutico: string | null
+          historia_origem: string | null
+          id: string
+          modos: Json
+          necessidades: Json
+          observacoes_terapeuta: string | null
+          outras_necessidades: string | null
+          padrao_identificado: string | null
+          patient_id: string
+          therapist_id: string
+          updated_at: string
+        }
+        Insert: {
+          adulto_saudavel_forca?: number | null
+          ambiente_familiar?: string | null
+          conexao_gerada?: string | null
+          created_at?: string
+          esquemas?: Json
+          eventos_marcantes?: string | null
+          figuras_vinculacao?: string | null
+          foco_terapeutico?: string | null
+          historia_origem?: string | null
+          id?: string
+          modos?: Json
+          necessidades?: Json
+          observacoes_terapeuta?: string | null
+          outras_necessidades?: string | null
+          padrao_identificado?: string | null
+          patient_id: string
+          therapist_id: string
+          updated_at?: string
+        }
+        Update: {
+          adulto_saudavel_forca?: number | null
+          ambiente_familiar?: string | null
+          conexao_gerada?: string | null
+          created_at?: string
+          esquemas?: Json
+          eventos_marcantes?: string | null
+          figuras_vinculacao?: string | null
+          foco_terapeutico?: string | null
+          historia_origem?: string | null
+          id?: string
+          modos?: Json
+          necessidades?: Json
+          observacoes_terapeuta?: string | null
+          outras_necessidades?: string | null
+          padrao_identificado?: string | null
+          patient_id?: string
+          therapist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schema_formulations_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       selfcare_checkins: {
         Row: {
           balance: boolean | null
