@@ -92,6 +92,7 @@ export default function FormulacaoIA() {
       const f = (data as any)?.formulation as Formulation | undefined;
       if (!f) { toast.error((data as any)?.error || "Não foi possível gerar."); return; }
       setFormulation(f);
+      setAiMeta({ abordagem: (data as any)?.abordagem, label: (data as any)?.abordagem_label });
       toast.success("Formulação gerada e salva.");
     } catch (e: any) {
       toast.error(e?.message || "Erro ao gerar formulação.");
