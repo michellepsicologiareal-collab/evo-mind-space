@@ -469,6 +469,7 @@ const RegistroSessao = () => {
       engagement: r.engagement ?? 3,
       risk_indicator: r.risk_indicator ?? "none",
       private_notes: r.private_notes ?? "",
+      plan_id: (r as any).plan_id ?? null,
     });
     // Make sure the patient group is expanded so the highlight stays visible
     setExpandedPatients((prev) => ({ ...prev, [r.patient_id]: true }));
