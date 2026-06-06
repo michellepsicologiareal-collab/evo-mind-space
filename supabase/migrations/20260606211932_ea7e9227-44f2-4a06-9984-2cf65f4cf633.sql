@@ -1,0 +1,1 @@
+ALTER TABLE public.session_records ADD COLUMN IF NOT EXISTS plan_id uuid REFERENCES public.treatment_plans(id) ON DELETE SET NULL;
