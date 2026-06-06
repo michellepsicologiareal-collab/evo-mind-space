@@ -28,7 +28,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "week", label: "Esta semana" },
   { key: "no_next", label: "Sem próxima sessão" },
   { key: "no_plan", label: "Sem plano" },
-  { key: "no_concept", label: "Sem conceitualização" },
+  { key: "no_concept", label: "Sem RPD" },
 ];
 
 export const PlanoTratamentoHub = () => {
@@ -128,7 +128,7 @@ export const PlanoTratamentoHub = () => {
           { label: "Hoje", value: counts.today, icon: Calendar },
           { label: "Esta semana", value: counts.week, icon: Calendar },
           { label: "Sem plano", value: counts.no_plan, icon: ClipboardList },
-          { label: "Sem conceitualização", value: counts.no_concept, icon: Target },
+          { label: "Sem RPD", value: counts.no_concept, icon: Target },
         ].map(s => (
           <Card key={s.label} className="p-3 rounded-xl">
             <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">{s.label}</p>
@@ -192,7 +192,7 @@ export const PlanoTratamentoHub = () => {
                       : "Sem próxima"}
                   </span>
                   {!r.has_conceptualization && (
-                    <span className="text-[11px] text-amber-700">Sem conceitualização</span>
+                    <span className="text-[11px] text-amber-700">Sem RPD</span>
                   )}
                 </div>
               </div>

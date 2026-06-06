@@ -522,7 +522,7 @@ const PlanoTratamento = () => {
                 </div>
               </div>
               <div>
-                <Label>Conceitualização resumida</Label>
+                <Label>RPD resumida</Label>
                 <Textarea value={plan.conceitualizacao} onChange={e => setPlan(p => ({ ...p, conceitualizacao: e.target.value }))} rows={8} />
               </div>
             </div>
