@@ -109,6 +109,7 @@ const Patients = () => {
   const [anamneseFilled, setAnamneseFilled] = useState<Record<string, string>>({});
   const [formulationFilled, setFormulationFilled] = useState<Record<string, string>>({});
   const [formulationSummaries, setFormulationSummaries] = useState<Record<string, string>>({});
+  const [summaryMeta, setSummaryMeta] = useState<Record<string, { abordagem: string; label: string }>>({});
   const [formulationData, setFormulationData] = useState<Record<string, any>>({});
   const [summarizing, setSummarizing] = useState<Record<string, boolean>>({});
   const [readPatient, setReadPatient] = useState<Patient | null>(null);
