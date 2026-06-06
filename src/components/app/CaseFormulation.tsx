@@ -287,10 +287,15 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
     if (!user) return;
     const load = async () => {
       setLoading(true);
-      const [formRes, evoRes] = await Promise.all([
+      const [formRes, evoRes, planRes] = await Promise.all([
         supabase.from("case_formulations").select("*").eq("patient_id", patientId).eq("user_id", user.id).maybeSingle(),
         supabase.from("session_evolutions").select("*").eq("patient_id", patientId).eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
+        supabase.from("treatment_plans").select("abordagem,status").eq("patient_id", patientId).maybeSingle(),
       ]);
+
+      const abord = (planRes.data as any)?.abordagem;
+      const list: string[] = Array.isArray(abord) ? abord.map((a: any) => String(a).toUpperCase()) : [];
+      setHasTE(list.some((a) => a === "TE" || a.includes("ESQUEMA")));
 
       if (formRes.data) {
         const f = formRes.data;
