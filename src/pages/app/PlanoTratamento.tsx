@@ -223,6 +223,7 @@ const PlanoTratamento = () => {
 
   const addTechnique = async () => {
     if (!newTech.trim() || !uid || !patientId) return;
+    await ensurePlan();
     const { data, error } = await supabase.from("treatment_techniques")
       .insert({ user_id: uid, patient_id: patientId, nome: newTech.trim() }).select().single();
     if (error) return toast.error("Erro");
