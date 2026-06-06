@@ -386,6 +386,7 @@ const RegistroSessao = () => {
       engagement: form.engagement,
       risk_indicator: form.risk_indicator,
       private_notes: form.private_notes,
+      plan_id: form.plan_id,
     };
 
     const { error } = editingId
