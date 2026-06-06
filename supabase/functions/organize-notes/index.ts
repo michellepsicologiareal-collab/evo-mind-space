@@ -30,7 +30,9 @@ serve(async (req) => {
       });
     }
 
-    const { notes } = await req.json();
+    const { notes, patient_id = null, patient_name = "" } = await req.json();
+    const abordagem = await fetchAbordagem(supabase, patient_id);
+    const abordagemBlock = buildAbordagemBlock(abordagem, patient_name);
     if (!notes || !notes.trim()) {
       return new Response(JSON.stringify({ error: "Nenhuma anotação fornecida." }), {
         status: 400,
