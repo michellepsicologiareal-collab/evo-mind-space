@@ -483,7 +483,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
       <TabsContent value="formulation" className="space-y-4">
         <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
           <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-1">
-            <LogoIcon className="h-4 w-4" /> Formulação de Caso — 5 Sistemas (Padesky)
+            <LogoIcon className="h-4 w-4" /> Formulação de Caso — 5 Aspectos
           </h3>
           <p className="text-xs text-muted-foreground">Formulação cognitivo-comportamental integrada.</p>
         </div>
@@ -854,7 +854,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
       <TabsContent value="coach" className="space-y-4">
         <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
           <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-1">
-            <Sparkles className="h-4 w-4 text-accent" /> Pensar com IA — método Padesky
+            <Sparkles className="h-4 w-4 text-accent" /> Pensar com IA — método 5 Aspectos
           </h3>
           <p className="text-xs text-muted-foreground">
             A IA atua como supervisora Socrática: lê os 5 sistemas que você preencheu e te devolve <strong>perguntas</strong>, hipóteses cognitivas e intervenções TCC para você raciocinar — não dá diagnóstico pronto.
