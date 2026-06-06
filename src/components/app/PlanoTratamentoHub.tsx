@@ -187,37 +187,84 @@ export const PlanoTratamentoHub = () => {
           <Card className="p-8 text-center text-muted-foreground">Nenhum paciente neste filtro.</Card>
         ) : filtered.map(r => {
           const pl = planLabel(r);
+          const np = r.next_plan;
+          const hasPlanning = !!(np && (np.objetivo?.trim() || np.retomar?.trim() || (np.tecnicas && np.tecnicas.length > 0)));
+          const borderColor = !r.has_plan
+            ? "#E5E7EB"
+            : hasPlanning ? "#2D6A4F" : "#B8860B";
           return (
-            <Card
+            <div
               key={r.id}
               onClick={() => navigate(`/app/plano-tratamento?patient=${r.id}`)}
-              className="p-4 rounded-xl cursor-pointer hover:shadow-md transition-shadow flex items-center gap-3"
+              className="bg-white cursor-pointer transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] flex items-start gap-3 p-4"
+              style={{ borderRadius: 10, borderLeft: `3px solid ${borderColor}` }}
             >
               <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
                 {r.full_name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold truncate">{r.full_name}</p>
-                <div className="flex flex-wrap gap-2 mt-1 text-xs text-muted-foreground items-center">
+                {/* Line 1 */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-bold truncate text-foreground">{r.full_name}</p>
                   <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full border text-[11px] font-medium", pl.cls)}>
                     {pl.label}
                   </span>
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <Target className="h-3 w-3" /> {r.goals_count} metas
                   </span>
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
                     {r.next_session
                       ? format(new Date(r.next_session.scheduled_at), "dd/MM 'às' HH:mm", { locale: ptBR })
                       : "Sem próxima"}
                   </span>
-                  {!r.has_conceptualization && (
-                    <span className="text-[11px] text-amber-700">Sem RPD</span>
-                  )}
                 </div>
+
+                {/* Line 2 or 3 */}
+                {hasPlanning ? (
+                  <div className="mt-2 space-y-1">
+                    <p className="uppercase tracking-wide font-semibold" style={{ fontSize: 10, color: "#534AB7" }}>
+                      Próxima sessão:
+                    </p>
+                    {np?.objetivo?.trim() && (
+                      <p className="truncate" style={{ fontSize: 12, color: "#374151" }}>
+                        {np.objetivo}
+                      </p>
+                    )}
+                    {np?.retomar?.trim() && (
+                      <p className="truncate" style={{ fontSize: 12, color: "#6B7280" }}>
+                        Retomar: {np.retomar}
+                      </p>
+                    )}
+                    {np?.tecnicas && np.tecnicas.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {np.tecnicas.map((t, i) => (
+                          <span
+                            key={i}
+                            className="px-2 py-0.5 rounded-full"
+                            style={{ background: "#EEEDFE", color: "#534AB7", fontSize: 11 }}
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : r.next_session ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span style={{ fontSize: 12, color: "#B8860B" }}>Nenhuma sessão planejada</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${r.id}`); }}
+                      className="text-primary hover:underline"
+                      style={{ fontSize: 12 }}
+                    >
+                      Planejar agora →
+                    </button>
+                  </div>
+                ) : null}
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-            </Card>
+              <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0 mt-1" />
+            </div>
           );
         })}
       </div>
