@@ -259,6 +259,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   const [formId, setFormId] = useState<string | null>(null);
   const [planSavedAt, setPlanSavedAt] = useState<string | null>(null);
   const [hasTE, setHasTE] = useState(false);
+  const [hasACT, setHasACT] = useState(false);
 
   // Evolutions state
   const [evolutions, setEvolutions] = useState<Evolution[]>([]);
@@ -297,6 +298,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
       const abord = (planRes.data as any)?.abordagem;
       const list: string[] = Array.isArray(abord) ? abord.map((a: any) => String(a).toUpperCase()) : [];
       setHasTE(list.some((a) => a === "TE" || a.includes("ESQUEMA")));
+      setHasACT(list.some((a) => a === "ACT" || a.includes("ACEITAÇÃO") || a.includes("ACEITACAO")));
 
       if (formRes.data) {
         const f = formRes.data;
@@ -494,6 +496,27 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
             style={{ background: "#B8860B", color: "#fff", padding: "8px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600 }}
           >
             Abrir Formulação TE →
+          </Link>
+        </div>
+      )}
+      {hasACT && !readOnly && (
+        <div
+          className="rounded-[10px] p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+          style={{ background: "#EAF3DE", border: "1px solid #74C69D" }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Sparkles className="h-4 w-4" style={{ color: "#2D6A4F" }} />
+            <div className="min-w-0">
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#1A1A2E" }}>Este paciente tem abordagem ACT no plano</p>
+              <p style={{ fontSize: 12, color: "#6B7280" }}>A Formulação TCC abaixo permanece disponível. Você pode também abrir a Formulação ACT dedicada (Hexaflex de Hayes).</p>
+            </div>
+          </div>
+          <Link
+            to={`/app/pacientes/${patientId}/formulacao-act`}
+            className="inline-flex items-center gap-1.5 shrink-0"
+            style={{ background: "#2D6A4F", color: "#fff", padding: "8px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600 }}
+          >
+            Abrir Formulação ACT →
           </Link>
         </div>
       )}
