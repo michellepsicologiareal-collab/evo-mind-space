@@ -475,7 +475,29 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
   }
 
   return (
-    <Tabs defaultValue="formulation" className="space-y-4">
+    <div className="space-y-4">
+      {hasTE && !readOnly && (
+        <div
+          className="rounded-[10px] p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+          style={{ background: "#FDF6E3", border: "1px solid #E8C97A" }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Sparkles className="h-4 w-4" style={{ color: "#B8860B" }} />
+            <div className="min-w-0">
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#1A1A2E" }}>Este paciente tem abordagem TE no plano</p>
+              <p style={{ fontSize: 12, color: "#6B7280" }}>A Formulação TCC abaixo permanece disponível. Você pode também abrir a Formulação de Esquema dedicada.</p>
+            </div>
+          </div>
+          <Link
+            to={`/app/pacientes/${patientId}/formulacao-te`}
+            className="inline-flex items-center gap-1.5 shrink-0"
+            style={{ background: "#B8860B", color: "#fff", padding: "8px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600 }}
+          >
+            Abrir Formulação TE →
+          </Link>
+        </div>
+      )}
+      <Tabs defaultValue="formulation" className="space-y-4">
       <TabsList className="w-full grid grid-cols-4">
         <TabsTrigger value="formulation" className="text-xs sm:text-sm">
           <LogoIcon className="h-4 w-4 mr-1 hidden sm:inline" /> 5 Sistemas
