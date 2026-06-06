@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Sparkles, Loader2, Copy, Eraser, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AbordagemBadge } from "@/components/app/AbordagemBadge";
 
 type Patient = { id: string; full_name: string };
 
