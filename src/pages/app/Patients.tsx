@@ -1005,15 +1005,40 @@ const Patients = () => {
             return (
               <div className="h-full overflow-y-auto relative">
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
-                <button
-                  onClick={() => setSelectedPatient(null)}
-                  className="absolute right-4 top-4 flex items-center justify-center transition-colors"
-                  style={{ width: 28, height: 28, borderRadius: 6, color: "hsl(var(--muted-foreground))" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; e.currentTarget.style.color = "hsl(var(--primary))"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="absolute right-4 top-4 flex items-center gap-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="flex items-center justify-center transition-colors"
+                        style={{ width: 28, height: 28, borderRadius: 6, color: "hsl(var(--muted-foreground))" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; e.currentTarget.style.color = "hsl(var(--primary))"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); openEdit(p); }}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); toggleActive(p); }}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); setTccPatient(p); }}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); setPadeksyPatient(p); }}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); }} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); }} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); handleDelete(p); }} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <button
+                    onClick={() => setSelectedPatient(null)}
+                    className="flex items-center justify-center transition-colors"
+                    style={{ width: 28, height: 28, borderRadius: 6, color: "hsl(var(--muted-foreground))" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; e.currentTarget.style.color = "hsl(var(--primary))"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
                 <div className="p-6 pt-8">
                   <div className="flex items-center gap-3 pr-8">
                     <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
