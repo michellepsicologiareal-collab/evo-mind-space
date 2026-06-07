@@ -195,10 +195,16 @@ export default function FormulacaoTE() {
     } finally { setSaving(false); }
   }, [form, user, patientId]);
 
-  // Autosave a cada 30s
+  // Autosave a cada 10s + ao ocultar a aba + ao desmontar
   useEffect(() => {
-    const t = setInterval(() => { save(true); }, 30000);
-    return () => clearInterval(t);
+    const t = setInterval(() => { save(true); }, 10000);
+    const onHide = () => { if (document.visibilityState === "hidden") save(true); };
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", onHide);
+      save(true);
+    };
   }, [save]);
 
   const podeGerarConexao = useMemo(() => {
@@ -330,7 +336,7 @@ export default function FormulacaoTE() {
 
   return (
     <div className="min-h-screen" style={{ background: BG }}>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+      <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-6 pb-28 sm:pb-10 space-y-4 sm:space-y-5">
         {/* Header */}
         <header className="bg-white rounded-[10px] p-5 sm:p-6 flex flex-col gap-3" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}>
           <div className="flex items-center gap-2">
@@ -353,10 +359,10 @@ export default function FormulacaoTE() {
                 )}
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" size="sm" onClick={exportPDF}><FileDown className="h-4 w-4" /> Exportar PDF</Button>
-              <Button size="sm" onClick={() => save(false)} disabled={saving} style={{ background: G, color: "#fff", fontWeight: 600 }}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar formulação
+            <div className="flex w-full sm:w-auto items-center gap-2">
+              <Button variant="outline" size="sm" onClick={exportPDF} className="flex-1 sm:flex-none"><FileDown className="h-4 w-4" /> <span className="hidden xs:inline sm:inline">Exportar PDF</span><span className="xs:hidden sm:hidden">PDF</span></Button>
+              <Button size="sm" onClick={() => save(false)} disabled={saving} className="flex-1 sm:flex-none" style={{ background: G, color: "#fff", fontWeight: 600 }}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} <span className="hidden xs:inline sm:inline">Salvar formulação</span><span className="xs:hidden sm:hidden">Salvar</span>
               </Button>
             </div>
           </div>
