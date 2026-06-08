@@ -157,7 +157,7 @@ const Patients = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes, plansRes, goalsRes, techRes, revRes] = await Promise.all([
+    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes, plansRes, goalsRes, techRes, revRes, teRes, actRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
       supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
@@ -171,6 +171,8 @@ const Patients = () => {
       supabase.from("treatment_goals").select("patient_id").eq("user_id", user.id),
       supabase.from("treatment_techniques").select("patient_id").eq("user_id", user.id),
       supabase.from("treatment_revisions").select("patient_id").eq("user_id", user.id),
+      supabase.from("schema_formulations").select("patient_id").eq("therapist_id", user.id),
+      supabase.from("act_formulations").select("patient_id").eq("therapist_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
