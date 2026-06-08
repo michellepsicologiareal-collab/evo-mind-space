@@ -201,6 +201,12 @@ const Patients = () => {
     setFormulationFilled(formMap);
     setFormulationSummaries(sumMap);
     setFormulationData(dataMap);
+    const teMap: Record<string, boolean> = {};
+    (teRes.data ?? []).forEach((r: any) => { if (r.patient_id) teMap[r.patient_id] = true; });
+    setTeFilled(teMap);
+    const actMap: Record<string, boolean> = {};
+    (actRes.data ?? []).forEach((r: any) => { if (r.patient_id) actMap[r.patient_id] = true; });
+    setActFilled(actMap);
 
     const plansMap: Record<string, any> = {};
     (plansRes.data ?? []).forEach((p: any) => {
