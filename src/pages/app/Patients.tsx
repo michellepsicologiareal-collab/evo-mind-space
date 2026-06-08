@@ -110,6 +110,8 @@ const Patients = () => {
   const [latestSessionDates, setLatestSessionDates] = useState<Record<string, string>>({});
   const [anamneseFilled, setAnamneseFilled] = useState<Record<string, string>>({});
   const [formulationFilled, setFormulationFilled] = useState<Record<string, string>>({});
+  const [teFilled, setTeFilled] = useState<Record<string, boolean>>({});
+  const [actFilled, setActFilled] = useState<Record<string, boolean>>({});
   const [formulationSummaries, setFormulationSummaries] = useState<Record<string, string>>({});
   const [summaryMeta, setSummaryMeta] = useState<Record<string, { abordagem: string; label: string }>>({});
   const [formulationData, setFormulationData] = useState<Record<string, any>>({});
