@@ -787,6 +787,16 @@ const Patients = () => {
                     <button onClick={(e) => { e.stopPropagation(); setPadeksyPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
                       <Pill label={hasFormul ? "Formulação" : "Sem formulação"} kind={hasFormul ? "filled" : "pending"} />
                     </button>
+                    <button onClick={(e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-te`); }} style={{ all: "unset", cursor: "pointer" }} title="Formulação TE">
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#FDF6E3", color: "#B8860B", fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6, border: "1px solid #F0E4B8" }}>
+                        <IconTarget className="h-3 w-3" /> TE
+                      </span>
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-act`); }} style={{ all: "unset", cursor: "pointer" }} title="Formulação ACT">
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#EAF3DE", color: "#2D6A4F", fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6, border: "1px solid #D4E5B8" }}>
+                        <IconFlame className="h-3 w-3" /> ACT
+                      </span>
+                    </button>
                     <button onClick={(e) => { e.stopPropagation(); setTccPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
                       <Pill label={cTcc > 0 ? "RPD" : "Sem RPD"} kind={cTcc > 0 ? "filled" : "pending"} />
                     </button>
