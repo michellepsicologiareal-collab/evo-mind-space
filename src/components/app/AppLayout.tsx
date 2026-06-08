@@ -97,6 +97,7 @@ export const AppLayout = () => {
   };
 
   const showGateOverlay = !isPremium && PREMIUM_ROUTES.has(location.pathname);
+  const isDynamicPatientFormulation = /^\/app\/pacientes\/[^/]+\/formulacao-(te|act)$/.test(location.pathname);
 
   const renderNavLink = (item: NavItem, isAdminSection = false) => (
     <NavLink
@@ -327,6 +328,8 @@ export const AppLayout = () => {
                 <Crown className="h-4 w-4" /> Assinar Agora
               </Button>
             </div>
+          ) : isDynamicPatientFormulation ? (
+            <Outlet />
           ) : (
             <KeepAliveOutlet />
           )}
