@@ -110,6 +110,8 @@ const Patients = () => {
   const [latestSessionDates, setLatestSessionDates] = useState<Record<string, string>>({});
   const [anamneseFilled, setAnamneseFilled] = useState<Record<string, string>>({});
   const [formulationFilled, setFormulationFilled] = useState<Record<string, string>>({});
+  const [teFilled, setTeFilled] = useState<Record<string, boolean>>({});
+  const [actFilled, setActFilled] = useState<Record<string, boolean>>({});
   const [formulationSummaries, setFormulationSummaries] = useState<Record<string, string>>({});
   const [summaryMeta, setSummaryMeta] = useState<Record<string, { abordagem: string; label: string }>>({});
   const [formulationData, setFormulationData] = useState<Record<string, any>>({});
@@ -155,7 +157,7 @@ const Patients = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes, plansRes, goalsRes, techRes, revRes] = await Promise.all([
+    const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes, plansRes, goalsRes, techRes, revRes, teRes, actRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
       supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
@@ -169,6 +171,8 @@ const Patients = () => {
       supabase.from("treatment_goals").select("patient_id").eq("user_id", user.id),
       supabase.from("treatment_techniques").select("patient_id").eq("user_id", user.id),
       supabase.from("treatment_revisions").select("patient_id").eq("user_id", user.id),
+      supabase.from("schema_formulations").select("patient_id").eq("therapist_id", user.id),
+      supabase.from("act_formulations").select("patient_id").eq("therapist_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients(patientsRes.data ?? []);
@@ -197,6 +201,12 @@ const Patients = () => {
     setFormulationFilled(formMap);
     setFormulationSummaries(sumMap);
     setFormulationData(dataMap);
+    const teMap: Record<string, boolean> = {};
+    (teRes.data ?? []).forEach((r: any) => { if (r.patient_id) teMap[r.patient_id] = true; });
+    setTeFilled(teMap);
+    const actMap: Record<string, boolean> = {};
+    (actRes.data ?? []).forEach((r: any) => { if (r.patient_id) actMap[r.patient_id] = true; });
+    setActFilled(actMap);
 
     const plansMap: Record<string, any> = {};
     (plansRes.data ?? []).forEach((p: any) => {
@@ -787,16 +797,32 @@ const Patients = () => {
                     <button onClick={(e) => { e.stopPropagation(); setPadeksyPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
                       <Pill label={hasFormul ? "Formulação" : "Sem formulação"} kind={hasFormul ? "filled" : "pending"} />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-te`); }} style={{ all: "unset", cursor: "pointer" }} title="Formulação TE">
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#FDF6E3", color: "#B8860B", fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6, border: "1px solid #F0E4B8" }}>
-                        <IconTarget className="h-3 w-3" /> TE
-                      </span>
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-act`); }} style={{ all: "unset", cursor: "pointer" }} title="Formulação ACT">
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#EAF3DE", color: "#2D6A4F", fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6, border: "1px solid #D4E5B8" }}>
-                        <IconFlame className="h-3 w-3" /> ACT
-                      </span>
-                    </button>
+                    {(() => {
+                      const hasTe = !!teFilled[p.id];
+                      const bg = hasTe ? "#FDF6E3" : "#FAFAFA";
+                      const fg = hasTe ? "#B8860B" : "#9CA3AF";
+                      const bd = hasTe ? "#F0E4B8" : "#E5E7EB";
+                      return (
+                        <button onClick={(e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-te`); }} style={{ all: "unset", cursor: "pointer" }} title={hasTe ? "Formulação TE preenchida" : "Formulação TE pendente"}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: bg, color: fg, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6, border: `1px solid ${bd}` }}>
+                            <IconTarget className="h-3 w-3" /> {hasTe ? "TE" : "Sem TE"}
+                          </span>
+                        </button>
+                      );
+                    })()}
+                    {(() => {
+                      const hasAct = !!actFilled[p.id];
+                      const bg = hasAct ? "#EAF3DE" : "#FAFAFA";
+                      const fg = hasAct ? "#2D6A4F" : "#9CA3AF";
+                      const bd = hasAct ? "#D4E5B8" : "#E5E7EB";
+                      return (
+                        <button onClick={(e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-act`); }} style={{ all: "unset", cursor: "pointer" }} title={hasAct ? "Formulação ACT preenchida" : "Formulação ACT pendente"}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: bg, color: fg, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6, border: `1px solid ${bd}` }}>
+                            <IconFlame className="h-3 w-3" /> {hasAct ? "ACT" : "Sem ACT"}
+                          </span>
+                        </button>
+                      );
+                    })()}
                     <button onClick={(e) => { e.stopPropagation(); setTccPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
                       <Pill label={cTcc > 0 ? "RPD" : "Sem RPD"} kind={cTcc > 0 ? "filled" : "pending"} />
                     </button>
