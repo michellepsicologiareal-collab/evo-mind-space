@@ -167,6 +167,20 @@ const PlanoTratamento = () => {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
+  // Load/save DSM-5-TR detail in localStorage scoped per patient (criteria, severity, notes).
+  useEffect(() => {
+    if (!patientId) { setDsm5(null); return; }
+    try {
+      const raw = localStorage.getItem(`dsm5:${patientId}`);
+      setDsm5(raw ? (JSON.parse(raw) as DSM5Detail) : null);
+    } catch { setDsm5(null); }
+  }, [patientId]);
+  useEffect(() => {
+    if (!patientId) return;
+    if (dsm5) localStorage.setItem(`dsm5:${patientId}`, JSON.stringify(dsm5));
+    else localStorage.removeItem(`dsm5:${patientId}`);
+  }, [patientId, dsm5]);
+
   /* ── save handlers ── */
   const ensurePlan = async () => {
     if (!uid || !patientId) return;
