@@ -794,7 +794,7 @@ const Patients = () => {
                     <button onClick={(e) => { e.stopPropagation(); setHistoryPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
                       <Pill label="Histórico" kind={cHist > 0 ? "filled" : "neutral"} count={cHist > 0 ? cHist : undefined} />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); setPadeksyPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
+                    <button onClick={(e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-tcc`); }} style={{ all: "unset", cursor: "pointer" }}>
                       <Pill label={hasFormul ? "Formulação" : "Sem formulação"} kind={hasFormul ? "filled" : "pending"} />
                     </button>
                     {(() => {
