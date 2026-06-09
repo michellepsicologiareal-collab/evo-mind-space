@@ -35,6 +35,7 @@ const FormulacaoIA = lazy(() => import("./pages/app/FormulacaoIA"));
 const FormulacaoLivre = lazy(() => import("./pages/app/FormulacaoLivre"));
 const FormulacaoTE = lazy(() => import("./pages/app/FormulacaoTE"));
 const FormulacaoACT = lazy(() => import("./pages/app/FormulacaoACT"));
+const FormulacaoTCC = lazy(() => import("./pages/app/FormulacaoTCC"));
 const ContratoPublico = lazy(() => import("./pages/ContratoPublico"));
 const AnamnesePublica = lazy(() => import("./pages/AnamnesePublica"));
 
@@ -137,8 +138,9 @@ const App = () => (
                   <Route path="plano-tratamento" element={<PlanoTratamento />} />
                   <Route path="formulacao-ia" element={<FormulacaoIA />} />
                   <Route path="formulacao-livre" element={<FormulacaoLivre />} />
-                  <Route path="pacientes/:id/formulacao-te" element={<FormulacaoTE />} />
-                  <Route path="pacientes/:id/formulacao-act" element={<FormulacaoACT />} />
+                 <Route path="pacientes/:id/formulacao-te" element={<FormulacaoTE />} />
+                 <Route path="pacientes/:id/formulacao-act" element={<FormulacaoACT />} />
+                 <Route path="pacientes/:id/formulacao-tcc" element={<FormulacaoTCC />} />
                   <Route path="financeiro" element={<Finance />} />
                   <Route path="supervisionandos" element={<Supervisees />} />
                   <Route path="biblioteca" element={<Library />} />

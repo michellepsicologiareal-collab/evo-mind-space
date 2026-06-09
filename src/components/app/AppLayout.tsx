@@ -97,7 +97,7 @@ export const AppLayout = () => {
   };
 
   const showGateOverlay = !isPremium && PREMIUM_ROUTES.has(location.pathname);
-  const isDynamicPatientFormulation = /^\/app\/pacientes\/[^/]+\/formulacao-(te|act)$/.test(location.pathname);
+  const isDynamicPatientFormulation = /^\/app\/pacientes\/[^/]+\/formulacao-(te|act|tcc)$/.test(location.pathname);
 
   const renderNavLink = (item: NavItem, isAdminSection = false) => (
     <NavLink
