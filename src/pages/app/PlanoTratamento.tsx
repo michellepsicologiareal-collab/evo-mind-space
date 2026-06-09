@@ -537,27 +537,35 @@ const PlanoTratamento = () => {
               <Stethoscope className="h-5 w-5 text-primary" />
               <h2 className="font-display text-lg font-bold">Diagnóstico e formulação</h2>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-4">
-                <div>
-                  <Label>CID-11</Label>
-                  <Input value={plan.cid} onChange={e => setPlan(p => ({ ...p, cid: e.target.value }))} placeholder="Ex: 6B00 Transtorno de ansiedade generalizada" />
-                </div>
-                <div>
-                  <Label className="mb-2 block">Abordagem</Label>
-                  <div className="flex flex-wrap gap-3">
-                    {ABORDAGEM_OPTIONS.map(a => (
-                      <label key={a} className="flex items-center gap-2 cursor-pointer">
-                        <Checkbox checked={plan.abordagem.includes(a)} onCheckedChange={() => toggleAbordagem(a)} />
-                        <span className="text-sm">{a}</span>
-                      </label>
-                    ))}
-                  </div>
+            <div className="space-y-5">
+              <DSM5Diagnostic
+                value={plan.cid}
+                onValueChange={(label) => setPlan(p => ({ ...p, cid: label }))}
+                detail={dsm5}
+                onDetailChange={setDsm5}
+              />
+
+              <div>
+                <Label className="mb-2 block">Abordagem</Label>
+                <div className="flex flex-wrap gap-3">
+                  {ABORDAGEM_OPTIONS.map(a => (
+                    <label key={a} className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox checked={plan.abordagem.includes(a)} onCheckedChange={() => toggleAbordagem(a)} />
+                      <span className="text-sm">{a}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
+
               <div>
-                <Label>RPD resumida</Label>
-                <Textarea value={plan.conceitualizacao} onChange={e => setPlan(p => ({ ...p, conceitualizacao: e.target.value }))} rows={8} />
+                <Label>Formulação Clínica Resumida</Label>
+                <Textarea
+                  value={plan.conceitualizacao}
+                  onChange={e => setPlan(p => ({ ...p, conceitualizacao: e.target.value }))}
+                  rows={10}
+                  className="mt-1.5"
+                  placeholder="Síntese do caso: predisponentes, precipitantes, perpetuantes, hipóteses, fatores protetores..."
+                />
               </div>
             </div>
           </Card>
