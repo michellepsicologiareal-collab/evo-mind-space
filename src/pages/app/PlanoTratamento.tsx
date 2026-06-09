@@ -350,8 +350,17 @@ const PlanoTratamento = () => {
     y += 42;
 
     section("Diagnóstico e formulação");
-    paragraph(`CID: ${clean(plan.cid) || "—"}`);
+    paragraph(`Diagnóstico (DSM-5-TR): ${clean(plan.cid) || "—"}`);
+    if (dsm5 && dsm5.diagnosis === plan.cid) {
+      if (dsm5.severity) paragraph(`Gravidade/especificador: ${dsm5.severity}`);
+      if (dsm5.criteriaChecked.length) {
+        paragraph(`Critérios observados (${dsm5.criteriaChecked.length}):`);
+        dsm5.criteriaChecked.forEach(c => paragraph(`• ${c}`));
+      }
+      if (dsm5.notes) paragraph(`Notas: ${clean(dsm5.notes)}`);
+    }
     paragraph(`Abordagem: ${plan.abordagem.join(", ") || "—"}`);
+    paragraph("Formulação clínica resumida:");
     paragraph(clean(plan.conceitualizacao) || "—");
 
     section("Metas terapêuticas");
