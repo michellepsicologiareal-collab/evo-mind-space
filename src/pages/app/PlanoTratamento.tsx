@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Plus, X, FileDown, ClipboardList, Target, Sparkles, History, Stethoscope, ArrowLeft } from "lucide-react";
 import { PlanoTratamentoHub } from "@/components/app/PlanoTratamentoHub";
+import { DSM5Diagnostic, type DSM5Detail } from "@/components/app/DSM5Diagnostic";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -82,6 +83,7 @@ const PlanoTratamento = () => {
   const [saving, setSaving] = useState(false);
 
   const [plan, setPlan] = useState<TreatmentPlan>({ status: "ativo", cid: "", abordagem: [], conceitualizacao: "" });
+  const [dsm5, setDsm5] = useState<DSM5Detail | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [techniques, setTechniques] = useState<Technique[]>([]);
   const [newTech, setNewTech] = useState("");
@@ -164,6 +166,20 @@ const PlanoTratamento = () => {
   }, [uid, patientId]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
+
+  // Load/save DSM-5-TR detail in localStorage scoped per patient (criteria, severity, notes).
+  useEffect(() => {
+    if (!patientId) { setDsm5(null); return; }
+    try {
+      const raw = localStorage.getItem(`dsm5:${patientId}`);
+      setDsm5(raw ? (JSON.parse(raw) as DSM5Detail) : null);
+    } catch { setDsm5(null); }
+  }, [patientId]);
+  useEffect(() => {
+    if (!patientId) return;
+    if (dsm5) localStorage.setItem(`dsm5:${patientId}`, JSON.stringify(dsm5));
+    else localStorage.removeItem(`dsm5:${patientId}`);
+  }, [patientId, dsm5]);
 
   /* ── save handlers ── */
   const ensurePlan = async () => {
@@ -334,8 +350,17 @@ const PlanoTratamento = () => {
     y += 42;
 
     section("Diagnóstico e formulação");
-    paragraph(`CID: ${clean(plan.cid) || "—"}`);
+    paragraph(`Diagnóstico (DSM-5-TR): ${clean(plan.cid) || "—"}`);
+    if (dsm5 && dsm5.diagnosis === plan.cid) {
+      if (dsm5.severity) paragraph(`Gravidade/especificador: ${dsm5.severity}`);
+      if (dsm5.criteriaChecked.length) {
+        paragraph(`Critérios observados (${dsm5.criteriaChecked.length}):`);
+        dsm5.criteriaChecked.forEach(c => paragraph(`• ${c}`));
+      }
+      if (dsm5.notes) paragraph(`Notas: ${clean(dsm5.notes)}`);
+    }
     paragraph(`Abordagem: ${plan.abordagem.join(", ") || "—"}`);
+    paragraph("Formulação clínica resumida:");
     paragraph(clean(plan.conceitualizacao) || "—");
 
     section("Metas terapêuticas");
@@ -521,27 +546,35 @@ const PlanoTratamento = () => {
               <Stethoscope className="h-5 w-5 text-primary" />
               <h2 className="font-display text-lg font-bold">Diagnóstico e formulação</h2>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-4">
-                <div>
-                  <Label>CID-11</Label>
-                  <Input value={plan.cid} onChange={e => setPlan(p => ({ ...p, cid: e.target.value }))} placeholder="Ex: 6B00 Transtorno de ansiedade generalizada" />
-                </div>
-                <div>
-                  <Label className="mb-2 block">Abordagem</Label>
-                  <div className="flex flex-wrap gap-3">
-                    {ABORDAGEM_OPTIONS.map(a => (
-                      <label key={a} className="flex items-center gap-2 cursor-pointer">
-                        <Checkbox checked={plan.abordagem.includes(a)} onCheckedChange={() => toggleAbordagem(a)} />
-                        <span className="text-sm">{a}</span>
-                      </label>
-                    ))}
-                  </div>
+            <div className="space-y-5">
+              <DSM5Diagnostic
+                value={plan.cid}
+                onValueChange={(label) => setPlan(p => ({ ...p, cid: label }))}
+                detail={dsm5}
+                onDetailChange={setDsm5}
+              />
+
+              <div>
+                <Label className="mb-2 block">Abordagem</Label>
+                <div className="flex flex-wrap gap-3">
+                  {ABORDAGEM_OPTIONS.map(a => (
+                    <label key={a} className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox checked={plan.abordagem.includes(a)} onCheckedChange={() => toggleAbordagem(a)} />
+                      <span className="text-sm">{a}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
+
               <div>
-                <Label>RPD resumida</Label>
-                <Textarea value={plan.conceitualizacao} onChange={e => setPlan(p => ({ ...p, conceitualizacao: e.target.value }))} rows={8} />
+                <Label>Formulação Clínica Resumida</Label>
+                <Textarea
+                  value={plan.conceitualizacao}
+                  onChange={e => setPlan(p => ({ ...p, conceitualizacao: e.target.value }))}
+                  rows={10}
+                  className="mt-1.5"
+                  placeholder="Síntese do caso: predisponentes, precipitantes, perpetuantes, hipóteses, fatores protetores..."
+                />
               </div>
             </div>
           </Card>
