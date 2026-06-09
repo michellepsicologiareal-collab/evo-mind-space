@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Plus, X, FileDown, ClipboardList, Target, Sparkles, History, Stethoscope, ArrowLeft } from "lucide-react";
 import { PlanoTratamentoHub } from "@/components/app/PlanoTratamentoHub";
+import { DSM5Diagnostic, type DSM5Detail } from "@/components/app/DSM5Diagnostic";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
