@@ -581,6 +581,7 @@ const PlanoTratamento = () => {
                 onValueChange={(label) => setPlan(p => ({ ...p, cid: label }))}
                 detail={dsm5}
                 onDetailChange={setDsm5}
+                recent={dsm5History}
               />
 
               <div>
@@ -595,16 +596,6 @@ const PlanoTratamento = () => {
                 </div>
               </div>
 
-              <div>
-                <Label>Formulação Clínica Resumida</Label>
-                <Textarea
-                  value={plan.conceitualizacao}
-                  onChange={e => setPlan(p => ({ ...p, conceitualizacao: e.target.value }))}
-                  rows={10}
-                  className="mt-1.5"
-                  placeholder="Síntese do caso: predisponentes, precipitantes, perpetuantes, hipóteses, fatores protetores..."
-                />
-              </div>
             </div>
           </Card>
 
