@@ -456,7 +456,7 @@ export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange, r
             value={query}
             onFocus={() => setOpen(true)}
             onChange={e => { setQuery(e.target.value); setOpen(true); }}
-            placeholder="Digite para buscar (ex: TAG, pânico, borderline...)"
+            placeholder="Busque por nome, sigla ou sintoma (ex: TAG, pânico, vômito, flashback...)"
             className="w-full h-10 pl-9 pr-9 rounded-md border border-input bg-background text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           {value ? (
@@ -467,6 +467,32 @@ export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange, r
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           )}
         </div>
+        {recent.length > 0 && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Recentes:</span>
+            {recent.map(label => {
+              const entry = CATALOG.find(e => e.label === label);
+              if (!entry) return null;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => pickEntry(entry)}
+                  className={cn(
+                    "text-[11px] px-2 py-1 rounded-full border transition-colors",
+                    label === value
+                      ? "bg-primary/10 text-primary border-primary/40"
+                      : "bg-secondary text-secondary-foreground border-border hover:bg-accent",
+                  )}
+                  title={entry.label}
+                >
+                  {entry.short ?? entry.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {open && (
           <div className="absolute z-50 mt-1 w-full max-h-72 overflow-auto rounded-md border bg-popover shadow-lg">
             {filtered.length === 0 && (
