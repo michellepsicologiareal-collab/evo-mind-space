@@ -46,6 +46,33 @@ export const DSM5_CATALOG_KEYWORDS: Record<string, string[]> = {
   AN: ["anorexia", "magreza", "restrição alimentar", "imagem corporal"],
 };
 
+export type DSM5Category =
+  | "Ansiedade"
+  | "TOC"
+  | "Humor"
+  | "Bipolar"
+  | "Personalidade"
+  | "Neurodesenvolvimento"
+  | "Trauma"
+  | "Alimentar";
+
+export const DSM5_CATEGORY_OF: Record<string, DSM5Category> = {
+  TAG: "Ansiedade", PANICO: "Ansiedade", FS: "Ansiedade", TAD: "Ansiedade", TAS: "Ansiedade",
+  TOC: "TOC",
+  EDM: "Humor", TDP: "Humor",
+  TB1: "Bipolar", TB2: "Bipolar",
+  TPB: "Personalidade", TPN: "Personalidade",
+  TDAH: "Neurodesenvolvimento",
+  TEPT: "Trauma", TA: "Trauma",
+  TCAP: "Alimentar", BN: "Alimentar", AN: "Alimentar",
+};
+
+const CATEGORY_OPTIONS: DSM5Category[] = [
+  "Ansiedade", "TOC", "Humor", "Bipolar", "Personalidade", "Neurodesenvolvimento", "Trauma", "Alimentar",
+];
+
+const SEVERITY_OPTIONS = ["Leve", "Moderado", "Grave"];
+
 
 const CATALOG: Entry[] = [
   {
