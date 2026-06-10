@@ -365,19 +365,32 @@ const PlanoTratamento = () => {
     labelValue("Fim/alta", displayDate(patient.treatment_end_date), margin + col, y + 22);
     y += 42;
 
-    section("Diagnóstico e formulação");
-    paragraph(`Diagnóstico (DSM-5-TR): ${clean(plan.cid) || "—"}`);
+    section("Diagnóstico DSM-5-TR");
+    paragraph(`Diagnóstico: ${clean(plan.cid) || "—"}`);
+    const entry = plan.cid ? getDsm5EntryByLabel(plan.cid) : null;
     if (dsm5 && dsm5.diagnosis === plan.cid) {
-      if (dsm5.severity) paragraph(`Gravidade/especificador: ${dsm5.severity}`);
-      if (dsm5.criteriaChecked.length) {
+      if (dsm5.severity) paragraph(`Gravidade / especificador: ${dsm5.severity}`);
+      if (entry) {
+        paragraph(`Critérios DSM-5-TR observados (${dsm5.criteriaChecked.length}/${entry.criteria.length}):`);
+        entry.criteria.forEach(c => {
+          const checked = dsm5.criteriaChecked.includes(c);
+          paragraph(`${checked ? "[X]" : "[ ]"} ${c}`, 9.5);
+        });
+      } else if (dsm5.criteriaChecked.length) {
         paragraph(`Critérios observados (${dsm5.criteriaChecked.length}):`);
-        dsm5.criteriaChecked.forEach(c => paragraph(`• ${c}`));
+        dsm5.criteriaChecked.forEach(c => paragraph(`• ${c}`, 9.5));
       }
-      if (dsm5.notes) paragraph(`Notas: ${clean(dsm5.notes)}`);
+      if (dsm5.notes) {
+        paragraph("Observações clínicas:");
+        paragraph(clean(dsm5.notes), 9.5);
+      }
+    }
+    if (entry) {
+      paragraph(`Diagnósticos diferenciais: ${entry.differentials.join(" · ")}`, 9.5);
+      paragraph(`Esquemas e modos associados: ${entry.schemas.join(" · ")}`, 9.5);
     }
     paragraph(`Abordagem: ${plan.abordagem.join(", ") || "—"}`);
-    paragraph("Formulação clínica resumida:");
-    paragraph(clean(plan.conceitualizacao) || "—");
+
 
     section("Metas terapêuticas");
     if (goals.length === 0) paragraph("Nenhuma meta cadastrada.", 10, [106, 88, 128]);
