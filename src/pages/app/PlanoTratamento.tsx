@@ -168,7 +168,7 @@ const PlanoTratamento = () => {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
-  // Load/save DSM-5-TR detail in localStorage scoped per patient (criteria, severity, notes).
+  // Load DSM-5-TR detail + history scoped per patient.
   useEffect(() => {
     if (!patientId) { setDsm5(null); setDsm5History([]); return; }
     try {
@@ -177,24 +177,50 @@ const PlanoTratamento = () => {
     } catch { setDsm5(null); }
     try {
       const rawH = localStorage.getItem(`dsm5-history:${patientId}`);
-      setDsm5History(rawH ? (JSON.parse(rawH) as string[]) : []);
+      const parsed = rawH ? JSON.parse(rawH) : [];
+      // migrate legacy string[] format
+      const items: DSM5HistoryItem[] = Array.isArray(parsed)
+        ? parsed.map((v: any) => typeof v === "string"
+            ? { diagnosis: v, severity: "", criteriaChecked: [], updatedAt: new Date().toISOString() }
+            : v as DSM5HistoryItem)
+        : [];
+      setDsm5History(items);
     } catch { setDsm5History([]); }
   }, [patientId]);
+
+  // Persist current detail
   useEffect(() => {
     if (!patientId) return;
     if (dsm5) localStorage.setItem(`dsm5:${patientId}`, JSON.stringify(dsm5));
     else localStorage.removeItem(`dsm5:${patientId}`);
   }, [patientId, dsm5]);
-  // Track diagnosis history per patient (max 5, most recent first)
+
+  // Auto-save into history whenever diagnosis, criteria, severity or notes change.
   useEffect(() => {
     if (!patientId || !dsm5?.diagnosis) return;
+    const item: DSM5HistoryItem = {
+      diagnosis: dsm5.diagnosis,
+      code: dsm5.code,
+      severity: dsm5.severity,
+      criteriaChecked: dsm5.criteriaChecked,
+      notes: dsm5.notes,
+      updatedAt: new Date().toISOString(),
+    };
     setDsm5History(prev => {
-      if (prev[0] === dsm5.diagnosis) return prev;
-      const next = [dsm5.diagnosis, ...prev.filter(d => d !== dsm5.diagnosis)].slice(0, 5);
+      const rest = prev.filter(h => h.diagnosis !== item.diagnosis);
+      const next = [item, ...rest].slice(0, 5);
       try { localStorage.setItem(`dsm5-history:${patientId}`, JSON.stringify(next)); } catch {}
       return next;
     });
-  }, [patientId, dsm5?.diagnosis]);
+  }, [
+    patientId,
+    dsm5?.diagnosis,
+    dsm5?.severity,
+    dsm5?.notes,
+    dsm5?.criteriaChecked?.length,
+    dsm5?.criteriaChecked?.join("|"),
+  ]);
+
 
 
   /* ── save handlers ── */
