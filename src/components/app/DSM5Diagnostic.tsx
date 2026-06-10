@@ -373,9 +373,16 @@ interface Props {
   onValueChange: (label: string) => void;
   detail: DSM5Detail | null;
   onDetailChange: (d: DSM5Detail | null) => void;
+  recent?: string[];
 }
 
-export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange }: Props) {
+export function getDsm5EntryByLabel(label: string) {
+  const e = CATALOG.find(x => x.label === label);
+  if (!e) return null;
+  return { code: e.code, label: e.label, criteria: e.criteria, severity: e.severity, differentials: e.differentials, schemas: e.schemas };
+}
+
+export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange, recent = [] }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -393,12 +400,17 @@ export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange }:
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return CATALOG;
-    return CATALOG.filter(e =>
-      e.label.toLowerCase().includes(q) ||
-      e.code.toLowerCase().includes(q) ||
-      (e.short ?? "").toLowerCase().includes(q),
-    );
+    return CATALOG.filter(e => {
+      const kws = DSM5_CATALOG_KEYWORDS[e.code] ?? [];
+      return (
+        e.label.toLowerCase().includes(q) ||
+        e.code.toLowerCase().includes(q) ||
+        (e.short ?? "").toLowerCase().includes(q) ||
+        kws.some(k => k.toLowerCase().includes(q))
+      );
+    });
   }, [query]);
+
 
   const selected = useMemo(() => CATALOG.find(e => e.label === value) || null, [value]);
 
