@@ -395,12 +395,21 @@ const CATALOG: Entry[] = [
   },
 ];
 
+export type DSM5HistoryItem = {
+  diagnosis: string;
+  code?: string;
+  severity: string;
+  criteriaChecked: string[];
+  notes?: string;
+  updatedAt: string;
+};
+
 interface Props {
   value: string;
   onValueChange: (label: string) => void;
   detail: DSM5Detail | null;
   onDetailChange: (d: DSM5Detail | null) => void;
-  recent?: string[];
+  recent?: DSM5HistoryItem[];
 }
 
 export function getDsm5EntryByLabel(label: string) {
@@ -412,6 +421,9 @@ export function getDsm5EntryByLabel(label: string) {
 export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange, recent = [] }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value);
+  const [category, setCategory] = useState<DSM5Category | "all">("all");
+  const [severityFilter, setSeverityFilter] = useState<string>("all");
+  const [onlyWithCriteria, setOnlyWithCriteria] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setQuery(value); }, [value]);
@@ -424,10 +436,26 @@ export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange, r
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const historyByLabel = useMemo(() => {
+    const m: Record<string, DSM5HistoryItem> = {};
+    for (const h of recent) m[h.diagnosis] = h;
+    return m;
+  }, [recent]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return CATALOG;
     return CATALOG.filter(e => {
+      if (category !== "all" && DSM5_CATEGORY_OF[e.code] !== category) return false;
+      if (severityFilter !== "all") {
+        const sev = severityFilter.toLowerCase();
+        const has = e.severity.some(s => s.toLowerCase().includes(sev));
+        if (!has) return false;
+      }
+      if (onlyWithCriteria) {
+        const h = historyByLabel[e.label];
+        if (!h || h.criteriaChecked.length === 0) return false;
+      }
+      if (!q) return true;
       const kws = DSM5_CATALOG_KEYWORDS[e.code] ?? [];
       return (
         e.label.toLowerCase().includes(q) ||
@@ -436,7 +464,11 @@ export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange, r
         kws.some(k => k.toLowerCase().includes(q))
       );
     });
-  }, [query]);
+  }, [query, category, severityFilter, onlyWithCriteria, historyByLabel]);
+
+  const activeFilterCount =
+    (category !== "all" ? 1 : 0) + (severityFilter !== "all" ? 1 : 0) + (onlyWithCriteria ? 1 : 0);
+
 
 
   const selected = useMemo(() => CATALOG.find(e => e.label === value) || null, [value]);
