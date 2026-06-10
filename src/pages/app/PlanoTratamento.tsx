@@ -170,17 +170,32 @@ const PlanoTratamento = () => {
 
   // Load/save DSM-5-TR detail in localStorage scoped per patient (criteria, severity, notes).
   useEffect(() => {
-    if (!patientId) { setDsm5(null); return; }
+    if (!patientId) { setDsm5(null); setDsm5History([]); return; }
     try {
       const raw = localStorage.getItem(`dsm5:${patientId}`);
       setDsm5(raw ? (JSON.parse(raw) as DSM5Detail) : null);
     } catch { setDsm5(null); }
+    try {
+      const rawH = localStorage.getItem(`dsm5-history:${patientId}`);
+      setDsm5History(rawH ? (JSON.parse(rawH) as string[]) : []);
+    } catch { setDsm5History([]); }
   }, [patientId]);
   useEffect(() => {
     if (!patientId) return;
     if (dsm5) localStorage.setItem(`dsm5:${patientId}`, JSON.stringify(dsm5));
     else localStorage.removeItem(`dsm5:${patientId}`);
   }, [patientId, dsm5]);
+  // Track diagnosis history per patient (max 5, most recent first)
+  useEffect(() => {
+    if (!patientId || !dsm5?.diagnosis) return;
+    setDsm5History(prev => {
+      if (prev[0] === dsm5.diagnosis) return prev;
+      const next = [dsm5.diagnosis, ...prev.filter(d => d !== dsm5.diagnosis)].slice(0, 5);
+      try { localStorage.setItem(`dsm5-history:${patientId}`, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, [patientId, dsm5?.diagnosis]);
+
 
   /* ── save handlers ── */
   const ensurePlan = async () => {
