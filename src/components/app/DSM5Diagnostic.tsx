@@ -18,11 +18,34 @@ type Entry = {
   code: string;
   label: string;
   short?: string;
+  keywords?: string[];
   criteria: string[];
   severity: string[];
   differentials: string[];
   schemas: string[];
 };
+
+export const DSM5_CATALOG_KEYWORDS: Record<string, string[]> = {
+  TAG: ["preocupação", "ansiedade generalizada", "tensão", "insônia", "ruminação"],
+  PANICO: ["ataque", "taquicardia", "falta de ar", "agorafobia", "morte"],
+  FS: ["social", "vergonha", "timidez", "desempenho", "público"],
+  TOC: ["obsessão", "compulsão", "ritual", "limpeza", "verificação", "contaminação"],
+  TAD: ["hipocondria", "saúde", "doença", "somático"],
+  EDM: ["depressão", "tristeza", "anedonia", "suicídio", "humor"],
+  TDP: ["distimia", "crônica", "desesperança"],
+  TB1: ["mania", "bipolar", "euforia", "grandiosidade"],
+  TB2: ["hipomania", "bipolar", "ciclos"],
+  TPB: ["borderline", "abandono", "instabilidade", "automutilação", "limítrofe"],
+  TPN: ["narcisista", "grandiosidade", "admiração", "empatia"],
+  TDAH: ["atenção", "hiperatividade", "impulsividade", "concentração", "desatenção"],
+  TEPT: ["trauma", "pesadelo", "flashback", "estresse pós", "hipervigilância"],
+  TA: ["ajustamento", "estressor", "luto", "adaptação"],
+  TAS: ["separação", "apego", "infância"],
+  TCAP: ["compulsão alimentar", "binge", "comida"],
+  BN: ["bulimia", "purga", "vômito", "compensação"],
+  AN: ["anorexia", "magreza", "restrição alimentar", "imagem corporal"],
+};
+
 
 const CATALOG: Entry[] = [
   {
@@ -350,9 +373,16 @@ interface Props {
   onValueChange: (label: string) => void;
   detail: DSM5Detail | null;
   onDetailChange: (d: DSM5Detail | null) => void;
+  recent?: string[];
 }
 
-export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange }: Props) {
+export function getDsm5EntryByLabel(label: string) {
+  const e = CATALOG.find(x => x.label === label);
+  if (!e) return null;
+  return { code: e.code, label: e.label, criteria: e.criteria, severity: e.severity, differentials: e.differentials, schemas: e.schemas };
+}
+
+export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange, recent = [] }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -370,12 +400,17 @@ export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange }:
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return CATALOG;
-    return CATALOG.filter(e =>
-      e.label.toLowerCase().includes(q) ||
-      e.code.toLowerCase().includes(q) ||
-      (e.short ?? "").toLowerCase().includes(q),
-    );
+    return CATALOG.filter(e => {
+      const kws = DSM5_CATALOG_KEYWORDS[e.code] ?? [];
+      return (
+        e.label.toLowerCase().includes(q) ||
+        e.code.toLowerCase().includes(q) ||
+        (e.short ?? "").toLowerCase().includes(q) ||
+        kws.some(k => k.toLowerCase().includes(q))
+      );
+    });
   }, [query]);
+
 
   const selected = useMemo(() => CATALOG.find(e => e.label === value) || null, [value]);
 
@@ -421,7 +456,7 @@ export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange }:
             value={query}
             onFocus={() => setOpen(true)}
             onChange={e => { setQuery(e.target.value); setOpen(true); }}
-            placeholder="Digite para buscar (ex: TAG, pânico, borderline...)"
+            placeholder="Busque por nome, sigla ou sintoma (ex: TAG, pânico, vômito, flashback...)"
             className="w-full h-10 pl-9 pr-9 rounded-md border border-input bg-background text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           {value ? (
@@ -432,6 +467,32 @@ export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange }:
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           )}
         </div>
+        {recent.length > 0 && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Recentes:</span>
+            {recent.map(label => {
+              const entry = CATALOG.find(e => e.label === label);
+              if (!entry) return null;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => pickEntry(entry)}
+                  className={cn(
+                    "text-[11px] px-2 py-1 rounded-full border transition-colors",
+                    label === value
+                      ? "bg-primary/10 text-primary border-primary/40"
+                      : "bg-secondary text-secondary-foreground border-border hover:bg-accent",
+                  )}
+                  title={entry.label}
+                >
+                  {entry.short ?? entry.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {open && (
           <div className="absolute z-50 mt-1 w-full max-h-72 overflow-auto rounded-md border bg-popover shadow-lg">
             {filtered.length === 0 && (

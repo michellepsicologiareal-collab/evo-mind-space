@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Plus, X, FileDown, ClipboardList, Target, Sparkles, History, Stethoscope, ArrowLeft } from "lucide-react";
 import { PlanoTratamentoHub } from "@/components/app/PlanoTratamentoHub";
-import { DSM5Diagnostic, type DSM5Detail } from "@/components/app/DSM5Diagnostic";
+import { DSM5Diagnostic, type DSM5Detail, getDsm5EntryByLabel } from "@/components/app/DSM5Diagnostic";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -84,6 +84,7 @@ const PlanoTratamento = () => {
 
   const [plan, setPlan] = useState<TreatmentPlan>({ status: "ativo", cid: "", abordagem: [], conceitualizacao: "" });
   const [dsm5, setDsm5] = useState<DSM5Detail | null>(null);
+  const [dsm5History, setDsm5History] = useState<string[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [techniques, setTechniques] = useState<Technique[]>([]);
   const [newTech, setNewTech] = useState("");
@@ -169,17 +170,32 @@ const PlanoTratamento = () => {
 
   // Load/save DSM-5-TR detail in localStorage scoped per patient (criteria, severity, notes).
   useEffect(() => {
-    if (!patientId) { setDsm5(null); return; }
+    if (!patientId) { setDsm5(null); setDsm5History([]); return; }
     try {
       const raw = localStorage.getItem(`dsm5:${patientId}`);
       setDsm5(raw ? (JSON.parse(raw) as DSM5Detail) : null);
     } catch { setDsm5(null); }
+    try {
+      const rawH = localStorage.getItem(`dsm5-history:${patientId}`);
+      setDsm5History(rawH ? (JSON.parse(rawH) as string[]) : []);
+    } catch { setDsm5History([]); }
   }, [patientId]);
   useEffect(() => {
     if (!patientId) return;
     if (dsm5) localStorage.setItem(`dsm5:${patientId}`, JSON.stringify(dsm5));
     else localStorage.removeItem(`dsm5:${patientId}`);
   }, [patientId, dsm5]);
+  // Track diagnosis history per patient (max 5, most recent first)
+  useEffect(() => {
+    if (!patientId || !dsm5?.diagnosis) return;
+    setDsm5History(prev => {
+      if (prev[0] === dsm5.diagnosis) return prev;
+      const next = [dsm5.diagnosis, ...prev.filter(d => d !== dsm5.diagnosis)].slice(0, 5);
+      try { localStorage.setItem(`dsm5-history:${patientId}`, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, [patientId, dsm5?.diagnosis]);
+
 
   /* ── save handlers ── */
   const ensurePlan = async () => {
@@ -349,19 +365,32 @@ const PlanoTratamento = () => {
     labelValue("Fim/alta", displayDate(patient.treatment_end_date), margin + col, y + 22);
     y += 42;
 
-    section("Diagnóstico e formulação");
-    paragraph(`Diagnóstico (DSM-5-TR): ${clean(plan.cid) || "—"}`);
+    section("Diagnóstico DSM-5-TR");
+    paragraph(`Diagnóstico: ${clean(plan.cid) || "—"}`);
+    const entry = plan.cid ? getDsm5EntryByLabel(plan.cid) : null;
     if (dsm5 && dsm5.diagnosis === plan.cid) {
-      if (dsm5.severity) paragraph(`Gravidade/especificador: ${dsm5.severity}`);
-      if (dsm5.criteriaChecked.length) {
+      if (dsm5.severity) paragraph(`Gravidade / especificador: ${dsm5.severity}`);
+      if (entry) {
+        paragraph(`Critérios DSM-5-TR observados (${dsm5.criteriaChecked.length}/${entry.criteria.length}):`);
+        entry.criteria.forEach(c => {
+          const checked = dsm5.criteriaChecked.includes(c);
+          paragraph(`${checked ? "[X]" : "[ ]"} ${c}`, 9.5);
+        });
+      } else if (dsm5.criteriaChecked.length) {
         paragraph(`Critérios observados (${dsm5.criteriaChecked.length}):`);
-        dsm5.criteriaChecked.forEach(c => paragraph(`• ${c}`));
+        dsm5.criteriaChecked.forEach(c => paragraph(`• ${c}`, 9.5));
       }
-      if (dsm5.notes) paragraph(`Notas: ${clean(dsm5.notes)}`);
+      if (dsm5.notes) {
+        paragraph("Observações clínicas:");
+        paragraph(clean(dsm5.notes), 9.5);
+      }
+    }
+    if (entry) {
+      paragraph(`Diagnósticos diferenciais: ${entry.differentials.join(" · ")}`, 9.5);
+      paragraph(`Esquemas e modos associados: ${entry.schemas.join(" · ")}`, 9.5);
     }
     paragraph(`Abordagem: ${plan.abordagem.join(", ") || "—"}`);
-    paragraph("Formulação clínica resumida:");
-    paragraph(clean(plan.conceitualizacao) || "—");
+
 
     section("Metas terapêuticas");
     if (goals.length === 0) paragraph("Nenhuma meta cadastrada.", 10, [106, 88, 128]);
@@ -552,6 +581,7 @@ const PlanoTratamento = () => {
                 onValueChange={(label) => setPlan(p => ({ ...p, cid: label }))}
                 detail={dsm5}
                 onDetailChange={setDsm5}
+                recent={dsm5History}
               />
 
               <div>
@@ -566,16 +596,6 @@ const PlanoTratamento = () => {
                 </div>
               </div>
 
-              <div>
-                <Label>Formulação Clínica Resumida</Label>
-                <Textarea
-                  value={plan.conceitualizacao}
-                  onChange={e => setPlan(p => ({ ...p, conceitualizacao: e.target.value }))}
-                  rows={10}
-                  className="mt-1.5"
-                  placeholder="Síntese do caso: predisponentes, precipitantes, perpetuantes, hipóteses, fatores protetores..."
-                />
-              </div>
             </div>
           </Card>
 
