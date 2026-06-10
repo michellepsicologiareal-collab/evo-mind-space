@@ -529,28 +529,82 @@ export function DSM5Diagnostic({ value, onValueChange, detail, onDetailChange, r
         {recent.length > 0 && (
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Recentes:</span>
-            {recent.map(label => {
-              const entry = CATALOG.find(e => e.label === label);
+            {recent.map(item => {
+              const entry = CATALOG.find(e => e.label === item.diagnosis);
               if (!entry) return null;
+              const isActive = item.diagnosis === value;
               return (
                 <button
-                  key={label}
+                  key={item.diagnosis}
                   type="button"
                   onClick={() => pickEntry(entry)}
                   className={cn(
-                    "text-[11px] px-2 py-1 rounded-full border transition-colors",
-                    label === value
+                    "text-[11px] px-2 py-1 rounded-full border transition-colors inline-flex items-center gap-1",
+                    isActive
                       ? "bg-primary/10 text-primary border-primary/40"
                       : "bg-secondary text-secondary-foreground border-border hover:bg-accent",
                   )}
-                  title={entry.label}
+                  title={`${entry.label}${item.severity ? ` · ${item.severity}` : ""}`}
                 >
-                  {entry.short ?? entry.label}
+                  <span>{entry.short ?? entry.label}</span>
+                  {item.criteriaChecked.length > 0 && (
+                    <span className={cn(
+                      "text-[9px] px-1.5 py-0.5 rounded-full font-semibold leading-none",
+                      isActive ? "bg-primary/20 text-primary" : "bg-background/60 text-muted-foreground",
+                    )}>
+                      {item.criteriaChecked.length}/{entry.criteria.length}
+                    </span>
+                  )}
                 </button>
               );
             })}
           </div>
         )}
+
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            <Filter className="h-3 w-3" /> Filtros
+            {activeFilterCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px]">{activeFilterCount}</span>
+            )}
+          </div>
+          <Select value={category} onValueChange={(v) => setCategory(v as any)}>
+            <SelectTrigger className="h-7 text-xs w-auto min-w-[130px]"><SelectValue placeholder="Categoria" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as categorias</SelectItem>
+              {CATEGORY_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={severityFilter} onValueChange={setSeverityFilter}>
+            <SelectTrigger className="h-7 text-xs w-auto min-w-[110px]"><SelectValue placeholder="Gravidade" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Qualquer gravidade</SelectItem>
+              {SEVERITY_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <button
+            type="button"
+            onClick={() => setOnlyWithCriteria(v => !v)}
+            className={cn(
+              "h-7 px-2.5 rounded-md border text-[11px] transition-colors",
+              onlyWithCriteria
+                ? "bg-primary/10 text-primary border-primary/40"
+                : "bg-background text-muted-foreground border-input hover:bg-accent",
+            )}
+          >
+            Com critérios marcados
+          </button>
+          {activeFilterCount > 0 && (
+            <button
+              type="button"
+              onClick={() => { setCategory("all"); setSeverityFilter("all"); setOnlyWithCriteria(false); }}
+              className="h-7 px-2 rounded-md text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              Limpar
+            </button>
+          )}
+        </div>
+
 
         {open && (
           <div className="absolute z-50 mt-1 w-full max-h-72 overflow-auto rounded-md border bg-popover shadow-lg">
