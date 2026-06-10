@@ -18,11 +18,34 @@ type Entry = {
   code: string;
   label: string;
   short?: string;
+  keywords?: string[];
   criteria: string[];
   severity: string[];
   differentials: string[];
   schemas: string[];
 };
+
+export const DSM5_CATALOG_KEYWORDS: Record<string, string[]> = {
+  TAG: ["preocupação", "ansiedade generalizada", "tensão", "insônia", "ruminação"],
+  PANICO: ["ataque", "taquicardia", "falta de ar", "agorafobia", "morte"],
+  FS: ["social", "vergonha", "timidez", "desempenho", "público"],
+  TOC: ["obsessão", "compulsão", "ritual", "limpeza", "verificação", "contaminação"],
+  TAD: ["hipocondria", "saúde", "doença", "somático"],
+  EDM: ["depressão", "tristeza", "anedonia", "suicídio", "humor"],
+  TDP: ["distimia", "crônica", "desesperança"],
+  TB1: ["mania", "bipolar", "euforia", "grandiosidade"],
+  TB2: ["hipomania", "bipolar", "ciclos"],
+  TPB: ["borderline", "abandono", "instabilidade", "automutilação", "limítrofe"],
+  TPN: ["narcisista", "grandiosidade", "admiração", "empatia"],
+  TDAH: ["atenção", "hiperatividade", "impulsividade", "concentração", "desatenção"],
+  TEPT: ["trauma", "pesadelo", "flashback", "estresse pós", "hipervigilância"],
+  TA: ["ajustamento", "estressor", "luto", "adaptação"],
+  TAS: ["separação", "apego", "infância"],
+  TCAP: ["compulsão alimentar", "binge", "comida"],
+  BN: ["bulimia", "purga", "vômito", "compensação"],
+  AN: ["anorexia", "magreza", "restrição alimentar", "imagem corporal"],
+};
+
 
 const CATALOG: Entry[] = [
   {
