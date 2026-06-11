@@ -407,28 +407,32 @@ const PlanoTratamento = () => {
     y += 42;
 
     section("Diagnóstico DSM-5-TR");
-    paragraph(`Diagnóstico: ${clean(plan.cid) || "—"}`);
-    const entry = plan.cid ? getDsm5EntryByLabel(plan.cid) : null;
-    if (dsm5 && dsm5.diagnosis === plan.cid) {
-      if (dsm5.severity) paragraph(`Gravidade / especificador: ${dsm5.severity}`);
-      if (entry) {
-        paragraph(`Critérios DSM-5-TR observados (${dsm5.criteriaChecked.length}/${entry.criteria.length}):`);
-        entry.criteria.forEach(c => {
-          const checked = dsm5.criteriaChecked.includes(c);
-          paragraph(`${checked ? "[X]" : "[ ]"} ${c}`, 9.5);
-        });
-      } else if (dsm5.criteriaChecked.length) {
-        paragraph(`Critérios observados (${dsm5.criteriaChecked.length}):`);
-        dsm5.criteriaChecked.forEach(c => paragraph(`• ${c}`, 9.5));
-      }
-      if (dsm5.notes) {
-        paragraph("Observações clínicas:");
-        paragraph(clean(dsm5.notes), 9.5);
-      }
-    }
-    if (entry) {
-      paragraph(`Diagnósticos diferenciais: ${entry.differentials.join(" · ")}`, 9.5);
-      paragraph(`Esquemas e modos associados: ${entry.schemas.join(" · ")}`, 9.5);
+    const validDsm5 = dsm5List.filter(d => d?.diagnosis);
+    if (!validDsm5.length) {
+      paragraph("Diagnóstico: —");
+    } else {
+      validDsm5.forEach((d, idx) => {
+        const role = idx === 0 ? "Principal" : `Comorbidade ${idx}`;
+        paragraph(`${role}: ${clean(d.diagnosis)}`, 11);
+        if (d.severity) paragraph(`Gravidade / especificador: ${d.severity}`, 9.5);
+        const entry = getDsm5EntryByLabel(d.diagnosis);
+        if (entry) {
+          paragraph(`Critérios DSM-5-TR observados (${d.criteriaChecked.length}/${entry.criteria.length}):`, 9.5);
+          entry.criteria.forEach(c => {
+            const checked = d.criteriaChecked.includes(c);
+            paragraph(`${checked ? "[X]" : "[ ]"} ${c}`, 9.5);
+          });
+          paragraph(`Diagnósticos diferenciais: ${entry.differentials.join(" · ")}`, 9.5);
+          paragraph(`Esquemas e modos associados: ${entry.schemas.join(" · ")}`, 9.5);
+        } else if (d.criteriaChecked.length) {
+          paragraph(`Critérios observados (${d.criteriaChecked.length}):`, 9.5);
+          d.criteriaChecked.forEach(c => paragraph(`• ${c}`, 9.5));
+        }
+        if (d.notes) {
+          paragraph("Observações clínicas:", 9.5);
+          paragraph(clean(d.notes), 9.5);
+        }
+      });
     }
     paragraph(`Abordagem: ${plan.abordagem.join(", ") || "—"}`);
 
