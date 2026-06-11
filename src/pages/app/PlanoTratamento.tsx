@@ -84,7 +84,7 @@ const PlanoTratamento = () => {
   const [saving, setSaving] = useState(false);
 
   const [plan, setPlan] = useState<TreatmentPlan>({ status: "ativo", cid: "", abordagem: [], conceitualizacao: "" });
-  const [dsm5, setDsm5] = useState<DSM5Detail | null>(null);
+  const [dsm5List, setDsm5List] = useState<DSM5Detail[]>([]);
   const [dsm5History, setDsm5History] = useState<DSM5HistoryItem[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [techniques, setTechniques] = useState<Technique[]>([]);
