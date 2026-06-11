@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Plus, X, FileDown, ClipboardList, Target, Sparkles, History, Stethoscope, ArrowLeft } from "lucide-react";
 import { PlanoTratamentoHub } from "@/components/app/PlanoTratamentoHub";
 import { DSM5Diagnostic, type DSM5Detail, type DSM5HistoryItem, getDsm5EntryByLabel } from "@/components/app/DSM5Diagnostic";
+import { DSM5MultiDiagnostic } from "@/components/app/DSM5MultiDiagnostic";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -83,7 +84,7 @@ const PlanoTratamento = () => {
   const [saving, setSaving] = useState(false);
 
   const [plan, setPlan] = useState<TreatmentPlan>({ status: "ativo", cid: "", abordagem: [], conceitualizacao: "" });
-  const [dsm5, setDsm5] = useState<DSM5Detail | null>(null);
+  const [dsm5List, setDsm5List] = useState<DSM5Detail[]>([]);
   const [dsm5History, setDsm5History] = useState<DSM5HistoryItem[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [techniques, setTechniques] = useState<Technique[]>([]);
@@ -168,17 +169,24 @@ const PlanoTratamento = () => {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
-  // Load DSM-5-TR detail + history scoped per patient.
+  // Load DSM-5-TR list + history scoped per patient.
   useEffect(() => {
-    if (!patientId) { setDsm5(null); setDsm5History([]); return; }
+    if (!patientId) { setDsm5List([]); setDsm5History([]); return; }
     try {
-      const raw = localStorage.getItem(`dsm5:${patientId}`);
-      setDsm5(raw ? (JSON.parse(raw) as DSM5Detail) : null);
-    } catch { setDsm5(null); }
+      // Prefer new multi key; fall back to legacy single key.
+      const rawList = localStorage.getItem(`dsm5-list:${patientId}`);
+      if (rawList) {
+        const parsed = JSON.parse(rawList);
+        setDsm5List(Array.isArray(parsed) ? parsed : []);
+      } else {
+        const rawSingle = localStorage.getItem(`dsm5:${patientId}`);
+        const single = rawSingle ? JSON.parse(rawSingle) as DSM5Detail : null;
+        setDsm5List(single?.diagnosis ? [single] : []);
+      }
+    } catch { setDsm5List([]); }
     try {
       const rawH = localStorage.getItem(`dsm5-history:${patientId}`);
       const parsed = rawH ? JSON.parse(rawH) : [];
-      // migrate legacy string[] format
       const items: DSM5HistoryItem[] = Array.isArray(parsed)
         ? parsed.map((v: any) => typeof v === "string"
             ? { diagnosis: v, severity: "", criteriaChecked: [], updatedAt: new Date().toISOString() }
@@ -188,38 +196,45 @@ const PlanoTratamento = () => {
     } catch { setDsm5History([]); }
   }, [patientId]);
 
-  // Persist current detail
+  // Persist current list + keep plan.cid as joined diagnoses (comorbidades).
   useEffect(() => {
     if (!patientId) return;
-    if (dsm5) localStorage.setItem(`dsm5:${patientId}`, JSON.stringify(dsm5));
-    else localStorage.removeItem(`dsm5:${patientId}`);
-  }, [patientId, dsm5]);
+    const valid = dsm5List.filter(d => d?.diagnosis);
+    if (valid.length) localStorage.setItem(`dsm5-list:${patientId}`, JSON.stringify(valid));
+    else localStorage.removeItem(`dsm5-list:${patientId}`);
+    localStorage.removeItem(`dsm5:${patientId}`); // cleanup legacy
+    const joined = valid.map(d => d.diagnosis).join(" + ");
+    setPlan(p => (p.cid === joined ? p : { ...p, cid: joined }));
+  }, [patientId, dsm5List]);
 
-  // Auto-save into history whenever diagnosis, criteria, severity or notes change.
+  // Auto-save every diagnosis into history.
   useEffect(() => {
-    if (!patientId || !dsm5?.diagnosis) return;
-    const item: DSM5HistoryItem = {
-      diagnosis: dsm5.diagnosis,
-      code: dsm5.code,
-      severity: dsm5.severity,
-      criteriaChecked: dsm5.criteriaChecked,
-      notes: dsm5.notes,
-      updatedAt: new Date().toISOString(),
-    };
+    if (!patientId) return;
+    const valid = dsm5List.filter(d => d?.diagnosis);
+    if (!valid.length) return;
     setDsm5History(prev => {
-      const rest = prev.filter(h => h.diagnosis !== item.diagnosis);
-      const next = [item, ...rest].slice(0, 5);
+      let next = [...prev];
+      for (const d of valid) {
+        const item: DSM5HistoryItem = {
+          diagnosis: d.diagnosis,
+          code: d.code,
+          severity: d.severity,
+          criteriaChecked: d.criteriaChecked,
+          notes: d.notes,
+          updatedAt: new Date().toISOString(),
+        };
+        next = [item, ...next.filter(h => h.diagnosis !== item.diagnosis)];
+      }
+      next = next.slice(0, 8);
       try { localStorage.setItem(`dsm5-history:${patientId}`, JSON.stringify(next)); } catch {}
       return next;
     });
   }, [
     patientId,
-    dsm5?.diagnosis,
-    dsm5?.severity,
-    dsm5?.notes,
-    dsm5?.criteriaChecked?.length,
-    dsm5?.criteriaChecked?.join("|"),
+    JSON.stringify(dsm5List.map(d => ({ d: d.diagnosis, s: d.severity, n: d.notes, c: d.criteriaChecked?.join("|") }))),
   ]);
+
+
 
 
 
@@ -392,28 +407,32 @@ const PlanoTratamento = () => {
     y += 42;
 
     section("Diagnóstico DSM-5-TR");
-    paragraph(`Diagnóstico: ${clean(plan.cid) || "—"}`);
-    const entry = plan.cid ? getDsm5EntryByLabel(plan.cid) : null;
-    if (dsm5 && dsm5.diagnosis === plan.cid) {
-      if (dsm5.severity) paragraph(`Gravidade / especificador: ${dsm5.severity}`);
-      if (entry) {
-        paragraph(`Critérios DSM-5-TR observados (${dsm5.criteriaChecked.length}/${entry.criteria.length}):`);
-        entry.criteria.forEach(c => {
-          const checked = dsm5.criteriaChecked.includes(c);
-          paragraph(`${checked ? "[X]" : "[ ]"} ${c}`, 9.5);
-        });
-      } else if (dsm5.criteriaChecked.length) {
-        paragraph(`Critérios observados (${dsm5.criteriaChecked.length}):`);
-        dsm5.criteriaChecked.forEach(c => paragraph(`• ${c}`, 9.5));
-      }
-      if (dsm5.notes) {
-        paragraph("Observações clínicas:");
-        paragraph(clean(dsm5.notes), 9.5);
-      }
-    }
-    if (entry) {
-      paragraph(`Diagnósticos diferenciais: ${entry.differentials.join(" · ")}`, 9.5);
-      paragraph(`Esquemas e modos associados: ${entry.schemas.join(" · ")}`, 9.5);
+    const validDsm5 = dsm5List.filter(d => d?.diagnosis);
+    if (!validDsm5.length) {
+      paragraph("Diagnóstico: —");
+    } else {
+      validDsm5.forEach((d, idx) => {
+        const role = idx === 0 ? "Principal" : `Comorbidade ${idx}`;
+        paragraph(`${role}: ${clean(d.diagnosis)}`, 11);
+        if (d.severity) paragraph(`Gravidade / especificador: ${d.severity}`, 9.5);
+        const entry = getDsm5EntryByLabel(d.diagnosis);
+        if (entry) {
+          paragraph(`Critérios DSM-5-TR observados (${d.criteriaChecked.length}/${entry.criteria.length}):`, 9.5);
+          entry.criteria.forEach(c => {
+            const checked = d.criteriaChecked.includes(c);
+            paragraph(`${checked ? "[X]" : "[ ]"} ${c}`, 9.5);
+          });
+          paragraph(`Diagnósticos diferenciais: ${entry.differentials.join(" · ")}`, 9.5);
+          paragraph(`Esquemas e modos associados: ${entry.schemas.join(" · ")}`, 9.5);
+        } else if (d.criteriaChecked.length) {
+          paragraph(`Critérios observados (${d.criteriaChecked.length}):`, 9.5);
+          d.criteriaChecked.forEach(c => paragraph(`• ${c}`, 9.5));
+        }
+        if (d.notes) {
+          paragraph("Observações clínicas:", 9.5);
+          paragraph(clean(d.notes), 9.5);
+        }
+      });
     }
     paragraph(`Abordagem: ${plan.abordagem.join(", ") || "—"}`);
 
@@ -602,11 +621,9 @@ const PlanoTratamento = () => {
               <h2 className="font-display text-lg font-bold">Diagnóstico e formulação</h2>
             </div>
             <div className="space-y-5">
-              <DSM5Diagnostic
-                value={plan.cid}
-                onValueChange={(label) => setPlan(p => ({ ...p, cid: label }))}
-                detail={dsm5}
-                onDetailChange={setDsm5}
+              <DSM5MultiDiagnostic
+                values={dsm5List}
+                onChange={setDsm5List}
                 recent={dsm5History}
               />
 

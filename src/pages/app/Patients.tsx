@@ -1349,7 +1349,7 @@ const Patients = () => {
           <FullBtn k="tcc" />
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">{tccPatient?.full_name}</DialogTitle>
-            <DialogDescription>Prontuário TCC — Registro de Pensamento</DialogDescription>
+            <DialogDescription>RPD — Registro de Pensamentos Disfuncionais</DialogDescription>
           </DialogHeader>
           {tccPatient && <TccRecords patientId={tccPatient.id} />}
         </DialogContent>
