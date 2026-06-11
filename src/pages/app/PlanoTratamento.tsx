@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Plus, X, FileDown, ClipboardList, Target, Sparkles, History, Stethoscope, ArrowLeft } from "lucide-react";
 import { PlanoTratamentoHub } from "@/components/app/PlanoTratamentoHub";
 import { DSM5Diagnostic, type DSM5Detail, type DSM5HistoryItem, getDsm5EntryByLabel } from "@/components/app/DSM5Diagnostic";
+import { DSM5MultiDiagnostic } from "@/components/app/DSM5MultiDiagnostic";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
