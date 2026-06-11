@@ -33,6 +33,12 @@ interface Props {
   readOnly?: boolean;
 }
 
+const G = "#B8860B";
+const G_BG = "#FDF6E3";
+const G_BORDER = "#E8C97A";
+const INK = "#1A1A2E";
+const MUTED = "#6B7280";
+
 export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const { user } = useAuth();
   const [records, setRecords] = useState<TccRecord[]>([]);
@@ -58,7 +64,6 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       .limit(20);
     setRecords(data ?? []);
     setLoading(false);
-    // Audit: log access to TCC records
     if (data?.length) logClinicalAccess("tcc_record", data[0].id, patientId);
   };
 
@@ -80,8 +85,8 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       rational_response: form.rational_response || null,
     });
     setSaving(false);
-    if (error) return toast.error("Erro ao salvar registro TCC");
-    toast.success("Registro TCC salvo");
+    if (error) return toast.error("Erro ao salvar RPD");
+    toast.success("RPD salvo");
     setOpen(false);
     setForm({ situation: "", automatic_thought: "", emotion: "", behavior: "", cognitive_distortion: "", rational_response: "" });
     load();
@@ -90,7 +95,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const handleDelete = async (id: string) => {
     const { error } = await (supabase as any).from("tcc_records").delete().eq("id", id);
     if (error) return toast.error("Erro ao excluir");
-    toast.success("Registro excluído");
+    toast.success("RPD excluído");
     setRecords((prev) => prev.filter((r) => r.id !== id));
   };
 
@@ -104,55 +109,83 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   ];
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <ClipboardList className="h-4 w-4 text-muted-foreground" />
-          Prontuário TCC
+    <section
+      className="bg-white rounded-[10px] p-4 sm:p-6 space-y-4"
+      style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}
+    >
+      <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="space-y-1 min-w-0">
+          <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: G, textTransform: "uppercase" }}>
+            TCC · Registro de Pensamentos Disfuncionais
+          </p>
+          <h2 className="font-display flex items-center gap-2" style={{ fontSize: 16, fontWeight: 700, color: INK }}>
+            <ClipboardList className="h-4 w-4" style={{ color: G }} />
+            RPD — Registro de Pensamentos Disfuncionais
+          </h2>
+          <p style={{ fontSize: 12, color: MUTED }}>Situação · Pensamento automático · Emoção · Comportamento · Distorção · Resposta racional</p>
         </div>
         {!readOnly && (
-          <Button variant="accent" size="sm" onClick={() => setOpen(true)}>
-            <Plus className="h-3.5 w-3.5" /> Novo registro
+          <Button
+            size="sm"
+            onClick={() => setOpen(true)}
+            className="w-full sm:w-auto shrink-0"
+            style={{ background: G, color: "#fff", fontWeight: 600 }}
+          >
+            <Plus className="h-4 w-4" /> Novo RPD
           </Button>
         )}
+      </header>
+
+      <div className="flex items-center gap-2">
+        <span
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md"
+          style={{ background: G_BG, color: G, border: `1px solid ${G_BORDER}`, fontSize: 11, fontWeight: 600 }}
+        >
+          {records.length} {records.length === 1 ? "registro" : "registros"}
+        </span>
       </div>
 
       {loading ? (
-        <div className="py-4 text-center">
-          <Loader2 className="h-4 w-4 animate-spin mx-auto text-primary" />
+        <div className="py-6 text-center">
+          <Loader2 className="h-5 w-5 animate-spin mx-auto" style={{ color: G }} />
         </div>
       ) : records.length === 0 ? (
-        <p className="text-sm text-muted-foreground rounded-lg bg-secondary/40 p-3 text-center">
-          Nenhum registro TCC ainda.
-        </p>
+        <div
+          className="rounded-lg p-6 text-center"
+          style={{ background: G_BG, border: `1px dashed ${G_BORDER}` }}
+        >
+          <p style={{ fontSize: 13, color: MUTED }}>
+            Nenhum RPD registrado ainda. Comece criando o primeiro registro de pensamento disfuncional.
+          </p>
+        </div>
       ) : (
         <ul className="space-y-2">
           {records.map((r) => {
             const isOpen = expanded === r.id;
-            const preview = r.situation || r.automatic_thought || "Registro TCC";
+            const preview = r.situation || r.automatic_thought || "RPD";
             return (
-              <li key={r.id} className="rounded-lg bg-secondary/40 overflow-hidden">
+              <li key={r.id} className="rounded-lg border bg-background overflow-hidden" style={{ borderColor: "#EEE7D6" }}>
                 <button
                   onClick={() => setExpanded(isOpen ? null : r.id)}
-                  className="w-full flex items-center justify-between gap-2 p-3 text-left text-sm"
+                  className="w-full flex items-center justify-between gap-2 p-3 text-left text-sm hover:bg-secondary/30 transition-colors"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium truncate">{preview}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(r.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                    <p className="font-medium truncate" style={{ color: INK }}>{preview}</p>
+                    <p className="text-xs" style={{ color: MUTED }}>
+                      {format(new Date(r.created_at), "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
                     </p>
                   </div>
                   {isOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
                 </button>
                 {isOpen && (
-                  <div className="px-3 pb-3 space-y-2 border-t border-border/50 pt-2 text-sm">
+                  <div className="px-3 pb-3 space-y-2.5 border-t pt-3 text-sm" style={{ borderColor: "#F0E9D8" }}>
                     {fields.map(({ key, label }) => {
                       const val = r[key as keyof TccRecord];
                       if (!val) return null;
                       return (
                         <div key={key}>
-                          <p className="text-xs font-medium text-muted-foreground">{label}</p>
-                          <p className="whitespace-pre-wrap">{val as string}</p>
+                          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: G }}>{label}</p>
+                          <p className="whitespace-pre-wrap" style={{ color: INK }}>{val as string}</p>
                         </div>
                       );
                     })}
@@ -174,7 +207,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">Novo Registro TCC</DialogTitle>
+            <DialogTitle className="font-display text-xl">Novo RPD</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             {fields.map(({ key, label }) => (
@@ -191,13 +224,13 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button variant="accent" onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={saving} style={{ background: G, color: "#fff", fontWeight: 600 }}>
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               Salvar
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </section>
   );
 };
