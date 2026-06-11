@@ -169,17 +169,24 @@ const PlanoTratamento = () => {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
-  // Load DSM-5-TR detail + history scoped per patient.
+  // Load DSM-5-TR list + history scoped per patient.
   useEffect(() => {
-    if (!patientId) { setDsm5(null); setDsm5History([]); return; }
+    if (!patientId) { setDsm5List([]); setDsm5History([]); return; }
     try {
-      const raw = localStorage.getItem(`dsm5:${patientId}`);
-      setDsm5(raw ? (JSON.parse(raw) as DSM5Detail) : null);
-    } catch { setDsm5(null); }
+      // Prefer new multi key; fall back to legacy single key.
+      const rawList = localStorage.getItem(`dsm5-list:${patientId}`);
+      if (rawList) {
+        const parsed = JSON.parse(rawList);
+        setDsm5List(Array.isArray(parsed) ? parsed : []);
+      } else {
+        const rawSingle = localStorage.getItem(`dsm5:${patientId}`);
+        const single = rawSingle ? JSON.parse(rawSingle) as DSM5Detail : null;
+        setDsm5List(single?.diagnosis ? [single] : []);
+      }
+    } catch { setDsm5List([]); }
     try {
       const rawH = localStorage.getItem(`dsm5-history:${patientId}`);
       const parsed = rawH ? JSON.parse(rawH) : [];
-      // migrate legacy string[] format
       const items: DSM5HistoryItem[] = Array.isArray(parsed)
         ? parsed.map((v: any) => typeof v === "string"
             ? { diagnosis: v, severity: "", criteriaChecked: [], updatedAt: new Date().toISOString() }
@@ -189,38 +196,45 @@ const PlanoTratamento = () => {
     } catch { setDsm5History([]); }
   }, [patientId]);
 
-  // Persist current detail
+  // Persist current list + keep plan.cid as joined diagnoses (comorbidades).
   useEffect(() => {
     if (!patientId) return;
-    if (dsm5) localStorage.setItem(`dsm5:${patientId}`, JSON.stringify(dsm5));
-    else localStorage.removeItem(`dsm5:${patientId}`);
-  }, [patientId, dsm5]);
+    const valid = dsm5List.filter(d => d?.diagnosis);
+    if (valid.length) localStorage.setItem(`dsm5-list:${patientId}`, JSON.stringify(valid));
+    else localStorage.removeItem(`dsm5-list:${patientId}`);
+    localStorage.removeItem(`dsm5:${patientId}`); // cleanup legacy
+    const joined = valid.map(d => d.diagnosis).join(" + ");
+    setPlan(p => (p.cid === joined ? p : { ...p, cid: joined }));
+  }, [patientId, dsm5List]);
 
-  // Auto-save into history whenever diagnosis, criteria, severity or notes change.
+  // Auto-save every diagnosis into history.
   useEffect(() => {
-    if (!patientId || !dsm5?.diagnosis) return;
-    const item: DSM5HistoryItem = {
-      diagnosis: dsm5.diagnosis,
-      code: dsm5.code,
-      severity: dsm5.severity,
-      criteriaChecked: dsm5.criteriaChecked,
-      notes: dsm5.notes,
-      updatedAt: new Date().toISOString(),
-    };
+    if (!patientId) return;
+    const valid = dsm5List.filter(d => d?.diagnosis);
+    if (!valid.length) return;
     setDsm5History(prev => {
-      const rest = prev.filter(h => h.diagnosis !== item.diagnosis);
-      const next = [item, ...rest].slice(0, 5);
+      let next = [...prev];
+      for (const d of valid) {
+        const item: DSM5HistoryItem = {
+          diagnosis: d.diagnosis,
+          code: d.code,
+          severity: d.severity,
+          criteriaChecked: d.criteriaChecked,
+          notes: d.notes,
+          updatedAt: new Date().toISOString(),
+        };
+        next = [item, ...next.filter(h => h.diagnosis !== item.diagnosis)];
+      }
+      next = next.slice(0, 8);
       try { localStorage.setItem(`dsm5-history:${patientId}`, JSON.stringify(next)); } catch {}
       return next;
     });
   }, [
     patientId,
-    dsm5?.diagnosis,
-    dsm5?.severity,
-    dsm5?.notes,
-    dsm5?.criteriaChecked?.length,
-    dsm5?.criteriaChecked?.join("|"),
+    JSON.stringify(dsm5List.map(d => ({ d: d.diagnosis, s: d.severity, n: d.notes, c: d.criteriaChecked?.join("|") }))),
   ]);
+
+
 
 
 
