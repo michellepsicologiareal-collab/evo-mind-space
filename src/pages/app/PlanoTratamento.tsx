@@ -621,11 +621,9 @@ const PlanoTratamento = () => {
               <h2 className="font-display text-lg font-bold">Diagnóstico e formulação</h2>
             </div>
             <div className="space-y-5">
-              <DSM5Diagnostic
-                value={plan.cid}
-                onValueChange={(label) => setPlan(p => ({ ...p, cid: label }))}
-                detail={dsm5}
-                onDetailChange={setDsm5}
+              <DSM5MultiDiagnostic
+                values={dsm5List}
+                onChange={setDsm5List}
                 recent={dsm5History}
               />
 
