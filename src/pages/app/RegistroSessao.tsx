@@ -406,7 +406,7 @@ const RegistroSessao = () => {
     clearDraft();
     setForm({ ...emptyForm });
     setEditingId(null);
-    loadRecords();
+    await preserveScroll(() => loadRecords());
   };
 
   const handlePolish = async () => {
