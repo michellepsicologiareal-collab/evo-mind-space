@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import {
   Dialog,
   DialogContent,
