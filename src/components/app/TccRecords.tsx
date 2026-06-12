@@ -88,9 +88,10 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
     setSaving(false);
     if (error) return toast.error("Erro ao salvar RPD");
     toast.success("RPD salvo");
+    keepScroll();
     setOpen(false);
     setForm({ situation: "", automatic_thought: "", emotion: "", behavior: "", cognitive_distortion: "", rational_response: "" });
-    load();
+    await preserveScroll(() => load());
   };
 
   const handleDelete = async (id: string) => {
