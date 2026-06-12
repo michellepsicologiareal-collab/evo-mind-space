@@ -586,8 +586,9 @@ const Agenda = () => {
     }
     clearSessionDraft();
     newGuard.resetDirty();
+    keepScroll();
     setOpen(false);
-    load(true); loadPending(true);
+    await preserveScroll(async () => { load(true); loadPending(true); });
   };
 
   const updateStatus = async (id: string, status: Status) => {
