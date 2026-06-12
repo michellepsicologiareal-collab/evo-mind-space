@@ -434,13 +434,13 @@ const Patients = () => {
       return;
     }
     toast.success("Paciente excluído");
-    load();
+    await preserveScroll(() => load());
   };
 
   const toggleActive = async (p: Patient) => {
     const { error } = await supabase.from("patients").update({ is_active: !p.is_active }).eq("id", p.id);
     if (error) return toast.error("Erro ao atualizar");
-    load();
+    await preserveScroll(() => load());
   };
 
   const toggleSharing = async (p: Patient) => {
