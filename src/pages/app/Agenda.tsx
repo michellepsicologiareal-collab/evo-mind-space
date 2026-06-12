@@ -597,7 +597,7 @@ const Agenda = () => {
     if (error) return toast.error("Erro ao atualizar");
     if (status === "cancelled") { deleteSessionFromGcal(id); } else { syncSessionToGcal(id); }
     toast.success(`Marcada como ${statusLabel[status].toLowerCase()}`);
-    load(true); loadPending(true);
+    await preserveScroll(async () => { load(true); loadPending(true); });
   };
 
   const updatePaymentStatus = async (id: string, paymentStatus: PaymentStatus) => {
