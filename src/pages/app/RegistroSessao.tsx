@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
+import { preserveScroll } from "@/lib/preserveScroll";
 
 const DRAFT_KEY = "rascunho_registro_sessao";
 
