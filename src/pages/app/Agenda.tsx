@@ -31,6 +31,7 @@ import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 import { EmotionChips } from "@/components/app/EmotionChips";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
