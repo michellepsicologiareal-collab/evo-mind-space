@@ -15,6 +15,7 @@ import { PlanoTratamentoHub } from "@/components/app/PlanoTratamentoHub";
 import { DSM5Diagnostic, type DSM5Detail, type DSM5HistoryItem, getDsm5EntryByLabel } from "@/components/app/DSM5Diagnostic";
 import { DSM5MultiDiagnostic } from "@/components/app/DSM5MultiDiagnostic";
 import { toast } from "sonner";
+import { preserveScroll } from "@/lib/preserveScroll";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { jsPDF } from "jspdf";
