@@ -117,7 +117,7 @@ const Anamneses = () => {
             <DialogTitle className="font-display text-2xl">{editing?.name}</DialogTitle>
             <DialogDescription>Anamnese — Criança</DialogDescription>
           </DialogHeader>
-          {editing && <ChildAnamnesisForm patientId={editing.patient_id} patientName={editing.name} onSaved={load} />}
+          {editing && <ChildAnamnesisForm patientId={editing.patient_id} patientName={editing.name} onSaved={() => { keepScroll(); preserveScroll(() => load()); }} />}
         </DialogContent>
       </Dialog>
     </div>
