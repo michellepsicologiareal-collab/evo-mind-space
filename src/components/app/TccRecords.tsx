@@ -205,28 +205,76 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl">Novo RPD</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            {fields.map(({ key, label }) => (
-              <div key={key} className="space-y-1">
-                <Label className="text-sm">{label}</Label>
+        <DialogContent
+          className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0"
+          style={{ background: "#F7F6F3" }}
+        >
+          {/* Header padronizado (mesmo estilo das formulações TE/ACT) */}
+          <div
+            className="bg-white rounded-t-lg p-5 sm:p-6"
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}
+          >
+            <DialogHeader className="space-y-1 text-left">
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: G, textTransform: "uppercase" }}>
+                TCC · Registro de Pensamentos Disfuncionais
+              </p>
+              <DialogTitle className="font-display" style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.3px", color: INK }}>
+                Novo RPD
+              </DialogTitle>
+              <p style={{ fontSize: 13, color: MUTED }}>
+                Preencha os 6 campos do modelo cognitivo: situação, pensamento, emoção, comportamento, distorção e resposta racional.
+              </p>
+              <div className="pt-2">
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md"
+                  style={{ background: G_BG, color: G, border: `1px solid ${G_BORDER}`, fontSize: 11, fontWeight: 600 }}
+                >
+                  RPD · 6 colunas
+                </span>
+              </div>
+            </DialogHeader>
+          </div>
+
+          {/* Corpo em cards padronizados */}
+          <div className="p-3 sm:p-5 space-y-3 sm:space-y-4">
+            {fields.map(({ key, label }, idx) => (
+              <section
+                key={key}
+                className="bg-white rounded-[10px] p-4 sm:p-5 space-y-2"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}
+              >
+                <header className="space-y-0.5">
+                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: G, textTransform: "uppercase" }}>
+                    Coluna {idx + 1}
+                  </p>
+                  <h3 className="font-display" style={{ fontSize: 15, fontWeight: 700, color: INK }}>
+                    {label}
+                  </h3>
+                </header>
                 <Textarea
-                  rows={2}
+                  rows={3}
                   value={form[key]}
                   onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                   placeholder={`Descreva ${label.toLowerCase()}...`}
+                  className="resize-y"
                 />
-              </div>
+              </section>
             ))}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={saving} style={{ background: G, color: "#fff", fontWeight: 600 }}>
+
+          <DialogFooter
+            className="p-4 sm:p-5 bg-white rounded-b-lg gap-2 sm:gap-2 flex-col-reverse sm:flex-row"
+            style={{ boxShadow: "0 -1px 4px rgba(0,0,0,0.04)" }}
+          >
+            <Button variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">Cancelar</Button>
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full sm:w-auto"
+              style={{ background: G, color: "#fff", fontWeight: 600 }}
+            >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Salvar
+              Salvar RPD
             </Button>
           </DialogFooter>
         </DialogContent>
