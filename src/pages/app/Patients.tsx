@@ -420,8 +420,9 @@ const Patients = () => {
     toast.success(editing ? "Paciente atualizado" : "Paciente cadastrado");
     if (!editing) clearDraft();
     patientGuard.resetDirty();
+    keepScroll();
     setOpen(false);
-    load();
+    await preserveScroll(() => load());
   };
 
   const handleDelete = async (p: Patient) => {
