@@ -492,7 +492,7 @@ const RegistroSessao = () => {
     }
     toast.success("Registro excluído.");
     if (editingId === id) handleClear();
-    loadRecords();
+    await preserveScroll(() => loadRecords());
   };
 
   const getPatientName = (id: string) => patients.find((p) => p.id === id)?.full_name ?? "—";
