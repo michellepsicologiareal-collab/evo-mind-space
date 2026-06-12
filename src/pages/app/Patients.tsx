@@ -32,6 +32,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
+import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 
 const PATIENT_CATEGORIES = [
   { value: "adolescente", label: "Adolescente" },
