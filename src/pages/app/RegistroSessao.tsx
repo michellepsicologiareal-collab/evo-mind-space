@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
+import { preserveScroll } from "@/lib/preserveScroll";
 
 const DRAFT_KEY = "rascunho_registro_sessao";
 
@@ -405,7 +406,7 @@ const RegistroSessao = () => {
     clearDraft();
     setForm({ ...emptyForm });
     setEditingId(null);
-    loadRecords();
+    await preserveScroll(() => loadRecords());
   };
 
   const handlePolish = async () => {
@@ -491,7 +492,7 @@ const RegistroSessao = () => {
     }
     toast.success("Registro excluído.");
     if (editingId === id) handleClear();
-    loadRecords();
+    await preserveScroll(() => loadRecords());
   };
 
   const getPatientName = (id: string) => patients.find((p) => p.id === id)?.full_name ?? "—";

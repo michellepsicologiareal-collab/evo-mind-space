@@ -32,6 +32,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
+import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 
 const PATIENT_CATEGORIES = [
   { value: "adolescente", label: "Adolescente" },
@@ -420,8 +421,9 @@ const Patients = () => {
     toast.success(editing ? "Paciente atualizado" : "Paciente cadastrado");
     if (!editing) clearDraft();
     patientGuard.resetDirty();
+    keepScroll();
     setOpen(false);
-    load();
+    await preserveScroll(() => load());
   };
 
   const handleDelete = async (p: Patient) => {
@@ -432,13 +434,13 @@ const Patients = () => {
       return;
     }
     toast.success("Paciente excluído");
-    load();
+    await preserveScroll(() => load());
   };
 
   const toggleActive = async (p: Patient) => {
     const { error } = await supabase.from("patients").update({ is_active: !p.is_active }).eq("id", p.id);
     if (error) return toast.error("Erro ao atualizar");
-    load();
+    await preserveScroll(() => load());
   };
 
   const toggleSharing = async (p: Patient) => {

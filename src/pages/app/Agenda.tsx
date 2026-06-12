@@ -31,6 +31,7 @@ import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 import { EmotionChips } from "@/components/app/EmotionChips";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
@@ -586,8 +587,9 @@ const Agenda = () => {
     }
     clearSessionDraft();
     newGuard.resetDirty();
+    keepScroll();
     setOpen(false);
-    load(true); loadPending(true);
+    await preserveScroll(async () => { load(true); loadPending(true); });
   };
 
   const updateStatus = async (id: string, status: Status) => {
@@ -595,7 +597,7 @@ const Agenda = () => {
     if (error) return toast.error("Erro ao atualizar");
     if (status === "cancelled") { deleteSessionFromGcal(id); } else { syncSessionToGcal(id); }
     toast.success(`Marcada como ${statusLabel[status].toLowerCase()}`);
-    load(true); loadPending(true);
+    await preserveScroll(async () => { load(true); loadPending(true); });
   };
 
   const updatePaymentStatus = async (id: string, paymentStatus: PaymentStatus) => {
