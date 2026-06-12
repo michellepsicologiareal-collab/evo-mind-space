@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import {
   Dialog,
   DialogContent,
@@ -87,9 +88,10 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
     setSaving(false);
     if (error) return toast.error("Erro ao salvar RPD");
     toast.success("RPD salvo");
+    keepScroll();
     setOpen(false);
     setForm({ situation: "", automatic_thought: "", emotion: "", behavior: "", cognitive_distortion: "", rational_response: "" });
-    load();
+    await preserveScroll(() => load());
   };
 
   const handleDelete = async (id: string) => {

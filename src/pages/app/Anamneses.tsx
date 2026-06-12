@@ -11,6 +11,7 @@ import { Baby, Search, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 
 interface Row {
   id: string;
@@ -54,7 +55,7 @@ const Anamneses = () => {
     const { error } = await supabase.from("child_anamneses").delete().eq("id", id);
     if (error) { toast.error("Erro ao excluir"); return; }
     toast.success("Anamnese excluída");
-    load();
+    await preserveScroll(() => load());
   };
 
   return (
@@ -116,7 +117,7 @@ const Anamneses = () => {
             <DialogTitle className="font-display text-2xl">{editing?.name}</DialogTitle>
             <DialogDescription>Anamnese — Criança</DialogDescription>
           </DialogHeader>
-          {editing && <ChildAnamnesisForm patientId={editing.patient_id} patientName={editing.name} onSaved={load} />}
+          {editing && <ChildAnamnesisForm patientId={editing.patient_id} patientName={editing.name} onSaved={() => { keepScroll(); preserveScroll(() => load()); }} />}
         </DialogContent>
       </Dialog>
     </div>

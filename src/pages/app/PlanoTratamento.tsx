@@ -15,6 +15,7 @@ import { PlanoTratamentoHub } from "@/components/app/PlanoTratamentoHub";
 import { DSM5Diagnostic, type DSM5Detail, type DSM5HistoryItem, getDsm5EntryByLabel } from "@/components/app/DSM5Diagnostic";
 import { DSM5MultiDiagnostic } from "@/components/app/DSM5MultiDiagnostic";
 import { toast } from "sonner";
+import { preserveScroll } from "@/lib/preserveScroll";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { jsPDF } from "jspdf";
@@ -261,7 +262,7 @@ const PlanoTratamento = () => {
       ? await supabase.from("treatment_plans").update(payload).eq("id", plan.id)
       : await supabase.from("treatment_plans").upsert(payload, { onConflict: "patient_id" });
     setSaving(false);
-    if (error) toast.error("Erro ao salvar plano"); else { toast.success("Plano salvo"); loadAll(); }
+    if (error) toast.error("Erro ao salvar plano"); else { toast.success("Plano salvo"); await preserveScroll(() => loadAll()); }
   };
 
   const saveSessionPlan = async () => {
@@ -273,7 +274,7 @@ const PlanoTratamento = () => {
       ? await supabase.from("session_plans").update(payload).eq("id", sessionPlan.id)
       : await supabase.from("session_plans").insert(payload);
     setSaving(false);
-    if (error) toast.error("Erro ao salvar"); else { toast.success("Próxima sessão salva"); loadAll(); }
+    if (error) toast.error("Erro ao salvar"); else { toast.success("Próxima sessão salva"); await preserveScroll(() => loadAll()); }
   };
 
   const addGoal = async () => {
