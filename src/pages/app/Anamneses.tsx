@@ -55,7 +55,7 @@ const Anamneses = () => {
     const { error } = await supabase.from("child_anamneses").delete().eq("id", id);
     if (error) { toast.error("Erro ao excluir"); return; }
     toast.success("Anamnese excluída");
-    load();
+    await preserveScroll(() => load());
   };
 
   return (
