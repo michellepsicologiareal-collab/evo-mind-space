@@ -197,6 +197,37 @@ const Autocuidado = () => {
       .then(({ data }) => setPatients((data as PatientOption[]) ?? []));
   }, [user]);
 
+  // Load sessions for the selected mood date (to pick which one triggered)
+  useEffect(() => {
+    if (!user || !moodOpen) return;
+    setLoadingDaySessions(true);
+    const dayStart = new Date(moodDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(moodDate);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    supabase
+      .from("sessions")
+      .select("id, patient_id, scheduled_at, status, patients!inner(full_name)")
+      .eq("user_id", user.id)
+      .eq("is_expense", false)
+      .gte("scheduled_at", dayStart.toISOString())
+      .lte("scheduled_at", dayEnd.toISOString())
+      .neq("status", "cancelled")
+      .order("scheduled_at", { ascending: true })
+      .then(({ data }) => {
+        const mapped: DaySession[] = ((data as any[]) ?? []).map((s) => ({
+          id: s.id,
+          patient_id: s.patient_id,
+          patient_name: s.patients?.full_name ?? "Paciente",
+          scheduled_at: s.scheduled_at,
+          status: s.status,
+        }));
+        setDaySessions(mapped);
+        setLoadingDaySessions(false);
+      });
+  }, [user, moodDate, moodOpen]);
+
   // Load today's check-in
   useEffect(() => {
     if (!user) return;
