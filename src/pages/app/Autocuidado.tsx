@@ -175,6 +175,8 @@ const Autocuidado = () => {
   const [triggerPatientId, setTriggerPatientId] = useState<string | null>(null);
   const [savingTrigger, setSavingTrigger] = useState(false);
   const [patients, setPatients] = useState<PatientOption[]>([]);
+  const [daySessions, setDaySessions] = useState<DaySession[]>([]);
+  const [loadingDaySessions, setLoadingDaySessions] = useState(false);
 
   // History
   const [openCard, setOpenCard] = useState<string | null>(null);
