@@ -361,6 +361,7 @@ const Patients = () => {
       treatment_plan: p.treatment_plan ?? "",
       anamnesis: p.anamnesis ?? "",
       category: p.category ?? "individual",
+      modality: (p.modality as any) ?? "presencial",
       has_financial_responsible: p.has_financial_responsible ?? false,
       financial_responsible_name: p.financial_responsible_name ?? "",
       financial_responsible_phone: frLocalPhone,
