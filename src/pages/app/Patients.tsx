@@ -178,7 +178,7 @@ const Patients = () => {
       supabase.from("act_formulations").select("patient_id").eq("therapist_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
-    setPatients(patientsRes.data ?? []);
+    setPatients((patientsRes.data ?? []) as any);
     setPixKey((profileRes.data as any)?.pix_key ?? "");
     setProfName(profileRes.data?.full_name ?? "");
     setProfCrp((profileRes.data as any)?.crp ?? "");
