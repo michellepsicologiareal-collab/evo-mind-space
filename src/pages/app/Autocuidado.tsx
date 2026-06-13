@@ -143,6 +143,14 @@ interface PatientOption {
   full_name: string;
 }
 
+interface DaySession {
+  id: string;
+  patient_id: string;
+  patient_name: string;
+  scheduled_at: string;
+  status: string;
+}
+
 /* ── Component ── */
 const Autocuidado = () => {
   const { user } = useAuth();
