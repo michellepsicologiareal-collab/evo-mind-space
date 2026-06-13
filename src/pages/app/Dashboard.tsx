@@ -264,8 +264,14 @@ const Dashboard = () => {
         return d > now2 && s.status !== "completed" && s.status !== "cancelled" && s.status !== "no_show";
       }).length;
 
+      const activePatientsList = (patientsRes.data ?? []) as Array<{ id: string; modality: string | null }>;
+      const onlineN = activePatientsList.filter((p) => p.modality === "online").length;
+      const presencialN = activePatientsList.length - onlineN;
+      setOnlineCount(onlineN);
+      setPresencialCount(presencialN);
+
       setStats({
-        activePatients: patientsRes.count ?? 0,
+        activePatients: activePatientsList.length,
         todaySessions: todayRes.count ?? 0,
         monthRevenue: revenue,
         supervisionCases: supervisionRes.count ?? 0,
