@@ -398,6 +398,7 @@ const Patients = () => {
       treatment_plan: parsed.data.treatment_plan || null,
       anamnesis: parsed.data.anamnesis || null,
       category: parsed.data.category || "individual",
+      modality: parsed.data.modality || "presencial",
       has_financial_responsible: form.has_financial_responsible,
       financial_responsible_name: form.has_financial_responsible ? (form.financial_responsible_name || null) : null,
       financial_responsible_phone: form.has_financial_responsible && form.financial_responsible_phone
