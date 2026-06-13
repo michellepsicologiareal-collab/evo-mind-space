@@ -183,6 +183,8 @@ const Dashboard = () => {
   const [moodFilterPatient, setMoodFilterPatient] = useState<string>("all");
   const [moodPeriod, setMoodPeriod] = useState<"week" | "biweek" | "all">("all");
   const [moodChartPatient, setMoodChartPatient] = useState<string>("all");
+  const [onlineCount, setOnlineCount] = useState(0);
+  const [presencialCount, setPresencialCount] = useState(0);
 
   const [editGoalsOpen, setEditGoalsOpen] = useState(false);
   const [goalFormSessions, setGoalFormSessions] = useState(40);
