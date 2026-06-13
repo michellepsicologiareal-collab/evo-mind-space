@@ -1,0 +1,1 @@
+ALTER TABLE public.patients ADD COLUMN IF NOT EXISTS modality text NOT NULL DEFAULT 'presencial';

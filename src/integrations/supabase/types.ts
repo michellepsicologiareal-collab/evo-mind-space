@@ -527,6 +527,7 @@ export type Database = {
           id: string
           is_active: boolean
           medications: string | null
+          modality: string
           notes: string | null
           phone: string | null
           psychiatrist_name: string | null
@@ -554,6 +555,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           medications?: string | null
+          modality?: string
           notes?: string | null
           phone?: string | null
           psychiatrist_name?: string | null
@@ -581,6 +583,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           medications?: string | null
+          modality?: string
           notes?: string | null
           phone?: string | null
           psychiatrist_name?: string | null
