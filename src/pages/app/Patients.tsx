@@ -72,6 +72,7 @@ interface Patient {
   treatment_plan: string | null;
   anamnesis: string | null;
   category: "adolescente" | "avaliacao" | "casal" | "crianca" | "grupo" | "individual" | "sessao_breve" | "supervisao";
+  modality: "presencial" | "online";
   has_financial_responsible: boolean;
   financial_responsible_name: string | null;
   financial_responsible_phone: string | null;
