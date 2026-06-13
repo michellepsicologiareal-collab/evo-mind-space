@@ -546,19 +546,69 @@ const Autocuidado = () => {
             {/* Conditional trigger details */}
             {hadTriggerSession && (
               <div className="space-y-4 pl-2 border-l-2 border-sage/30 ml-1">
-                {/* Patient dropdown */}
+                {/* Day sessions picker */}
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-1 block">Qual paciente?</label>
-                  <select
-                    value={triggerPatientId ?? ""}
-                    onChange={(e) => setTriggerPatientId(e.target.value || null)}
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-sage/40"
-                  >
-                    <option value="">Selecionar paciente...</option>
-                    {patients.map((p) => (
-                      <option key={p.id} value={p.id}>{p.full_name}</option>
-                    ))}
-                  </select>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Sessões deste dia
+                    </label>
+                    <span className="text-xs text-muted-foreground">
+                      {loadingDaySessions
+                        ? "carregando..."
+                        : `${daySessions.length} ${daySessions.length === 1 ? "sessão" : "sessões"}`}
+                    </span>
+                  </div>
+
+                  {!loadingDaySessions && daySessions.length > 0 ? (
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {daySessions.map((s) => {
+                        const selected = triggerPatientId === s.patient_id;
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setTriggerPatientId(selected ? null : s.patient_id)}
+                            className={cn(
+                              "w-full flex items-center justify-between gap-3 rounded-xl border-2 px-3 py-2.5 text-left transition-all",
+                              selected
+                                ? "border-sage bg-sage/10 shadow-soft"
+                                : "border-border bg-background hover:border-sage/40 hover:bg-sage/5"
+                            )}
+                          >
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">
+                                {s.patient_name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {format(new Date(s.scheduled_at), "HH:mm")} · {s.status}
+                              </p>
+                            </div>
+                            {selected && (
+                              <span className="text-xs font-semibold text-sage shrink-0">
+                                ✓ Ativou
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : !loadingDaySessions ? (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground italic">
+                        Sem sessões registradas neste dia. Selecione um paciente manualmente:
+                      </p>
+                      <select
+                        value={triggerPatientId ?? ""}
+                        onChange={(e) => setTriggerPatientId(e.target.value || null)}
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-sage/40"
+                      >
+                        <option value="">Selecionar paciente...</option>
+                        {patients.map((p) => (
+                          <option key={p.id} value={p.id}>{p.full_name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* Trigger chips */}
