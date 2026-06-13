@@ -1208,6 +1208,18 @@ const Patients = () => {
                 ))}
               </select>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="modality">Modalidade</Label>
+              <select
+                id="modality"
+                value={form.modality}
+                onChange={(e) => setForm({ ...form, modality: e.target.value as "presencial" | "online" })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="presencial">Presencial</option>
+                <option value="online">Online</option>
+              </select>
+            </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
