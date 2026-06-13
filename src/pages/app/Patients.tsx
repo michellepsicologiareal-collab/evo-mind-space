@@ -56,6 +56,7 @@ const patientSchema = z.object({
   treatment_plan: z.string().trim().max(4000).optional().or(z.literal("")),
   anamnesis: z.string().trim().max(6000).optional().or(z.literal("")),
   category: z.enum(["adolescente", "avaliacao", "casal", "crianca", "grupo", "individual", "sessao_breve", "supervisao"]).optional(),
+  modality: z.enum(["presencial", "online"]).optional(),
 });
 
 interface Patient {
