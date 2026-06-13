@@ -143,6 +143,14 @@ interface PatientOption {
   full_name: string;
 }
 
+interface DaySession {
+  id: string;
+  patient_id: string;
+  patient_name: string;
+  scheduled_at: string;
+  status: string;
+}
+
 /* ── Component ── */
 const Autocuidado = () => {
   const { user } = useAuth();
@@ -167,6 +175,8 @@ const Autocuidado = () => {
   const [triggerPatientId, setTriggerPatientId] = useState<string | null>(null);
   const [savingTrigger, setSavingTrigger] = useState(false);
   const [patients, setPatients] = useState<PatientOption[]>([]);
+  const [daySessions, setDaySessions] = useState<DaySession[]>([]);
+  const [loadingDaySessions, setLoadingDaySessions] = useState(false);
 
   // History
   const [openCard, setOpenCard] = useState<string | null>(null);
@@ -186,6 +196,37 @@ const Autocuidado = () => {
       .order("full_name")
       .then(({ data }) => setPatients((data as PatientOption[]) ?? []));
   }, [user]);
+
+  // Load sessions for the selected mood date (to pick which one triggered)
+  useEffect(() => {
+    if (!user || !moodOpen) return;
+    setLoadingDaySessions(true);
+    const dayStart = new Date(moodDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(moodDate);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    supabase
+      .from("sessions")
+      .select("id, patient_id, scheduled_at, status, patients!inner(full_name)")
+      .eq("user_id", user.id)
+      .eq("is_expense", false)
+      .gte("scheduled_at", dayStart.toISOString())
+      .lte("scheduled_at", dayEnd.toISOString())
+      .neq("status", "cancelled")
+      .order("scheduled_at", { ascending: true })
+      .then(({ data }) => {
+        const mapped: DaySession[] = ((data as any[]) ?? []).map((s) => ({
+          id: s.id,
+          patient_id: s.patient_id,
+          patient_name: s.patients?.full_name ?? "Paciente",
+          scheduled_at: s.scheduled_at,
+          status: s.status,
+        }));
+        setDaySessions(mapped);
+        setLoadingDaySessions(false);
+      });
+  }, [user, moodDate, moodOpen]);
 
   // Load today's check-in
   useEffect(() => {
@@ -505,19 +546,69 @@ const Autocuidado = () => {
             {/* Conditional trigger details */}
             {hadTriggerSession && (
               <div className="space-y-4 pl-2 border-l-2 border-sage/30 ml-1">
-                {/* Patient dropdown */}
+                {/* Day sessions picker */}
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-1 block">Qual paciente?</label>
-                  <select
-                    value={triggerPatientId ?? ""}
-                    onChange={(e) => setTriggerPatientId(e.target.value || null)}
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-sage/40"
-                  >
-                    <option value="">Selecionar paciente...</option>
-                    {patients.map((p) => (
-                      <option key={p.id} value={p.id}>{p.full_name}</option>
-                    ))}
-                  </select>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Sessões deste dia
+                    </label>
+                    <span className="text-xs text-muted-foreground">
+                      {loadingDaySessions
+                        ? "carregando..."
+                        : `${daySessions.length} ${daySessions.length === 1 ? "sessão" : "sessões"}`}
+                    </span>
+                  </div>
+
+                  {!loadingDaySessions && daySessions.length > 0 ? (
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {daySessions.map((s) => {
+                        const selected = triggerPatientId === s.patient_id;
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setTriggerPatientId(selected ? null : s.patient_id)}
+                            className={cn(
+                              "w-full flex items-center justify-between gap-3 rounded-xl border-2 px-3 py-2.5 text-left transition-all",
+                              selected
+                                ? "border-sage bg-sage/10 shadow-soft"
+                                : "border-border bg-background hover:border-sage/40 hover:bg-sage/5"
+                            )}
+                          >
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">
+                                {s.patient_name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {format(new Date(s.scheduled_at), "HH:mm")} · {s.status}
+                              </p>
+                            </div>
+                            {selected && (
+                              <span className="text-xs font-semibold text-sage shrink-0">
+                                ✓ Ativou
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : !loadingDaySessions ? (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground italic">
+                        Sem sessões registradas neste dia. Selecione um paciente manualmente:
+                      </p>
+                      <select
+                        value={triggerPatientId ?? ""}
+                        onChange={(e) => setTriggerPatientId(e.target.value || null)}
+                        className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-sage/40"
+                      >
+                        <option value="">Selecionar paciente...</option>
+                        {patients.map((p) => (
+                          <option key={p.id} value={p.id}>{p.full_name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* Trigger chips */}
