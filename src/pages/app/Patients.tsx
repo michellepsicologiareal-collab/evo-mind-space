@@ -56,6 +56,7 @@ const patientSchema = z.object({
   treatment_plan: z.string().trim().max(4000).optional().or(z.literal("")),
   anamnesis: z.string().trim().max(6000).optional().or(z.literal("")),
   category: z.enum(["adolescente", "avaliacao", "casal", "crianca", "grupo", "individual", "sessao_breve", "supervisao"]).optional(),
+  modality: z.enum(["presencial", "online"]).optional(),
 });
 
 interface Patient {
@@ -71,6 +72,7 @@ interface Patient {
   treatment_plan: string | null;
   anamnesis: string | null;
   category: "adolescente" | "avaliacao" | "casal" | "crianca" | "grupo" | "individual" | "sessao_breve" | "supervisao";
+  modality: "presencial" | "online";
   has_financial_responsible: boolean;
   financial_responsible_name: string | null;
   financial_responsible_phone: string | null;
@@ -135,8 +137,8 @@ const Patients = () => {
   );
 
   const DRAFT_KEY = "rascunho_novo_paciente";
-  type FormState = { full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "adolescente" | "avaliacao" | "casal" | "crianca" | "grupo" | "individual" | "sessao_breve" | "supervisao"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string };
-  const emptyForm: FormState = { full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55", treatment_start_date: "", treatment_end_date: "", has_psychiatrist: false, psychiatrist_name: "", psychiatrist_phone: "", psychiatrist_phone_ddi: "+55", medications: "" };
+  type FormState = { full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "adolescente" | "avaliacao" | "casal" | "crianca" | "grupo" | "individual" | "sessao_breve" | "supervisao"; modality: "presencial" | "online"; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string };
+  const emptyForm: FormState = { full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", modality: "presencial", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55", treatment_start_date: "", treatment_end_date: "", has_psychiatrist: false, psychiatrist_name: "", psychiatrist_phone: "", psychiatrist_phone_ddi: "+55", medications: "" };
   const [form, setFormRaw] = useState<FormState>(emptyForm);
   const [draftRestored, setDraftRestored] = useState(false);
   const setForm = useCallback((v: typeof emptyForm | ((prev: typeof emptyForm) => typeof emptyForm)) => { patientGuard.markDirty(); setFormRaw(v); }, [patientGuard.markDirty]);
@@ -176,7 +178,7 @@ const Patients = () => {
       supabase.from("act_formulations").select("patient_id").eq("therapist_id", user.id),
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
-    setPatients(patientsRes.data ?? []);
+    setPatients((patientsRes.data ?? []) as any);
     setPixKey((profileRes.data as any)?.pix_key ?? "");
     setProfName(profileRes.data?.full_name ?? "");
     setProfCrp((profileRes.data as any)?.crp ?? "");
@@ -359,6 +361,7 @@ const Patients = () => {
       treatment_plan: p.treatment_plan ?? "",
       anamnesis: p.anamnesis ?? "",
       category: p.category ?? "individual",
+      modality: (p.modality as any) ?? "presencial",
       has_financial_responsible: p.has_financial_responsible ?? false,
       financial_responsible_name: p.financial_responsible_name ?? "",
       financial_responsible_phone: frLocalPhone,
@@ -395,6 +398,7 @@ const Patients = () => {
       treatment_plan: parsed.data.treatment_plan || null,
       anamnesis: parsed.data.anamnesis || null,
       category: parsed.data.category || "individual",
+      modality: parsed.data.modality || "presencial",
       has_financial_responsible: form.has_financial_responsible,
       financial_responsible_name: form.has_financial_responsible ? (form.financial_responsible_name || null) : null,
       financial_responsible_phone: form.has_financial_responsible && form.financial_responsible_phone
@@ -1202,6 +1206,18 @@ const Patients = () => {
                 {PATIENT_CATEGORIES.map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="modality">Modalidade</Label>
+              <select
+                id="modality"
+                value={form.modality}
+                onChange={(e) => setForm({ ...form, modality: e.target.value as "presencial" | "online" })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="presencial">Presencial</option>
+                <option value="online">Online</option>
               </select>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">

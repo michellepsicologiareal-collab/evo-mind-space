@@ -30,6 +30,8 @@ import {
   TrendingDown,
   Minus,
   MoreHorizontal,
+  Video,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -183,6 +185,8 @@ const Dashboard = () => {
   const [moodFilterPatient, setMoodFilterPatient] = useState<string>("all");
   const [moodPeriod, setMoodPeriod] = useState<"week" | "biweek" | "all">("all");
   const [moodChartPatient, setMoodChartPatient] = useState<string>("all");
+  const [onlineCount, setOnlineCount] = useState(0);
+  const [presencialCount, setPresencialCount] = useState(0);
 
   const [editGoalsOpen, setEditGoalsOpen] = useState(false);
   const [goalFormSessions, setGoalFormSessions] = useState(40);
@@ -209,7 +213,7 @@ const Dashboard = () => {
       const [profileRes, patientsRes, todayRes, monthRes, upcomingRes, supervisionRes, recordsRes, weekRes, monthAllRes, yearRes] =
         await Promise.all([
           supabase.from("profiles").select("full_name, clinic_name, goal_sessions, goal_revenue, goal_records").eq("id", user.id).maybeSingle(),
-          supabase.from("patients").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("is_active", true),
+          supabase.from("patients").select("id, modality").eq("user_id", user.id).eq("is_active", true),
           supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", dayStart).lte("scheduled_at", dayEnd).in("status", ["scheduled", "confirmed", "completed"]),
           supabase.from("sessions").select("price, status, scheduled_at, paid_at, payment_status").eq("user_id", user.id).gte("scheduled_at", periodStartISO).lte("scheduled_at", periodEndISO),
           supabase
@@ -262,8 +266,14 @@ const Dashboard = () => {
         return d > now2 && s.status !== "completed" && s.status !== "cancelled" && s.status !== "no_show";
       }).length;
 
+      const activePatientsList = (patientsRes.data ?? []) as Array<{ id: string; modality: string | null }>;
+      const onlineN = activePatientsList.filter((p) => p.modality === "online").length;
+      const presencialN = activePatientsList.length - onlineN;
+      setOnlineCount(onlineN);
+      setPresencialCount(presencialN);
+
       setStats({
-        activePatients: patientsRes.count ?? 0,
+        activePatients: activePatientsList.length,
         todaySessions: todayRes.count ?? 0,
         monthRevenue: revenue,
         supervisionCases: supervisionRes.count ?? 0,
@@ -627,6 +637,13 @@ const Dashboard = () => {
           <KPICard icon={CalendarDays} label="Sessões esta Semana" value={weekSessions.toString()} tooltip="Total de sessões (agendadas, confirmadas ou concluídas) na semana atual (segunda a domingo)." />
           <KPICard icon={CalendarRange} label="Sessões este Mês" value={monthSessions.toString()} tooltip="Total de sessões (agendadas, confirmadas ou concluídas) no mês corrente." />
         </section>
+
+        {/* ── Modalidade de Atendimento (pacientes ativos) ── */}
+        <section className="grid grid-cols-2 gap-4">
+          <KPICard icon={MapPin} label="Pacientes Presenciais" value={presencialCount.toString()} tooltip="Pacientes ativos cuja modalidade de atendimento é Presencial." />
+          <KPICard icon={Video} label="Pacientes Online" value={onlineCount.toString()} tooltip="Pacientes ativos cuja modalidade de atendimento é Online." />
+        </section>
+
 
         {/* ── Métricas de Sessões do Mês ── */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
