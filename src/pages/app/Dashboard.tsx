@@ -638,6 +638,13 @@ const Dashboard = () => {
           <KPICard icon={CalendarRange} label="Sessões este Mês" value={monthSessions.toString()} tooltip="Total de sessões (agendadas, confirmadas ou concluídas) no mês corrente." />
         </section>
 
+        {/* ── Modalidade de Atendimento (pacientes ativos) ── */}
+        <section className="grid grid-cols-2 gap-4">
+          <KPICard icon={MapPin} label="Pacientes Presenciais" value={presencialCount.toString()} tooltip="Pacientes ativos cuja modalidade de atendimento é Presencial." />
+          <KPICard icon={Video} label="Pacientes Online" value={onlineCount.toString()} tooltip="Pacientes ativos cuja modalidade de atendimento é Online." />
+        </section>
+
+
         {/* ── Métricas de Sessões do Mês ── */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard icon={ClipboardList} label="Previstos" value={stats.previstos.toString()} tooltip="Total de sessões previstas no período selecionado (todos os status)." />
