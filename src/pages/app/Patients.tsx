@@ -33,6 +33,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
+import { PageIntro } from "@/components/app/PageIntro";
 
 const PATIENT_CATEGORIES = [
   { value: "adolescente", label: "Adolescente" },
@@ -587,6 +588,9 @@ const Patients = () => {
           </button>
         </div>
       </div>
+
+      <PageIntro description="Cadastro central dos seus pacientes. Daqui você abre a ficha, registra sessões, organiza formulações de caso, acompanha humor e exporta dados clínicos." />
+
 
       {/* ─────────── INSIGHT STRIP ─────────── */}
       {(attentionPatients.length > 0 || lowAdherencePatients.length > 0) && (

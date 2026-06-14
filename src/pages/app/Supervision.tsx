@@ -35,6 +35,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageIntro } from "@/components/app/PageIntro";
 
 interface PatientListItem {
   id: string;
@@ -318,6 +319,9 @@ const Supervision = () => {
           </div>
         )}
       </header>
+
+      <PageIntro description="Como supervisor(a), você vê apenas o que cada supervisionando escolhe compartilhar — somente leitura, garantindo o sigilo do paciente e a autonomia do supervisionando." />
+
 
       {/* Invite section */}
       <section className="rounded-3xl bg-card border border-border shadow-card p-6 sm:p-8 space-y-4">

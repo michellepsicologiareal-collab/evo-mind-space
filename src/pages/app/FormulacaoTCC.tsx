@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { CaseFormulation } from "@/components/app/CaseFormulation";
+import { PageIntro } from "@/components/app/PageIntro";
 
 const G = "#534AB7";
 const G_BG = "#EEEDFE";
@@ -49,6 +50,8 @@ export default function FormulacaoTCC() {
                   TCC · 5 Aspectos
                 </span>
               </div>
+              <PageIntro className="mt-3" description="Modelo de 5 Aspectos de Padesky: conecta pensamento, emoção, comportamento, fisiologia e ambiente para entender o ciclo que mantém o sofrimento e planejar intervenções TCC." />
+
             </div>
           </div>
         </header>

@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
+import { PageIntro } from "@/components/app/PageIntro";
 
 interface Row {
   id: string;
@@ -70,6 +71,9 @@ const Anamneses = () => {
           <Input className="pl-9" placeholder="Buscar pelo nome..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </header>
+
+      <PageIntro description="A anamnese organiza a história de vida, o motivo da queixa e o contexto familiar de cada paciente — base clínica para hipóteses, plano terapêutico e devolutiva à família." />
+
 
       {loading ? (
         <CardSkeleton count={3} />

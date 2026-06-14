@@ -62,6 +62,7 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { PageIntro } from "@/components/app/PageIntro";
 
 type PaymentStatus = "pending" | "paid";
 type PaymentMethod = "pix" | "card" | "cash";
@@ -441,7 +442,7 @@ const Finance = () => {
           <p className="text-sm text-muted-foreground">Financeiro</p>
           <h1 className="mt-1 font-display text-4xl font-medium">Faturamento</h1>
           <p className="mt-2 text-muted-foreground">
-            Acompanhe sessões pagas, pendentes e seu faturamento mensal.
+            Acompanhe sessões pagas, pendentes e seu faturamento mensal. Cada sessão registrada na Agenda vira uma linha de receita aqui — você só marca como paga ao receber.
           </p>
         </div>
         <div className="flex items-center gap-2">

@@ -16,6 +16,7 @@ import { Loader2, Save, Sparkles, ArrowLeft, FileDown, Check, Copy, RefreshCw } 
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import { AbordagemBadge } from "@/components/app/AbordagemBadge";
+import { PageIntro } from "@/components/app/PageIntro";
 
 const G = "#B8860B";
 const G_BG = "#FDF6E3";
@@ -358,6 +359,8 @@ export default function FormulacaoTE() {
                   </span>
                 )}
               </div>
+              <PageIntro className="mt-3" description="Mapa de Esquemas Iniciais Desadaptativos (Young): identifica origens na infância, esquemas ativos e modos atuais para guiar a reparentalização limitada e o trabalho com o Adulto Saudável." />
+
             </div>
             <div className="flex w-full sm:w-auto items-center gap-2">
               <Button variant="outline" size="sm" onClick={exportPDF} className="flex-1 sm:flex-none"><FileDown className="h-4 w-4" /> <span className="hidden xs:inline sm:inline">Exportar PDF</span><span className="xs:hidden sm:hidden">PDF</span></Button>
