@@ -36,6 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PageIntro } from "@/components/app/PageIntro";
 
 interface Patient {
   id: string;
@@ -214,6 +215,9 @@ const Supervisees = () => {
           Gerencie os profissionais que você supervisiona e consulte os pacientes vinculados a cada um.
         </p>
       </header>
+
+      <PageIntro description="Convide e acompanhe os profissionais que você supervisiona. Eles decidem quais pacientes compartilhar com você — sempre só para leitura, preservando o sigilo." />
+
 
       {/* Invite section */}
       <section className="rounded-3xl bg-card border border-border shadow-card p-6 sm:p-8 space-y-4">

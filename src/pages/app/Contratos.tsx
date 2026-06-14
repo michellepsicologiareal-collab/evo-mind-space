@@ -26,6 +26,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { PageIntro } from "@/components/app/PageIntro";
 
 interface SignedContract {
   id: string;
@@ -96,6 +97,9 @@ export default function Contratos() {
           {contracts.length} contrato{contracts.length !== 1 ? "s" : ""} aceito{contracts.length !== 1 ? "s" : ""}
         </p>
       </div>
+
+      <PageIntro description="Termos de adesão e consentimento informado assinados digitalmente pelos pacientes — registro legal do enquadre terapêutico aceito por cada um." />
+
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

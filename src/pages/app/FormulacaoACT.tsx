@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import ReactMarkdown from "react-markdown";
+import { PageIntro } from "@/components/app/PageIntro";
 
 // Palette ACT
 const GREEN = "#2D6A4F";
@@ -349,6 +350,8 @@ export default function FormulacaoACT() {
                   </span>
                 )}
               </div>
+              <PageIntro className="mt-3" description="Hexaflex de Hayes: avalia flexibilidade psicológica em seis processos — desfusão, aceitação, eu como contexto, contato com o presente, valores e ação comprometida — para construir uma vida orientada por valores." />
+
             </div>
             <div className="flex w-full sm:w-auto items-center gap-2">
               <Button variant="outline" size="sm" onClick={exportPDF} className="flex-1 sm:flex-none"><FileDown className="h-4 w-4" /> <span className="hidden sm:inline">Exportar PDF</span><span className="sm:hidden">PDF</span></Button>

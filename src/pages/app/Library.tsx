@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PremiumGate } from "@/components/app/PremiumGate";
+import { PageIntro } from "@/components/app/PageIntro";
 
 type Category = "documentos_legais" | "materiais_pacientes" | "guias_tcc";
 
@@ -103,6 +104,9 @@ const Library = () => {
           Curadoria de materiais essenciais para a sua prática clínica.
         </p>
       </header>
+
+      <PageIntro description="Materiais de referência (escalas, protocolos clínicos, modelos legais e éticos) para consultar e baixar quando precisar — sem precisar sair do sistema durante a clínica." />
+
 
       <Tabs defaultValue="documentos_legais">
         <TabsList className="w-full justify-start flex-wrap h-auto gap-1 bg-transparent p-0">

@@ -21,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 import { preserveScroll } from "@/lib/preserveScroll";
+import { PageIntro } from "@/components/app/PageIntro";
 
 const DRAFT_KEY = "rascunho_registro_sessao";
 
@@ -616,6 +617,7 @@ const RegistroSessao = () => {
             </p>
           </div>
         </div>
+        <PageIntro description="Onde você documenta cada sessão — queixa, intervenção, evolução e plano para a próxima. Boas notas sustentam o raciocínio clínico e protegem a continuidade do tratamento." />
         <RegistroSessaoHub onSelectPatient={(id) => setForm((f) => ({ ...f, patient_id: id }))} />
       </div>
     );

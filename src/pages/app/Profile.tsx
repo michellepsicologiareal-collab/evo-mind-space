@@ -23,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { PageIntro } from "@/components/app/PageIntro";
 
 const profileSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(120),
@@ -518,6 +519,9 @@ const Profile = () => {
         <h1 className="font-display text-4xl font-medium">Perfil</h1>
         <p className="mt-2 text-muted-foreground">Suas informações profissionais.</p>
       </header>
+
+      <PageIntro description="Suas informações profissionais aparecem em contratos, recibos e PDFs gerados pelo sistema. Mantenha CPF, CRP e dados de contato sempre atualizados." />
+
 
       <section className="rounded-3xl bg-card border border-border shadow-card p-8">
         <div className="flex items-center gap-6">

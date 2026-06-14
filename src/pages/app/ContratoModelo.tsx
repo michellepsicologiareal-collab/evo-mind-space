@@ -11,6 +11,7 @@ import { Loader2, FileText, Copy, ExternalLink, Plus, Trash2, Link2, FileCheck }
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
+import { PageIntro } from "@/components/app/PageIntro";
 
 interface Clause {
   key: string;
@@ -291,6 +292,9 @@ export default function ContratoModelo() {
           </Button>
         </div>
       </div>
+
+      <PageIntro description="Modelo único de contrato terapêutico, personalizado com seus dados profissionais. O paciente recebe um link, lê e assina digitalmente — fica salvo em Contratos Assinados." />
+
 
       {draftRestored && (
         <div className="rounded-lg bg-accent/20 border border-accent/30 px-3 py-2 text-sm text-muted-foreground flex items-center justify-between gap-2">

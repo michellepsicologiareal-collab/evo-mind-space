@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { jsPDF } from "jspdf";
 import { cn } from "@/lib/utils";
+import { PageIntro } from "@/components/app/PageIntro";
 
 type Patient = {
   id: string;
@@ -504,6 +505,8 @@ const PlanoTratamento = () => {
             </p>
           </div>
         </div>
+
+        <PageIntro description="Centraliza o plano terapêutico de cada paciente: objetivos, técnicas, revisões e indicadores de progresso. Use para guiar e documentar a evolução do tratamento — e para revisar com o paciente em sessões de fechamento." />
 
         {patientId && (
           <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
