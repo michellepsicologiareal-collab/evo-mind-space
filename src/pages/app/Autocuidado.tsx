@@ -905,15 +905,20 @@ const Autocuidado = () => {
           </Button>
           <span className="text-sm text-muted-foreground">atendimentos</span>
         </div>
-        <div className="flex items-center gap-4 mt-5">
+        <div className="flex items-center gap-3 mt-5 flex-wrap">
           <Button variant="outline" size="sm" className="min-h-[44px] border-sage/30 text-sage hover:bg-sage/10"
             onClick={() => setPauseCount((p) => p + 1)}>
             <Pause className="h-4 w-4" /> Registrar pausa
           </Button>
           {pauseCount > 0 && (
-            <span className="text-sm text-muted-foreground">
-              {pauseCount} {pauseCount === 1 ? "pausa" : "pausas"} hoje
-            </span>
+            <>
+              <Button variant="outline" size="icon" onClick={() => setPauseCount((p) => Math.max(0, p - 1))} aria-label="Remover pausa">
+                <span className="text-lg font-bold">−</span>
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {pauseCount} {pauseCount === 1 ? "pausa" : "pausas"} hoje
+              </span>
+            </>
           )}
         </div>
       </section>
