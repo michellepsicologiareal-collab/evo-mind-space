@@ -23,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { PageIntro } from "@/components/app/PageIntro";
+import { PageHeader } from "@/components/app/PageHeader";
 
 const profileSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(120),
