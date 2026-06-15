@@ -208,6 +208,87 @@
   ::selection { background: hsl(var(--primary) / 0.2); }
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Dark mode rescue — telas com cores hardcoded
+   Reescreve dentro da app-shell (escopo: rotas /app/*) os
+   estilos inline e classes utilitárias que travavam o tema claro.
+   ───────────────────────────────────────────────────────────── */
+.dark .app-shell .bg-white { background-color: hsl(var(--card)) !important; }
+.dark .app-shell .text-foreground { color: hsl(var(--foreground)); }
+
+/* Inline backgrounds (cards brancos, fundos bege claros) */
+.dark .app-shell [style*="background-color: #FFFFFF"],
+.dark .app-shell [style*="background-color:#FFFFFF"],
+.dark .app-shell [style*="background-color: #ffffff"],
+.dark .app-shell [style*="background-color: #FFF"],
+.dark .app-shell [style*="background-color:#FFF"],
+.dark .app-shell [style*="background-color: #fff"],
+.dark .app-shell [style*="background: #FFFFFF"],
+.dark .app-shell [style*="background:#FFFFFF"],
+.dark .app-shell [style*="background: #FFF"],
+.dark .app-shell [style*="background: #fff"],
+.dark .app-shell [style*="backgroundColor: \"#FFFFFF\""] {
+  background-color: hsl(var(--card)) !important;
+}
+
+/* Fundo bege/cinza claro de containers */
+.dark .app-shell [style*="background-color: #F7F6F3"],
+.dark .app-shell [style*="background-color:#F7F6F3"],
+.dark .app-shell [style*="background-color: #F9FAFB"],
+.dark .app-shell [style*="background-color:#F9FAFB"],
+.dark .app-shell [style*="background-color: #F3F4F6"],
+.dark .app-shell [style*="background-color:#F3F4F6"] {
+  background-color: hsl(var(--muted)) !important;
+}
+
+/* Bordas cinza claras (#E5E7EB) */
+.dark .app-shell [style*="border: 1px solid #E5E7EB"],
+.dark .app-shell [style*="border:1px solid #E5E7EB"],
+.dark .app-shell [style*="1px solid #E5E7EB"] {
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Textos dark hardcoded (#1A1A2E quase preto) → foreground */
+.dark .app-shell [style*="color: #1A1A2E"],
+.dark .app-shell [style*="color:#1A1A2E"],
+.dark .app-shell [style*="color: #1a1a2e"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Textos muted hardcoded (#6B7280) → muted-foreground */
+.dark .app-shell [style*="color: #6B7280"],
+.dark .app-shell [style*="color:#6B7280"],
+.dark .app-shell [style*="color: #6b7280"] {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Roxo escuro hardcoded (#534AB7, #3C3489) → primary do dark */
+.dark .app-shell [style*="color: #534AB7"],
+.dark .app-shell [style*="color:#534AB7"],
+.dark .app-shell [style*="color: #3C3489"] {
+  color: hsl(var(--primary)) !important;
+}
+
+/* Pílulas roxas claras (#EEEDFE) → secondary do dark */
+.dark .app-shell [style*="background-color: #EEEDFE"],
+.dark .app-shell [style*="background-color:#EEEDFE"] {
+  background-color: hsl(var(--secondary)) !important;
+}
+
+/* Pílula verde "Salvo" (#EAF3DE/#2D6A4F) → tokens moss */
+.dark .app-shell [style*="background-color: #EAF3DE"] {
+  background-color: hsl(var(--moss) / 0.18) !important;
+}
+.dark .app-shell [style*="color: #2D6A4F"] {
+  color: hsl(var(--moss)) !important;
+}
+
+/* bg-white em utilitárias residuais dentro de chips/badges */
+.dark .app-shell .hover\:bg-white\/60:hover { background-color: hsl(var(--muted) / 0.6) !important; }
+.dark .app-shell .bg-white\/60 { background-color: hsl(var(--card) / 0.6) !important; }
+
+
+
 @layer utilities {
   /* Linha dourada universal no topo dos cards */
   .gold-top { position: relative; }
