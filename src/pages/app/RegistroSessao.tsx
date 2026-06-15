@@ -611,7 +611,7 @@ const RegistroSessao = () => {
             <FileText className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="font-display text-2xl font-bold">Registro de Sessão</h1>
+            <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Registro de Sessão</h1>
             <p className="text-sm text-muted-foreground">
               Selecione um paciente para registrar a sessão
             </p>

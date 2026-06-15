@@ -499,7 +499,7 @@ const PlanoTratamento = () => {
             <ClipboardList className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="font-display text-2xl font-bold">Plano de tratamento</h1>
+            <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Plano de tratamento</h1>
             <p className="text-sm text-muted-foreground">
               {patientId ? "Organize objetivos, técnicas e revisões do tratamento" : "Centro de organização clínica — selecione um paciente para abrir seu plano"}
             </p>

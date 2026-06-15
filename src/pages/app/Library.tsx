@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PremiumGate } from "@/components/app/PremiumGate";
-import { PageIntro } from "@/components/app/PageIntro";
+import { PageHeader } from "@/components/app/PageHeader";
 
 type Category = "documentos_legais" | "materiais_pacientes" | "guias_tcc";
 
@@ -98,14 +98,13 @@ const Library = () => {
 
   return (
     <div className="space-y-8 animate-fade-up">
-      <header>
-        <h1 className="font-display text-4xl font-medium">Biblioteca Clínica</h1>
-        <p className="mt-2 text-muted-foreground">
-          Curadoria de materiais essenciais para a sua prática clínica.
-        </p>
-      </header>
+      <PageHeader
+        icon={BookOpen}
+        title="Biblioteca Clínica"
+        subtitle="Curadoria de materiais essenciais para a sua prática clínica."
+        intro="Materiais de referência (escalas, protocolos clínicos, modelos legais e éticos) para consultar e baixar quando precisar — sem precisar sair do sistema durante a clínica."
+      />
 
-      <PageIntro description="Materiais de referência (escalas, protocolos clínicos, modelos legais e éticos) para consultar e baixar quando precisar — sem precisar sair do sistema durante a clínica." />
 
 
       <Tabs defaultValue="documentos_legais">

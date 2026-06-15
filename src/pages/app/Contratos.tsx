@@ -26,7 +26,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { PageIntro } from "@/components/app/PageIntro";
+import { PageHeader } from "@/components/app/PageHeader";
 
 interface SignedContract {
   id: string;
@@ -90,15 +90,15 @@ export default function Contratos() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-display font-bold">Contratos Assinados</h1>
-        <p className="text-muted-foreground text-sm">
-          {contracts.length} contrato{contracts.length !== 1 ? "s" : ""} aceito{contracts.length !== 1 ? "s" : ""}
-        </p>
-      </div>
+    <div className="space-y-6 animate-fade-up">
+      <PageHeader
+        icon={FileCheck}
+        title="Contratos Assinados"
+        subtitle={`${contracts.length} contrato${contracts.length !== 1 ? "s" : ""} aceito${contracts.length !== 1 ? "s" : ""}`}
+        intro="Termos de adesão e consentimento informado assinados digitalmente pelos pacientes — registro legal do enquadre terapêutico aceito por cada um."
+      />
 
-      <PageIntro description="Termos de adesão e consentimento informado assinados digitalmente pelos pacientes — registro legal do enquadre terapêutico aceito por cada um." />
+
 
 
       <div className="relative max-w-sm">
