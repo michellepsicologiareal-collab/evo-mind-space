@@ -209,14 +209,13 @@ const Supervisees = () => {
 
   return (
     <div className="space-y-8 animate-fade-up max-w-4xl">
-      <header>
-        <h1 className="font-display text-4xl font-medium">Supervisionandos</h1>
-        <p className="mt-2 text-muted-foreground">
-          Gerencie os profissionais que você supervisiona e consulte os pacientes vinculados a cada um.
-        </p>
-      </header>
+      <PageHeader
+        icon={GraduationCap}
+        title="Supervisionandos"
+        subtitle="Gerencie os profissionais que você supervisiona e consulte os pacientes vinculados a cada um."
+        intro="Convide e acompanhe os profissionais que você supervisiona. Eles decidem quais pacientes compartilhar com você — sempre só para leitura, preservando o sigilo."
+      />
 
-      <PageIntro description="Convide e acompanhe os profissionais que você supervisiona. Eles decidem quais pacientes compartilhar com você — sempre só para leitura, preservando o sigilo." />
 
 
       {/* Invite section */}
