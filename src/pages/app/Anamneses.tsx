@@ -63,7 +63,7 @@ const Anamneses = () => {
   return (
     <div className="space-y-6 animate-fade-up">
       <PageHeader
-        icon={ClipboardList}
+        icon={Baby}
         title="Anamneses"
         subtitle="Anamneses preenchidas dos seus pacientes infantis."
         intro="A anamnese organiza a história de vida, o motivo da queixa e o contexto familiar de cada paciente — base clínica para hipóteses, plano terapêutico e devolutiva à família."
