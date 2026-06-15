@@ -12,7 +12,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
-import { PageIntro } from "@/components/app/PageIntro";
+import { PageHeader } from "@/components/app/PageHeader";
+
 
 interface Row {
   id: string;
