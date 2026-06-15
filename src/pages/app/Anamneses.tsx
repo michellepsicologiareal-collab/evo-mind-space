@@ -60,19 +60,20 @@ const Anamneses = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl text-foreground">Anamneses</h1>
-          <p className="text-sm text-muted-foreground mt-1">Anamneses preenchidas dos seus pacientes infantis.</p>
-        </div>
-        <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Buscar pelo nome..." value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-      </header>
+    <div className="space-y-6 animate-fade-up">
+      <PageHeader
+        icon={ClipboardList}
+        title="Anamneses"
+        subtitle="Anamneses preenchidas dos seus pacientes infantis."
+        intro="A anamnese organiza a história de vida, o motivo da queixa e o contexto familiar de cada paciente — base clínica para hipóteses, plano terapêutico e devolutiva à família."
+        actions={
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input className="pl-9" placeholder="Buscar pelo nome..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+        }
+      />
 
-      <PageIntro description="A anamnese organiza a história de vida, o motivo da queixa e o contexto familiar de cada paciente — base clínica para hipóteses, plano terapêutico e devolutiva à família." />
 
 
       {loading ? (
