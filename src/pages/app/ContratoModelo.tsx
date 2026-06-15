@@ -11,7 +11,7 @@ import { Loader2, FileText, Copy, ExternalLink, Plus, Trash2, Link2, FileCheck }
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { PageIntro } from "@/components/app/PageIntro";
+import { PageHeader } from "@/components/app/PageHeader";
 
 interface Clause {
   key: string;
