@@ -274,26 +274,26 @@ export default function ContratoModelo() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold">Termo de Adesão</h1>
-          <p className="text-muted-foreground text-sm">
-            Personalize seu contrato. O paciente receberá um link para preenchimento e aceite.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => navigate("/app/contratos")}>
-            <FileCheck className="h-4 w-4 mr-1" /> Contratos assinados
-          </Button>
-          <Button variant="accent" onClick={handleSave} disabled={saving}>
-            {saving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-            Salvar Modelo
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-6 animate-fade-up">
+      <PageHeader
+        icon={FileText}
+        title="Termo de Adesão"
+        subtitle="Personalize seu contrato. O paciente receberá um link para preenchimento e aceite."
+        intro="Modelo único de contrato terapêutico, personalizado com seus dados profissionais. O paciente recebe um link, lê e assina digitalmente — fica salvo em Contratos Assinados."
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={() => navigate("/app/contratos")}>
+              <FileCheck className="h-4 w-4 mr-1" /> Contratos assinados
+            </Button>
+            <Button variant="accent" onClick={handleSave} disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+              Salvar Modelo
+            </Button>
+          </>
+        }
+      />
 
-      <PageIntro description="Modelo único de contrato terapêutico, personalizado com seus dados profissionais. O paciente recebe um link, lê e assina digitalmente — fica salvo em Contratos Assinados." />
+
 
 
       {draftRestored && (
