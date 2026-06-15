@@ -301,25 +301,27 @@ const Supervision = () => {
 
   return (
     <div className="space-y-8 animate-fade-up max-w-3xl">
-      <header>
-        <h1 className="font-display text-4xl font-medium">Supervisão</h1>
-        <p className="mt-2 text-muted-foreground">
-          Acompanhe os pacientes compartilhados pelos seus supervisionandos — somente leitura.
-        </p>
-        {!loading && (
-          <div className="mt-3 flex gap-4 text-sm">
-            <span className="rounded-lg bg-secondary px-3 py-1 font-medium">
-              {supervisees.length} {supervisees.length === 1 ? "supervisionando" : "supervisionandos"}
-            </span>
-            <span className="rounded-lg bg-secondary px-3 py-1 font-medium">
-              <Eye className="inline h-3.5 w-3.5 mr-1 -mt-0.5" />
-              {totalShared} {totalShared === 1 ? "paciente compartilhado" : "pacientes compartilhados"}
-            </span>
-          </div>
-        )}
-      </header>
+      <PageHeader
+        icon={Users}
+        title="Supervisão"
+        subtitle="Acompanhe os pacientes compartilhados pelos seus supervisionandos — somente leitura."
+        intro="Como supervisor(a), você vê apenas o que cada supervisionando escolhe compartilhar — somente leitura, garantindo o sigilo do paciente e a autonomia do supervisionando."
+        meta={
+          !loading ? (
+            <>
+              <span className="inline-flex items-center rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+                {supervisees.length} {supervisees.length === 1 ? "supervisionando" : "supervisionandos"}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+                <Eye className="h-3.5 w-3.5" />
+                {totalShared} {totalShared === 1 ? "paciente compartilhado" : "pacientes compartilhados"}
+              </span>
+            </>
+          ) : undefined
+        }
+      />
 
-      <PageIntro description="Como supervisor(a), você vê apenas o que cada supervisionando escolhe compartilhar — somente leitura, garantindo o sigilo do paciente e a autonomia do supervisionando." />
+
 
 
       {/* Invite section */}
