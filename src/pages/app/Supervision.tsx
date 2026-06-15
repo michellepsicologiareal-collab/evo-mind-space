@@ -245,9 +245,8 @@ const Supervision = () => {
   if (profileType !== "supervisor") {
     return (
       <div className="space-y-8 animate-fade-up max-w-3xl">
-        <header>
-          <h1 className="font-display text-4xl font-medium">Supervisão</h1>
-        </header>
+        <PageHeader icon={Users} title="Supervisão" />
+
         <div className="rounded-3xl bg-card border border-border shadow-card p-8 sm:p-12 text-center space-y-6">
           <img
             src={michellePhoto}
