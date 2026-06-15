@@ -26,7 +26,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { PageIntro } from "@/components/app/PageIntro";
+import { PageHeader } from "@/components/app/PageHeader";
 
 interface SignedContract {
   id: string;
