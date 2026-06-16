@@ -661,6 +661,54 @@ const Agenda = () => {
     await load(true); loadPending(true);
   };
 
+  // Exclui a sessão atual + todas as outras do mesmo pacote (passadas e futuras).
+  const executeDeleteSeries = async (includeFinancial: boolean) => {
+    if (!deleteSessionId || !user) return;
+    const current = sessions.find((s) => s.id === deleteSessionId)
+      || pendingSessions.find((s) => s.id === deleteSessionId)
+      || pendingPackageSessions.find((s) => s.id === deleteSessionId);
+    if (!current || !current.patient_id) return;
+    const pkgInfo = getPackageInfo(current.notes);
+    if (!pkgInfo) return;
+
+    setDeleting(true);
+    // Busca todas as irmãs do pacote (mesmo paciente + mesmo total no notes)
+    const { data: siblings } = await supabase.from("sessions")
+      .select("id, notes")
+      .eq("user_id", user.id)
+      .eq("patient_id", current.patient_id);
+    const ids = (siblings ?? [])
+      .filter((s: any) => s.notes && /Plano \d+ sess/.test(s.notes) && s.notes.includes(`/${pkgInfo.total})`))
+      .map((s: any) => s.id);
+    if (!ids.includes(deleteSessionId)) ids.push(deleteSessionId);
+
+    // Limpa GCal e relações em paralelo
+    await Promise.all(ids.map((id) => deleteSessionFromGcal(id)));
+    await Promise.all([
+      supabase.from("patient_progress").delete().in("session_id", ids),
+      supabase.from("session_gcal_events").delete().in("session_id", ids),
+      supabase.from("session_records").delete().in("session_id", ids),
+      supabase.from("session_evolutions").delete().in("session_id", ids),
+    ]);
+
+    if (includeFinancial) {
+      const { error } = await supabase.from("sessions").delete().in("id", ids);
+      if (error) { setDeleting(false); toast.error("Erro ao excluir sequência"); return; }
+      toast.success(`${ids.length} sessões do pacote excluídas (com financeiro)`);
+    } else {
+      const { error } = await supabase.from("sessions").update({ status: "cancelled" as any }).in("id", ids);
+      if (error) { setDeleting(false); toast.error("Erro ao excluir sequência"); return; }
+      toast.success(`${ids.length} sessões do pacote canceladas (financeiro mantido)`);
+    }
+
+    setDeleting(false);
+    setDeleteConfirmOpen(false);
+    setDeleteSessionId(null);
+    if (editOpen) { editGuard.resetDirty(); setEditOpen(false); }
+    await load(true); loadPending(true);
+  };
+
+
   const copyConfirmationLink = async (s: Session) => {
     let token = s.confirmation_token;
     if (!token) {
