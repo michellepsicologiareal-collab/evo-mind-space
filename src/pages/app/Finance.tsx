@@ -447,12 +447,17 @@ const Finance = () => {
   return (
     <div className="space-y-8 animate-fade-up">
       <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Financeiro</p>
-          <h1 className="mt-1 font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Faturamento</h1>
-          <p className="mt-1.5 text-sm md:text-base text-muted-foreground max-w-2xl">
-            Acompanhe sessões pagas, pendentes e seu faturamento mensal. Cada sessão registrada na Agenda vira uma linha de receita aqui — você só marca como paga ao receber.
-          </p>
+        <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+          <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent">
+            <Wallet className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Financeiro</p>
+            <h1 className="mt-1 font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Faturamento</h1>
+            <p className="mt-1.5 text-sm md:text-base text-muted-foreground max-w-2xl">
+              Acompanhe sessões pagas, pendentes e seu faturamento mensal. Cada sessão registrada na Agenda vira uma linha de receita aqui — você só marca como paga ao receber.
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
