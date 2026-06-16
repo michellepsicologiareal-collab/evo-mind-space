@@ -76,6 +76,7 @@ interface Row {
   payment_reference: string | null;
   price: number | null;
   paid_at: string | null;
+  session_type: string | null;
   patient: { full_name: string } | null;
   service: { name: string } | null;
 }
