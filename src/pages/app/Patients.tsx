@@ -564,32 +564,36 @@ const Patients = () => {
       style={{ background: C.pageBg, fontFamily: "Inter, sans-serif", color: C.ink }}
     >
       {/* ─────────── TOPBAR ─────────── */}
-      <div className="flex flex-wrap items-center gap-3 mb-5">
-        <div className="flex items-baseline gap-3 min-w-0">
-          <h1 style={{ fontWeight: 700, fontSize: 22, letterSpacing: "-0.3px", color: C.ink }}>Pacientes</h1>
-          <span style={{ fontSize: 13, color: C.muted }}>{todayLabelCap}</span>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-5">
+        <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+          <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent">
+            <User className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Clínica</p>
+            <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Pacientes</h1>
+            <p className="mt-1.5 text-sm md:text-base text-muted-foreground max-w-2xl">{todayLabelCap}</p>
+          </div>
         </div>
-        <div className="ml-auto flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap sm:justify-end">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: C.muted }} />
-            <input
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar paciente..."
-              style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px 8px 34px", fontSize: 13, color: C.ink, width: 220, outline: "none" }}
+              className="pl-9 w-[220px] rounded-full"
             />
           </div>
-          <button
-            onClick={openNew}
-            className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-90"
-            style={{ background: C.ink, color: "#fff", borderRadius: 8, padding: "9px 14px", fontWeight: 600, fontSize: 13 }}
-          >
+          <Button onClick={openNew} variant="accent" className="rounded-full font-display font-semibold">
             <Plus className="h-4 w-4" /> Novo paciente
-          </button>
+          </Button>
         </div>
-      </div>
+      </header>
 
       <PageIntro description="Cadastro central dos seus pacientes. Daqui você abre a ficha, registra sessões, organiza formulações de caso, acompanha humor e exporta dados clínicos." />
+
+
 
 
       {/* ─────────── INSIGHT STRIP ─────────── */}

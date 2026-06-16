@@ -76,6 +76,7 @@ interface Row {
   payment_reference: string | null;
   price: number | null;
   paid_at: string | null;
+  session_type: string | null;
   patient: { full_name: string } | null;
   service: { name: string } | null;
 }
@@ -259,11 +260,19 @@ const Finance = () => {
     return weeks;
   }, [rows, monthStart, monthEnd]);
 
-  // Service breakdown
+  // Service breakdown — agrupa por serviço/atendimento. Sessões clínicas sem
+  // serviço cadastrado entram como "Atendimento Clínico"; supervisões como
+  // "Supervisão". Outras entradas usam o nome do serviço.
   const serviceBreakdown = useMemo(() => {
     const map = new Map<string, { name: string; total: number; count: number }>();
     fortnightBillable.filter((r) => r.payment_status === "paid").forEach((r) => {
-      const name = (r.service as any)?.name ?? "Sem serviço";
+      const svcName = (r.service as any)?.name as string | undefined;
+      let name = svcName;
+      if (!name) {
+        if (r.session_type === "supervision") name = "Supervisão";
+        else if (r.session_type === "clinical") name = "Atendimento Clínico";
+        else name = "Outros";
+      }
       const entry = map.get(name);
       if (entry) {
         entry.total += Number(r.price ?? 0);
@@ -438,12 +447,17 @@ const Finance = () => {
   return (
     <div className="space-y-8 animate-fade-up">
       <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Financeiro</p>
-          <h1 className="mt-1 font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Faturamento</h1>
-          <p className="mt-1.5 text-sm md:text-base text-muted-foreground max-w-2xl">
-            Acompanhe sessões pagas, pendentes e seu faturamento mensal. Cada sessão registrada na Agenda vira uma linha de receita aqui — você só marca como paga ao receber.
-          </p>
+        <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+          <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent">
+            <Wallet className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Financeiro</p>
+            <h1 className="mt-1 font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Faturamento</h1>
+            <p className="mt-1.5 text-sm md:text-base text-muted-foreground max-w-2xl">
+              Acompanhe sessões pagas, pendentes e seu faturamento mensal. Cada sessão registrada na Agenda vira uma linha de receita aqui — você só marca como paga ao receber.
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">

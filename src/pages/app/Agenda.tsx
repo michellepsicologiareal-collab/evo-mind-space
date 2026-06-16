@@ -1259,9 +1259,15 @@ const Agenda = () => {
       </button>
 
       <header className="flex flex-wrap items-end justify-between gap-3 sticky top-16 md:static z-30 -mx-6 px-6 -mt-6 pt-6 md:m-0 md:p-0 bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none pb-3 md:pb-0">
-        <div>
-          <h1 className="font-display text-2xl sm:text-4xl font-medium">Agenda</h1>
-          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-muted-foreground">Visualize e organize seus atendimentos. Sessões marcadas aqui viram lembretes para o paciente, entradas no Google Calendar e linhas no Financeiro.</p>
+        <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+          <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent">
+            <CalendarIcon className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Clínica</p>
+            <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Agenda</h1>
+            <p className="mt-1.5 text-sm md:text-base text-muted-foreground max-w-2xl">Visualize e organize seus atendimentos. Sessões marcadas aqui viram lembretes para o paciente, entradas no Google Calendar e linhas no Financeiro.</p>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Button
