@@ -2338,32 +2338,75 @@ const Agenda = () => {
               Escolha o que deseja excluir:
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 py-2">
-            <Button
-              variant="outline"
-              className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden"
-              disabled={deleting}
-              onClick={() => executeDelete(false)}
-            >
-              <Trash2 className="h-4 w-4 text-muted-foreground shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-sm text-foreground">Excluir apenas a sessão</p>
-                <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso e eventos vinculados</p>
+          {(() => {
+            const current = deleteSessionId
+              ? (sessions.find((s) => s.id === deleteSessionId)
+                || pendingSessions.find((s) => s.id === deleteSessionId)
+                || pendingPackageSessions.find((s) => s.id === deleteSessionId))
+              : null;
+            const pkg = current ? getPackageInfo(current.notes) : null;
+            return (
+              <div className="space-y-3 py-2">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden"
+                  disabled={deleting}
+                  onClick={() => executeDelete(false)}
+                >
+                  <Trash2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm text-foreground">Excluir apenas a sessão</p>
+                    <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso e eventos vinculados</p>
+                  </div>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden border-destructive/30 hover:bg-destructive/5"
+                  disabled={deleting}
+                  onClick={() => executeDelete(true)}
+                >
+                  <DollarSign className="h-4 w-4 text-destructive shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm text-destructive">Excluir sessão + lançamento financeiro</p>
+                    <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso, eventos vinculados e o lançamento financeiro</p>
+                  </div>
+                </Button>
+                {pkg && (
+                  <>
+                    <div className="pt-2 border-t border-border">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                        Sequência (pacote de {pkg.total} sessões)
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden"
+                      disabled={deleting}
+                      onClick={() => executeDeleteSeries(false)}
+                    >
+                      <Users className="h-4 w-4 text-primary shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm text-foreground">Excluir toda a sequência</p>
+                        <p className="text-xs text-muted-foreground leading-snug break-words">Cancela todas as sessões do pacote (mantém o financeiro)</p>
+                      </div>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden border-destructive/30 hover:bg-destructive/5"
+                      disabled={deleting}
+                      onClick={() => executeDeleteSeries(true)}
+                    >
+                      <DollarSign className="h-4 w-4 text-destructive shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm text-destructive">Excluir sequência + financeiro</p>
+                        <p className="text-xs text-muted-foreground leading-snug break-words">Remove todas as sessões do pacote e seus lançamentos</p>
+                      </div>
+                    </Button>
+                  </>
+                )}
               </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden border-destructive/30 hover:bg-destructive/5"
-              disabled={deleting}
-              onClick={() => executeDelete(true)}
-            >
-              <DollarSign className="h-4 w-4 text-destructive shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-sm text-destructive">Excluir sessão + lançamento financeiro</p>
-                <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso, eventos vinculados e o lançamento financeiro</p>
-              </div>
-            </Button>
-          </div>
+            );
+          })()}
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDeleteConfirmOpen(false)} disabled={deleting}>Cancelar</Button>
           </DialogFooter>
