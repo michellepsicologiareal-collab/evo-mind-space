@@ -661,6 +661,54 @@ const Agenda = () => {
     await load(true); loadPending(true);
   };
 
+  // Exclui a sessão atual + todas as outras do mesmo pacote (passadas e futuras).
+  const executeDeleteSeries = async (includeFinancial: boolean) => {
+    if (!deleteSessionId || !user) return;
+    const current = sessions.find((s) => s.id === deleteSessionId)
+      || pendingSessions.find((s) => s.id === deleteSessionId)
+      || pendingPackageSessions.find((s) => s.id === deleteSessionId);
+    if (!current || !current.patient_id) return;
+    const pkgInfo = getPackageInfo(current.notes);
+    if (!pkgInfo) return;
+
+    setDeleting(true);
+    // Busca todas as irmãs do pacote (mesmo paciente + mesmo total no notes)
+    const { data: siblings } = await supabase.from("sessions")
+      .select("id, notes")
+      .eq("user_id", user.id)
+      .eq("patient_id", current.patient_id);
+    const ids = (siblings ?? [])
+      .filter((s: any) => s.notes && /Plano \d+ sess/.test(s.notes) && s.notes.includes(`/${pkgInfo.total})`))
+      .map((s: any) => s.id);
+    if (!ids.includes(deleteSessionId)) ids.push(deleteSessionId);
+
+    // Limpa GCal e relações em paralelo
+    await Promise.all(ids.map((id) => deleteSessionFromGcal(id)));
+    await Promise.all([
+      supabase.from("patient_progress").delete().in("session_id", ids),
+      supabase.from("session_gcal_events").delete().in("session_id", ids),
+      supabase.from("session_records").delete().in("session_id", ids),
+      supabase.from("session_evolutions").delete().in("session_id", ids),
+    ]);
+
+    if (includeFinancial) {
+      const { error } = await supabase.from("sessions").delete().in("id", ids);
+      if (error) { setDeleting(false); toast.error("Erro ao excluir sequência"); return; }
+      toast.success(`${ids.length} sessões do pacote excluídas (com financeiro)`);
+    } else {
+      const { error } = await supabase.from("sessions").update({ status: "cancelled" as any }).in("id", ids);
+      if (error) { setDeleting(false); toast.error("Erro ao excluir sequência"); return; }
+      toast.success(`${ids.length} sessões do pacote canceladas (financeiro mantido)`);
+    }
+
+    setDeleting(false);
+    setDeleteConfirmOpen(false);
+    setDeleteSessionId(null);
+    if (editOpen) { editGuard.resetDirty(); setEditOpen(false); }
+    await load(true); loadPending(true);
+  };
+
+
   const copyConfirmationLink = async (s: Session) => {
     let token = s.confirmation_token;
     if (!token) {
@@ -872,8 +920,17 @@ const Agenda = () => {
     if (rescheduleAll && session && newScheduledAt) {
       const origDate = new Date(session.scheduled_at);
       const newDate = new Date(newScheduledAt);
-      const diffMs = newDate.getTime() - origDate.getTime();
       const pkgInfo = getPackageInfo(session.notes);
+
+      // Delta entre o dia da semana original e o novo (-3..+3), preservando
+      // o intervalo semanal. Ex: terça→quinta = +2 dias em cada sessão futura.
+      const origWeekday = origDate.getDay();
+      const newWeekday = newDate.getDay();
+      let weekdayDelta = newWeekday - origWeekday;
+      if (weekdayDelta > 3) weekdayDelta -= 7;
+      if (weekdayDelta < -3) weekdayDelta += 7;
+      const newHours = newDate.getHours();
+      const newMinutes = newDate.getMinutes();
 
       if (pkgInfo && session.patient_id) {
         // Find sibling sessions in the same package that are AFTER this one
@@ -891,9 +948,11 @@ const Agenda = () => {
 
         for (const sib of packageSiblings) {
           const sibDate = new Date(sib.scheduled_at);
-          const newSibDate = new Date(sibDate.getTime() + diffMs);
+          const shifted = new Date(sibDate);
+          shifted.setDate(sibDate.getDate() + weekdayDelta);
+          shifted.setHours(newHours, newMinutes, 0, 0);
           await supabase.from("sessions").update({
-            scheduled_at: newSibDate.toISOString(),
+            scheduled_at: shifted.toISOString(),
           } as any).eq("id", sib.id);
           syncSessionToGcal(sib.id);
         }
@@ -2279,32 +2338,75 @@ const Agenda = () => {
               Escolha o que deseja excluir:
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 py-2">
-            <Button
-              variant="outline"
-              className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden"
-              disabled={deleting}
-              onClick={() => executeDelete(false)}
-            >
-              <Trash2 className="h-4 w-4 text-muted-foreground shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-sm text-foreground">Excluir apenas a sessão</p>
-                <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso e eventos vinculados</p>
+          {(() => {
+            const current = deleteSessionId
+              ? (sessions.find((s) => s.id === deleteSessionId)
+                || pendingSessions.find((s) => s.id === deleteSessionId)
+                || pendingPackageSessions.find((s) => s.id === deleteSessionId))
+              : null;
+            const pkg = current ? getPackageInfo(current.notes) : null;
+            return (
+              <div className="space-y-3 py-2">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden"
+                  disabled={deleting}
+                  onClick={() => executeDelete(false)}
+                >
+                  <Trash2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm text-foreground">Excluir apenas a sessão</p>
+                    <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso e eventos vinculados</p>
+                  </div>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden border-destructive/30 hover:bg-destructive/5"
+                  disabled={deleting}
+                  onClick={() => executeDelete(true)}
+                >
+                  <DollarSign className="h-4 w-4 text-destructive shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm text-destructive">Excluir sessão + lançamento financeiro</p>
+                    <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso, eventos vinculados e o lançamento financeiro</p>
+                  </div>
+                </Button>
+                {pkg && (
+                  <>
+                    <div className="pt-2 border-t border-border">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                        Sequência (pacote de {pkg.total} sessões)
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden"
+                      disabled={deleting}
+                      onClick={() => executeDeleteSeries(false)}
+                    >
+                      <Users className="h-4 w-4 text-primary shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm text-foreground">Excluir toda a sequência</p>
+                        <p className="text-xs text-muted-foreground leading-snug break-words">Cancela todas as sessões do pacote (mantém o financeiro)</p>
+                      </div>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden border-destructive/30 hover:bg-destructive/5"
+                      disabled={deleting}
+                      onClick={() => executeDeleteSeries(true)}
+                    >
+                      <DollarSign className="h-4 w-4 text-destructive shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm text-destructive">Excluir sequência + financeiro</p>
+                        <p className="text-xs text-muted-foreground leading-snug break-words">Remove todas as sessões do pacote e seus lançamentos</p>
+                      </div>
+                    </Button>
+                  </>
+                )}
               </div>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden border-destructive/30 hover:bg-destructive/5"
-              disabled={deleting}
-              onClick={() => executeDelete(true)}
-            >
-              <DollarSign className="h-4 w-4 text-destructive shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-sm text-destructive">Excluir sessão + lançamento financeiro</p>
-                <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso, eventos vinculados e o lançamento financeiro</p>
-              </div>
-            </Button>
-          </div>
+            );
+          })()}
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDeleteConfirmOpen(false)} disabled={deleting}>Cancelar</Button>
           </DialogFooter>
