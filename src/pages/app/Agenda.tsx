@@ -872,8 +872,17 @@ const Agenda = () => {
     if (rescheduleAll && session && newScheduledAt) {
       const origDate = new Date(session.scheduled_at);
       const newDate = new Date(newScheduledAt);
-      const diffMs = newDate.getTime() - origDate.getTime();
       const pkgInfo = getPackageInfo(session.notes);
+
+      // Delta entre o dia da semana original e o novo (-3..+3), preservando
+      // o intervalo semanal. Ex: terça→quinta = +2 dias em cada sessão futura.
+      const origWeekday = origDate.getDay();
+      const newWeekday = newDate.getDay();
+      let weekdayDelta = newWeekday - origWeekday;
+      if (weekdayDelta > 3) weekdayDelta -= 7;
+      if (weekdayDelta < -3) weekdayDelta += 7;
+      const newHours = newDate.getHours();
+      const newMinutes = newDate.getMinutes();
 
       if (pkgInfo && session.patient_id) {
         // Find sibling sessions in the same package that are AFTER this one
@@ -891,9 +900,11 @@ const Agenda = () => {
 
         for (const sib of packageSiblings) {
           const sibDate = new Date(sib.scheduled_at);
-          const newSibDate = new Date(sibDate.getTime() + diffMs);
+          const shifted = new Date(sibDate);
+          shifted.setDate(sibDate.getDate() + weekdayDelta);
+          shifted.setHours(newHours, newMinutes, 0, 0);
           await supabase.from("sessions").update({
-            scheduled_at: newSibDate.toISOString(),
+            scheduled_at: shifted.toISOString(),
           } as any).eq("id", sib.id);
           syncSessionToGcal(sib.id);
         }
