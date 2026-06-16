@@ -260,11 +260,19 @@ const Finance = () => {
     return weeks;
   }, [rows, monthStart, monthEnd]);
 
-  // Service breakdown
+  // Service breakdown — agrupa por serviço/atendimento. Sessões clínicas sem
+  // serviço cadastrado entram como "Atendimento Clínico"; supervisões como
+  // "Supervisão". Outras entradas usam o nome do serviço.
   const serviceBreakdown = useMemo(() => {
     const map = new Map<string, { name: string; total: number; count: number }>();
     fortnightBillable.filter((r) => r.payment_status === "paid").forEach((r) => {
-      const name = (r.service as any)?.name ?? "Sem serviço";
+      const svcName = (r.service as any)?.name as string | undefined;
+      let name = svcName;
+      if (!name) {
+        if (r.session_type === "supervision") name = "Supervisão";
+        else if (r.session_type === "clinical") name = "Atendimento Clínico";
+        else name = "Outros";
+      }
       const entry = map.get(name);
       if (entry) {
         entry.total += Number(r.price ?? 0);
