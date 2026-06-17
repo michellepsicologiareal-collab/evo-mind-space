@@ -140,6 +140,7 @@ const Agenda = () => {
   const [psiName, setPsiName] = useState("");
   const [psiCrp, setPsiCrp] = useState("");
   const [viewTab, setViewTab] = useState<string>("month");
+  const [serviceFilter, setServiceFilter] = useState<string>("all");
 
   // Pending
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
@@ -1019,24 +1020,31 @@ const Agenda = () => {
   }, [drawerSessions]);
 
   // ── Derived data ──
-  const sessionsByDay = (date: Date) => sessions.filter((s) => isSameDay(new Date(s.scheduled_at), date));
+  const filteredSessions = useMemo(() => {
+    if (serviceFilter === "all") return sessions;
+    if (serviceFilter === "clinical") return sessions.filter((s) => s.session_type === "clinical" && !s.service_id);
+    if (serviceFilter === "supervision") return sessions.filter((s) => s.session_type === "supervision");
+    return sessions.filter((s) => s.service_id === serviceFilter);
+  }, [sessions, serviceFilter]);
+
+  const sessionsByDay = (date: Date) => filteredSessions.filter((s) => isSameDay(new Date(s.scheduled_at), date));
 
   const daysWithSessions = useMemo(() => {
     const set = new Set<string>();
-    sessions.forEach((s) => set.add(format(new Date(s.scheduled_at), "yyyy-MM-dd")));
+    filteredSessions.forEach((s) => set.add(format(new Date(s.scheduled_at), "yyyy-MM-dd")));
     return set;
-  }, [sessions]);
+  }, [filteredSessions]);
 
-  const selectedDaySessions = useMemo(() => sessionsByDay(selectedDate), [sessions, selectedDate]);
+  const selectedDaySessions = useMemo(() => sessionsByDay(selectedDate), [filteredSessions, selectedDate]);
 
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
   const weekSessions = useMemo(() => {
     const wEnd = addDays(weekStart, 7);
-    return sessions.filter((s) => {
+    return filteredSessions.filter((s) => {
       const d = new Date(s.scheduled_at);
       return d >= weekStart && d < wEnd;
     });
-  }, [sessions, weekStart]);
+  }, [filteredSessions, weekStart]);
 
   const pendingTotal = pendingSessions.filter(s => s.payment_status === "pending").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
   const paidTotal = pendingSessions.filter(s => s.payment_status === "paid").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
@@ -1606,6 +1614,57 @@ const Agenda = () => {
       {/* ── ZONA SUPERIOR: Calendar + day sessions ── */}
       <div className="space-y-4 pb-5" style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
         <div className="space-y-4">
+
+          {/* Service filter */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+            <button
+              onClick={() => setServiceFilter("all")}
+              className={cn(
+                "shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                serviceFilter === "all"
+                  ? "bg-accent text-accent-foreground border-accent"
+                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+              )}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setServiceFilter("clinical")}
+              className={cn(
+                "shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                serviceFilter === "clinical"
+                  ? "bg-accent text-accent-foreground border-accent"
+                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+              )}
+            >
+              Atendimento clínico
+            </button>
+            <button
+              onClick={() => setServiceFilter("supervision")}
+              className={cn(
+                "shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                serviceFilter === "supervision"
+                  ? "bg-accent text-accent-foreground border-accent"
+                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+              )}
+            >
+              Supervisão
+            </button>
+            {services.map((svc) => (
+              <button
+                key={svc.id}
+                onClick={() => setServiceFilter(svc.id)}
+                className={cn(
+                  "shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                  serviceFilter === svc.id
+                    ? "bg-accent text-accent-foreground border-accent"
+                    : "bg-background text-muted-foreground border-border hover:bg-muted"
+                )}
+              >
+                {svc.name}
+              </button>
+            ))}
+          </div>
 
           <Tabs value={viewTab} onValueChange={setViewTab}>
             <TabsList className="w-full sm:w-auto bg-background/95 backdrop-blur sm:bg-transparent sm:backdrop-blur-none gap-1 p-0 sticky top-[124px] md:static z-20 -mx-6 px-6 py-2 sm:m-0 sm:p-0">
