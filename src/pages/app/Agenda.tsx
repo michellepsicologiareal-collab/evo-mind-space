@@ -1615,6 +1615,57 @@ const Agenda = () => {
       <div className="space-y-4 pb-5" style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
         <div className="space-y-4">
 
+          {/* Service filter */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+            <button
+              onClick={() => setServiceFilter("all")}
+              className={cn(
+                "shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                serviceFilter === "all"
+                  ? "bg-accent text-accent-foreground border-accent"
+                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+              )}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setServiceFilter("clinical")}
+              className={cn(
+                "shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                serviceFilter === "clinical"
+                  ? "bg-accent text-accent-foreground border-accent"
+                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+              )}
+            >
+              Atendimento clínico
+            </button>
+            <button
+              onClick={() => setServiceFilter("supervision")}
+              className={cn(
+                "shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                serviceFilter === "supervision"
+                  ? "bg-accent text-accent-foreground border-accent"
+                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+              )}
+            >
+              Supervisão
+            </button>
+            {services.map((svc) => (
+              <button
+                key={svc.id}
+                onClick={() => setServiceFilter(svc.id)}
+                className={cn(
+                  "shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                  serviceFilter === svc.id
+                    ? "bg-accent text-accent-foreground border-accent"
+                    : "bg-background text-muted-foreground border-border hover:bg-muted"
+                )}
+              >
+                {svc.name}
+              </button>
+            ))}
+          </div>
+
           <Tabs value={viewTab} onValueChange={setViewTab}>
             <TabsList className="w-full sm:w-auto bg-background/95 backdrop-blur sm:bg-transparent sm:backdrop-blur-none gap-1 p-0 sticky top-[124px] md:static z-20 -mx-6 px-6 py-2 sm:m-0 sm:p-0">
               <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarDays className="h-3.5 w-3.5 mr-1.5 inline" /> Mês</TabsTrigger>
