@@ -1248,7 +1248,9 @@ const Agenda = () => {
                 {s.patient_name}
               </p>
               {(() => {
-                const svcName = s.service_id ? services.find(sv => sv.id === s.service_id)?.name : null;
+                const svcName = s.service_id
+                  ? services.find(sv => sv.id === s.service_id)?.name
+                  : "Atendimento clínico";
                 return svcName ? (
                   <p className={cn("text-muted-foreground", compact ? "text-[10px]" : "text-xs")}>{svcName}</p>
                 ) : null;
