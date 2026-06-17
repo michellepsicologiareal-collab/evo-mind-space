@@ -886,15 +886,26 @@ const Finance = () => {
       {/* Service breakdown */}
       {serviceBreakdown.length > 0 && (
         <section className="rounded-3xl bg-card border border-border shadow-card p-6 lg:p-8">
-          <h2 className="font-display text-lg font-semibold mb-4">Recebido por serviço</h2>
+          <h2 className="font-display text-lg font-semibold mb-1">Por serviço</h2>
+          <p className="text-xs text-muted-foreground mb-4">Comparação entre o que está previsto no mês e o que já foi realizado.</p>
           <ul className="space-y-2">
             {serviceBreakdown.map((s) => (
-              <li key={s.name} className="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 p-3">
-                <div className="min-w-0">
+              <li key={s.name} className="rounded-xl bg-secondary/40 p-3">
+                <div className="flex items-center justify-between gap-3">
                   <p className="font-medium truncate">{s.name}</p>
-                  <p className="text-xs text-muted-foreground">{s.count} {s.count === 1 ? "sessão" : "sessões"}</p>
+                  <div className="flex items-center gap-4 shrink-0 text-right">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Previsto</p>
+                      <p className="font-display font-semibold text-sm">{formatBRL(s.previstoTotal)}</p>
+                      <p className="text-[10px] text-muted-foreground">{s.previstoCount} {s.previstoCount === 1 ? "sessão" : "sessões"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-moss">Realizado</p>
+                      <p className="font-display font-semibold text-sm text-moss">{formatBRL(s.realizadoTotal)}</p>
+                      <p className="text-[10px] text-muted-foreground">{s.realizadoCount} {s.realizadoCount === 1 ? "sessão" : "sessões"}</p>
+                    </div>
+                  </div>
                 </div>
-                <span className="font-display font-semibold shrink-0">{formatBRL(s.total)}</span>
               </li>
             ))}
           </ul>
