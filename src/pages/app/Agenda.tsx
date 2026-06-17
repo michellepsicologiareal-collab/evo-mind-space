@@ -140,6 +140,7 @@ const Agenda = () => {
   const [psiName, setPsiName] = useState("");
   const [psiCrp, setPsiCrp] = useState("");
   const [viewTab, setViewTab] = useState<string>("month");
+  const [serviceFilter, setServiceFilter] = useState<string>("all");
 
   // Pending
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
@@ -1019,24 +1020,31 @@ const Agenda = () => {
   }, [drawerSessions]);
 
   // ── Derived data ──
-  const sessionsByDay = (date: Date) => sessions.filter((s) => isSameDay(new Date(s.scheduled_at), date));
+  const filteredSessions = useMemo(() => {
+    if (serviceFilter === "all") return sessions;
+    if (serviceFilter === "clinical") return sessions.filter((s) => s.session_type === "clinical" && !s.service_id);
+    if (serviceFilter === "supervision") return sessions.filter((s) => s.session_type === "supervision");
+    return sessions.filter((s) => s.service_id === serviceFilter);
+  }, [sessions, serviceFilter]);
+
+  const sessionsByDay = (date: Date) => filteredSessions.filter((s) => isSameDay(new Date(s.scheduled_at), date));
 
   const daysWithSessions = useMemo(() => {
     const set = new Set<string>();
-    sessions.forEach((s) => set.add(format(new Date(s.scheduled_at), "yyyy-MM-dd")));
+    filteredSessions.forEach((s) => set.add(format(new Date(s.scheduled_at), "yyyy-MM-dd")));
     return set;
-  }, [sessions]);
+  }, [filteredSessions]);
 
-  const selectedDaySessions = useMemo(() => sessionsByDay(selectedDate), [sessions, selectedDate]);
+  const selectedDaySessions = useMemo(() => sessionsByDay(selectedDate), [filteredSessions, selectedDate]);
 
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
   const weekSessions = useMemo(() => {
     const wEnd = addDays(weekStart, 7);
-    return sessions.filter((s) => {
+    return filteredSessions.filter((s) => {
       const d = new Date(s.scheduled_at);
       return d >= weekStart && d < wEnd;
     });
-  }, [sessions, weekStart]);
+  }, [filteredSessions, weekStart]);
 
   const pendingTotal = pendingSessions.filter(s => s.payment_status === "pending").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
   const paidTotal = pendingSessions.filter(s => s.payment_status === "paid").reduce((sum, s) => sum + Number(s.price ?? 0), 0);
