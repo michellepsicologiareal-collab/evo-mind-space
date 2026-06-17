@@ -2138,12 +2138,20 @@ const Agenda = () => {
                   setEditForm({ ...editForm, session_type: v as SessionType, service_id: "" });
                 } else {
                   const svc = services.find(s => s.id === v);
-                  setEditForm({ ...editForm, session_type: "clinical", service_id: v, price: svc ? String(svc.price) : editForm.price });
+                  const svcPrice = svc ? Number(svc.price) : 0;
+                  setEditForm({
+                    ...editForm,
+                    session_type: "clinical",
+                    service_id: v,
+                    // Mantém o valor digitado quando o serviço não tem preço cadastrado.
+                    price: svcPrice > 0 ? String(svcPrice) : editForm.price,
+                  });
                 }
               }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="clinical">Atendimento Clínico</SelectItem>
+                  <SelectItem value="clinical">Automático (Atendimento clínico)</SelectItem>
+                  
                   
                   {services.length > 0 && services.map(svc => (
                     <SelectItem key={svc.id} value={svc.id}>
