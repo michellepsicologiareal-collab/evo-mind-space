@@ -260,29 +260,38 @@ const Finance = () => {
     return weeks;
   }, [rows, monthStart, monthEnd]);
 
-  // Service breakdown — agrupa por serviço/atendimento. Sessões clínicas sem
-  // serviço cadastrado entram como "Atendimento Clínico"; supervisões como
-  // "Supervisão". Outras entradas usam o nome do serviço.
+  // Service breakdown — agrupa por serviço/atendimento separando previsto x realizado.
+  // Previsto = todas as sessões não canceladas/no_show. Realizado = sessões concluídas.
   const serviceBreakdown = useMemo(() => {
-    const map = new Map<string, { name: string; total: number; count: number }>();
-    fortnightBillable.filter((r) => r.payment_status === "paid").forEach((r) => {
+    const labelFor = (r: Row) => {
       const svcName = (r.service as any)?.name as string | undefined;
-      let name = svcName;
-      if (!name) {
-        if (r.session_type === "supervision") name = "Supervisão";
-        else if (r.session_type === "clinical") name = "Atendimento Clínico";
-        else name = "Outros";
-      }
-      const entry = map.get(name);
-      if (entry) {
-        entry.total += Number(r.price ?? 0);
-        entry.count++;
-      } else {
-        map.set(name, { name, total: Number(r.price ?? 0), count: 1 });
-      }
+      if (svcName) return svcName;
+      if (r.session_type === "supervision") return "Supervisão";
+      if (r.session_type === "clinical") return "Atendimento Clínico";
+      return "Outros";
+    };
+    const map = new Map<string, {
+      name: string;
+      previstoTotal: number; previstoCount: number;
+      realizadoTotal: number; realizadoCount: number;
+    }>();
+    const ensure = (name: string) => {
+      let e = map.get(name);
+      if (!e) { e = { name, previstoTotal: 0, previstoCount: 0, realizadoTotal: 0, realizadoCount: 0 }; map.set(name, e); }
+      return e;
+    };
+    fortnightAllValid.forEach((r) => {
+      const e = ensure(labelFor(r));
+      e.previstoTotal += Number(r.price ?? 0);
+      e.previstoCount++;
     });
-    return Array.from(map.values()).sort((a, b) => b.total - a.total);
-  }, [fortnightBillable]);
+    fortnightBillable.forEach((r) => {
+      const e = ensure(labelFor(r));
+      e.realizadoTotal += Number(r.price ?? 0);
+      e.realizadoCount++;
+    });
+    return Array.from(map.values()).sort((a, b) => b.previstoTotal - a.previstoTotal);
+  }, [fortnightAllValid, fortnightBillable]);
 
   const missingReference = useMemo(
     () =>
