@@ -1394,12 +1394,20 @@ const Agenda = () => {
                       setForm({ ...form, session_type: v as SessionType, service_id: "" });
                     } else {
                       const svc = services.find(s => s.id === v);
-                      setForm({ ...form, session_type: "clinical", service_id: v, price: svc ? String(svc.price) : form.price });
+                      const svcPrice = svc ? Number(svc.price) : 0;
+                      setForm({
+                        ...form,
+                        session_type: "clinical",
+                        service_id: v,
+                        // Só sobrescreve o valor se o serviço tiver preço cadastrado (> 0).
+                        // Assim, mudar de serviço não zera o valor digitado manualmente.
+                        price: svcPrice > 0 ? String(svcPrice) : form.price,
+                      });
                     }
                   }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="clinical">Atendimento Clínico</SelectItem>
+                      <SelectItem value="clinical">Automático (Atendimento clínico)</SelectItem>
                       {services.length > 0 && services.map(svc => (
                         <SelectItem key={svc.id} value={svc.id}>
                           {svc.name}
