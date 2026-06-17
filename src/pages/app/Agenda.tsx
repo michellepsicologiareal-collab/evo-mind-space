@@ -1248,7 +1248,9 @@ const Agenda = () => {
                 {s.patient_name}
               </p>
               {(() => {
-                const svcName = s.service_id ? services.find(sv => sv.id === s.service_id)?.name : null;
+                const svcName = s.service_id
+                  ? services.find(sv => sv.id === s.service_id)?.name
+                  : "Atendimento clínico";
                 return svcName ? (
                   <p className={cn("text-muted-foreground", compact ? "text-[10px]" : "text-xs")}>{svcName}</p>
                 ) : null;
@@ -1392,12 +1394,20 @@ const Agenda = () => {
                       setForm({ ...form, session_type: v as SessionType, service_id: "" });
                     } else {
                       const svc = services.find(s => s.id === v);
-                      setForm({ ...form, session_type: "clinical", service_id: v, price: svc ? String(svc.price) : form.price });
+                      const svcPrice = svc ? Number(svc.price) : 0;
+                      setForm({
+                        ...form,
+                        session_type: "clinical",
+                        service_id: v,
+                        // Só sobrescreve o valor se o serviço tiver preço cadastrado (> 0).
+                        // Assim, mudar de serviço não zera o valor digitado manualmente.
+                        price: svcPrice > 0 ? String(svcPrice) : form.price,
+                      });
                     }
                   }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="clinical">Atendimento Clínico</SelectItem>
+                      <SelectItem value="clinical">Automático (Atendimento clínico)</SelectItem>
                       {services.length > 0 && services.map(svc => (
                         <SelectItem key={svc.id} value={svc.id}>
                           {svc.name}
@@ -1855,7 +1865,9 @@ const Agenda = () => {
                             <div className="divide-y divide-border">
                               {items.map((s) => {
                                 const isSupervisionRow = s.session_type === "supervision";
-                                const svcName = s.service_id ? services.find(sv => sv.id === s.service_id)?.name : null;
+                                const svcName = s.service_id
+                                  ? services.find(sv => sv.id === s.service_id)?.name
+                                  : (isSupervisionRow ? null : "Atendimento clínico");
                                 return (
                                   <div
                                     key={s.id}
@@ -2126,12 +2138,20 @@ const Agenda = () => {
                   setEditForm({ ...editForm, session_type: v as SessionType, service_id: "" });
                 } else {
                   const svc = services.find(s => s.id === v);
-                  setEditForm({ ...editForm, session_type: "clinical", service_id: v, price: svc ? String(svc.price) : editForm.price });
+                  const svcPrice = svc ? Number(svc.price) : 0;
+                  setEditForm({
+                    ...editForm,
+                    session_type: "clinical",
+                    service_id: v,
+                    // Mantém o valor digitado quando o serviço não tem preço cadastrado.
+                    price: svcPrice > 0 ? String(svcPrice) : editForm.price,
+                  });
                 }
               }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="clinical">Atendimento Clínico</SelectItem>
+                  <SelectItem value="clinical">Automático (Atendimento clínico)</SelectItem>
+                  
                   
                   {services.length > 0 && services.map(svc => (
                     <SelectItem key={svc.id} value={svc.id}>

@@ -260,29 +260,38 @@ const Finance = () => {
     return weeks;
   }, [rows, monthStart, monthEnd]);
 
-  // Service breakdown — agrupa por serviço/atendimento. Sessões clínicas sem
-  // serviço cadastrado entram como "Atendimento Clínico"; supervisões como
-  // "Supervisão". Outras entradas usam o nome do serviço.
+  // Service breakdown — agrupa por serviço/atendimento separando previsto x realizado.
+  // Previsto = todas as sessões não canceladas/no_show. Realizado = sessões concluídas.
   const serviceBreakdown = useMemo(() => {
-    const map = new Map<string, { name: string; total: number; count: number }>();
-    fortnightBillable.filter((r) => r.payment_status === "paid").forEach((r) => {
+    const labelFor = (r: Row) => {
       const svcName = (r.service as any)?.name as string | undefined;
-      let name = svcName;
-      if (!name) {
-        if (r.session_type === "supervision") name = "Supervisão";
-        else if (r.session_type === "clinical") name = "Atendimento Clínico";
-        else name = "Outros";
-      }
-      const entry = map.get(name);
-      if (entry) {
-        entry.total += Number(r.price ?? 0);
-        entry.count++;
-      } else {
-        map.set(name, { name, total: Number(r.price ?? 0), count: 1 });
-      }
+      if (svcName) return svcName;
+      if (r.session_type === "supervision") return "Supervisão";
+      if (r.session_type === "clinical") return "Atendimento Clínico";
+      return "Outros";
+    };
+    const map = new Map<string, {
+      name: string;
+      previstoTotal: number; previstoCount: number;
+      realizadoTotal: number; realizadoCount: number;
+    }>();
+    const ensure = (name: string) => {
+      let e = map.get(name);
+      if (!e) { e = { name, previstoTotal: 0, previstoCount: 0, realizadoTotal: 0, realizadoCount: 0 }; map.set(name, e); }
+      return e;
+    };
+    fortnightAllValid.forEach((r) => {
+      const e = ensure(labelFor(r));
+      e.previstoTotal += Number(r.price ?? 0);
+      e.previstoCount++;
     });
-    return Array.from(map.values()).sort((a, b) => b.total - a.total);
-  }, [fortnightBillable]);
+    fortnightBillable.forEach((r) => {
+      const e = ensure(labelFor(r));
+      e.realizadoTotal += Number(r.price ?? 0);
+      e.realizadoCount++;
+    });
+    return Array.from(map.values()).sort((a, b) => b.previstoTotal - a.previstoTotal);
+  }, [fortnightAllValid, fortnightBillable]);
 
   const missingReference = useMemo(
     () =>
@@ -877,15 +886,26 @@ const Finance = () => {
       {/* Service breakdown */}
       {serviceBreakdown.length > 0 && (
         <section className="rounded-3xl bg-card border border-border shadow-card p-6 lg:p-8">
-          <h2 className="font-display text-lg font-semibold mb-4">Recebido por serviço</h2>
+          <h2 className="font-display text-lg font-semibold mb-1">Por serviço</h2>
+          <p className="text-xs text-muted-foreground mb-4">Comparação entre o que está previsto no mês e o que já foi realizado.</p>
           <ul className="space-y-2">
             {serviceBreakdown.map((s) => (
-              <li key={s.name} className="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 p-3">
-                <div className="min-w-0">
+              <li key={s.name} className="rounded-xl bg-secondary/40 p-3">
+                <div className="flex items-center justify-between gap-3">
                   <p className="font-medium truncate">{s.name}</p>
-                  <p className="text-xs text-muted-foreground">{s.count} {s.count === 1 ? "sessão" : "sessões"}</p>
+                  <div className="flex items-center gap-4 shrink-0 text-right">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Previsto</p>
+                      <p className="font-display font-semibold text-sm">{formatBRL(s.previstoTotal)}</p>
+                      <p className="text-[10px] text-muted-foreground">{s.previstoCount} {s.previstoCount === 1 ? "sessão" : "sessões"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wide text-moss">Realizado</p>
+                      <p className="font-display font-semibold text-sm text-moss">{formatBRL(s.realizadoTotal)}</p>
+                      <p className="text-[10px] text-muted-foreground">{s.realizadoCount} {s.realizadoCount === 1 ? "sessão" : "sessões"}</p>
+                    </div>
+                  </div>
                 </div>
-                <span className="font-display font-semibold shrink-0">{formatBRL(s.total)}</span>
               </li>
             ))}
           </ul>
