@@ -1857,7 +1857,9 @@ const Agenda = () => {
                             <div className="divide-y divide-border">
                               {items.map((s) => {
                                 const isSupervisionRow = s.session_type === "supervision";
-                                const svcName = s.service_id ? services.find(sv => sv.id === s.service_id)?.name : null;
+                                const svcName = s.service_id
+                                  ? services.find(sv => sv.id === s.service_id)?.name
+                                  : (isSupervisionRow ? null : "Atendimento clínico");
                                 return (
                                   <div
                                     key={s.id}
