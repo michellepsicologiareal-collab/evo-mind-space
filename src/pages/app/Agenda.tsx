@@ -1029,6 +1029,11 @@ const Agenda = () => {
     });
   }, [sessions, serviceFilter, patientFilter]);
 
+  const selectedPatientName = useMemo(() => {
+    if (patientFilter === "all") return null;
+    return patients.find((p) => p.id === patientFilter)?.full_name || null;
+  }, [patients, patientFilter]);
+
   const sessionsByDay = (date: Date) => filteredSessions.filter((s) => isSameDay(new Date(s.scheduled_at), date));
 
   const daysWithSessions = useMemo(() => {
