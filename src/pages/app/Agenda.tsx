@@ -1646,6 +1646,31 @@ const Agenda = () => {
             ))}
           </div>
 
+          {/* Patient filter */}
+          {patients.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Select value={patientFilter} onValueChange={setPatientFilter}>
+                <SelectTrigger className="h-9 rounded-full text-xs font-display font-semibold w-full sm:w-72">
+                  <SelectValue placeholder="Filtrar por paciente" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os pacientes</SelectItem>
+                  {patients.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {patientFilter !== "all" && (
+                <button
+                  onClick={() => setPatientFilter("all")}
+                  className="shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold border border-border text-muted-foreground hover:bg-muted"
+                >
+                  Limpar
+                </button>
+              )}
+            </div>
+          )}
+
           <Tabs value={viewTab} onValueChange={setViewTab}>
             <TabsList className="w-full sm:w-auto bg-background/95 backdrop-blur sm:bg-transparent sm:backdrop-blur-none gap-1 p-0 sticky top-[124px] md:static z-20 -mx-6 px-6 py-2 sm:m-0 sm:p-0">
               <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarDays className="h-3.5 w-3.5 mr-1.5 inline" /> Mês</TabsTrigger>
