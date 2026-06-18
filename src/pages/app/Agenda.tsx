@@ -1022,8 +1022,6 @@ const Agenda = () => {
   // ── Derived data ──
   const filteredSessions = useMemo(() => {
     if (serviceFilter === "all") return sessions;
-    if (serviceFilter === "clinical") return sessions.filter((s) => s.session_type === "clinical" && !s.service_id);
-    if (serviceFilter === "supervision") return sessions.filter((s) => s.session_type === "supervision");
     return sessions.filter((s) => s.service_id === serviceFilter);
   }, [sessions, serviceFilter]);
 
@@ -1627,28 +1625,6 @@ const Agenda = () => {
               )}
             >
               Todos
-            </button>
-            <button
-              onClick={() => setServiceFilter("clinical")}
-              className={cn(
-                "shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
-                serviceFilter === "clinical"
-                  ? "bg-accent text-accent-foreground border-accent"
-                  : "bg-background text-muted-foreground border-border hover:bg-muted"
-              )}
-            >
-              Atendimento clínico
-            </button>
-            <button
-              onClick={() => setServiceFilter("supervision")}
-              className={cn(
-                "shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
-                serviceFilter === "supervision"
-                  ? "bg-accent text-accent-foreground border-accent"
-                  : "bg-background text-muted-foreground border-border hover:bg-muted"
-              )}
-            >
-              Supervisão
             </button>
             {services.map((svc) => (
               <button
