@@ -1029,6 +1029,11 @@ const Agenda = () => {
     });
   }, [sessions, serviceFilter, patientFilter]);
 
+  const selectedPatientName = useMemo(() => {
+    if (patientFilter === "all") return null;
+    return patients.find((p) => p.id === patientFilter)?.full_name || null;
+  }, [patients, patientFilter]);
+
   const sessionsByDay = (date: Date) => filteredSessions.filter((s) => isSameDay(new Date(s.scheduled_at), date));
 
   const daysWithSessions = useMemo(() => {
@@ -1617,6 +1622,25 @@ const Agenda = () => {
       <div className="space-y-4 pb-5" style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
         <div className="space-y-4">
 
+          {/* Patient banner */}
+          {selectedPatientName && (
+            <div className="flex items-center gap-2.5 rounded-2xl bg-primary/8 border border-primary/20 px-4 py-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <User className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Paciente selecionado</p>
+                <p className="font-display text-base font-semibold text-foreground truncate">{selectedPatientName}</p>
+              </div>
+              <button
+                onClick={() => setPatientFilter("all")}
+                className="ml-auto shrink-0 inline-flex items-center gap-1 text-xs font-display font-semibold text-primary hover:underline"
+              >
+                <X className="h-3.5 w-3.5" /> Limpar filtro
+              </button>
+            </div>
+          )}
+
           {/* Service filter */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
             <button
@@ -1763,7 +1787,11 @@ const Agenda = () => {
                       {selectedDaySessions.length === 0 ? (
                         <div className="py-8 text-center text-muted-foreground">
                           <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                          <p className="text-sm">Nenhuma sessão neste dia</p>
+                          <p className="text-sm">
+                            {selectedPatientName
+                              ? `${selectedPatientName} não tem sessões neste dia`
+                              : "Nenhuma sessão neste dia"}
+                          </p>
                           <Button variant="ghost" size="sm" className="mt-2" onClick={() => openNew(selectedDate)}>
                             + Agendar sessão
                           </Button>
@@ -2021,8 +2049,14 @@ const Agenda = () => {
                 ) : selectedDaySessions.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-border bg-card/50 p-14 text-center">
                     <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/40" />
-                    <p className="mt-4 font-display text-lg font-medium text-foreground/70">Dia livre</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Nenhuma sessão agendada para este dia.</p>
+                    <p className="mt-4 font-display text-lg font-medium text-foreground/70">
+                      {selectedPatientName ? "Sem sessões" : "Dia livre"}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {selectedPatientName
+                        ? `${selectedPatientName} não tem sessões agendadas para este dia.`
+                        : "Nenhuma sessão agendada para este dia."}
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
