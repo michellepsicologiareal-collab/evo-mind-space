@@ -1022,8 +1022,6 @@ const Agenda = () => {
   // ── Derived data ──
   const filteredSessions = useMemo(() => {
     if (serviceFilter === "all") return sessions;
-    if (serviceFilter === "clinical") return sessions.filter((s) => s.session_type === "clinical" && !s.service_id);
-    if (serviceFilter === "supervision") return sessions.filter((s) => s.session_type === "supervision");
     return sessions.filter((s) => s.service_id === serviceFilter);
   }, [sessions, serviceFilter]);
 
