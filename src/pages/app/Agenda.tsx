@@ -141,6 +141,7 @@ const Agenda = () => {
   const [psiCrp, setPsiCrp] = useState("");
   const [viewTab, setViewTab] = useState<string>("month");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
+  const [patientFilter, setPatientFilter] = useState<string>("all");
 
   // Pending
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
@@ -1021,9 +1022,12 @@ const Agenda = () => {
 
   // ── Derived data ──
   const filteredSessions = useMemo(() => {
-    if (serviceFilter === "all") return sessions;
-    return sessions.filter((s) => s.service_id === serviceFilter);
-  }, [sessions, serviceFilter]);
+    return sessions.filter((s) => {
+      if (serviceFilter !== "all" && s.service_id !== serviceFilter) return false;
+      if (patientFilter !== "all" && s.patient_id !== patientFilter) return false;
+      return true;
+    });
+  }, [sessions, serviceFilter, patientFilter]);
 
   const sessionsByDay = (date: Date) => filteredSessions.filter((s) => isSameDay(new Date(s.scheduled_at), date));
 
@@ -1641,6 +1645,31 @@ const Agenda = () => {
               </button>
             ))}
           </div>
+
+          {/* Patient filter */}
+          {patients.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Select value={patientFilter} onValueChange={setPatientFilter}>
+                <SelectTrigger className="h-9 rounded-full text-xs font-display font-semibold w-full sm:w-72">
+                  <SelectValue placeholder="Filtrar por paciente" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os pacientes</SelectItem>
+                  {patients.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {patientFilter !== "all" && (
+                <button
+                  onClick={() => setPatientFilter("all")}
+                  className="shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold border border-border text-muted-foreground hover:bg-muted"
+                >
+                  Limpar
+                </button>
+              )}
+            </div>
+          )}
 
           <Tabs value={viewTab} onValueChange={setViewTab}>
             <TabsList className="w-full sm:w-auto bg-background/95 backdrop-blur sm:bg-transparent sm:backdrop-blur-none gap-1 p-0 sticky top-[124px] md:static z-20 -mx-6 px-6 py-2 sm:m-0 sm:p-0">
