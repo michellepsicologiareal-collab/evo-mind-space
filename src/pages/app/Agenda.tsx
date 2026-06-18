@@ -2049,8 +2049,14 @@ const Agenda = () => {
                 ) : selectedDaySessions.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-border bg-card/50 p-14 text-center">
                     <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/40" />
-                    <p className="mt-4 font-display text-lg font-medium text-foreground/70">Dia livre</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Nenhuma sessão agendada para este dia.</p>
+                    <p className="mt-4 font-display text-lg font-medium text-foreground/70">
+                      {selectedPatientName ? "Sem sessões" : "Dia livre"}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {selectedPatientName
+                        ? `${selectedPatientName} não tem sessões agendadas para este dia.`
+                        : "Nenhuma sessão agendada para este dia."}
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
