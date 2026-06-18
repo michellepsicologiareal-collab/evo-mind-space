@@ -1622,6 +1622,25 @@ const Agenda = () => {
       <div className="space-y-4 pb-5" style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
         <div className="space-y-4">
 
+          {/* Patient banner */}
+          {selectedPatientName && (
+            <div className="flex items-center gap-2.5 rounded-2xl bg-primary/8 border border-primary/20 px-4 py-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <User className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Paciente selecionado</p>
+                <p className="font-display text-base font-semibold text-foreground truncate">{selectedPatientName}</p>
+              </div>
+              <button
+                onClick={() => setPatientFilter("all")}
+                className="ml-auto shrink-0 inline-flex items-center gap-1 text-xs font-display font-semibold text-primary hover:underline"
+              >
+                <X className="h-3.5 w-3.5" /> Limpar filtro
+              </button>
+            </div>
+          )}
+
           {/* Service filter */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
             <button
