@@ -1787,7 +1787,11 @@ const Agenda = () => {
                       {selectedDaySessions.length === 0 ? (
                         <div className="py-8 text-center text-muted-foreground">
                           <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                          <p className="text-sm">Nenhuma sessão neste dia</p>
+                          <p className="text-sm">
+                            {selectedPatientName
+                              ? `${selectedPatientName} não tem sessões neste dia`
+                              : "Nenhuma sessão neste dia"}
+                          </p>
                           <Button variant="ghost" size="sm" className="mt-2" onClick={() => openNew(selectedDate)}>
                             + Agendar sessão
                           </Button>
