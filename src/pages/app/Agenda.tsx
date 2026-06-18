@@ -141,6 +141,7 @@ const Agenda = () => {
   const [psiCrp, setPsiCrp] = useState("");
   const [viewTab, setViewTab] = useState<string>("month");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
+  const [patientFilter, setPatientFilter] = useState<string>("all");
 
   // Pending
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
