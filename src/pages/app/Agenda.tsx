@@ -1767,6 +1767,49 @@ const Agenda = () => {
             </div>
           )}
 
+          {/* Month selector */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select
+              value={String(currentMonth.getMonth() + 1)}
+              onValueChange={(v) => {
+                const newMonth = new Date(currentMonth.getFullYear(), Number(v) - 1, 1);
+                setCurrentMonth(newMonth);
+                setSelectedDate(newMonth);
+                setWeekStart(startOfWeek(newMonth, { weekStartsOn: 1 }));
+              }}
+            >
+              <SelectTrigger className="h-9 w-40 rounded-full text-xs font-display font-semibold">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }, (_, i) => (
+                  <SelectItem key={i + 1} value={String(i + 1)}>
+                    {format(new Date(2024, i, 1), "MMMM", { locale: ptBR })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={String(currentMonth.getFullYear())}
+              onValueChange={(v) => {
+                const newMonth = new Date(Number(v), currentMonth.getMonth(), 1);
+                setCurrentMonth(newMonth);
+                setSelectedDate(newMonth);
+                setWeekStart(startOfWeek(newMonth, { weekStartsOn: 1 }));
+              }}
+            >
+              <SelectTrigger className="h-9 w-24 rounded-full text-xs font-display font-semibold">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 11 }, (_, i) => {
+                  const year = new Date().getFullYear() - 5 + i;
+                  return <SelectItem key={year} value={String(year)}>{year}</SelectItem>;
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
           <Tabs value={viewTab} onValueChange={setViewTab}>
             <TabsList className="w-full sm:w-auto bg-background/95 backdrop-blur sm:bg-transparent sm:backdrop-blur-none gap-1 p-0 sticky top-[124px] md:static z-20 -mx-6 px-6 py-2 sm:m-0 sm:p-0">
               <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarDays className="h-3.5 w-3.5 mr-1.5 inline" /> Mês</TabsTrigger>
