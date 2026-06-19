@@ -164,6 +164,29 @@ const Agenda = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientFilter]);
 
+  // Seed month filter from ?month= query string
+  useEffect(() => {
+    const m = searchParams.get("month");
+    if (!m) return;
+    const parsed = parse(m, "yyyy-MM", new Date());
+    if (isNaN(parsed.getTime())) return;
+    if (!isSameMonth(parsed, currentMonth)) {
+      setCurrentMonth(startOfMonth(parsed));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Keep ?month= in sync with currentMonth
+  useEffect(() => {
+    const current = searchParams.get("month");
+    const formatted = format(currentMonth, "yyyy-MM");
+    if (current === formatted) return;
+    const next = new URLSearchParams(searchParams);
+    next.set("month", formatted);
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMonth]);
+
   // Pending
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
   const [pendingPackageSessions, setPendingPackageSessions] = useState<Session[]>([]);
@@ -1043,12 +1066,16 @@ const Agenda = () => {
 
   // ── Derived data ──
   const filteredSessions = useMemo(() => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
     return sessions.filter((s) => {
       if (serviceFilter !== "all" && s.service_id !== serviceFilter) return false;
       if (patientFilter !== "all" && s.patient_id !== patientFilter) return false;
+      const d = new Date(s.scheduled_at);
+      if (d < monthStart || d > monthEnd) return false;
       return true;
     });
-  }, [sessions, serviceFilter, patientFilter]);
+  }, [sessions, serviceFilter, patientFilter, currentMonth]);
 
   const selectedPatientName = useMemo(() => {
     if (patientFilter === "all") return null;
@@ -1162,6 +1189,22 @@ const Agenda = () => {
   useEffect(() => {
     if (selectedDate < weekStart || selectedDate >= addDays(weekStart, 7)) {
       setSelectedDate(weekStart);
+    }
+  }, [weekStart]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep currentMonth in sync when selectedDate crosses month boundary
+  useEffect(() => {
+    const m = startOfMonth(selectedDate);
+    if (!isSameMonth(m, currentMonth)) {
+      setCurrentMonth(m);
+    }
+  }, [selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep currentMonth in sync when weekStart crosses month boundary
+  useEffect(() => {
+    const m = startOfMonth(weekStart);
+    if (!isSameMonth(m, currentMonth)) {
+      setCurrentMonth(m);
     }
   }, [weekStart]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1723,6 +1766,49 @@ const Agenda = () => {
               )}
             </div>
           )}
+
+          {/* Month selector */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select
+              value={String(currentMonth.getMonth() + 1)}
+              onValueChange={(v) => {
+                const newMonth = new Date(currentMonth.getFullYear(), Number(v) - 1, 1);
+                setCurrentMonth(newMonth);
+                setSelectedDate(newMonth);
+                setWeekStart(startOfWeek(newMonth, { weekStartsOn: 1 }));
+              }}
+            >
+              <SelectTrigger className="h-9 w-40 rounded-full text-xs font-display font-semibold">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }, (_, i) => (
+                  <SelectItem key={i + 1} value={String(i + 1)}>
+                    {format(new Date(2024, i, 1), "MMMM", { locale: ptBR })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={String(currentMonth.getFullYear())}
+              onValueChange={(v) => {
+                const newMonth = new Date(Number(v), currentMonth.getMonth(), 1);
+                setCurrentMonth(newMonth);
+                setSelectedDate(newMonth);
+                setWeekStart(startOfWeek(newMonth, { weekStartsOn: 1 }));
+              }}
+            >
+              <SelectTrigger className="h-9 w-24 rounded-full text-xs font-display font-semibold">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 11 }, (_, i) => {
+                  const year = new Date().getFullYear() - 5 + i;
+                  return <SelectItem key={year} value={String(year)}>{year}</SelectItem>;
+                })}
+              </SelectContent>
+            </Select>
+          </div>
 
           <Tabs value={viewTab} onValueChange={setViewTab}>
             <TabsList className="w-full sm:w-auto bg-background/95 backdrop-blur sm:bg-transparent sm:backdrop-blur-none gap-1 p-0 sticky top-[124px] md:static z-20 -mx-6 px-6 py-2 sm:m-0 sm:p-0">
