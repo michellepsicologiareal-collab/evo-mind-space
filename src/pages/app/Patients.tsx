@@ -816,7 +816,72 @@ const Patients = () => {
                         </span>
                       )}
                     </div>
+                    {(() => {
+                      const si = sessionInfo[p.id];
+                      const lastRec = lastDates.records[p.id];
+                      const lastFormU = formulationFilled[p.id];
+                      const statusLabel: Record<string, string> = {
+                        scheduled: "Agendada", confirmed: "Confirmada", completed: "Realizada",
+                        done: "Realizada", attended: "Realizada", cancelled: "Cancelada", no_show: "Faltou",
+                      };
+                      const statusColor: Record<string, string> = {
+                        scheduled: C.purple, confirmed: C.green, completed: C.green,
+                        done: C.green, attended: C.green, cancelled: C.red, no_show: C.gold,
+                      };
+                      const hasAny = si?.lastDate || si?.nextDate || lastRec || lastFormU;
+                      if (!hasAny) return null;
+                      const Item = ({ icon, label, value, color }: any) => (
+                        <span className="inline-flex items-center gap-1" style={{ fontSize: 11, color: C.muted }}>
+                          {icon}
+                          <span>{label}:</span>
+                          <strong style={{ color: color || C.ink, fontWeight: 600 }}>{value}</strong>
+                        </span>
+                      );
+                      return (
+                        <div className="flex items-center gap-x-3 gap-y-1 mt-1.5 flex-wrap">
+                          {si?.lastDate && (
+                            <Item
+                              icon={<CalendarDays className="h-3 w-3" />}
+                              label="Última sessão"
+                              value={`${format(new Date(si.lastDate), "dd/MM/yyyy", { locale: ptBR })}${si.lastStatus ? ` · ${statusLabel[si.lastStatus] || si.lastStatus}` : ""}`}
+                              color={si.lastStatus ? statusColor[si.lastStatus] : undefined}
+                            />
+                          )}
+                          {si?.nextDate && (
+                            <Item
+                              icon={<CalendarDays className="h-3 w-3" />}
+                              label="Próxima"
+                              value={`${format(new Date(si.nextDate), "dd/MM/yyyy", { locale: ptBR })}${si.nextStatus ? ` · ${statusLabel[si.nextStatus] || si.nextStatus}` : ""}`}
+                              color={si.nextStatus ? statusColor[si.nextStatus] : undefined}
+                            />
+                          )}
+                          {lastRec && (
+                            <Item
+                              icon={<FileText className="h-3 w-3" />}
+                              label="Último registro"
+                              value={format(new Date(lastRec), "dd/MM/yyyy", { locale: ptBR })}
+                            />
+                          )}
+                          {lastFormU && (
+                            <Item
+                              icon={<Sparkles className="h-3 w-3" />}
+                              label="Formulação atualizada"
+                              value={format(new Date(lastFormU), "dd/MM/yyyy", { locale: ptBR })}
+                            />
+                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); navigate(`/app/agenda?patient=${p.id}`); }}
+                            className="inline-flex items-center gap-1"
+                            style={{ fontSize: 11, fontWeight: 600, color: C.purple, background: "transparent", border: "none", cursor: "pointer", padding: 0 }}
+                            title="Ver na agenda"
+                          >
+                            <CalendarDays className="h-3 w-3" /> Ver agenda
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </div>
+
 
                   <div className="flex items-center gap-1.5 flex-wrap w-full sm:w-auto sm:flex-1 min-w-0">
                     <button onClick={(e) => { e.stopPropagation(); setMoodPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
