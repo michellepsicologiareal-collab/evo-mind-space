@@ -143,6 +143,14 @@ const Agenda = () => {
   const [viewTab, setViewTab] = useState<string>("month");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Seed patient filter from ?patient= query string
+  useEffect(() => {
+    const qp = searchParams.get("patient");
+    if (qp && qp !== patientFilter) setPatientFilter(qp);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Pending
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
