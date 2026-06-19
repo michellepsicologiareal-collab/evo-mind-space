@@ -1192,6 +1192,22 @@ const Agenda = () => {
     }
   }, [weekStart]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Keep currentMonth in sync when selectedDate crosses month boundary
+  useEffect(() => {
+    const m = startOfMonth(selectedDate);
+    if (!isSameMonth(m, currentMonth)) {
+      setCurrentMonth(m);
+    }
+  }, [selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep currentMonth in sync when weekStart crosses month boundary
+  useEffect(() => {
+    const m = startOfMonth(weekStart);
+    if (!isSameMonth(m, currentMonth)) {
+      setCurrentMonth(m);
+    }
+  }, [weekStart]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const SessionCard = ({ s, compact = false }: { s: Session; compact?: boolean }) => {
     const isSupervisionCard = s.session_type === "supervision";
     const [sheetOpen, setSheetOpen] = useState(false);
