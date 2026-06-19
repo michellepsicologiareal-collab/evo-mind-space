@@ -164,6 +164,29 @@ const Agenda = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientFilter]);
 
+  // Seed month filter from ?month= query string
+  useEffect(() => {
+    const m = searchParams.get("month");
+    if (!m) return;
+    const parsed = parse(m, "yyyy-MM", new Date());
+    if (isNaN(parsed.getTime())) return;
+    if (!isSameMonth(parsed, currentMonth)) {
+      setCurrentMonth(startOfMonth(parsed));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Keep ?month= in sync with currentMonth
+  useEffect(() => {
+    const current = searchParams.get("month");
+    const formatted = format(currentMonth, "yyyy-MM");
+    if (current === formatted) return;
+    const next = new URLSearchParams(searchParams);
+    next.set("month", formatted);
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMonth]);
+
   // Pending
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
   const [pendingPackageSessions, setPendingPackageSessions] = useState<Session[]>([]);
@@ -1043,12 +1066,16 @@ const Agenda = () => {
 
   // ── Derived data ──
   const filteredSessions = useMemo(() => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
     return sessions.filter((s) => {
       if (serviceFilter !== "all" && s.service_id !== serviceFilter) return false;
       if (patientFilter !== "all" && s.patient_id !== patientFilter) return false;
+      const d = new Date(s.scheduled_at);
+      if (d < monthStart || d > monthEnd) return false;
       return true;
     });
-  }, [sessions, serviceFilter, patientFilter]);
+  }, [sessions, serviceFilter, patientFilter, currentMonth]);
 
   const selectedPatientName = useMemo(() => {
     if (patientFilter === "all") return null;
