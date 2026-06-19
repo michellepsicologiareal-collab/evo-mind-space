@@ -33,6 +33,7 @@ import { EmotionChips } from "@/components/app/EmotionChips";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
+import { useSearchParams } from "react-router-dom";
 
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
@@ -142,6 +143,14 @@ const Agenda = () => {
   const [viewTab, setViewTab] = useState<string>("month");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Seed patient filter from ?patient= query string
+  useEffect(() => {
+    const qp = searchParams.get("patient");
+    if (qp && qp !== patientFilter) setPatientFilter(qp);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Pending
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
@@ -1044,6 +1053,14 @@ const Agenda = () => {
 
   const selectedDaySessions = useMemo(() => sessionsByDay(selectedDate), [filteredSessions, selectedDate]);
 
+  // All filtered sessions in current visible month, sorted by date (used when a patient filter is active)
+  const monthFilteredSessions = useMemo(
+    () => [...filteredSessions].sort(
+      (a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
+    ),
+    [filteredSessions]
+  );
+
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
   const weekSessions = useMemo(() => {
     const wEnd = addDays(weekStart, 7);
@@ -1802,6 +1819,29 @@ const Agenda = () => {
                         </div>
                       )}
                     </div>
+
+                    {/* Lista do mês para o paciente filtrado */}
+                    {selectedPatientName && (
+                      <div className="lg:col-span-2 rounded-2xl bg-card border border-border shadow-card p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="font-display text-sm font-semibold text-foreground">
+                            Sessões de {selectedPatientName} em {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {monthFilteredSessions.length} sessão{monthFilteredSessions.length === 1 ? "" : "es"}
+                          </span>
+                        </div>
+                        {monthFilteredSessions.length === 0 ? (
+                          <p className="text-sm text-muted-foreground py-4 text-center">
+                            Nenhuma sessão deste paciente neste mês.
+                          </p>
+                        ) : (
+                          <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                            {monthFilteredSessions.map((s) => <SessionCard key={s.id} s={s} />)}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

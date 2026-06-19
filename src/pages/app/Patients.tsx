@@ -126,6 +126,7 @@ const Patients = () => {
   const [counts, setCounts] = useState<{ mood: Record<string, number>; tcc: Record<string, number>; records: Record<string, number>; history: Record<string, number> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [lastDates, setLastDates] = useState<{ mood: Record<string, string>; tcc: Record<string, string>; records: Record<string, string>; history: Record<string, string> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [attendance, setAttendance] = useState<Record<string, { total: number; attended: number; pct: number }>>({});
+  const [sessionInfo, setSessionInfo] = useState<Record<string, { lastDate?: string; lastStatus?: string; nextDate?: string; nextStatus?: string }>>({});
   const [fullscreen, setFullscreen] = useState<Record<string, boolean>>({});
   const toggleFull = (k: string) => setFullscreen((s) => ({ ...s, [k]: !s[k] }));
   const dlgCls = (k: string) => fullscreen[k]
@@ -265,6 +266,22 @@ const Patients = () => {
     });
     Object.keys(att).forEach((k) => { att[k].pct = att[k].total > 0 ? Math.round((att[k].attended / att[k].total) * 100) : 0; });
     setAttendance(att);
+
+    // last past / next future session per patient (historyRes is desc by scheduled_at)
+    const info: Record<string, { lastDate?: string; lastStatus?: string; nextDate?: string; nextStatus?: string }> = {};
+    (historyRes.data ?? []).forEach((s: any) => {
+      if (!s.patient_id || !s.scheduled_at) return;
+      const ts = new Date(s.scheduled_at).getTime();
+      const cur = info[s.patient_id] ?? {};
+      if (ts <= nowTs) {
+        if (!cur.lastDate) { cur.lastDate = s.scheduled_at; cur.lastStatus = s.status; }
+      } else {
+        // upcoming: keep earliest future (list is desc, so last seen future = earliest)
+        cur.nextDate = s.scheduled_at; cur.nextStatus = s.status;
+      }
+      info[s.patient_id] = cur;
+    });
+    setSessionInfo(info);
     setLoading(false);
   };
 
@@ -799,7 +816,72 @@ const Patients = () => {
                         </span>
                       )}
                     </div>
+                    {(() => {
+                      const si = sessionInfo[p.id];
+                      const lastRec = lastDates.records[p.id];
+                      const lastFormU = formulationFilled[p.id];
+                      const statusLabel: Record<string, string> = {
+                        scheduled: "Agendada", confirmed: "Confirmada", completed: "Realizada",
+                        done: "Realizada", attended: "Realizada", cancelled: "Cancelada", no_show: "Faltou",
+                      };
+                      const statusColor: Record<string, string> = {
+                        scheduled: C.purple, confirmed: C.green, completed: C.green,
+                        done: C.green, attended: C.green, cancelled: C.red, no_show: C.gold,
+                      };
+                      const hasAny = si?.lastDate || si?.nextDate || lastRec || lastFormU;
+                      if (!hasAny) return null;
+                      const Item = ({ icon, label, value, color }: any) => (
+                        <span className="inline-flex items-center gap-1" style={{ fontSize: 11, color: C.muted }}>
+                          {icon}
+                          <span>{label}:</span>
+                          <strong style={{ color: color || C.ink, fontWeight: 600 }}>{value}</strong>
+                        </span>
+                      );
+                      return (
+                        <div className="flex items-center gap-x-3 gap-y-1 mt-1.5 flex-wrap">
+                          {si?.lastDate && (
+                            <Item
+                              icon={<CalendarDays className="h-3 w-3" />}
+                              label="Última sessão"
+                              value={`${format(new Date(si.lastDate), "dd/MM/yyyy", { locale: ptBR })}${si.lastStatus ? ` · ${statusLabel[si.lastStatus] || si.lastStatus}` : ""}`}
+                              color={si.lastStatus ? statusColor[si.lastStatus] : undefined}
+                            />
+                          )}
+                          {si?.nextDate && (
+                            <Item
+                              icon={<CalendarDays className="h-3 w-3" />}
+                              label="Próxima"
+                              value={`${format(new Date(si.nextDate), "dd/MM/yyyy", { locale: ptBR })}${si.nextStatus ? ` · ${statusLabel[si.nextStatus] || si.nextStatus}` : ""}`}
+                              color={si.nextStatus ? statusColor[si.nextStatus] : undefined}
+                            />
+                          )}
+                          {lastRec && (
+                            <Item
+                              icon={<FileText className="h-3 w-3" />}
+                              label="Último registro"
+                              value={format(new Date(lastRec), "dd/MM/yyyy", { locale: ptBR })}
+                            />
+                          )}
+                          {lastFormU && (
+                            <Item
+                              icon={<Sparkles className="h-3 w-3" />}
+                              label="Formulação atualizada"
+                              value={format(new Date(lastFormU), "dd/MM/yyyy", { locale: ptBR })}
+                            />
+                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); navigate(`/app/agenda?patient=${p.id}`); }}
+                            className="inline-flex items-center gap-1"
+                            style={{ fontSize: 11, fontWeight: 600, color: C.purple, background: "transparent", border: "none", cursor: "pointer", padding: 0 }}
+                            title="Ver na agenda"
+                          >
+                            <CalendarDays className="h-3 w-3" /> Ver agenda
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </div>
+
 
                   <div className="flex items-center gap-1.5 flex-wrap w-full sm:w-auto sm:flex-1 min-w-0">
                     <button onClick={(e) => { e.stopPropagation(); setMoodPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
