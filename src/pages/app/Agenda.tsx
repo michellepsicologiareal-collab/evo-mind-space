@@ -1053,6 +1053,14 @@ const Agenda = () => {
 
   const selectedDaySessions = useMemo(() => sessionsByDay(selectedDate), [filteredSessions, selectedDate]);
 
+  // All filtered sessions in current visible month, sorted by date (used when a patient filter is active)
+  const monthFilteredSessions = useMemo(
+    () => [...filteredSessions].sort(
+      (a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
+    ),
+    [filteredSessions]
+  );
+
   const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
   const weekSessions = useMemo(() => {
     const wEnd = addDays(weekStart, 7);
