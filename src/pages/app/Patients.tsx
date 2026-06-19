@@ -126,6 +126,7 @@ const Patients = () => {
   const [counts, setCounts] = useState<{ mood: Record<string, number>; tcc: Record<string, number>; records: Record<string, number>; history: Record<string, number> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [lastDates, setLastDates] = useState<{ mood: Record<string, string>; tcc: Record<string, string>; records: Record<string, string>; history: Record<string, string> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [attendance, setAttendance] = useState<Record<string, { total: number; attended: number; pct: number }>>({});
+  const [sessionInfo, setSessionInfo] = useState<Record<string, { lastDate?: string; lastStatus?: string; nextDate?: string; nextStatus?: string }>>({});
   const [fullscreen, setFullscreen] = useState<Record<string, boolean>>({});
   const toggleFull = (k: string) => setFullscreen((s) => ({ ...s, [k]: !s[k] }));
   const dlgCls = (k: string) => fullscreen[k]
