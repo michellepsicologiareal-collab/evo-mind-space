@@ -266,6 +266,22 @@ const Patients = () => {
     });
     Object.keys(att).forEach((k) => { att[k].pct = att[k].total > 0 ? Math.round((att[k].attended / att[k].total) * 100) : 0; });
     setAttendance(att);
+
+    // last past / next future session per patient (historyRes is desc by scheduled_at)
+    const info: Record<string, { lastDate?: string; lastStatus?: string; nextDate?: string; nextStatus?: string }> = {};
+    (historyRes.data ?? []).forEach((s: any) => {
+      if (!s.patient_id || !s.scheduled_at) return;
+      const ts = new Date(s.scheduled_at).getTime();
+      const cur = info[s.patient_id] ?? {};
+      if (ts <= nowTs) {
+        if (!cur.lastDate) { cur.lastDate = s.scheduled_at; cur.lastStatus = s.status; }
+      } else {
+        // upcoming: keep earliest future (list is desc, so last seen future = earliest)
+        cur.nextDate = s.scheduled_at; cur.nextStatus = s.status;
+      }
+      info[s.patient_id] = cur;
+    });
+    setSessionInfo(info);
     setLoading(false);
   };
 
