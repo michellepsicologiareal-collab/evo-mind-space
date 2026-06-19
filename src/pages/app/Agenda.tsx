@@ -1819,6 +1819,29 @@ const Agenda = () => {
                         </div>
                       )}
                     </div>
+
+                    {/* Lista do mês para o paciente filtrado */}
+                    {selectedPatientName && (
+                      <div className="lg:col-span-2 rounded-2xl bg-card border border-border shadow-card p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="font-display text-sm font-semibold text-foreground">
+                            Sessões de {selectedPatientName} em {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {monthFilteredSessions.length} sessão{monthFilteredSessions.length === 1 ? "" : "es"}
+                          </span>
+                        </div>
+                        {monthFilteredSessions.length === 0 ? (
+                          <p className="text-sm text-muted-foreground py-4 text-center">
+                            Nenhuma sessão deste paciente neste mês.
+                          </p>
+                        ) : (
+                          <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                            {monthFilteredSessions.map((s) => <SessionCard key={s.id} s={s} />)}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
