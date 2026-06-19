@@ -145,12 +145,24 @@ const Agenda = () => {
   const [patientFilter, setPatientFilter] = useState<string>("all");
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Seed patient filter from ?patient= query string
+  // Seed patient filter from ?patient= query string (once on mount / when URL changes externally)
   useEffect(() => {
     const qp = searchParams.get("patient");
     if (qp && qp !== patientFilter) setPatientFilter(qp);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  // Keep ?patient= in sync with state so the filter persists across view changes,
+  // month navigation and reloads (deep-linkable).
+  useEffect(() => {
+    const current = searchParams.get("patient") ?? "all";
+    if (patientFilter === current) return;
+    const next = new URLSearchParams(searchParams);
+    if (patientFilter === "all") next.delete("patient");
+    else next.set("patient", patientFilter);
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientFilter]);
 
   // Pending
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
