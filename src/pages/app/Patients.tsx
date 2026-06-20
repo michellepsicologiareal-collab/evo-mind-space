@@ -16,6 +16,7 @@ import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 import { PatientMoodChart } from "@/components/app/PatientMoodChart";
 import { PatientSessionRecords } from "@/components/app/PatientSessionRecords";
 import { CardSkeleton } from "@/components/app/Skeletons";
+import { PatientHomework } from "@/components/app/PatientHomework";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -83,6 +84,7 @@ interface Patient {
   psychiatrist_name: string | null;
   psychiatrist_phone: string | null;
   medications: string | null;
+  homework_token: string | null;
 }
 
 const FREE_PATIENT_LIMIT = 5;
@@ -106,6 +108,7 @@ const Patients = () => {
   const [moodPatient, setMoodPatient] = useState<Patient | null>(null);
   const [recordsPatient, setRecordsPatient] = useState<Patient | null>(null);
   const [anamnesisPatient, setAnamnesisPatient] = useState<Patient | null>(null);
+  const [homeworkPatient, setHomeworkPatient] = useState<Patient | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
@@ -969,6 +972,12 @@ const Patients = () => {
                       >
                         <FileText className="h-3.5 w-3.5" />
                       </button>
+                      <button onClick={(e) => { e.stopPropagation(); setHomeworkPatient(p); }} title="Tarefas de casa"
+                        className="flex items-center justify-center"
+                        style={{ width: 32, height: 32, borderRadius: 7, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
+                      >
+                        <ClipboardList className="h-3.5 w-3.5" />
+                      </button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button onClick={(e) => e.stopPropagation()}
@@ -1670,6 +1679,26 @@ const Patients = () => {
               patientId={anamnesisPatient.id}
               patientName={anamnesisPatient.full_name}
               onSaved={() => setAnamnesisPatient(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Homework Dialog */}
+      <Dialog open={!!homeworkPatient} onOpenChange={(o) => !o && setHomeworkPatient(null)}>
+        <DialogContent className={dlgCls("hw")}>
+          <FullBtn k="hw" />
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">{homeworkPatient?.full_name}</DialogTitle>
+            <DialogDescription>Tarefas de casa — envie por WhatsApp e gere PDF</DialogDescription>
+          </DialogHeader>
+          {homeworkPatient && (
+            <PatientHomework
+              patientId={homeworkPatient.id}
+              patientName={homeworkPatient.full_name}
+              patientPhone={homeworkPatient.phone}
+              homeworkToken={(homeworkPatient as any).homework_token ?? null}
+              therapistFirstName={profName ? profName.split(" ")[0] : undefined}
             />
           )}
         </DialogContent>
