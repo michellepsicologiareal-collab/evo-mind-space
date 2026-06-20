@@ -409,6 +409,57 @@ export type Database = {
         }
         Relationships: []
       }
+      homework_tasks: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          patient_id: string
+          sent_at: string | null
+          session_record_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          patient_id: string
+          sent_at?: string | null
+          session_record_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          patient_id?: string
+          sent_at?: string | null
+          session_record_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_tasks_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_tasks_session_record_id_fkey"
+            columns: ["session_record_id"]
+            isOneToOne: false
+            referencedRelation: "session_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       library_materials: {
         Row: {
           category: Database["public"]["Enums"]["library_category"]
@@ -524,6 +575,7 @@ export type Database = {
           full_name: string
           has_financial_responsible: boolean
           has_psychiatrist: boolean
+          homework_token: string | null
           id: string
           is_active: boolean
           medications: string | null
@@ -552,6 +604,7 @@ export type Database = {
           full_name: string
           has_financial_responsible?: boolean
           has_psychiatrist?: boolean
+          homework_token?: string | null
           id?: string
           is_active?: boolean
           medications?: string | null
@@ -580,6 +633,7 @@ export type Database = {
           full_name?: string
           has_financial_responsible?: boolean
           has_psychiatrist?: boolean
+          homework_token?: string | null
           id?: string
           is_active?: boolean
           medications?: string | null
@@ -1514,6 +1568,19 @@ export type Database = {
         Returns: {
           is_approved: boolean
           profile_type: Database["public"]["Enums"]["profile_type"]
+        }[]
+      }
+      get_homework_by_token: {
+        Args: { _token: string }
+        Returns: {
+          content: string
+          created_at: string
+          patient_name: string
+          sent_at: string
+          task_id: string
+          therapist_crp: string
+          therapist_name: string
+          title: string
         }[]
       }
       get_profile_id_by_email: { Args: { _email: string }; Returns: string }
