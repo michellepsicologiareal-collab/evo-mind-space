@@ -1,0 +1,129 @@
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Loader2, FileText, Printer, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import logoImg from "@/assets/logo-psireal.png";
+
+interface Row {
+  patient_name: string;
+  therapist_name: string;
+  therapist_crp: string | null;
+  task_id: string | null;
+  title: string | null;
+  content: string | null;
+  sent_at: string | null;
+  created_at: string | null;
+}
+
+const Tarefas = () => {
+  const { token } = useParams<{ token: string }>();
+  const [rows, setRows] = useState<Row[]>([]);
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+
+  useEffect(() => {
+    document.title = "Tarefas de Casa — Psi Real";
+    return () => { document.title = "Psi Real — Gestão Inteligente para Psicólogos"; };
+  }, []);
+
+  useEffect(() => {
+    if (!token) { setState("error"); return; }
+    (async () => {
+      const { data, error } = await supabase.rpc("get_homework_by_token", { _token: token });
+      if (error || !data) { setState("error"); return; }
+      setRows((data as Row[]) ?? []);
+      setState("ready");
+    })();
+  }, [token]);
+
+  if (state === "loading") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
+  if (state === "error" || rows.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-md text-center rounded-2xl bg-card border border-border p-8">
+          <X className="h-12 w-12 mx-auto text-destructive/40 mb-4" />
+          <h2 className="font-display text-xl font-bold text-foreground">Link inválido</h2>
+          <p className="mt-2 text-muted-foreground">Esta página de tarefas não está disponível.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const header = rows[0];
+  const tasks = rows.filter((r) => r.task_id);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <style>{`
+        @media print {
+          .no-print { display: none !important; }
+          body { background: white !important; }
+        }
+      `}</style>
+
+      <div className="max-w-3xl mx-auto p-6 print:p-0">
+        <div className="flex items-center justify-between gap-3 mb-6 no-print">
+          <div className="flex items-center gap-2">
+            <img src={logoImg} alt="Psi Real" className="h-8 w-8 object-contain" />
+            <span className="font-display text-lg font-bold text-foreground">Psi Real</span>
+          </div>
+          <Button variant="accent" size="sm" onClick={() => window.print()}>
+            <Printer className="h-4 w-4" /> Baixar/Imprimir PDF
+          </Button>
+        </div>
+
+        <div className="rounded-2xl bg-card border border-border p-6 sm:p-8 print:border-0 print:p-4">
+          <div className="border-b border-border pb-4 mb-6">
+            <h1 className="font-display text-2xl font-bold text-foreground">Tarefas de Casa</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              <span className="font-medium text-foreground">{header.patient_name}</span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Psicóloga: {header.therapist_name}{header.therapist_crp ? ` · CRP ${header.therapist_crp}` : ""}
+            </p>
+          </div>
+
+          {tasks.length === 0 ? (
+            <div className="text-center py-8">
+              <FileText className="h-8 w-8 mx-auto text-muted-foreground/40" />
+              <p className="mt-2 text-sm text-muted-foreground">Nenhuma tarefa enviada ainda.</p>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {tasks.map((t, i) => (
+                <div key={t.task_id!} className="pb-5 border-b border-border last:border-0 last:pb-0 break-inside-avoid">
+                  <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                    <h2 className="font-display text-base font-semibold text-foreground">
+                      {i + 1}. {t.title}
+                    </h2>
+                    {t.sent_at && (
+                      <span className="text-[11px] text-muted-foreground">
+                        Enviada em {format(new Date(t.sent_at), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-sm text-foreground whitespace-pre-line leading-relaxed">{t.content}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p className="mt-8 pt-4 border-t border-border text-[10px] text-muted-foreground text-center">
+            Documento gerado pelo Psi Real
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Tarefas;
