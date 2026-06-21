@@ -1095,7 +1095,7 @@ const Patients = () => {
                     <X className="h-4 w-4" />
                   </button>
                 </div>
-                <div className="p-6 pt-8">
+                <div className="p-6 pt-10 max-w-3xl mx-auto">
                   <div className="flex items-center gap-3 pr-8">
                     <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
                       {p.full_name.charAt(0).toUpperCase()}
