@@ -119,6 +119,9 @@ const Patients = () => {
   const [formulationFilled, setFormulationFilled] = useState<Record<string, string>>({});
   const [teFilled, setTeFilled] = useState<Record<string, boolean>>({});
   const [actFilled, setActFilled] = useState<Record<string, boolean>>({});
+  const [teData, setTeData] = useState<Record<string, { padrao_identificado?: string; foco_terapeutico?: string; conexao_gerada?: string; updated_at?: string }>>({});
+  const [actData, setActData] = useState<Record<string, { apresentacao_problema?: string; direcionamento_gerado?: string; updated_at?: string }>>({});
+
   const [formulationSummaries, setFormulationSummaries] = useState<Record<string, string>>({});
   const [summaryMeta, setSummaryMeta] = useState<Record<string, { abordagem: string; label: string }>>({});
   const [formulationData, setFormulationData] = useState<Record<string, any>>({});
