@@ -801,7 +801,7 @@ const Patients = () => {
                     {initials}
                   </div>
 
-                  <div className="min-w-0 flex-1 sm:flex-none">
+                  <div className="min-w-0 flex-1">
                     <p className="truncate" style={{ fontWeight: 700, fontSize: 15, color: C.ink }}>{p.full_name}</p>
                     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                       <span style={{ background: C.greenSoft, color: C.green, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6 }}>
@@ -886,121 +886,36 @@ const Patients = () => {
                   </div>
 
 
-                  <div className="flex items-center gap-1.5 flex-wrap w-full sm:w-auto sm:flex-1 min-w-0">
-                    <button onClick={(e) => { e.stopPropagation(); setMoodPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
-                      <Pill label={cMood > 0 ? "Humor" : "Humor —"} kind={cMood > 0 ? "filled" : "neutral"} count={cMood > 0 ? cMood : undefined} />
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); setHistoryPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
-                      <Pill label="Histórico" kind={cHist > 0 ? "filled" : "neutral"} count={cHist > 0 ? cHist : undefined} />
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-tcc`); }} style={{ all: "unset", cursor: "pointer" }}>
-                      <Pill label={hasFormul ? "Formulação" : "Sem formulação"} kind={hasFormul ? "filled" : "pending"} />
-                    </button>
-                    {(() => {
-                      const hasTe = !!teFilled[p.id];
-                      const bg = hasTe ? "#FDF6E3" : "#FAFAFA";
-                      const fg = hasTe ? "#B8860B" : "#9CA3AF";
-                      const bd = hasTe ? "#F0E4B8" : "#E5E7EB";
-                      return (
-                        <button onClick={(e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-te`); }} style={{ all: "unset", cursor: "pointer" }} title={hasTe ? "Formulação TE preenchida" : "Formulação TE pendente"}>
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: bg, color: fg, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6, border: `1px solid ${bd}` }}>
-                            <IconTarget className="h-3 w-3" /> {hasTe ? "TE" : "Sem TE"}
-                          </span>
-                        </button>
-                      );
-                    })()}
-                    {(() => {
-                      const hasAct = !!actFilled[p.id];
-                      const bg = hasAct ? "#EAF3DE" : "#FAFAFA";
-                      const fg = hasAct ? "#2D6A4F" : "#9CA3AF";
-                      const bd = hasAct ? "#D4E5B8" : "#E5E7EB";
-                      return (
-                        <button onClick={(e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-act`); }} style={{ all: "unset", cursor: "pointer" }} title={hasAct ? "Formulação ACT preenchida" : "Formulação ACT pendente"}>
-                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: bg, color: fg, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6, border: `1px solid ${bd}` }}>
-                            <IconFlame className="h-3 w-3" /> {hasAct ? "ACT" : "Sem ACT"}
-                          </span>
-                        </button>
-                      );
-                    })()}
-                    <button onClick={(e) => { e.stopPropagation(); setTccPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
-                      <Pill label={cTcc > 0 ? "RPD" : "Sem RPD"} kind={cTcc > 0 ? "filled" : "pending"} />
-                    </button>
-                    {(() => {
-                      const planStatus = tp?.status;
-                      const isRevision = planStatus === "em_revisao";
-                      const isActive = hasPlan && planStatus !== "em_revisao";
-                      const label = isRevision ? "Revisão Pendente" : isActive ? "Plano Ativo" : "Sem Plano";
-                      const kind = isActive ? "filled" : "pending";
-                      return (
-                        <button onClick={(e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); }} style={{ all: "unset", cursor: "pointer" }}>
-                          <Pill label={label} kind={kind as any} count={planMetasCount > 0 ? planMetasCount : undefined} />
-                        </button>
-                      );
-                    })()}
-                    {p.category === "crianca" && (
-                      <button onClick={(e) => { e.stopPropagation(); setAnamnesisPatient(p); }} style={{ all: "unset", cursor: "pointer" }}>
-                        <Pill label={hasAnam ? "Anamnese" : "Sem anamnese"} kind={hasAnam ? "filled" : "pending"} />
-                      </button>
-                    )}
-                  </div>
-
                   <div className="flex items-center gap-3 shrink-0 ml-auto">
                     {p.session_price != null && (
-                      <div className="text-right">
+                      <div className="text-right hidden sm:block">
                         <span style={{ fontWeight: 700, fontSize: 16, color: C.ink }}>R$ {Number(p.session_price).toFixed(0)}</span>
                         <span style={{ fontSize: 12, color: C.muted, marginLeft: 2 }}>/sessão</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-1.5">
-                      <button onClick={(e) => { e.stopPropagation(); setPadeksyPatient(p); }} title="Resumo IA / Formulação"
-                        className="flex items-center justify-center transition-opacity hover:opacity-90"
-                        style={{ width: 32, height: 32, borderRadius: 7, background: C.purple, color: "#fff" }}
-                      >
-                        <Sparkles className="h-4 w-4" />
-                      </button>
-                      {url && (
-                        <a href={url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} title="WhatsApp"
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button onClick={(e) => e.stopPropagation()}
                           className="flex items-center justify-center"
                           style={{ width: 32, height: 32, borderRadius: 7, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
                         >
-                          <MessageCircle className="h-3.5 w-3.5" />
-                        </a>
-                      )}
-                      <button onClick={(e) => { e.stopPropagation(); setRecordsPatient(p); }} title="Registros"
-                        className="flex items-center justify-center"
-                        style={{ width: 32, height: 32, borderRadius: 7, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
-                      >
-                        <FileText className="h-3.5 w-3.5" />
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); setHomeworkPatient(p); }} title="Tarefas de casa"
-                        className="flex items-center justify-center"
-                        style={{ width: 32, height: 32, borderRadius: 7, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
-                      >
-                        <ClipboardList className="h-3.5 w-3.5" />
-                      </button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button onClick={(e) => e.stopPropagation()}
-                            className="flex items-center justify-center"
-                            style={{ width: 32, height: 32, borderRadius: 7, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
-                          >
-                            <MoreHorizontal className="h-3.5 w-3.5" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenuItem onClick={() => openEdit(p)}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleActive(p)}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => setTccPatient(p)}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-te`)} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+                          <MoreHorizontal className="h-3.5 w-3.5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => openEdit(p)}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => toggleActive(p)}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setTccPatient(p)}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-te`)} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
+
                 </div>
 
                 {(() => {
