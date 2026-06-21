@@ -179,8 +179,9 @@ const Patients = () => {
       supabase.from("treatment_goals").select("patient_id").eq("user_id", user.id),
       supabase.from("treatment_techniques").select("patient_id").eq("user_id", user.id),
       supabase.from("treatment_revisions").select("patient_id").eq("user_id", user.id),
-      supabase.from("schema_formulations").select("patient_id").eq("therapist_id", user.id),
-      supabase.from("act_formulations").select("patient_id").eq("therapist_id", user.id),
+      supabase.from("schema_formulations").select("patient_id, padrao_identificado, foco_terapeutico, conexao_gerada, updated_at").eq("therapist_id", user.id),
+      supabase.from("act_formulations").select("patient_id, apresentacao_problema, direcionamento_gerado, updated_at").eq("therapist_id", user.id),
+
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients((patientsRes.data ?? []) as any);
