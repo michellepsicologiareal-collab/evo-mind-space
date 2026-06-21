@@ -1086,6 +1086,10 @@ const Patients = () => {
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); }} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); }} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
                       <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); setRecordsPatient(p); }}><FileText className="h-4 w-4 mr-2" /> Registros de sessão</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }}><ClipboardList className="h-4 w-4 mr-2" /> Tarefas de casa</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); handleDelete(p); }} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
