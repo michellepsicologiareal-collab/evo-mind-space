@@ -119,6 +119,9 @@ const Patients = () => {
   const [formulationFilled, setFormulationFilled] = useState<Record<string, string>>({});
   const [teFilled, setTeFilled] = useState<Record<string, boolean>>({});
   const [actFilled, setActFilled] = useState<Record<string, boolean>>({});
+  const [teData, setTeData] = useState<Record<string, { padrao_identificado?: string; foco_terapeutico?: string; conexao_gerada?: string; updated_at?: string }>>({});
+  const [actData, setActData] = useState<Record<string, { apresentacao_problema?: string; direcionamento_gerado?: string; updated_at?: string }>>({});
+
   const [formulationSummaries, setFormulationSummaries] = useState<Record<string, string>>({});
   const [summaryMeta, setSummaryMeta] = useState<Record<string, { abordagem: string; label: string }>>({});
   const [formulationData, setFormulationData] = useState<Record<string, any>>({});
@@ -179,8 +182,9 @@ const Patients = () => {
       supabase.from("treatment_goals").select("patient_id").eq("user_id", user.id),
       supabase.from("treatment_techniques").select("patient_id").eq("user_id", user.id),
       supabase.from("treatment_revisions").select("patient_id").eq("user_id", user.id),
-      supabase.from("schema_formulations").select("patient_id").eq("therapist_id", user.id),
-      supabase.from("act_formulations").select("patient_id").eq("therapist_id", user.id),
+      supabase.from("schema_formulations").select("patient_id, padrao_identificado, foco_terapeutico, conexao_gerada, updated_at").eq("therapist_id", user.id),
+      supabase.from("act_formulations").select("patient_id, apresentacao_problema, direcionamento_gerado, updated_at").eq("therapist_id", user.id),
+
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients((patientsRes.data ?? []) as any);
@@ -210,11 +214,16 @@ const Patients = () => {
     setFormulationSummaries(sumMap);
     setFormulationData(dataMap);
     const teMap: Record<string, boolean> = {};
-    (teRes.data ?? []).forEach((r: any) => { if (r.patient_id) teMap[r.patient_id] = true; });
+    const teDataMap: Record<string, any> = {};
+    (teRes.data ?? []).forEach((r: any) => { if (r.patient_id) { teMap[r.patient_id] = true; teDataMap[r.patient_id] = r; } });
     setTeFilled(teMap);
+    setTeData(teDataMap);
     const actMap: Record<string, boolean> = {};
-    (actRes.data ?? []).forEach((r: any) => { if (r.patient_id) actMap[r.patient_id] = true; });
+    const actDataMap: Record<string, any> = {};
+    (actRes.data ?? []).forEach((r: any) => { if (r.patient_id) { actMap[r.patient_id] = true; actDataMap[r.patient_id] = r; } });
     setActFilled(actMap);
+    setActData(actDataMap);
+
 
     const plansMap: Record<string, any> = {};
     (plansRes.data ?? []).forEach((p: any) => {
@@ -1135,13 +1144,87 @@ const Patients = () => {
                       <Chip label="Histórico" count={cHist} onClick={() => { setSelectedPatient(null); setHistoryPatient(p); }} />
                       <Chip label="Sessões" count={cRec} onClick={() => { setSelectedPatient(null); setRecordsPatient(p); }} />
                       <Chip label="Anamnese" count={hasAnam ? 1 : 0} onClick={() => { setSelectedPatient(null); setAnamnesisPatient(p); }} />
-                      <Chip label="TCC" count={cTcc} onClick={() => { setSelectedPatient(null); setTccPatient(p); }} />
-                      <Chip label="Formulação" onClick={() => { setSelectedPatient(null); setPadeksyPatient(p); }} />
                       <Chip label="Plano" onClick={() => { setSelectedPatient(null); navigate(`/app/plano-tratamento?patient=${p.id}`); }} />
                       <Chip label="Tarefas de casa" onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }} />
-
                     </div>
                   </div>
+
+                  {(() => {
+                    const trunc = (t?: string, n = 180) => !t ? "" : (t.length > n ? t.slice(0, n).trimEnd() + "…" : t);
+                    const tccSummary = formulationSummaries[p.id] || formulationData[p.id]?.treatment_goals || formulationData[p.id]?.core_beliefs || "";
+                    const te = teData[p.id];
+                    const teSummary = te?.foco_terapeutico || te?.padrao_identificado || te?.conexao_gerada || "";
+                    const act = actData[p.id];
+                    const actSummary = act?.direcionamento_gerado || act?.apresentacao_problema || "";
+                    const items = [
+                      {
+                        key: "tcc",
+                        label: "TCC — Formulação de caso",
+                        filled: !!formulationFilled[p.id],
+                        summary: trunc(tccSummary),
+                        accent: "hsl(var(--primary))",
+                        onView: () => { setSelectedPatient(null); setPadeksyPatient(p); },
+                      },
+                      {
+                        key: "te",
+                        label: "TE — Terapia do Esquema",
+                        filled: !!teFilled[p.id],
+                        summary: trunc(teSummary),
+                        accent: "#B8860B",
+                        onView: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); },
+                      },
+                      {
+                        key: "act",
+                        label: "ACT — Terapia de Aceitação",
+                        filled: !!actFilled[p.id],
+                        summary: trunc(actSummary),
+                        accent: "#2D6A4F",
+                        onView: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); },
+                      },
+                      {
+                        key: "rpd",
+                        label: "RPD — Registros TCC",
+                        filled: cTcc > 0,
+                        summary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "",
+                        accent: "hsl(var(--moss))",
+                        onView: () => { setSelectedPatient(null); setTccPatient(p); },
+                      },
+                    ];
+                    return (
+                      <div className="mt-6">
+                        <p className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", color: "hsl(var(--muted-foreground))" }}>Formulações</p>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {items.map((it) => (
+                            <div key={it.key} className="rounded-xl p-3 flex items-start gap-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderLeft: `3px solid ${it.accent}` }}>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>{it.label}</p>
+                                  <span style={{ background: it.filled ? "rgba(61,92,53,0.12)" : "rgba(0,0,0,0.06)", color: it.filled ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                                    {it.filled ? "Preenchida" : "Pendente"}
+                                  </span>
+                                </div>
+                                {it.summary ? (
+                                  <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--brown))", lineHeight: 1.45 }}>{it.summary}</p>
+                                ) : (
+                                  <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))", fontStyle: "italic" }}>Ainda não preenchido.</p>
+                                )}
+                              </div>
+                              <button
+                                onClick={it.onView}
+                                title="Visualizar"
+                                className="shrink-0 flex items-center justify-center transition-opacity hover:opacity-80"
+                                style={{ width: 32, height: 32, borderRadius: 8, background: it.accent, color: "#fff" }}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+
 
                   <div className="mt-6 space-y-2">
                     {url && (
