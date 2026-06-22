@@ -17,6 +17,7 @@ import { PatientMoodChart } from "@/components/app/PatientMoodChart";
 import { PatientSessionRecords } from "@/components/app/PatientSessionRecords";
 import { CardSkeleton } from "@/components/app/Skeletons";
 import { PatientHomework } from "@/components/app/PatientHomework";
+import { IntegratedCaseSummary } from "@/components/app/IntegratedCaseSummary";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -931,88 +932,7 @@ const Patients = () => {
 
                 </div>
 
-                {(() => {
-                  const trunc = (t: string, n = 180) => (t.length > n ? t.slice(0, n).trimEnd() + "…" : t);
-                  const planText = tp?.conceitualizacao?.trim() || p.treatment_plan?.trim() || "";
-                  const items: Array<{ label: string; text: string }> = [];
-                  if (p.chief_complaint?.trim()) items.push({ label: "Queixa principal", text: trunc(p.chief_complaint.trim()) });
-                  if (p.anamnesis?.trim()) items.push({ label: "Anamnese", text: trunc(p.anamnesis.trim()) });
-                  if (p.notes?.trim()) items.push({ label: "Notas", text: trunc(p.notes.trim()) });
-                  if (planText) items.push({ label: "Plano", text: trunc(planText) });
-                  if (p.medications?.trim()) items.push({ label: "Medicações", text: trunc(p.medications.trim(), 120) });
-                  if (items.length === 0) return null;
-                  return (
-                    <div onClick={(e) => e.stopPropagation()} className="px-4 sm:px-5 py-3 space-y-2" style={{ background: "#FAFAF7", borderTop: `1px solid ${C.border}` }}>
-                      <div className="flex items-center justify-between gap-2">
-                        <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "0.08em" }}>Resumo do cadastro</p>
-                        <button
-                          onClick={() => setSummaryPatient(p)}
-                          title="Ver resumo completo"
-                          className="inline-flex items-center gap-1 transition-opacity hover:opacity-80"
-                          style={{ background: "transparent", color: C.purple, fontSize: 11, fontWeight: 600, padding: "2px 6px", borderRadius: 6 }}
-                        >
-                          <Eye className="h-3.5 w-3.5" /> Ver tudo
-                        </button>
-                      </div>
-                      <div className="space-y-1.5">
-                        {items.map((it) => (
-                          <div key={it.label} className="flex gap-2">
-                            <span className="shrink-0" style={{ fontSize: 11, fontWeight: 700, color: C.ink, minWidth: 110 }}>{it.label}</span>
-                            <span style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{it.text}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {hasFormul && (
-                  <div onClick={(e) => e.stopPropagation()}
-                    className="flex flex-col sm:flex-row sm:items-start gap-3 px-4 sm:px-5 py-3.5"
-                    style={{ background: C.purpleSoft, borderTop: `1px solid ${C.border}` }}
-                  >
-                    <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                      <div className="shrink-0 mt-0.5 flex items-center justify-center" style={{ width: 24, height: 24, borderRadius: 6, background: C.purple, color: "#fff" }}>
-                        <Sparkles className="h-3.5 w-3.5" />
-                      </div>
-                      <div className="min-w-0">
-                        <p style={{ fontSize: 11, fontWeight: 700, color: C.purple, textTransform: "uppercase", letterSpacing: "0.08em" }}>Resumo IA · Formulação</p>
-                        {aiSum ? (
-                          <>
-                            <p className="mt-1" style={{ fontSize: 12, color: C.purpleInk, lineHeight: 1.5 }}>{aiSum}</p>
-                            {summaryMeta[p.id]?.abordagem && (
-                              <div className="mt-1.5">
-                                <AbordagemBadge abordagem={summaryMeta[p.id].abordagem} label={summaryMeta[p.id].label} />
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <p className="mt-1 italic" style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
-                            Gere um resumo de IA com os destaques clínicos desta formulação.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0 sm:ml-2">
-                      <button
-                        onClick={() => summarizeFormulation(p.id)}
-                        disabled={!!summarizing[p.id]}
-                        className="inline-flex items-center gap-1.5 transition-opacity disabled:opacity-60"
-                        style={{ background: C.card, border: `1px solid ${C.purple}`, color: C.purple, padding: "6px 12px", borderRadius: 7, fontWeight: 600, fontSize: 12 }}
-                      >
-                        {summarizing[p.id] ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-                        {aiSum ? "Atualizar" : "Gerar"}
-                      </button>
-                      <button
-                        onClick={() => setReadPatient(p)}
-                        className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-90"
-                        style={{ background: C.purple, color: "#fff", border: `1px solid ${C.purple}`, padding: "6px 12px", borderRadius: 7, fontWeight: 600, fontSize: 12 }}
-                      >
-                        <Eye className="h-3.5 w-3.5" /> Ler formulação
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {/* Resumo do cadastro e Resumo IA movidos para a visualização expandida (sheet) */}
 
                 {isCriticalAlert && (
                   <div style={{ background: C.redSoft, borderTop: `1px solid ${C.border}`, padding: "9px 16px", display: "flex", alignItems: "center", gap: 8 }}>
@@ -1223,6 +1143,10 @@ const Patients = () => {
                       </div>
                     );
                   })()}
+
+                  <IntegratedCaseSummary patientId={p.id} />
+
+
 
 
 
