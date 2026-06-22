@@ -22,16 +22,39 @@ export const IntegratedCaseSummary = ({ patientId }: { patientId: string }) => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase.functions.invoke("integrate-case-summary", {
+      const { data, error: invokeError } = await supabase.functions.invoke("integrate-case-summary", {
         body: { patient_id: patientId },
       });
-      if (error) throw error;
-      if ((data as any)?.error) {
-        setError((data as any).error);
+
+      // Tenta extrair a mensagem real do corpo da resposta, mesmo em erros HTTP
+      let bodyError: string | null = null;
+      let bodyData: any = data;
+      if (invokeError) {
+        try {
+          const ctx: any = (invokeError as any).context;
+          if (ctx?.json) bodyData = await ctx.json();
+          else if (ctx?.text) bodyData = JSON.parse(await ctx.text());
+        } catch {}
+        bodyError = bodyData?.error || invokeError.message || "Erro desconhecido";
+      } else if ((data as any)?.error) {
+        bodyError = (data as any).error;
+      }
+
+      if (bodyError) {
+        // Mensagens mais amigáveis para erros comuns
+        let friendly = bodyError;
+        if (/credit|402|payment/i.test(bodyError)) {
+          friendly = "Créditos de IA esgotados. Adicione créditos no Lovable (Settings → Plans & credits) para gerar o resumo integrado.";
+        } else if (/429|limit/i.test(bodyError)) {
+          friendly = "Limite de uso da IA atingido. Tente novamente em alguns instantes.";
+        }
+        setError(friendly);
+        toast.error(friendly);
         return;
       }
-      setSummary((data as any).summary);
-      setAbordagens((data as any).abordagens || []);
+
+      setSummary((bodyData as any).summary);
+      setAbordagens((bodyData as any).abordagens || []);
       toast.success("Resumo integrado gerado");
     } catch (e: any) {
       const msg = e?.message || "Erro ao gerar resumo integrado";
