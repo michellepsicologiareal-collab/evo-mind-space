@@ -17,6 +17,7 @@ import { PatientMoodChart } from "@/components/app/PatientMoodChart";
 import { PatientSessionRecords } from "@/components/app/PatientSessionRecords";
 import { CardSkeleton } from "@/components/app/Skeletons";
 import { PatientHomework } from "@/components/app/PatientHomework";
+import { IntegratedCaseSummary } from "@/components/app/IntegratedCaseSummary";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
