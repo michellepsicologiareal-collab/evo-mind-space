@@ -1143,6 +1143,10 @@ const Patients = () => {
                     );
                   })()}
 
+                  <IntegratedCaseSummary patientId={p.id} />
+
+
+
 
 
                   <div className="mt-6 space-y-2">
