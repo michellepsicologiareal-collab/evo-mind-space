@@ -1200,9 +1200,17 @@ const Agenda = () => {
     }
   }, [selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keep currentMonth in sync when weekStart crosses month boundary
+  // Keep currentMonth in sync when weekStart crosses month boundary.
+  // Skipped when weekStart was updated programmatically by the month/year selector,
+  // because the week of day 1 often starts in the previous month and would
+  // cause an infinite loop reverting currentMonth.
+  const skipWeekSyncRef = useRef(false);
   useEffect(() => {
-    const m = startOfMonth(weekStart);
+    if (skipWeekSyncRef.current) {
+      skipWeekSyncRef.current = false;
+      return;
+    }
+    const m = startOfMonth(addDays(weekStart, 3));
     if (!isSameMonth(m, currentMonth)) {
       setCurrentMonth(m);
     }
@@ -1773,6 +1781,7 @@ const Agenda = () => {
               value={String(currentMonth.getMonth() + 1)}
               onValueChange={(v) => {
                 const newMonth = new Date(currentMonth.getFullYear(), Number(v) - 1, 1);
+                skipWeekSyncRef.current = true;
                 setCurrentMonth(newMonth);
                 setSelectedDate(newMonth);
                 setWeekStart(startOfWeek(newMonth, { weekStartsOn: 1 }));
@@ -1793,6 +1802,7 @@ const Agenda = () => {
               value={String(currentMonth.getFullYear())}
               onValueChange={(v) => {
                 const newMonth = new Date(Number(v), currentMonth.getMonth(), 1);
+                skipWeekSyncRef.current = true;
                 setCurrentMonth(newMonth);
                 setSelectedDate(newMonth);
                 setWeekStart(startOfWeek(newMonth, { weekStartsOn: 1 }));
