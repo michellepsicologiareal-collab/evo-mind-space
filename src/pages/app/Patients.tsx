@@ -1201,6 +1201,7 @@ const Patients = () => {
                     </div>
                     <Switch checked={p.shared_with_supervisor} onCheckedChange={() => toggleSharing(p)} />
                   </div>
+                  </div>
                 </div>
               </div>
             );
