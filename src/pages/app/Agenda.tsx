@@ -1802,6 +1802,7 @@ const Agenda = () => {
               value={String(currentMonth.getFullYear())}
               onValueChange={(v) => {
                 const newMonth = new Date(Number(v), currentMonth.getMonth(), 1);
+                skipWeekSyncRef.current = true;
                 setCurrentMonth(newMonth);
                 setSelectedDate(newMonth);
                 setWeekStart(startOfWeek(newMonth, { weekStartsOn: 1 }));
