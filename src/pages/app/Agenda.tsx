@@ -1201,8 +1201,9 @@ const Agenda = () => {
   }, [selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keep currentMonth in sync when weekStart crosses month boundary
+  // Use Thursday (ISO middle of week) to avoid flicker when a week spans two months.
   useEffect(() => {
-    const m = startOfMonth(weekStart);
+    const m = startOfMonth(addDays(weekStart, 3));
     if (!isSameMonth(m, currentMonth)) {
       setCurrentMonth(m);
     }
