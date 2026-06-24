@@ -177,6 +177,13 @@ const Agenda = () => {
     setCurrentMonth(startOfMonth(addDays(nextWeekStart, 3)));
   }, []);
 
+  // Debounce: clear navigation lock after transitions settle
+  useEffect(() => {
+    if (!isNavigating) return;
+    const t = setTimeout(() => setIsNavigating(false), 500);
+    return () => clearTimeout(t);
+  }, [isNavigating]);
+
   // Seed patient filter from ?patient= query string (once on mount / when URL changes externally)
   useEffect(() => {
     const qp = searchParams.get("patient");
