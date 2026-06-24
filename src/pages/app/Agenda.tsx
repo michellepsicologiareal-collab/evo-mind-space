@@ -144,6 +144,34 @@ const Agenda = () => {
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
   const [searchParams, setSearchParams] = useSearchParams();
+  const skipDateMonthSyncRef = useRef(false);
+  const skipWeekSyncRef = useRef(false);
+
+  const goToMonth = useCallback((date: Date) => {
+    const month = startOfMonth(date);
+    skipDateMonthSyncRef.current = true;
+    skipWeekSyncRef.current = true;
+    setCurrentMonth(month);
+    setSelectedDate(month);
+    setWeekStart(startOfWeek(month, { weekStartsOn: 1 }));
+  }, []);
+
+  const goToDate = useCallback((date: Date) => {
+    skipDateMonthSyncRef.current = true;
+    skipWeekSyncRef.current = true;
+    setSelectedDate(date);
+    setCurrentMonth(startOfMonth(date));
+    setWeekStart(startOfWeek(date, { weekStartsOn: 1 }));
+  }, []);
+
+  const goToWeek = useCallback((date: Date) => {
+    const nextWeekStart = startOfWeek(date, { weekStartsOn: 1 });
+    skipDateMonthSyncRef.current = true;
+    skipWeekSyncRef.current = true;
+    setWeekStart(nextWeekStart);
+    setSelectedDate(nextWeekStart);
+    setCurrentMonth(startOfMonth(addDays(nextWeekStart, 3)));
+  }, []);
 
   // Seed patient filter from ?patient= query string (once on mount / when URL changes externally)
   useEffect(() => {
@@ -157,10 +185,12 @@ const Agenda = () => {
   useEffect(() => {
     const current = searchParams.get("patient") ?? "all";
     if (patientFilter === current) return;
-    const next = new URLSearchParams(searchParams);
-    if (patientFilter === "all") next.delete("patient");
-    else next.set("patient", patientFilter);
-    setSearchParams(next, { replace: true });
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (patientFilter === "all") next.delete("patient");
+      else next.set("patient", patientFilter);
+      return next;
+    }, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientFilter]);
 
@@ -171,7 +201,7 @@ const Agenda = () => {
     const parsed = parse(m, "yyyy-MM", new Date());
     if (isNaN(parsed.getTime())) return;
     if (!isSameMonth(parsed, currentMonth)) {
-      setCurrentMonth(startOfMonth(parsed));
+      goToMonth(parsed);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -181,9 +211,11 @@ const Agenda = () => {
     const current = searchParams.get("month");
     const formatted = format(currentMonth, "yyyy-MM");
     if (current === formatted) return;
-    const next = new URLSearchParams(searchParams);
-    next.set("month", formatted);
-    setSearchParams(next, { replace: true });
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("month", formatted);
+      return next;
+    }, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMonth]);
 
