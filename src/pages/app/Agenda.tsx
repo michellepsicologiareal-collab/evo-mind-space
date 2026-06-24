@@ -144,6 +144,34 @@ const Agenda = () => {
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
   const [searchParams, setSearchParams] = useSearchParams();
+  const skipDateMonthSyncRef = useRef(false);
+  const skipWeekSyncRef = useRef(false);
+
+  const goToMonth = useCallback((date: Date) => {
+    const month = startOfMonth(date);
+    skipDateMonthSyncRef.current = true;
+    skipWeekSyncRef.current = true;
+    setCurrentMonth(month);
+    setSelectedDate(month);
+    setWeekStart(startOfWeek(month, { weekStartsOn: 1 }));
+  }, []);
+
+  const goToDate = useCallback((date: Date) => {
+    skipDateMonthSyncRef.current = true;
+    skipWeekSyncRef.current = true;
+    setSelectedDate(date);
+    setCurrentMonth(startOfMonth(date));
+    setWeekStart(startOfWeek(date, { weekStartsOn: 1 }));
+  }, []);
+
+  const goToWeek = useCallback((date: Date) => {
+    const nextWeekStart = startOfWeek(date, { weekStartsOn: 1 });
+    skipDateMonthSyncRef.current = true;
+    skipWeekSyncRef.current = true;
+    setWeekStart(nextWeekStart);
+    setSelectedDate(nextWeekStart);
+    setCurrentMonth(startOfMonth(addDays(nextWeekStart, 3)));
+  }, []);
 
   // Seed patient filter from ?patient= query string (once on mount / when URL changes externally)
   useEffect(() => {
@@ -157,10 +185,12 @@ const Agenda = () => {
   useEffect(() => {
     const current = searchParams.get("patient") ?? "all";
     if (patientFilter === current) return;
-    const next = new URLSearchParams(searchParams);
-    if (patientFilter === "all") next.delete("patient");
-    else next.set("patient", patientFilter);
-    setSearchParams(next, { replace: true });
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (patientFilter === "all") next.delete("patient");
+      else next.set("patient", patientFilter);
+      return next;
+    }, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientFilter]);
 
@@ -171,7 +201,7 @@ const Agenda = () => {
     const parsed = parse(m, "yyyy-MM", new Date());
     if (isNaN(parsed.getTime())) return;
     if (!isSameMonth(parsed, currentMonth)) {
-      setCurrentMonth(startOfMonth(parsed));
+      goToMonth(parsed);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -181,9 +211,11 @@ const Agenda = () => {
     const current = searchParams.get("month");
     const formatted = format(currentMonth, "yyyy-MM");
     if (current === formatted) return;
-    const next = new URLSearchParams(searchParams);
-    next.set("month", formatted);
-    setSearchParams(next, { replace: true });
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("month", formatted);
+      return next;
+    }, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMonth]);
 
@@ -1194,6 +1226,10 @@ const Agenda = () => {
 
   // Keep currentMonth in sync when selectedDate crosses month boundary
   useEffect(() => {
+    if (skipDateMonthSyncRef.current) {
+      skipDateMonthSyncRef.current = false;
+      return;
+    }
     const m = startOfMonth(selectedDate);
     if (!isSameMonth(m, currentMonth)) {
       setCurrentMonth(m);
@@ -1204,7 +1240,6 @@ const Agenda = () => {
   // Skipped when weekStart was updated programmatically by the month/year selector,
   // because the week of day 1 often starts in the previous month and would
   // cause an infinite loop reverting currentMonth.
-  const skipWeekSyncRef = useRef(false);
   useEffect(() => {
     if (skipWeekSyncRef.current) {
       skipWeekSyncRef.current = false;
@@ -1781,10 +1816,7 @@ const Agenda = () => {
               value={String(currentMonth.getMonth() + 1)}
               onValueChange={(v) => {
                 const newMonth = new Date(currentMonth.getFullYear(), Number(v) - 1, 1);
-                skipWeekSyncRef.current = true;
-                setCurrentMonth(newMonth);
-                setSelectedDate(newMonth);
-                setWeekStart(startOfWeek(newMonth, { weekStartsOn: 1 }));
+                goToMonth(newMonth);
               }}
             >
               <SelectTrigger className="h-9 w-40 rounded-full text-xs font-display font-semibold">
@@ -1802,10 +1834,7 @@ const Agenda = () => {
               value={String(currentMonth.getFullYear())}
               onValueChange={(v) => {
                 const newMonth = new Date(Number(v), currentMonth.getMonth(), 1);
-                skipWeekSyncRef.current = true;
-                setCurrentMonth(newMonth);
-                setSelectedDate(newMonth);
-                setWeekStart(startOfWeek(newMonth, { weekStartsOn: 1 }));
+                goToMonth(newMonth);
               }}
             >
               <SelectTrigger className="h-9 w-24 rounded-full text-xs font-display font-semibold">
@@ -1832,17 +1861,17 @@ const Agenda = () => {
               <div className="space-y-4">
                 {/* Month header */}
                 <div className="flex items-center justify-between gap-2 rounded-2xl bg-card border border-border shadow-card p-3 sm:p-4">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0" onClick={() => goToMonth(subMonths(currentMonth, 1))}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <p className="font-display text-sm sm:text-lg font-semibold capitalize text-center truncate">
                     {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
                   </p>
                   <div className="flex gap-1 sm:gap-2 shrink-0">
-                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-primary hover:bg-[rgba(150,117,206,0.12)] hover:text-primary" onClick={() => { setCurrentMonth(startOfMonth(new Date())); setSelectedDate(new Date()); }}>
+                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-primary hover:bg-[rgba(150,117,206,0.12)] hover:text-primary" onClick={() => goToDate(new Date())}>
                       Hoje
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => goToMonth(addMonths(currentMonth, 1))}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -1870,7 +1899,7 @@ const Agenda = () => {
                           return (
                             <button
                               key={dateKey}
-                              onClick={() => setSelectedDate(cell)}
+                              onClick={() => goToDate(cell)}
                               className={cn(
                                 "aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all text-sm leading-none",
                                 isSelected ? "bg-accent text-accent-foreground ring-2 ring-accent/40 font-bold"
@@ -1959,7 +1988,7 @@ const Agenda = () => {
             <TabsContent value="week">
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-2 rounded-2xl bg-card border border-border shadow-card p-3 sm:p-4">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0" onClick={() => setWeekStart(addWeeks(weekStart, -1))}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0" onClick={() => goToWeek(addWeeks(weekStart, -1))}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <div className="text-center min-w-0">
@@ -1967,8 +1996,8 @@ const Agenda = () => {
                     <p className="text-[10px] sm:text-xs text-muted-foreground">{format(weekStart, "dd/MM")} — {format(addDays(weekStart, 6), "dd/MM")}</p>
                   </div>
                   <div className="flex gap-1 sm:gap-2 shrink-0">
-                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-primary hover:bg-[rgba(150,117,206,0.12)] hover:text-primary" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>Hoje</Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>
+                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-primary hover:bg-[rgba(150,117,206,0.12)] hover:text-primary" onClick={() => goToDate(new Date())}>Hoje</Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => goToWeek(addWeeks(weekStart, 1))}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -1988,7 +2017,7 @@ const Agenda = () => {
                         return (
                           <button
                             key={day.toISOString()}
-                            onClick={() => setSelectedDate(day)}
+                            onClick={() => goToDate(day)}
                             className={cn(
                               "flex flex-col items-center gap-0.5 py-1.5 rounded-xl transition-colors",
                               isSelected ? "bg-accent text-accent-foreground" :
@@ -2171,7 +2200,7 @@ const Agenda = () => {
             <TabsContent value="day">
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-2 rounded-2xl bg-card border border-border shadow-card p-3 sm:p-4">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0" onClick={() => setSelectedDate(addDays(selectedDate, -1))}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0" onClick={() => goToDate(addDays(selectedDate, -1))}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <div className="text-center min-w-0">
@@ -2179,8 +2208,8 @@ const Agenda = () => {
                     <p className="text-[10px] sm:text-sm text-muted-foreground truncate">{format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
                   </div>
                   <div className="flex gap-1 sm:gap-2 shrink-0">
-                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-primary hover:bg-[rgba(150,117,206,0.12)] hover:text-primary" onClick={() => setSelectedDate(new Date())}>Hoje</Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>
+                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-primary hover:bg-[rgba(150,117,206,0.12)] hover:text-primary" onClick={() => goToDate(new Date())}>Hoje</Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => goToDate(addDays(selectedDate, 1))}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
