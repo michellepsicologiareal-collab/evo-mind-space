@@ -1848,9 +1848,9 @@ const Agenda = () => {
                 goToMonth(newMonth);
               }}
             >
-              <SelectTrigger className="h-9 w-24 rounded-full text-xs font-display font-semibold">
-                <SelectValue placeholder="Ano" />
-              </SelectTrigger>
+                <SelectTrigger disabled={loading || isNavigating} className="h-9 w-24 rounded-full text-xs font-display font-semibold">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 11 }, (_, i) => {
                   const year = new Date().getFullYear() - 5 + i;
