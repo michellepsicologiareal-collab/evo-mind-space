@@ -1226,6 +1226,10 @@ const Agenda = () => {
 
   // Keep currentMonth in sync when selectedDate crosses month boundary
   useEffect(() => {
+    if (skipDateMonthSyncRef.current) {
+      skipDateMonthSyncRef.current = false;
+      return;
+    }
     const m = startOfMonth(selectedDate);
     if (!isSameMonth(m, currentMonth)) {
       setCurrentMonth(m);
@@ -1236,7 +1240,6 @@ const Agenda = () => {
   // Skipped when weekStart was updated programmatically by the month/year selector,
   // because the week of day 1 often starts in the previous month and would
   // cause an infinite loop reverting currentMonth.
-  const skipWeekSyncRef = useRef(false);
   useEffect(() => {
     if (skipWeekSyncRef.current) {
       skipWeekSyncRef.current = false;
