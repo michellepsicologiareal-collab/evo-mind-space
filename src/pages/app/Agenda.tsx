@@ -144,6 +144,7 @@ const Agenda = () => {
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isNavigating, setIsNavigating] = useState(false);
   const skipDateMonthSyncRef = useRef(false);
   const skipWeekSyncRef = useRef(false);
 
@@ -151,6 +152,7 @@ const Agenda = () => {
     const month = startOfMonth(date);
     skipDateMonthSyncRef.current = true;
     skipWeekSyncRef.current = true;
+    setIsNavigating(true);
     setCurrentMonth(month);
     setSelectedDate(month);
     setWeekStart(startOfWeek(month, { weekStartsOn: 1 }));
@@ -159,6 +161,7 @@ const Agenda = () => {
   const goToDate = useCallback((date: Date) => {
     skipDateMonthSyncRef.current = true;
     skipWeekSyncRef.current = true;
+    setIsNavigating(true);
     setSelectedDate(date);
     setCurrentMonth(startOfMonth(date));
     setWeekStart(startOfWeek(date, { weekStartsOn: 1 }));
@@ -168,10 +171,18 @@ const Agenda = () => {
     const nextWeekStart = startOfWeek(date, { weekStartsOn: 1 });
     skipDateMonthSyncRef.current = true;
     skipWeekSyncRef.current = true;
+    setIsNavigating(true);
     setWeekStart(nextWeekStart);
     setSelectedDate(nextWeekStart);
     setCurrentMonth(startOfMonth(addDays(nextWeekStart, 3)));
   }, []);
+
+  // Debounce: clear navigation lock after transitions settle
+  useEffect(() => {
+    if (!isNavigating) return;
+    const t = setTimeout(() => setIsNavigating(false), 500);
+    return () => clearTimeout(t);
+  }, [isNavigating]);
 
   // Seed patient filter from ?patient= query string (once on mount / when URL changes externally)
   useEffect(() => {
@@ -1819,9 +1830,9 @@ const Agenda = () => {
                 goToMonth(newMonth);
               }}
             >
-              <SelectTrigger className="h-9 w-40 rounded-full text-xs font-display font-semibold">
-                <SelectValue placeholder="Mês" />
-              </SelectTrigger>
+                <SelectTrigger disabled={loading || isNavigating} className="h-9 w-40 rounded-full text-xs font-display font-semibold">
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 12 }, (_, i) => (
                   <SelectItem key={i + 1} value={String(i + 1)}>
@@ -1837,9 +1848,9 @@ const Agenda = () => {
                 goToMonth(newMonth);
               }}
             >
-              <SelectTrigger className="h-9 w-24 rounded-full text-xs font-display font-semibold">
-                <SelectValue placeholder="Ano" />
-              </SelectTrigger>
+                <SelectTrigger disabled={loading || isNavigating} className="h-9 w-24 rounded-full text-xs font-display font-semibold">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 11 }, (_, i) => {
                   const year = new Date().getFullYear() - 5 + i;
