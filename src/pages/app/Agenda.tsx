@@ -152,6 +152,7 @@ const Agenda = () => {
     const month = startOfMonth(date);
     skipDateMonthSyncRef.current = true;
     skipWeekSyncRef.current = true;
+    setIsNavigating(true);
     setCurrentMonth(month);
     setSelectedDate(month);
     setWeekStart(startOfWeek(month, { weekStartsOn: 1 }));
@@ -160,6 +161,7 @@ const Agenda = () => {
   const goToDate = useCallback((date: Date) => {
     skipDateMonthSyncRef.current = true;
     skipWeekSyncRef.current = true;
+    setIsNavigating(true);
     setSelectedDate(date);
     setCurrentMonth(startOfMonth(date));
     setWeekStart(startOfWeek(date, { weekStartsOn: 1 }));
@@ -169,6 +171,7 @@ const Agenda = () => {
     const nextWeekStart = startOfWeek(date, { weekStartsOn: 1 });
     skipDateMonthSyncRef.current = true;
     skipWeekSyncRef.current = true;
+    setIsNavigating(true);
     setWeekStart(nextWeekStart);
     setSelectedDate(nextWeekStart);
     setCurrentMonth(startOfMonth(addDays(nextWeekStart, 3)));
