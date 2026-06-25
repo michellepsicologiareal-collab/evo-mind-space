@@ -1115,7 +1115,7 @@ const Patients = () => {
                         <p className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", color: "hsl(var(--muted-foreground))" }}>Formulações</p>
                         <div className="grid gap-2 sm:grid-cols-2">
                           {items.map((it) => (
-                            <div key={it.key} className="rounded-xl p-3 flex items-start gap-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderLeft: `3px solid ${it.accent}` }}>
+                            <div key={it.key} className="rounded-xl p-3 flex items-start gap-3 min-w-0 overflow-hidden" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderLeft: `3px solid ${it.accent}` }}>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>{it.label}</p>
