@@ -1115,7 +1115,7 @@ const Patients = () => {
                         <p className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", color: "hsl(var(--muted-foreground))" }}>Formulações</p>
                         <div className="grid gap-2 sm:grid-cols-2">
                           {items.map((it) => (
-                            <div key={it.key} className="rounded-xl p-3 flex items-start gap-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderLeft: `3px solid ${it.accent}` }}>
+                            <div key={it.key} className="rounded-xl p-3 flex items-start gap-3 min-w-0 overflow-hidden" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderLeft: `3px solid ${it.accent}` }}>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>{it.label}</p>
@@ -1398,7 +1398,7 @@ const Patients = () => {
         <DialogContent className={dlgCls("tcc")}>
           <FullBtn k="tcc" />
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">{tccPatient?.full_name}</DialogTitle>
+            <DialogTitle className="font-display text-lg sm:text-2xl break-words pr-8">{tccPatient?.full_name}</DialogTitle>
             <DialogDescription>RPD — Registro de Pensamentos Disfuncionais</DialogDescription>
           </DialogHeader>
           {tccPatient && <TccRecords patientId={tccPatient.id} />}
@@ -1410,7 +1410,7 @@ const Patients = () => {
         <DialogContent className={`${dlgCls("padesky")} [&_textarea]:scroll-mt-24 [&_input]:scroll-mt-24`}>
           <FullBtn k="padesky" />
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">{padeksyPatient?.full_name}</DialogTitle>
+            <DialogTitle className="font-display text-lg sm:text-2xl break-words pr-8">{padeksyPatient?.full_name}</DialogTitle>
             <DialogDescription>Formulação de Caso — com coach de IA baseada em 5 Aspectos</DialogDescription>
           </DialogHeader>
           {padeksyPatient && <CaseFormulation patientId={padeksyPatient.id} />}
@@ -1570,7 +1570,7 @@ const Patients = () => {
         <DialogContent className={dlgCls("hist")}>
           <FullBtn k="hist" />
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">{historyPatient?.full_name}</DialogTitle>
+            <DialogTitle className="font-display text-lg sm:text-2xl break-words pr-8">{historyPatient?.full_name}</DialogTitle>
             <DialogDescription>Histórico de sessões e evolução do humor</DialogDescription>
           </DialogHeader>
           {historyPatient && <PatientSessionHistory patientId={historyPatient.id} patientName={historyPatient.full_name} />}
@@ -1582,7 +1582,7 @@ const Patients = () => {
         <DialogContent className={dlgCls("rec")}>
           <FullBtn k="rec" />
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">{recordsPatient?.full_name}</DialogTitle>
+            <DialogTitle className="font-display text-lg sm:text-2xl break-words pr-8">{recordsPatient?.full_name}</DialogTitle>
             <DialogDescription>Registros de sessão (prontuário clínico)</DialogDescription>
           </DialogHeader>
           {recordsPatient && <PatientSessionRecords patientId={recordsPatient.id} patientName={recordsPatient.full_name} />}
@@ -1594,7 +1594,7 @@ const Patients = () => {
         <DialogContent className={dlgCls("mood")}>
           <FullBtn k="mood" />
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">{moodPatient?.full_name}</DialogTitle>
+            <DialogTitle className="font-display text-lg sm:text-2xl break-words pr-8">{moodPatient?.full_name}</DialogTitle>
             <DialogDescription>Evolução do humor ao longo do tempo</DialogDescription>
           </DialogHeader>
           {moodPatient && <PatientMoodChart patientId={moodPatient.id} patientName={moodPatient.full_name} />}
@@ -1604,7 +1604,7 @@ const Patients = () => {
         <DialogContent className={dlgCls("anam")}>
           <FullBtn k="anam" />
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">{anamnesisPatient?.full_name}</DialogTitle>
+            <DialogTitle className="font-display text-lg sm:text-2xl break-words pr-8">{anamnesisPatient?.full_name}</DialogTitle>
             <DialogDescription>Anamnese — Informações do paciente criança</DialogDescription>
           </DialogHeader>
           {anamnesisPatient && (
@@ -1622,7 +1622,7 @@ const Patients = () => {
         <DialogContent className={dlgCls("hw")}>
           <FullBtn k="hw" />
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">{homeworkPatient?.full_name}</DialogTitle>
+            <DialogTitle className="font-display text-lg sm:text-2xl break-words pr-8">{homeworkPatient?.full_name}</DialogTitle>
             <DialogDescription>Tarefas de casa — envie por WhatsApp e gere PDF</DialogDescription>
           </DialogHeader>
           {homeworkPatient && (
