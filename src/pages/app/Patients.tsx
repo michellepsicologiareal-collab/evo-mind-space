@@ -1115,16 +1115,16 @@ const Patients = () => {
                         <p className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", color: "hsl(var(--muted-foreground))" }}>Formulações</p>
                         <div className="grid gap-2 sm:grid-cols-2">
                           {items.map((it) => (
-                            <div key={it.key} className="rounded-xl p-3 flex items-start gap-3 min-w-0 overflow-hidden" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderLeft: `3px solid ${it.accent}` }}>
+                            <div key={it.key} className="rounded-xl p-3 flex items-start gap-3 min-w-0 w-full" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderLeft: `3px solid ${it.accent}` }}>
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>{it.label}</p>
-                                  <span style={{ background: it.filled ? "rgba(61,92,53,0.12)" : "rgba(0,0,0,0.06)", color: it.filled ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                                <div className="flex items-start gap-2 mb-1 flex-wrap">
+                                  <p className="min-w-0 break-words" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>{it.label}</p>
+                                  <span className="shrink-0" style={{ background: it.filled ? "rgba(61,92,53,0.12)" : "rgba(0,0,0,0.06)", color: it.filled ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
                                     {it.filled ? "Preenchida" : "Pendente"}
                                   </span>
                                 </div>
                                 {it.summary ? (
-                                  <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--brown))", lineHeight: 1.45 }}>{it.summary}</p>
+                                  <p className="break-words" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--brown))", lineHeight: 1.45, overflowWrap: "anywhere" }}>{it.summary}</p>
                                 ) : (
                                   <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))", fontStyle: "italic" }}>Ainda não preenchido.</p>
                                 )}
@@ -1132,6 +1132,7 @@ const Patients = () => {
                               <button
                                 onClick={it.onView}
                                 title="Visualizar"
+                                aria-label={`Visualizar ${it.label}`}
                                 className="shrink-0 flex items-center justify-center transition-opacity hover:opacity-80"
                                 style={{ width: 32, height: 32, borderRadius: 8, background: it.accent, color: "#fff" }}
                               >
@@ -1140,6 +1141,7 @@ const Patients = () => {
                             </div>
                           ))}
                         </div>
+
                       </div>
                     );
                   })()}
