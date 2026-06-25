@@ -1124,13 +1124,23 @@ const Patients = () => {
                             <div key={it.key} className="rounded-xl p-3 flex items-start gap-3 min-w-0 w-full" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderLeft: `3px solid ${it.accent}` }}>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start gap-2 mb-1 flex-wrap">
-                                  <p className="min-w-0 break-words" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>{it.label}</p>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <p className="min-w-0 break-words" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>{it.label}</p>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">{it.label}</TooltipContent>
+                                  </Tooltip>
                                   <span className="shrink-0" style={{ background: it.filled ? "rgba(61,92,53,0.12)" : "rgba(0,0,0,0.06)", color: it.filled ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
                                     {it.filled ? "Preenchida" : "Pendente"}
                                   </span>
                                 </div>
                                 {it.summary ? (
-                                  <p className="break-words" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--brown))", lineHeight: 1.45, overflowWrap: "anywhere" }}>{it.summary}</p>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <p className="break-words" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--brown))", lineHeight: 1.45, overflowWrap: "anywhere" }}>{it.summary}</p>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-xs break-words">{it.fullSummary || it.summary}</TooltipContent>
+                                  </Tooltip>
                                 ) : (
                                   <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))", fontStyle: "italic" }}>Ainda não preenchido.</p>
                                 )}
