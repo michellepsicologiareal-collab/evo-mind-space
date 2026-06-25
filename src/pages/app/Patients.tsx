@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, CalendarDays, Smile, FileText, Baby, Sparkles, Maximize2, Minimize2, X, Printer, BookOpen, RefreshCw } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { IconPencil, IconUserOff, IconClipboardList, IconFileText, IconTarget, IconFlame, IconTrash } from "@tabler/icons-react";
 import { AbordagemBadge } from "@/components/app/AbordagemBadge";
 import { LogoIcon } from "@/components/LogoIcon";
@@ -1083,6 +1084,7 @@ const Patients = () => {
                         label: "TCC — Formulação de caso",
                         filled: !!formulationFilled[p.id],
                         summary: trunc(tccSummary),
+                        fullSummary: tccSummary,
                         accent: "hsl(var(--primary))",
                         onView: () => { setSelectedPatient(null); setPadeksyPatient(p); },
                       },
@@ -1091,6 +1093,7 @@ const Patients = () => {
                         label: "TE — Terapia do Esquema",
                         filled: !!teFilled[p.id],
                         summary: trunc(teSummary),
+                        fullSummary: teSummary,
                         accent: "#B8860B",
                         onView: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); },
                       },
@@ -1099,6 +1102,7 @@ const Patients = () => {
                         label: "ACT — Terapia de Aceitação",
                         filled: !!actFilled[p.id],
                         summary: trunc(actSummary),
+                        fullSummary: actSummary,
                         accent: "#2D6A4F",
                         onView: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); },
                       },
@@ -1107,6 +1111,7 @@ const Patients = () => {
                         label: "RPD — Registros TCC",
                         filled: cTcc > 0,
                         summary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "",
+                        fullSummary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "",
                         accent: "hsl(var(--moss))",
                         onView: () => { setSelectedPatient(null); setTccPatient(p); },
                       },
@@ -1119,13 +1124,23 @@ const Patients = () => {
                             <div key={it.key} className="rounded-xl p-3 flex items-start gap-3 min-w-0 w-full" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderLeft: `3px solid ${it.accent}` }}>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start gap-2 mb-1 flex-wrap">
-                                  <p className="min-w-0 break-words" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>{it.label}</p>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <p className="min-w-0 break-words" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>{it.label}</p>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">{it.label}</TooltipContent>
+                                  </Tooltip>
                                   <span className="shrink-0" style={{ background: it.filled ? "rgba(61,92,53,0.12)" : "rgba(0,0,0,0.06)", color: it.filled ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
                                     {it.filled ? "Preenchida" : "Pendente"}
                                   </span>
                                 </div>
                                 {it.summary ? (
-                                  <p className="break-words" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--brown))", lineHeight: 1.45, overflowWrap: "anywhere" }}>{it.summary}</p>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <p className="break-words" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--brown))", lineHeight: 1.45, overflowWrap: "anywhere" }}>{it.summary}</p>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-xs break-words">{it.fullSummary || it.summary}</TooltipContent>
+                                  </Tooltip>
                                 ) : (
                                   <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))", fontStyle: "italic" }}>Ainda não preenchido.</p>
                                 )}
