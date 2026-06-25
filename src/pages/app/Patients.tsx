@@ -1034,10 +1034,10 @@ const Patients = () => {
                 </div>
                 <div className="max-w-3xl mx-auto">
                   <div
-                    className="sticky top-0 z-20 px-6 pt-10 pb-4"
+                    className="sticky top-0 z-20 px-4 sm:px-6 pt-10 pb-4"
                     style={{ background: "hsl(var(--card))", borderBottom: "0.5px solid hsl(var(--border))" }}
                   >
-                    <div className="flex items-center gap-3 pr-20">
+                    <div className="flex items-center gap-3 pr-16 sm:pr-20">
                       <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
                         {p.full_name.charAt(0).toUpperCase()}
                       </div>
@@ -1046,13 +1046,14 @@ const Patients = () => {
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className="uppercase" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "hsl(var(--brown))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 8px", letterSpacing: "0.04em" }}>{type}</span>
                           {p.is_active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "hsl(var(--moss))" }} />}
-                          {p.phone && <span className="inline-flex items-center gap-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--muted-foreground))" }}><Phone className="h-3 w-3" /> {p.phone}</span>}
+                          {p.phone && <span className="inline-flex items-center gap-1 min-w-0 max-w-full" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--muted-foreground))" }}><Phone className="h-3 w-3 shrink-0" /> <span className="truncate">{p.phone}</span></span>}
                           {p.session_price != null && <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--brown))", fontWeight: 600 }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>}
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="px-6 pt-4 pb-6">
+                  <div className="px-4 sm:px-6 pt-4 pb-6 min-w-0">
+
                   <div className="space-y-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--brown))" }}>
                     {p.email && <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" style={{ color: "hsl(var(--muted-foreground))" }} /> {p.email}</p>}
                   </div>
