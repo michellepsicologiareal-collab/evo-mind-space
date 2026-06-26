@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
@@ -61,10 +61,24 @@ interface FormulationItem {
 
 const FormulationItemCard = ({ item: it }: { item: FormulationItem }) => {
   const [expanded, setExpanded] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   const hasMore = !!it.fullSummary && it.fullSummary.length > it.summary.length;
   const toggle = () => { if (hasMore) setExpanded((v) => !v); };
+
+  useEffect(() => {
+    if (!expanded) return;
+    const handlePointerDown = (e: PointerEvent | MouseEvent | TouchEvent) => {
+      const target = e.target as Node | null;
+      if (cardRef.current && target && !cardRef.current.contains(target)) {
+        setExpanded(false);
+      }
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [expanded]);
+
   return (
-    <div className="rounded-xl p-3 flex items-start gap-3 min-w-0 w-full" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderLeft: `3px solid ${it.accent}` }}>
+    <div ref={cardRef} className="rounded-xl p-3 flex items-start gap-3 min-w-0 w-full" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderLeft: `3px solid ${it.accent}` }}>
       <div className="flex-1 min-w-0">
         <div className="flex items-start gap-2 mb-1 flex-wrap">
           <button
