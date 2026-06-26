@@ -92,7 +92,7 @@ const FormulationItemCard = ({ item: it }: { item: FormulationItem }) => {
             <span>{it.label}</span>
             {hasMore && (
               <ChevronDown
-                className="h-3 w-3 shrink-0 transition-transform"
+                className="h-3 w-3 shrink-0 transition-transform duration-300 ease-out"
                 style={{ transform: expanded ? "rotate(180deg)" : "none", color: "hsl(var(--muted-foreground))" }}
               />
             )}
@@ -109,7 +109,21 @@ const FormulationItemCard = ({ item: it }: { item: FormulationItem }) => {
             style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--brown))", lineHeight: 1.45, overflowWrap: "anywhere", cursor: hasMore ? "pointer" : "default" }}
             aria-expanded={expanded}
           >
-            {expanded ? (it.fullSummary || it.summary) : it.summary}
+            <div
+              className="grid transition-[grid-template-rows] duration-500 ease-out"
+              style={{ gridTemplateRows: expanded ? "1fr" : "0fr" }}
+            >
+              <div className="min-h-0 overflow-hidden">
+                {it.fullSummary || it.summary}
+              </div>
+            </div>
+            {!expanded && (
+              <div className="grid" style={{ gridTemplateRows: "1fr" }}>
+                <div className="min-h-0 overflow-hidden">
+                  {it.summary}
+                </div>
+              </div>
+            )}
           </button>
         ) : (
           <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))", fontStyle: "italic" }}>Ainda não preenchido.</p>
@@ -122,7 +136,7 @@ const FormulationItemCard = ({ item: it }: { item: FormulationItem }) => {
             style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, fontWeight: 600, color: it.accent }}
           >
             {expanded ? "Mostrar menos" : "Mostrar mais"}
-            <ChevronDown className="h-3 w-3 transition-transform" style={{ transform: expanded ? "rotate(180deg)" : "none" }} />
+            <ChevronDown className="h-3 w-3 transition-transform duration-300 ease-out" style={{ transform: expanded ? "rotate(180deg)" : "none" }} />
           </button>
         )}
       </div>
