@@ -49,6 +49,83 @@ const PATIENT_CATEGORIES = [
   { value: "supervisao", label: "Supervisão" },
 ] as const;
 
+interface FormulationItem {
+  key: string;
+  label: string;
+  filled: boolean;
+  summary: string;
+  fullSummary: string;
+  accent: string;
+  onView: () => void;
+}
+
+const FormulationItemCard = ({ item: it }: { item: FormulationItem }) => {
+  const [expanded, setExpanded] = useState(false);
+  const hasMore = !!it.fullSummary && it.fullSummary.length > it.summary.length;
+  const toggle = () => { if (hasMore) setExpanded((v) => !v); };
+  return (
+    <div className="rounded-xl p-3 flex items-start gap-3 min-w-0 w-full" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderLeft: `3px solid ${it.accent}` }}>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start gap-2 mb-1 flex-wrap">
+          <button
+            type="button"
+            onClick={toggle}
+            className="min-w-0 text-left break-words flex items-center gap-1"
+            style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))", cursor: hasMore ? "pointer" : "default" }}
+            aria-expanded={expanded}
+            aria-label={hasMore ? `${expanded ? "Recolher" : "Expandir"} ${it.label}` : it.label}
+          >
+            <span>{it.label}</span>
+            {hasMore && (
+              <ChevronDown
+                className="h-3 w-3 shrink-0 transition-transform"
+                style={{ transform: expanded ? "rotate(180deg)" : "none", color: "hsl(var(--muted-foreground))" }}
+              />
+            )}
+          </button>
+          <span className="shrink-0" style={{ background: it.filled ? "rgba(61,92,53,0.12)" : "rgba(0,0,0,0.06)", color: it.filled ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+            {it.filled ? "Preenchida" : "Pendente"}
+          </span>
+        </div>
+        {it.summary ? (
+          <button
+            type="button"
+            onClick={toggle}
+            className="block w-full text-left break-words"
+            style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--brown))", lineHeight: 1.45, overflowWrap: "anywhere", cursor: hasMore ? "pointer" : "default" }}
+            aria-expanded={expanded}
+          >
+            {expanded ? (it.fullSummary || it.summary) : it.summary}
+          </button>
+        ) : (
+          <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))", fontStyle: "italic" }}>Ainda não preenchido.</p>
+        )}
+        {hasMore && (
+          <button
+            type="button"
+            onClick={toggle}
+            className="mt-1 inline-flex items-center gap-1 hover:opacity-80"
+            style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, fontWeight: 600, color: it.accent }}
+          >
+            {expanded ? "Mostrar menos" : "Mostrar mais"}
+            <ChevronDown className="h-3 w-3 transition-transform" style={{ transform: expanded ? "rotate(180deg)" : "none" }} />
+          </button>
+        )}
+      </div>
+      <button
+        onClick={it.onView}
+        title="Visualizar"
+        aria-label={`Visualizar ${it.label}`}
+        className="shrink-0 flex items-center justify-center transition-opacity hover:opacity-80"
+        style={{ width: 32, height: 32, borderRadius: 8, background: it.accent, color: "#fff" }}
+      >
+        <Eye className="h-4 w-4" />
+      </button>
+    </div>
+  );
+};
+
+
 const patientSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(120),
   email: z.string().trim().email("Email inválido").max(255).optional().or(z.literal("")),
