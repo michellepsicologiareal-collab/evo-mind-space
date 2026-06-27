@@ -4,6 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { Loader2, Plus, Send, Trash2, Download, MessageCircle, FileText, ExternalLink, Pencil, CheckSquare, Square, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,7 +26,7 @@ interface Task {
   title: string;
   content: string;
   session_points: string | null;
-  actions: any;
+  actions: Json | null;
   weekly_observations: string | null;
   sent_at: string | null;
   created_at: string;
@@ -137,7 +138,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
       title: title.trim(),
       content: "", // legado, mantido vazio para novos registros
       session_points: sessionPoints.trim() || null,
-      actions: actions.length > 0 ? actions : null,
+      actions: actions.length > 0 ? (actions as unknown as Json) : null,
       weekly_observations: weeklyObservations.trim() || null,
       session_record_id: sourceRecord === "none" ? null : sourceRecord,
     };
