@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Plus, Send, Trash2, Download, MessageCircle, FileText, ExternalLink, Pencil } from "lucide-react";
+import { Loader2, Plus, Send, Trash2, Download, MessageCircle, FileText, ExternalLink, Pencil, CheckSquare, Square, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,17 @@ interface Task {
   id: string;
   title: string;
   content: string;
+  session_points: string | null;
+  actions: any;
+  weekly_observations: string | null;
   sent_at: string | null;
   created_at: string;
   session_record_id: string | null;
+}
+
+interface ActionItem {
+  text: string;
+  done: boolean;
 }
 
 interface SessionRecordOpt {
@@ -44,7 +52,10 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [sessionPoints, setSessionPoints] = useState("");
+  const [actions, setActions] = useState<ActionItem[]>([]);
+  const [actionInput, setActionInput] = useState("");
+  const [weeklyObservations, setWeeklyObservations] = useState("");
   const [sourceRecord, setSourceRecord] = useState<string>("none");
   const [saving, setSaving] = useState(false);
 
@@ -63,14 +74,28 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
 
   useEffect(() => { load(); }, [patientId]);
 
-  const resetForm = () => { setTitle(""); setContent(""); setSourceRecord("none"); setEditing(null); };
+  const resetForm = () => {
+    setTitle("");
+    setSessionPoints("");
+    setActions([]);
+    setActionInput("");
+    setWeeklyObservations("");
+    setSourceRecord("none");
+    setEditing(null);
+  };
 
   const openNew = () => { resetForm(); setOpen(true); };
 
   const openEdit = (t: Task) => {
     setEditing(t);
     setTitle(t.title);
-    setContent(t.content);
+    setSessionPoints(t.session_points || "");
+    const parsedActions: ActionItem[] = Array.isArray(t.actions) ? t.actions.map((a: any) => ({
+      text: typeof a === "string" ? a : (a?.text || ""),
+      done: !!a?.done,
+    })) : [];
+    setActions(parsedActions);
+    setWeeklyObservations(t.weekly_observations || "");
     setSourceRecord(t.session_record_id ?? "none");
     setOpen(true);
   };
@@ -80,19 +105,40 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
     if (recordId === "none") return;
     const rec = records.find((r) => r.id === recordId);
     if (!rec) return;
-    const parts = [rec.next_session_plan, rec.clinical_observations].filter(Boolean).join("\n\n");
-    if (parts) setContent(parts);
-    if (!title) setTitle(`Tarefa da sessão de ${format(new Date(rec.session_date), "dd/MM/yyyy")}`);
+    if (rec.clinical_observations) setSessionPoints(rec.clinical_observations);
+    if (rec.next_session_plan) {
+      const lines = rec.next_session_plan.split(/\n|\.\s+/).map((s) => s.trim()).filter(Boolean);
+      setActions(lines.map((text) => ({ text, done: false })));
+    }
+    if (!title) setTitle(`Plano da sessão de ${format(new Date(rec.session_date), "dd/MM/yyyy")}`);
+  };
+
+  const addAction = () => {
+    const text = actionInput.trim();
+    if (!text) return;
+    setActions((prev) => [...prev, { text, done: false }]);
+    setActionInput("");
+  };
+
+  const removeAction = (index: number) => {
+    setActions((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleAction = (index: number) => {
+    setActions((prev) => prev.map((a, i) => i === index ? { ...a, done: !a.done } : a));
   };
 
   const save = async () => {
-    if (!title.trim() || !content.trim()) { toast.error("Preencha título e conteúdo"); return; }
+    if (!title.trim()) { toast.error("Preencha o título do plano"); return; }
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSaving(false); return; }
     const payload = {
       title: title.trim(),
-      content: content.trim(),
+      content: "", // legado, mantido vazio para novos registros
+      session_points: sessionPoints.trim() || null,
+      actions: actions.length > 0 ? actions : null,
+      weekly_observations: weeklyObservations.trim() || null,
       session_record_id: sourceRecord === "none" ? null : sourceRecord,
     };
     let err;
@@ -103,17 +149,17 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
     }
     setSaving(false);
     if (err) { toast.error("Erro ao salvar"); return; }
-    toast.success(editing ? "Tarefa atualizada" : "Tarefa criada");
+    toast.success(editing ? "Plano atualizado" : "Plano criado");
     setOpen(false);
     resetForm();
     load();
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Excluir esta tarefa?")) return;
+    if (!confirm("Excluir este plano?")) return;
     const { error } = await supabase.from("homework_tasks").delete().eq("id", id);
     if (error) { toast.error("Erro ao excluir"); return; }
-    toast.success("Tarefa excluída");
+    toast.success("Plano excluído");
     load();
   };
 
@@ -123,17 +169,36 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
     if (!publicUrl) { toast.error("Token público indisponível"); return; }
     const firstName = patientName.split(" ")[0];
     const psiName = therapistFirstName || "sua psi";
-    const msg = [
+    const parts: string[] = [
       `Olá, ${firstName}! Aqui é a ${psiName}.`,
       "",
-      `Segue sua tarefa de casa: *${task.title}*`,
+      `Segue seu *Plano entre Sessões*: ${task.title}`,
       "",
-      `Você pode acompanhar todas as tarefas pelo link abaixo (também gera PDF):`,
-      publicUrl,
-      "",
-      "Qualquer dúvida, estou por aqui.",
-    ].join("\n");
-    // Mark as sent (if not already)
+    ];
+    if (task.session_points) {
+      parts.push("📝 *Pontos importantes da sessão:*");
+      parts.push(task.session_points);
+      parts.push("");
+    }
+    const taskActions = Array.isArray(task.actions) ? task.actions : [];
+    if (taskActions.length > 0) {
+      parts.push("🎯 *Plano entre Sessões:*");
+      taskActions.forEach((a: any, i: number) => {
+        const text = typeof a === "string" ? a : (a?.text || "");
+        parts.push(`${i + 1}. ${text}`);
+      });
+      parts.push("");
+    }
+    if (task.weekly_observations) {
+      parts.push("👀 *O que observar durante a semana:*");
+      parts.push(task.weekly_observations);
+      parts.push("");
+    }
+    parts.push("Você pode acompanhar todos os planos pelo link abaixo (também gera PDF):");
+    parts.push(publicUrl);
+    parts.push("");
+    parts.push("Qualquer dúvida, estou por aqui.");
+    const msg = parts.join("\n");
     if (!task.sent_at) {
       await supabase.from("homework_tasks").update({ sent_at: new Date().toISOString() }).eq("id", task.id);
       load();
@@ -159,7 +224,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
               <a href={publicUrl} target="_blank" rel="noreferrer"><Download className="h-3.5 w-3.5" /> Baixar PDF</a>
             </Button>
           )}
-          <Button variant="accent" size="sm" onClick={openNew}><Plus className="h-3.5 w-3.5" /> Nova tarefa</Button>
+          <Button variant="accent" size="sm" onClick={openNew}><Plus className="h-3.5 w-3.5" /> Novo plano</Button>
         </div>
       </div>
 
@@ -168,49 +233,79 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
       ) : tasks.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-8 text-center">
           <FileText className="h-8 w-8 mx-auto text-muted-foreground/40" />
-          <p className="mt-2 text-sm text-muted-foreground">Nenhuma tarefa de casa criada ainda.</p>
-          <p className="mt-1 text-xs text-muted-foreground">Crie tarefas a partir do que anotou no registro de sessão.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Nenhum plano entre sessões criado ainda.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Crie planos a partir do que anotou no registro de sessão.</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {tasks.map((t) => (
-            <div key={t.id} className="rounded-xl border border-border bg-muted/20 p-4 space-y-2">
-              <div className="flex items-start justify-between gap-2 flex-wrap">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-display font-semibold text-foreground">{t.title}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Criada {format(new Date(t.created_at), "dd/MM/yyyy", { locale: ptBR })}
-                    {t.sent_at && ` · Enviada ${format(new Date(t.sent_at), "dd/MM/yyyy", { locale: ptBR })}`}
-                  </p>
+        <div className="space-y-4">
+          {tasks.map((t) => {
+            const taskActions = Array.isArray(t.actions) ? t.actions : [];
+            return (
+              <div key={t.id} className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2 flex-wrap">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-display font-semibold text-foreground">{t.title}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Criado {format(new Date(t.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                      {t.sent_at && ` · Enviado ${format(new Date(t.sent_at), "dd/MM/yyyy", { locale: ptBR })}`}
+                    </p>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(t)} title="Editar"><Pencil className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => remove(t.id)} title="Excluir"><Trash2 className="h-3.5 w-3.5" /></Button>
+                    <Button variant="accent" size="sm" className="gap-1.5 text-xs" onClick={() => sendWhats(t)}>
+                      <MessageCircle className="h-3.5 w-3.5" /> {t.sent_at ? "Reenviar" : "Enviar"}
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-1.5">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(t)} title="Editar"><Pencil className="h-3.5 w-3.5" /></Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => remove(t.id)} title="Excluir"><Trash2 className="h-3.5 w-3.5" /></Button>
-                  <Button variant="accent" size="sm" className="gap-1.5 text-xs" onClick={() => sendWhats(t)}>
-                    <MessageCircle className="h-3.5 w-3.5" /> {t.sent_at ? "Reenviar" : "Enviar"}
-                  </Button>
-                </div>
+
+                {t.session_points && (
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">📝 Pontos importantes da sessão</p>
+                    <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{t.session_points}</p>
+                  </div>
+                )}
+
+                {taskActions.length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">🎯 Plano entre Sessões</p>
+                    <ul className="space-y-1">
+                      {taskActions.map((a: any, i: number) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                          <CheckSquare className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
+                          <span className="leading-relaxed">{typeof a === "string" ? a : (a?.text || "")}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {t.weekly_observations && (
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">👀 O que observar durante a semana</p>
+                    <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{t.weekly_observations}</p>
+                  </div>
+                )}
               </div>
-              <p className="text-sm text-foreground whitespace-pre-line">{t.content}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-display">{editing ? "Editar tarefa" : "Nova tarefa de casa"}</DialogTitle>
+            <DialogTitle className="font-display">{editing ? "Editar plano" : "Novo Plano entre Sessões"}</DialogTitle>
             <DialogDescription>Para {patientName}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
             {records.length > 0 && !editing && (
               <div>
                 <Label className="text-xs">Preencher a partir de um registro de sessão (opcional)</Label>
                 <Select value={sourceRecord} onValueChange={fillFromRecord}>
                   <SelectTrigger><SelectValue placeholder="Escolher registro..." /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">— Tarefa livre —</SelectItem>
+                    <SelectItem value="none">— Plano livre —</SelectItem>
                     {records.map((r) => (
                       <SelectItem key={r.id} value={r.id}>
                         {format(new Date(r.session_date), "dd/MM/yyyy", { locale: ptBR })}
@@ -221,13 +316,60 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
                 </Select>
               </div>
             )}
+
             <div>
-              <Label className="text-xs">Título</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Registro de pensamentos da semana" maxLength={200} />
+              <Label className="text-xs">Título do plano</Label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Semana 3 — Consolidando insights" maxLength={200} />
             </div>
+
             <div>
-              <Label className="text-xs">Conteúdo da tarefa</Label>
-              <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={8} maxLength={4000} placeholder="Descreva a tarefa que o paciente deve realizar até a próxima sessão..." />
+              <Label className="text-xs">📝 Pontos importantes da sessão</Label>
+              <Textarea
+                value={sessionPoints}
+                onChange={(e) => setSessionPoints(e.target.value)}
+                rows={4}
+                maxLength={2000}
+                placeholder="Registre os principais insights, orientações e pontos abordados na sessão..."
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs">🎯 Plano entre Sessões</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={actionInput}
+                  onChange={(e) => setActionInput(e.target.value)}
+                  placeholder="Adicionar uma ação combinada..."
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addAction(); } }}
+                />
+                <Button type="button" variant="outline" size="sm" onClick={addAction}><Plus className="h-4 w-4" /></Button>
+              </div>
+              {actions.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {actions.map((a, i) => (
+                    <div key={i} className="flex items-center gap-2 group">
+                      <button type="button" onClick={() => toggleAction(i)} className="shrink-0">
+                        {a.done ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4 text-muted-foreground" />}
+                      </button>
+                      <span className={`text-sm flex-1 ${a.done ? "line-through text-muted-foreground" : "text-foreground"}`}>{a.text}</span>
+                      <button type="button" onClick={() => removeAction(i)} className="opacity-0 group-hover:opacity-100 transition-opacity" title="Remover">
+                        <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <Label className="text-xs">👀 O que observar durante a semana</Label>
+              <Textarea
+                value={weeklyObservations}
+                onChange={(e) => setWeeklyObservations(e.target.value)}
+                rows={4}
+                maxLength={2000}
+                placeholder="Registre pensamentos, emoções, comportamentos, gatilhos ou situações relevantes para observar..."
+              />
             </div>
           </div>
           <DialogFooter>
