@@ -138,7 +138,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
       title: title.trim(),
       content: "", // legado, mantido vazio para novos registros
       session_points: sessionPoints.trim() || null,
-      actions: actions.length > 0 ? actions : null,
+      actions: actions.length > 0 ? (actions as unknown as Json) : null,
       weekly_observations: weeklyObservations.trim() || null,
       session_record_id: sourceRecord === "none" ? null : sourceRecord,
     };
