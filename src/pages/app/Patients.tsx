@@ -1028,7 +1028,7 @@ const Patients = () => {
                         <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => setRecordsPatient(p)}><FileText className="h-4 w-4 mr-2" /> Registros de sessão</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setHomeworkPatient(p)}><ClipboardList className="h-4 w-4 mr-2" /> Tarefas de casa</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setHomeworkPatient(p)}><ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões</DropdownMenuItem>
                         <DropdownMenuSeparator />
 
                         <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
@@ -1122,7 +1122,7 @@ const Patients = () => {
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); }} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); setRecordsPatient(p); }}><FileText className="h-4 w-4 mr-2" /> Registros de sessão</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }}><ClipboardList className="h-4 w-4 mr-2" /> Tarefas de casa</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }}><ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões</DropdownMenuItem>
                       <DropdownMenuSeparator />
 
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); handleDelete(p); }} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
@@ -1172,7 +1172,7 @@ const Patients = () => {
                       <Chip label="Sessões" count={cRec} onClick={() => { setSelectedPatient(null); setRecordsPatient(p); }} />
                       <Chip label="Anamnese" count={hasAnam ? 1 : 0} onClick={() => { setSelectedPatient(null); setAnamnesisPatient(p); }} />
                       <Chip label="Plano" onClick={() => { setSelectedPatient(null); navigate(`/app/plano-tratamento?patient=${p.id}`); }} />
-                      <Chip label="Tarefas de casa" onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }} />
+                      <Chip label="Plano entre Sessões" onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }} />
                     </div>
                   </div>
 
@@ -1714,7 +1714,7 @@ const Patients = () => {
           <FullBtn k="hw" />
           <DialogHeader>
             <DialogTitle className="font-display text-lg sm:text-2xl break-words pr-8">{homeworkPatient?.full_name}</DialogTitle>
-            <DialogDescription>Tarefas de casa — envie por WhatsApp e gere PDF</DialogDescription>
+            <DialogDescription>Plano entre Sessões — envie por WhatsApp e gere PDF</DialogDescription>
           </DialogHeader>
           {homeworkPatient && (
             <PatientHomework
