@@ -133,7 +133,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSaving(false); return; }
-    const payload = {
+    const payload: any = {
       title: title.trim(),
       content: "", // legado, mantido vazio para novos registros
       session_points: sessionPoints.trim() || null,
