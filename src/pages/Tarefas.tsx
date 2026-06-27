@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, FileText, Printer, X } from "lucide-react";
+import { Loader2, FileText, Printer, X, CheckSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import logoImg from "@/assets/logo-psireal.png";
@@ -14,6 +14,9 @@ interface Row {
   task_id: string | null;
   title: string | null;
   content: string | null;
+  session_points: string | null;
+  actions: any;
+  weekly_observations: string | null;
   sent_at: string | null;
   created_at: string | null;
 }
@@ -24,7 +27,7 @@ const Tarefas = () => {
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
-    document.title = "Tarefas de Casa — Psi Real";
+    document.title = "Plano entre Sessões — Psi Real";
     return () => { document.title = "Psi Real — Gestão Inteligente para Psicólogos"; };
   }, []);
 
@@ -52,7 +55,7 @@ const Tarefas = () => {
         <div className="max-w-md text-center rounded-2xl bg-card border border-border p-8">
           <X className="h-12 w-12 mx-auto text-destructive/40 mb-4" />
           <h2 className="font-display text-xl font-bold text-foreground">Link inválido</h2>
-          <p className="mt-2 text-muted-foreground">Esta página de tarefas não está disponível.</p>
+          <p className="mt-2 text-muted-foreground">Esta página de planos não está disponível.</p>
         </div>
       </div>
     );
@@ -83,7 +86,7 @@ const Tarefas = () => {
 
         <div className="rounded-2xl bg-card border border-border p-6 sm:p-8 print:border-0 print:p-4">
           <div className="border-b border-border pb-4 mb-6">
-            <h1 className="font-display text-2xl font-bold text-foreground">Tarefas de Casa</h1>
+            <h1 className="font-display text-2xl font-bold text-foreground">Plano entre Sessões</h1>
             <p className="text-sm text-muted-foreground mt-1">
               <span className="font-medium text-foreground">{header.patient_name}</span>
             </p>
@@ -95,25 +98,59 @@ const Tarefas = () => {
           {tasks.length === 0 ? (
             <div className="text-center py-8">
               <FileText className="h-8 w-8 mx-auto text-muted-foreground/40" />
-              <p className="mt-2 text-sm text-muted-foreground">Nenhuma tarefa enviada ainda.</p>
+              <p className="mt-2 text-sm text-muted-foreground">Nenhum plano enviado ainda.</p>
             </div>
           ) : (
-            <div className="space-y-5">
-              {tasks.map((t, i) => (
-                <div key={t.task_id!} className="pb-5 border-b border-border last:border-0 last:pb-0 break-inside-avoid">
-                  <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                    <h2 className="font-display text-base font-semibold text-foreground">
-                      {i + 1}. {t.title}
-                    </h2>
-                    {t.sent_at && (
-                      <span className="text-[11px] text-muted-foreground">
-                        Enviada em {format(new Date(t.sent_at), "dd 'de' MMMM, yyyy", { locale: ptBR })}
-                      </span>
+            <div className="space-y-6">
+              {tasks.map((t, i) => {
+                const taskActions = Array.isArray(t.actions) ? t.actions : [];
+                return (
+                  <div key={t.task_id!} className="pb-6 border-b border-border last:border-0 last:pb-0 break-inside-avoid">
+                    <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                      <h2 className="font-display text-base font-semibold text-foreground">
+                        {i + 1}. {t.title}
+                      </h2>
+                      {t.sent_at && (
+                        <span className="text-[11px] text-muted-foreground">
+                          Enviado em {format(new Date(t.sent_at), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                        </span>
+                      )}
+                    </div>
+
+                    {t.session_points && (
+                      <div className="mt-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">📝 Pontos importantes da sessão</p>
+                        <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{t.session_points}</p>
+                      </div>
+                    )}
+
+                    {taskActions.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">🎯 Plano entre Sessões</p>
+                        <ul className="space-y-1">
+                          {taskActions.map((a: any, idx: number) => (
+                            <li key={idx} className="flex items-start gap-2 text-sm text-foreground">
+                              <CheckSquare className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
+                              <span className="leading-relaxed">{typeof a === "string" ? a : (a?.text || "")}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {t.weekly_observations && (
+                      <div className="mt-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">👀 O que observar durante a semana</p>
+                        <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{t.weekly_observations}</p>
+                      </div>
+                    )}
+
+                    {!t.session_points && taskActions.length === 0 && !t.weekly_observations && t.content && (
+                      <p className="mt-3 text-sm text-foreground whitespace-pre-line leading-relaxed">{t.content}</p>
                     )}
                   </div>
-                  <p className="mt-2 text-sm text-foreground whitespace-pre-line leading-relaxed">{t.content}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

@@ -411,37 +411,46 @@ export type Database = {
       }
       homework_tasks: {
         Row: {
+          actions: Json | null
           content: string
           created_at: string
           id: string
           patient_id: string
           sent_at: string | null
+          session_points: string | null
           session_record_id: string | null
           title: string
           updated_at: string
           user_id: string
+          weekly_observations: string | null
         }
         Insert: {
+          actions?: Json | null
           content: string
           created_at?: string
           id?: string
           patient_id: string
           sent_at?: string | null
+          session_points?: string | null
           session_record_id?: string | null
           title: string
           updated_at?: string
           user_id: string
+          weekly_observations?: string | null
         }
         Update: {
+          actions?: Json | null
           content?: string
           created_at?: string
           id?: string
           patient_id?: string
           sent_at?: string | null
+          session_points?: string | null
           session_record_id?: string | null
           title?: string
           updated_at?: string
           user_id?: string
+          weekly_observations?: string | null
         }
         Relationships: [
           {
@@ -1573,14 +1582,17 @@ export type Database = {
       get_homework_by_token: {
         Args: { _token: string }
         Returns: {
+          actions: Json
           content: string
           created_at: string
           patient_name: string
           sent_at: string
+          session_points: string
           task_id: string
           therapist_crp: string
           therapist_name: string
           title: string
+          weekly_observations: string
         }[]
       }
       get_profile_id_by_email: { Args: { _email: string }; Returns: string }
