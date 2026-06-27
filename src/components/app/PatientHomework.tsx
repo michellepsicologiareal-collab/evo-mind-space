@@ -4,6 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { Loader2, Plus, Send, Trash2, Download, MessageCircle, FileText, ExternalLink, Pencil, CheckSquare, Square, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
