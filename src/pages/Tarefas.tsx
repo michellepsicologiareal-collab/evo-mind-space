@@ -16,7 +16,7 @@ interface Row {
   title: string | null;
   content: string | null;
   session_points: string | null;
-  actions: any;
+  actions: Json | null;
   weekly_observations: string | null;
   sent_at: string | null;
   created_at: string | null;
