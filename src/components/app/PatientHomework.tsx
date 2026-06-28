@@ -244,7 +244,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
       ) : (
         <div className="space-y-4">
           {tasks.map((t) => {
-            const taskActions = Array.isArray(t.actions) ? t.actions : [];
+            const taskActions = normalizeActions(t.actions);
             return (
               <div key={t.id} className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2 flex-wrap">
