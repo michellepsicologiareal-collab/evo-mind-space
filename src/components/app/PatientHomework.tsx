@@ -93,6 +93,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
           if (t) openEdit(t);
         }
       } catch {}
+      draftRestoredRef.current = true;
     }
   };
 
