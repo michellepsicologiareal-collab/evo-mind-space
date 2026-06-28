@@ -216,6 +216,12 @@ const Patients = () => {
   const [recordsPatient, setRecordsPatient] = useState<Patient | null>(null);
   const [anamnesisPatient, setAnamnesisPatient] = useState<Patient | null>(null);
   const [homeworkPatient, setHomeworkPatient] = useState<Patient | null>(null);
+  useEffect(() => {
+    try {
+      if (homeworkPatient) localStorage.setItem("psireal:openHomework", homeworkPatient.id);
+      else localStorage.removeItem("psireal:openHomework");
+    } catch {}
+  }, [homeworkPatient]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
@@ -295,6 +301,14 @@ const Patients = () => {
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients((patientsRes.data ?? []) as any);
+    // Restaurar diálogo de "Plano entre Sessões" se estava aberto antes
+    try {
+      const lastHwId = localStorage.getItem("psireal:openHomework");
+      if (lastHwId) {
+        const p = (patientsRes.data ?? []).find((x: any) => x.id === lastHwId);
+        if (p) setHomeworkPatient(p as any);
+      }
+    } catch {}
     setPixKey((profileRes.data as any)?.pix_key ?? "");
     setProfName(profileRes.data?.full_name ?? "");
     setProfCrp((profileRes.data as any)?.crp ?? "");
@@ -1709,7 +1723,12 @@ const Patients = () => {
       </Dialog>
 
       {/* Homework Dialog */}
-      <Dialog open={!!homeworkPatient} onOpenChange={(o) => !o && setHomeworkPatient(null)}>
+      <Dialog open={!!homeworkPatient} onOpenChange={(o) => {
+        if (!o) {
+          setHomeworkPatient(null);
+          try { localStorage.removeItem("psireal:openHomework"); } catch {}
+        }
+      }}>
         <DialogContent className={dlgCls("hw")}>
           <FullBtn k="hw" />
           <DialogHeader>

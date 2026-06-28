@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Loader2, Plus, Send, Trash2, Download, MessageCircle, FileText, ExternalLink, Pencil, CheckSquare, Square, X } from "lucide-react";
@@ -67,21 +67,36 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
   const [weeklyObservations, setWeeklyObservations] = useState("");
   const [sourceRecord, setSourceRecord] = useState<string>("none");
   const [saving, setSaving] = useState(false);
+  const [autoSavedAt, setAutoSavedAt] = useState<Date | null>(null);
+  const editingRef = useRef<Task | null>(null);
+  const draftKey = `psireal:openHomeworkTask:${patientId}`;
+  useEffect(() => { editingRef.current = editing; }, [editing]);
 
   const publicUrl = homeworkToken ? `${window.location.origin}/tarefas/${homeworkToken}` : null;
 
-  const load = async () => {
+  const load = async (opts?: { restoreOpen?: boolean }) => {
     setLoading(true);
     const [t, r] = await Promise.all([
       supabase.from("homework_tasks").select("*").eq("patient_id", patientId).order("created_at", { ascending: false }),
       supabase.from("session_records").select("id, session_date, session_number, next_session_plan, clinical_observations").eq("patient_id", patientId).order("session_date", { ascending: false }).limit(20),
     ]);
-    setTasks((t.data as Task[]) ?? []);
+    const taskList = (t.data as Task[]) ?? [];
+    setTasks(taskList);
     setRecords((r.data as SessionRecordOpt[]) ?? []);
     setLoading(false);
+    // Restaurar diálogo de edição se havia rascunho aberto para este paciente
+    if (opts?.restoreOpen) {
+      try {
+        const lastId = localStorage.getItem(draftKey);
+        if (lastId) {
+          const t = taskList.find((x) => x.id === lastId);
+          if (t) openEdit(t);
+        }
+      } catch {}
+    }
   };
 
-  useEffect(() => { load(); }, [patientId]);
+  useEffect(() => { load({ restoreOpen: true }); }, [patientId]);
 
   const resetForm = () => {
     setTitle("");
@@ -91,6 +106,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
     setWeeklyObservations("");
     setSourceRecord("none");
     setEditing(null);
+    setAutoSavedAt(null);
   };
 
   const openNew = () => { resetForm(); setOpen(true); };
@@ -132,6 +148,49 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
   const toggleAction = (index: number) => {
     setActions((prev) => prev.map((a, i) => i === index ? { ...a, done: !a.done } : a));
   };
+
+  // Persist draft pointer (qual task está sendo editada) e autosave debounced
+  useEffect(() => {
+    try {
+      if (open && editing) localStorage.setItem(draftKey, editing.id);
+      else if (!open) localStorage.removeItem(draftKey);
+    } catch {}
+  }, [open, editing, draftKey]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (!title.trim()) return;
+    const handle = setTimeout(async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const payload: any = {
+        title: title.trim(),
+        content: "",
+        session_points: sessionPoints.trim() || null,
+        actions: actions.length > 0 ? (actions as unknown as Json) : null,
+        weekly_observations: weeklyObservations.trim() || null,
+        session_record_id: sourceRecord === "none" ? null : sourceRecord,
+      };
+      const current = editingRef.current;
+      if (current) {
+        const { error } = await supabase.from("homework_tasks").update(payload).eq("id", current.id);
+        if (!error) setAutoSavedAt(new Date());
+      } else {
+        const { data, error } = await supabase
+          .from("homework_tasks")
+          .insert({ ...payload, patient_id: patientId, user_id: user.id })
+          .select("*")
+          .single();
+        if (!error && data) {
+          setEditing(data as Task);
+          setAutoSavedAt(new Date());
+          try { localStorage.setItem(draftKey, (data as Task).id); } catch {}
+        }
+      }
+    }, 1200);
+    return () => clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, title, sessionPoints, actions, weeklyObservations, sourceRecord]);
 
   const save = async () => {
     if (!title.trim()) { toast.error("Preencha o título do plano"); return; }
@@ -377,11 +436,18 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button variant="accent" onClick={save} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Salvar
-            </Button>
+          <DialogFooter className="flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
+            <span className="text-[11px] text-muted-foreground">
+              {autoSavedAt
+                ? `Salvo automaticamente às ${format(autoSavedAt, "HH:mm:ss")}`
+                : title.trim() ? "Salvando automaticamente..." : "Comece pelo título para salvar automaticamente"}
+            </span>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setOpen(false)}>Fechar</Button>
+              <Button variant="accent" onClick={save} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Salvar e fechar
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
