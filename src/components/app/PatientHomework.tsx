@@ -148,6 +148,49 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
     setActions((prev) => prev.map((a, i) => i === index ? { ...a, done: !a.done } : a));
   };
 
+  // Persist draft pointer (qual task está sendo editada) e autosave debounced
+  useEffect(() => {
+    try {
+      if (open && editing) localStorage.setItem(draftKey, editing.id);
+      else if (!open) localStorage.removeItem(draftKey);
+    } catch {}
+  }, [open, editing, draftKey]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (!title.trim()) return;
+    const handle = setTimeout(async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const payload: any = {
+        title: title.trim(),
+        content: "",
+        session_points: sessionPoints.trim() || null,
+        actions: actions.length > 0 ? (actions as unknown as Json) : null,
+        weekly_observations: weeklyObservations.trim() || null,
+        session_record_id: sourceRecord === "none" ? null : sourceRecord,
+      };
+      const current = editingRef.current;
+      if (current) {
+        const { error } = await supabase.from("homework_tasks").update(payload).eq("id", current.id);
+        if (!error) setAutoSavedAt(new Date());
+      } else {
+        const { data, error } = await supabase
+          .from("homework_tasks")
+          .insert({ ...payload, patient_id: patientId, user_id: user.id })
+          .select("*")
+          .single();
+        if (!error && data) {
+          setEditing(data as Task);
+          setAutoSavedAt(new Date());
+          try { localStorage.setItem(draftKey, (data as Task).id); } catch {}
+        }
+      }
+    }, 1200);
+    return () => clearTimeout(handle);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, title, sessionPoints, actions, weeklyObservations, sourceRecord]);
+
   const save = async () => {
     if (!title.trim()) { toast.error("Preencha o título do plano"); return; }
     setSaving(true);
