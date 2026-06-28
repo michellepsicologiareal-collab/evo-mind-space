@@ -74,18 +74,29 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
 
   const publicUrl = homeworkToken ? `${window.location.origin}/tarefas/${homeworkToken}` : null;
 
-  const load = async () => {
+  const load = async (opts?: { restoreOpen?: boolean }) => {
     setLoading(true);
     const [t, r] = await Promise.all([
       supabase.from("homework_tasks").select("*").eq("patient_id", patientId).order("created_at", { ascending: false }),
       supabase.from("session_records").select("id, session_date, session_number, next_session_plan, clinical_observations").eq("patient_id", patientId).order("session_date", { ascending: false }).limit(20),
     ]);
-    setTasks((t.data as Task[]) ?? []);
+    const taskList = (t.data as Task[]) ?? [];
+    setTasks(taskList);
     setRecords((r.data as SessionRecordOpt[]) ?? []);
     setLoading(false);
+    // Restaurar diálogo de edição se havia rascunho aberto para este paciente
+    if (opts?.restoreOpen) {
+      try {
+        const lastId = localStorage.getItem(draftKey);
+        if (lastId) {
+          const t = taskList.find((x) => x.id === lastId);
+          if (t) openEdit(t);
+        }
+      } catch {}
+    }
   };
 
-  useEffect(() => { load(); }, [patientId]);
+  useEffect(() => { load({ restoreOpen: true }); }, [patientId]);
 
   const resetForm = () => {
     setTitle("");
