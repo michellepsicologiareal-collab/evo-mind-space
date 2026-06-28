@@ -105,7 +105,7 @@ const Tarefas = () => {
           ) : (
             <div className="space-y-6">
               {tasks.map((t, i) => {
-                const taskActions = Array.isArray(t.actions) ? t.actions : [];
+                const taskActions = normalizeActions(t.actions);
                 return (
                   <div key={t.task_id!} className="pb-6 border-b border-border last:border-0 last:pb-0 break-inside-avoid">
                     <div className="flex items-baseline justify-between gap-2 flex-wrap">
