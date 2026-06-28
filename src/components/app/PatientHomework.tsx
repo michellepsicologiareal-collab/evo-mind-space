@@ -93,6 +93,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
           if (t) openEdit(t);
         }
       } catch {}
+      draftRestoredRef.current = true;
     }
   };
 
@@ -150,7 +151,9 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
   };
 
   // Persist draft pointer (qual task está sendo editada) e autosave debounced
+  const draftRestoredRef = useRef(false);
   useEffect(() => {
+    if (!draftRestoredRef.current) return;
     try {
       if (open && editing) localStorage.setItem(draftKey, editing.id);
       else if (!open) localStorage.removeItem(draftKey);
