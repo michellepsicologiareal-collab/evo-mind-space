@@ -106,6 +106,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
     setWeeklyObservations("");
     setSourceRecord("none");
     setEditing(null);
+    setAutoSavedAt(null);
   };
 
   const openNew = () => { resetForm(); setOpen(true); };
