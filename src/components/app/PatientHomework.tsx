@@ -185,7 +185,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
       parts.push(task.session_points);
       parts.push("");
     }
-    const taskActions = Array.isArray(task.actions) ? task.actions : [];
+    const taskActions = normalizeActions(task.actions);
     if (taskActions.length > 0) {
       parts.push("🎯 *Plano entre Sessões:*");
       taskActions.forEach((a: any, i: number) => {
