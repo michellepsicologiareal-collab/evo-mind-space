@@ -38,6 +38,14 @@ interface ActionItem {
   done: boolean;
 }
 
+export function normalizeActions(raw: Json | null | undefined): ActionItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((a: any) => ({
+    text: typeof a === "string" ? a : (a?.text || ""),
+    done: !!a?.done,
+  }));
+}
+
 interface SessionRecordOpt {
   id: string;
   session_date: string;
@@ -91,11 +99,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
     setEditing(t);
     setTitle(t.title);
     setSessionPoints(t.session_points || "");
-    const parsedActions: ActionItem[] = Array.isArray(t.actions) ? t.actions.map((a: any) => ({
-      text: typeof a === "string" ? a : (a?.text || ""),
-      done: !!a?.done,
-    })) : [];
-    setActions(parsedActions);
+    setActions(normalizeActions(t.actions));
     setWeeklyObservations(t.weekly_observations || "");
     setSourceRecord(t.session_record_id ?? "none");
     setOpen(true);
@@ -181,7 +185,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
       parts.push(task.session_points);
       parts.push("");
     }
-    const taskActions = Array.isArray(task.actions) ? task.actions : [];
+    const taskActions = normalizeActions(task.actions);
     if (taskActions.length > 0) {
       parts.push("🎯 *Plano entre Sessões:*");
       taskActions.forEach((a: any, i: number) => {
@@ -240,7 +244,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
       ) : (
         <div className="space-y-4">
           {tasks.map((t) => {
-            const taskActions = Array.isArray(t.actions) ? t.actions : [];
+            const taskActions = normalizeActions(t.actions);
             return (
               <div key={t.id} className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2 flex-wrap">

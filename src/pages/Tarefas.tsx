@@ -6,6 +6,7 @@ import { Loader2, FileText, Printer, X, CheckSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
+import { normalizeActions } from "@/components/app/PatientHomework";
 import logoImg from "@/assets/logo-psireal.png";
 
 interface Row {
@@ -104,7 +105,7 @@ const Tarefas = () => {
           ) : (
             <div className="space-y-6">
               {tasks.map((t, i) => {
-                const taskActions = Array.isArray(t.actions) ? t.actions : [];
+                const taskActions = normalizeActions(t.actions);
                 return (
                   <div key={t.task_id!} className="pb-6 border-b border-border last:border-0 last:pb-0 break-inside-avoid">
                     <div className="flex items-baseline justify-between gap-2 flex-wrap">
