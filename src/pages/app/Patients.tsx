@@ -312,6 +312,7 @@ const Patients = () => {
         if (p) setHomeworkPatient(p as any);
       }
     } catch {}
+    homeworkRestoredRef.current = true;
     setPixKey((profileRes.data as any)?.pix_key ?? "");
     setProfName(profileRes.data?.full_name ?? "");
     setProfCrp((profileRes.data as any)?.crp ?? "");
