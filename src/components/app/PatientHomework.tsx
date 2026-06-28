@@ -67,6 +67,10 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
   const [weeklyObservations, setWeeklyObservations] = useState("");
   const [sourceRecord, setSourceRecord] = useState<string>("none");
   const [saving, setSaving] = useState(false);
+  const [autoSavedAt, setAutoSavedAt] = useState<Date | null>(null);
+  const editingRef = useRef<Task | null>(null);
+  const draftKey = `psireal:openHomeworkTask:${patientId}`;
+  useEffect(() => { editingRef.current = editing; }, [editing]);
 
   const publicUrl = homeworkToken ? `${window.location.origin}/tarefas/${homeworkToken}` : null;
 
