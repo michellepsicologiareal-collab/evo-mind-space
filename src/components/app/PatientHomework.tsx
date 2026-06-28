@@ -38,6 +38,14 @@ interface ActionItem {
   done: boolean;
 }
 
+export function normalizeActions(raw: Json | null | undefined): ActionItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((a: any) => ({
+    text: typeof a === "string" ? a : (a?.text || ""),
+    done: !!a?.done,
+  }));
+}
+
 interface SessionRecordOpt {
   id: string;
   session_date: string;
