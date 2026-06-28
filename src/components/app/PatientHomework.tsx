@@ -435,11 +435,18 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button variant="accent" onClick={save} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Salvar
-            </Button>
+          <DialogFooter className="flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
+            <span className="text-[11px] text-muted-foreground">
+              {autoSavedAt
+                ? `Salvo automaticamente às ${format(autoSavedAt, "HH:mm:ss")}`
+                : title.trim() ? "Salvando automaticamente..." : "Comece pelo título para salvar automaticamente"}
+            </span>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setOpen(false)}>Fechar</Button>
+              <Button variant="accent" onClick={save} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Salvar e fechar
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
