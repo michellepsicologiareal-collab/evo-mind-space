@@ -1717,7 +1717,12 @@ const Patients = () => {
       </Dialog>
 
       {/* Homework Dialog */}
-      <Dialog open={!!homeworkPatient} onOpenChange={(o) => !o && setHomeworkPatient(null)}>
+      <Dialog open={!!homeworkPatient} onOpenChange={(o) => {
+        if (!o) {
+          setHomeworkPatient(null);
+          try { localStorage.removeItem("psireal:openHomework"); } catch {}
+        }
+      }}>
         <DialogContent className={dlgCls("hw")}>
           <FullBtn k="hw" />
           <DialogHeader>
