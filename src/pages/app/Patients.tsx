@@ -216,7 +216,10 @@ const Patients = () => {
   const [recordsPatient, setRecordsPatient] = useState<Patient | null>(null);
   const [anamnesisPatient, setAnamnesisPatient] = useState<Patient | null>(null);
   const [homeworkPatient, setHomeworkPatient] = useState<Patient | null>(null);
+  const homeworkRestoredRef = useRef(false);
   useEffect(() => {
+    // Evita apagar o pointer salvo antes da restauração inicial rodar
+    if (!homeworkRestoredRef.current) return;
     try {
       if (homeworkPatient) localStorage.setItem("psireal:openHomework", homeworkPatient.id);
       else localStorage.removeItem("psireal:openHomework");
