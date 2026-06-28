@@ -295,6 +295,14 @@ const Patients = () => {
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
     setPatients((patientsRes.data ?? []) as any);
+    // Restaurar diálogo de "Plano entre Sessões" se estava aberto antes
+    try {
+      const lastHwId = localStorage.getItem("psireal:openHomework");
+      if (lastHwId) {
+        const p = (patientsRes.data ?? []).find((x: any) => x.id === lastHwId);
+        if (p) setHomeworkPatient(p as any);
+      }
+    } catch {}
     setPixKey((profileRes.data as any)?.pix_key ?? "");
     setProfName(profileRes.data?.full_name ?? "");
     setProfCrp((profileRes.data as any)?.crp ?? "");
