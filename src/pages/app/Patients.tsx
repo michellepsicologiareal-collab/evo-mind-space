@@ -216,6 +216,12 @@ const Patients = () => {
   const [recordsPatient, setRecordsPatient] = useState<Patient | null>(null);
   const [anamnesisPatient, setAnamnesisPatient] = useState<Patient | null>(null);
   const [homeworkPatient, setHomeworkPatient] = useState<Patient | null>(null);
+  useEffect(() => {
+    try {
+      if (homeworkPatient) localStorage.setItem("psireal:openHomework", homeworkPatient.id);
+      else localStorage.removeItem("psireal:openHomework");
+    } catch {}
+  }, [homeworkPatient]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
