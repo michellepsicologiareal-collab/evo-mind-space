@@ -99,11 +99,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
     setEditing(t);
     setTitle(t.title);
     setSessionPoints(t.session_points || "");
-    const parsedActions: ActionItem[] = Array.isArray(t.actions) ? t.actions.map((a: any) => ({
-      text: typeof a === "string" ? a : (a?.text || ""),
-      done: !!a?.done,
-    })) : [];
-    setActions(parsedActions);
+    setActions(normalizeActions(t.actions));
     setWeeklyObservations(t.weekly_observations || "");
     setSourceRecord(t.session_record_id ?? "none");
     setOpen(true);
