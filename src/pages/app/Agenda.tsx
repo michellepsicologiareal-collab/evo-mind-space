@@ -750,7 +750,8 @@ const Agenda = () => {
     await load(true); loadPending(true);
   };
 
-  // Exclui a sessão atual + todas as outras do mesmo pacote (passadas e futuras).
+  // Exclui a sessão atual + todas as outras do MESMO pacote (passadas e futuras).
+  // Usa groupId quando disponível; cai para "chunking" por data nos pacotes legados.
   const executeDeleteSeries = async (includeFinancial: boolean) => {
     if (!deleteSessionId || !user) return;
     const current = sessions.find((s) => s.id === deleteSessionId)
@@ -761,14 +762,33 @@ const Agenda = () => {
     if (!pkgInfo) return;
 
     setDeleting(true);
-    // Busca todas as irmãs do pacote (mesmo paciente + mesmo total no notes)
     const { data: siblings } = await supabase.from("sessions")
-      .select("id, notes")
+      .select("id, notes, scheduled_at")
       .eq("user_id", user.id)
-      .eq("patient_id", current.patient_id);
-    const ids = (siblings ?? [])
-      .filter((s: any) => s.notes && /Plano \d+ sess/.test(s.notes) && s.notes.includes(`/${pkgInfo.total})`))
-      .map((s: any) => s.id);
+      .eq("patient_id", current.patient_id)
+      .order("scheduled_at", { ascending: true });
+
+    const currentGroupId = getGroupId(current.notes);
+    let ids: string[] = [];
+
+    if (currentGroupId) {
+      // Novo formato: usa o groupId para isolar APENAS este pacote
+      ids = (siblings ?? [])
+        .filter((s: any) => getGroupId(s.notes) === currentGroupId)
+        .map((s: any) => s.id);
+    } else {
+      // Legado: agrupa por total + sem groupId, dividindo em "chunks" de tamanho `total`
+      const legacy = (siblings ?? []).filter((s: any) => {
+        const info = getPackageInfo(s.notes);
+        return info?.total === pkgInfo.total && !getGroupId(s.notes);
+      });
+      const idx = legacy.findIndex((s: any) => s.id === deleteSessionId);
+      if (idx >= 0) {
+        const chunkStart = Math.floor(idx / pkgInfo.total) * pkgInfo.total;
+        ids = legacy.slice(chunkStart, chunkStart + pkgInfo.total).map((s: any) => s.id);
+      }
+    }
+
     if (!ids.includes(deleteSessionId)) ids.push(deleteSessionId);
 
     // Limpa GCal e relações em paralelo
