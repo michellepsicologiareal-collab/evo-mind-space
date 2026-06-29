@@ -750,7 +750,8 @@ const Agenda = () => {
     await load(true); loadPending(true);
   };
 
-  // Exclui a sessão atual + todas as outras do mesmo pacote (passadas e futuras).
+  // Exclui a sessão atual + todas as outras do MESMO pacote (passadas e futuras).
+  // Usa groupId quando disponível; cai para "chunking" por data nos pacotes legados.
   const executeDeleteSeries = async (includeFinancial: boolean) => {
     if (!deleteSessionId || !user) return;
     const current = sessions.find((s) => s.id === deleteSessionId)
@@ -761,14 +762,33 @@ const Agenda = () => {
     if (!pkgInfo) return;
 
     setDeleting(true);
-    // Busca todas as irmãs do pacote (mesmo paciente + mesmo total no notes)
     const { data: siblings } = await supabase.from("sessions")
-      .select("id, notes")
+      .select("id, notes, scheduled_at")
       .eq("user_id", user.id)
-      .eq("patient_id", current.patient_id);
-    const ids = (siblings ?? [])
-      .filter((s: any) => s.notes && /Plano \d+ sess/.test(s.notes) && s.notes.includes(`/${pkgInfo.total})`))
-      .map((s: any) => s.id);
+      .eq("patient_id", current.patient_id)
+      .order("scheduled_at", { ascending: true });
+
+    const currentGroupId = getGroupId(current.notes);
+    let ids: string[] = [];
+
+    if (currentGroupId) {
+      // Novo formato: usa o groupId para isolar APENAS este pacote
+      ids = (siblings ?? [])
+        .filter((s: any) => getGroupId(s.notes) === currentGroupId)
+        .map((s: any) => s.id);
+    } else {
+      // Legado: agrupa por total + sem groupId, dividindo em "chunks" de tamanho `total`
+      const legacy = (siblings ?? []).filter((s: any) => {
+        const info = getPackageInfo(s.notes);
+        return info?.total === pkgInfo.total && !getGroupId(s.notes);
+      });
+      const idx = legacy.findIndex((s: any) => s.id === deleteSessionId);
+      if (idx >= 0) {
+        const chunkStart = Math.floor(idx / pkgInfo.total) * pkgInfo.total;
+        ids = legacy.slice(chunkStart, chunkStart + pkgInfo.total).map((s: any) => s.id);
+      }
+    }
+
     if (!ids.includes(deleteSessionId)) ids.push(deleteSessionId);
 
     // Limpa GCal e relações em paralelo
@@ -2798,36 +2818,92 @@ const Agenda = () => {
               ) : drawerSessions.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">Nenhuma sessão encontrada.</p>
               ) : (
-                <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-                  {drawerSessions.map((s) => (
-                    <div key={s.id} className="rounded-xl border border-border bg-background p-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-medium">{format(new Date(s.scheduled_at), "dd/MM/yyyy 'às' HH:mm")}</p>
-                          <p className="text-xs text-muted-foreground">{s.duration_minutes} min</p>
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                  {(() => {
+                    // Agrupa por pacote (groupId ou chunk legado por total) — sessões avulsas no fim
+                    type Bucket = { key: string; label: string; total: number | null; items: Session[] };
+                    const sorted = [...drawerSessions].sort(
+                      (a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
+                    );
+                    const buckets: Bucket[] = [];
+                    const legacyCount: Record<number, number> = {};
+                    const legacyBucket: Record<string, Bucket> = {};
+                    const groupBucket: Record<string, Bucket> = {};
+                    const single: Session[] = [];
+
+                    for (const s of sorted) {
+                      const info = getPackageInfo(s.notes);
+                      if (!info) { single.push(s); continue; }
+                      const gid = getGroupId(s.notes);
+                      if (gid) {
+                        let b = groupBucket[gid];
+                        if (!b) {
+                          b = { key: `g:${gid}`, label: "", total: info.total, items: [] };
+                          groupBucket[gid] = b;
+                          buckets.push(b);
+                        }
+                        b.items.push(s);
+                      } else {
+                        const used = legacyCount[info.total] ?? 0;
+                        const chunkIdx = Math.floor(used / info.total);
+                        const bKey = `l:${info.total}:${chunkIdx}`;
+                        let b = legacyBucket[bKey];
+                        if (!b) {
+                          b = { key: bKey, label: "", total: info.total, items: [] };
+                          legacyBucket[bKey] = b;
+                          buckets.push(b);
+                        }
+                        b.items.push(s);
+                        legacyCount[info.total] = used + 1;
+                      }
+                    }
+
+                    buckets.forEach((b, i) => { b.label = `Pacote ${i + 1} — ${b.total} sessões`; });
+                    if (single.length) buckets.push({ key: "single", label: "Sessões avulsas", total: null, items: single });
+
+                    const renderItem = (s: Session) => (
+                      <div key={s.id} className="rounded-xl border border-border bg-background p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-medium">{format(new Date(s.scheduled_at), "dd/MM/yyyy 'às' HH:mm")}</p>
+                            <p className="text-xs text-muted-foreground">{s.duration_minutes} min</p>
+                          </div>
+                          <div className="text-right">
+                            <span className={cn(PILL_BASE, statusClass[s.status as Status])}>
+                              {statusLabel[s.status as Status]}
+                            </span>
+                            {s.price != null && (
+                              <p className="text-xs text-muted-foreground mt-1">R$ {Number(s.price).toFixed(2)}</p>
+                            )}
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <span className={cn(PILL_BASE, statusClass[s.status as Status])}>
-                            {statusLabel[s.status as Status]}
-                          </span>
-                          {s.price != null && (
-                            <p className="text-xs text-muted-foreground mt-1">R$ {Number(s.price).toFixed(2)}</p>
-                          )}
+                        {s.price != null && (
+                          <div className="mt-1.5">
+                            <span className={cn(PILL_BASE, paymentStatusClass[s.payment_status as PaymentStatus])}>
+                              {paymentStatusLabel[s.payment_status as PaymentStatus]}
+                              {s.payment_method && ` · ${s.payment_method === "pix" ? "PIX" : s.payment_method === "card" ? "Cartão" : s.payment_method === "cash" ? "Dinheiro" : ""}`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    return buckets.map((b) => (
+                      <div key={b.key} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{b.label}</p>
+                          <span className="text-[10px] text-muted-foreground">{b.items.length} sessões</span>
+                        </div>
+                        <div className="space-y-2 pl-2 border-l-2 border-accent/30">
+                          {b.items.map(renderItem)}
                         </div>
                       </div>
-                      {s.price != null && (
-                        <div className="mt-1.5">
-                          <span className={cn(PILL_BASE, paymentStatusClass[s.payment_status as PaymentStatus])}>
-                            {paymentStatusLabel[s.payment_status as PaymentStatus]}
-                            {s.payment_method && ` · ${s.payment_method === "pix" ? "PIX" : s.payment_method === "card" ? "Cartão" : s.payment_method === "cash" ? "Dinheiro" : ""}`}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
               )}
             </TabsContent>
+
 
             {/* Financial tab */}
             <TabsContent value="financial" className="mt-4">
