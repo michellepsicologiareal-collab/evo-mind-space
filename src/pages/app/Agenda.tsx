@@ -2671,6 +2671,21 @@ const Agenda = () => {
                 || pendingPackageSessions.find((s) => s.id === deleteSessionId))
               : null;
             const pkg = current ? getPackageInfo(current.notes) : null;
+            const currentGid = current ? getGroupId(current.notes) : null;
+            const allKnown = [...sessions, ...pendingSessions, ...pendingPackageSessions]
+              .filter((it, i, l) => l.findIndex((c) => c.id === it.id) === i);
+            const seriesSessions = (current && pkg)
+              ? (currentGid
+                  ? allKnown.filter((s) => s.patient_id === current.patient_id && getGroupId(s.notes) === currentGid)
+                  : allKnown.filter((s) => {
+                      const info = getPackageInfo(s.notes);
+                      return s.patient_id === current.patient_id && info?.total === pkg.total && !getGroupId(s.notes);
+                    }))
+              : [];
+            const seriesCount = seriesSessions.length || (pkg?.total ?? 0);
+            const sorted = [...seriesSessions].sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+            const firstDate = sorted[0] ? new Date(sorted[0].scheduled_at).toLocaleDateString("pt-BR") : null;
+            const lastDate = sorted[sorted.length - 1] ? new Date(sorted[sorted.length - 1].scheduled_at).toLocaleDateString("pt-BR") : null;
             return (
               <div className="space-y-3 py-2">
                 <Button
@@ -2700,10 +2715,18 @@ const Agenda = () => {
                 {pkg && (
                   <>
                     <div className="pt-2 border-t border-border">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                         Sequência (pacote de {pkg.total} sessões)
                       </p>
+                      <p className="text-[11px] text-muted-foreground leading-snug">
+                        Esta ação afeta apenas <strong>{seriesCount}</strong> sessão(ões) deste pacote
+                        {firstDate && lastDate ? <> ({firstDate} → {lastDate})</> : null}.
+                        {currentGid
+                          ? " Outros pacotes e o histórico de meses anteriores deste paciente serão preservados."
+                          : " Pacote legado: agrupamento por ordem cronológica."}
+                      </p>
                     </div>
+
                     <Button
                       variant="outline"
                       className="w-full justify-start items-start gap-3 h-auto py-3 text-left whitespace-normal overflow-hidden"
