@@ -184,51 +184,50 @@ const Agenda = () => {
     return () => clearTimeout(t);
   }, [isNavigating]);
 
-  // Seed patient filter from ?patient= query string (once on mount / when URL changes externally)
+  // Seed patient/month from URL ONCE on mount. Subsequent URL writes are one-way
+  // (state → URL) to avoid ping-pong loops between effects that watch searchParams.
+  const urlSeededRef = useRef(false);
   useEffect(() => {
+    if (urlSeededRef.current) return;
+    urlSeededRef.current = true;
     const qp = searchParams.get("patient");
-    if (qp && qp !== patientFilter) setPatientFilter(qp);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
-
-  // Keep ?patient= in sync with state so the filter persists across view changes,
-  // month navigation and reloads (deep-linkable).
-  useEffect(() => {
-    const current = searchParams.get("patient") ?? "all";
-    if (patientFilter === current) return;
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (patientFilter === "all") next.delete("patient");
-      else next.set("patient", patientFilter);
-      return next;
-    }, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [patientFilter]);
-
-  // Seed month filter from ?month= query string
-  useEffect(() => {
+    if (qp) setPatientFilter(qp);
     const m = searchParams.get("month");
-    if (!m) return;
-    const parsed = parse(m, "yyyy-MM", new Date());
-    if (isNaN(parsed.getTime())) return;
-    if (!isSameMonth(parsed, currentMonth)) {
-      goToMonth(parsed);
+    if (m) {
+      const parsed = parse(m, "yyyy-MM", new Date());
+      if (!isNaN(parsed.getTime()) && !isSameMonth(parsed, currentMonth)) {
+        goToMonth(parsed);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, []);
 
-  // Keep ?month= in sync with currentMonth
+  // Keep ?patient= and ?month= in sync with state (one-way write).
+  // Uses window.history directly to avoid re-triggering useSearchParams subscribers
+  // and to keep this effect free of `searchParams` in its dependency array.
   useEffect(() => {
-    const current = searchParams.get("month");
-    const formatted = format(currentMonth, "yyyy-MM");
-    if (current === formatted) return;
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set("month", formatted);
-      return next;
-    }, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentMonth]);
+    if (!urlSeededRef.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const monthStr = format(currentMonth, "yyyy-MM");
+    let changed = false;
+    if ((params.get("patient") ?? "all") !== patientFilter) {
+      if (patientFilter === "all") params.delete("patient");
+      else params.set("patient", patientFilter);
+      changed = true;
+    }
+    if (params.get("month") !== monthStr) {
+      params.set("month", monthStr);
+      changed = true;
+    }
+    if (changed) {
+      const qs = params.toString();
+      window.history.replaceState(
+        window.history.state,
+        "",
+        window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash
+      );
+    }
+  }, [patientFilter, currentMonth]);
 
   // Pending
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
