@@ -1479,7 +1479,7 @@ const Agenda = () => {
         <span className="text-sm">Nova</span>
       </button>
 
-      <header className="flex flex-wrap items-end justify-between gap-3 sticky top-16 md:static z-30 -mx-6 px-6 -mt-6 pt-6 md:m-0 md:p-0 bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none pb-3 md:pb-0">
+      <header className="flex flex-wrap items-end justify-between gap-3 sticky top-16 md:static z-30 -mx-4 px-4 sm:-mx-6 sm:px-6 -mt-4 pt-4 sm:-mt-6 sm:pt-6 md:m-0 md:p-0 bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none pb-3 md:pb-0">
         <div className="flex items-start gap-3 sm:gap-4 min-w-0">
           <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent">
             <CalendarIcon className="h-5 w-5" />
@@ -1849,7 +1849,7 @@ const Agenda = () => {
                 goToMonth(newMonth);
               }}
             >
-                <SelectTrigger disabled={loading || isNavigating} className="h-9 w-40 rounded-full text-xs font-display font-semibold">
+                <SelectTrigger disabled={loading} className="h-9 w-40 rounded-full text-xs font-display font-semibold">
                   <SelectValue placeholder="Mês" />
                 </SelectTrigger>
               <SelectContent>
@@ -1867,7 +1867,7 @@ const Agenda = () => {
                 goToMonth(newMonth);
               }}
             >
-                <SelectTrigger disabled={loading || isNavigating} className="h-9 w-24 rounded-full text-xs font-display font-semibold">
+                <SelectTrigger disabled={loading} className="h-9 w-24 rounded-full text-xs font-display font-semibold">
                   <SelectValue placeholder="Ano" />
                 </SelectTrigger>
               <SelectContent>
@@ -1880,7 +1880,7 @@ const Agenda = () => {
           </div>
 
           <Tabs value={viewTab} onValueChange={setViewTab}>
-            <TabsList className="w-full sm:w-auto bg-background/95 backdrop-blur sm:bg-transparent sm:backdrop-blur-none gap-1 p-0 sticky top-[124px] md:static z-20 -mx-6 px-6 py-2 sm:m-0 sm:p-0">
+            <TabsList className="w-full sm:w-auto bg-transparent gap-1 p-0 mb-2">
               <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarDays className="h-3.5 w-3.5 mr-1.5 inline" /> Mês</TabsTrigger>
               <TabsTrigger value="week" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarRange className="h-3.5 w-3.5 mr-1.5 inline" /> Semana</TabsTrigger>
               <TabsTrigger value="day" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarCheck className="h-3.5 w-3.5 mr-1.5 inline" /> Dia</TabsTrigger>
@@ -1910,7 +1910,7 @@ const Agenda = () => {
                 {loading ? (
                   <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
                 ) : (
-                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-4">
+                  <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4">
                     {/* Calendar grid */}
                     <div className="rounded-2xl bg-card border border-border shadow-card p-4">
                       <div className="grid grid-cols-7 gap-1 mb-2">
@@ -1989,7 +1989,7 @@ const Agenda = () => {
 
                     {/* Lista do mês para o paciente filtrado */}
                     {selectedPatientName && (
-                      <div className="lg:col-span-2 rounded-2xl bg-card border border-border shadow-card p-4">
+                      <div className="xl:col-span-2 rounded-2xl bg-card border border-border shadow-card p-4">
                         <div className="flex items-center justify-between mb-3">
                           <p className="font-display text-sm font-semibold text-foreground">
                             Sessões de {selectedPatientName} em {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
@@ -2277,7 +2277,7 @@ const Agenda = () => {
       </div>
 
       {/* ── ZONA INFERIOR: Sessões do Mês (largura total) ── */}
-      <div style={{ background: "hsl(var(--muted))", margin: "0 -1rem", padding: "20px 1rem 24px" }}>
+      <div className="-mx-4 sm:-mx-6 lg:-mx-10 px-4 sm:px-6 lg:px-10 py-5 sm:py-6" style={{ background: "hsl(var(--muted))" }}>
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <h2 style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>Sessões do Mês</h2>
           <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
