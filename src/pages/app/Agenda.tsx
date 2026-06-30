@@ -2277,7 +2277,7 @@ const Agenda = () => {
       </div>
 
       {/* ── ZONA INFERIOR: Sessões do Mês (largura total) ── */}
-      <div style={{ background: "hsl(var(--muted))", margin: "0 -1rem", padding: "20px 1rem 24px" }}>
+      <div className="-mx-4 sm:-mx-6 lg:-mx-10 px-4 sm:px-6 lg:px-10 py-5 sm:py-6" style={{ background: "hsl(var(--muted))" }}>
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <h2 style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>Sessões do Mês</h2>
           <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
