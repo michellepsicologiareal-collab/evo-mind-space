@@ -1479,7 +1479,7 @@ const Agenda = () => {
         <span className="text-sm">Nova</span>
       </button>
 
-      <header className="flex flex-wrap items-end justify-between gap-3 sticky top-16 md:static z-30 -mx-6 px-6 -mt-6 pt-6 md:m-0 md:p-0 bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none pb-3 md:pb-0">
+      <header className="flex flex-wrap items-end justify-between gap-3 sticky top-16 md:static z-30 -mx-4 px-4 sm:-mx-6 sm:px-6 -mt-4 pt-4 sm:-mt-6 sm:pt-6 md:m-0 md:p-0 bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none pb-3 md:pb-0">
         <div className="flex items-start gap-3 sm:gap-4 min-w-0">
           <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent">
             <CalendarIcon className="h-5 w-5" />
