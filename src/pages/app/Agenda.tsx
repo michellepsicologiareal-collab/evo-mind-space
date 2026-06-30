@@ -1989,7 +1989,7 @@ const Agenda = () => {
 
                     {/* Lista do mês para o paciente filtrado */}
                     {selectedPatientName && (
-                      <div className="lg:col-span-2 rounded-2xl bg-card border border-border shadow-card p-4">
+                      <div className="xl:col-span-2 rounded-2xl bg-card border border-border shadow-card p-4">
                         <div className="flex items-center justify-between mb-3">
                           <p className="font-display text-sm font-semibold text-foreground">
                             Sessões de {selectedPatientName} em {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
