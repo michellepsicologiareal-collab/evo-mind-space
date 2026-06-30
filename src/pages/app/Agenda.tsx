@@ -1910,7 +1910,7 @@ const Agenda = () => {
                 {loading ? (
                   <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
                 ) : (
-                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr] gap-4">
+                  <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4">
                     {/* Calendar grid */}
                     <div className="rounded-2xl bg-card border border-border shadow-card p-4">
                       <div className="grid grid-cols-7 gap-1 mb-2">
