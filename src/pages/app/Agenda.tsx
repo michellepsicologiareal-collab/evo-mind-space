@@ -1849,7 +1849,7 @@ const Agenda = () => {
                 goToMonth(newMonth);
               }}
             >
-                <SelectTrigger disabled={loading || isNavigating} className="h-9 w-40 rounded-full text-xs font-display font-semibold">
+                <SelectTrigger disabled={loading} className="h-9 w-40 rounded-full text-xs font-display font-semibold">
                   <SelectValue placeholder="Mês" />
                 </SelectTrigger>
               <SelectContent>
