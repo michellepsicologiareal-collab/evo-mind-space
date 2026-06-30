@@ -143,7 +143,7 @@ const Agenda = () => {
   const [viewTab, setViewTab] = useState<string>("month");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [isNavigating, setIsNavigating] = useState(false);
   const skipDateMonthSyncRef = useRef(false);
   const skipWeekSyncRef = useRef(false);
