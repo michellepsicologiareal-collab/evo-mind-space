@@ -123,7 +123,7 @@ const App = () => (
 
                 <Route path="/sessao-confirmada/:token" element={<SessaoConfirmada />} />
 
-                <Route path="/contrato/:templateId" element={<ContratoPublico />} />
+                <Route path="/contrato/:token" element={<ContratoPublico />} />
 
                 <Route path="/anamnese-crianca/:patientId" element={<AnamnesePublica />} />
 

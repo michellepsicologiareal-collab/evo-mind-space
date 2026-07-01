@@ -7,11 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, FileText, Copy, ExternalLink, Plus, Trash2, Link2, FileCheck } from "lucide-react";
+import { Loader2, FileText, Plus, Trash2, FileCheck, AlertTriangle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/app/PageHeader";
+import { ContractInvites } from "@/components/app/ContractInvites";
 
 interface Clause {
   key: string;
@@ -239,17 +240,6 @@ export default function ContratoModelo() {
   };
   const navigate = useNavigate();
 
-  const publicLink = templateId
-    ? `${window.location.origin}/contrato/${templateId}`
-    : null;
-
-  const copyLink = () => {
-    if (publicLink) {
-      navigator.clipboard.writeText(publicLink);
-      toast.success("Link copiado!");
-    }
-  };
-
   const updateClause = (index: number, field: keyof Clause, value: string) => {
     setClauses((prev) => prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)));
   };
@@ -278,8 +268,8 @@ export default function ContratoModelo() {
       <PageHeader
         icon={FileText}
         title="Termo de Adesão"
-        subtitle="Personalize seu contrato. O paciente receberá um link para preenchimento e aceite."
-        intro="Modelo único de contrato terapêutico, personalizado com seus dados profissionais. O paciente recebe um link, lê e assina digitalmente — fica salvo em Contratos Assinados."
+        subtitle="Personalize seu contrato e gere um link individual por paciente."
+        intro="Modelo único de contrato terapêutico. Para cada paciente você gera um link de uso único — quando ele assina, o link expira automaticamente."
         actions={
           <>
             <Button variant="outline" size="sm" onClick={() => navigate("/app/contratos")}>
@@ -293,8 +283,20 @@ export default function ContratoModelo() {
         }
       />
 
-
-
+      {/* Migration notice */}
+      <div className="rounded-xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 p-4 flex gap-3">
+        <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+        <div className="text-sm space-y-1">
+          <p className="font-semibold text-amber-900 dark:text-amber-200">
+            Nova forma de enviar contratos
+          </p>
+          <p className="text-amber-800/80 dark:text-amber-200/80">
+            Por segurança, os links antigos <code className="text-xs">/contrato/&lt;id-do-modelo&gt;</code>
+            {" "}deixaram de funcionar. Gere um link individual por paciente abaixo —
+            cada link vale para uma única assinatura e expira automaticamente.
+          </p>
+        </div>
+      </div>
 
       {draftRestored && (
         <div className="rounded-lg bg-accent/20 border border-accent/30 px-3 py-2 text-sm text-muted-foreground flex items-center justify-between gap-2">
@@ -308,42 +310,13 @@ export default function ContratoModelo() {
         </div>
       )}
 
-      {/* Link card - prominent */}
-      {publicLink ? (
-        <Card className="rounded-2xl border-accent/30 bg-accent/5">
-          <CardContent className="p-5 space-y-3">
-            <div className="flex items-center gap-2 text-accent">
-              <Link2 className="h-5 w-5" />
-              <p className="font-display font-semibold">Link para o paciente preencher</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Input
-                readOnly
-                value={publicLink}
-                className="font-mono text-sm bg-card"
-                onClick={(e) => (e.target as HTMLInputElement).select()}
-              />
-              <Button variant="accent" size="sm" onClick={copyLink} className="shrink-0">
-                <Copy className="h-4 w-4 mr-1" /> Copiar
-              </Button>
-              <Button variant="outline" size="sm" asChild className="shrink-0">
-                <a href={publicLink} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-1" /> Abrir
-                </a>
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Envie este link ao paciente por WhatsApp ou e-mail. Após preencher, o contrato aparecerá em "Contratos assinados".
-            </p>
-          </CardContent>
-        </Card>
+      {/* Invites (only when template exists) */}
+      {templateId ? (
+        <ContractInvites templateId={templateId} />
       ) : (
-        <Card className="rounded-2xl border-dashed border-muted-foreground/30">
-          <CardContent className="p-5 text-center text-sm text-muted-foreground">
-            <Link2 className="h-6 w-6 mx-auto mb-2 opacity-40" />
-            Salve o modelo para gerar o link de preenchimento para o paciente.
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-dashed border-muted-foreground/30 p-5 text-center text-sm text-muted-foreground">
+          Salve o modelo abaixo para começar a gerar links individuais para cada paciente.
+        </div>
       )}
 
       {/* Professional info */}

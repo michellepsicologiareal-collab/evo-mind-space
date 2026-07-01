@@ -313,6 +313,63 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_invites: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          patient_label: string | null
+          revoked_at: string | null
+          signed_contract_id: string | null
+          template_id: string
+          token: string
+          updated_at: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          patient_label?: string | null
+          revoked_at?: string | null
+          signed_contract_id?: string | null
+          template_id: string
+          token?: string
+          updated_at?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          patient_label?: string | null
+          revoked_at?: string | null
+          signed_contract_id?: string | null
+          template_id?: string
+          token?: string
+          updated_at?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_invites_signed_contract_fk"
+            columns: ["signed_contract_id"]
+            isOneToOne: false
+            referencedRelation: "signed_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_invites_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_templates: {
         Row: {
           clauses: Json
@@ -1173,6 +1230,7 @@ export type Database = {
           emergency_contact_phone: string
           emergency_contact_relationship: string
           id: string
+          invite_id: string | null
           ip_address: string | null
           patient_address: string
           patient_birth_date: string | null
@@ -1180,6 +1238,7 @@ export type Database = {
           patient_name: string
           patient_whatsapp: string
           template_id: string
+          user_agent: string | null
           user_id: string
         }
         Insert: {
@@ -1191,6 +1250,7 @@ export type Database = {
           emergency_contact_phone?: string
           emergency_contact_relationship?: string
           id?: string
+          invite_id?: string | null
           ip_address?: string | null
           patient_address?: string
           patient_birth_date?: string | null
@@ -1198,6 +1258,7 @@ export type Database = {
           patient_name: string
           patient_whatsapp?: string
           template_id: string
+          user_agent?: string | null
           user_id: string
         }
         Update: {
@@ -1209,6 +1270,7 @@ export type Database = {
           emergency_contact_phone?: string
           emergency_contact_relationship?: string
           id?: string
+          invite_id?: string | null
           ip_address?: string | null
           patient_address?: string
           patient_birth_date?: string | null
@@ -1216,9 +1278,17 @@ export type Database = {
           patient_name?: string
           patient_whatsapp?: string
           template_id?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "signed_contracts_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "contract_invites"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "signed_contracts_template_id_fkey"
             columns: ["template_id"]
@@ -1579,6 +1649,19 @@ export type Database = {
           profile_type: Database["public"]["Enums"]["profile_type"]
         }[]
       }
+      get_contract_by_invite_token: {
+        Args: { _token: string }
+        Returns: {
+          clauses: Json
+          expires_at: string
+          invite_id: string
+          lgpd_clause: string
+          professional_crp: string
+          professional_name: string
+          status: string
+          template_id: string
+        }[]
+      }
       get_homework_by_token: {
         Args: { _token: string }
         Returns: {
@@ -1653,6 +1736,10 @@ export type Database = {
       }
       respond_to_confirmation: {
         Args: { _confirm: boolean; _token: string }
+        Returns: string
+      }
+      submit_signed_contract: {
+        Args: { _ip: string; _payload: Json; _token: string; _ua: string }
         Returns: string
       }
       unlink_supervisee: {
