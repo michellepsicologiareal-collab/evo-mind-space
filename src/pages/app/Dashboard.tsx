@@ -581,6 +581,36 @@ const Dashboard = () => {
           </p>
         </header>
 
+        {/* ── Ações Rápidas ── */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Button asChild variant="accent" size="lg" className="h-14 justify-start gap-3 rounded-2xl shadow-card">
+            <Link to="/app/pacientes">
+              <Users className="h-5 w-5 shrink-0" />
+              <span className="truncate font-display font-semibold">Novo paciente</span>
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className="h-14 justify-start gap-3 rounded-2xl bg-card shadow-card border-border hover:bg-accent/5">
+            <Link to="/app/agenda">
+              <Calendar className="h-5 w-5 shrink-0 text-accent" />
+              <span className="truncate font-display font-semibold">Agendar sessão</span>
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className="h-14 justify-start gap-3 rounded-2xl bg-card shadow-card border-border hover:bg-accent/5">
+            <Link to="/app/contratos">
+              <FileText className="h-5 w-5 shrink-0 text-lilac" />
+              <span className="truncate font-display font-semibold">Criar contrato</span>
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className="h-14 justify-start gap-3 rounded-2xl bg-card shadow-card border-border hover:bg-accent/5">
+            <Link to="/app/anamneses">
+              <ClipboardList className="h-5 w-5 shrink-0 text-lilac" />
+              <span className="truncate font-display font-semibold">Enviar anamnese</span>
+            </Link>
+          </Button>
+        </section>
+
+
+
         {/* ── Period Filter ── */}
         <div className="flex flex-wrap items-center gap-3">
           <Filter className="h-4 w-4 text-muted-foreground" />
@@ -638,11 +668,74 @@ const Dashboard = () => {
           <KPICard icon={CalendarRange} label="Sessões este Mês" value={monthSessions.toString()} tooltip="Total de sessões (agendadas, confirmadas ou concluídas) no mês corrente." />
         </section>
 
+        {/* ── HOJE: Próximas Sessões ── */}
+        <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 relative overflow-hidden">
+          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
+          <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+            <div>
+              <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", color: "#B8860B" }}>
+                Hoje
+              </p>
+              <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Próximas Sessões</h2>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/app/agenda" className="text-accent hover:text-accent/80">
+                Ver agenda <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+
+          {upcoming.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-30" />
+              <p className="font-display text-lg font-medium text-foreground/70">Sua agenda está tranquila</p>
+              <p className="mt-1 text-sm">Que tal agendar a próxima sessão?</p>
+              <Button variant="accent" size="sm" className="mt-5 min-h-[44px]" asChild>
+                <Link to="/app/agenda">Agendar uma sessão</Link>
+              </Button>
+            </div>
+          ) : (
+            <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {upcoming.map((s) => {
+                const st = statusConfig[s.status] ?? statusConfig.scheduled;
+                return (
+                  <li
+                    key={s.id}
+                    className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
+                  >
+                    <div
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-bold text-sm ${getAvatarColor(s.patient_name)}`}
+                    >
+                      {s.patient_initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground truncate">{s.patient_name}</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span className="capitalize">
+                          {format(new Date(s.scheduled_at), "HH:mm", { locale: ptBR })}
+                        </span>
+                        <span className="text-border">•</span>
+                        <span>Sessão #{s.session_number}</span>
+                      </div>
+                    </div>
+                    <span className={`text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap ${st.className}`}>
+                      {st.label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
         {/* ── Modalidade de Atendimento (pacientes ativos) ── */}
         <section className="grid grid-cols-2 gap-4">
           <KPICard icon={MapPin} label="Pacientes Presenciais" value={presencialCount.toString()} tooltip="Pacientes ativos cuja modalidade de atendimento é Presencial." />
           <KPICard icon={Video} label="Pacientes Online" value={onlineCount.toString()} tooltip="Pacientes ativos cuja modalidade de atendimento é Online." />
         </section>
+
+
 
 
         {/* ── Métricas de Sessões do Mês ── */}
@@ -1206,61 +1299,7 @@ const Dashboard = () => {
           );
         })()}
 
-        {/* ── Upcoming Sessions ── */}
-        <section className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Próximas Sessões</h2>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/app/agenda" className="text-accent hover:text-accent/80">
-                Ver agenda <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
 
-          {upcoming.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-30" />
-              <p className="font-display text-lg font-medium text-foreground/70">Sua agenda está tranquila</p>
-              <p className="mt-1 text-sm">Que tal agendar a próxima sessão?</p>
-              <Button variant="accent" size="sm" className="mt-5 min-h-[44px]" asChild>
-                <Link to="/app/agenda">Agendar uma sessão</Link>
-              </Button>
-            </div>
-          ) : (
-            <ul className="space-y-3">
-              {upcoming.map((s) => {
-                const st = statusConfig[s.status] ?? statusConfig.scheduled;
-                return (
-                  <li
-                    key={s.id}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                  >
-                    <div
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-bold text-sm ${getAvatarColor(s.patient_name)}`}
-                    >
-                      {s.patient_initials}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground truncate">{s.patient_name}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span className="capitalize">
-                          {format(new Date(s.scheduled_at), "HH:mm", { locale: ptBR })}
-                        </span>
-                        <span className="text-border">•</span>
-                        <span>Sessão #{s.session_number}</span>
-                      </div>
-                    </div>
-                    <span className={`text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap ${st.className}`}>
-                      {st.label}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
 
         {/* ── Goals / Gamification ── */}
         <section className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
