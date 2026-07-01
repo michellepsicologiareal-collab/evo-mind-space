@@ -944,21 +944,21 @@ const Dashboard = () => {
 
         {/* ── Emoções dos Pacientes ── */}
         {(() => {
-          // Helpers
-          const CRISIS_RX = /(crise|término|termino|resist|não acei|nao acei|suic|abandon)/i;
-          const ANX_RX = /ansios/i;
-          const ENG_RX = /(engaj|rápido|rapido|vínculo|vinculo|evolu)/i;
-
+          // Sinalização clínica agora vem apenas do attention_flag registrado pelo profissional.
+          // Nenhuma inferência automática por texto de nota ou por escore.
           const isUrgentMood = (m: PatientMoodEntry) =>
-            (m.mood_score ?? 10) <= 5 || (m.note ? CRISIS_RX.test(m.note) : false);
+            m.attention_flag === "urgent" || m.attention_flag === "watch";
 
           const classifyChip = (m: PatientMoodEntry) => {
-            const note = m.note ?? "";
-            if (/crise/i.test(note)) return { label: "Em crise", bg: "rgba(133,79,11,0.12)", color: "#1A1A2E", border: "rgba(133,79,11,0.25)" };
-            if (/(término|termino|resist|não acei|nao acei)/i.test(note)) return { label: "Resistente", bg: "rgba(201,168,76,0.12)", color: "#1A1A2E", border: "rgba(201,168,76,0.3)" };
-            if (ANX_RX.test(note)) return { label: "Ansioso", bg: "rgba(201,168,76,0.08)", color: "#9a7a28", border: "rgba(201,168,76,0.2)" };
-            if (ENG_RX.test(note)) return { label: "Engajado", bg: "rgba(150,117,206,0.12)", color: "#3C3489", border: "rgba(150,117,206,0.25)" };
-            return { label: "Estável", bg: "rgba(150,117,206,0.08)", color: "#3C3489", border: "rgba(150,117,206,0.2)" };
+            if (m.attention_flag === "urgent")
+              return { label: "Urgente", bg: "rgba(133,79,11,0.14)", color: "#1A1A2E", border: "rgba(133,79,11,0.35)" };
+            if (m.attention_flag === "watch")
+              return { label: "Observar", bg: "rgba(201,168,76,0.14)", color: "#1A1A2E", border: "rgba(201,168,76,0.35)" };
+            if (m.attention_flag === "none")
+              return { label: "Sem atenção", bg: "rgba(150,117,206,0.08)", color: "#3C3489", border: "rgba(150,117,206,0.2)" };
+            if (m.data_model === "legacy_unclassified")
+              return { label: "Legado", bg: "rgba(107,114,128,0.10)", color: "#374151", border: "rgba(107,114,128,0.25)" };
+            return { label: "Não avaliado", bg: "rgba(107,114,128,0.06)", color: "#6B7280", border: "rgba(107,114,128,0.2)" };
           };
 
           // Period filter
