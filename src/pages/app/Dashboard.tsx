@@ -1167,7 +1167,7 @@ const Dashboard = () => {
                     {urgentCount} {urgentCount === 1 ? "paciente requer" : "pacientes requerem"} atenção clínica.
                   </span>
                   <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 400, color: "#1A1A2E" }}>
-                    Crise relatada ou resistência ao processo terapêutico.
+                    Sinalizados pelo profissional como “Observar” ou “Urgente”.
                   </span>
                 </div>
               )}
