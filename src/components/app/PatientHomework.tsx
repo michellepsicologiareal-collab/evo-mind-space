@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Plus, Send, Trash2, Download, MessageCircle, FileText, ExternalLink, Pencil, CheckSquare, Square, X } from "lucide-react";
+import { Loader2, Plus, Send, Trash2, Download, MessageCircle, FileText, ExternalLink, Pencil, CheckSquare, Square, X, NotebookPen, ListChecks, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -33,18 +34,40 @@ interface Task {
   session_record_id: string | null;
 }
 
-interface ActionItem {
-  text: string;
-  done: boolean;
-}
+// Zod schema — canonical shape for a checklist item
+export const actionItemSchema = z.object({
+  text: z.string().trim().min(1).max(500),
+  done: z.boolean(),
+});
+export const actionsSchema = z.array(actionItemSchema).max(50);
+export type ActionItem = z.infer<typeof actionItemSchema>;
 
+/**
+ * Validates and normalizes `actions` coming from the database (or legacy formats).
+ * Accepts: null, array of strings, array of {text, done?}. Anything invalid is dropped.
+ */
 export function normalizeActions(raw: Json | null | undefined): ActionItem[] {
   if (!Array.isArray(raw)) return [];
-  return raw.map((a: any) => ({
-    text: typeof a === "string" ? a : (a?.text || ""),
-    done: !!a?.done,
-  }));
+  const coerced = raw
+    .map((a: any) => {
+      if (typeof a === "string") return { text: a.trim(), done: false };
+      if (a && typeof a === "object") {
+        return { text: String(a.text ?? "").trim(), done: !!a.done };
+      }
+      return null;
+    })
+    .filter((a): a is ActionItem => !!a && a.text.length > 0);
+  const parsed = actionsSchema.safeParse(coerced);
+  return parsed.success ? parsed.data : [];
 }
+
+/** Serializes `actions` for persistence; returns `null` when empty or invalid. */
+export function serializeActions(items: ActionItem[]): Json | null {
+  const parsed = actionsSchema.safeParse(items);
+  if (!parsed.success || parsed.data.length === 0) return null;
+  return parsed.data as unknown as Json;
+}
+
 
 interface SessionRecordOpt {
   id: string;
