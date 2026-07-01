@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, CheckCircle2, ShieldCheck } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo-psireal.png";
 
@@ -18,21 +17,25 @@ interface Clause {
   options?: string[];
 }
 
-interface Template {
-  id: string;
-  user_id: string;
+interface InvitePayload {
+  invite_id: string;
+  template_id: string;
   professional_name: string;
   professional_crp: string;
   clauses: Clause[];
   lgpd_clause: string;
+  expires_at: string;
 }
 
+const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/public-contract`;
+
 export default function ContratoPublico() {
-  const { templateId } = useParams<{ templateId: string }>();
+  const { token } = useParams<{ token: string }>();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [template, setTemplate] = useState<Template | null>(null);
+  const [invite, setInvite] = useState<InvitePayload | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Patient fields
   const [patientName, setPatientName] = useState("");
@@ -44,40 +47,40 @@ export default function ContratoPublico() {
   const [emergencyRelationship, setEmergencyRelationship] = useState("");
   const [emergencyPhone, setEmergencyPhone] = useState("");
   const [acceptedLgpd, setAcceptedLgpd] = useState(false);
-
-  // Clause responses
   const [responses, setResponses] = useState<Record<string, string | boolean>>({});
 
   useEffect(() => {
-    if (!templateId) return;
+    if (!token) return;
     (async () => {
-      let tpl: Template | null = null;
       try {
-        const url = `https://fdixnrqzoyuyeaqurfdx.supabase.co/functions/v1/public-contract?template_id=${encodeURIComponent(templateId)}`;
-        const resp = await fetch(url);
-        if (resp.ok) tpl = (await resp.json()) as Template;
+        const resp = await fetch(
+          `${FN_URL}?token=${encodeURIComponent(token)}`,
+        );
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          setLoadError(data?.error ?? "Link inválido ou expirado.");
+        } else {
+          const tpl = data as InvitePayload;
+          setInvite(tpl);
+          const init: Record<string, string | boolean> = {};
+          (tpl.clauses || []).forEach((c) => {
+            if (c.type === "text") return;
+            init[c.key] = c.type === "agree" ? false : "";
+          });
+          setResponses(init);
+        }
       } catch {
-        // ignore
-      }
-      if (tpl && tpl.id) {
-        setTemplate(tpl);
-        const init: Record<string, string | boolean> = {};
-        (tpl.clauses || []).forEach((c) => {
-          if (c.type === "text") return;
-          init[c.key] = c.type === "agree" ? false : "";
-        });
-        setResponses(init);
+        setLoadError("Erro ao carregar o contrato. Tente novamente.");
       }
       setLoading(false);
     })();
-  }, [templateId]);
+  }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!template) return;
+    if (!invite || !token) return;
 
-    // Validate all agree clauses are checked
-    const allAgreed = template.clauses.every((c) => {
+    const allAgreed = invite.clauses.every((c) => {
       if (c.type === "text") return true;
       if (c.type === "agree") return responses[c.key] === true;
       if (c.type === "radio") return !!responses[c.key];
@@ -88,12 +91,10 @@ export default function ContratoPublico() {
       toast.error("Por favor, aceite todas as cláusulas antes de enviar.");
       return;
     }
-
     if (!acceptedLgpd) {
       toast.error("Você precisa aceitar a cláusula LGPD.");
       return;
     }
-
     if (!patientName.trim() || !patientCpf.trim()) {
       toast.error("Nome e CPF são obrigatórios.");
       return;
@@ -101,42 +102,43 @@ export default function ContratoPublico() {
 
     setSubmitting(true);
 
-    // Build human-readable clause responses
     const readableResponses: Record<string, string> = {};
-    template.clauses.forEach((c) => {
+    invite.clauses.forEach((c) => {
       if (c.type === "text") return;
       const val = responses[c.key];
       readableResponses[c.title] = c.type === "agree" ? "Aceito" : String(val);
     });
 
-    const resp = await fetch(
-      `https://fdixnrqzoyuyeaqurfdx.supabase.co/functions/v1/public-contract`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          template_id: template.id,
-          patient_name: patientName.trim(),
-          patient_whatsapp: patientWhatsapp.trim(),
-          patient_birth_date: patientBirthDate || null,
-          patient_cpf: patientCpf.trim(),
-          patient_address: patientAddress.trim(),
-          emergency_contact_name: emergencyName.trim(),
-          emergency_contact_relationship: emergencyRelationship.trim(),
-          emergency_contact_phone: emergencyPhone.trim(),
-          clause_responses: readableResponses,
-          accepted_lgpd: true,
-        }),
-      },
-    );
-    const error = !resp.ok;
+    const resp = await fetch(FN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token,
+        patient_name: patientName.trim(),
+        patient_whatsapp: patientWhatsapp.trim(),
+        patient_birth_date: patientBirthDate || null,
+        patient_cpf: patientCpf.trim(),
+        patient_address: patientAddress.trim(),
+        emergency_contact_name: emergencyName.trim(),
+        emergency_contact_relationship: emergencyRelationship.trim(),
+        emergency_contact_phone: emergencyPhone.trim(),
+        clause_responses: readableResponses,
+        accepted_lgpd: true,
+      }),
+    });
 
     setSubmitting(false);
 
-    if (error) {
-      toast.error("Erro ao enviar contrato. Tente novamente.");
-    } else {
+    if (resp.ok) {
       setSubmitted(true);
+    } else {
+      const data = await resp.json().catch(() => ({}));
+      toast.error(data?.error ?? "Erro ao enviar contrato.");
+      if (resp.status === 410) {
+        // Link consumed/expired/revoked mid-flow: refresh UI to show error state
+        setInvite(null);
+        setLoadError(data?.error ?? "Este link não está mais disponível.");
+      }
     }
   };
 
@@ -148,10 +150,19 @@ export default function ContratoPublico() {
     );
   }
 
-  if (!template) {
+  if (loadError || !invite) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground">Contrato não encontrado.</p>
+      <div className="min-h-screen flex items-center justify-center bg-background p-6">
+        <div className="text-center space-y-4 max-w-md">
+          <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto" />
+          <h1 className="text-2xl font-display font-bold">
+            Link indisponível
+          </h1>
+          <p className="text-muted-foreground">
+            {loadError ??
+              "Este link de contrato não é mais válido. Solicite um novo link ao(à) profissional."}
+          </p>
+        </div>
       </div>
     );
   }
@@ -161,9 +172,13 @@ export default function ContratoPublico() {
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
         <div className="text-center space-y-4 max-w-md">
           <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
-          <h1 className="text-2xl font-display font-bold">Contrato aceito com sucesso!</h1>
+          <h1 className="text-2xl font-display font-bold">
+            Contrato aceito com sucesso!
+          </h1>
           <p className="text-muted-foreground">
-            Obrigado, {patientName}. Seu termo de adesão foi registrado e enviado ao(à) profissional.
+            Obrigado, {patientName}. Seu termo de adesão foi registrado e
+            enviado ao(à) profissional. Este link não poderá mais ser
+            utilizado.
           </p>
         </div>
       </div>
@@ -173,41 +188,60 @@ export default function ContratoPublico() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
-        {/* Header */}
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
             <img src={logo} alt="Psi Real" className="h-10 w-10 rounded-full" />
           </div>
-          <h1 className="text-2xl font-display font-bold">Termo de Adesão ao Tratamento</h1>
+          <h1 className="text-2xl font-display font-bold">
+            Termo de Adesão ao Tratamento
+          </h1>
         </div>
 
-        {/* Contratada (Profissional) */}
         <div className="border rounded-xl p-4 bg-card space-y-1">
-          <h2 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider">Contratada (Profissional)</h2>
-          <p className="text-sm"><strong>{template.professional_name || "—"}</strong></p>
-          {template.professional_crp && <p className="text-sm text-muted-foreground">CRP: {template.professional_crp}</p>}
+          <h2 className="font-display font-semibold text-sm text-muted-foreground uppercase tracking-wider">
+            Contratada (Profissional)
+          </h2>
+          <p className="text-sm">
+            <strong>{invite.professional_name || "—"}</strong>
+          </p>
+          {invite.professional_crp && (
+            <p className="text-sm text-muted-foreground">
+              CRP: {invite.professional_crp}
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Clauses */}
           <div className="space-y-4">
-            <h2 className="font-display font-semibold text-lg">Condições para Aceite</h2>
-            {template.clauses.map((clause, index) => (
-              <div key={clause.key} className="border rounded-xl p-4 bg-card space-y-2">
+            <h2 className="font-display font-semibold text-lg">
+              Condições para Aceite
+            </h2>
+            {invite.clauses.map((clause, index) => (
+              <div
+                key={clause.key}
+                className="border rounded-xl p-4 bg-card space-y-2"
+              >
                 <p className="font-semibold text-sm">
                   {index + 1}) {clause.title}
                 </p>
-                <p className="text-sm text-muted-foreground whitespace-pre-line">{clause.description}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-line">
+                  {clause.description}
+                </p>
 
                 {clause.type === "agree" && (
                   <label className="flex items-center gap-2 mt-2 cursor-pointer">
                     <Checkbox
                       checked={responses[clause.key] === true}
                       onCheckedChange={(checked) =>
-                        setResponses((prev) => ({ ...prev, [clause.key]: !!checked }))
+                        setResponses((prev) => ({
+                          ...prev,
+                          [clause.key]: !!checked,
+                        }))
                       }
                     />
-                    <span className="text-sm">Estou de acordo com os termos citados</span>
+                    <span className="text-sm">
+                      Estou de acordo com os termos citados
+                    </span>
                   </label>
                 )}
 
@@ -220,83 +254,128 @@ export default function ContratoPublico() {
                     className="mt-2 space-y-1"
                   >
                     {clause.options.map((opt) => (
-                      <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                      <label
+                        key={opt}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
                         <RadioGroupItem value={opt} />
                         <span className="text-sm">{opt}</span>
                       </label>
                     ))}
                   </RadioGroup>
                 )}
-
-                {/* "text" type = display only, no interaction needed */}
               </div>
             ))}
           </div>
 
-          {/* Patient data */}
           <div className="space-y-4">
-            <h2 className="font-display font-semibold text-lg">Contratante (Paciente)</h2>
-            <p className="text-xs text-muted-foreground">Pessoa física que solicita e receberá os serviços de psicologia.</p>
+            <h2 className="font-display font-semibold text-lg">
+              Contratante (Paciente)
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Pessoa física que solicita e receberá os serviços de psicologia.
+            </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <Label>Nome completo *</Label>
-                <Input value={patientName} onChange={(e) => setPatientName(e.target.value)} required />
+                <Input
+                  value={patientName}
+                  onChange={(e) => setPatientName(e.target.value)}
+                  required
+                />
               </div>
               <div>
                 <Label>WhatsApp</Label>
-                <Input value={patientWhatsapp} onChange={(e) => setPatientWhatsapp(e.target.value)} placeholder="(00) 00000-0000" />
+                <Input
+                  value={patientWhatsapp}
+                  onChange={(e) => setPatientWhatsapp(e.target.value)}
+                  placeholder="(00) 00000-0000"
+                />
               </div>
               <div>
                 <Label>Data de nascimento</Label>
-                <Input type="date" value={patientBirthDate} onChange={(e) => setPatientBirthDate(e.target.value)} />
+                <Input
+                  type="date"
+                  value={patientBirthDate}
+                  onChange={(e) => setPatientBirthDate(e.target.value)}
+                />
               </div>
               <div>
                 <Label>CPF *</Label>
-                <Input value={patientCpf} onChange={(e) => setPatientCpf(e.target.value)} placeholder="000.000.000-00" required />
+                <Input
+                  value={patientCpf}
+                  onChange={(e) => setPatientCpf(e.target.value)}
+                  placeholder="000.000.000-00"
+                  required
+                />
               </div>
               <div className="sm:col-span-2">
                 <Label>Endereço (Rua, Bairro, Cidade, Estado)</Label>
-                <Input value={patientAddress} onChange={(e) => setPatientAddress(e.target.value)} />
+                <Input
+                  value={patientAddress}
+                  onChange={(e) => setPatientAddress(e.target.value)}
+                />
               </div>
             </div>
           </div>
 
-          {/* Emergency contact */}
           <div className="space-y-4">
-            <h2 className="font-display font-semibold text-lg">Contato de Emergência</h2>
+            <h2 className="font-display font-semibold text-lg">
+              Contato de Emergência
+            </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <Label>Nome do contato</Label>
-                <Input value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)} />
+                <Input
+                  value={emergencyName}
+                  onChange={(e) => setEmergencyName(e.target.value)}
+                />
               </div>
               <div>
                 <Label>Grau de parentesco</Label>
-                <Input value={emergencyRelationship} onChange={(e) => setEmergencyRelationship(e.target.value)} />
+                <Input
+                  value={emergencyRelationship}
+                  onChange={(e) => setEmergencyRelationship(e.target.value)}
+                />
               </div>
               <div className="sm:col-span-2">
                 <Label>Telefone e e-mail</Label>
-                <Input value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} />
+                <Input
+                  value={emergencyPhone}
+                  onChange={(e) => setEmergencyPhone(e.target.value)}
+                />
               </div>
             </div>
           </div>
 
-          {/* LGPD */}
           <div className="border rounded-xl p-4 bg-card space-y-3">
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold text-sm">Proteção de Dados (LGPD)</h3>
+              <h3 className="font-semibold text-sm">
+                Proteção de Dados (LGPD)
+              </h3>
             </div>
-            <p className="text-sm text-muted-foreground">{template.lgpd_clause}</p>
+            <p className="text-sm text-muted-foreground">
+              {invite.lgpd_clause}
+            </p>
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox
                 checked={acceptedLgpd}
                 onCheckedChange={(checked) => setAcceptedLgpd(!!checked)}
               />
-              <span className="text-sm">Li e aceito os termos de proteção de dados</span>
+              <span className="text-sm">
+                Li e aceito os termos de proteção de dados
+              </span>
             </label>
           </div>
 
-          <Button type="submit" variant="accent" size="lg" className="w-full" disabled={submitting}>
+          <Button
+            type="submit"
+            variant="accent"
+            size="lg"
+            className="w-full"
+            disabled={submitting}
+          >
             {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             Aceitar e Enviar
           </Button>
