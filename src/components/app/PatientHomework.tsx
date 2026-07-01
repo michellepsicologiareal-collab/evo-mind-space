@@ -40,7 +40,7 @@ export const actionItemSchema = z.object({
   done: z.boolean(),
 });
 export const actionsSchema = z.array(actionItemSchema).max(50);
-export type ActionItem = z.infer<typeof actionItemSchema>;
+export type ActionItem = { text: string; done: boolean };
 
 /**
  * Validates and normalizes `actions` coming from the database (or legacy formats).
