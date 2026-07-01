@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Plus, Send, Trash2, Download, MessageCircle, FileText, ExternalLink, Pencil, CheckSquare, Square, X } from "lucide-react";
+import { Loader2, Plus, Send, Trash2, Download, MessageCircle, FileText, ExternalLink, Pencil, CheckSquare, Square, X, NotebookPen, ListChecks, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -33,18 +34,40 @@ interface Task {
   session_record_id: string | null;
 }
 
-interface ActionItem {
-  text: string;
-  done: boolean;
-}
+// Zod schema — canonical shape for a checklist item
+export const actionItemSchema = z.object({
+  text: z.string().trim().min(1).max(500),
+  done: z.boolean(),
+});
+export const actionsSchema = z.array(actionItemSchema).max(50);
+export type ActionItem = { text: string; done: boolean };
 
+/**
+ * Validates and normalizes `actions` coming from the database (or legacy formats).
+ * Accepts: null, array of strings, array of {text, done?}. Anything invalid is dropped.
+ */
 export function normalizeActions(raw: Json | null | undefined): ActionItem[] {
   if (!Array.isArray(raw)) return [];
-  return raw.map((a: any) => ({
-    text: typeof a === "string" ? a : (a?.text || ""),
-    done: !!a?.done,
-  }));
+  const coerced = raw
+    .map((a: any) => {
+      if (typeof a === "string") return { text: a.trim(), done: false };
+      if (a && typeof a === "object") {
+        return { text: String(a.text ?? "").trim(), done: !!a.done };
+      }
+      return null;
+    })
+    .filter((a): a is ActionItem => a !== null && a.text.length > 0);
+  const parsed = actionsSchema.safeParse(coerced);
+  return parsed.success ? (parsed.data as ActionItem[]) : [];
 }
+
+/** Serializes `actions` for persistence; returns `null` when empty or invalid. */
+export function serializeActions(items: ActionItem[]): Json | null {
+  const parsed = actionsSchema.safeParse(items);
+  if (!parsed.success || parsed.data.length === 0) return null;
+  return parsed.data as unknown as Json;
+}
+
 
 interface SessionRecordOpt {
   id: string;
@@ -170,7 +193,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
         title: title.trim(),
         content: "",
         session_points: sessionPoints.trim() || null,
-        actions: actions.length > 0 ? (actions as unknown as Json) : null,
+        actions: serializeActions(actions),
         weekly_observations: weeklyObservations.trim() || null,
         session_record_id: sourceRecord === "none" ? null : sourceRecord,
       };
@@ -204,7 +227,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
       title: title.trim(),
       content: "", // legado, mantido vazio para novos registros
       session_points: sessionPoints.trim() || null,
-      actions: actions.length > 0 ? (actions as unknown as Json) : null,
+      actions: serializeActions(actions),
       weekly_observations: weeklyObservations.trim() || null,
       session_record_id: sourceRecord === "none" ? null : sourceRecord,
     };
@@ -328,14 +351,18 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
 
                 {t.session_points && (
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">📝 Pontos importantes da sessão</p>
+                    <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                      <NotebookPen className="h-3.5 w-3.5" /> Pontos importantes da sessão
+                    </p>
                     <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{t.session_points}</p>
                   </div>
                 )}
 
                 {taskActions.length > 0 && (
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">🎯 Plano entre Sessões</p>
+                    <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                      <ListChecks className="h-3.5 w-3.5" /> Plano entre Sessões
+                    </p>
                     <ul className="space-y-1">
                       {taskActions.map((a: any, i: number) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-foreground">
@@ -349,7 +376,9 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
 
                 {t.weekly_observations && (
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">👀 O que observar durante a semana</p>
+                    <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                      <Eye className="h-3.5 w-3.5" /> O que observar durante a semana
+                    </p>
                     <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{t.weekly_observations}</p>
                   </div>
                 )}
@@ -390,7 +419,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
             </div>
 
             <div>
-              <Label className="text-xs">📝 Pontos importantes da sessão</Label>
+              <Label className="flex items-center gap-1.5 text-xs"><NotebookPen className="h-3.5 w-3.5" /> Pontos importantes da sessão</Label>
               <Textarea
                 value={sessionPoints}
                 onChange={(e) => setSessionPoints(e.target.value)}
@@ -401,7 +430,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
             </div>
 
             <div>
-              <Label className="text-xs">🎯 Plano entre Sessões</Label>
+              <Label className="flex items-center gap-1.5 text-xs"><ListChecks className="h-3.5 w-3.5" /> Plano entre Sessões</Label>
               <div className="flex gap-2">
                 <Input
                   value={actionInput}
@@ -429,7 +458,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
             </div>
 
             <div>
-              <Label className="text-xs">👀 O que observar durante a semana</Label>
+              <Label className="flex items-center gap-1.5 text-xs"><Eye className="h-3.5 w-3.5" /> O que observar durante a semana</Label>
               <Textarea
                 value={weeklyObservations}
                 onChange={(e) => setWeeklyObservations(e.target.value)}
