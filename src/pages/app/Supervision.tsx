@@ -73,6 +73,12 @@ interface ProgressEntry {
   recorded_at: string;
   mood_score: number | null;
   note: string | null;
+  wellbeing_score: number | null;
+  wellbeing_source: string | null;
+  patient_context: string | null;
+  clinical_observation: string | null;
+  attention_flag: "not_assessed" | "none" | "watch" | "urgent" | null;
+  data_model: "legacy_unclassified" | "v2_structured" | null;
 }
 
 const Supervision = () => {
@@ -112,7 +118,7 @@ const Supervision = () => {
         .limit(5),
       (supabase as any)
         .from("patient_progress")
-        .select("id, recorded_at, mood_score, note")
+        .select("id, recorded_at, mood_score, note, wellbeing_score, wellbeing_source, patient_context, clinical_observation, attention_flag, data_model")
         .eq("patient_id", item.id)
         .order("recorded_at", { ascending: false })
         .limit(1)
@@ -597,23 +603,72 @@ const Supervision = () => {
                     </p>
                   ) : (
                     <div className="rounded-lg bg-secondary/40 p-3 space-y-2">
-                      <div className="flex items-center justify-between gap-2 text-sm">
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between gap-2 text-sm flex-wrap">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Smile className="h-4 w-4 text-primary" />
-                          <span className="font-medium">
-                            {latestProgress.mood_score != null
-                              ? `Humor ${latestProgress.mood_score}/10`
-                              : "Sem humor"}
-                          </span>
+                          {latestProgress.data_model === "v2_structured" ? (
+                            <>
+                              <span className="font-medium">
+                                {latestProgress.wellbeing_score != null
+                                  ? `Bem-estar ${latestProgress.wellbeing_score}/10`
+                                  : "Sem escore de bem-estar"}
+                              </span>
+                              {latestProgress.wellbeing_source && (
+                                <span className="text-[10px] uppercase rounded-full px-2 py-0.5 bg-lilac/40 text-primary-dark font-semibold">
+                                  {latestProgress.wellbeing_source === "patient_self_report"
+                                    ? "Autorrelato"
+                                    : "Estimativa profissional"}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <span className="font-medium">
+                                {latestProgress.mood_score != null
+                                  ? `Humor ${latestProgress.mood_score}/10`
+                                  : "Sem humor"}
+                              </span>
+                              <span className="text-[10px] uppercase rounded-full px-2 py-0.5 bg-amber-200/60 text-amber-900 font-semibold">
+                                Legado
+                              </span>
+                            </>
+                          )}
+                          {latestProgress.attention_flag === "watch" && (
+                            <span className="text-[10px] uppercase rounded-full px-2 py-0.5 bg-amber-200/70 text-amber-900 font-semibold">
+                              Observar
+                            </span>
+                          )}
+                          {latestProgress.attention_flag === "urgent" && (
+                            <span className="text-[10px] uppercase rounded-full px-2 py-0.5 bg-destructive/15 text-destructive font-semibold">
+                              Urgente
+                            </span>
+                          )}
                         </div>
                         <span className="text-xs text-muted-foreground">
                           {format(new Date(latestProgress.recorded_at), "dd/MM/yyyy", { locale: ptBR })}
                         </span>
                       </div>
-                      {latestProgress.note && (
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                          {latestProgress.note}
-                        </p>
+                      {latestProgress.data_model === "v2_structured" ? (
+                        <>
+                          {latestProgress.patient_context && (
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                              <span className="font-medium text-foreground">Contexto do paciente: </span>
+                              {latestProgress.patient_context}
+                            </p>
+                          )}
+                          {latestProgress.clinical_observation && (
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                              <span className="font-medium text-foreground">Observação clínica: </span>
+                              {latestProgress.clinical_observation}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        latestProgress.note && (
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                            {latestProgress.note}
+                          </p>
+                        )
                       )}
                     </div>
                   )}

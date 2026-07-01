@@ -85,9 +85,11 @@ interface PatientMoodEntry {
   patient_id: string;
   patient_name: string;
   patient_initials: string;
-  mood_score: number;
-  note: string | null;
+  mood_score: number; // score exibido (wellbeing_score quando v2, ou legacy mood_score)
+  note: string | null; // texto exibido (v2: patient_context/clinical_observation; legacy: note)
   recorded_at: string;
+  attention_flag: "not_assessed" | "none" | "watch" | "urgent";
+  data_model: "legacy_unclassified" | "v2_structured";
 }
 
 interface FrequencyData {
@@ -400,13 +402,12 @@ const Dashboard = () => {
       const prevEnd = endOfMonth(subMonths(now, 1)).toISOString();
 
       const [moodRes, prevRes] = await Promise.all([
-        supabase
+        (supabase as any)
           .from("patient_progress")
-          .select("mood_score, recorded_at, patient_id")
+          .select("mood_score, wellbeing_score, data_model, recorded_at, patient_id")
           .eq("user_id", user.id)
-          .not("mood_score", "is", null)
           .order("recorded_at", { ascending: true })
-          .limit(30),
+          .limit(60),
         supabase
           .from("sessions")
           .select("price, status")
@@ -415,11 +416,20 @@ const Dashboard = () => {
           .lte("scheduled_at", prevEnd),
       ]);
 
-      const moodRows = moodRes.data;
-      if (moodRows && moodRows.length > 0) {
-        const moodChartData = moodRows.map((m: any) => ({
+      const moodRowsRaw = (moodRes.data ?? []) as any[];
+      // Score exibido: wellbeing_score quando v2; caso contrário mood_score (legado)
+      const moodRows = moodRowsRaw
+        .map((m: any) => ({
+          ...m,
+          _display_score: m.data_model === "v2_structured"
+            ? (m.wellbeing_score != null ? Number(m.wellbeing_score) : null)
+            : (m.mood_score != null ? Number(m.mood_score) : null),
+        }))
+        .filter((m) => m._display_score != null);
+      if (moodRows.length > 0) {
+        const moodChartData = moodRows.slice(-30).map((m: any) => ({
           name: format(new Date(m.recorded_at), "dd/MM"),
-          score: Number(m.mood_score),
+          score: m._display_score,
         }));
         setMoodData(moodChartData);
         const avg = moodChartData.reduce((s, d) => s + d.score, 0) / moodChartData.length;
@@ -457,16 +467,24 @@ const Dashboard = () => {
       }
       setWeeklyRevenue(weekData);
 
-      const { data: recentMoods } = await supabase
+      const { data: recentMoodsRaw } = await (supabase as any)
         .from("patient_progress")
-        .select("id, mood_score, note, recorded_at, patient_id")
+        .select("id, mood_score, note, wellbeing_score, patient_context, clinical_observation, attention_flag, data_model, recorded_at, patient_id")
         .eq("user_id", user.id)
-        .not("mood_score", "is", null)
         .order("recorded_at", { ascending: false })
-        .limit(100);
+        .limit(200);
 
-      if (recentMoods && recentMoods.length > 0) {
-        const pIds = [...new Set(recentMoods.map((m: any) => m.patient_id))];
+      const recentMoods = (recentMoodsRaw ?? []).filter((m: any) => {
+        // exibe entradas com score OU sinalizador clínico OU texto
+        const score = m.data_model === "v2_structured" ? m.wellbeing_score : m.mood_score;
+        const hasText = m.data_model === "v2_structured"
+          ? !!(m.patient_context || m.clinical_observation)
+          : !!m.note;
+        return score != null || hasText || (m.attention_flag && m.attention_flag !== "not_assessed");
+      }).slice(0, 100);
+
+      if (recentMoods.length > 0) {
+        const pIds = [...new Set(recentMoods.map((m: any) => m.patient_id as string))] as string[];
         const { data: pNames } = await supabase
           .from("patients")
           .select("id, full_name")
@@ -475,15 +493,26 @@ const Dashboard = () => {
         (pNames ?? []).forEach((p: any) => { nameMap[p.id] = p.full_name; });
 
         setPatientMoods(
-          recentMoods.map((m: any) => ({
-            id: m.id,
-            patient_id: m.patient_id,
-            patient_name: nameMap[m.patient_id] ?? "Paciente",
-            patient_initials: getInitials(nameMap[m.patient_id] ?? "?"),
-            mood_score: Number(m.mood_score),
-            note: m.note,
-            recorded_at: m.recorded_at,
-          }))
+          recentMoods.map((m: any) => {
+            const v2 = m.data_model === "v2_structured";
+            const score = v2
+              ? (m.wellbeing_score != null ? Number(m.wellbeing_score) : NaN)
+              : (m.mood_score != null ? Number(m.mood_score) : NaN);
+            const displayText = v2
+              ? [m.patient_context, m.clinical_observation].filter(Boolean).join(" · ") || null
+              : m.note;
+            return {
+              id: m.id,
+              patient_id: m.patient_id,
+              patient_name: nameMap[m.patient_id] ?? "Paciente",
+              patient_initials: getInitials(nameMap[m.patient_id] ?? "?"),
+              mood_score: Number.isFinite(score) ? score : 0,
+              note: displayText,
+              recorded_at: m.recorded_at,
+              attention_flag: (m.attention_flag ?? "not_assessed") as PatientMoodEntry["attention_flag"],
+              data_model: (m.data_model ?? "legacy_unclassified") as PatientMoodEntry["data_model"],
+            };
+          })
         );
       }
     };
@@ -915,21 +944,21 @@ const Dashboard = () => {
 
         {/* ── Emoções dos Pacientes ── */}
         {(() => {
-          // Helpers
-          const CRISIS_RX = /(crise|término|termino|resist|não acei|nao acei|suic|abandon)/i;
-          const ANX_RX = /ansios/i;
-          const ENG_RX = /(engaj|rápido|rapido|vínculo|vinculo|evolu)/i;
-
+          // Sinalização clínica agora vem apenas do attention_flag registrado pelo profissional.
+          // Nenhuma inferência automática por texto de nota ou por escore.
           const isUrgentMood = (m: PatientMoodEntry) =>
-            (m.mood_score ?? 10) <= 5 || (m.note ? CRISIS_RX.test(m.note) : false);
+            m.attention_flag === "urgent" || m.attention_flag === "watch";
 
           const classifyChip = (m: PatientMoodEntry) => {
-            const note = m.note ?? "";
-            if (/crise/i.test(note)) return { label: "Em crise", bg: "rgba(133,79,11,0.12)", color: "#1A1A2E", border: "rgba(133,79,11,0.25)" };
-            if (/(término|termino|resist|não acei|nao acei)/i.test(note)) return { label: "Resistente", bg: "rgba(201,168,76,0.12)", color: "#1A1A2E", border: "rgba(201,168,76,0.3)" };
-            if (ANX_RX.test(note)) return { label: "Ansioso", bg: "rgba(201,168,76,0.08)", color: "#9a7a28", border: "rgba(201,168,76,0.2)" };
-            if (ENG_RX.test(note)) return { label: "Engajado", bg: "rgba(150,117,206,0.12)", color: "#3C3489", border: "rgba(150,117,206,0.25)" };
-            return { label: "Estável", bg: "rgba(150,117,206,0.08)", color: "#3C3489", border: "rgba(150,117,206,0.2)" };
+            if (m.attention_flag === "urgent")
+              return { label: "Urgente", bg: "rgba(133,79,11,0.14)", color: "#1A1A2E", border: "rgba(133,79,11,0.35)" };
+            if (m.attention_flag === "watch")
+              return { label: "Observar", bg: "rgba(201,168,76,0.14)", color: "#1A1A2E", border: "rgba(201,168,76,0.35)" };
+            if (m.attention_flag === "none")
+              return { label: "Sem atenção", bg: "rgba(150,117,206,0.08)", color: "#3C3489", border: "rgba(150,117,206,0.2)" };
+            if (m.data_model === "legacy_unclassified")
+              return { label: "Legado", bg: "rgba(107,114,128,0.10)", color: "#374151", border: "rgba(107,114,128,0.25)" };
+            return { label: "Não avaliado", bg: "rgba(107,114,128,0.06)", color: "#6B7280", border: "rgba(107,114,128,0.2)" };
           };
 
           // Period filter
@@ -1138,7 +1167,7 @@ const Dashboard = () => {
                     {urgentCount} {urgentCount === 1 ? "paciente requer" : "pacientes requerem"} atenção clínica.
                   </span>
                   <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 400, color: "#1A1A2E" }}>
-                    Crise relatada ou resistência ao processo terapêutico.
+                    Sinalizados pelo profissional como “Observar” ou “Urgente”.
                   </span>
                 </div>
               )}

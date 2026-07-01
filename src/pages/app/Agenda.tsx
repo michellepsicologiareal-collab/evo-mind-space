@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 import { EmotionChips } from "@/components/app/EmotionChips";
+import { ClinicalV2Block, EMOTIONS_V2 } from "@/components/app/ClinicalV2Block";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
@@ -93,8 +94,13 @@ const sessionSchema = z
     notes: z.string().max(2000).optional(),
     payment_method: z.enum(["none", "pix", "card", "cash"]).default("none"),
     payment_reference: z.string().max(500).optional(),
-    mood_score: z.string().optional(),
-    progress_note: z.string().max(2000).optional(),
+    // v2 clinical fields
+    wellbeing_score: z.string().optional(),
+    wellbeing_source: z.enum(["", "patient_self_report", "professional_estimate"]).default(""),
+    patient_context: z.string().max(4000).optional(),
+    clinical_observation: z.string().max(4000).optional(),
+    emotions: z.array(z.string()).default([]),
+    attention_flag: z.enum(["not_assessed", "none", "watch", "urgent"]).default("not_assessed"),
   })
   .refine(
     (d) => d.session_type === "supervision" || (d.patient_id && d.patient_id.length > 0),
@@ -105,6 +111,10 @@ const sessionSchema = z
       !(d.payment_method === "pix" || d.payment_method === "card") ||
       (d.payment_reference?.trim().length ?? 0) > 0,
     { path: ["payment_reference"], message: "Informe a referência do pagamento." }
+  )
+  .refine(
+    (d) => !d.wellbeing_score || !!d.wellbeing_source,
+    { path: ["wellbeing_source"], message: "Indique se é autorrelato do paciente ou estimativa profissional." }
   );
 
 const statusLabel: Record<Status, string> = {
@@ -249,7 +259,14 @@ const Agenda = () => {
     date: format(new Date(), "yyyy-MM-dd"), time: "09:00",
     duration_minutes: 50, price: "", notes: "",
     payment_method: "none" as "none" | "pix" | "card" | "cash",
-    payment_reference: "", mood_score: "", progress_note: "",
+    payment_reference: "",
+    // v2 clinical fields
+    wellbeing_score: "" as string,
+    wellbeing_source: "" as "" | "patient_self_report" | "professional_estimate",
+    patient_context: "" as string,
+    clinical_observation: "" as string,
+    emotions: [] as string[],
+    attention_flag: "not_assessed" as "not_assessed" | "none" | "watch" | "urgent",
     recurrence: "single" as "single" | "recurring",
     recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
     payment_plan: "per_session" as "per_session" | "single_payment",
@@ -285,7 +302,18 @@ const Agenda = () => {
     payment_status: "pending" as PaymentStatus,
     payment_method: "none" as "none" | "pix" | "card" | "cash",
     payment_reference: "", price: "", notes: "",
-    duration_minutes: 50, mood_score: "", progress_note: "",
+    duration_minutes: 50,
+    // v2 clinical fields
+    wellbeing_score: "" as string,
+    wellbeing_source: "" as "" | "patient_self_report" | "professional_estimate",
+    patient_context: "" as string,
+    clinical_observation: "" as string,
+    emotions: [] as string[],
+    attention_flag: "not_assessed" as "not_assessed" | "none" | "watch" | "urgent",
+    // legacy read-only display
+    legacy_mood: null as number | null,
+    legacy_note: "" as string,
+    data_model: "v2_structured" as "legacy_unclassified" | "v2_structured",
     session_type: "clinical" as SessionType,
     service_id: "" as string,
     recurrence: "single" as "single" | "recurring",
@@ -654,14 +682,34 @@ const Agenda = () => {
       Promise.all(created.map((row: any) => syncSessionToGcal(row.id))).catch(() => {});
     }
 
-    const moodNum = parsed.data.mood_score ? Number(parsed.data.mood_score) : null;
-    const progressNote = parsed.data.progress_note?.trim() || null;
-    if (!isSupervision && parsed.data.patient_id && ((moodNum && moodNum >= 1 && moodNum <= 10) || progressNote)) {
+    // v2 clinical registration — only when patient session and something was filled
+    const wbScore = parsed.data.wellbeing_score ? Number(parsed.data.wellbeing_score) : null;
+    const wbValid = wbScore != null && wbScore >= 0 && wbScore <= 10 && !!parsed.data.wellbeing_source;
+    const pCtx = parsed.data.patient_context?.trim() || null;
+    const cObs = parsed.data.clinical_observation?.trim() || null;
+    const emos = parsed.data.emotions ?? [];
+    const attFlag = parsed.data.attention_flag ?? "not_assessed";
+    const hasV2Content = wbValid || pCtx || cObs || emos.length > 0 || attFlag !== "not_assessed";
+    if (!isSupervision && parsed.data.patient_id && hasV2Content) {
+      const emotionsPayload = emos.length > 0
+        ? emos.map((label) => ({ label, source: "clinician" }))
+        : null;
+      const attentionAssigned = attFlag !== "not_assessed";
       await supabase.from("patient_progress").insert({
-        user_id: user.id, patient_id: parsed.data.patient_id,
-        session_id: created?.[0]?.id ?? null, mood_score: moodNum,
-        note: progressNote, recorded_at: baseDate.toISOString(),
-      });
+        user_id: user.id,
+        patient_id: parsed.data.patient_id,
+        session_id: created?.[0]?.id ?? null,
+        recorded_at: baseDate.toISOString(),
+        wellbeing_score: wbValid ? wbScore : null,
+        wellbeing_source: wbValid ? parsed.data.wellbeing_source : null,
+        patient_context: pCtx,
+        clinical_observation: cObs,
+        emotions: emotionsPayload,
+        attention_flag: attFlag,
+        attention_set_by: attentionAssigned ? user.id : null,
+        attention_set_at: attentionAssigned ? new Date().toISOString() : null,
+        data_model: "v2_structured",
+      } as any);
     }
 
     setSaving(false);
@@ -945,7 +993,15 @@ const Agenda = () => {
       payment_reference: (s as any).payment_reference ?? "",
       price: s.price != null ? String(s.price) : "",
       notes: s.notes ?? "", duration_minutes: s.duration_minutes,
-      mood_score: "", progress_note: "",
+      wellbeing_score: "",
+      wellbeing_source: "",
+      patient_context: "",
+      clinical_observation: "",
+      emotions: [],
+      attention_flag: "not_assessed",
+      legacy_mood: null,
+      legacy_note: "",
+      data_model: "v2_structured",
       session_type: s.session_type,
       service_id: s.service_id ?? "",
       recurrence: "single",
@@ -959,14 +1015,25 @@ const Agenda = () => {
     editGuard.resetDirty();
     setEditOpen(true);
     if (s.patient_id && user) {
-      const { data } = await supabase.from("patient_progress")
-        .select("id, mood_score, note").eq("session_id", s.id).eq("user_id", user.id).maybeSingle();
+      const { data } = await (supabase as any).from("patient_progress")
+        .select("id, mood_score, note, wellbeing_score, wellbeing_source, patient_context, clinical_observation, emotions, attention_flag, data_model")
+        .eq("session_id", s.id).eq("user_id", user.id).maybeSingle();
       if (data) {
         setEditProgressId(data.id);
+        const emoList: string[] = Array.isArray(data.emotions)
+          ? data.emotions.map((e: any) => (typeof e === "string" ? e : e?.label)).filter(Boolean)
+          : [];
         setEditFormRaw((prev) => ({
           ...prev,
-          mood_score: data.mood_score != null ? String(data.mood_score) : "",
-          progress_note: data.note ?? "",
+          wellbeing_score: data.wellbeing_score != null ? String(data.wellbeing_score) : "",
+          wellbeing_source: (data.wellbeing_source ?? "") as any,
+          patient_context: data.patient_context ?? "",
+          clinical_observation: data.clinical_observation ?? "",
+          emotions: emoList,
+          attention_flag: (data.attention_flag ?? "not_assessed") as any,
+          legacy_mood: data.mood_score,
+          legacy_note: data.note ?? "",
+          data_model: (data.data_model ?? "legacy_unclassified") as any,
         }));
       }
     }
@@ -1074,17 +1141,39 @@ const Agenda = () => {
     // Sync the edited session to Google Calendar
     if (editSessionId) syncSessionToGcal(editSessionId);
 
-    // Always update mood/progress if patient exists (even when clearing values)
-    const moodNum = editForm.mood_score ? Number(editForm.mood_score) : null;
-    const progressNote = editForm.progress_note?.trim() || null;
+    // v2 clinical record update — write only the new model
     if (session?.patient_id) {
+      const wbNum = editForm.wellbeing_score ? Number(editForm.wellbeing_score) : null;
+      const wbValid = wbNum != null && wbNum >= 0 && wbNum <= 10 && !!editForm.wellbeing_source;
+      const pCtx = editForm.patient_context?.trim() || null;
+      const cObs = editForm.clinical_observation?.trim() || null;
+      const emos = editForm.emotions ?? [];
+      const attFlag = editForm.attention_flag ?? "not_assessed";
+      const emotionsPayload = emos.length > 0
+        ? emos.map((label) => ({ label, source: "clinician" }))
+        : null;
+      const attentionAssigned = attFlag !== "not_assessed";
+      const payload: any = {
+        wellbeing_score: wbValid ? wbNum : null,
+        wellbeing_source: wbValid ? editForm.wellbeing_source : null,
+        patient_context: pCtx,
+        clinical_observation: cObs,
+        emotions: emotionsPayload,
+        attention_flag: attFlag,
+        attention_set_by: attentionAssigned ? user.id : null,
+        attention_set_at: attentionAssigned ? new Date().toISOString() : null,
+        data_model: "v2_structured",
+      };
+      const hasV2Content = wbValid || pCtx || cObs || emos.length > 0 || attentionAssigned;
       if (editProgressId) {
-        await supabase.from("patient_progress").update({ mood_score: moodNum, note: progressNote }).eq("id", editProgressId);
-      } else if (moodNum || progressNote) {
-        await supabase.from("patient_progress").insert({
-          user_id: user.id, patient_id: session.patient_id,
-          session_id: editSessionId, mood_score: moodNum,
-          note: progressNote, recorded_at: session.scheduled_at,
+        await (supabase as any).from("patient_progress").update(payload).eq("id", editProgressId);
+      } else if (hasV2Content) {
+        await (supabase as any).from("patient_progress").insert({
+          ...payload,
+          user_id: user.id,
+          patient_id: session.patient_id,
+          session_id: editSessionId,
+          recorded_at: session.scheduled_at,
         });
       }
     }
@@ -1730,24 +1819,17 @@ const Agenda = () => {
                   <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
                 </div>
                 {form.session_type === "clinical" && (
-                  <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Dados do humor — preencher após sessão</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="space-y-2 sm:col-span-1">
-                        <Label htmlFor="mood">Humor (1-10)</Label>
-                        <Input id="mood" type="number" min="1" max="10" placeholder="—" value={form.mood_score} onChange={(e) => setForm({ ...form, mood_score: e.target.value })} />
-                      </div>
-                      <div className="space-y-2 sm:col-span-2">
-                        <Label htmlFor="prog">Observação</Label>
-                        <Input id="prog" maxLength={2000} placeholder="Ex.: melhora no sono" value={form.progress_note} onChange={(e) => setForm({ ...form, progress_note: e.target.value })} />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Emoções predominantes</Label>
-                      <EmotionChips note={form.progress_note} onChange={(v) => setForm({ ...form, progress_note: v })} />
-                    </div>
-                  </div>
+                  <ClinicalV2Block
+                    value={{
+                      wellbeing_score: form.wellbeing_score,
+                      wellbeing_source: form.wellbeing_source,
+                      patient_context: form.patient_context,
+                      clinical_observation: form.clinical_observation,
+                      emotions: form.emotions,
+                      attention_flag: form.attention_flag,
+                    }}
+                    onChange={(patch) => setForm({ ...form, ...patch })}
+                  />
                 )}
 
                 <DialogFooter>
@@ -2598,10 +2680,9 @@ const Agenda = () => {
               const session = sessions.find((s) => s.id === editSessionId);
               if (session?.session_type === "supervision") return null;
               return (
-                <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Dados do humor — preencher após sessão</p>
-                    {editProgressId && (
+                <div className="space-y-3">
+                  {editProgressId && (
+                    <div className="flex justify-end">
                       <Button
                         type="button"
                         variant="ghost"
@@ -2610,30 +2691,35 @@ const Agenda = () => {
                         onClick={async () => {
                           await supabase.from("patient_progress").delete().eq("id", editProgressId);
                           setEditProgressId(null);
-                          setEditFormRaw((prev) => ({ ...prev, mood_score: "", progress_note: "" }));
-                          toast.success("Registro de humor excluído");
+                          setEditFormRaw((prev) => ({
+                            ...prev,
+                            wellbeing_score: "", wellbeing_source: "",
+                            patient_context: "", clinical_observation: "",
+                            emotions: [], attention_flag: "not_assessed",
+                            legacy_mood: null, legacy_note: "",
+                          }));
+                          toast.success("Registro clínico excluído");
                         }}
                       >
-                        <Trash2 className="h-3 w-3 mr-1" /> Excluir humor
+                        <Trash2 className="h-3 w-3 mr-1" /> Excluir registro
                       </Button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="space-y-2 sm:col-span-1">
-                      <Label>Humor (1-10)</Label>
-                      <Input type="number" min="1" max="10" placeholder="—" value={editForm.mood_score} onChange={(e) => setEditForm({ ...editForm, mood_score: e.target.value })} />
                     </div>
-                    <div className="space-y-2 sm:col-span-2">
-                      <Label>Observação</Label>
-                      <Input maxLength={2000} placeholder="Ex.: melhora no sono" value={editForm.progress_note} onChange={(e) => setEditForm({ ...editForm, progress_note: e.target.value })} />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">Emoções predominantes</Label>
-                    <EmotionChips note={editForm.progress_note} onChange={(v) => setEditForm({ ...editForm, progress_note: v })} />
-                  </div>
-
+                  )}
+                  <ClinicalV2Block
+                    value={{
+                      wellbeing_score: editForm.wellbeing_score,
+                      wellbeing_source: editForm.wellbeing_source,
+                      patient_context: editForm.patient_context,
+                      clinical_observation: editForm.clinical_observation,
+                      emotions: editForm.emotions,
+                      attention_flag: editForm.attention_flag,
+                    }}
+                    onChange={(patch) => setEditForm({ ...editForm, ...patch })}
+                    legacyMood={editForm.legacy_mood}
+                    legacyNote={editForm.legacy_note}
+                    legacyDate={session?.scheduled_at ?? null}
+                    dataModel={editForm.data_model}
+                  />
                 </div>
               );
             })()}
