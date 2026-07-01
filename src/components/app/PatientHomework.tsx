@@ -351,14 +351,18 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
 
                 {t.session_points && (
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">📝 Pontos importantes da sessão</p>
+                    <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                      <NotebookPen className="h-3.5 w-3.5" /> Pontos importantes da sessão
+                    </p>
                     <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{t.session_points}</p>
                   </div>
                 )}
 
                 {taskActions.length > 0 && (
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">🎯 Plano entre Sessões</p>
+                    <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                      <ListChecks className="h-3.5 w-3.5" /> Plano entre Sessões
+                    </p>
                     <ul className="space-y-1">
                       {taskActions.map((a: any, i: number) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-foreground">
@@ -372,7 +376,9 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
 
                 {t.weekly_observations && (
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">👀 O que observar durante a semana</p>
+                    <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                      <Eye className="h-3.5 w-3.5" /> O que observar durante a semana
+                    </p>
                     <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{t.weekly_observations}</p>
                   </div>
                 )}
