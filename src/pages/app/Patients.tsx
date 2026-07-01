@@ -804,8 +804,11 @@ const Patients = () => {
         </div>
       )}
 
-      {/* ─────────── FILTER TABS ─────────── */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
+      {/* ─────────── FILTER TABS (sticky) ─────────── */}
+      <div
+        className="flex flex-wrap items-center gap-2 mb-4 sticky top-16 md:top-0 z-10 py-2 -mx-4 px-4 sm:-mx-6 sm:px-6"
+        style={{ background: "hsl(var(--background))" }}
+      >
         <div className="inline-flex items-center gap-1 p-1" style={{ background: C.neutralBg, borderRadius: 10, border: `1px solid ${C.border}` }}>
           {[
             { k: "active", label: "Ativos", n: activeCount },
