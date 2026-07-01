@@ -9,7 +9,8 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { IconPencil, IconUserOff, IconClipboardList, IconFileText, IconTarget, IconFlame, IconTrash } from "@tabler/icons-react";
 import { AbordagemBadge } from "@/components/app/AbordagemBadge";
 import { LogoIcon } from "@/components/LogoIcon";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { TccRecords } from "@/components/app/TccRecords";
 import { CaseFormulation } from "@/components/app/CaseFormulation";
 import { ChildAnamnesisForm } from "@/components/app/ChildAnamnesisForm";
