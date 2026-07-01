@@ -38,7 +38,7 @@ const DEFAULT_CLAUSES: Clause[] = [
   {
     key: "honorarios",
     title: "Honorários",
-    description: "O valor da sessão será de acordo com o Plano de atendimento escolhido e o pagamento pode ser realizado através de pix.\nOs planos de atendimento compõem 4 sessões por mês. Em meses com mais de 5 semanas, será dividido o valor do pacote mensal por 4 e o resultado será acrescentado como uma sessão a mais no pacote mensal.\nO pagamento das sessões do mês deve ser efetuado de forma única e antecipada, antes do início das sessões do mês em questão. O valor total das sessões do mês corrente deve ser pago até o dia 5 do mês vigente.\nO valor da sessão sofrerá um reajuste anual, realizado no mês que iniciou a terapia, de acordo com os investimentos realizados pela terapeuta, informado com 30 dias de antecedência.\nPix: michelledonegas@gmail.com — Enviar comprovante a cada pagamento.",
+    description: "O valor da sessão será de acordo com o Plano de atendimento escolhido e o pagamento pode ser realizado através de pix.\nOs planos de atendimento compõem 4 sessões por mês. Em meses com mais de 5 semanas, será dividido o valor do pacote mensal por 4 e o resultado será acrescentado como uma sessão a mais no pacote mensal.\nO pagamento das sessões do mês deve ser efetuado de forma única e antecipada, antes do início das sessões do mês em questão. O valor total das sessões do mês corrente deve ser pago até o dia 5 do mês vigente.\nO valor da sessão sofrerá um reajuste anual, realizado no mês que iniciou a terapia, de acordo com os investimentos realizados pela terapeuta, informado com 30 dias de antecedência.\nPix: exemplo@dominio.com — Enviar comprovante a cada pagamento.",
     type: "agree",
   },
   {
