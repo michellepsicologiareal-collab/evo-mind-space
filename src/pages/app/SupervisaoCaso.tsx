@@ -160,8 +160,8 @@ const SupervisaoCaso = () => {
             </div>
             <div className="flex items-center gap-3">
               <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-              <a href="mailto:transformepsicologia@gmail.com" className="text-primary hover:underline">
-                transformepsicologia@gmail.com
+              <a href="mailto:exemplo@dominio.com" className="text-primary hover:underline">
+                exemplo@dominio.com
               </a>
             </div>
             <div className="flex items-center gap-3">
