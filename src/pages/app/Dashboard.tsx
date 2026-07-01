@@ -85,9 +85,11 @@ interface PatientMoodEntry {
   patient_id: string;
   patient_name: string;
   patient_initials: string;
-  mood_score: number;
-  note: string | null;
+  mood_score: number; // score exibido (wellbeing_score quando v2, ou legacy mood_score)
+  note: string | null; // texto exibido (v2: patient_context/clinical_observation; legacy: note)
   recorded_at: string;
+  attention_flag: "not_assessed" | "none" | "watch" | "urgent";
+  data_model: "legacy_unclassified" | "v2_structured";
 }
 
 interface FrequencyData {
@@ -400,13 +402,12 @@ const Dashboard = () => {
       const prevEnd = endOfMonth(subMonths(now, 1)).toISOString();
 
       const [moodRes, prevRes] = await Promise.all([
-        supabase
+        (supabase as any)
           .from("patient_progress")
-          .select("mood_score, recorded_at, patient_id")
+          .select("mood_score, wellbeing_score, data_model, recorded_at, patient_id")
           .eq("user_id", user.id)
-          .not("mood_score", "is", null)
           .order("recorded_at", { ascending: true })
-          .limit(30),
+          .limit(60),
         supabase
           .from("sessions")
           .select("price, status")
@@ -415,11 +416,20 @@ const Dashboard = () => {
           .lte("scheduled_at", prevEnd),
       ]);
 
-      const moodRows = moodRes.data;
-      if (moodRows && moodRows.length > 0) {
-        const moodChartData = moodRows.map((m: any) => ({
+      const moodRowsRaw = (moodRes.data ?? []) as any[];
+      // Score exibido: wellbeing_score quando v2; caso contrário mood_score (legado)
+      const moodRows = moodRowsRaw
+        .map((m: any) => ({
+          ...m,
+          _display_score: m.data_model === "v2_structured"
+            ? (m.wellbeing_score != null ? Number(m.wellbeing_score) : null)
+            : (m.mood_score != null ? Number(m.mood_score) : null),
+        }))
+        .filter((m) => m._display_score != null);
+      if (moodRows.length > 0) {
+        const moodChartData = moodRows.slice(-30).map((m: any) => ({
           name: format(new Date(m.recorded_at), "dd/MM"),
-          score: Number(m.mood_score),
+          score: m._display_score,
         }));
         setMoodData(moodChartData);
         const avg = moodChartData.reduce((s, d) => s + d.score, 0) / moodChartData.length;
@@ -457,15 +467,23 @@ const Dashboard = () => {
       }
       setWeeklyRevenue(weekData);
 
-      const { data: recentMoods } = await supabase
+      const { data: recentMoodsRaw } = await (supabase as any)
         .from("patient_progress")
-        .select("id, mood_score, note, recorded_at, patient_id")
+        .select("id, mood_score, note, wellbeing_score, patient_context, clinical_observation, attention_flag, data_model, recorded_at, patient_id")
         .eq("user_id", user.id)
-        .not("mood_score", "is", null)
         .order("recorded_at", { ascending: false })
-        .limit(100);
+        .limit(200);
 
-      if (recentMoods && recentMoods.length > 0) {
+      const recentMoods = (recentMoodsRaw ?? []).filter((m: any) => {
+        // exibe entradas com score OU sinalizador clínico OU texto
+        const score = m.data_model === "v2_structured" ? m.wellbeing_score : m.mood_score;
+        const hasText = m.data_model === "v2_structured"
+          ? !!(m.patient_context || m.clinical_observation)
+          : !!m.note;
+        return score != null || hasText || (m.attention_flag && m.attention_flag !== "not_assessed");
+      }).slice(0, 100);
+
+      if (recentMoods.length > 0) {
         const pIds = [...new Set(recentMoods.map((m: any) => m.patient_id))];
         const { data: pNames } = await supabase
           .from("patients")
@@ -475,15 +493,26 @@ const Dashboard = () => {
         (pNames ?? []).forEach((p: any) => { nameMap[p.id] = p.full_name; });
 
         setPatientMoods(
-          recentMoods.map((m: any) => ({
-            id: m.id,
-            patient_id: m.patient_id,
-            patient_name: nameMap[m.patient_id] ?? "Paciente",
-            patient_initials: getInitials(nameMap[m.patient_id] ?? "?"),
-            mood_score: Number(m.mood_score),
-            note: m.note,
-            recorded_at: m.recorded_at,
-          }))
+          recentMoods.map((m: any) => {
+            const v2 = m.data_model === "v2_structured";
+            const score = v2
+              ? (m.wellbeing_score != null ? Number(m.wellbeing_score) : NaN)
+              : (m.mood_score != null ? Number(m.mood_score) : NaN);
+            const displayText = v2
+              ? [m.patient_context, m.clinical_observation].filter(Boolean).join(" · ") || null
+              : m.note;
+            return {
+              id: m.id,
+              patient_id: m.patient_id,
+              patient_name: nameMap[m.patient_id] ?? "Paciente",
+              patient_initials: getInitials(nameMap[m.patient_id] ?? "?"),
+              mood_score: Number.isFinite(score) ? score : 0,
+              note: displayText,
+              recorded_at: m.recorded_at,
+              attention_flag: (m.attention_flag ?? "not_assessed") as PatientMoodEntry["attention_flag"],
+              data_model: (m.data_model ?? "legacy_unclassified") as PatientMoodEntry["data_model"],
+            };
+          })
         );
       }
     };
