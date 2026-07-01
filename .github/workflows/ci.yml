@@ -133,14 +133,23 @@ jobs:
             console.log("PatientHomework badge:", badge);
           '
 
+      - name: Fill README badge owner/repo from GITHUB_REPOSITORY
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          if [ -f README.md ]; then
+            # Replace %OWNER%/%REPO% (and legacy OWNER/REPO placeholder pair) with the current repo slug
+            sed -i "s|%OWNER%/%REPO%|${GITHUB_REPOSITORY}|g" README.md
+            sed -i "s|{OWNER}/{REPO}|${GITHUB_REPOSITORY}|g" README.md
+          fi
+
       - name: Commit coverage badges (main only)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           CHANGED=0
-          for f in .github/badges/coverage.json .github/badges/coverage-patienthomework.json; do
-            if ! git diff --quiet -- "$f" 2>/dev/null; then
+          for f in .github/badges/coverage.json .github/badges/coverage-patienthomework.json README.md; do
+            if [ -f "$f" ] && ! git diff --quiet -- "$f" 2>/dev/null; then
               git add "$f"
               CHANGED=1
             fi
@@ -151,6 +160,7 @@ jobs:
           fi
           git commit -m "chore(ci): update coverage badges [skip ci]"
           git push
+
 
       - name: Upload coverage artifact
         if: always()
