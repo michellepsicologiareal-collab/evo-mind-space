@@ -1,72 +1,52 @@
+
 ## Objetivo
+Fechar o P1 do `public-anamnesis` eliminando o acesso por `patient_id` público. Espelhar o padrão já validado em `public-contract` (token aleatório, uso único, expiração e revogação) com o menor volume possível de código para economizar créditos.
 
-Garantir recuperação rápida em caso de incidentes com:
-- Snapshot **JSON completo** diário (todas as tabelas do usuário) — restaurável.
-- Exports **CSV** legíveis (Pacientes, Sessões, Prontuários, Financeiro) — para auditoria/uso externo.
-- Tudo guardado em Lovable Cloud Storage privado, por usuário, com retenção de 7 dias.
+## Escopo (só isto neste turno)
+1. Nova tabela `public.anamnesis_invites` (mesmo formato do `contract_invites`):
+   - `id, user_id, patient_id, token uuid unique, expires_at, used_at, revoked_at, signed_anamnesis_id, created_at, updated_at`
+   - RLS: apenas o profissional dono lê/insere/atualiza; `anon` sem grants.
+   - Trigger `protect_anamnesis_invite_fields` (mesmo modelo do contrato): roles `authenticated`/`anon` não conseguem alterar `used_at`, `signed_anamnesis_id`, `token`, `template_id equivalente = patient_id`, `user_id`. Owner ainda pode revogar/estender.
+2. Coluna `child_anamneses.invite_id uuid` (nullable, FK) para rastreabilidade — não quebra os 2 registros históricos.
+3. Duas funções SECURITY DEFINER:
+   - `get_child_anamnesis_by_invite_token(_token uuid)` → retorna só nome da criança + nome/CRP do profissional + status (`active|used|expired|revoked`). Nada mais do paciente é revelado.
+   - `submit_child_anamnesis(_token uuid, _payload jsonb, _ip text, _ua text)` → trava atômica em `UPDATE ... SET used_at=now() WHERE token=? AND ativo`, insere em `child_anamneses` com `invite_id`, notifica profissional. Erros claros para revogado/expirado/já usado/lgpd ausente.
+4. Rewrite curto da edge function `public-anamnesis`:
+   - Remove suporte a `patient_id`. Passa a aceitar apenas `?token=` (GET) e `{token,...}` (POST).
+   - IP via header (`x-forwarded-for` sanitizado pela borda) e UA via header — ignora quaisquer valores enviados no body. Body só como metadado.
+   - Throttle simples em memória (Map por token e por IP, N tentativas/min) — best-effort, zero custo.
+   - Zod-lite (checagens manuais atuais já cobrem; mantenho para não inflar bundle).
+5. Frontend:
+   - Rota vira `/anamnese-crianca/:token` em `src/App.tsx`.
+   - `AnamnesePublica.tsx`: troca `patientId` por `token` na URL e no body.
+   - `Patients.tsx` (botão "Enviar anamnese"): antes de gerar o link, chama `supabase.from('anamnesis_invites').insert({patient_id, expires_at})` (RLS garante `user_id=auth.uid()` via default) e usa o `token` retornado no link WhatsApp. Adiciono coluna default `user_id = auth.uid()` na tabela para simplificar.
+   - Sem UI de gestão de convites nesta iteração (P2). Só o link individual.
+6. Registros históricos:
+   - Verificado: 2 `child_anamneses` já preenchidos, ambos permanecem intactos (a coluna `invite_id` é nullable).
+   - URLs antigas `/anamnese-crianca/<patient_uuid>` ficam inertes: a rota agora exige token, e a edge function não aceita mais `patient_id`. Sem migração destrutiva.
+7. Testes E2E via Edge Function (mesmos casos do contrato):
+   - GET sem token / não-UUID / desconhecido / expirado / revogado / válido.
+   - POST reuso / expirado / revogado / LGPD ausente / body tentando forjar `ip`/`user_agent`.
+   - Confirmar via SQL que RLS bloqueia `anon` de ler `anamnesis_invites` e `child_anamneses`.
+8. Limpeza dos dados E2E do contrato:
+   - Migration com `DELETE FROM contract_invites WHERE id::text LIKE 'e2e%'` e o `signed_contracts` correspondente ao token e2e22222 (o único que foi assinado no teste). Os 2 contratos históricos legítimos ficam intactos (não têm `invite_id` casando com esses).
 
-## Como vai funcionar
+## Fora de escopo (P2/P3, não tocar agora)
+- CORS lockdown, ajustes de lint, unificação helper `resolveClientIp`, UI de gestão de convites de anamnese, .env.
 
+## Fluxo técnico resumido (para revisão)
 ```text
-┌─ Cron diário 03:00 BRT ─┐
-│ run-scheduled-backups   │  (edge function, service role)
-└────────┬────────────────┘
-         │ para cada usuário aprovado:
-         ▼
-   ┌─────────────────────────┐      ┌──────────────────────┐
-   │ Gera JSON completo      │─────▶│ Storage: backups/    │
-   │ Gera 4 CSVs (zipados)   │      │  {user_id}/{data}/   │
-   └─────────────────────────┘      │   backup.json        │
-         │                          │   exports.zip        │
-         ▼                          └──────────────────────┘
-   Insere linha em backup_history
-   Apaga arquivos > 7 dias
+Profissional clica "Enviar anamnese"
+  → INSERT anamnesis_invites (patient_id, expires_at=+30d)  [RLS auth.uid()]
+  → link WhatsApp: /anamnese-crianca/<token>
+
+Responsável abre link
+  → GET public-anamnesis?token=... → get_child_anamnesis_by_invite_token
+    → 200 (child_name + profissional) | 400 | 404 | 410
+  → POST public-anamnesis {token, campos, authorized_lgpd:true}
+    → submit_child_anamnesis (atomic used_at) 
+    → 200 {ok:true} | 400 | 404 | 410
 ```
 
-## Backend
-
-**Novo bucket privado `backups`** com RLS: usuário só lê pasta `{auth.uid()}/...`; escrita só via service role.
-
-**Nova tabela `backup_history`** (1 linha por backup gerado):
-- `user_id`, `backup_date`, `kind` ('auto' | 'manual'), `json_path`, `csv_zip_path`, `size_bytes`, `tables_count`, `status` ('success' | 'failed'), `error_message`
-
-**Edge functions:**
-
-1. `run-scheduled-backups` (nova, sem JWT, autenticada por header secret) — itera usuários aprovados, gera snapshot + CSVs, faz upload no storage, registra em `backup_history`, limpa arquivos antigos. Chamada pelo cron.
-2. `backup-export` (existente) — adiciona parâmetro `?format=csv` que retorna ZIP com 4 CSVs (pacientes, sessões, prontuários, financeiro). Mantém JSON como default.
-3. `backup-download` (nova) — gera URL assinada do storage para o usuário baixar arquivos do `backup_history`.
-
-**Cron `pg_cron`** (via insert, não migration) — chama `run-scheduled-backups` todo dia 03:00 com header secret.
-
-## Frontend
-
-Nova aba **"Backups"** dentro de Perfil (`src/pages/app/Profile.tsx`):
-- Card explicando frequência e retenção.
-- Botão **"Baixar backup completo (JSON)"** — usa edge function existente.
-- Botão **"Baixar exportação (CSV)"** — novo, com select de qual entidade ou tudo zipado.
-- Lista dos últimos backups automáticos (de `backup_history`), com data, tamanho e botões "Baixar JSON" / "Baixar CSVs".
-- Mantém botão atual de importar backup.
-
-Sem mudanças em rotas, navegação ou outras telas.
-
-## Detalhes técnicos
-
-- CSV gerado server-side com headers em PT-BR; valores com vírgula/quebra de linha escapados conforme RFC 4180; encoding UTF-8 com BOM (Excel-friendly).
-- ZIP feito com `jszip` via `npm:` no Deno.
-- Financeiro = `sessions` com `payment_status`, valor, paciente, modalidade.
-- Limite de tamanho: se backup individual > 50 MB, divide JSON por tabela. (Improvável neste volume, mas previne timeout.)
-- Secret novo `BACKUP_CRON_SECRET` para autenticar o cron job.
-
-## Arquivos tocados
-
-- `supabase/migrations/...sql` — bucket `backups`, tabela `backup_history`, policies.
-- `supabase/functions/run-scheduled-backups/index.ts` (novo)
-- `supabase/functions/backup-download/index.ts` (novo)
-- `supabase/functions/backup-export/index.ts` (acrescentar CSV/ZIP)
-- `src/pages/app/Profile.tsx` (aba/seção de Backups)
-- `src/components/profile/BackupsPanel.tsx` (novo)
-
-## Você vai precisar fazer
-
-- Aprovar o secret `BACKUP_CRON_SECRET` quando for solicitado.
-- Aprovar a migração que cria bucket + tabela.
+## Entregáveis ao final
+- Migração(ões) executada(s), arquivos alterados, resultados dos testes E2E (tabela mesmo formato do contrato), consumo aproximado de créditos, confirmação de que os 2 anamneses históricos e os 2 contratos históricos seguem íntegros e que os dados E2E do contrato foram removidos.
