@@ -34,6 +34,55 @@ jobs:
       - name: Unit tests — PatientHomework (actions migration)
         run: bunx vitest run src/components/app/PatientHomework.test.ts --reporter=verbose
 
-      # Full suite: every *.test.ts / *.spec.ts under src/
-      - name: Unit tests — full suite
-        run: bun run test
+      # Full suite with coverage — enforces thresholds defined in vitest.config.ts
+      - name: Unit tests with coverage
+        run: bun run test:coverage
+
+      - name: Publish coverage summary
+        if: always()
+        run: |
+          SUMMARY_FILE="coverage/coverage-summary.json"
+          if [ ! -f "$SUMMARY_FILE" ]; then
+            echo "No coverage summary found." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          node -e '
+            const fs = require("fs");
+            const s = JSON.parse(fs.readFileSync("coverage/coverage-summary.json", "utf8"));
+            const t = s.total;
+            const pct = (m) => `${t[m].pct.toFixed(2)}%`;
+
+            const homeworkKey = Object.keys(s).find(k =>
+              k.endsWith("src/components/app/PatientHomework.tsx")
+            );
+            const h = homeworkKey ? s[homeworkKey] : null;
+
+            const lines = [];
+            lines.push("## Coverage report");
+            lines.push("");
+            lines.push("| Metric | Total | PatientHomework.tsx |");
+            lines.push("|---|---|---|");
+            for (const m of ["lines", "statements", "functions", "branches"]) {
+              const hPct = h ? `${h[m].pct.toFixed(2)}%` : "n/a";
+              lines.push(`| ${m} | ${pct(m)} | ${hPct} |`);
+            }
+            lines.push("");
+            lines.push("Threshold enforced on `src/components/app/PatientHomework.tsx` to keep the legacy `actions` migration path protected.");
+
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join("\n") + "\n");
+
+            // Also echo to the log for quick scanning
+            console.log(`Total lines: ${pct("lines")} · statements: ${pct("statements")} · functions: ${pct("functions")} · branches: ${pct("branches")}`);
+            if (h) {
+              console.log(`PatientHomework.tsx lines: ${h.lines.pct.toFixed(2)}% · branches: ${h.branches.pct.toFixed(2)}%`);
+            }
+          '
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
