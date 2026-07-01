@@ -484,7 +484,7 @@ const Dashboard = () => {
       }).slice(0, 100);
 
       if (recentMoods.length > 0) {
-        const pIds = [...new Set(recentMoods.map((m: any) => m.patient_id))];
+        const pIds = [...new Set(recentMoods.map((m: any) => m.patient_id as string))] as string[];
         const { data: pNames } = await supabase
           .from("patients")
           .select("id, full_name")
