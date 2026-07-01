@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, FileText, Printer, X, CheckSquare } from "lucide-react";
+import { Loader2, FileText, Printer, X, CheckSquare, NotebookPen, ListChecks, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -121,14 +121,18 @@ const Tarefas = () => {
 
                     {t.session_points && (
                       <div className="mt-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">📝 Pontos importantes da sessão</p>
+                        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                          <NotebookPen className="h-3.5 w-3.5" /> Pontos importantes da sessão
+                        </p>
                         <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{t.session_points}</p>
                       </div>
                     )}
 
                     {taskActions.length > 0 && (
                       <div className="mt-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">🎯 Plano entre Sessões</p>
+                        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                          <ListChecks className="h-3.5 w-3.5" /> Plano entre Sessões
+                        </p>
                         <ul className="space-y-1">
                           {taskActions.map((a: any, idx: number) => (
                             <li key={idx} className="flex items-start gap-2 text-sm text-foreground">
@@ -142,7 +146,9 @@ const Tarefas = () => {
 
                     {t.weekly_observations && (
                       <div className="mt-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">👀 O que observar durante a semana</p>
+                        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                          <Eye className="h-3.5 w-3.5" /> O que observar durante a semana
+                        </p>
                         <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{t.weekly_observations}</p>
                       </div>
                     )}
