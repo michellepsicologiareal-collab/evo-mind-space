@@ -107,6 +107,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <RecoveryLinkRedirect />
+          <SessionStatusBadge />
 
           <Suspense fallback={<SplashScreen />}>
             <AppErrorBoundary>
