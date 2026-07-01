@@ -1115,6 +1115,10 @@ const Patients = () => {
       {/* Side panel */}
       <Sheet open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
         <SheetContent side="right" className="w-full sm:max-w-full p-0" style={{ background: "hsl(var(--card))", borderLeft: "0.5px solid hsl(var(--border))" }}>
+          <VisuallyHidden>
+            <SheetTitle>{selectedPatient?.full_name ?? "Ficha do paciente"}</SheetTitle>
+            <SheetDescription>Ficha completa do paciente com resumo clínico, formulações e ações.</SheetDescription>
+          </VisuallyHidden>
           {selectedPatient && (() => {
             const p = selectedPatient;
             const cHist = counts.history[p.id] || 0;
