@@ -93,8 +93,13 @@ const sessionSchema = z
     notes: z.string().max(2000).optional(),
     payment_method: z.enum(["none", "pix", "card", "cash"]).default("none"),
     payment_reference: z.string().max(500).optional(),
-    mood_score: z.string().optional(),
-    progress_note: z.string().max(2000).optional(),
+    // v2 clinical fields
+    wellbeing_score: z.string().optional(),
+    wellbeing_source: z.enum(["", "patient_self_report", "professional_estimate"]).default(""),
+    patient_context: z.string().max(4000).optional(),
+    clinical_observation: z.string().max(4000).optional(),
+    emotions: z.array(z.string()).default([]),
+    attention_flag: z.enum(["not_assessed", "none", "watch", "urgent"]).default("not_assessed"),
   })
   .refine(
     (d) => d.session_type === "supervision" || (d.patient_id && d.patient_id.length > 0),
@@ -105,6 +110,10 @@ const sessionSchema = z
       !(d.payment_method === "pix" || d.payment_method === "card") ||
       (d.payment_reference?.trim().length ?? 0) > 0,
     { path: ["payment_reference"], message: "Informe a referência do pagamento." }
+  )
+  .refine(
+    (d) => !d.wellbeing_score || !!d.wellbeing_source,
+    { path: ["wellbeing_source"], message: "Indique se é autorrelato do paciente ou estimativa profissional." }
   );
 
 const statusLabel: Record<Status, string> = {
@@ -249,7 +258,14 @@ const Agenda = () => {
     date: format(new Date(), "yyyy-MM-dd"), time: "09:00",
     duration_minutes: 50, price: "", notes: "",
     payment_method: "none" as "none" | "pix" | "card" | "cash",
-    payment_reference: "", mood_score: "", progress_note: "",
+    payment_reference: "",
+    // v2 clinical fields
+    wellbeing_score: "" as string,
+    wellbeing_source: "" as "" | "patient_self_report" | "professional_estimate",
+    patient_context: "" as string,
+    clinical_observation: "" as string,
+    emotions: [] as string[],
+    attention_flag: "not_assessed" as "not_assessed" | "none" | "watch" | "urgent",
     recurrence: "single" as "single" | "recurring",
     recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
     payment_plan: "per_session" as "per_session" | "single_payment",
@@ -285,7 +301,18 @@ const Agenda = () => {
     payment_status: "pending" as PaymentStatus,
     payment_method: "none" as "none" | "pix" | "card" | "cash",
     payment_reference: "", price: "", notes: "",
-    duration_minutes: 50, mood_score: "", progress_note: "",
+    duration_minutes: 50,
+    // v2 clinical fields
+    wellbeing_score: "" as string,
+    wellbeing_source: "" as "" | "patient_self_report" | "professional_estimate",
+    patient_context: "" as string,
+    clinical_observation: "" as string,
+    emotions: [] as string[],
+    attention_flag: "not_assessed" as "not_assessed" | "none" | "watch" | "urgent",
+    // legacy read-only display
+    legacy_mood: null as number | null,
+    legacy_note: "" as string,
+    data_model: "v2_structured" as "legacy_unclassified" | "v2_structured",
     session_type: "clinical" as SessionType,
     service_id: "" as string,
     recurrence: "single" as "single" | "recurring",
