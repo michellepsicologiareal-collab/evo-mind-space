@@ -56,7 +56,7 @@ export function normalizeActions(raw: Json | null | undefined): ActionItem[] {
       }
       return null;
     })
-    .filter((a): a is ActionItem => !!a && a.text.length > 0);
+    .filter((a): a is ActionItem => a !== null && a.text.length > 0);
   const parsed = actionsSchema.safeParse(coerced);
   return parsed.success ? parsed.data : [];
 }
