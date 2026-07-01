@@ -1279,8 +1279,17 @@ const Patients = () => {
                       <CalendarDays className="h-4 w-4" /> Nova sessão
                     </button>
                     <button
-                      onClick={() => {
-                        const link = `${window.location.origin}/anamnese-crianca/${p.id}`;
+                      onClick={async () => {
+                        const { data, error } = await supabase
+                          .from("anamnesis_invites")
+                          .insert({ patient_id: p.id })
+                          .select("token")
+                          .single();
+                        if (error || !data?.token) {
+                          toast.error("Não foi possível gerar o link.");
+                          return;
+                        }
+                        const link = `${window.location.origin}/anamnese-crianca/${data.token}`;
                         const phone = (p.phone || "").replace(/\D/g, "");
                         const msg = `Olá! Para iniciarmos o atendimento de ${p.full_name}, por favor preencha a anamnese neste link: ${link}`;
                         if (phone) {
