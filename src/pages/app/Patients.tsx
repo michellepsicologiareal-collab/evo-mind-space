@@ -924,11 +924,30 @@ const Patients = () => {
               );
             };
 
+            const openCard = (e: React.MouseEvent | React.KeyboardEvent) => {
+              const target = e.target as HTMLElement;
+              // Ignore clicks/keys that originated inside any interactive descendant
+              // (buttons, links, menus, form controls). This is the delegation guard
+              // that replaces the fragile stopPropagation() sprinkled everywhere.
+              if (target.closest('button, a, input, textarea, select, [role="button"], [role="menu"], [role="menuitem"], [data-no-card-open]')) {
+                return;
+              }
+              setSelectedPatient(p);
+            };
             return (
               <li
                 key={p.id}
-                onClick={() => setSelectedPatient(p)}
-                className="cursor-pointer transition-shadow overflow-hidden"
+                role="button"
+                tabIndex={0}
+                aria-label={`Abrir ficha de ${p.full_name}`}
+                onClick={openCard}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    openCard(e);
+                  }
+                }}
+                className="cursor-pointer transition-shadow overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
                 style={{ background: C.card, borderRadius: 10, borderLeft: `3px solid ${borderColor}`, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
                 onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.06)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)"; }}
