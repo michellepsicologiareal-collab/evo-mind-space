@@ -1819,24 +1819,17 @@ const Agenda = () => {
                   <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
                 </div>
                 {form.session_type === "clinical" && (
-                  <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Dados do humor — preencher após sessão</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="space-y-2 sm:col-span-1">
-                        <Label htmlFor="mood">Humor (1-10)</Label>
-                        <Input id="mood" type="number" min="1" max="10" placeholder="—" value={form.mood_score} onChange={(e) => setForm({ ...form, mood_score: e.target.value })} />
-                      </div>
-                      <div className="space-y-2 sm:col-span-2">
-                        <Label htmlFor="prog">Observação</Label>
-                        <Input id="prog" maxLength={2000} placeholder="Ex.: melhora no sono" value={form.progress_note} onChange={(e) => setForm({ ...form, progress_note: e.target.value })} />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Emoções predominantes</Label>
-                      <EmotionChips note={form.progress_note} onChange={(v) => setForm({ ...form, progress_note: v })} />
-                    </div>
-                  </div>
+                  <ClinicalV2Block
+                    value={{
+                      wellbeing_score: form.wellbeing_score,
+                      wellbeing_source: form.wellbeing_source,
+                      patient_context: form.patient_context,
+                      clinical_observation: form.clinical_observation,
+                      emotions: form.emotions,
+                      attention_flag: form.attention_flag,
+                    }}
+                    onChange={(patch) => setForm({ ...form, ...patch })}
+                  />
                 )}
 
                 <DialogFooter>
