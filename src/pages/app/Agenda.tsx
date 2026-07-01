@@ -681,14 +681,34 @@ const Agenda = () => {
       Promise.all(created.map((row: any) => syncSessionToGcal(row.id))).catch(() => {});
     }
 
-    const moodNum = parsed.data.mood_score ? Number(parsed.data.mood_score) : null;
-    const progressNote = parsed.data.progress_note?.trim() || null;
-    if (!isSupervision && parsed.data.patient_id && ((moodNum && moodNum >= 1 && moodNum <= 10) || progressNote)) {
+    // v2 clinical registration — only when patient session and something was filled
+    const wbScore = parsed.data.wellbeing_score ? Number(parsed.data.wellbeing_score) : null;
+    const wbValid = wbScore != null && wbScore >= 0 && wbScore <= 10 && !!parsed.data.wellbeing_source;
+    const pCtx = parsed.data.patient_context?.trim() || null;
+    const cObs = parsed.data.clinical_observation?.trim() || null;
+    const emos = parsed.data.emotions ?? [];
+    const attFlag = parsed.data.attention_flag ?? "not_assessed";
+    const hasV2Content = wbValid || pCtx || cObs || emos.length > 0 || attFlag !== "not_assessed";
+    if (!isSupervision && parsed.data.patient_id && hasV2Content) {
+      const emotionsPayload = emos.length > 0
+        ? emos.map((label) => ({ label, source: "clinician" }))
+        : null;
+      const attentionAssigned = attFlag !== "not_assessed";
       await supabase.from("patient_progress").insert({
-        user_id: user.id, patient_id: parsed.data.patient_id,
-        session_id: created?.[0]?.id ?? null, mood_score: moodNum,
-        note: progressNote, recorded_at: baseDate.toISOString(),
-      });
+        user_id: user.id,
+        patient_id: parsed.data.patient_id,
+        session_id: created?.[0]?.id ?? null,
+        recorded_at: baseDate.toISOString(),
+        wellbeing_score: wbValid ? wbScore : null,
+        wellbeing_source: wbValid ? parsed.data.wellbeing_source : null,
+        patient_context: pCtx,
+        clinical_observation: cObs,
+        emotions: emotionsPayload,
+        attention_flag: attFlag,
+        attention_set_by: attentionAssigned ? user.id : null,
+        attention_set_at: attentionAssigned ? new Date().toISOString() : null,
+        data_model: "v2_structured",
+      } as any);
     }
 
     setSaving(false);
