@@ -67,6 +67,60 @@ export type Database = {
           },
         ]
       }
+      anamnesis_invites: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          patient_id: string
+          revoked_at: string | null
+          signed_anamnesis_id: string | null
+          token: string
+          updated_at: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          patient_id: string
+          revoked_at?: string | null
+          signed_anamnesis_id?: string | null
+          token?: string
+          updated_at?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          patient_id?: string
+          revoked_at?: string | null
+          signed_anamnesis_id?: string | null
+          token?: string
+          updated_at?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anamnesis_invites_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anamnesis_invites_signed_anamnesis_id_fkey"
+            columns: ["signed_anamnesis_id"]
+            isOneToOne: false
+            referencedRelation: "child_anamneses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           access_type: Database["public"]["Enums"]["audit_access_type"]
@@ -214,6 +268,7 @@ export type Database = {
           feeding: string | null
           has_disease: string | null
           id: string
+          invite_id: string | null
           mother_name: string | null
           mother_profession: string | null
           mother_schooling: string | null
@@ -251,6 +306,7 @@ export type Database = {
           feeding?: string | null
           has_disease?: string | null
           id?: string
+          invite_id?: string | null
           mother_name?: string | null
           mother_profession?: string | null
           mother_schooling?: string | null
@@ -288,6 +344,7 @@ export type Database = {
           feeding?: string | null
           has_disease?: string | null
           id?: string
+          invite_id?: string | null
           mother_name?: string | null
           mother_profession?: string | null
           mother_schooling?: string | null
@@ -311,7 +368,15 @@ export type Database = {
           was_desired?: string | null
           weeks_at_birth?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "child_anamneses_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "anamnesis_invites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contract_invites: {
         Row: {
@@ -1649,6 +1714,17 @@ export type Database = {
           profile_type: Database["public"]["Enums"]["profile_type"]
         }[]
       }
+      get_child_anamnesis_by_invite_token: {
+        Args: { _token: string }
+        Returns: {
+          child_name: string
+          expires_at: string
+          invite_id: string
+          professional_crp: string
+          professional_name: string
+          status: string
+        }[]
+      }
       get_contract_by_invite_token: {
         Args: { _token: string }
         Returns: {
@@ -1736,6 +1812,10 @@ export type Database = {
       }
       respond_to_confirmation: {
         Args: { _confirm: boolean; _token: string }
+        Returns: string
+      }
+      submit_child_anamnesis: {
+        Args: { _ip: string; _payload: Json; _token: string; _ua: string }
         Returns: string
       }
       submit_signed_contract: {

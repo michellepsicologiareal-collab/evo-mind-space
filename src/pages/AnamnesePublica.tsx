@@ -52,11 +52,11 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 );
 
 export default function AnamnesePublica() {
-  const { patientId } = useParams<{ patientId: string }>();
+  const { token } = useParams<{ token: string }>();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [notFound, setNotFound] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [professionalName, setProfessionalName] = useState("");
   const [form, setForm] = useState<Form>(empty);
   const [acceptedLgpd, setAcceptedLgpd] = useState(false);
@@ -65,23 +65,26 @@ export default function AnamnesePublica() {
     setForm((p) => ({ ...p, [k]: v }));
 
   useEffect(() => {
-    if (!patientId) return;
+    if (!token) return;
     (async () => {
       try {
-        const res = await fetch(`${ENDPOINT}?patient_id=${patientId}`, {
+        const res = await fetch(`${ENDPOINT}?token=${token}`, {
           headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
         });
-        if (!res.ok) { setNotFound(true); return; }
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setErrorMsg(data?.error || "Link de anamnese inválido ou expirado.");
+          return;
+        }
         setProfessionalName(data.professional_name || "");
         setForm((p) => ({ ...p, child_name: data.child_name || "" }));
       } catch {
-        setNotFound(true);
+        setErrorMsg("Não foi possível carregar o formulário.");
       } finally {
         setLoading(false);
       }
     })();
-  }, [patientId]);
+  }, [token]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,14 +105,15 @@ export default function AnamnesePublica() {
         Authorization: `Bearer ${ANON_KEY}`,
       },
       body: JSON.stringify({
-        patient_id: patientId,
+        token,
         authorized_lgpd: true,
         ...form,
       }),
     });
+    const data = await res.json().catch(() => ({}));
     setSubmitting(false);
     if (!res.ok) {
-      toast.error("Erro ao enviar. Tente novamente.");
+      toast.error(data?.error || "Erro ao enviar. Tente novamente.");
       return;
     }
     setSubmitted(true);
@@ -123,10 +127,10 @@ export default function AnamnesePublica() {
     );
   }
 
-  if (notFound) {
+  if (errorMsg) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
-        <p className="text-muted-foreground">Link de anamnese inválido ou expirado.</p>
+        <p className="text-muted-foreground text-center max-w-md">{errorMsg}</p>
       </div>
     );
   }
