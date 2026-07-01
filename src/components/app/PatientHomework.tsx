@@ -419,7 +419,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
             </div>
 
             <div>
-              <Label className="text-xs">📝 Pontos importantes da sessão</Label>
+              <Label className="flex items-center gap-1.5 text-xs"><NotebookPen className="h-3.5 w-3.5" /> Pontos importantes da sessão</Label>
               <Textarea
                 value={sessionPoints}
                 onChange={(e) => setSessionPoints(e.target.value)}
@@ -430,7 +430,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
             </div>
 
             <div>
-              <Label className="text-xs">🎯 Plano entre Sessões</Label>
+              <Label className="flex items-center gap-1.5 text-xs"><ListChecks className="h-3.5 w-3.5" /> Plano entre Sessões</Label>
               <div className="flex gap-2">
                 <Input
                   value={actionInput}
@@ -458,7 +458,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
             </div>
 
             <div>
-              <Label className="text-xs">👀 O que observar durante a semana</Label>
+              <Label className="flex items-center gap-1.5 text-xs"><Eye className="h-3.5 w-3.5" /> O que observar durante a semana</Label>
               <Textarea
                 value={weeklyObservations}
                 onChange={(e) => setWeeklyObservations(e.target.value)}
