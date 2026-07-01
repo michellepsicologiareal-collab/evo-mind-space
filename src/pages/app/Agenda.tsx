@@ -1140,17 +1140,39 @@ const Agenda = () => {
     // Sync the edited session to Google Calendar
     if (editSessionId) syncSessionToGcal(editSessionId);
 
-    // Always update mood/progress if patient exists (even when clearing values)
-    const moodNum = editForm.mood_score ? Number(editForm.mood_score) : null;
-    const progressNote = editForm.progress_note?.trim() || null;
+    // v2 clinical record update — write only the new model
     if (session?.patient_id) {
+      const wbNum = editForm.wellbeing_score ? Number(editForm.wellbeing_score) : null;
+      const wbValid = wbNum != null && wbNum >= 0 && wbNum <= 10 && !!editForm.wellbeing_source;
+      const pCtx = editForm.patient_context?.trim() || null;
+      const cObs = editForm.clinical_observation?.trim() || null;
+      const emos = editForm.emotions ?? [];
+      const attFlag = editForm.attention_flag ?? "not_assessed";
+      const emotionsPayload = emos.length > 0
+        ? emos.map((label) => ({ label, source: "clinician" }))
+        : null;
+      const attentionAssigned = attFlag !== "not_assessed";
+      const payload: any = {
+        wellbeing_score: wbValid ? wbNum : null,
+        wellbeing_source: wbValid ? editForm.wellbeing_source : null,
+        patient_context: pCtx,
+        clinical_observation: cObs,
+        emotions: emotionsPayload,
+        attention_flag: attFlag,
+        attention_set_by: attentionAssigned ? user.id : null,
+        attention_set_at: attentionAssigned ? new Date().toISOString() : null,
+        data_model: "v2_structured",
+      };
+      const hasV2Content = wbValid || pCtx || cObs || emos.length > 0 || attentionAssigned;
       if (editProgressId) {
-        await supabase.from("patient_progress").update({ mood_score: moodNum, note: progressNote }).eq("id", editProgressId);
-      } else if (moodNum || progressNote) {
-        await supabase.from("patient_progress").insert({
-          user_id: user.id, patient_id: session.patient_id,
-          session_id: editSessionId, mood_score: moodNum,
-          note: progressNote, recorded_at: session.scheduled_at,
+        await (supabase as any).from("patient_progress").update(payload).eq("id", editProgressId);
+      } else if (hasV2Content) {
+        await (supabase as any).from("patient_progress").insert({
+          ...payload,
+          user_id: user.id,
+          patient_id: session.patient_id,
+          session_id: editSessionId,
+          recorded_at: session.scheduled_at,
         });
       }
     }
