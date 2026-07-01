@@ -9,7 +9,8 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { IconPencil, IconUserOff, IconClipboardList, IconFileText, IconTarget, IconFlame, IconTrash } from "@tabler/icons-react";
 import { AbordagemBadge } from "@/components/app/AbordagemBadge";
 import { LogoIcon } from "@/components/LogoIcon";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { TccRecords } from "@/components/app/TccRecords";
 import { CaseFormulation } from "@/components/app/CaseFormulation";
 import { ChildAnamnesisForm } from "@/components/app/ChildAnamnesisForm";
@@ -804,8 +805,11 @@ const Patients = () => {
         </div>
       )}
 
-      {/* ─────────── FILTER TABS ─────────── */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
+      {/* ─────────── FILTER TABS (sticky) ─────────── */}
+      <div
+        className="flex flex-wrap items-center gap-2 mb-4 sticky top-16 md:top-0 z-10 py-2 -mx-4 px-4 sm:-mx-6 sm:px-6"
+        style={{ background: "hsl(var(--background))" }}
+      >
         <div className="inline-flex items-center gap-1 p-1" style={{ background: C.neutralBg, borderRadius: 10, border: `1px solid ${C.border}` }}>
           {[
             { k: "active", label: "Ativos", n: activeCount },
@@ -921,11 +925,30 @@ const Patients = () => {
               );
             };
 
+            const openCard = (e: React.MouseEvent | React.KeyboardEvent) => {
+              const target = e.target as HTMLElement;
+              // Ignore clicks/keys that originated inside any interactive descendant
+              // (buttons, links, menus, form controls). This is the delegation guard
+              // that replaces the fragile stopPropagation() sprinkled everywhere.
+              if (target.closest('button, a, input, textarea, select, [role="button"], [role="menu"], [role="menuitem"], [data-no-card-open]')) {
+                return;
+              }
+              setSelectedPatient(p);
+            };
             return (
               <li
                 key={p.id}
-                onClick={() => setSelectedPatient(p)}
-                className="cursor-pointer transition-shadow overflow-hidden"
+                role="button"
+                tabIndex={0}
+                aria-label={`Abrir ficha de ${p.full_name}`}
+                onClick={openCard}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    openCard(e);
+                  }
+                }}
+                className="cursor-pointer transition-shadow overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
                 style={{ background: C.card, borderRadius: 10, borderLeft: `3px solid ${borderColor}`, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
                 onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.06)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)"; }}
@@ -1092,6 +1115,10 @@ const Patients = () => {
       {/* Side panel */}
       <Sheet open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
         <SheetContent side="right" className="w-full sm:max-w-full p-0" style={{ background: "hsl(var(--card))", borderLeft: "0.5px solid hsl(var(--border))" }}>
+          <VisuallyHidden>
+            <SheetTitle>{selectedPatient?.full_name ?? "Ficha do paciente"}</SheetTitle>
+            <SheetDescription>Ficha completa do paciente com resumo clínico, formulações e ações.</SheetDescription>
+          </VisuallyHidden>
           {selectedPatient && (() => {
             const p = selectedPatient;
             const cHist = counts.history[p.id] || 0;
