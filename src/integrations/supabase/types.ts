@@ -659,37 +659,70 @@ export type Database = {
       }
       patient_progress: {
         Row: {
+          attention_flag: Database["public"]["Enums"]["attention_flag"]
+          attention_set_at: string | null
+          attention_set_by: string | null
+          clinical_observation: string | null
           created_at: string
+          data_model: Database["public"]["Enums"]["progress_data_model"]
+          emotions: Json | null
           id: string
           mood_score: number | null
           note: string | null
+          patient_context: string | null
           patient_id: string
           recorded_at: string
           session_id: string | null
           updated_at: string
           user_id: string
+          wellbeing_score: number | null
+          wellbeing_source:
+            | Database["public"]["Enums"]["wellbeing_source"]
+            | null
         }
         Insert: {
+          attention_flag?: Database["public"]["Enums"]["attention_flag"]
+          attention_set_at?: string | null
+          attention_set_by?: string | null
+          clinical_observation?: string | null
           created_at?: string
+          data_model?: Database["public"]["Enums"]["progress_data_model"]
+          emotions?: Json | null
           id?: string
           mood_score?: number | null
           note?: string | null
+          patient_context?: string | null
           patient_id: string
           recorded_at?: string
           session_id?: string | null
           updated_at?: string
           user_id: string
+          wellbeing_score?: number | null
+          wellbeing_source?:
+            | Database["public"]["Enums"]["wellbeing_source"]
+            | null
         }
         Update: {
+          attention_flag?: Database["public"]["Enums"]["attention_flag"]
+          attention_set_at?: string | null
+          attention_set_by?: string | null
+          clinical_observation?: string | null
           created_at?: string
+          data_model?: Database["public"]["Enums"]["progress_data_model"]
+          emotions?: Json | null
           id?: string
           mood_score?: number | null
           note?: string | null
+          patient_context?: string | null
           patient_id?: string
           recorded_at?: string
           session_id?: string | null
           updated_at?: string
           user_id?: string
+          wellbeing_score?: number | null
+          wellbeing_source?:
+            | Database["public"]["Enums"]["wellbeing_source"]
+            | null
         }
         Relationships: []
       }
@@ -1829,6 +1862,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      attention_flag: "not_assessed" | "none" | "watch" | "urgent"
       audit_access_type: "own" | "supervision"
       audit_result: "success" | "blocked"
       library_category:
@@ -1848,6 +1882,7 @@ export type Database = {
       payment_method: "pix" | "card" | "cash"
       payment_status: "pending" | "paid"
       profile_type: "standard" | "supervisee" | "supervisor"
+      progress_data_model: "legacy_unclassified" | "v2_structured"
       session_status:
         | "scheduled"
         | "completed"
@@ -1857,6 +1892,7 @@ export type Database = {
         | "confirmed"
       session_type: "clinical" | "supervision"
       subscription_status: "free" | "pending" | "active"
+      wellbeing_source: "patient_self_report" | "professional_estimate"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1985,6 +2021,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      attention_flag: ["not_assessed", "none", "watch", "urgent"],
       audit_access_type: ["own", "supervision"],
       audit_result: ["success", "blocked"],
       library_category: [
@@ -2006,6 +2043,7 @@ export const Constants = {
       payment_method: ["pix", "card", "cash"],
       payment_status: ["pending", "paid"],
       profile_type: ["standard", "supervisee", "supervisor"],
+      progress_data_model: ["legacy_unclassified", "v2_structured"],
       session_status: [
         "scheduled",
         "completed",
@@ -2016,6 +2054,7 @@ export const Constants = {
       ],
       session_type: ["clinical", "supervision"],
       subscription_status: ["free", "pending", "active"],
+      wellbeing_source: ["patient_self_report", "professional_estimate"],
     },
   },
 } as const
