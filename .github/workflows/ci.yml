@@ -105,17 +105,51 @@ jobs:
             console.log("Badge:", badge);
           '
 
-      - name: Commit coverage badge (main only)
+      - name: Generate PatientHomework coverage badge
+        if: always()
+        run: |
+          mkdir -p .github/badges
+          node -e '
+            const fs = require("fs");
+            if (!fs.existsSync("coverage/coverage-summary.json")) process.exit(0);
+            const s = JSON.parse(fs.readFileSync("coverage/coverage-summary.json", "utf8"));
+            const key = Object.keys(s).find(k => k.endsWith("src/components/app/PatientHomework.tsx"));
+            if (!key) { console.log("PatientHomework key not found in coverage summary"); process.exit(0); }
+            const h = s[key];
+            const pct = h.lines.pct;
+            const color =
+              pct >= 90 ? "brightgreen" :
+              pct >= 75 ? "green" :
+              pct >= 60 ? "yellowgreen" :
+              pct >= 40 ? "yellow" :
+              pct >= 20 ? "orange" : "red";
+            const badge = {
+              schemaVersion: 1,
+              label: "PatientHomework",
+              message: `${pct.toFixed(1)}%`,
+              color,
+            };
+            fs.writeFileSync(".github/badges/coverage-patienthomework.json", JSON.stringify(badge, null, 2) + "\n");
+            console.log("PatientHomework badge:", badge);
+          '
+
+      - name: Commit coverage badges (main only)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          if git diff --quiet -- .github/badges/coverage.json; then
-            echo "Badge unchanged, skipping commit."
-            exit 0
-          fi
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/badges/coverage.json
-          git commit -m "chore(ci): update coverage badge [skip ci]"
+          CHANGED=0
+          for f in .github/badges/coverage.json .github/badges/coverage-patienthomework.json; do
+            if ! git diff --quiet -- "$f" 2>/dev/null; then
+              git add "$f"
+              CHANGED=1
+            fi
+          done
+          if [ "$CHANGED" = "0" ]; then
+            echo "Badges unchanged, skipping commit."
+            exit 0
+          fi
+          git commit -m "chore(ci): update coverage badges [skip ci]"
           git push
 
       - name: Upload coverage artifact
