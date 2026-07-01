@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/app/AppLayout";
 import { SplashScreen } from "@/components/SplashScreen";
+import { SessionStatusBadge } from "@/components/app/SessionStatusBadge";
 
 /* ── Lazy-loaded pages ── */
 const Index = lazy(() => import("./pages/Index"));
@@ -106,6 +107,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <RecoveryLinkRedirect />
+          <SessionStatusBadge />
 
           <Suspense fallback={<SplashScreen />}>
             <AppErrorBoundary>
