@@ -1281,6 +1281,8 @@ const Patients = () => {
                     );
                   })()}
 
+                  <AIClinicalSummary patientId={p.id} />
+
                   <IntegratedCaseSummary patientId={p.id} />
 
 
