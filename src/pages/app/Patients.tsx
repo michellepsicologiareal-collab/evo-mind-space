@@ -20,6 +20,7 @@ import { PatientSessionRecords } from "@/components/app/PatientSessionRecords";
 import { CardSkeleton } from "@/components/app/Skeletons";
 import { PatientHomework } from "@/components/app/PatientHomework";
 import { IntegratedCaseSummary } from "@/components/app/IntegratedCaseSummary";
+import { AIClinicalSummary } from "@/components/app/AIClinicalSummary";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -1279,6 +1280,8 @@ const Patients = () => {
                       </div>
                     );
                   })()}
+
+                  <AIClinicalSummary patientId={p.id} />
 
                   <IntegratedCaseSummary patientId={p.id} />
 

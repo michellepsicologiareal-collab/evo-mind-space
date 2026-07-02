@@ -657,6 +657,65 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_ai_summaries: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          edited_content: Json | null
+          generated_at: string
+          id: string
+          model_used: string | null
+          patient_id: string
+          source_records: Json
+          status: string
+          summary_data: Json
+          tokens_used: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          edited_content?: Json | null
+          generated_at?: string
+          id?: string
+          model_used?: string | null
+          patient_id: string
+          source_records?: Json
+          status?: string
+          summary_data: Json
+          tokens_used?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          edited_content?: Json | null
+          generated_at?: string
+          id?: string
+          model_used?: string | null
+          patient_id?: string
+          source_records?: Json
+          status?: string
+          summary_data?: Json
+          tokens_used?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_ai_summaries_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: true
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_progress: {
         Row: {
           attention_flag: Database["public"]["Enums"]["attention_flag"]
