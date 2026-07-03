@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Sparkles, RefreshCw, Loader2, AlertCircle, Check, Pencil, X, Trash2, Clock } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Sparkles, RefreshCw, Loader2, AlertCircle, Check, Pencil, X, Trash2, Clock, GitCompare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -23,9 +23,51 @@ interface StoredSummary {
   model_used: string | null;
   generated_at: string;
   approved_at: string | null;
+  last_approved_data: SummaryData | null;
+  last_approved_at: string | null;
 }
 
 const fmt = (iso: string) => new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+// --- diff helpers ---------------------------------------------------------
+
+type LineDiff = { type: "same" | "add" | "del"; text: string };
+
+// LCS-based line diff (small inputs — safe)
+function diffLines(oldStr: string, newStr: string): LineDiff[] {
+  const a = (oldStr || "").split("\n");
+  const b = (newStr || "").split("\n");
+  const m = a.length, n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = m - 1; i >= 0; i--) {
+    for (let j = n - 1; j >= 0; j--) {
+      dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+  const out: LineDiff[] = [];
+  let i = 0, j = 0;
+  while (i < m && j < n) {
+    if (a[i] === b[j]) { out.push({ type: "same", text: a[i] }); i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) { out.push({ type: "del", text: a[i] }); i++; }
+    else { out.push({ type: "add", text: b[j] }); j++; }
+  }
+  while (i < m) { out.push({ type: "del", text: a[i++] }); }
+  while (j < n) { out.push({ type: "add", text: b[j++] }); }
+  return out;
+}
+
+const sectionsMeta: { key: keyof SummaryData; title: string; kind: "text" | "list" }[] = [
+  { key: "visao_geral", title: "Visão Geral", kind: "text" },
+  { key: "temas_recorrentes", title: "Temas Recorrentes", kind: "list" },
+  { key: "evolucao_percebida", title: "Evolução Percebida", kind: "text" },
+  { key: "intervencoes_estrategias", title: "Intervenções e Estratégias Registradas", kind: "list" },
+  { key: "pontos_acompanhamento", title: "Pontos para Acompanhamento", kind: "list" },
+  { key: "pendencias_documentais", title: "Pendências Documentais", kind: "list" },
+];
+
+const toText = (v: any) => Array.isArray(v) ? v.join("\n") : (v ?? "");
+
+// --------------------------------------------------------------------------
 
 export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
   const [summary, setSummary] = useState<StoredSummary | null>(null);
@@ -35,10 +77,22 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
   const [stale, setStale] = useState(false);
   const [newCount, setNewCount] = useState(0);
   const [editMode, setEditMode] = useState(false);
+  const [showDiff, setShowDiff] = useState(false);
   const [draft, setDraft] = useState<SummaryData | null>(null);
   const triggered = useRef(false);
 
   const view: SummaryData | null = summary ? (summary.edited_content ?? summary.summary_data) : null;
+  const current: SummaryData | null = editMode ? draft : view;
+
+  const hasApprovedSnapshot = !!summary?.last_approved_data;
+  const diffChangedCount = useMemo(() => {
+    if (!hasApprovedSnapshot || !current || !summary?.last_approved_data) return 0;
+    return sectionsMeta.reduce((n, s) => {
+      const oldT = toText((summary.last_approved_data as any)[s.key]);
+      const newT = toText((current as any)[s.key]);
+      return n + (oldT === newT ? 0 : 1);
+    }, 0);
+  }, [current, summary?.last_approved_data, hasApprovedSnapshot]);
 
   const invoke = async (force = false) => {
     setLoading(true);
@@ -75,7 +129,6 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     }
   };
 
-  // 1) carrega cache imediatamente
   useEffect(() => {
     let cancel = false;
     (async () => {
@@ -88,8 +141,6 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
       if (cancel) return;
       if (data) setSummary(data as any);
       setInitialLoading(false);
-
-      // 2) em background, dispara função que só regenera se necessário
       if (!triggered.current) {
         triggered.current = true;
         invoke(false);
@@ -168,6 +219,18 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
         </div>
         <div className="flex items-center gap-2">
           {loading && <Loader2 className="h-4 w-4 animate-spin" style={{ color: "hsl(var(--muted-foreground))" }} />}
+          {hasApprovedSnapshot && (
+            <Button
+              size="sm"
+              variant={showDiff ? "default" : "outline"}
+              onClick={() => setShowDiff(v => !v)}
+              className="h-7 text-xs"
+              title={summary?.last_approved_at ? `Comparar com aprovado em ${fmt(summary.last_approved_at)}` : undefined}
+            >
+              <GitCompare className="h-3 w-3 mr-1" />
+              {showDiff ? "Ocultar diferenças" : `Comparar com aprovado${diffChangedCount ? ` (${diffChangedCount})` : ""}`}
+            </Button>
+          )}
           <Button size="sm" variant="outline" onClick={() => invoke(true)} disabled={loading} className="h-7 text-xs">
             <RefreshCw className="h-3 w-3 mr-1" /> Atualizar
           </Button>
@@ -190,6 +253,66 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
         <div className="flex items-start gap-2 rounded-xl p-3 mb-3" style={{ background: "rgba(192,57,43,0.08)", border: "0.5px solid rgba(192,57,43,0.25)" }}>
           <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#C0392B" }} />
           <p className="text-xs" style={{ fontFamily: "Instrument Sans, sans-serif", color: "#C0392B" }}>{error}</p>
+        </div>
+      )}
+
+      {showDiff && hasApprovedSnapshot && current && summary?.last_approved_data && (
+        <div className="mb-4 rounded-xl p-3" style={{ background: "hsl(var(--muted) / 0.35)", border: "0.5px solid hsl(var(--border))" }}>
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em" }}>
+              Diferenças vs. última aprovação
+            </p>
+            {summary.last_approved_at && (
+              <span className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))", fontFamily: "Instrument Sans, sans-serif" }}>
+                Aprovado em {fmt(summary.last_approved_at)}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 mb-3 text-[10px]" style={{ fontFamily: "Instrument Sans, sans-serif", color: "hsl(var(--muted-foreground))" }}>
+            <span className="inline-flex items-center gap-1">
+              <span style={{ width: 10, height: 10, background: "rgba(192,57,43,0.18)", border: "0.5px solid rgba(192,57,43,0.4)", borderRadius: 2 }} /> Removido
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span style={{ width: 10, height: 10, background: "rgba(61,92,53,0.18)", border: "0.5px solid rgba(61,92,53,0.4)", borderRadius: 2 }} /> Adicionado
+            </span>
+          </div>
+          <div className="space-y-3">
+            {sectionsMeta.map(s => {
+              const oldT = toText((summary.last_approved_data as any)[s.key]);
+              const newT = toText((current as any)[s.key]);
+              const unchanged = oldT === newT;
+              return (
+                <div key={s.key}>
+                  <p className="mb-1 flex items-center gap-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 11, fontWeight: 700 }}>
+                    {s.title}
+                    {unchanged && (
+                      <span className="text-[9px] uppercase" style={{ color: "hsl(var(--muted-foreground))", letterSpacing: "0.06em" }}>sem alterações</span>
+                    )}
+                  </p>
+                  {!unchanged && (
+                    <div className="rounded-md overflow-hidden" style={{ border: "0.5px solid hsl(var(--border))", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 11.5 }}>
+                      {diffLines(oldT, newT).map((ln, i) => (
+                        <div
+                          key={i}
+                          className="px-2 py-0.5 whitespace-pre-wrap break-words"
+                          style={{
+                            background: ln.type === "add" ? "rgba(61,92,53,0.10)" : ln.type === "del" ? "rgba(192,57,43,0.10)" : "transparent",
+                            color: ln.type === "add" ? "hsl(var(--moss))" : ln.type === "del" ? "#C0392B" : "hsl(var(--brown))",
+                            textDecoration: ln.type === "del" ? "line-through" : "none",
+                          }}
+                        >
+                          <span style={{ opacity: 0.5, marginRight: 6 }}>
+                            {ln.type === "add" ? "+" : ln.type === "del" ? "−" : " "}
+                          </span>
+                          {ln.text || "\u00A0"}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
