@@ -665,6 +665,9 @@ export type Database = {
           edited_content: Json | null
           generated_at: string
           id: string
+          last_approved_at: string | null
+          last_approved_by: string | null
+          last_approved_data: Json | null
           model_used: string | null
           patient_id: string
           source_records: Json
@@ -681,6 +684,9 @@ export type Database = {
           edited_content?: Json | null
           generated_at?: string
           id?: string
+          last_approved_at?: string | null
+          last_approved_by?: string | null
+          last_approved_data?: Json | null
           model_used?: string | null
           patient_id: string
           source_records?: Json
@@ -697,6 +703,9 @@ export type Database = {
           edited_content?: Json | null
           generated_at?: string
           id?: string
+          last_approved_at?: string | null
+          last_approved_by?: string | null
+          last_approved_data?: Json | null
           model_used?: string | null
           patient_id?: string
           source_records?: Json
