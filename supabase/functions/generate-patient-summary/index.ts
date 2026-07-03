@@ -62,6 +62,8 @@ Deno.serve(async (req) => {
     if (existing && existing.status === "approved" && !force) {
       return json({ summary: existing, cached: true, new_records: newRecords, stale: newRecords > 0 });
     }
+    // Se aprovado E forçado: NÃO substitui o conteúdo aprovado.
+    // Gera abaixo e grava em pending_draft_*, mantendo summary_data intocado.
 
     // Coleta dados clínicos mínimos
     const [tccRes, teRes, actRes, recordsRes, progressRes] = await Promise.all([
