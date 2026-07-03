@@ -171,6 +171,27 @@ Use a tool save_summary retornando as 6 seções.`;
       generated_from_records: newRecords,
     };
 
+    // Se já existe registro aprovado, grava apenas em pending_draft_* (não substitui aprovado)
+    if (existing && existing.status === "approved") {
+      const { data: saved, error: updErr } = await admin
+        .from("patient_ai_summaries")
+        .update({
+          pending_draft_data: parsed,
+          pending_draft_generated_at: new Date().toISOString(),
+          pending_draft_source_records: sourceRecords,
+          pending_draft_model: model,
+          pending_draft_tokens: tokens,
+        })
+        .eq("id", existing.id)
+        .select()
+        .single();
+      if (updErr) {
+        console.error("pending draft update error", updErr);
+        return json({ error: updErr.message }, 500);
+      }
+      return json({ summary: saved, cached: false, new_records: newRecords, pending_created: true });
+    }
+
     const payload = {
       patient_id,
       user_id: user.id,
@@ -183,6 +204,11 @@ Use a tool save_summary retornando as 6 seções.`;
       edited_content: null,
       approved_at: null,
       approved_by: null,
+      pending_draft_data: null,
+      pending_draft_generated_at: null,
+      pending_draft_source_records: null,
+      pending_draft_model: null,
+      pending_draft_tokens: null,
     };
 
     const { data: saved, error: upsertErr } = await admin
