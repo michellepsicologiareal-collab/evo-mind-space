@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles, RefreshCw, Loader2, AlertCircle, Check, Pencil, X, Trash2, Clock, GitCompare } from "lucide-react";
+import {
+  Sparkles, RefreshCw, Loader2, AlertCircle, Check, Pencil, X, Trash2, Clock,
+  GitCompare, History, ChevronDown, ChevronUp, ArrowUpCircle, FileWarning,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -23,17 +26,32 @@ interface StoredSummary {
   model_used: string | null;
   generated_at: string;
   approved_at: string | null;
+  approved_by: string | null;
   last_approved_data: SummaryData | null;
   last_approved_at: string | null;
+  last_approved_by: string | null;
+  pending_draft_data: SummaryData | null;
+  pending_draft_generated_at: string | null;
+  pending_draft_source_records: any;
+  pending_draft_model: string | null;
+  pending_draft_tokens: number | null;
+}
+
+interface AuditEvent {
+  id: string;
+  event_type: string;
+  from_status: string | null;
+  to_status: string | null;
+  actor_id: string;
+  actor_name?: string | null;
+  note: string | null;
+  created_at: string;
 }
 
 const fmt = (iso: string) => new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
 // --- diff helpers ---------------------------------------------------------
-
 type LineDiff = { type: "same" | "add" | "del"; text: string };
-
-// LCS-based line diff (small inputs — safe)
 function diffLines(oldStr: string, newStr: string): LineDiff[] {
   const a = (oldStr || "").split("\n");
   const b = (newStr || "").split("\n");
@@ -67,6 +85,30 @@ const sectionsMeta: { key: keyof SummaryData; title: string; kind: "text" | "lis
 
 const toText = (v: any) => Array.isArray(v) ? v.join("\n") : (v ?? "");
 
+const EVENT_LABEL: Record<string, string> = {
+  generated: "Resumo gerado",
+  regenerated: "Resumo regenerado",
+  edited: "Edições salvas",
+  approved: "Aprovado",
+  discarded: "Descartado",
+  pending_created: "Novo rascunho gerado",
+  pending_promoted: "Rascunho promovido a aprovado",
+  pending_discarded: "Rascunho descartado",
+};
+
+const StatusPill = ({ status }: { status: StoredSummary["status"] }) => {
+  const cfg = status === "approved"
+    ? { bg: "rgba(61,92,53,0.14)", fg: "hsl(var(--moss))", label: "✓ Aprovado" }
+    : status === "discarded"
+      ? { bg: "rgba(120,120,120,0.15)", fg: "hsl(var(--muted-foreground))", label: "Descartado" }
+      : { bg: "rgba(184,134,11,0.14)", fg: "#B8860B", label: "Rascunho" };
+  return (
+    <span style={{ background: cfg.bg, color: cfg.fg, fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+      {cfg.label}
+    </span>
+  );
+};
+
 // --------------------------------------------------------------------------
 
 export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
@@ -78,21 +120,36 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
   const [newCount, setNewCount] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [showDiff, setShowDiff] = useState(false);
+  const [viewPending, setViewPending] = useState(false); // toggle to view pending draft content
+  const [showAudit, setShowAudit] = useState(false);
+  const [audit, setAudit] = useState<AuditEvent[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
   const [draft, setDraft] = useState<SummaryData | null>(null);
   const triggered = useRef(false);
 
-  const view: SummaryData | null = summary ? (summary.edited_content ?? summary.summary_data) : null;
+  const approved: SummaryData | null = summary ? (summary.edited_content ?? summary.summary_data) : null;
+  const pending: SummaryData | null = summary?.pending_draft_data ?? null;
+  const hasPending = !!pending && summary?.status === "approved";
+
+  // O que está sendo exibido/editado
+  const view: SummaryData | null = hasPending && viewPending ? pending : approved;
   const current: SummaryData | null = editMode ? draft : view;
 
-  const hasApprovedSnapshot = !!summary?.last_approved_data;
+  // Base do diff: quando há pending mostramos aprovado vs pending; senão, snapshot vs current
+  const diffBase: SummaryData | null = hasPending
+    ? approved
+    : (summary?.last_approved_data ?? null);
+  const diffTarget: SummaryData | null = hasPending ? pending : current;
+  const canDiff = !!diffBase && !!diffTarget;
+
   const diffChangedCount = useMemo(() => {
-    if (!hasApprovedSnapshot || !current || !summary?.last_approved_data) return 0;
+    if (!canDiff) return 0;
     return sectionsMeta.reduce((n, s) => {
-      const oldT = toText((summary.last_approved_data as any)[s.key]);
-      const newT = toText((current as any)[s.key]);
+      const oldT = toText((diffBase as any)[s.key]);
+      const newT = toText((diffTarget as any)[s.key]);
       return n + (oldT === newT ? 0 : 1);
     }, 0);
-  }, [current, summary?.last_approved_data, hasApprovedSnapshot]);
+  }, [canDiff, diffBase, diffTarget]);
 
   const invoke = async (force = false) => {
     setLoading(true);
@@ -122,6 +179,10 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
       setSummary(body.summary);
       setStale(!!body.stale);
       setNewCount(body.new_records ?? 0);
+      if (body.pending_created) {
+        toast.success("Novo rascunho gerado. O conteúdo aprovado foi preservado.");
+        setViewPending(true);
+      }
     } catch (e: any) {
       setError(e?.message || "Erro ao gerar resumo");
     } finally {
@@ -129,17 +190,35 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     }
   };
 
+  const loadSummary = async () => {
+    const { data } = await (supabase as any)
+      .from("patient_ai_summaries")
+      .select("*")
+      .eq("patient_id", patientId)
+      .maybeSingle();
+    if (data) setSummary(data as any);
+    return data;
+  };
+
+  const loadAudit = async () => {
+    if (!summary) return;
+    setAuditLoading(true);
+    const { data } = await (supabase as any)
+      .from("patient_ai_summary_events")
+      .select("id, event_type, from_status, to_status, actor_id, note, created_at")
+      .eq("summary_id", summary.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    setAudit((data as any) || []);
+    setAuditLoading(false);
+  };
+
   useEffect(() => {
     let cancel = false;
     (async () => {
       setInitialLoading(true);
-      const { data } = await supabase
-        .from("patient_ai_summaries")
-        .select("*")
-        .eq("patient_id", patientId)
-        .maybeSingle();
+      await loadSummary();
       if (cancel) return;
-      if (data) setSummary(data as any);
       setInitialLoading(false);
       if (!triggered.current) {
         triggered.current = true;
@@ -149,12 +228,29 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     return () => { cancel = true; };
   }, [patientId]);
 
+  useEffect(() => { if (showAudit) loadAudit(); /* eslint-disable-next-line */ }, [showAudit, summary?.id]);
+
   const startEdit = () => { setDraft(view ? JSON.parse(JSON.stringify(view)) : null); setEditMode(true); };
   const cancelEdit = () => { setEditMode(false); setDraft(null); };
 
   const saveEdit = async () => {
     if (!summary || !draft) return;
-    const { data, error: err } = await supabase
+    // Só edita o conteúdo aprovado; edições no rascunho pendente são feitas via "promover" depois.
+    if (hasPending && viewPending) {
+      // Salvar edições no rascunho pendente
+      const { data, error: err } = await (supabase as any)
+        .from("patient_ai_summaries")
+        .update({ pending_draft_data: draft as any })
+        .eq("id", summary.id)
+        .select()
+        .single();
+      if (err) { toast.error(err.message); return; }
+      setSummary(data as any);
+      setEditMode(false);
+      toast.success("Edições no rascunho salvas");
+      return;
+    }
+    const { data, error: err } = await (supabase as any)
       .from("patient_ai_summaries")
       .update({ edited_content: draft as any })
       .eq("id", summary.id)
@@ -169,7 +265,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
   const approve = async () => {
     if (!summary) return;
     const { data: userData } = await supabase.auth.getUser();
-    const { data, error: err } = await supabase
+    const { data, error: err } = await (supabase as any)
       .from("patient_ai_summaries")
       .update({ status: "approved", approved_at: new Date().toISOString(), approved_by: userData.user?.id })
       .eq("id", summary.id)
@@ -181,19 +277,80 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     toast.success("Resumo aprovado");
   };
 
+  const promotePending = async () => {
+    if (!summary || !summary.pending_draft_data) return;
+    if (!confirm("Promover o rascunho pendente? Ele substituirá o conteúdo aprovado atual (um snapshot da versão atual será mantido).")) return;
+    const { data: userData } = await supabase.auth.getUser();
+    const { data, error: err } = await (supabase as any)
+      .from("patient_ai_summaries")
+      .update({
+        summary_data: summary.pending_draft_data as any,
+        edited_content: null,
+        source_records: summary.pending_draft_source_records,
+        model_used: summary.pending_draft_model,
+        tokens_used: summary.pending_draft_tokens,
+        generated_at: summary.pending_draft_generated_at,
+        status: "approved",
+        approved_at: new Date().toISOString(),
+        approved_by: userData.user?.id,
+        pending_draft_data: null,
+        pending_draft_generated_at: null,
+        pending_draft_source_records: null,
+        pending_draft_model: null,
+        pending_draft_tokens: null,
+      })
+      .eq("id", summary.id)
+      .select()
+      .single();
+    if (err) { toast.error(err.message); return; }
+    setSummary(data as any);
+    setViewPending(false);
+    setStale(false);
+    toast.success("Rascunho promovido");
+  };
+
+  const discardPending = async () => {
+    if (!summary) return;
+    if (!confirm("Descartar o rascunho pendente? O conteúdo aprovado permanece intocado.")) return;
+    const { data, error: err } = await (supabase as any)
+      .from("patient_ai_summaries")
+      .update({
+        pending_draft_data: null,
+        pending_draft_generated_at: null,
+        pending_draft_source_records: null,
+        pending_draft_model: null,
+        pending_draft_tokens: null,
+      })
+      .eq("id", summary.id)
+      .select()
+      .single();
+    if (err) { toast.error(err.message); return; }
+    setSummary(data as any);
+    setViewPending(false);
+    toast.success("Rascunho descartado");
+  };
+
   const discard = async () => {
     if (!summary) return;
-    if (!confirm("Descartar este resumo? Um novo poderá ser gerado.")) return;
-    const { error: err } = await supabase.from("patient_ai_summaries").delete().eq("id", summary.id);
+    if (!confirm("Descartar este resumo? O histórico permanece registrado; você poderá gerar um novo depois.")) return;
+    const { data, error: err } = await (supabase as any)
+      .from("patient_ai_summaries")
+      .update({ status: "discarded" })
+      .eq("id", summary.id)
+      .select()
+      .single();
     if (err) { toast.error(err.message); return; }
-    setSummary(null);
+    setSummary(data as any);
     setStale(false);
     toast.success("Resumo descartado");
   };
 
-  const src = summary?.source_records ?? {};
+  const src = (hasPending && viewPending ? summary?.pending_draft_source_records : summary?.source_records) ?? {};
   const nSess = Array.isArray(src.session_record_ids) ? src.session_record_ids.length : 0;
   const nProg = Array.isArray(src.progress_ids) ? src.progress_ids.length : 0;
+  const shownGeneratedAt = hasPending && viewPending
+    ? summary?.pending_draft_generated_at
+    : summary?.generated_at;
 
   return (
     <div className="mt-6 rounded-2xl p-4" style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))" }}>
@@ -206,12 +363,13 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
           <span style={{ background: "rgba(192,57,43,0.1)", color: "#C0392B", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em" }}>
             ⚠ Gerado por IA — revise antes de usar
           </span>
-          {summary?.status === "approved" && (
-            <span style={{ background: "rgba(61,92,53,0.12)", color: "hsl(var(--moss))", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-              ✓ Aprovado
+          {summary && <StatusPill status={summary.status} />}
+          {hasPending && (
+            <span style={{ background: "rgba(150,117,206,0.14)", color: "hsl(var(--primary))", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Rascunho pendente
             </span>
           )}
-          {stale && (
+          {stale && !hasPending && (
             <span style={{ background: "rgba(184,134,11,0.14)", color: "#B8860B", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em" }}>
               Desatualizado ({newCount} novos)
             </span>
@@ -219,18 +377,16 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
         </div>
         <div className="flex items-center gap-2">
           {loading && <Loader2 className="h-4 w-4 animate-spin" style={{ color: "hsl(var(--muted-foreground))" }} />}
-          {hasApprovedSnapshot && (
-            <Button
-              size="sm"
-              variant={showDiff ? "default" : "outline"}
-              onClick={() => setShowDiff(v => !v)}
-              className="h-7 text-xs"
-              title={summary?.last_approved_at ? `Comparar com aprovado em ${fmt(summary.last_approved_at)}` : undefined}
-            >
+          {canDiff && (
+            <Button size="sm" variant={showDiff ? "default" : "outline"} onClick={() => setShowDiff(v => !v)} className="h-7 text-xs">
               <GitCompare className="h-3 w-3 mr-1" />
-              {showDiff ? "Ocultar diferenças" : `Comparar com aprovado${diffChangedCount ? ` (${diffChangedCount})` : ""}`}
+              {showDiff ? "Ocultar diferenças" : `Comparar${diffChangedCount ? ` (${diffChangedCount})` : ""}`}
             </Button>
           )}
+          <Button size="sm" variant="outline" onClick={() => setShowAudit(v => !v)} className="h-7 text-xs">
+            <History className="h-3 w-3 mr-1" /> Histórico
+            {showAudit ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
+          </Button>
           <Button size="sm" variant="outline" onClick={() => invoke(true)} disabled={loading} className="h-7 text-xs">
             <RefreshCw className="h-3 w-3 mr-1" /> Atualizar
           </Button>
@@ -256,13 +412,40 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
         </div>
       )}
 
-      {showDiff && hasApprovedSnapshot && current && summary?.last_approved_data && (
+      {/* Banner de rascunho pendente */}
+      {hasPending && (
+        <div className="mb-3 rounded-xl p-3 flex items-start gap-3 flex-wrap" style={{ background: "rgba(150,117,206,0.08)", border: "0.5px solid rgba(150,117,206,0.3)" }}>
+          <FileWarning className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "hsl(var(--primary))" }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold" style={{ fontFamily: "Syne, sans-serif", color: "hsl(var(--foreground))" }}>
+              Existe um rascunho pendente gerado {summary?.pending_draft_generated_at ? `em ${fmt(summary.pending_draft_generated_at)}` : ""}
+            </p>
+            <p className="text-[11px] mt-0.5" style={{ fontFamily: "Instrument Sans, sans-serif", color: "hsl(var(--muted-foreground))" }}>
+              O conteúdo aprovado permanece ativo. Compare, promova para substituir ou descarte.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setViewPending(v => !v)} className="h-7 text-xs">
+              {viewPending ? "Ver aprovado" : "Ver rascunho"}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={discardPending} className="h-7 text-xs text-destructive">
+              <Trash2 className="h-3 w-3 mr-1" /> Descartar rascunho
+            </Button>
+            <Button size="sm" onClick={promotePending} className="h-7 text-xs">
+              <ArrowUpCircle className="h-3 w-3 mr-1" /> Promover
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Diff */}
+      {showDiff && canDiff && (
         <div className="mb-4 rounded-xl p-3" style={{ background: "hsl(var(--muted) / 0.35)", border: "0.5px solid hsl(var(--border))" }}>
           <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
             <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em" }}>
-              Diferenças vs. última aprovação
+              {hasPending ? "Aprovado vs. rascunho pendente" : "Diferenças vs. última aprovação"}
             </p>
-            {summary.last_approved_at && (
+            {!hasPending && summary?.last_approved_at && (
               <span className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))", fontFamily: "Instrument Sans, sans-serif" }}>
                 Aprovado em {fmt(summary.last_approved_at)}
               </span>
@@ -278,32 +461,25 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
           </div>
           <div className="space-y-3">
             {sectionsMeta.map(s => {
-              const oldT = toText((summary.last_approved_data as any)[s.key]);
-              const newT = toText((current as any)[s.key]);
+              const oldT = toText((diffBase as any)[s.key]);
+              const newT = toText((diffTarget as any)[s.key]);
               const unchanged = oldT === newT;
               return (
                 <div key={s.key}>
                   <p className="mb-1 flex items-center gap-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 11, fontWeight: 700 }}>
                     {s.title}
-                    {unchanged && (
-                      <span className="text-[9px] uppercase" style={{ color: "hsl(var(--muted-foreground))", letterSpacing: "0.06em" }}>sem alterações</span>
-                    )}
+                    {unchanged && <span className="text-[9px] uppercase" style={{ color: "hsl(var(--muted-foreground))", letterSpacing: "0.06em" }}>sem alterações</span>}
                   </p>
                   {!unchanged && (
                     <div className="rounded-md overflow-hidden" style={{ border: "0.5px solid hsl(var(--border))", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 11.5 }}>
                       {diffLines(oldT, newT).map((ln, i) => (
-                        <div
-                          key={i}
-                          className="px-2 py-0.5 whitespace-pre-wrap break-words"
+                        <div key={i} className="px-2 py-0.5 whitespace-pre-wrap break-words"
                           style={{
                             background: ln.type === "add" ? "rgba(61,92,53,0.10)" : ln.type === "del" ? "rgba(192,57,43,0.10)" : "transparent",
                             color: ln.type === "add" ? "hsl(var(--moss))" : ln.type === "del" ? "#C0392B" : "hsl(var(--brown))",
                             textDecoration: ln.type === "del" ? "line-through" : "none",
-                          }}
-                        >
-                          <span style={{ opacity: 0.5, marginRight: 6 }}>
-                            {ln.type === "add" ? "+" : ln.type === "del" ? "−" : " "}
-                          </span>
+                          }}>
+                          <span style={{ opacity: 0.5, marginRight: 6 }}>{ln.type === "add" ? "+" : ln.type === "del" ? "−" : " "}</span>
                           {ln.text || "\u00A0"}
                         </div>
                       ))}
@@ -316,8 +492,51 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
         </div>
       )}
 
+      {/* Audit log */}
+      {showAudit && (
+        <div className="mb-4 rounded-xl p-3" style={{ background: "hsl(var(--muted) / 0.35)", border: "0.5px solid hsl(var(--border))" }}>
+          <p className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em" }}>
+            Trilha de auditoria
+          </p>
+          {auditLoading ? (
+            <div className="flex items-center gap-2 text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
+              <Loader2 className="h-3 w-3 animate-spin" /> Carregando…
+            </div>
+          ) : audit.length === 0 ? (
+            <p className="italic text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>Nenhum evento registrado.</p>
+          ) : (
+            <ul className="space-y-1.5" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12 }}>
+              {audit.map(ev => (
+                <li key={ev.id} className="flex items-baseline gap-2">
+                  <span className="text-[10px] shrink-0" style={{ color: "hsl(var(--muted-foreground))", fontFamily: "ui-monospace, monospace" }}>
+                    {fmt(ev.created_at)}
+                  </span>
+                  <span style={{ color: "hsl(var(--foreground))" }}>
+                    {EVENT_LABEL[ev.event_type] ?? ev.event_type}
+                    {ev.from_status && ev.to_status && ev.from_status !== ev.to_status && (
+                      <span className="text-[10px] ml-1" style={{ color: "hsl(var(--muted-foreground))" }}>
+                        ({ev.from_status} → {ev.to_status})
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                    por {ev.actor_id === summary?.approved_by ? "profissional" : ev.actor_id.slice(0, 8)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       {view && (
         <div className="space-y-3">
+          {hasPending && viewPending && (
+            <div className="rounded-md px-2 py-1.5 text-[11px]" style={{ background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", fontFamily: "Instrument Sans, sans-serif" }}>
+              Você está visualizando o <strong>rascunho pendente</strong>. Ele não substitui o aprovado até ser promovido.
+            </div>
+          )}
+
           <Section title="Visão Geral">
             {editMode ? (
               <Textarea value={draft?.visao_geral ?? ""} onChange={(e) => setDraft(d => d ? { ...d, visao_geral: e.target.value } : d)} className="text-sm min-h-20" />
@@ -345,7 +564,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
           <div className="flex items-center justify-between gap-3 pt-3 mt-2 flex-wrap" style={{ borderTop: "0.5px solid hsl(var(--border))" }}>
             <div className="flex items-center gap-1.5 text-[11px]" style={{ color: "hsl(var(--muted-foreground))", fontFamily: "Instrument Sans, sans-serif" }}>
               <Clock className="h-3 w-3" />
-              Gerado em {fmt(summary!.generated_at)} • {nSess} sessão(ões), {nProg} registro(s) de progresso
+              Gerado em {shownGeneratedAt ? fmt(shownGeneratedAt) : "-"} • {nSess} sessão(ões), {nProg} registro(s) de progresso
             </div>
             <div className="flex items-center gap-2">
               {editMode ? (
@@ -355,9 +574,11 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
                 </>
               ) : (
                 <>
-                  <Button size="sm" variant="ghost" onClick={discard} className="h-7 text-xs text-destructive"><Trash2 className="h-3 w-3 mr-1" /> Descartar</Button>
+                  {summary?.status !== "discarded" && (
+                    <Button size="sm" variant="ghost" onClick={discard} className="h-7 text-xs text-destructive"><Trash2 className="h-3 w-3 mr-1" /> Descartar</Button>
+                  )}
                   <Button size="sm" variant="outline" onClick={startEdit} className="h-7 text-xs"><Pencil className="h-3 w-3 mr-1" /> Editar</Button>
-                  {summary?.status !== "approved" && (
+                  {summary?.status !== "approved" && !hasPending && (
                     <Button size="sm" onClick={approve} className="h-7 text-xs"><Check className="h-3 w-3 mr-1" /> Aprovar</Button>
                   )}
                 </>

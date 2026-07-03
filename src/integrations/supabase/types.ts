@@ -670,6 +670,11 @@ export type Database = {
           last_approved_data: Json | null
           model_used: string | null
           patient_id: string
+          pending_draft_data: Json | null
+          pending_draft_generated_at: string | null
+          pending_draft_model: string | null
+          pending_draft_source_records: Json | null
+          pending_draft_tokens: number | null
           source_records: Json
           status: string
           summary_data: Json
@@ -689,6 +694,11 @@ export type Database = {
           last_approved_data?: Json | null
           model_used?: string | null
           patient_id: string
+          pending_draft_data?: Json | null
+          pending_draft_generated_at?: string | null
+          pending_draft_model?: string | null
+          pending_draft_source_records?: Json | null
+          pending_draft_tokens?: number | null
           source_records?: Json
           status?: string
           summary_data: Json
@@ -708,6 +718,11 @@ export type Database = {
           last_approved_data?: Json | null
           model_used?: string | null
           patient_id?: string
+          pending_draft_data?: Json | null
+          pending_draft_generated_at?: string | null
+          pending_draft_model?: string | null
+          pending_draft_source_records?: Json | null
+          pending_draft_tokens?: number | null
           source_records?: Json
           status?: string
           summary_data?: Json
@@ -721,6 +736,56 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: true
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_ai_summary_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          event_type: string
+          from_status: string | null
+          id: string
+          note: string | null
+          patient_id: string
+          snapshot: Json | null
+          summary_id: string | null
+          to_status: string | null
+          user_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          event_type: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          patient_id: string
+          snapshot?: Json | null
+          summary_id?: string | null
+          to_status?: string | null
+          user_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          patient_id?: string
+          snapshot?: Json | null
+          summary_id?: string | null
+          to_status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_ai_summary_events_summary_id_fkey"
+            columns: ["summary_id"]
+            isOneToOne: false
+            referencedRelation: "patient_ai_summaries"
             referencedColumns: ["id"]
           },
         ]
