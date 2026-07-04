@@ -749,7 +749,9 @@ export type Database = {
           id: string
           note: string | null
           patient_id: string
+          reason: string | null
           snapshot: Json | null
+          source_records: Json | null
           summary_id: string | null
           to_status: string | null
           user_id: string
@@ -762,7 +764,9 @@ export type Database = {
           id?: string
           note?: string | null
           patient_id: string
+          reason?: string | null
           snapshot?: Json | null
+          source_records?: Json | null
           summary_id?: string | null
           to_status?: string | null
           user_id: string
@@ -775,7 +779,9 @@ export type Database = {
           id?: string
           note?: string | null
           patient_id?: string
+          reason?: string | null
           snapshot?: Json | null
+          source_records?: Json | null
           summary_id?: string | null
           to_status?: string | null
           user_id?: string
@@ -1979,6 +1985,10 @@ export type Database = {
       respond_to_confirmation: {
         Args: { _confirm: boolean; _token: string }
         Returns: string
+      }
+      set_ai_summary_event_reason: {
+        Args: { _reason: string; _summary_id: string }
+        Returns: undefined
       }
       submit_child_anamnesis: {
         Args: { _ip: string; _payload: Json; _token: string; _ua: string }
