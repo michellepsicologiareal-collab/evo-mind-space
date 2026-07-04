@@ -171,6 +171,19 @@ Use a tool save_summary retornando as 6 seções.`;
       generated_from_records: newRecords,
     };
 
+    // Motivo automático (sobrescrito pelo motivo enviado pelo cliente, se houver)
+    const autoReason = existing
+      ? (existing.status === "approved"
+          ? (force ? `Rascunho pendente gerado manualmente (registros novos: ${newRecords})` : `Rascunho pendente gerado automaticamente (registros novos: ${newRecords})`)
+          : (force ? `Regeneração manual (registros novos: ${newRecords})` : `Regeneração automática (registros novos: ${newRecords})`))
+      : `Primeira geração (registros considerados: ${records.length} sessões, ${progress.length} progressos)`;
+    const reason = (clientReason && String(clientReason).slice(0, 500)) || autoReason;
+
+    const annotateLastEvent = async (summaryId: string) => {
+      const { error: rpcErr } = await supabase.rpc("set_ai_summary_event_reason", { _summary_id: summaryId, _reason: reason });
+      if (rpcErr) console.warn("annotate reason error", rpcErr.message);
+    };
+
     // Se já existe registro aprovado, grava apenas em pending_draft_* (não substitui aprovado)
     if (existing && existing.status === "approved") {
       const { data: saved, error: updErr } = await admin
@@ -189,7 +202,8 @@ Use a tool save_summary retornando as 6 seções.`;
         console.error("pending draft update error", updErr);
         return json({ error: updErr.message }, 500);
       }
-      return json({ summary: saved, cached: false, new_records: newRecords, pending_created: true });
+      await annotateLastEvent(saved.id);
+      return json({ summary: saved, cached: false, new_records: newRecords, pending_created: true, reason });
     }
 
     const payload = {
@@ -222,7 +236,8 @@ Use a tool save_summary retornando as 6 seções.`;
       return json({ error: upsertErr.message }, 500);
     }
 
-    return json({ summary: saved, cached: false, new_records: newRecords });
+    await annotateLastEvent(saved.id);
+    return json({ summary: saved, cached: false, new_records: newRecords, reason });
   } catch (e) {
     console.error("generate-patient-summary error:", e);
     return json({ error: e instanceof Error ? e.message : "Erro desconhecido" }, 500);
