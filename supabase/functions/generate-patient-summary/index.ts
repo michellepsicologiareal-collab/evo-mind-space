@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { patient_id, force } = await req.json();
+    const { patient_id, force, reason: clientReason } = await req.json();
     if (!patient_id) return json({ error: "patient_id requerido" }, 400);
 
     const authHeader = req.headers.get("Authorization") ?? "";
