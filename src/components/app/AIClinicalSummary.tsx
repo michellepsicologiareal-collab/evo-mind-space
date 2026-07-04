@@ -255,6 +255,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
       if (err) { toast.error(err.message); return; }
       setSummary(data as any);
       setEditMode(false);
+      await annotateReason("Edições manuais no rascunho pendente");
       toast.success("Edições no rascunho salvas");
       return;
     }
@@ -267,6 +268,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     if (err) { toast.error(err.message); return; }
     setSummary(data as any);
     setEditMode(false);
+    await annotateReason("Edições manuais no conteúdo aprovado/rascunho");
     toast.success("Edições salvas");
   };
 
@@ -282,6 +284,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     if (err) { toast.error(err.message); return; }
     setSummary(data as any);
     setStale(false);
+    await annotateReason("Aprovação manual pelo profissional");
     toast.success("Resumo aprovado");
   };
 
@@ -314,6 +317,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     setSummary(data as any);
     setViewPending(false);
     setStale(false);
+    await annotateReason("Rascunho pendente promovido a aprovado");
     toast.success("Rascunho promovido");
   };
 
@@ -335,6 +339,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     if (err) { toast.error(err.message); return; }
     setSummary(data as any);
     setViewPending(false);
+    await annotateReason("Rascunho pendente descartado");
     toast.success("Rascunho descartado");
   };
 
@@ -350,6 +355,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     if (err) { toast.error(err.message); return; }
     setSummary(data as any);
     setStale(false);
+    await annotateReason("Resumo descartado manualmente");
     toast.success("Resumo descartado");
   };
 
