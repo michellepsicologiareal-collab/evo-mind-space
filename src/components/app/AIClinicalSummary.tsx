@@ -45,6 +45,8 @@ interface AuditEvent {
   actor_id: string;
   actor_name?: string | null;
   note: string | null;
+  reason: string | null;
+  source_records: any;
   created_at: string;
 }
 
@@ -205,12 +207,18 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     setAuditLoading(true);
     const { data } = await (supabase as any)
       .from("patient_ai_summary_events")
-      .select("id, event_type, from_status, to_status, actor_id, note, created_at")
+      .select("id, event_type, from_status, to_status, actor_id, note, reason, source_records, created_at")
       .eq("summary_id", summary.id)
       .order("created_at", { ascending: false })
       .limit(50);
     setAudit((data as any) || []);
     setAuditLoading(false);
+  };
+
+  const annotateReason = async (reason: string) => {
+    if (!summary) return;
+    const { error: rpcErr } = await (supabase as any).rpc("set_ai_summary_event_reason", { _summary_id: summary.id, _reason: reason });
+    if (rpcErr) console.warn("annotate reason:", rpcErr.message);
   };
 
   useEffect(() => {
@@ -247,6 +255,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
       if (err) { toast.error(err.message); return; }
       setSummary(data as any);
       setEditMode(false);
+      await annotateReason("Edições manuais no rascunho pendente");
       toast.success("Edições no rascunho salvas");
       return;
     }
@@ -259,6 +268,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     if (err) { toast.error(err.message); return; }
     setSummary(data as any);
     setEditMode(false);
+    await annotateReason("Edições manuais no conteúdo aprovado/rascunho");
     toast.success("Edições salvas");
   };
 
@@ -274,6 +284,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     if (err) { toast.error(err.message); return; }
     setSummary(data as any);
     setStale(false);
+    await annotateReason("Aprovação manual pelo profissional");
     toast.success("Resumo aprovado");
   };
 
@@ -306,6 +317,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     setSummary(data as any);
     setViewPending(false);
     setStale(false);
+    await annotateReason("Rascunho pendente promovido a aprovado");
     toast.success("Rascunho promovido");
   };
 
@@ -327,6 +339,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     if (err) { toast.error(err.message); return; }
     setSummary(data as any);
     setViewPending(false);
+    await annotateReason("Rascunho pendente descartado");
     toast.success("Rascunho descartado");
   };
 
@@ -342,6 +355,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     if (err) { toast.error(err.message); return; }
     setSummary(data as any);
     setStale(false);
+    await annotateReason("Resumo descartado manualmente");
     toast.success("Resumo descartado");
   };
 
@@ -505,25 +519,44 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
           ) : audit.length === 0 ? (
             <p className="italic text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>Nenhum evento registrado.</p>
           ) : (
-            <ul className="space-y-1.5" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12 }}>
-              {audit.map(ev => (
-                <li key={ev.id} className="flex items-baseline gap-2">
-                  <span className="text-[10px] shrink-0" style={{ color: "hsl(var(--muted-foreground))", fontFamily: "ui-monospace, monospace" }}>
-                    {fmt(ev.created_at)}
-                  </span>
-                  <span style={{ color: "hsl(var(--foreground))" }}>
-                    {EVENT_LABEL[ev.event_type] ?? ev.event_type}
-                    {ev.from_status && ev.to_status && ev.from_status !== ev.to_status && (
-                      <span className="text-[10px] ml-1" style={{ color: "hsl(var(--muted-foreground))" }}>
-                        ({ev.from_status} → {ev.to_status})
+            <ul className="space-y-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12 }}>
+              {audit.map(ev => {
+                const sr = ev.source_records || {};
+                const nS = Array.isArray(sr.session_record_ids) ? sr.session_record_ids.length : 0;
+                const nP = Array.isArray(sr.progress_ids) ? sr.progress_ids.length : 0;
+                const hasSrc = ev.source_records != null;
+                return (
+                  <li key={ev.id} className="rounded-md px-2 py-1.5" style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))" }}>
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <span className="text-[10px] shrink-0" style={{ color: "hsl(var(--muted-foreground))", fontFamily: "ui-monospace, monospace" }}>
+                        {fmt(ev.created_at)}
                       </span>
+                      <span style={{ color: "hsl(var(--foreground))", fontWeight: 600 }}>
+                        {EVENT_LABEL[ev.event_type] ?? ev.event_type}
+                      </span>
+                      {ev.from_status && ev.to_status && ev.from_status !== ev.to_status && (
+                        <span className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                          {ev.from_status} → {ev.to_status}
+                        </span>
+                      )}
+                      <span className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                        por {ev.actor_id?.slice(0, 8)}
+                      </span>
+                    </div>
+                    {ev.reason && (
+                      <p className="text-[11px] mt-0.5" style={{ color: "hsl(var(--brown))" }}>
+                        <span className="uppercase text-[9px] mr-1" style={{ color: "hsl(var(--muted-foreground))", letterSpacing: "0.06em" }}>Motivo:</span>
+                        {ev.reason}
+                      </p>
                     )}
-                  </span>
-                  <span className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))" }}>
-                    por {ev.actor_id === summary?.approved_by ? "profissional" : ev.actor_id.slice(0, 8)}
-                  </span>
-                </li>
-              ))}
+                    {hasSrc && (
+                      <p className="text-[10px] mt-0.5" style={{ color: "hsl(var(--muted-foreground))" }}>
+                        Registros considerados: {nS} sessão(ões), {nP} progresso(s)
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
