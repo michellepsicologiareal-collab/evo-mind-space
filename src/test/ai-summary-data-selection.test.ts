@@ -55,7 +55,7 @@ describe("generate-patient-summary — data selection scope", () => {
   });
 
   it("only writes to patient_ai_summaries (via service role after ownership check)", () => {
-    const writeCalls = [...SRC.matchAll(/(?:supabase|admin)\.from\(\s*["'](.+?)["']\s*\)[\s\S]{0,200}?\.(upsert|insert|update|delete)\b/g)];
+    const writeCalls = [...SRC.matchAll(/(?:supabase|admin)\.from\(\s*["'](.+?)["']\s*\)[\s\S]*?\.(upsert|insert|update|delete)\b/g)];
     for (const w of writeCalls) {
       expect(WRITE_TABLES).toContain(w[1]);
     }
