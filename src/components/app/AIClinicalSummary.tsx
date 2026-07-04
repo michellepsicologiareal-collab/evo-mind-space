@@ -45,6 +45,8 @@ interface AuditEvent {
   actor_id: string;
   actor_name?: string | null;
   note: string | null;
+  reason: string | null;
+  source_records: any;
   created_at: string;
 }
 
@@ -205,12 +207,18 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     setAuditLoading(true);
     const { data } = await (supabase as any)
       .from("patient_ai_summary_events")
-      .select("id, event_type, from_status, to_status, actor_id, note, created_at")
+      .select("id, event_type, from_status, to_status, actor_id, note, reason, source_records, created_at")
       .eq("summary_id", summary.id)
       .order("created_at", { ascending: false })
       .limit(50);
     setAudit((data as any) || []);
     setAuditLoading(false);
+  };
+
+  const annotateReason = async (reason: string) => {
+    if (!summary) return;
+    const { error: rpcErr } = await (supabase as any).rpc("set_ai_summary_event_reason", { _summary_id: summary.id, _reason: reason });
+    if (rpcErr) console.warn("annotate reason:", rpcErr.message);
   };
 
   useEffect(() => {
