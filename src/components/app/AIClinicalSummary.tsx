@@ -500,6 +500,12 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
           <Button size="sm" variant="outline" onClick={() => invoke(true)} disabled={loading} className="h-7 text-xs">
             <RefreshCw className="h-3 w-3 mr-1" /> Atualizar
           </Button>
+          {summary && summary.status === "approved" && (
+            <Button size="sm" onClick={exportPdf} className="h-7 text-xs" title="Exportar resumo aprovado em PDF para anexar ao prontuário">
+              <FileDown className="h-3 w-3 mr-1" /> Exportar PDF
+            </Button>
+          )}
+
         </div>
       </div>
 
