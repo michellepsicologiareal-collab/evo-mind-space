@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Sparkles, RefreshCw, Loader2, AlertCircle, Check, Pencil, X, Trash2, Clock,
-  GitCompare, History, ChevronDown, ChevronUp, ArrowUpCircle, FileWarning,
+  GitCompare, History, ChevronDown, ChevronUp, ArrowUpCircle, FileWarning, FileDown,
 } from "lucide-react";
+import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+
 
 interface SummaryData {
   visao_geral: string;
@@ -359,6 +361,100 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
     toast.success("Resumo descartado");
   };
 
+  const exportPdf = async () => {
+    if (!summary) return;
+    const data: SummaryData | null = summary.edited_content ?? summary.summary_data;
+    if (!data) { toast.error("Nada para exportar"); return; }
+    if (summary.status !== "approved") {
+      if (!confirm("Este resumo ainda não foi aprovado. Deseja exportar mesmo assim?")) return;
+    }
+    // Busca nome do paciente para o cabeçalho do PDF
+    const { data: pat } = await (supabase as any)
+      .from("patients")
+      .select("full_name, birth_date")
+      .eq("id", patientId)
+      .maybeSingle();
+    const patientName = pat?.full_name || "Paciente";
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 48;
+    const maxW = pageW - margin * 2;
+    let y = margin;
+    const ensure = (h: number) => { if (y + h > pageH - margin) { doc.addPage(); y = margin; } };
+    const writeParagraph = (text: string, opts: { size?: number; bold?: boolean; color?: [number, number, number]; gap?: number } = {}) => {
+      const size = opts.size ?? 11;
+      doc.setFont("helvetica", opts.bold ? "bold" : "normal");
+      doc.setFontSize(size);
+      doc.setTextColor(...(opts.color ?? [30, 30, 30]));
+      const lines = doc.splitTextToSize(text || "—", maxW);
+      lines.forEach((ln: string) => {
+        ensure(size + 4);
+        doc.text(ln, margin, y);
+        y += size + 4;
+      });
+      y += opts.gap ?? 4;
+    };
+    const writeSectionTitle = (t: string) => {
+      ensure(22);
+      y += 6;
+      writeParagraph(t, { size: 12, bold: true, color: [80, 60, 130], gap: 2 });
+      doc.setDrawColor(200, 200, 210);
+      doc.line(margin, y - 4, pageW - margin, y - 4);
+      y += 2;
+    };
+    const writeList = (items: string[]) => {
+      if (!items || items.length === 0) { writeParagraph("informação não disponível", { color: [140, 140, 140] }); return; }
+      items.forEach((it) => writeParagraph("• " + it, { size: 11 }));
+    };
+
+    // Cabeçalho
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(50, 40, 100);
+    doc.text("Resumo Clínico com IA", margin, y); y += 20;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(90, 90, 90);
+    doc.text(`Paciente: ${patientName}`, margin, y); y += 14;
+    const status = summary.status === "approved" ? "Aprovado" : summary.status === "discarded" ? "Descartado" : "Rascunho";
+    const genAt = new Date(summary.generated_at).toLocaleString("pt-BR");
+    const apprAt = summary.approved_at ? new Date(summary.approved_at).toLocaleString("pt-BR") : "—";
+    doc.text(`Status: ${status}  •  Gerado em: ${genAt}  •  Aprovado em: ${apprAt}`, margin, y); y += 12;
+    doc.text(`Exportado em: ${new Date().toLocaleString("pt-BR")}`, margin, y); y += 8;
+    doc.setDrawColor(180, 180, 190);
+    doc.line(margin, y, pageW - margin, y); y += 10;
+    doc.setFontSize(9);
+    doc.setTextColor(160, 60, 50);
+    const disc = doc.splitTextToSize("Conteúdo gerado por IA a partir de registros clínicos do prontuário. Revisado e aprovado pelo profissional responsável. Não substitui o julgamento clínico.", maxW);
+    disc.forEach((ln: string) => { ensure(12); doc.text(ln, margin, y); y += 12; });
+    y += 4;
+
+    writeSectionTitle("Visão Geral"); writeParagraph(data.visao_geral);
+    writeSectionTitle("Temas Recorrentes"); writeList(data.temas_recorrentes);
+    writeSectionTitle("Evolução Percebida"); writeParagraph(data.evolucao_percebida);
+    writeSectionTitle("Intervenções e Estratégias Registradas"); writeList(data.intervencoes_estrategias);
+    writeSectionTitle("Pontos para Acompanhamento"); writeList(data.pontos_acompanhamento);
+    writeSectionTitle("Pendências Documentais"); writeList(data.pendencias_documentais);
+
+    // Rodapé com numeração
+    const total = doc.getNumberOfPages();
+    for (let i = 1; i <= total; i++) {
+      doc.setPage(i);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Página ${i} de ${total}`, pageW - margin, pageH - 20, { align: "right" });
+      doc.text("Psi Real — Resumo Clínico com IA", margin, pageH - 20);
+    }
+
+    const safeName = patientName.replace(/[^\w\s-]/g, "").replace(/\s+/g, "_").slice(0, 40);
+    doc.save(`resumo-clinico_${safeName}_${new Date().toISOString().slice(0, 10)}.pdf`);
+    await annotateReason("Resumo aprovado exportado em PDF");
+    toast.success("PDF exportado");
+  };
+
+
   const src = (hasPending && viewPending ? summary?.pending_draft_source_records : summary?.source_records) ?? {};
   const nSess = Array.isArray(src.session_record_ids) ? src.session_record_ids.length : 0;
   const nProg = Array.isArray(src.progress_ids) ? src.progress_ids.length : 0;
@@ -404,6 +500,12 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
           <Button size="sm" variant="outline" onClick={() => invoke(true)} disabled={loading} className="h-7 text-xs">
             <RefreshCw className="h-3 w-3 mr-1" /> Atualizar
           </Button>
+          {summary && summary.status === "approved" && (
+            <Button size="sm" onClick={exportPdf} className="h-7 text-xs" title="Exportar resumo aprovado em PDF para anexar ao prontuário">
+              <FileDown className="h-3 w-3 mr-1" /> Exportar PDF
+            </Button>
+          )}
+
         </div>
       </div>
 
