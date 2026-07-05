@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Sparkles, RefreshCw, Loader2, AlertCircle, Check, Pencil, X, Trash2, Clock,
-  GitCompare, History, ChevronDown, ChevronUp, ArrowUpCircle, FileWarning,
+  GitCompare, History, ChevronDown, ChevronUp, ArrowUpCircle, FileWarning, FileDown,
 } from "lucide-react";
+import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+
 
 interface SummaryData {
   visao_geral: string;
