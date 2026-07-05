@@ -1041,7 +1041,71 @@ const Patients = () => {
                         </div>
                       );
                     })()}
+
+                    {/* Mapa de preenchimento — o que existe de cada paciente */}
+                    {(() => {
+                      const te = teData[p.id];
+                      const teHas = !!teFilled[p.id];
+                      const actHas = !!actFilled[p.id];
+                      const items: { key: string; label: string; filled: boolean; color: string; onView: (e: React.MouseEvent) => void }[] = [
+                        { key: "anam", label: "Anamnese", filled: hasAnam, color: "#7A5AA8",
+                          onView: (e) => { e.stopPropagation(); setAnamnesisPatient(p); } },
+                        { key: "tcc", label: "Formulação TCC", filled: hasFormul, color: C.purple,
+                          onView: (e) => { e.stopPropagation(); setPadeksyPatient(p); } },
+                        { key: "te", label: "Formulação TE", filled: teHas, color: "#B8860B",
+                          onView: (e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-te`); } },
+                        { key: "act", label: "Formulação ACT", filled: actHas, color: "#2D6A4F",
+                          onView: (e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-act`); } },
+                        { key: "rpd", label: "Registros TCC", filled: cTcc > 0, color: "hsl(var(--moss))",
+                          onView: (e) => { e.stopPropagation(); setTccPatient(p); } },
+                        { key: "sess", label: "Registros sessão", filled: (counts.records[p.id] || 0) > 0, color: C.purple,
+                          onView: (e) => { e.stopPropagation(); setRecordsPatient(p); } },
+                        { key: "plan", label: "Plano", filled: hasPlan, color: "#7A5AA8",
+                          onView: (e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); } },
+                      ];
+                      const filledCount = items.filter((i) => i.filled).length;
+                      return (
+                        <div className="mt-2 flex items-center gap-x-2 gap-y-1.5 flex-wrap" data-no-card-open>
+                          <span className="uppercase" style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: C.muted }}>
+                            Preenchido {filledCount}/{items.length}:
+                          </span>
+                          {items.map((it) => (
+                            <button
+                              key={it.key}
+                              type="button"
+                              onClick={it.onView}
+                              title={it.filled ? `Visualizar ${it.label}` : `${it.label} — pendente (clique para abrir)`}
+                              aria-label={`${it.filled ? "Visualizar" : "Abrir"} ${it.label}`}
+                              className="inline-flex items-center gap-1 transition-opacity hover:opacity-80"
+                              style={{
+                                fontSize: 10.5,
+                                fontWeight: 600,
+                                padding: "2px 7px 2px 8px",
+                                borderRadius: 40,
+                                border: `1px solid ${it.filled ? it.color : C.border}`,
+                                background: it.filled ? `${it.color}14` : "transparent",
+                                color: it.filled ? it.color : C.muted,
+                                opacity: it.filled ? 1 : 0.75,
+                                cursor: "pointer",
+                              }}
+                            >
+                              <span
+                                aria-hidden
+                                style={{
+                                  width: 6, height: 6, borderRadius: "50%",
+                                  background: it.filled ? it.color : "transparent",
+                                  border: it.filled ? "none" : `1px dashed ${C.muted}`,
+                                }}
+                              />
+                              {it.label}
+                              <Eye className="h-3 w-3" style={{ opacity: it.filled ? 1 : 0.55 }} />
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
+
 
 
                   <div className="flex items-center gap-3 shrink-0 ml-auto">
