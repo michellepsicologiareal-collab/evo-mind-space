@@ -1374,16 +1374,19 @@ const Patients = () => {
                     </button>
                     <button
                       onClick={async () => {
+                        const isChild = p.category === "crianca";
+                        const table = isChild ? "anamnesis_invites" : "adult_anamnesis_invites";
+                        const routeSlug = isChild ? "anamnese-crianca" : "anamnese-adulto";
                         const { data, error } = await supabase
-                          .from("anamnesis_invites")
-                          .insert({ patient_id: p.id })
+                          .from(table)
+                          .insert({ patient_id: p.id, user_id: (await supabase.auth.getUser()).data.user?.id })
                           .select("token")
                           .single();
                         if (error || !data?.token) {
                           toast.error("Não foi possível gerar o link.");
                           return;
                         }
-                        const link = `${window.location.origin}/anamnese-crianca/${data.token}`;
+                        const link = `${window.location.origin}/${routeSlug}/${data.token}`;
                         const phone = (p.phone || "").replace(/\D/g, "");
                         const msg = `Olá! Para iniciarmos o atendimento de ${p.full_name}, por favor preencha a anamnese neste link: ${link}`;
                         if (phone) {
