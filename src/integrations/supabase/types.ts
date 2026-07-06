@@ -67,6 +67,194 @@ export type Database = {
           },
         ]
       }
+      adult_anamneses: {
+        Row: {
+          additional_info: string | null
+          authorized_lgpd: boolean
+          birth_date: string | null
+          created_at: string
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          full_name: string
+          had_psychiatrist: string | null
+          had_psychotherapy: string | null
+          id: string
+          impact_level: number | null
+          important_events: string | null
+          invite_id: string | null
+          marital_status: string | null
+          medication_name: string | null
+          patient_id: string
+          phone: string | null
+          problem_duration: string | null
+          profession: string | null
+          reason_for_seeking: string | null
+          risk_flag: boolean | null
+          risk_ideation: string
+          scale_feeding: number | null
+          scale_leisure: number | null
+          scale_physical_health: number | null
+          scale_relationships: number | null
+          scale_sleep: number | null
+          scale_work: number | null
+          status: string
+          submitted_at: string
+          support_network: string | null
+          support_network_details: string | null
+          symptom_other: string | null
+          symptoms: Json
+          therapy_goals: string | null
+          updated_at: string
+          user_id: string
+          uses_medication: string | null
+        }
+        Insert: {
+          additional_info?: string | null
+          authorized_lgpd?: boolean
+          birth_date?: string | null
+          created_at?: string
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          full_name: string
+          had_psychiatrist?: string | null
+          had_psychotherapy?: string | null
+          id?: string
+          impact_level?: number | null
+          important_events?: string | null
+          invite_id?: string | null
+          marital_status?: string | null
+          medication_name?: string | null
+          patient_id: string
+          phone?: string | null
+          problem_duration?: string | null
+          profession?: string | null
+          reason_for_seeking?: string | null
+          risk_flag?: boolean | null
+          risk_ideation?: string
+          scale_feeding?: number | null
+          scale_leisure?: number | null
+          scale_physical_health?: number | null
+          scale_relationships?: number | null
+          scale_sleep?: number | null
+          scale_work?: number | null
+          status?: string
+          submitted_at?: string
+          support_network?: string | null
+          support_network_details?: string | null
+          symptom_other?: string | null
+          symptoms?: Json
+          therapy_goals?: string | null
+          updated_at?: string
+          user_id: string
+          uses_medication?: string | null
+        }
+        Update: {
+          additional_info?: string | null
+          authorized_lgpd?: boolean
+          birth_date?: string | null
+          created_at?: string
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          full_name?: string
+          had_psychiatrist?: string | null
+          had_psychotherapy?: string | null
+          id?: string
+          impact_level?: number | null
+          important_events?: string | null
+          invite_id?: string | null
+          marital_status?: string | null
+          medication_name?: string | null
+          patient_id?: string
+          phone?: string | null
+          problem_duration?: string | null
+          profession?: string | null
+          reason_for_seeking?: string | null
+          risk_flag?: boolean | null
+          risk_ideation?: string
+          scale_feeding?: number | null
+          scale_leisure?: number | null
+          scale_physical_health?: number | null
+          scale_relationships?: number | null
+          scale_sleep?: number | null
+          scale_work?: number | null
+          status?: string
+          submitted_at?: string
+          support_network?: string | null
+          support_network_details?: string | null
+          symptom_other?: string | null
+          symptoms?: Json
+          therapy_goals?: string | null
+          updated_at?: string
+          user_id?: string
+          uses_medication?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adult_anamneses_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adult_anamnesis_invites: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          patient_id: string | null
+          revoked_at: string | null
+          signed_anamnesis_id: string | null
+          token: string
+          updated_at: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          patient_id?: string | null
+          revoked_at?: string | null
+          signed_anamnesis_id?: string | null
+          token?: string
+          updated_at?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          patient_id?: string | null
+          revoked_at?: string | null
+          signed_anamnesis_id?: string | null
+          token?: string
+          updated_at?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adult_anamnesis_invites_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adult_anamnesis_invites_signed_anamnesis_id_fkey"
+            columns: ["signed_anamnesis_id"]
+            isOneToOne: false
+            referencedRelation: "adult_anamneses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       anamnesis_invites: {
         Row: {
           created_at: string
@@ -1886,6 +2074,17 @@ export type Database = {
           profile_type: Database["public"]["Enums"]["profile_type"]
         }[]
       }
+      get_adult_anamnesis_by_invite_token: {
+        Args: { _token: string }
+        Returns: {
+          expires_at: string
+          invite_id: string
+          patient_name: string
+          professional_crp: string
+          professional_name: string
+          status: string
+        }[]
+      }
       get_child_anamnesis_by_invite_token: {
         Args: { _token: string }
         Returns: {
@@ -1989,6 +2188,10 @@ export type Database = {
       set_ai_summary_event_reason: {
         Args: { _reason: string; _summary_id: string }
         Returns: undefined
+      }
+      submit_adult_anamnesis: {
+        Args: { _ip: string; _payload: Json; _token: string; _ua: string }
+        Returns: string
       }
       submit_child_anamnesis: {
         Args: { _ip: string; _payload: Json; _token: string; _ua: string }
