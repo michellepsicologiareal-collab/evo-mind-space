@@ -40,6 +40,7 @@ const FormulacaoACT = lazy(() => import("./pages/app/FormulacaoACT"));
 const FormulacaoTCC = lazy(() => import("./pages/app/FormulacaoTCC"));
 const ContratoPublico = lazy(() => import("./pages/ContratoPublico"));
 const AnamnesePublica = lazy(() => import("./pages/AnamnesePublica"));
+const AnamneseAdultoPublica = lazy(() => import("./pages/AnamneseAdultoPublica"));
 
 const queryClient = new QueryClient();
 
@@ -126,6 +127,8 @@ const App = () => (
                 <Route path="/contrato/:token" element={<ContratoPublico />} />
 
                 <Route path="/anamnese-crianca/:token" element={<AnamnesePublica />} />
+
+                <Route path="/anamnese-adulto/:token" element={<AnamneseAdultoPublica />} />
 
                 <Route path="/tarefas/:token" element={<Tarefas />} />
 
