@@ -295,6 +295,45 @@ const Anamneses = () => {
           {viewingAdult && <AdultAnamnesisViewer anamnesisId={viewingAdult.id} onSaved={() => { keepScroll(); preserveScroll(() => load()); }} />}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={sendOpen} onOpenChange={setSendOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl flex items-center gap-2">
+              {sendType === "adult" ? <Users className="h-5 w-5" /> : <Baby className="h-5 w-5" />}
+              Enviar anamnese — {sendType === "adult" ? "Adulto" : "Criança"}
+            </DialogTitle>
+            <DialogDescription>Selecione o paciente. O link será aberto no WhatsApp se houver telefone, ou copiado para você.</DialogDescription>
+          </DialogHeader>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input className="pl-9" placeholder="Buscar paciente..." value={sendSearch} onChange={(e) => setSendSearch(e.target.value)} />
+          </div>
+          <div className="max-h-80 overflow-y-auto space-y-1.5">
+            {filteredSendPatients.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Nenhum paciente {sendType === "child" ? "criança" : "adulto"} encontrado.</p>
+            ) : filteredSendPatients.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => generateLink(p)}
+                disabled={sending === p.id}
+                className="w-full flex items-center justify-between gap-3 rounded-xl border border-border bg-background hover:bg-muted/40 px-3 py-2.5 text-left transition-colors disabled:opacity-60"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{p.full_name}</p>
+                  {p.phone && <p className="text-xs text-muted-foreground truncate flex items-center gap-1"><MessageCircle className="h-3 w-3" /> {p.phone}</p>}
+                </div>
+                <span className="text-xs text-primary font-medium shrink-0 inline-flex items-center gap-1">
+                  {p.phone ? <><MessageCircle className="h-3.5 w-3.5" /> Enviar</> : <><Copy className="h-3.5 w-3.5" /> Copiar</>}
+                </span>
+              </button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSendOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
