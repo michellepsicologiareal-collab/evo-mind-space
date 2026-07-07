@@ -158,9 +158,19 @@ const Anamneses = () => {
         subtitle="Anamneses preenchidas pelos seus pacientes."
         intro="A anamnese organiza a história de vida, o motivo da queixa e o contexto de cada paciente — base clínica para hipóteses, plano terapêutico e devolutiva."
         actions={
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Buscar pelo nome..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input className="pl-9" placeholder="Buscar pelo nome..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="accent" onClick={() => openSend("adult")} className="gap-2">
+                <Send className="h-4 w-4" /> Enviar (Adulto)
+              </Button>
+              <Button variant="outline" onClick={() => openSend("child")} className="gap-2">
+                <Baby className="h-4 w-4" /> Enviar (Criança)
+              </Button>
+            </div>
           </div>
         }
       />
