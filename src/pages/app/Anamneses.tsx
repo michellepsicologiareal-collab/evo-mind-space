@@ -4,12 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ChildAnamnesisForm } from "@/components/app/ChildAnamnesisForm";
 import { AdultAnamnesisViewer } from "@/components/app/AdultAnamnesisViewer";
 import { CardSkeleton } from "@/components/app/Skeletons";
-import { Baby, Search, Pencil, Trash2, Users, AlertTriangle, Eye } from "lucide-react";
+import { Baby, Search, Pencil, Trash2, Users, AlertTriangle, Eye, Send, Copy, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -44,6 +44,59 @@ const Anamneses = () => {
   const [search, setSearch] = useState("");
   const [editingChild, setEditingChild] = useState<{ patient_id: string; name: string } | null>(null);
   const [viewingAdult, setViewingAdult] = useState<{ id: string; name: string } | null>(null);
+  const [sendOpen, setSendOpen] = useState(false);
+  const [sendType, setSendType] = useState<"adult" | "child">("adult");
+  const [sendPatients, setSendPatients] = useState<Array<{ id: string; full_name: string; category: string | null; phone: string | null }>>([]);
+  const [sendSearch, setSendSearch] = useState("");
+  const [sending, setSending] = useState<string | null>(null);
+
+  const openSend = async (type: "adult" | "child") => {
+    if (!user) return;
+    setSendType(type);
+    setSendOpen(true);
+    setSendSearch("");
+    const { data, error } = await supabase
+      .from("patients")
+      .select("id, full_name, category, phone")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .order("full_name");
+    if (error) { toast.error("Erro ao carregar pacientes"); return; }
+    setSendPatients((data ?? []) as any);
+  };
+
+  const generateLink = async (p: { id: string; full_name: string; phone: string | null }) => {
+    if (!user) return;
+    setSending(p.id);
+    const table = sendType === "child" ? "anamnesis_invites" : "adult_anamnesis_invites";
+    const slug = sendType === "child" ? "anamnese-crianca" : "anamnese-adulto";
+    const { data, error } = await supabase
+      .from(table)
+      .insert({ patient_id: p.id, user_id: user.id } as any)
+      .select("token")
+      .single();
+    setSending(null);
+    if (error || !data?.token) { toast.error("Não foi possível gerar o link."); return; }
+    const link = `${window.location.origin}/${slug}/${data.token}`;
+    const phone = (p.phone || "").replace(/\D/g, "");
+    const msg = `Olá! Para iniciarmos o atendimento de ${p.full_name}, por favor preencha a anamnese neste link: ${link}`;
+    if (phone) {
+      window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+      toast.success("Link aberto no WhatsApp");
+    } else {
+      await navigator.clipboard.writeText(link);
+      toast.success("Link copiado para a área de transferência");
+    }
+  };
+
+  const filteredSendPatients = useMemo(() => {
+    const q = sendSearch.trim().toLowerCase();
+    const base = sendType === "child"
+      ? sendPatients.filter(p => p.category === "crianca")
+      : sendPatients.filter(p => p.category !== "crianca");
+    if (!q) return base;
+    return base.filter(p => p.full_name.toLowerCase().includes(q));
+  }, [sendPatients, sendSearch, sendType]);
 
   const load = async () => {
     if (!user) return;
@@ -105,9 +158,19 @@ const Anamneses = () => {
         subtitle="Anamneses preenchidas pelos seus pacientes."
         intro="A anamnese organiza a história de vida, o motivo da queixa e o contexto de cada paciente — base clínica para hipóteses, plano terapêutico e devolutiva."
         actions={
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Buscar pelo nome..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input className="pl-9" placeholder="Buscar pelo nome..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="accent" onClick={() => openSend("adult")} className="gap-2">
+                <Send className="h-4 w-4" /> Enviar (Adulto)
+              </Button>
+              <Button variant="outline" onClick={() => openSend("child")} className="gap-2">
+                <Baby className="h-4 w-4" /> Enviar (Criança)
+              </Button>
+            </div>
           </div>
         }
       />
@@ -230,6 +293,45 @@ const Anamneses = () => {
             <DialogDescription>Anamnese Inicial — Adulto</DialogDescription>
           </DialogHeader>
           {viewingAdult && <AdultAnamnesisViewer anamnesisId={viewingAdult.id} onSaved={() => { keepScroll(); preserveScroll(() => load()); }} />}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={sendOpen} onOpenChange={setSendOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl flex items-center gap-2">
+              {sendType === "adult" ? <Users className="h-5 w-5" /> : <Baby className="h-5 w-5" />}
+              Enviar anamnese — {sendType === "adult" ? "Adulto" : "Criança"}
+            </DialogTitle>
+            <DialogDescription>Selecione o paciente. O link será aberto no WhatsApp se houver telefone, ou copiado para você.</DialogDescription>
+          </DialogHeader>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input className="pl-9" placeholder="Buscar paciente..." value={sendSearch} onChange={(e) => setSendSearch(e.target.value)} />
+          </div>
+          <div className="max-h-80 overflow-y-auto space-y-1.5">
+            {filteredSendPatients.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Nenhum paciente {sendType === "child" ? "criança" : "adulto"} encontrado.</p>
+            ) : filteredSendPatients.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => generateLink(p)}
+                disabled={sending === p.id}
+                className="w-full flex items-center justify-between gap-3 rounded-xl border border-border bg-background hover:bg-muted/40 px-3 py-2.5 text-left transition-colors disabled:opacity-60"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{p.full_name}</p>
+                  {p.phone && <p className="text-xs text-muted-foreground truncate flex items-center gap-1"><MessageCircle className="h-3 w-3" /> {p.phone}</p>}
+                </div>
+                <span className="text-xs text-primary font-medium shrink-0 inline-flex items-center gap-1">
+                  {p.phone ? <><MessageCircle className="h-3.5 w-3.5" /> Enviar</> : <><Copy className="h-3.5 w-3.5" /> Copiar</>}
+                </span>
+              </button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSendOpen(false)}>Fechar</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
