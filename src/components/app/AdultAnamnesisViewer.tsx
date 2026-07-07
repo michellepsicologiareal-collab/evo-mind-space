@@ -15,7 +15,7 @@ interface Props {
   onSaved?: () => void;
 }
 
-type Row = {
+type AnamnesisRow = {
   id: string;
   patient_id: string;
   full_name: string;
@@ -80,7 +80,7 @@ const Block = ({ title, children }: { title: string; children: React.ReactNode }
 );
 
 export const AdultAnamnesisViewer = ({ anamnesisId, onSaved }: Props) => {
-  const [row, setRow] = useState<Row | null>(null);
+  const [row, setRow] = useState<AnamnesisRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -93,7 +93,7 @@ export const AdultAnamnesisViewer = ({ anamnesisId, onSaved }: Props) => {
       .eq("id", anamnesisId)
       .maybeSingle();
     if (error) toast.error("Erro ao carregar anamnese");
-    setRow(data as unknown as Row);
+    setRow(data as unknown as AnamnesisRow);
     setLoading(false);
   };
 
@@ -209,7 +209,7 @@ export const AdultAnamnesisViewer = ({ anamnesisId, onSaved }: Props) => {
     return <div className="flex justify-center p-6"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   }
 
-  const update = <K extends keyof Row>(k: K, v: Row[K]) => setRow((p) => (p ? { ...p, [k]: v } : p));
+  const update = <K extends keyof AnamnesisRow>(k: K, v: AnamnesisRow[K]) => setRow((p) => (p ? { ...p, [k]: v } : p));
 
   return (
     <div className="space-y-4">
