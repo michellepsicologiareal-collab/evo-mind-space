@@ -44,6 +44,59 @@ const Anamneses = () => {
   const [search, setSearch] = useState("");
   const [editingChild, setEditingChild] = useState<{ patient_id: string; name: string } | null>(null);
   const [viewingAdult, setViewingAdult] = useState<{ id: string; name: string } | null>(null);
+  const [sendOpen, setSendOpen] = useState(false);
+  const [sendType, setSendType] = useState<"adult" | "child">("adult");
+  const [sendPatients, setSendPatients] = useState<Array<{ id: string; full_name: string; category: string | null; phone: string | null }>>([]);
+  const [sendSearch, setSendSearch] = useState("");
+  const [sending, setSending] = useState<string | null>(null);
+
+  const openSend = async (type: "adult" | "child") => {
+    if (!user) return;
+    setSendType(type);
+    setSendOpen(true);
+    setSendSearch("");
+    const { data, error } = await supabase
+      .from("patients")
+      .select("id, full_name, category, phone")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .order("full_name");
+    if (error) { toast.error("Erro ao carregar pacientes"); return; }
+    setSendPatients((data ?? []) as any);
+  };
+
+  const generateLink = async (p: { id: string; full_name: string; phone: string | null }) => {
+    if (!user) return;
+    setSending(p.id);
+    const table = sendType === "child" ? "anamnesis_invites" : "adult_anamnesis_invites";
+    const slug = sendType === "child" ? "anamnese-crianca" : "anamnese-adulto";
+    const { data, error } = await supabase
+      .from(table)
+      .insert({ patient_id: p.id, user_id: user.id } as any)
+      .select("token")
+      .single();
+    setSending(null);
+    if (error || !data?.token) { toast.error("Não foi possível gerar o link."); return; }
+    const link = `${window.location.origin}/${slug}/${data.token}`;
+    const phone = (p.phone || "").replace(/\D/g, "");
+    const msg = `Olá! Para iniciarmos o atendimento de ${p.full_name}, por favor preencha a anamnese neste link: ${link}`;
+    if (phone) {
+      window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+      toast.success("Link aberto no WhatsApp");
+    } else {
+      await navigator.clipboard.writeText(link);
+      toast.success("Link copiado para a área de transferência");
+    }
+  };
+
+  const filteredSendPatients = useMemo(() => {
+    const q = sendSearch.trim().toLowerCase();
+    const base = sendType === "child"
+      ? sendPatients.filter(p => p.category === "crianca")
+      : sendPatients.filter(p => p.category !== "crianca");
+    if (!q) return base;
+    return base.filter(p => p.full_name.toLowerCase().includes(q));
+  }, [sendPatients, sendSearch, sendType]);
 
   const load = async () => {
     if (!user) return;
