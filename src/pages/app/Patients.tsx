@@ -1126,11 +1126,14 @@ const Patients = () => {
                     )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button onClick={(e) => e.stopPropagation()}
+                        <button
+                          onClick={(e) => e.stopPropagation()}
                           className="flex items-center justify-center"
                           style={{ width: 32, height: 32, borderRadius: 7, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
+                          aria-label="Ações do paciente"
+                          title="Ações do paciente"
                         >
-                          <MoreHorizontal className="h-3.5 w-3.5" />
+                          <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
@@ -1232,8 +1235,10 @@ const Patients = () => {
                         style={{ width: 28, height: 28, borderRadius: 6, color: "hsl(var(--muted-foreground))" }}
                         onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; e.currentTarget.style.color = "hsl(var(--primary))"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
+                        aria-label="Ações do paciente"
+                        title="Ações do paciente"
                       >
-                        <MoreHorizontal className="h-4 w-4" />
+                        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
