@@ -970,6 +970,15 @@ const Patients = () => {
                       ) : (
                         <span style={{ background: "#F3F4F6", color: C.muted, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6 }}>{type}</span>
                       )}
+                      {p.shared_with_supervisor && (
+                        <span
+                          className="inline-flex items-center gap-1"
+                          title="Este paciente está compartilhado com o(a) supervisor(a)"
+                          style={{ background: "rgba(155,141,184,0.15)", color: "hsl(var(--lilac))", fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6, border: "1px solid rgba(155,141,184,0.35)" }}
+                        >
+                          <Eye className="h-3 w-3" /> Compartilhado c/ supervisor
+                        </span>
+                      )}
                       {p.phone && (
                         <span className="inline-flex items-center gap-1" style={{ fontSize: 12, color: C.muted }}>
                           <Phone className="h-3 w-3" />
