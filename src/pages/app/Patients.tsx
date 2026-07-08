@@ -1136,6 +1136,11 @@ const Patients = () => {
                         <DropdownMenuItem onClick={() => setRecordsPatient(p)}><FileText className="h-4 w-4 mr-2" /> Registros de sessão</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setHomeworkPatient(p)}><ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões</DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => toggleSharing(p)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          {p.shared_with_supervisor ? "Remover do supervisor" : "Compartilhar com supervisor"}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
 
                         <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
                       </DropdownMenuContent>
