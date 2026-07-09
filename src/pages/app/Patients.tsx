@@ -1128,6 +1128,11 @@ const Patients = () => {
                       <DropdownMenuTrigger asChild>
                         <button
                           onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.stopPropagation();
+                            }
+                          }}
                           className="flex items-center justify-center"
                           style={{ width: 32, height: 32, borderRadius: 7, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
                           aria-label="Ações do paciente"
@@ -1136,7 +1141,16 @@ const Patients = () => {
                           <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuContent
+                        align="end"
+                        onClick={(e) => e.stopPropagation()}
+                        onOpenAutoFocus={(e) => {
+                          // Keep Radix default: focus first menuitem when opened via keyboard.
+                        }}
+                        onCloseAutoFocus={(e) => {
+                          // Keep Radix default: return focus to the trigger button.
+                        }}
+                      >
                         <DropdownMenuItem onClick={() => openEdit(p)}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => toggleActive(p)}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
                         <DropdownMenuSeparator />
