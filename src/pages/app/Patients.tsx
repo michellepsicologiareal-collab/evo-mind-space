@@ -1144,9 +1144,6 @@ const Patients = () => {
                       <DropdownMenuContent
                         align="end"
                         onClick={(e) => e.stopPropagation()}
-                        onOpenAutoFocus={(e) => {
-                          // Keep Radix default: focus first menuitem when opened via keyboard.
-                        }}
                         onCloseAutoFocus={(e) => {
                           // Keep Radix default: return focus to the trigger button.
                         }}
