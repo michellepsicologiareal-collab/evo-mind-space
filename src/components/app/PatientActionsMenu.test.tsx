@@ -203,7 +203,9 @@ describe("Menu de ações do paciente (regressão multi-viewport)", () => {
       });
 
       it("devolve foco ao trigger após fechar por clique fora", async () => {
-        const user = userEvent.setup();
+        const user = userEvent.setup({
+          pointerEventsCheck: 0,
+        });
         render(
           <div>
             <PatientActionsMenu onShare={() => {}} onUnshare={() => {}} />
