@@ -175,11 +175,59 @@ describe("Menu de ações do paciente (regressão multi-viewport)", () => {
         expect(
           screen.queryByRole("menuitem", { name: "Compartilhar com supervisor" }),
         ).not.toBeInTheDocument();
-        // Radix devolve foco ao trigger via onCloseAutoFocus; em jsdom o foco
-        // pode ficar no body — validamos ao menos que o trigger permanece no DOM
-        // e focusável (tabIndex >= 0 ou é botão).
         expect(trigger).toBeInTheDocument();
         expect(trigger.tagName).toBe("BUTTON");
+      });
+
+      it("devolve foco ao trigger após fechar com Esc", async () => {
+        const user = userEvent.setup();
+        render(<PatientActionsMenu onShare={() => {}} onUnshare={() => {}} />);
+        const trigger = screen.getByRole("button", { name: "Ações do paciente" });
+        trigger.focus();
+        await user.keyboard("{Enter}");
+        expect(
+          await screen.findByRole("menuitem", { name: "Compartilhar com supervisor" }),
+        ).toBeInTheDocument();
+        await act(async () => {
+          await user.keyboard("{Escape}");
+        });
+        expect(
+          screen.queryByRole("menuitem", { name: "Compartilhar com supervisor" }),
+        ).not.toBeInTheDocument();
+        // Radix dispara onCloseAutoFocus devolvendo foco ao trigger.
+        await act(async () => {
+          await new Promise((r) => setTimeout(r, 0));
+        });
+        expect(document.activeElement === trigger || trigger.matches(":focus"))
+          .toBe(true);
+      });
+
+      it("devolve foco ao trigger após fechar por clique fora", async () => {
+        const user = userEvent.setup();
+        render(
+          <div>
+            <PatientActionsMenu onShare={() => {}} onUnshare={() => {}} />
+            <button type="button" data-testid="fora">fora</button>
+          </div>,
+        );
+        const trigger = screen.getAllByRole("button", { name: "Ações do paciente" })[0];
+        await user.click(trigger);
+        expect(
+          await screen.findByRole("menuitem", { name: "Compartilhar com supervisor" }),
+        ).toBeInTheDocument();
+        // clique fora fecha o menu
+        await act(async () => {
+          await user.click(document.body);
+        });
+        // aguarda o Radix propagar o onCloseAutoFocus
+        await act(async () => {
+          await new Promise((r) => setTimeout(r, 0));
+        });
+        expect(
+          screen.queryByRole("menuitem", { name: "Compartilhar com supervisor" }),
+        ).not.toBeInTheDocument();
+        expect(document.activeElement === trigger || trigger.matches(":focus"))
+          .toBe(true);
       });
     });
   }
