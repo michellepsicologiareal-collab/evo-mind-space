@@ -660,7 +660,7 @@ const Finance = () => {
       {/* Alerts row — filtros clicáveis que refinam a lista de sessões */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {([
-          { key: "receita_saude" as QuickAlert, label: "Receita Saúde pendente", icon: Receipt, count: missingReference.length, tone: "text-amber-600 bg-amber-50 border-amber-200" },
+          { key: "receita_saude" as QuickAlert, label: "Receita Saúde pendente", icon: Receipt, count: receitaSaudeToIssue.length, tone: "text-amber-600 bg-amber-50 border-amber-200" },
           { key: "sem_pagamento" as QuickAlert, label: "Sessões realizadas sem pagamento", icon: FileWarning, count: sessoesPendentes, tone: "text-destructive bg-destructive/10 border-destructive/30" },
           { key: "pix_sem_conf" as QuickAlert, label: "PIX recebido sem confirmação", icon: AlertTriangle, count: recentMissing.length, tone: "text-amber-700 bg-amber-50 border-amber-200" },
           { key: "pacotes_vencendo" as QuickAlert, label: "Pacotes vencendo", icon: PackageOpen, count: 0, tone: "text-primary bg-secondary/60 border-border" },
