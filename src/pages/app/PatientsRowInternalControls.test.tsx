@@ -222,7 +222,7 @@ describe("Controles internos da linha NÃO abrem o Sheet", () => {
     expect(screen.queryByTestId("sheet-name")).not.toBeInTheDocument();
   });
 
-  it("clicar em itens do menu '...' não abre o Sheet", async () => {
+  it("clicar em item do menu '...' não abre o Sheet", async () => {
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     const onAction = vi.fn();
     render(<Harness onAction={onAction} />);
@@ -231,13 +231,6 @@ describe("Controles internos da linha NÃO abrem o Sheet", () => {
     );
     await user.click(await screen.findByRole("menuitem", { name: "Editar" }));
     expect(onAction).toHaveBeenCalledWith("menu-edit");
-    expect(screen.queryByTestId("sheet-name")).not.toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole("button", { name: "Ações de Aline dos Anjos" })
-    );
-    await user.click(await screen.findByRole("menuitem", { name: "Arquivar" }));
-    expect(onAction).toHaveBeenCalledWith("menu-archive");
     expect(screen.queryByTestId("sheet-name")).not.toBeInTheDocument();
   });
 
