@@ -198,6 +198,70 @@ interface Patient {
 
 const FREE_PATIENT_LIMIT = 5;
 
+const hasMeaningfulClinicalValue = (value: unknown): boolean => {
+  if (value == null) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value === "boolean") return value;
+  if (Array.isArray(value)) return value.some(hasMeaningfulClinicalValue);
+  if (typeof value === "object") return Object.values(value as Record<string, unknown>).some(hasMeaningfulClinicalValue);
+  return false;
+};
+
+const clinicalText = (value: unknown): string => {
+  if (value == null) return "";
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) {
+    return value.map(clinicalText).filter(Boolean).join(" · ");
+  }
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const preferred = [record.objective, record.text, record.hypothesis, record.manifestacao, record.observacao, record.valor_declarado, record.acoes_alinhadas, record.barreiras];
+    const direct = preferred.map(clinicalText).filter(Boolean).join(" · ");
+    if (direct) return direct;
+    return Object.values(record).map(clinicalText).filter(Boolean).join(" · ");
+  }
+  return "";
+};
+
+const hasTccFormulation = (f?: Record<string, unknown> | null) => !!f && [
+  f.ai_summary,
+  f.environment,
+  f.thoughts,
+  f.emotions,
+  f.behaviors,
+  f.physical_reactions,
+  f.core_beliefs,
+  f.treatment_goals,
+].some(hasMeaningfulClinicalValue);
+
+const hasSchemaFormulation = (f?: Record<string, unknown> | null) => !!f && [
+  f.ambiente_familiar,
+  f.figuras_vinculacao,
+  f.eventos_marcantes,
+  f.padrao_identificado,
+  f.historia_origem,
+  f.necessidades,
+  f.outras_necessidades,
+  f.esquemas,
+  f.modos,
+  f.adulto_saudavel_forca,
+  f.conexao_gerada,
+  f.foco_terapeutico,
+  f.observacoes_terapeuta,
+].some(hasMeaningfulClinicalValue);
+
+const hasActFormulation = (f?: Record<string, unknown> | null) => !!f && [
+  f.apresentacao_problema,
+  f.hexaflex,
+  f.valores,
+  f.matriz_act,
+  f.barreiras_geradas,
+  f.direcionamento_gerado,
+  f.observacoes_terapeuta,
+].some(hasMeaningfulClinicalValue);
+
 const Patients = () => {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
@@ -251,8 +315,8 @@ const Patients = () => {
   const [formulationFilled, setFormulationFilled] = useState<Record<string, string>>({});
   const [teFilled, setTeFilled] = useState<Record<string, boolean>>({});
   const [actFilled, setActFilled] = useState<Record<string, boolean>>({});
-  const [teData, setTeData] = useState<Record<string, { padrao_identificado?: string; foco_terapeutico?: string; conexao_gerada?: string; updated_at?: string }>>({});
-  const [actData, setActData] = useState<Record<string, { apresentacao_problema?: string; direcionamento_gerado?: string; updated_at?: string }>>({});
+  const [teData, setTeData] = useState<Record<string, any>>({});
+  const [actData, setActData] = useState<Record<string, any>>({});
 
   const [formulationSummaries, setFormulationSummaries] = useState<Record<string, string>>({});
   const [summaryMeta, setSummaryMeta] = useState<Record<string, { abordagem: string; label: string }>>({});
@@ -317,8 +381,8 @@ const Patients = () => {
       supabase.from("treatment_goals").select("patient_id").eq("user_id", user.id),
       supabase.from("treatment_techniques").select("patient_id").eq("user_id", user.id),
       supabase.from("treatment_revisions").select("patient_id").eq("user_id", user.id),
-      supabase.from("schema_formulations").select("patient_id, padrao_identificado, foco_terapeutico, conexao_gerada, updated_at").eq("therapist_id", user.id),
-      supabase.from("act_formulations").select("patient_id, apresentacao_problema, direcionamento_gerado, updated_at").eq("therapist_id", user.id),
+      supabase.from("schema_formulations").select("patient_id, ambiente_familiar, figuras_vinculacao, eventos_marcantes, padrao_identificado, historia_origem, necessidades, outras_necessidades, esquemas, modos, adulto_saudavel_forca, conexao_gerada, foco_terapeutico, observacoes_terapeuta, updated_at").eq("therapist_id", user.id),
+      supabase.from("act_formulations").select("patient_id, apresentacao_problema, hexaflex, valores, matriz_act, barreiras_geradas, direcionamento_gerado, observacoes_terapeuta, updated_at").eq("therapist_id", user.id),
 
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
@@ -350,8 +414,9 @@ const Patients = () => {
     const dataMap: Record<string, any> = {};
     (formRes.data ?? []).forEach((f: any) => {
       if (!f.patient_id) return;
-      formMap[f.patient_id] = f.updated_at;
-      if (f.ai_summary) sumMap[f.patient_id] = f.ai_summary;
+      if (hasTccFormulation(f)) formMap[f.patient_id] = f.updated_at || new Date().toISOString();
+      const summary = clinicalText(f.ai_summary) || clinicalText(f.treatment_goals) || clinicalText(f.core_beliefs) || clinicalText(f.environment);
+      if (summary) sumMap[f.patient_id] = summary;
       dataMap[f.patient_id] = f;
     });
     setFormulationFilled(formMap);
@@ -359,12 +424,12 @@ const Patients = () => {
     setFormulationData(dataMap);
     const teMap: Record<string, boolean> = {};
     const teDataMap: Record<string, any> = {};
-    (teRes.data ?? []).forEach((r: any) => { if (r.patient_id) { teMap[r.patient_id] = true; teDataMap[r.patient_id] = r; } });
+    (teRes.data ?? []).forEach((r: any) => { if (r.patient_id) { teMap[r.patient_id] = hasSchemaFormulation(r); teDataMap[r.patient_id] = r; } });
     setTeFilled(teMap);
     setTeData(teDataMap);
     const actMap: Record<string, boolean> = {};
     const actDataMap: Record<string, any> = {};
-    (actRes.data ?? []).forEach((r: any) => { if (r.patient_id) { actMap[r.patient_id] = true; actDataMap[r.patient_id] = r; } });
+    (actRes.data ?? []).forEach((r: any) => { if (r.patient_id) { actMap[r.patient_id] = hasActFormulation(r); actDataMap[r.patient_id] = r; } });
     setActFilled(actMap);
     setActData(actDataMap);
 
@@ -1313,17 +1378,17 @@ const Patients = () => {
                             <DropdownMenuItem onClick={() => setTccPatient(p)}>
                               <IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setPadeksyPatient(p)}>
+                            <DropdownMenuItem onClick={() => guardMissing(!!formulationFilled[p.id], () => setPadeksyPatient(p), { label: "Formulação TCC" })}>
                               <IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-te`)}
+                              onClick={() => guardMissing(!!teFilled[p.id], () => navigate(`/app/pacientes/${p.id}/formulacao-te`), { label: "Formulação TE" })}
                               className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"
                             >
                               <IconTarget className="h-4 w-4 mr-2" /> Formulação TE
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)}
+                              onClick={() => guardMissing(!!actFilled[p.id], () => navigate(`/app/pacientes/${p.id}/formulacao-act`), { label: "Formulação ACT" })}
                               className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"
                             >
                               <IconFlame className="h-4 w-4 mr-2" /> Formulação ACT
@@ -1419,9 +1484,9 @@ const Patients = () => {
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); toggleActive(p); }}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); setTccPatient(p); }}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); setPadeksyPatient(p); }}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); }} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); }} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => guardMissing(!!formulationFilled[p.id], () => { setSelectedPatient(null); setPadeksyPatient(p); }, { label: "Formulação TCC" })}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => guardMissing(!!teFilled[p.id], () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); }, { label: "Formulação TE" })} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => guardMissing(!!actFilled[p.id], () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); }, { label: "Formulação ACT" })} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); setRecordsPatient(p); }}><FileText className="h-4 w-4 mr-2" /> Registros de sessão</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }}><ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões</DropdownMenuItem>
@@ -1501,15 +1566,19 @@ const Patients = () => {
                     <TabsContent value="formulations" className="mt-4">
                       {(() => {
                         const trunc = (t?: string, n = 180) => !t ? "" : (t.length > n ? t.slice(0, n).trimEnd() + "…" : t);
-                        const tccSummary = formulationSummaries[p.id] || formulationData[p.id]?.treatment_goals || formulationData[p.id]?.core_beliefs || "";
+                        const tcc = formulationData[p.id];
+                        const hasTcc = hasTccFormulation(tcc);
+                        const tccSummary = clinicalText(formulationSummaries[p.id]) || clinicalText(tcc?.treatment_goals) || clinicalText(tcc?.core_beliefs) || clinicalText(tcc?.environment);
                         const te = teData[p.id];
-                        const teSummary = te?.foco_terapeutico || te?.padrao_identificado || te?.conexao_gerada || "";
+                        const hasTe = hasSchemaFormulation(te);
+                        const teSummary = clinicalText(te?.foco_terapeutico) || clinicalText(te?.padrao_identificado) || clinicalText(te?.conexao_gerada) || clinicalText(te?.esquemas) || clinicalText(te?.modos);
                         const act = actData[p.id];
-                        const actSummary = act?.direcionamento_gerado || act?.apresentacao_problema || "";
+                        const hasAct = hasActFormulation(act);
+                        const actSummary = clinicalText(act?.direcionamento_gerado) || clinicalText(act?.apresentacao_problema) || clinicalText(act?.matriz_act) || clinicalText(act?.valores);
                         const items = [
-                          { key: "tcc", label: "TCC — Formulação de caso", filled: !!formulationFilled[p.id], summary: trunc(tccSummary), fullSummary: tccSummary, accent: "hsl(var(--primary))", onView: () => guardMissing(!!formulationFilled[p.id], () => { setSelectedPatient(null); setPadeksyPatient(p); }, { label: "Formulação TCC", onCreate: () => { setSelectedPatient(null); setPadeksyPatient(p); } }) },
-                          { key: "te", label: "TE — Terapia do Esquema", filled: !!teFilled[p.id], summary: trunc(teSummary), fullSummary: teSummary, accent: "#B8860B", onView: () => guardMissing(!!teFilled[p.id], () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); }, { label: "Formulação TE", onCreate: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); } }) },
-                          { key: "act", label: "ACT — Terapia de Aceitação", filled: !!actFilled[p.id], summary: trunc(actSummary), fullSummary: actSummary, accent: "#2D6A4F", onView: () => guardMissing(!!actFilled[p.id], () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); }, { label: "Formulação ACT", onCreate: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); } }) },
+                          { key: "tcc", label: "TCC — Formulação de caso", filled: hasTcc, summary: trunc(tccSummary), fullSummary: tccSummary, accent: "hsl(var(--primary))", onView: () => guardMissing(hasTcc, () => { setSelectedPatient(null); setPadeksyPatient(p); }, { label: "Formulação TCC", onCreate: () => { setSelectedPatient(null); setPadeksyPatient(p); } }) },
+                          { key: "te", label: "TE — Terapia do Esquema", filled: hasTe, summary: trunc(teSummary), fullSummary: teSummary, accent: "#B8860B", onView: () => guardMissing(hasTe, () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); }, { label: "Formulação TE", onCreate: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); } }) },
+                          { key: "act", label: "ACT — Terapia de Aceitação", filled: hasAct, summary: trunc(actSummary), fullSummary: actSummary, accent: "#2D6A4F", onView: () => guardMissing(hasAct, () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); }, { label: "Formulação ACT", onCreate: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); } }) },
                           { key: "rpd", label: "RPD — Registros TCC", filled: cTcc > 0, summary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", fullSummary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", accent: "hsl(var(--moss))", onView: () => guardMissing(cTcc > 0, () => { setSelectedPatient(null); setTccPatient(p); }, { label: "Registros TCC", onCreate: () => { setSelectedPatient(null); setTccPatient(p); } }) },
                         ];
                         return (
