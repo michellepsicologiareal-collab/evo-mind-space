@@ -463,21 +463,40 @@ const Finance = () => {
 
   return (
     <div className="space-y-8 animate-fade-up">
-      <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      <header className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div className="flex items-start gap-3 sm:gap-4 min-w-0">
           <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent">
             <Wallet className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Financeiro</p>
-            <h1 className="mt-1 font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Faturamento</h1>
+            <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Financeiro</h1>
             <p className="mt-1.5 text-sm md:text-base text-muted-foreground max-w-2xl">
-              Acompanhe sessões pagas, pendentes e seu faturamento mensal. Cada sessão registrada na Agenda vira uma linha de receita aqui — você só marca como paga ao receber.
+              Gestão de pagamentos, recebimentos e Receita Saúde.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+          <Button
+            variant="accent"
+            onClick={() => sessionsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Adicionar pagamento
+          </Button>
+
+          <div className="flex items-center gap-2 bg-card border border-border rounded-full p-1">
+            <Button variant="ghost" size="icon" onClick={() => setMonthCursor(subMonths(monthCursor, 1))}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs sm:text-sm font-medium px-1 sm:px-3 capitalize min-w-[100px] sm:min-w-[140px] text-center">
+              {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
+            </span>
+            <Button variant="ghost" size="icon" onClick={() => setMonthCursor(addMonths(monthCursor, 1))}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" size="icon" title="Preferências do lembrete">
@@ -589,20 +608,46 @@ const Finance = () => {
               </div>
             </PopoverContent>
           </Popover>
-
-          <div className="flex items-center gap-2 bg-card border border-border rounded-full p-1">
-            <Button variant="ghost" size="icon" onClick={() => setMonthCursor(subMonths(monthCursor, 1))}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-xs sm:text-sm font-medium px-1 sm:px-3 capitalize min-w-[100px] sm:min-w-[140px] text-center">
-              {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
-            </span>
-            <Button variant="ghost" size="icon" onClick={() => setMonthCursor(addMonths(monthCursor, 1))}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
       </header>
+
+      {/* KPI Cards — 4 cards */}
+      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard icon={Wallet} label="Recebido" value={formatBRL(totalRecebido)} hint={`${sessoesPagas} sessões`} accent />
+        <KpiCard icon={Clock} label="A Receber" value={formatBRL(totalAReceber)} hint={`${sessoesAgendadas - sessoesPagas} sessões`} />
+        <KpiCard icon={Receipt} label="Receita Saúde pendente" value={formatBRL(missingReference.reduce((s, r) => s + Number(r.price ?? 0), 0))} hint={`${missingReference.length} sem referência`} />
+        <KpiCard icon={CalendarClock} label="Receita prevista do mês" value={formatBRL(totalPrevisto)} hint={`${sessoesAgendadas} sessões agendadas`} />
+      </section>
+
+      {/* Alerts row — filtros clicáveis que refinam a lista de sessões */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {([
+          { key: "receita_saude" as QuickAlert, label: "Receita Saúde pendente", icon: Receipt, count: missingReference.length, tone: "text-amber-600 bg-amber-50 border-amber-200" },
+          { key: "sem_pagamento" as QuickAlert, label: "Sessões realizadas sem pagamento", icon: FileWarning, count: sessoesPendentes, tone: "text-destructive bg-destructive/10 border-destructive/30" },
+          { key: "pix_sem_conf" as QuickAlert, label: "PIX recebido sem confirmação", icon: AlertTriangle, count: recentMissing.length, tone: "text-amber-700 bg-amber-50 border-amber-200" },
+          { key: "pacotes_vencendo" as QuickAlert, label: "Pacotes vencendo", icon: PackageOpen, count: 0, tone: "text-primary bg-secondary/60 border-border" },
+        ]).map((a) => {
+          const active = quickAlert === a.key;
+          const Icon = a.icon;
+          return (
+            <button
+              key={a.key}
+              type="button"
+              onClick={() => {
+                setQuickAlert((cur) => (cur === a.key ? "none" : a.key));
+                sessionsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              className={`text-left rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:shadow-soft ${a.tone} ${active ? "ring-2 ring-offset-2 ring-primary/60" : ""}`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="font-display text-2xl font-semibold">{a.count}</span>
+              </div>
+              <p className="mt-2 text-xs font-medium leading-snug">{a.label}</p>
+            </button>
+          );
+        })}
+      </section>
 
       {/* Fortnight filter */}
       <div className="flex items-center gap-3">
@@ -615,13 +660,6 @@ const Finance = () => {
         </Tabs>
       </div>
 
-      <section className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <KpiCard icon={CalendarClock} label="Receita Prevista" value={formatBRL(totalPrevisto)} hint={`${sessoesAgendadas} sessões agendadas`} />
-        <KpiCard icon={TrendingUp} label="Faturado (realizado)" value={formatBRL(totalFaturado)} accent />
-        <KpiCard icon={Wallet} label="Recebido" value={formatBRL(totalRecebido)} hint={`${sessoesPagas} sessões`} />
-        <KpiCard icon={Clock} label="A receber" value={formatBRL(totalAReceber)} hint={`${sessoesAgendadas - sessoesRealizadas} sessões`} />
-        <KpiCard icon={CheckCircle2} label="Sessões realizadas" value={fortnightBillable.length.toString()} />
-      </section>
 
       {/* Previsto vs Realizado Chart */}
       <section className="rounded-3xl bg-card border border-border shadow-card p-6 lg:p-8">
