@@ -1446,7 +1446,7 @@ const Patients = () => {
 
 
       {/* Side panel */}
-      <Sheet open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
+      <Sheet open={!!selectedPatient} onOpenChange={(o) => { if (!o) { setSelectedPatient(null); setSelectedTab("overview"); } }}>
         <SheetContent side="right" className="w-full sm:max-w-[640px] p-0" style={{ background: "hsl(var(--card))", borderLeft: "0.5px solid hsl(var(--border))" }}>
           <VisuallyHidden>
             <SheetTitle>{selectedPatient?.full_name ?? "Ficha do paciente"}</SheetTitle>
