@@ -51,6 +51,10 @@ import {
   Sparkles,
   CalendarClock,
   BarChart3,
+  Plus,
+  FileWarning,
+  PackageOpen,
+  Receipt,
 } from "lucide-react";
 import {
   startOfMonth,
