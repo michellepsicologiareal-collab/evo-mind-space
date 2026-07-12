@@ -125,6 +125,7 @@ const Finance = () => {
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [expandedPatients, setExpandedPatients] = useState<Set<string>>(new Set());
   const [quickAlert, setQuickAlert] = useState<QuickAlert>("none");
+  const [receitaSaudeFilter, setReceitaSaudeFilter] = useState<ReceitaSaudeFilter>("all");
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const recentAlertRef = useRef<HTMLDivElement | null>(null);
   const sessionsSectionRef = useRef<HTMLElement | null>(null);
