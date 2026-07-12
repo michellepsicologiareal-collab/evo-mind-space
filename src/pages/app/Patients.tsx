@@ -1558,7 +1558,7 @@ const Patients = () => {
                         );
                       })()}
                       <div className="flex flex-wrap gap-1.5">
-                        <Chip label="Abrir plano" onClick={() => { setSelectedPatient(null); navigate(`/app/plano-tratamento?patient=${p.id}`); }} />
+                        <Chip label="Abrir plano" onClick={() => guardMissing(!!treatmentPlans[p.id], () => { setSelectedPatient(null); navigate(`/app/plano-tratamento?patient=${p.id}`); }, { label: "Plano terapêutico", onCreate: () => { setSelectedPatient(null); navigate(`/app/plano-tratamento?patient=${p.id}`); } })} />
                         <Chip label="Plano entre Sessões" onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }} />
                       </div>
                     </TabsContent>
