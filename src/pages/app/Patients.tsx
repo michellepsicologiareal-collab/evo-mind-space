@@ -1529,9 +1529,9 @@ const Patients = () => {
                         <InfoRow label="Histórico de sessões" value={cHist > 0 ? cHist : null} />
                       </div>
                       <div className="flex flex-wrap gap-1.5">
-                        <Chip label="Humor" count={cMood} onClick={() => { setSelectedPatient(null); setMoodPatient(p); }} />
-                        <Chip label="Histórico" count={cHist} onClick={() => { setSelectedPatient(null); setHistoryPatient(p); }} />
-                        <Chip label="Registros" count={cRec} onClick={() => { setSelectedPatient(null); setRecordsPatient(p); }} />
+                        <Chip label="Humor" count={cMood} onClick={() => guardMissing(cMood > 0, () => { setSelectedPatient(null); setMoodPatient(p); }, { label: "Humor", onCreate: () => { setSelectedPatient(null); setMoodPatient(p); } })} />
+                        <Chip label="Histórico" count={cHist} onClick={() => guardMissing(cHist > 0, () => { setSelectedPatient(null); setHistoryPatient(p); }, { label: "Histórico", onCreate: () => { setSelectedPatient(null); setHistoryPatient(p); } })} />
+                        <Chip label="Registros" count={cRec} onClick={() => guardMissing(cRec > 0, () => { setSelectedPatient(null); setRecordsPatient(p); }, { label: "Registros de sessão", onCreate: () => { setSelectedPatient(null); setRecordsPatient(p); } })} />
                       </div>
                       <button
                         onClick={() => { setSelectedPatient(null); navigate("/app/agenda"); }}
