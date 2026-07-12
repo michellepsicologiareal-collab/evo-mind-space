@@ -688,7 +688,7 @@ const Finance = () => {
       </section>
 
       {/* Fortnight filter */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Tabs value={fortnightFilter} onValueChange={(v) => setFortnightFilter(v as FortnightFilter)}>
           <TabsList>
             <TabsTrigger value="all">Mês todo</TabsTrigger>
@@ -696,6 +696,19 @@ const Finance = () => {
             <TabsTrigger value="second">2ª Quinzena (16–fim)</TabsTrigger>
           </TabsList>
         </Tabs>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="receita-saude-filter" className="text-xs text-muted-foreground">Receita Saúde</Label>
+          <Select value={receitaSaudeFilter} onValueChange={(v) => setReceitaSaudeFilter(v as ReceitaSaudeFilter)}>
+            <SelectTrigger id="receita-saude-filter" className="h-9 w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="to_issue">A emitir</SelectItem>
+              <SelectItem value="issued">Emitido</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
 
