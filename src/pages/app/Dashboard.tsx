@@ -1,1486 +1,422 @@
-import { useEffect, useState, useCallback } from "react";
-import { useAutoRefresh } from "@/hooks/useAutoRefresh";
-import { Link } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
-  Users,
-  Calendar,
-  TrendingUp,
-  Briefcase,
+  Search,
+  Plus,
+  Bell,
   ArrowRight,
-  Eye,
-  EyeOff,
-  Clock,
-  FileText,
-  Target,
-  SmilePlus,
-  Heart,
-  CalendarDays,
-  CalendarRange,
-  Banknote,
-  CheckCircle2,
-  XCircle,
-  CalendarClock,
-  ClipboardList,
-  Info,
-  Filter,
-  Pencil,
-  AlertTriangle,
-  TrendingDown,
-  Minus,
-  MoreHorizontal,
   Video,
   MapPin,
+  ClipboardList,
+  CalendarX,
+  CircleDollarSign,
+  UserMinus,
+  MoreHorizontal,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarPicker } from "@/components/ui/calendar";
-import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, differenceInMinutes, subMonths, startOfWeek, endOfWeek, startOfYear, endOfYear } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { CardSkeleton } from "@/components/app/Skeletons";
-import { toast } from "sonner";
-import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Legend } from "recharts";
-
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
-/* ── types ── */
-interface Stats {
-  activePatients: number;
-  todaySessions: number;
-  monthRevenue: number;
-  supervisionCases: number;
-  completedSessions: number;
-  totalRecords: number;
-  revenueGoal: number;
-  sessionsGoal: number;
-  recordsGoal: number;
-  previstos: number;
-  realizados: number;
-  faltasCanceladas: number;
-  aRealizar: number;
-  previstoRevenue: number;
-}
-
-interface UpcomingSession {
-  id: string;
-  scheduled_at: string;
-  patient_name: string;
-  patient_initials: string;
-  status: string;
-  session_number: number;
-}
-
-interface PatientMoodEntry {
-  id: string;
-  patient_id: string;
-  patient_name: string;
-  patient_initials: string;
-  mood_score: number; // score exibido (wellbeing_score quando v2, ou legacy mood_score)
-  note: string | null; // texto exibido (v2: patient_context/clinical_observation; legacy: note)
-  recorded_at: string;
-  attention_flag: "not_assessed" | "none" | "watch" | "urgent";
-  data_model: "legacy_unclassified" | "v2_structured";
-}
-
-interface FrequencyData {
-  name: string;
-  value: number;
-  avgPrice: number;
-}
-
-/* ── helpers ── */
-const getInitials = (name: string) => {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  return (parts[0]?.[0] ?? "?").toUpperCase();
-};
-
-const avatarColors = [
-  "bg-accent/20 text-accent",
-  "bg-lilac/20 text-lilac",
-  "bg-emerald-100 text-emerald-700",
-  "bg-sky-100 text-sky-700",
-  "bg-amber-100 text-amber-700",
-  "bg-rose-100 text-rose-700",
+/* ─── Mock data (será substituído por queries reais no próximo passo) ─── */
+const KPI = [
+  { label: "Pacientes ativos", value: "38", hint: "+3 neste mês", to: "/app/pacientes" },
+  { label: "Sessões na semana", value: "15", hint: "5 ainda por realizar", to: "/app/agenda" },
+  { label: "Comparecimento", value: "86%", hint: "+6% sobre o mês anterior", to: "/app/agenda" },
 ];
 
-const getAvatarColor = (name: string) => {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return avatarColors[Math.abs(hash) % avatarColors.length];
+type TodayItem = {
+  id: string;
+  time: string;
+  name: string;
+  session: number;
+  mode: "Online" | "Presencial";
+  status: "scheduled" | "to-confirm" | "confirmed";
 };
 
-const statusConfig: Record<string, { label: string; className: string }> = {
-  scheduled: { label: "Agendada", className: "bg-secondary text-secondary-foreground" },
-  confirmed: { label: "Confirmada", className: "bg-emerald-100 text-emerald-700" },
-  supervision: { label: "Supervisão", className: "bg-lilac/20 text-lilac" },
-  pending: { label: "Pendente", className: "bg-amber-100 text-amber-700" },
-};
+const TODAY: TodayItem[] = [
+  { id: "1", time: "08:00", name: "Pamela Tanaka", session: 17, mode: "Online", status: "scheduled" },
+  { id: "2", time: "09:00", name: "Ingrid Aparecida Maia", session: 6, mode: "Presencial", status: "to-confirm" },
+  { id: "3", time: "10:00", name: "Romara M. Miranda", session: 6, mode: "Online", status: "confirmed" },
+];
 
-const PIE_COLORS = ["#534AB7", "#B8860B"];
+const PENDINGS = [
+  { icon: ClipboardList, label: "Registros pendentes", count: 5, to: "/app/registro-sessao" },
+  { icon: CalendarX, label: "Sem próxima sessão", count: 3, to: "/app/pacientes?filter=sem-proxima" },
+  { icon: CircleDollarSign, label: "Pagamentos atrasados", count: 2, to: "/app/financeiro?filter=atrasados" },
+  { icon: UserMinus, label: "Baixa adesão", count: 1, to: "/app/pacientes?filter=baixa-adesao" },
+];
 
-const C = {
-  pageBg: "#F7F6F3",
-  ink: "#1A1A2E",
-  muted: "#6B7280",
-  purple: "#534AB7",
-  gold: "#B8860B",
-  border: "#E5E7EB",
-  card: "#FFFFFF",
-  green: "#2D6A4F",
-  red: "#C0392B",
-};
+const WEEK = [
+  { key: "seg", label: "Seg", value: 6 },
+  { key: "ter", label: "Ter", value: 7 },
+  { key: "qua", label: "Qua", value: 4 },
+  { key: "qui", label: "Qui", value: 5 },
+  { key: "sex", label: "Sex", value: 3 },
+];
 
-/* ── date range helpers ── */
-const currentMonthStart = () => startOfMonth(new Date());
-const currentMonthEnd = () => endOfMonth(new Date());
+/* ─── UI helpers ─── */
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Bom dia";
+  if (h < 18) return "Boa tarde";
+  return "Boa noite";
+}
 
-/* ── component ── */
-const Dashboard = () => {
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase();
+}
+
+/* ─── Page ─── */
+export default function Dashboard() {
   const { user } = useAuth();
-  const [dateFrom, setDateFrom] = useState<Date>(currentMonthStart());
-  const [dateTo, setDateTo] = useState<Date>(currentMonthEnd());
-  const [stats, setStats] = useState<Stats>({
-    activePatients: 0,
-    todaySessions: 0,
-    monthRevenue: 0,
-    supervisionCases: 0,
-    completedSessions: 0,
-    totalRecords: 0,
-    revenueGoal: 10000,
-    sessionsGoal: 40,
-    recordsGoal: 20,
-    previstos: 0,
-    realizados: 0,
-    faltasCanceladas: 0,
-    aRealizar: 0,
-    previstoRevenue: 0,
-  });
-  const [upcoming, setUpcoming] = useState<UpcomingSession[]>([]);
-  const [profileName, setProfileName] = useState("");
-  const [clinicName, setClinicName] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
-  useAutoRefresh(() => setRefreshKey(k => k + 1), { routePath: "/app" });
-  const [hideRevenue, setHideRevenue] = useState(false);
-  const [nextSessionMin, setNextSessionMin] = useState<number | null>(null);
-  const [moodData, setMoodData] = useState<{ name: string; score: number }[]>([]);
-  const [avgMood, setAvgMood] = useState<number | null>(null);
-  const [topMoodPatient, setTopMoodPatient] = useState("");
-  const [prevMonthRevenue, setPrevMonthRevenue] = useState(0);
-  const [weeklyRevenue, setWeeklyRevenue] = useState<{ week: string; value: number }[]>([]);
-  const [patientMoods, setPatientMoods] = useState<PatientMoodEntry[]>([]);
-  const [weekSessions, setWeekSessions] = useState(0);
-  const [monthSessions, setMonthSessions] = useState(0);
-  const [yearRevenue, setYearRevenue] = useState(0);
-  const [frequencyData, setFrequencyData] = useState<FrequencyData[]>([]);
-  const [moodFilterPatient, setMoodFilterPatient] = useState<string>("all");
-  const [moodPeriod, setMoodPeriod] = useState<"week" | "biweek" | "all">("all");
-  const [moodChartPatient, setMoodChartPatient] = useState<string>("all");
-  const [onlineCount, setOnlineCount] = useState(0);
-  const [presencialCount, setPresencialCount] = useState(0);
+  const navigate = useNavigate();
+  const displayName = useMemo(() => {
+    const meta: any = user?.user_metadata;
+    return (meta?.name || meta?.full_name || user?.email?.split("@")[0] || "Michelle") as string;
+  }, [user]);
 
-  const [editGoalsOpen, setEditGoalsOpen] = useState(false);
-  const [goalFormSessions, setGoalFormSessions] = useState(40);
-  const [goalFormRevenue, setGoalFormRevenue] = useState(10000);
-  const [goalFormRecords, setGoalFormRecords] = useState(20);
-  const [savingGoals, setSavingGoals] = useState(false);
+  const today = new Date();
+  const dateStr = format(today, "EEEE, d 'de' MMMM", { locale: ptBR });
+  const capDate = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+  const nextTime = TODAY[0]?.time ?? "—";
 
-  useEffect(() => {
-    if (!user) return;
-    const load = async () => {
-      const now = new Date();
-      const periodStart = dateFrom;
-      const periodEnd = dateTo;
-      const periodStartISO = periodStart.toISOString();
-      const periodEndISO = periodEnd.toISOString();
-      const dayStart = startOfDay(now).toISOString();
-      const dayEnd = endOfDay(now).toISOString();
+  const [selectedDay, setSelectedDay] = useState<string>("qui");
+  const maxWeek = Math.max(...WEEK.map((w) => w.value));
+  const totalWeek = WEEK.reduce((a, w) => a + w.value, 0);
+  const selectedLabel =
+    WEEK.find((w) => w.key === selectedDay)?.label ?? "";
 
-      const weekStartDate = startOfWeek(now, { weekStartsOn: 1 });
-      const weekEndDate = endOfWeek(now, { weekStartsOn: 1 });
-      const yearStart = startOfYear(now).toISOString();
-      const yearEnd = endOfYear(now).toISOString();
-
-      const [profileRes, patientsRes, todayRes, monthRes, upcomingRes, supervisionRes, recordsRes, weekRes, monthAllRes, yearRes] =
-        await Promise.all([
-          supabase.from("profiles").select("full_name, clinic_name, goal_sessions, goal_revenue, goal_records").eq("id", user.id).maybeSingle(),
-          supabase.from("patients").select("id, modality").eq("user_id", user.id).eq("is_active", true),
-          supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", dayStart).lte("scheduled_at", dayEnd).in("status", ["scheduled", "confirmed", "completed"]),
-          supabase.from("sessions").select("price, status, scheduled_at, paid_at, payment_status").eq("user_id", user.id).gte("scheduled_at", periodStartISO).lte("scheduled_at", periodEndISO),
-          supabase
-            .from("sessions")
-            .select("id, scheduled_at, status, patient_id, session_type, patient:patients!sessions_patient_id_fkey(full_name)")
-            .eq("user_id", user.id)
-            .gte("scheduled_at", now.toISOString())
-            .in("status", ["scheduled", "confirmed"])
-            .order("scheduled_at")
-            .limit(3),
-          supabase
-            .from("patients")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", user.id)
-            .eq("shared_with_supervisor", true),
-          supabase
-            .from("sessions")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", user.id)
-            .gte("scheduled_at", periodStartISO)
-            .lte("scheduled_at", periodEndISO)
-            .not("notes", "is", null)
-            .neq("notes", ""),
-          supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", weekStartDate.toISOString()).lte("scheduled_at", weekEndDate.toISOString()).in("status", ["scheduled", "confirmed", "completed"]),
-          supabase.from("sessions").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("scheduled_at", periodStartISO).lte("scheduled_at", periodEndISO).in("status", ["scheduled", "confirmed", "completed"]),
-          supabase.from("sessions").select("price, status, is_expense").eq("user_id", user.id).gte("scheduled_at", yearStart).lte("scheduled_at", yearEnd).eq("status", "completed"),
-        ]);
-
-      setProfileName(profileRes.data?.full_name ?? "");
-      setClinicName((profileRes.data as any)?.clinic_name ?? "");
-
-      const pGoalSessions = (profileRes.data as any)?.goal_sessions ?? 40;
-      const pGoalRevenue = Number((profileRes.data as any)?.goal_revenue ?? 10000);
-      const pGoalRecords = (profileRes.data as any)?.goal_records ?? 20;
-      setGoalFormSessions(pGoalSessions);
-      setGoalFormRevenue(pGoalRevenue);
-      setGoalFormRecords(pGoalRecords);
-
-      const monthSessionsArr = monthRes.data ?? [];
-      // Faturado (realizado) = completed + paid sessions in the period
-      const revenue = monthSessionsArr
-        .filter((s: any) => s.status === "completed" && s.payment_status === "paid")
-        .reduce((sum: number, s: any) => sum + Number(s.price ?? 0), 0);
-      const previstoRevenue = monthSessionsArr.filter((s: any) => s.status !== "cancelled" && s.status !== "no_show").reduce((sum: number, s: any) => sum + Number(s.price ?? 0), 0);
-      const completed = monthSessionsArr.filter((s) => s.status === "completed").length;
-      const faltasCanceladas = monthSessionsArr.filter((s) => s.status === "no_show" || s.status === "cancelled").length;
-      const now2 = new Date();
-      const aRealizar = monthSessionsArr.filter((s) => {
-        const d = new Date(s.scheduled_at);
-        return d > now2 && s.status !== "completed" && s.status !== "cancelled" && s.status !== "no_show";
-      }).length;
-
-      const activePatientsList = (patientsRes.data ?? []) as Array<{ id: string; modality: string | null }>;
-      const onlineN = activePatientsList.filter((p) => p.modality === "online").length;
-      const presencialN = activePatientsList.length - onlineN;
-      setOnlineCount(onlineN);
-      setPresencialCount(presencialN);
-
-      setStats({
-        activePatients: activePatientsList.length,
-        todaySessions: todayRes.count ?? 0,
-        monthRevenue: revenue,
-        supervisionCases: supervisionRes.count ?? 0,
-        completedSessions: completed,
-        totalRecords: recordsRes.count ?? 0,
-        revenueGoal: pGoalRevenue,
-        sessionsGoal: pGoalSessions,
-        recordsGoal: pGoalRecords,
-        previstos: monthSessionsArr.filter((s) => s.status !== "cancelled" && s.status !== "no_show").length,
-        realizados: completed,
-        faltasCanceladas,
-        aRealizar,
-        previstoRevenue,
-      });
-
-      setWeekSessions(weekRes.count ?? 0);
-      setMonthSessions(monthAllRes.count ?? 0);
-      // Exclude expenses from year revenue
-      setYearRevenue(
-        (yearRes.data ?? [])
-          .filter((s: any) => !s.is_expense)
-          .reduce((sum, s) => sum + Number(s.price ?? 0), 0)
-      );
-
-      const sessionsData = (upcomingRes.data ?? []) as any[];
-      const uniquePatientIds = [...new Set(sessionsData.map((s: any) => s.patient_id).filter(Boolean))];
-      const countResults = await Promise.all(
-        uniquePatientIds.map((pid) =>
-          supabase
-            .from("sessions")
-            .select("id", { count: "exact", head: true })
-            .eq("patient_id", pid)
-            .eq("user_id", user.id)
-            .then(({ count }) => [pid, count ?? 0] as const)
-        )
-      );
-      const patientSessionCounts = Object.fromEntries(countResults);
-
-      const mapped = sessionsData.map((s: any) => ({
-        id: s.id,
-        scheduled_at: s.scheduled_at,
-        patient_name: s.session_type === "supervision" ? "Supervisão" : (s.patient?.full_name ?? "—"),
-        patient_initials: s.session_type === "supervision" ? "SV" : getInitials(s.patient?.full_name ?? "?"),
-        status: s.status ?? "scheduled",
-        session_number: patientSessionCounts[s.patient_id] ?? 1,
-      }));
-
-      setUpcoming(mapped);
-
-      if (mapped.length > 0) {
-        const diff = differenceInMinutes(new Date(mapped[0].scheduled_at), now);
-        setNextSessionMin(diff > 0 ? diff : null);
-      }
-
-      // ── Frequency analysis: active patients only (weekly vs biweekly) ──
-      // Fetch active patients with session_price
-      const { data: activePatients } = await supabase
-        .from("patients")
-        .select("id, session_price")
-        .eq("user_id", user.id)
-        .eq("is_active", true);
-
-      if (activePatients && activePatients.length > 0) {
-        const activeIds = new Set(activePatients.map((p: any) => p.id));
-        const priceMap: Record<string, number> = {};
-        activePatients.forEach((p: any) => {
-          priceMap[p.id] = Number(p.session_price ?? 0);
-        });
-
-        // Fetch scheduled (planned) sessions for active patients to calc interval
-        const { data: freqSessions } = await supabase
-          .from("sessions")
-          .select("patient_id, scheduled_at")
-          .eq("user_id", user.id)
-          .eq("is_expense", false)
-          .in("status", ["scheduled", "completed", "confirmed"])
-          .order("scheduled_at", { ascending: true });
-
-        const byPatient: Record<string, Date[]> = {};
-        if (freqSessions) {
-          freqSessions.forEach((s: any) => {
-            if (!activeIds.has(s.patient_id)) return;
-            if (!byPatient[s.patient_id]) byPatient[s.patient_id] = [];
-            byPatient[s.patient_id].push(new Date(s.scheduled_at));
-          });
-        }
-
-        const freqCounts: Record<string, { count: number; totalPrice: number }> = {
-          Semanal: { count: 0, totalPrice: 0 },
-          Quinzenal: { count: 0, totalPrice: 0 },
-        };
-
-        Object.entries(byPatient).forEach(([patientId, dates]) => {
-          if (dates.length < 2) return;
-          let totalDays = 0;
-          for (let i = 1; i < dates.length; i++) {
-            totalDays += (dates[i].getTime() - dates[i - 1].getTime()) / (1000 * 60 * 60 * 24);
-          }
-          const avgInterval = totalDays / (dates.length - 1);
-          const patientPrice = priceMap[patientId] ?? 0;
-
-          if (avgInterval <= 10) {
-            freqCounts["Semanal"].count++;
-            freqCounts["Semanal"].totalPrice += patientPrice;
-          } else {
-            freqCounts["Quinzenal"].count++;
-            freqCounts["Quinzenal"].totalPrice += patientPrice;
-          }
-        });
-
-        const pieData: FrequencyData[] = Object.entries(freqCounts)
-          .filter(([, v]) => v.count > 0)
-          .map(([name, v]) => ({
-            name,
-            value: v.count,
-            avgPrice: v.count > 0 ? Math.round(v.totalPrice / v.count) : 0,
-          }));
-
-        setFrequencyData(pieData);
-      }
-
-      // ── Mood + Previous revenue in parallel ──
-      const prevStart = startOfMonth(subMonths(now, 1)).toISOString();
-      const prevEnd = endOfMonth(subMonths(now, 1)).toISOString();
-
-      const [moodRes, prevRes] = await Promise.all([
-        (supabase as any)
-          .from("patient_progress")
-          .select("mood_score, wellbeing_score, data_model, recorded_at, patient_id")
-          .eq("user_id", user.id)
-          .order("recorded_at", { ascending: true })
-          .limit(60),
-        supabase
-          .from("sessions")
-          .select("price, status")
-          .eq("user_id", user.id)
-          .gte("scheduled_at", prevStart)
-          .lte("scheduled_at", prevEnd),
-      ]);
-
-      const moodRowsRaw = (moodRes.data ?? []) as any[];
-      // Score exibido: wellbeing_score quando v2; caso contrário mood_score (legado)
-      const moodRows = moodRowsRaw
-        .map((m: any) => ({
-          ...m,
-          _display_score: m.data_model === "v2_structured"
-            ? (m.wellbeing_score != null ? Number(m.wellbeing_score) : null)
-            : (m.mood_score != null ? Number(m.mood_score) : null),
-        }))
-        .filter((m) => m._display_score != null);
-      if (moodRows.length > 0) {
-        const moodChartData = moodRows.slice(-30).map((m: any) => ({
-          name: format(new Date(m.recorded_at), "dd/MM"),
-          score: m._display_score,
-        }));
-        setMoodData(moodChartData);
-        const avg = moodChartData.reduce((s, d) => s + d.score, 0) / moodChartData.length;
-        setAvgMood(Math.round(avg * 10) / 10);
-
-        const patientCounts: Record<string, number> = {};
-        moodRows.forEach((m: any) => { patientCounts[m.patient_id] = (patientCounts[m.patient_id] ?? 0) + 1; });
-        const topPatientId = Object.entries(patientCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
-        if (topPatientId) {
-          const { data: pat } = await supabase.from("patients").select("full_name").eq("id", topPatientId).maybeSingle();
-          if (pat) {
-            const parts = pat.full_name.split(" ");
-            setTopMoodPatient(parts[0] + (parts[1] ? ` ${parts[1][0]}.` : ""));
-          }
-        }
-      }
-
-      const prevRev = (prevRes.data ?? [])
-        .filter((s) => s.status === "completed")
-        .reduce((sum, s) => sum + Number(s.price ?? 0), 0);
-      setPrevMonthRevenue(prevRev);
-
-      const weekData: { week: string; value: number }[] = [];
-      const monthSess = monthSessionsArr.filter((s) => s.status === "completed");
-      for (let w = 0; w < 4; w++) {
-        const wStart = w * 7 + 1;
-        const wEnd = w === 3 ? 31 : (w + 1) * 7;
-        const val = monthSess
-          .filter((s: any) => {
-            const day = new Date(s.scheduled_at ?? now).getDate();
-            return day >= wStart && day <= wEnd;
-          })
-          .reduce((sum, s) => sum + Number(s.price ?? 0), 0);
-        weekData.push({ week: `S${w + 1}`, value: val });
-      }
-      setWeeklyRevenue(weekData);
-
-      const { data: recentMoodsRaw } = await (supabase as any)
-        .from("patient_progress")
-        .select("id, mood_score, note, wellbeing_score, patient_context, clinical_observation, attention_flag, data_model, recorded_at, patient_id")
-        .eq("user_id", user.id)
-        .order("recorded_at", { ascending: false })
-        .limit(200);
-
-      const recentMoods = (recentMoodsRaw ?? []).filter((m: any) => {
-        // exibe entradas com score OU sinalizador clínico OU texto
-        const score = m.data_model === "v2_structured" ? m.wellbeing_score : m.mood_score;
-        const hasText = m.data_model === "v2_structured"
-          ? !!(m.patient_context || m.clinical_observation)
-          : !!m.note;
-        return score != null || hasText || (m.attention_flag && m.attention_flag !== "not_assessed");
-      }).slice(0, 100);
-
-      if (recentMoods.length > 0) {
-        const pIds = [...new Set(recentMoods.map((m: any) => m.patient_id as string))] as string[];
-        const { data: pNames } = await supabase
-          .from("patients")
-          .select("id, full_name")
-          .in("id", pIds);
-        const nameMap: Record<string, string> = {};
-        (pNames ?? []).forEach((p: any) => { nameMap[p.id] = p.full_name; });
-
-        setPatientMoods(
-          recentMoods.map((m: any) => {
-            const v2 = m.data_model === "v2_structured";
-            const score = v2
-              ? (m.wellbeing_score != null ? Number(m.wellbeing_score) : NaN)
-              : (m.mood_score != null ? Number(m.mood_score) : NaN);
-            const displayText = v2
-              ? [m.patient_context, m.clinical_observation].filter(Boolean).join(" · ") || null
-              : m.note;
-            return {
-              id: m.id,
-              patient_id: m.patient_id,
-              patient_name: nameMap[m.patient_id] ?? "Paciente",
-              patient_initials: getInitials(nameMap[m.patient_id] ?? "?"),
-              mood_score: Number.isFinite(score) ? score : 0,
-              note: displayText,
-              recorded_at: m.recorded_at,
-              attention_flag: (m.attention_flag ?? "not_assessed") as PatientMoodEntry["attention_flag"],
-              data_model: (m.data_model ?? "legacy_unclassified") as PatientMoodEntry["data_model"],
-            };
-          })
-        );
-      }
-    };
-    load()
-      .catch((error) => {
-        console.warn("Não foi possível carregar o painel inicial:", error);
-      })
-      .finally(() => setLoading(false));
-  }, [user, dateFrom, dateTo, refreshKey]);
-
-  const greeting = (() => {
-    const h = new Date().getHours();
-    if (h < 12) return "Bom dia";
-    if (h < 18) return "Boa tarde";
-    return "Boa noite";
-  })();
-
-  const firstName = profileName?.split(" ")[0] ?? "";
-  const periodLabel = `${format(dateFrom, "dd/MM/yyyy")} — ${format(dateTo, "dd/MM/yyyy")}`;
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="h-24 rounded-2xl bg-muted animate-pulse" />
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <CardSkeleton key={i} />)}
-        </div>
-        <div className="h-64 rounded-2xl bg-muted animate-pulse" />
-      </div>
-    );
-  }
-
-  const summaryParts: string[] = [];
-  if (stats.todaySessions > 0)
-    summaryParts.push(`Você tem ${stats.todaySessions} ${stats.todaySessions === 1 ? "sessão" : "sessões"} hoje`);
-  if (nextSessionMin !== null && nextSessionMin > 0) {
-    const hours = Math.floor(nextSessionMin / 60);
-    const mins = nextSessionMin % 60;
-    const timeStr = hours > 0 ? `${hours}h${mins > 0 ? `${mins}min` : ""}` : `${mins} min`;
-    summaryParts.push(`A próxima começa em ${timeStr}`);
-  }
-  const summaryText =
-    summaryParts.length > 0
-      ? summaryParts.join(". ") + "."
-      : "Sua agenda está tranquila hoje. Aproveite para organizar seus registros.";
-
-  const progressItems = [
-    {
-      label: "Sessões Realizadas",
-      icon: Calendar,
-      current: stats.completedSessions,
-      goal: stats.sessionsGoal,
-    },
-    {
-      label: "Meta de Faturamento",
-      icon: Target,
-      current: stats.monthRevenue,
-      goal: stats.revenueGoal,
-      isCurrency: true,
-    },
-    {
-      label: "Registros Clínicos",
-      icon: FileText,
-      current: stats.totalRecords,
-      goal: stats.recordsGoal,
-    },
-  ];
+  const handleAction = (label: string) =>
+    toast.success(label, { description: "Ação simulada nesta versão." });
 
   return (
-    <TooltipProvider delayDuration={300}>
-      <div
-        className="space-y-8 animate-fade-up -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 pt-4 sm:pt-6 pb-10 min-h-screen"
-        style={{ background: C.pageBg }}
-      >
-        {/* ── Welcome Header ── */}
-        <header className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
-          <p
-            className="uppercase"
-            style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", color: "#B8860B" }}
-          >
-            PSI REAL{clinicName ? ` · ${clinicName}` : ""}
-          </p>
-          <p className="mt-1 capitalize" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 300, color: "#6B7280" }}>
-            {format(new Date(), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-          </p>
-          <h1
-            className="mt-2"
-            style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 700, color: "#1A1A2E" }}
-          >
-            {greeting}{firstName ? `, ${firstName}` : ""}.
-          </h1>
-          <p className="mt-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "13px", fontWeight: 300, color: "#6B7280" }}>
-            {summaryText}
-          </p>
-        </header>
-
-        {/* ── Ações Rápidas ── */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Button asChild variant="accent" size="lg" className="h-14 justify-start gap-3 rounded-2xl shadow-card">
-            <Link to="/app/pacientes">
-              <Users className="h-5 w-5 shrink-0" />
-              <span className="truncate font-display font-semibold">Novo paciente</span>
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="h-14 justify-start gap-3 rounded-2xl bg-card shadow-card border-border hover:bg-accent/5">
-            <Link to="/app/agenda">
-              <Calendar className="h-5 w-5 shrink-0 text-accent" />
-              <span className="truncate font-display font-semibold">Agendar sessão</span>
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="h-14 justify-start gap-3 rounded-2xl bg-card shadow-card border-border hover:bg-accent/5">
-            <Link to="/app/contratos">
-              <FileText className="h-5 w-5 shrink-0 text-lilac" />
-              <span className="truncate font-display font-semibold">Criar contrato</span>
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="h-14 justify-start gap-3 rounded-2xl bg-card shadow-card border-border hover:bg-accent/5">
-            <Link to="/app/anamneses">
-              <ClipboardList className="h-5 w-5 shrink-0 text-lilac" />
-              <span className="truncate font-display font-semibold">Enviar anamnese</span>
-            </Link>
-          </Button>
-        </section>
-
-
-
-        {/* ── Period Filter ── */}
-        <div className="flex flex-wrap items-center gap-3">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-muted-foreground">Período:</span>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 gap-2 text-sm">
-                <CalendarDays className="h-3.5 w-3.5" />
-                {format(dateFrom, "dd/MM/yyyy")}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <CalendarPicker
-                mode="single"
-                selected={dateFrom}
-                onSelect={(d) => d && setDateFrom(startOfDay(d))}
-                initialFocus
-                className="p-3 pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-          <span className="text-sm text-muted-foreground">até</span>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 gap-2 text-sm">
-                <CalendarDays className="h-3.5 w-3.5" />
-                {format(dateTo, "dd/MM/yyyy")}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <CalendarPicker
-                mode="single"
-                selected={dateTo}
-                onSelect={(d) => d && setDateTo(endOfDay(d))}
-                initialFocus
-                className="p-3 pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs text-accent"
-            onClick={() => { setDateFrom(currentMonthStart()); setDateTo(currentMonthEnd()); }}
-          >
-            Mês atual
-          </Button>
-        </div>
-
-        {/* ── KPI Cards ── */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard icon={Users} label="Pacientes Ativos" value={stats.activePatients.toString()} tooltip="Total de pacientes com status ativo no seu cadastro." />
-          <KPICard icon={Calendar} label="Sessões Hoje" value={stats.todaySessions.toString()} tooltip="Quantidade de sessões agendadas, confirmadas ou concluídas para o dia de hoje." />
-          <KPICard icon={CalendarDays} label="Sessões esta Semana" value={weekSessions.toString()} tooltip="Total de sessões (agendadas, confirmadas ou concluídas) na semana atual (segunda a domingo)." />
-          <KPICard icon={CalendarRange} label="Sessões este Mês" value={monthSessions.toString()} tooltip="Total de sessões (agendadas, confirmadas ou concluídas) no mês corrente." />
-        </section>
-
-        {/* ── HOJE: Próximas Sessões ── */}
-        <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
-          <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
-            <div>
-              <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.14em", color: "#B8860B" }}>
-                Hoje
-              </p>
-              <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Próximas Sessões</h2>
-            </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/app/agenda" className="text-accent hover:text-accent/80">
-                Ver agenda <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
+    <TooltipProvider delayDuration={200}>
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-6 md:py-8 space-y-8">
+        {/* ─ Cabeçalho ─ */}
+        <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="min-w-0">
+            <h1 className="font-display text-2xl md:text-[28px] leading-tight font-semibold tracking-tight text-foreground">
+              {greeting()}, {displayName}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {capDate} · Próxima sessão às{" "}
+              <span className="text-foreground font-medium">{nextTime}</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 rounded-full gap-2"
+              onClick={() => handleAction("Buscar paciente")}
+            >
+              <Search className="h-4 w-4" />
+              Buscar paciente
             </Button>
-          </div>
-
-          {upcoming.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-30" />
-              <p className="font-display text-lg font-medium text-foreground/70">Sua agenda está tranquila</p>
-              <p className="mt-1 text-sm">Que tal agendar a próxima sessão?</p>
-              <Button variant="accent" size="sm" className="mt-5 min-h-[44px]" asChild>
-                <Link to="/app/agenda">Agendar uma sessão</Link>
-              </Button>
-            </div>
-          ) : (
-            <ul className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-              {upcoming.map((s) => {
-                const st = statusConfig[s.status] ?? statusConfig.scheduled;
-                return (
-                  <li
-                    key={s.id}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                  >
-                    <div
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-bold text-sm ${getAvatarColor(s.patient_name)}`}
-                    >
-                      {s.patient_initials}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground truncate">{s.patient_name}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span className="capitalize">
-                          {format(new Date(s.scheduled_at), "HH:mm", { locale: ptBR })}
-                        </span>
-                        <span className="text-border">•</span>
-                        <span>Sessão #{s.session_number}</span>
-                      </div>
-                    </div>
-                    <span className={`text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap ${st.className}`}>
-                      {st.label}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
-
-        {/* ── Modalidade de Atendimento (pacientes ativos) ── */}
-        <section className="grid grid-cols-2 gap-4">
-          <KPICard icon={MapPin} label="Pacientes Presenciais" value={presencialCount.toString()} tooltip="Pacientes ativos cuja modalidade de atendimento é Presencial." />
-          <KPICard icon={Video} label="Pacientes Online" value={onlineCount.toString()} tooltip="Pacientes ativos cuja modalidade de atendimento é Online." />
-        </section>
-
-
-
-
-        {/* ── Métricas de Sessões do Mês ── */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard icon={ClipboardList} label="Previstos" value={stats.previstos.toString()} tooltip="Total de sessões previstas no período selecionado (todos os status)." />
-          <KPICard icon={CheckCircle2} label="Realizados" value={stats.realizados.toString()} tooltip="Sessões concluídas (status 'completed') no período." />
-          <KPICard icon={XCircle} label="Faltas / Canceladas" value={stats.faltasCanceladas.toString()} highlight={stats.faltasCanceladas > 0} tooltip="Sessões canceladas ou marcadas como falta no período." />
-          <KPICard icon={CalendarClock} label="A Realizar" value={stats.aRealizar.toString()} tooltip="Sessões futuras no período que ainda não foram concluídas." />
-        </section>
-
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KPICard
-            icon={CalendarClock}
-            label="Receita Prevista"
-            value={hideRevenue ? "•••••" : `R$ ${stats.previstoRevenue.toFixed(2).replace(".", ",")}`}
-            action={
-              <button
-                onClick={() => setHideRevenue(!hideRevenue)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={hideRevenue ? "Mostrar valor" : "Ocultar valor"}
-              >
-                {hideRevenue ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              </button>
-            }
-            tooltip={`Receita prevista — ${periodLabel}: soma de todas as ${stats.previstos} sessões não canceladas no período.`}
-          />
-          <KPICard
-            icon={TrendingUp}
-            label="Faturado (Realizado)"
-            value={hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(2).replace(".", ",")}`}
-            highlight
-            tooltip="Soma dos valores de todas as sessões concluídas no período."
-          />
-          <KPICard
-            icon={Banknote}
-            label={`Faturamento ${new Date().getFullYear()}`}
-            value={hideRevenue ? "•••••" : `R$ ${yearRevenue.toFixed(2).replace(".", ",")}`}
-            highlight
-            tooltip={`Soma de todas as sessões concluídas em ${new Date().getFullYear()}, excluindo despesas.`}
-          />
-          <KPICard icon={Briefcase} label="Casos em Supervisão" value={stats.supervisionCases.toString()} tooltip="Pacientes com compartilhamento ativo para supervisão clínica." />
-        </section>
-
-        {/* ── Insight Charts ── */}
-        <section className="grid grid-cols-1 gap-4">
-
-
-          {/* Revenue Chart Card */}
-          <div className="rounded-2xl bg-card border border-border shadow-card p-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
-            <p className="mb-1 uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "#6B7280" }}>
-              Faturamento — {periodLabel}
-            </p>
-            <p style={{ fontFamily: "Syne, sans-serif", fontSize: "28px", fontWeight: 700, color: "#1A1A2E", lineHeight: 1.1 }}>
-              {hideRevenue ? "•••••" : `R$ ${stats.monthRevenue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`}
-            </p>
-            {prevMonthRevenue > 0 && !hideRevenue && (() => {
-              const pctChange = ((stats.monthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100;
-              const isUp = pctChange >= 0;
-              return (
-                <p className="text-sm font-medium mt-1" style={{ color: isUp ? "#534AB7" : "hsl(var(--destructive))" }}>
-                  {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(0)}% vs. {format(subMonths(new Date(), 1), "MMMM", { locale: ptBR })}
-                </p>
-              );
-            })()}
-            {weeklyRevenue.some((w) => w.value > 0) ? (
-              <div className="mt-3 h-[80px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={weeklyRevenue}>
-                    <defs>
-                      <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#534AB7" stopOpacity={0.18} />
-                        <stop offset="100%" stopColor="#534AB7" stopOpacity={0.02} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis dataKey="week" tick={{ fontSize: 10, fill: "#6B7280" }} axisLine={false} tickLine={false} />
-                    <RechartsTooltip
-                      contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E5E7EB" }}
-                      formatter={(v: number) => [`R$ ${v.toFixed(0)}`, "Receita"]}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="value"
-                      stroke="#534AB7"
-                      strokeWidth={2.5}
-                      fill="url(#revGrad)"
-                      dot={false}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <p className="mt-4 text-sm text-muted-foreground">Complete sessões para ver seu faturamento semanal 📊</p>
-            )}
-          </div>
-        </section>
-
-        {/* ── Gráfico de Pizza: Frequência de Atendimentos ── */}
-        <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
-          <div className="flex items-center gap-2 mb-4">
-            <CalendarRange className="h-5 w-5 text-lilac" />
-            <h2 className="font-display text-xl font-bold text-foreground">Tipo de Atendimento por Frequência</h2>
+            <Button
+              size="sm"
+              className="h-10 rounded-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={() => handleAction("Nova sessão")}
+            >
+              <Plus className="h-4 w-4" />
+              Nova sessão
+            </Button>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Notificações"
+                  className="h-10 w-10 rounded-full"
+                >
+                  <Bell className="h-4 w-4" />
+                </Button>
               </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                <p>Mostra apenas pacientes ativos, classificados pelo intervalo médio entre sessões previstas: Semanal (até 10 dias) ou Quinzenal (acima de 10 dias). A média de valor usa o valor de sessão cadastrado no paciente.</p>
-              </TooltipContent>
+              <TooltipContent>Notificações</TooltipContent>
             </Tooltip>
           </div>
+        </header>
 
-          {frequencyData.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground">
-              <CalendarRange className="h-12 w-12 mx-auto mb-4 opacity-30" />
-              <p className="font-display text-lg font-medium text-foreground/70">Dados insuficientes</p>
-              <p className="mt-1 text-sm">Complete mais sessões para ver a distribuição de frequências dos seus atendimentos.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div className="h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={frequencyData}
-                      cx="50%"
-                      cy="55%"
-                      innerRadius={45}
-                      outerRadius={80}
-                      paddingAngle={4}
-                      dataKey="value"
-                      label={({ name, percent, cx, cy, midAngle, outerRadius: or }) => {
-                        const RADIAN = Math.PI / 180;
-                        const radius = or + 20;
-                        const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                        const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                        return (
-                          <text x={x} y={y} fill="#1A1A2E" textAnchor={x > cx ? "start" : "end"} dominantBaseline="central" fontSize={12}>
-                            {name} {(percent * 100).toFixed(0)}%
-                          </text>
-                        );
-                      }}
-                      labelLine={true}
-                    >
-                      {frequencyData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip
-                      contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E5E7EB" }}
-                      formatter={(value: number, name: string, props: any) => [
-                        `${value} paciente${value !== 1 ? "s" : ""} · Média R$ ${props.payload.avgPrice}`,
-                        name,
-                      ]}
-                    />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="space-y-3">
-                {frequencyData.map((item, i) => (
-                  <div key={item.name} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30">
-                    <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                    <div className="flex-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", color: "#1A1A2E" }}>
-                      <p className="font-semibold" style={{ color: "#1A1A2E" }}>{item.name}</p>
-                      <p style={{ color: "#1A1A2E" }}>
-                        {item.value} paciente{item.value !== 1 ? "s" : ""} · Média: R$ {item.avgPrice.toFixed(2).replace(".", ",")}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        {/* ─ KPIs ─ */}
+        <section
+          aria-label="Indicadores principais"
+          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {KPI.map((k) => (
+            <Link
+              key={k.label}
+              to={k.to}
+              className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
+            >
+              <Card className="rounded-2xl border-border/60 bg-card p-5 shadow-none transition-colors hover:border-border">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {k.label}
+                </p>
+                <p className="mt-3 font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
+                  {k.value}
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">{k.hint}</p>
+              </Card>
+            </Link>
+          ))}
         </section>
 
-        {/* ── Emoções dos Pacientes ── */}
-        {(() => {
-          // Sinalização clínica agora vem apenas do attention_flag registrado pelo profissional.
-          // Nenhuma inferência automática por texto de nota ou por escore.
-          const isUrgentMood = (m: PatientMoodEntry) =>
-            m.attention_flag === "urgent" || m.attention_flag === "watch";
-
-          const classifyChip = (m: PatientMoodEntry) => {
-            if (m.attention_flag === "urgent")
-              return { label: "Urgente", bg: "rgba(133,79,11,0.14)", color: "#1A1A2E", border: "rgba(133,79,11,0.35)" };
-            if (m.attention_flag === "watch")
-              return { label: "Observar", bg: "rgba(201,168,76,0.14)", color: "#1A1A2E", border: "rgba(201,168,76,0.35)" };
-            if (m.attention_flag === "none")
-              return { label: "Sem atenção", bg: "rgba(150,117,206,0.08)", color: "#3C3489", border: "rgba(150,117,206,0.2)" };
-            if (m.data_model === "legacy_unclassified")
-              return { label: "Legado", bg: "rgba(107,114,128,0.10)", color: "#374151", border: "rgba(107,114,128,0.25)" };
-            return { label: "Não avaliado", bg: "rgba(107,114,128,0.06)", color: "#6B7280", border: "rgba(107,114,128,0.2)" };
-          };
-
-          // Period filter
-          const now = new Date();
-          const cutoff = moodPeriod === "week" ? 7 : moodPeriod === "biweek" ? 14 : null;
-          const periodFiltered = cutoff
-            ? patientMoods.filter(m => (now.getTime() - new Date(m.recorded_at).getTime()) / 86400000 <= cutoff)
-            : patientMoods;
-
-          // Latest entry per patient (within filter)
-          const latestByPatient = new Map<string, PatientMoodEntry>();
-          [...periodFiltered]
-            .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())
-            .forEach(m => { if (!latestByPatient.has(m.patient_id)) latestByPatient.set(m.patient_id, m); });
-
-          // Previous score per patient (from full dataset, immediately before latest)
-          const prevScoreByPatient = new Map<string, number>();
-          latestByPatient.forEach((latest, pid) => {
-            const sorted = [...patientMoods]
-              .filter(m => m.patient_id === pid)
-              .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime());
-            const idx = sorted.findIndex(m => m.id === latest.id);
-            if (idx >= 0 && sorted[idx + 1]) prevScoreByPatient.set(pid, sorted[idx + 1].mood_score);
-          });
-
-          let listed = Array.from(latestByPatient.values());
-          if (moodFilterPatient !== "all") listed = listed.filter(m => m.patient_id === moodFilterPatient);
-
-          // Sort: urgent first, then score desc
-          listed.sort((a, b) => {
-            const ua = isUrgentMood(a) ? 0 : 1;
-            const ub = isUrgentMood(b) ? 0 : 1;
-            if (ua !== ub) return ua - ub;
-            return b.mood_score - a.mood_score;
-          });
-
-          const urgent = listed.filter(isUrgentMood);
-          const stable = listed.filter(m => !isUrgentMood(m));
-          const urgentCount = urgent.length;
-
-          const uniquePatients = Array.from(
-            new Map(patientMoods.map(m => [m.patient_id, { id: m.patient_id, name: m.patient_name }])).values()
-          ).sort((a, b) => a.name.localeCompare(b.name));
-
-          const PERIOD_CHIPS: { key: "week" | "biweek" | "all"; label: string }[] = [
-            { key: "week", label: "Esta semana" },
-            { key: "biweek", label: "Quinzenal" },
-            { key: "all", label: "Todos" },
-          ];
-
-          const Card = ({ m, urgentCard }: { m: PatientMoodEntry; urgentCard: boolean }) => {
-            const chip = classifyChip(m);
-            const prev = prevScoreByPatient.get(m.patient_id);
-            const delta = prev !== undefined ? +(m.mood_score - prev).toFixed(1) : null;
-            const fillColor = m.mood_score >= 7 ? "#534AB7" : m.mood_score >= 4 ? "#B8860B" : "#1A1A2E";
-            const valueColor = m.mood_score >= 7 ? "#3C3489" : m.mood_score >= 4 ? "#1A1A2E" : "#1A1A2E";
-            const pct = Math.max(0, Math.min(100, (m.mood_score / 10) * 100));
-            return (
-              <li
-                className="group relative flex items-center gap-3 px-3 transition-colors"
-                style={{
-                  height: "52px",
-                  background: urgentCard ? "#F5F5F0" : "transparent",
-                  borderLeft: urgentCard ? "2px solid #1A1A2E" : "2px solid transparent",
-                }}
-                onMouseEnter={(e) => { if (!urgentCard) e.currentTarget.style.background = "#F7F6F3"; }}
-                onMouseLeave={(e) => { if (!urgentCard) e.currentTarget.style.background = "transparent"; }}
-              >
-                <div
-                  className="flex shrink-0 items-center justify-center rounded-full"
-                  style={{
-                    width: 32,
-                    height: 32,
-                    background: urgentCard ? "rgba(201,168,76,0.12)" : "rgba(150,117,206,0.08)",
-                    color: urgentCard ? "#1A1A2E" : "#534AB7",
-                    fontFamily: "Syne, sans-serif",
-                    fontWeight: 700,
-                    fontSize: 12,
-                  }}
-                >
-                  {m.patient_initials}
-                </div>
-
-                <div className="flex items-center gap-2 min-w-0" style={{ flex: 2, minWidth: 200 }}>
-                  <p
-                    className="truncate"
-                    style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13, color: urgentCard ? "#1A1A2E" : "#1A1A2E" }}
-                  >
-                    {m.patient_name}
-                  </p>
-                  <span
-                    className="uppercase shrink-0"
-                    style={{
-                      fontFamily: "Syne, sans-serif",
-                      fontSize: "9px",
-                      fontWeight: 600,
-                      padding: "3px 8px",
-                      borderRadius: "40px",
-                      background: chip.bg,
-                      color: chip.color,
-                      border: `0.5px solid ${chip.border}`,
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    {chip.label}
-                  </span>
-                </div>
-
-                <div className="min-w-0 hidden md:block" style={{ flex: 2 }}>
-                  {m.note && (
-                    <p
-                      className="truncate"
-                      style={{ fontFamily: "Instrument Sans, sans-serif", fontStyle: "italic", fontSize: 12, color: "#1A1A2E" }}
-                    >
-                      {m.note}
-                    </p>
-                  )}
-                </div>
-
-                <div className="hidden lg:flex items-center gap-1.5 shrink-0" style={{ flex: 1, fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "#6B7280" }}>
-                  <Clock style={{ width: 12, height: 12, color: "#6B7280" }} />
-                  <span className="truncate">{format(new Date(m.recorded_at), "dd/MM · HH:mm", { locale: ptBR })}</span>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0 justify-end" style={{ width: 140 }}>
-                  <div style={{ width: 48, height: 3, background: "#EAE6F5", borderRadius: 40, overflow: "hidden" }}>
-                    <div style={{ width: `${pct}%`, height: "100%", background: fillColor, borderRadius: 40 }} />
-                  </div>
-                  <div className="flex items-baseline gap-0.5">
-                    <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: valueColor }}>
-                      {m.mood_score.toString().replace(".", ",")}
-                    </span>
-                    <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 10, color: "#6B7280" }}>/10</span>
-                  </div>
-                  {delta !== null && (
-                    <span
-                      className="flex items-center"
-                      style={{ fontSize: "10.5px", color: delta > 0 ? "#534AB7" : delta < 0 ? "#1A1A2E" : "#6B7280" }}
-                    >
-                      {delta > 0 ? <TrendingUp className="h-3 w-3" /> : delta < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-                    </span>
-                  )}
-                </div>
-
-                <button
-                  title="Excluir registro"
-                  onClick={async () => {
-                    await supabase.from("patient_progress").delete().eq("id", m.id);
-                    setPatientMoods(prev => prev.filter(x => x.id !== m.id));
-                  }}
-                  className="shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
-                  style={{ width: 26, height: 26, borderRadius: 6, color: "#6B7280", background: "transparent" }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#534AB7"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "#6B7280"; }}
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
-              </li>
-            );
-          };
-
-          const SectionLabel = ({ text, count }: { text: string; count: number }) => (
-            <div className="flex items-center gap-3 mt-2 mb-3">
-              <span
-                className="uppercase"
-                style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "9px", letterSpacing: "0.14em", color: "#6B7280" }}
-              >
-                {text}
-              </span>
-              <div className="flex-1" style={{ height: "0.5px", background: "#E5E7EB" }} />
-              <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "9px", color: "#6B7280" }}>
-                {count.toString().padStart(2, "0")}
-              </span>
-            </div>
-          );
-
-          return (
-            <section
-              className="rounded-2xl border shadow-card overflow-hidden relative"
-              style={{ background: "#F5F5F0", borderColor: "#E5E7EB" }}
+        {/* ─ Hoje ─ */}
+        <section aria-labelledby="today-heading" className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2
+              id="today-heading"
+              className="font-display text-xl font-semibold tracking-tight"
             >
-              <div className="absolute top-0 left-0 right-0 z-10" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 pt-6">
-                <div className="flex items-center gap-2">
-                  <SmilePlus className="h-5 w-5" style={{ color: "#534AB7" }} />
-                  <h2 style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: "18px", color: "#1A1A2E" }}>
-                    Emoções dos Pacientes
-                  </h2>
-                </div>
-              </div>
-
-              {/* Alert banner */}
-              {urgentCount > 0 && (
-                <div
-                  className="flex items-center gap-2 mt-4 flex-wrap"
-                  style={{
-                    background: "#F5F5F0",
-                    borderTop: "0.5px solid rgba(201,168,76,0.25)",
-                    borderBottom: "0.5px solid rgba(201,168,76,0.25)",
-                    padding: "10px 24px",
-                  }}
-                >
-                  <AlertTriangle style={{ width: "15px", height: "15px", color: "#1A1A2E" }} />
-                  <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "12px", color: "#1A1A2E" }}>
-                    {urgentCount} {urgentCount === 1 ? "paciente requer" : "pacientes requerem"} atenção clínica.
-                  </span>
-                  <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "12px", fontWeight: 400, color: "#1A1A2E" }}>
-                    Sinalizados pelo profissional como “Observar” ou “Urgente”.
-                  </span>
-                </div>
-              )}
-
-              {/* Filters */}
-              <div className="px-4 sm:px-6 pt-4 pb-3 flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
-                  <Select value={moodFilterPatient} onValueChange={setMoodFilterPatient}>
-                    <SelectTrigger
-                      className="h-9 w-full sm:w-[200px]"
-                      style={{
-                        background: "#FFFFFF",
-                        border: "0.5px solid #E5E7EB",
-                        borderRadius: "40px",
-                        fontFamily: "Instrument Sans, sans-serif",
-                        fontSize: "12px",
-                        color: "#1A1A2E",
-                      }}
-                    >
-                      <Filter className="h-3 w-3 mr-1" style={{ color: "#6B7280" }} />
-                      <SelectValue placeholder="Todos os pacientes" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os pacientes</SelectItem>
-                      {uniquePatients.map(p => (
-                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {PERIOD_CHIPS.map(c => {
-                    const active = moodPeriod === c.key;
-                    return (
-                      <button
-                        key={c.key}
-                        onClick={() => setMoodPeriod(c.key)}
-                        style={{
-                          background: active ? "rgba(150,117,206,0.06)" : "#FFFFFF",
-                          border: active ? "0.5px solid rgba(150,117,206,0.25)" : "0.5px solid #E5E7EB",
-                          color: active ? "#3C3489" : "#6B7280",
-                          borderRadius: "40px",
-                          padding: "6px 14px",
-                          fontFamily: "Syne, sans-serif",
-                          fontWeight: 600,
-                          fontSize: "12px",
-                        }}
-                      >
-                        {c.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <Link to="/app/agenda" style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "12px", color: "#534AB7" }}>
-                  Ver sessões →
-                </Link>
-              </div>
-
-              {/* Content */}
-              <div className="px-6 pb-6">
-                {listed.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Heart className="h-12 w-12 mx-auto mb-4" style={{ color: "#6B7280" }} />
-                    <p style={{ fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: "15px", color: "#3C3489" }}>
-                      Nenhum registro de humor ainda
-                    </p>
-                    <p className="mt-1" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: "13px", color: "#6B7280" }}>
-                      Registre o humor dos pacientes nas sessões para acompanhar a evolução emocional aqui.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    {(() => {
-                      const source = (moodFilterPatient === "all" ? periodFiltered : periodFiltered.filter(m => m.patient_id === moodFilterPatient))
-                        .slice()
-                        .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
-                        .map(m => ({
-                          name: format(new Date(m.recorded_at), "dd/MM"),
-                          score: Number(m.mood_score),
-                          patient: m.patient_name,
-                        }));
-                      if (source.length < 2) return null;
-                      const avg = source.reduce((s, d) => s + d.score, 0) / source.length;
-                      return (
-                        <div className="mb-6 rounded-2xl border border-border bg-gradient-card p-4 sm:p-6">
-                          <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-                            <div>
-                              <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: "10px", fontWeight: 600, letterSpacing: "0.12em", color: "#6B7280" }}>
-                                Evolução do humor
-                              </p>
-                              <p style={{ fontFamily: "Syne, sans-serif", fontSize: "22px", fontWeight: 700, color: "#1A1A2E", lineHeight: 1.1 }}>
-                                Média {avg.toFixed(1).replace(".", ",")}<span style={{ fontSize: "13px", color: "#6B7280", fontWeight: 400 }}> /10</span>
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-3 text-xs" style={{ fontFamily: "Instrument Sans, sans-serif", color: "#1A1A2E" }}>
-                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#2D6A4F" }} />Bem (7-10)</span>
-                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#B8860B" }} />Atenção (4-6)</span>
-                              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "#1A1A2E" }} />Crítico (0-3)</span>
-                            </div>
-                          </div>
-                          <div className="h-[260px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart data={source} margin={{ top: 10, right: 16, left: -10, bottom: 0 }}>
-                                <defs>
-                                  <linearGradient id="moodGradBig" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#534AB7" stopOpacity={0.35} />
-                                    <stop offset="100%" stopColor="#534AB7" stopOpacity={0.02} />
-                                  </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
-                                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} />
-                                <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} width={28} />
-                                <RechartsTooltip
-                                  contentStyle={{ fontSize: 12, borderRadius: 12, border: "1px solid #E5E7EB", background: "#fff" }}
-                                  formatter={(v: number) => [`${v}/10`, "Humor"]}
-                                  labelFormatter={(l, payload: any) => {
-                                    const p = payload?.[0]?.payload?.patient;
-                                    return p ? `${l} · ${p}` : l;
-                                  }}
-                                />
-                                <Area
-                                  type="monotone"
-                                  dataKey="score"
-                                  stroke="#534AB7"
-                                  strokeWidth={2.5}
-                                  fill="url(#moodGradBig)"
-                                  dot={{ r: 4, fill: "#534AB7", strokeWidth: 2, stroke: "#fff" }}
-                                  activeDot={{ r: 6 }}
-                                />
-                              </AreaChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    {urgent.length > 0 && (
-                      <>
-                        <SectionLabel text="Atenção imediata" count={urgent.length} />
-                        <ul className="[&>li]:border-b [&>li]:border-secondary">
-
-                          {urgent.map(m => <Card key={m.id} m={m} urgentCard />)}
-                        </ul>
-                      </>
-                    )}
-                    {stable.length > 0 && (
-                      <>
-                        <SectionLabel text="Estáveis" count={stable.length} />
-                        <ul className="[&>li]:border-b [&>li]:border-secondary">
-                          {stable.map(m => <Card key={m.id} m={m} urgentCard={false} />)}
-                        </ul>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-            </section>
-          );
-        })()}
-
-
-
-        {/* ── Goals / Gamification ── */}
-        <section className="rounded-2xl bg-card border border-border shadow-card p-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">Metas do Mês</h2>
-            <Button variant="ghost" size="sm" onClick={() => setEditGoalsOpen(true)}>
-              <Pencil className="h-4 w-4 mr-1" /> Editar metas
+              Hoje
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/app/agenda")}
+              className="text-primary hover:text-primary hover:bg-primary/5 gap-1"
+            >
+              Ver agenda <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {progressItems.map((item) => {
-              const pct = item.goal > 0 ? Math.min((item.current / item.goal) * 100, 100) : 0;
-              const displayCurrent = item.isCurrency
-                ? `R$ ${item.current.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`
-                : item.current.toString();
-              const displayGoal = item.isCurrency
-                ? `R$ ${item.goal.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`
-                : item.goal.toString();
 
-              return (
-                <div key={item.label} className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <item.icon className="h-4 w-4 text-accent" />
-                    {item.label}
-                  </div>
-                  <div className="h-3 rounded-full bg-secondary overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-accent transition-all duration-700 ease-out"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{displayCurrent}</span>
-                    <span className="font-medium">{Math.round(pct)}%</span>
-                    <span>{displayGoal}</span>
-                  </div>
-                </div>
-              );
-            })}
+          <Card className="rounded-2xl border-border/60 divide-y divide-border/60 overflow-hidden">
+            {TODAY.map((s) => (
+              <TodayRow
+                key={s.id}
+                item={s}
+                onOpen={() => handleAction(`Abrindo sessão de ${s.name}`)}
+                onConfirm={() => handleAction(`Sessão de ${s.name} confirmada`)}
+              />
+            ))}
+          </Card>
+        </section>
+
+        {/* ─ 2 colunas: Atenção + Agenda semana ─ */}
+        <section className="grid gap-6 lg:grid-cols-[1fr_1.15fr]">
+          {/* Atenção */}
+          <div className="space-y-3">
+            <h2 className="font-display text-xl font-semibold tracking-tight">
+              Atenção necessária
+            </h2>
+            <Card className="rounded-2xl border-border/60 divide-y divide-border/60">
+              {PENDINGS.map((p) => (
+                <Link
+                  key={p.label}
+                  to={p.to}
+                  className="flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-muted/40 transition-colors focus:outline-none focus-visible:bg-muted/40"
+                >
+                  <span className="flex items-center gap-3 text-sm text-foreground">
+                    <p.icon className="h-4 w-4 text-muted-foreground" />
+                    {p.label}
+                  </span>
+                  <span
+                    className={cn(
+                      "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-xs font-medium",
+                      p.count > 0
+                        ? "bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {p.count}
+                  </span>
+                </Link>
+              ))}
+            </Card>
+          </div>
+
+          {/* Semana */}
+          <div className="space-y-3">
+            <div>
+              <h2 className="font-display text-xl font-semibold tracking-tight">
+                Agenda da semana
+              </h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                {totalWeek} sessões distribuídas · {selectedLabel && `${selectedLabel.toLowerCase()}-feira selecionada`}
+              </p>
+            </div>
+            <Card className="rounded-2xl border-border/60 p-5">
+              <div className="flex items-end justify-between gap-3 h-44">
+                {WEEK.map((d) => {
+                  const active = d.key === selectedDay;
+                  const pct = (d.value / maxWeek) * 100;
+                  return (
+                    <button
+                      key={d.key}
+                      onClick={() => setSelectedDay(d.key)}
+                      className="group flex flex-1 flex-col items-center gap-2 focus:outline-none"
+                      aria-label={`${d.label}: ${d.value} sessões`}
+                    >
+                      <span
+                        className={cn(
+                          "text-xs font-medium",
+                          active ? "text-foreground" : "text-muted-foreground",
+                        )}
+                      >
+                        {d.value}
+                      </span>
+                      <div className="flex h-32 w-full items-end justify-center">
+                        <div
+                          style={{ height: `${pct}%` }}
+                          className={cn(
+                            "w-6 md:w-8 rounded-t-md transition-colors",
+                            active
+                              ? "bg-primary"
+                              : "bg-primary/25 group-hover:bg-primary/40 group-focus-visible:bg-primary/40",
+                          )}
+                        />
+                      </div>
+                      <span
+                        className={cn(
+                          "text-xs",
+                          active
+                            ? "text-foreground font-medium"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        {d.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
           </div>
         </section>
 
-        {/* ── Edit Goals Dialog ── */}
-        <Dialog open={editGoalsOpen} onOpenChange={setEditGoalsOpen}>
-          <DialogContent className="max-w-sm">
-            <DialogHeader>
-              <DialogTitle className="font-display text-xl">Editar Metas</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Meta de Sessões Realizadas</Label>
-                <Input type="number" min="1" value={goalFormSessions} onChange={(e) => setGoalFormSessions(Number(e.target.value))} />
+        {/* ─ Financeiro compacto ─ */}
+        <section aria-labelledby="finance-heading">
+          <Card className="rounded-2xl border-border/60 bg-muted/30 p-5 md:p-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="grid flex-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Recebido</p>
+                  <p className="mt-1 font-display text-lg font-semibold text-emerald-700 dark:text-emerald-400">
+                    R$ 2.005
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">A receber</p>
+                  <p className="mt-1 font-display text-lg font-semibold text-foreground">
+                    R$ 7.992
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Em atraso</p>
+                  <p className="mt-1 font-display text-lg font-semibold text-amber-700 dark:text-amber-400">
+                    2 pagamentos
+                  </p>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Meta de Faturamento (R$)</Label>
-                <Input type="number" min="0" step="100" value={goalFormRevenue} onChange={(e) => setGoalFormRevenue(Number(e.target.value))} />
-              </div>
-              <div className="space-y-2">
-                <Label>Meta de Registros Clínicos</Label>
-                <Input type="number" min="1" value={goalFormRecords} onChange={(e) => setGoalFormRecords(Number(e.target.value))} />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditGoalsOpen(false)}>Cancelar</Button>
-              <Button variant="accent" disabled={savingGoals} onClick={async () => {
-                if (!user) return;
-                setSavingGoals(true);
-                const { error } = await supabase.from("profiles").update({
-                  goal_sessions: goalFormSessions,
-                  goal_revenue: goalFormRevenue,
-                  goal_records: goalFormRecords,
-                } as any).eq("id", user.id);
-                setSavingGoals(false);
-                if (error) { toast.error("Erro ao salvar metas"); return; }
-                setStats(prev => ({
-                  ...prev,
-                  sessionsGoal: goalFormSessions,
-                  revenueGoal: goalFormRevenue,
-                  recordsGoal: goalFormRecords,
-                }));
-                toast.success("Metas atualizadas!");
-                setEditGoalsOpen(false);
-              }}>
-                Salvar
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/app/financeiro")}
+                className="rounded-full gap-2 self-start md:self-auto"
+              >
+                Abrir financeiro <ArrowRight className="h-3.5 w-3.5" />
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </div>
+            <h2 id="finance-heading" className="sr-only">
+              Resumo financeiro
+            </h2>
+          </Card>
+        </section>
       </div>
     </TooltipProvider>
   );
-};
+}
 
-/* ── KPI Card ── */
-const KPICard = ({
-  icon: Icon,
-  label,
-  value,
-  highlight,
-  action,
-  tooltip,
+/* ─── Sub-components ─── */
+function TodayRow({
+  item,
+  onOpen,
+  onConfirm,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-  highlight?: boolean;
-  action?: React.ReactNode;
-  tooltip?: string;
-}) => (
-  <div
-    className={`rounded-2xl border p-5 md:p-6 transition-all hover:-translate-y-0.5 hover:shadow-soft relative overflow-hidden ${
-      highlight ? "bg-accent/5 border-accent/20" : "bg-card border-border"
-    }`}
-  >
-    <div className="absolute top-0 left-0 right-0" style={{ height: "3px", background: "linear-gradient(90deg, #B8860B, #B8860B, #B8860B)" }} />
-    <div className="flex items-center justify-between">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-accent">
-        <Icon className="h-5 w-5" />
+  item: TodayItem;
+  onOpen: () => void;
+  onConfirm: () => void;
+}) {
+  const ModeIcon = item.mode === "Online" ? Video : MapPin;
+  return (
+    <div className="flex items-center gap-4 px-4 md:px-5 py-4 hover:bg-muted/30 transition-colors">
+      <div className="w-14 shrink-0 text-sm font-medium tabular-nums text-muted-foreground">
+        {item.time}
       </div>
-      <div className="flex items-center gap-1">
-        {action}
-        {tooltip && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-            </TooltipTrigger>
-            <TooltipContent side="top" align="end" collisionPadding={16} className="max-w-[calc(100vw-2rem)] sm:max-w-xs text-xs break-words whitespace-normal">
-              <p>{tooltip}</p>
-            </TooltipContent>
-          </Tooltip>
+      <div className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
+        {initials(item.name)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-foreground truncate">
+          {item.name}
+        </p>
+        <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+          Sessão {item.session}
+          <span className="text-muted-foreground/50">·</span>
+          <ModeIcon className="h-3 w-3" />
+          {item.mode}
+        </p>
+      </div>
+      <div className="flex items-center gap-2">
+        {item.status === "confirmed" ? (
+          <Badge
+            variant="secondary"
+            className="rounded-full bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900 gap-1"
+          >
+            <CheckCircle2 className="h-3 w-3" />
+            Confirmada
+          </Badge>
+        ) : item.status === "to-confirm" ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onConfirm}
+            className="rounded-full h-8"
+          >
+            Confirmar
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onOpen}
+            className="rounded-full h-8"
+          >
+            Abrir sessão
+          </Button>
         )}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={`Mais ações para ${item.name}`}
+              className="h-8 w-8 rounded-full hidden md:inline-flex"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Mais ações</TooltipContent>
+        </Tooltip>
       </div>
     </div>
-    <p
-      className="mt-4 font-sans uppercase"
-      style={{ fontSize: "10px", fontWeight: 400, letterSpacing: "0.09em", color: "#6B7280" }}
-    >
-      {label}
-    </p>
-    <p
-      className="mt-1 font-display"
-      style={{
-        fontFamily: "Syne, sans-serif",
-        fontSize: value.trim().startsWith("R$") ? "18px" : "28px",
-        fontWeight: 700,
-        color: "#1A1A2E",
-      }}
-    >
-      {value}
-    </p>
-  </div>
-);
-
-export default Dashboard;
+  );
+}
