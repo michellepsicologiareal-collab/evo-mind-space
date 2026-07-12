@@ -82,7 +82,7 @@ interface Row {
   price: number | null;
   paid_at: string | null;
   session_type: string | null;
-  patient: { full_name: string } | null;
+  patient: { id: string; full_name: string } | null;
   service: { name: string } | null;
 }
 
