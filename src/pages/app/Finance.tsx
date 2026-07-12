@@ -72,6 +72,8 @@ import { PageIntro } from "@/components/app/PageIntro";
 type PaymentStatus = "pending" | "paid";
 type PaymentMethod = "pix" | "card" | "cash";
 
+type ReceitaSaudeStatus = "to_issue" | "issued";
+
 interface Row {
   id: string;
   scheduled_at: string;
@@ -79,12 +81,15 @@ interface Row {
   payment_status: PaymentStatus;
   payment_method: PaymentMethod | null;
   payment_reference: string | null;
+  receita_saude_status: ReceitaSaudeStatus | null;
   price: number | null;
   paid_at: string | null;
   session_type: string | null;
   patient: { id: string; full_name: string } | null;
   service: { name: string } | null;
 }
+
+type ReceitaSaudeFilter = "all" | "to_issue" | "issued";
 
 type FortnightFilter = "all" | "first" | "second";
 
@@ -120,6 +125,7 @@ const Finance = () => {
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [expandedPatients, setExpandedPatients] = useState<Set<string>>(new Set());
   const [quickAlert, setQuickAlert] = useState<QuickAlert>("none");
+  const [receitaSaudeFilter, setReceitaSaudeFilter] = useState<ReceitaSaudeFilter>("all");
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const recentAlertRef = useRef<HTMLDivElement | null>(null);
   const sessionsSectionRef = useRef<HTMLElement | null>(null);
@@ -130,7 +136,7 @@ const Finance = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const selectCols = "id, scheduled_at, status, payment_status, payment_method, payment_reference, price, paid_at, is_expense, session_type, patient:patients!sessions_patient_id_fkey(id, full_name), service:services(name)";
+    const selectCols = "id, scheduled_at, status, payment_status, payment_method, payment_reference, receita_saude_status, price, paid_at, is_expense, session_type, patient:patients!sessions_patient_id_fkey(id, full_name), service:services(name)";
 
     const { data, error } = await supabase
       .from("sessions")
@@ -336,6 +342,11 @@ const Finance = () => {
           (!r.payment_reference || r.payment_reference.trim().length === 0)
       ),
     [billable]
+  );
+
+  const receitaSaudeToIssue = useMemo(
+    () => fortnightAllValid.filter((r) => r.receita_saude_status === "to_issue"),
+    [fortnightAllValid]
   );
 
   const recentMissing = useMemo(() => {
@@ -649,7 +660,7 @@ const Finance = () => {
       {/* Alerts row — filtros clicáveis que refinam a lista de sessões */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {([
-          { key: "receita_saude" as QuickAlert, label: "Receita Saúde pendente", icon: Receipt, count: missingReference.length, tone: "text-amber-600 bg-amber-50 border-amber-200" },
+          { key: "receita_saude" as QuickAlert, label: "Receita Saúde pendente", icon: Receipt, count: receitaSaudeToIssue.length, tone: "text-amber-600 bg-amber-50 border-amber-200" },
           { key: "sem_pagamento" as QuickAlert, label: "Sessões realizadas sem pagamento", icon: FileWarning, count: sessoesPendentes, tone: "text-destructive bg-destructive/10 border-destructive/30" },
           { key: "pix_sem_conf" as QuickAlert, label: "PIX recebido sem confirmação", icon: AlertTriangle, count: recentMissing.length, tone: "text-amber-700 bg-amber-50 border-amber-200" },
           { key: "pacotes_vencendo" as QuickAlert, label: "Pacotes vencendo", icon: PackageOpen, count: 0, tone: "text-primary bg-secondary/60 border-border" },
@@ -677,7 +688,7 @@ const Finance = () => {
       </section>
 
       {/* Fortnight filter */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Tabs value={fortnightFilter} onValueChange={(v) => setFortnightFilter(v as FortnightFilter)}>
           <TabsList>
             <TabsTrigger value="all">Mês todo</TabsTrigger>
@@ -685,6 +696,19 @@ const Finance = () => {
             <TabsTrigger value="second">2ª Quinzena (16–fim)</TabsTrigger>
           </TabsList>
         </Tabs>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="receita-saude-filter" className="text-xs text-muted-foreground">Receita Saúde</Label>
+          <Select value={receitaSaudeFilter} onValueChange={(v) => setReceitaSaudeFilter(v as ReceitaSaudeFilter)}>
+            <SelectTrigger id="receita-saude-filter" className="h-9 w-[160px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="to_issue">A emitir</SelectItem>
+              <SelectItem value="issued">Emitido</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
 
@@ -909,6 +933,8 @@ const Finance = () => {
             latestBillable: Row | null;
             hasPending: boolean;
             oldestPendingDays: number;
+            receitaToIssueCount: number;
+            receitaIssuedCount: number;
           };
           const now = Date.now();
           const map = new Map<string, Aggregate>();
@@ -928,10 +954,14 @@ const Finance = () => {
                 latestBillable: null,
                 hasPending: false,
                 oldestPendingDays: 0,
+                receitaToIssueCount: 0,
+                receitaIssuedCount: 0,
               };
               map.set(name, e);
             }
             if (!e.patientId && r.patient?.id) e.patientId = r.patient.id;
+            if (r.receita_saude_status === "to_issue") e.receitaToIssueCount++;
+            else if (r.receita_saude_status === "issued") e.receitaIssuedCount++;
             if (r.status === "completed") {
               e.realizadas++;
               e.totalValue += Number(r.price ?? 0);
@@ -952,9 +982,14 @@ const Finance = () => {
               }
             }
           }
-          const patients = Array.from(map.values()).sort((a, b) =>
+          const allAggregates = Array.from(map.values()).sort((a, b) =>
             a.name.localeCompare(b.name, "pt-BR")
           );
+          const patients = allAggregates.filter((p) => {
+            if (receitaSaudeFilter === "to_issue") return p.receitaToIssueCount > 0;
+            if (receitaSaudeFilter === "issued") return p.receitaIssuedCount > 0 && p.receitaToIssueCount === 0;
+            return true;
+          });
 
           if (loading) {
             return <p className="text-center py-12 text-muted-foreground">Carregando…</p>;
@@ -1089,10 +1124,20 @@ const Finance = () => {
                           </td>
                           <td className={`py-3 px-3 font-medium ${pay.tone}`}>{pay.label}</td>
                           <td
-                            className={`py-3 px-3 text-muted-foreground italic text-xs ${rowClickable ? "cursor-pointer" : ""}`}
+                            className={`py-3 px-3 text-xs ${rowClickable ? "cursor-pointer" : ""}`}
                             onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("finance", "receita-saude"); } : undefined}
                           >
-                            Não informado
+                            {p.receitaToIssueCount > 0 ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-amber-500/10 text-amber-700 dark:text-amber-500">
+                                A emitir{p.receitaToIssueCount > 1 ? ` · ${p.receitaToIssueCount}` : ""}
+                              </span>
+                            ) : p.receitaIssuedCount > 0 ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-moss/10 text-moss">
+                                Emitido{p.receitaIssuedCount > 1 ? ` · ${p.receitaIssuedCount}` : ""}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground italic">Não informado</span>
+                            )}
                           </td>
                           <td className="py-3 px-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${sit.tone}`}>
@@ -1284,6 +1329,7 @@ const PaymentDetailsDialog = ({
 }) => {
   const [method, setMethod] = useState<PaymentMethod | "none">("none");
   const [reference, setReference] = useState("");
+  const [receitaSaude, setReceitaSaude] = useState<ReceitaSaudeStatus | "none">("none");
   const [saving, setSaving] = useState(false);
   const [refError, setRefError] = useState<string | null>(null);
 
@@ -1291,6 +1337,7 @@ const PaymentDetailsDialog = ({
     if (row) {
       setMethod((row.payment_method as PaymentMethod | null) ?? "none");
       setReference(row.payment_reference ?? "");
+      setReceitaSaude((row.receita_saude_status as ReceitaSaudeStatus | null) ?? "none");
       setRefError(null);
     }
   }, [row]);
@@ -1317,6 +1364,7 @@ const PaymentDetailsDialog = ({
       .update({
         payment_method: method === "none" ? null : method,
         payment_reference: ref.length > 0 ? ref : null,
+        receita_saude_status: receitaSaude === "none" ? null : receitaSaude,
       })
       .eq("id", row.id);
     setSaving(false);
@@ -1382,6 +1430,20 @@ const PaymentDetailsDialog = ({
                 Obrigatório para {method === "pix" ? "PIX" : "cartão"}.
               </p>
             ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="receita-saude">Receita Saúde</Label>
+            <Select value={receitaSaude} onValueChange={(v) => setReceitaSaude(v as ReceitaSaudeStatus | "none")}>
+              <SelectTrigger id="receita-saude">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Não selecionado</SelectItem>
+                <SelectItem value="to_issue">Emitir Receita Saúde</SelectItem>
+                <SelectItem value="issued">Emitido Receita Saúde</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
         </div>

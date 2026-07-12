@@ -1,0 +1,1 @@
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS receita_saude_status text NULL CHECK (receita_saude_status IN ('to_issue','issued'));
