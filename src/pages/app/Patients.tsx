@@ -762,15 +762,11 @@ const Patients = () => {
     await preserveScroll(() => load());
   };
 
-  const toggleSharing = async (p: Patient) => {
-    const { error } = await supabase
-      .from("patients")
-      .update({ shared_with_supervisor: !p.shared_with_supervisor } as any)
-      .eq("id", p.id);
-    if (error) return toast.error("Erro ao atualizar compartilhamento");
-    setPatients((prev) =>
-      prev.map((x) => (x.id === p.id ? { ...x, shared_with_supervisor: !x.shared_with_supervisor } : x))
-    );
+  const toggleSharing = async (_p: Patient) => {
+    // FASE 1 HOTFIX — Compartilhamento antigo desativado para revisão de privacidade.
+    // Nenhum valor de `shared_with_supervisor` é alterado. Um novo fluxo de casos
+    // de supervisão pseudonimizados será entregue na Fase 2.
+    toast.info("O compartilhamento de casos está temporariamente indisponível para revisão de privacidade.");
   };
 
   const activeCount = patients.filter((p) => p.is_active).length;
@@ -1360,23 +1356,8 @@ const Patients = () => {
                         >
                           {p.is_active ? "Ativo" : "Inativo"}
                         </span>
-                        {p.shared_with_supervisor && (
-                          <span
-                            className="inline-flex items-center gap-1 ml-1"
-                            title="Compartilhado com supervisor"
-                            style={{
-                              background: "rgba(155,141,184,0.15)",
-                              color: "hsl(var(--lilac))",
-                              fontSize: 10,
-                              fontWeight: 600,
-                              padding: "2px 6px",
-                              borderRadius: 40,
-                              border: "1px solid rgba(155,141,184,0.35)",
-                            }}
-                          >
-                            <Eye className="h-3 w-3" />
-                          </span>
-                        )}
+                        {/* Badge "compartilhado com supervisor" removido no hotfix Fase 1:
+                            supervisoras não têm mais acesso via RLS, então o indicador seria enganoso. */}
                       </td>
 
                       {/* Ações */}
@@ -1439,9 +1420,13 @@ const Patients = () => {
                               <ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => toggleSharing(p)}>
+                            <DropdownMenuItem
+                              disabled
+                              aria-disabled="true"
+                              title="Compartilhamento indisponível para revisão de privacidade"
+                            >
                               <Eye className="h-4 w-4 mr-2" />
-                              {p.shared_with_supervisor ? "Remover do supervisor" : "Compartilhar com supervisor"}
+                              Compartilhamento indisponível
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]">
@@ -1764,11 +1749,11 @@ const Patients = () => {
                     </TabsContent>
                   </Tabs>
 
-                  <div className="mt-6 flex items-center justify-between pt-4" style={{ borderTop: "0.5px solid hsl(var(--border))" }}>
-                    <div className="flex items-center gap-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
-                      <Eye className="h-3.5 w-3.5" /> Visível ao supervisor
+                  <div className="mt-6 pt-4" style={{ borderTop: "0.5px solid hsl(var(--border))" }}>
+                    <div className="flex items-start gap-2 rounded-xl bg-muted/40 p-3" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
+                      <Eye className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+                      <span>O compartilhamento de casos está temporariamente indisponível para revisão de privacidade.</span>
                     </div>
-                    <Switch checked={p.shared_with_supervisor} onCheckedChange={() => toggleSharing(p)} />
                   </div>
                 </div>
               </div>
