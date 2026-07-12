@@ -72,6 +72,8 @@ import { PageIntro } from "@/components/app/PageIntro";
 type PaymentStatus = "pending" | "paid";
 type PaymentMethod = "pix" | "card" | "cash";
 
+type ReceitaSaudeStatus = "to_issue" | "issued";
+
 interface Row {
   id: string;
   scheduled_at: string;
@@ -79,12 +81,15 @@ interface Row {
   payment_status: PaymentStatus;
   payment_method: PaymentMethod | null;
   payment_reference: string | null;
+  receita_saude_status: ReceitaSaudeStatus | null;
   price: number | null;
   paid_at: string | null;
   session_type: string | null;
   patient: { id: string; full_name: string } | null;
   service: { name: string } | null;
 }
+
+type ReceitaSaudeFilter = "all" | "to_issue" | "issued";
 
 type FortnightFilter = "all" | "first" | "second";
 
