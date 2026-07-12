@@ -1564,6 +1564,7 @@ export type Database = {
           payment_reference: string | null
           payment_status: Database["public"]["Enums"]["payment_status"]
           price: number | null
+          receita_saude_status: string | null
           scheduled_at: string
           service_id: string | null
           session_type: Database["public"]["Enums"]["session_type"]
@@ -1589,6 +1590,7 @@ export type Database = {
           payment_reference?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           price?: number | null
+          receita_saude_status?: string | null
           scheduled_at: string
           service_id?: string | null
           session_type?: Database["public"]["Enums"]["session_type"]
@@ -1614,6 +1616,7 @@ export type Database = {
           payment_reference?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           price?: number | null
+          receita_saude_status?: string | null
           scheduled_at?: string
           service_id?: string | null
           session_type?: Database["public"]["Enums"]["session_type"]
