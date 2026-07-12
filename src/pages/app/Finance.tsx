@@ -958,28 +958,61 @@ const Finance = () => {
         </section>
       )}
 
-      <section className="rounded-3xl bg-card border border-border shadow-card p-6 lg:p-8">
+      <section ref={sessionsSectionRef} className="rounded-3xl bg-card border border-border shadow-card p-6 lg:p-8">
         <Tabs defaultValue="all">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <h2 className="font-display text-2xl font-semibold">Sessões realizadas</h2>
-            <TabsList>
-              <TabsTrigger value="all">Todas</TabsTrigger>
-              <TabsTrigger value="pending">Pendentes</TabsTrigger>
-              <TabsTrigger value="paid">Realizadas</TabsTrigger>
-            </TabsList>
+            <div className="flex flex-wrap items-center gap-2">
+              {quickAlert !== "none" && (
+                <button
+                  type="button"
+                  onClick={() => setQuickAlert("none")}
+                  className="text-xs px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                >
+                  Limpar alerta
+                </button>
+              )}
+              <TabsList>
+                <TabsTrigger value="all">Todas</TabsTrigger>
+                <TabsTrigger value="pending">Pendentes</TabsTrigger>
+                <TabsTrigger value="paid">Realizadas</TabsTrigger>
+              </TabsList>
+            </div>
           </div>
 
-          <TabsContent value="all">
-            <SessionsTable rows={fortnightBillable} loading={loading} onChange={updatePayment} onEdit={setEditing} allRows={fortnightBillable} />
-          </TabsContent>
-          <TabsContent value="pending">
-            <SessionsTable rows={fortnightBillable.filter((r) => r.payment_status === "pending")} loading={loading} onChange={updatePayment} onEdit={setEditing} allRows={fortnightBillable} />
-          </TabsContent>
-          <TabsContent value="paid">
-            <SessionsTable rows={fortnightBillable.filter((r) => r.payment_status === "paid")} loading={loading} onChange={updatePayment} onEdit={setEditing} allRows={fortnightBillable} />
-          </TabsContent>
+          {(() => {
+            const applyAlert = (list: Row[]) => {
+              switch (quickAlert) {
+                case "receita_saude":
+                  return list.filter((r) => missingReference.some((m) => m.id === r.id));
+                case "sem_pagamento":
+                  return list.filter((r) => r.payment_status === "pending");
+                case "pix_sem_conf":
+                  return list.filter((r) => recentMissing.some((m) => m.id === r.id));
+                case "pacotes_vencendo":
+                  return list;
+                default:
+                  return list;
+              }
+            };
+            const base = applyAlert(fortnightBillable);
+            return (
+              <>
+                <TabsContent value="all">
+                  <SessionsTable rows={base} loading={loading} onChange={updatePayment} onEdit={setEditing} allRows={fortnightBillable} />
+                </TabsContent>
+                <TabsContent value="pending">
+                  <SessionsTable rows={base.filter((r) => r.payment_status === "pending")} loading={loading} onChange={updatePayment} onEdit={setEditing} allRows={fortnightBillable} />
+                </TabsContent>
+                <TabsContent value="paid">
+                  <SessionsTable rows={base.filter((r) => r.payment_status === "paid")} loading={loading} onChange={updatePayment} onEdit={setEditing} allRows={fortnightBillable} />
+                </TabsContent>
+              </>
+            );
+          })()}
         </Tabs>
       </section>
+
 
 
       <PaymentDetailsDialog
