@@ -920,6 +920,8 @@ const Finance = () => {
             latestBillable: Row | null;
             hasPending: boolean;
             oldestPendingDays: number;
+            receitaToIssueCount: number;
+            receitaIssuedCount: number;
           };
           const now = Date.now();
           const map = new Map<string, Aggregate>();
@@ -939,10 +941,14 @@ const Finance = () => {
                 latestBillable: null,
                 hasPending: false,
                 oldestPendingDays: 0,
+                receitaToIssueCount: 0,
+                receitaIssuedCount: 0,
               };
               map.set(name, e);
             }
             if (!e.patientId && r.patient?.id) e.patientId = r.patient.id;
+            if (r.receita_saude_status === "to_issue") e.receitaToIssueCount++;
+            else if (r.receita_saude_status === "issued") e.receitaIssuedCount++;
             if (r.status === "completed") {
               e.realizadas++;
               e.totalValue += Number(r.price ?? 0);
@@ -963,9 +969,14 @@ const Finance = () => {
               }
             }
           }
-          const patients = Array.from(map.values()).sort((a, b) =>
+          const allAggregates = Array.from(map.values()).sort((a, b) =>
             a.name.localeCompare(b.name, "pt-BR")
           );
+          const patients = allAggregates.filter((p) => {
+            if (receitaSaudeFilter === "to_issue") return p.receitaToIssueCount > 0;
+            if (receitaSaudeFilter === "issued") return p.receitaIssuedCount > 0 && p.receitaToIssueCount === 0;
+            return true;
+          });
 
           if (loading) {
             return <p className="text-center py-12 text-muted-foreground">Carregando…</p>;
