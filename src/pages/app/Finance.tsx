@@ -97,6 +97,8 @@ const MethodIcon = ({ method, className }: { method: PaymentMethod; className?: 
   return <Banknote className={className} />;
 };
 
+type QuickAlert = "none" | "receita_saude" | "sem_pagamento" | "pix_sem_conf" | "pacotes_vencendo";
+
 const Finance = () => {
   const { user } = useAuth();
   const [monthCursor, setMonthCursor] = useState<Date>(new Date());
@@ -111,8 +113,10 @@ const Finance = () => {
   const [prefsLoaded, setPrefsLoaded] = useState(false);
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [expandedPatients, setExpandedPatients] = useState<Set<string>>(new Set());
+  const [quickAlert, setQuickAlert] = useState<QuickAlert>("none");
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const recentAlertRef = useRef<HTMLDivElement | null>(null);
+  const sessionsSectionRef = useRef<HTMLElement | null>(null);
 
   const monthStart = useMemo(() => startOfMonth(monthCursor), [monthCursor]);
   const monthEnd = useMemo(() => endOfMonth(monthCursor), [monthCursor]);
