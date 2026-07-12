@@ -11,6 +11,7 @@ const routeComponents: Record<string, ComponentType> = {
   "/app": lazy(() => import("@/pages/app/Dashboard")),
   "/app/pacientes": lazy(() => import("@/pages/app/Patients")),
   "/app/agenda": lazy(() => import("@/pages/app/Agenda")),
+  "/app/humor": lazy(() => import("@/pages/app/Humor")),
   "/app/plano-tratamento": lazy(() => import("@/pages/app/PlanoTratamento")),
   "/app/financeiro": lazy(() => import("@/pages/app/Finance")),
   "/app/supervisionandos": lazy(() => import("@/pages/app/Supervisees")),
