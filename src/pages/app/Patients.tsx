@@ -929,320 +929,416 @@ const Patients = () => {
           )}
         </div>
       ) : (
-        <ul className="space-y-3">
-          {filtered.map((p, idx) => {
-            const isCriticalAlert = p.notes ? /(crise|resist|abandon|suic|término)/i.test(p.notes) : false;
-            const isAttention = attentionPatients.some((x) => x.id === p.id);
-            const isLowAdherence = lowAdherencePatients.some((x) => x.id === p.id);
-            const borderColor = isCriticalAlert ? C.red : isAttention ? C.gold : C.purple;
-            const cHist = counts.history[p.id] || 0;
-            const cMood = counts.mood[p.id] || 0;
-            const cTcc = counts.tcc[p.id] || 0;
-            const hasAnam = !!anamneseFilled[p.id];
-            const hasFormul = !!formulationFilled[p.id];
-            const aiSum = formulationSummaries[p.id];
-            const tp = treatmentPlans[p.id];
-            const planMetasCount = tp?.goals_count || 0;
-            const hasPlan = !!(tp && (planMetasCount > 0 || tp.conceitualizacao?.trim() || tp.techniques_count > 0));
-            const type = PATIENT_CATEGORIES.find((c) => c.value === p.category)?.label ?? "Individual";
-            const isSupervision = p.category === "supervisao";
-            const initials = p.full_name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-            const avatarBg = avatarPalette[idx % avatarPalette.length];
-            const url = buildWhatsAppUrl(p);
-            const att = attendance[p.id];
+        <div
+          style={{
+            background: C.card,
+            border: `1px solid ${C.border}`,
+            borderRadius: 12,
+            boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+            overflow: "hidden",
+          }}
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full" style={{ borderCollapse: "collapse", fontSize: 13, minWidth: 1080 }}>
+              <thead>
+                <tr style={{ background: C.neutralBg, borderBottom: `1px solid ${C.border}` }}>
+                  {[
+                    { k: "avatar", label: "", w: 52 },
+                    { k: "nome", label: "Nome" },
+                    { k: "pacote", label: "Pacote" },
+                    { k: "progresso", label: "Progresso" },
+                    { k: "proxima", label: "Próxima sessão" },
+                    { k: "valor", label: "Valor" },
+                    { k: "pagamento", label: "Pagamento" },
+                    { k: "receita", label: "Receita Saúde" },
+                    { k: "status", label: "Status" },
+                    { k: "acoes", label: "", w: 56 },
+                  ].map((h) => (
+                    <th
+                      key={h.k}
+                      style={{
+                        textAlign: "left",
+                        padding: "10px 12px",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: C.muted,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        width: (h as any).w,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {h.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((p, idx) => {
+                  const isCriticalAlert = p.notes ? /(crise|resist|abandon|suic|término)/i.test(p.notes) : false;
+                  const isAttention = attentionPatients.some((x) => x.id === p.id);
+                  const rowAccent = isCriticalAlert ? C.red : isAttention ? C.gold : "transparent";
+                  const type = PATIENT_CATEGORIES.find((c) => c.value === p.category)?.label ?? "Individual";
+                  const isSupervision = p.category === "supervisao";
+                  const initials = p.full_name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+                  const avatarBg = avatarPalette[idx % avatarPalette.length];
+                  const si = sessionInfo[p.id];
+                  const pkg = packageInfo[p.id];
+                  const pay = paymentInfo[p.id];
+                  const rs = receitaSaudePending[p.id] || 0;
+                  const progressPct = pkg ? Math.min(100, Math.max(0, Math.round((pkg.current / pkg.total) * 100))) : null;
 
-            const Pill = ({ label, kind, count }: { label: string; kind: "filled" | "pending" | "neutral"; count?: number }) => {
-              const styles = kind === "filled"
-                ? { background: C.greenSoft, color: C.green, border: `1px solid ${C.greenBorder}` }
-                : kind === "pending"
-                ? { background: C.goldSoft, color: C.gold, border: `1px solid ${C.goldBorder}` }
-                : { background: C.neutralBg, color: C.muted, border: `1px solid ${C.border}` };
-              return (
-                <span className="inline-flex items-center gap-1" style={{ ...styles, fontSize: 11, fontWeight: 500, padding: "3px 9px", borderRadius: 6 }}>
-                  {label}
-                  {count != null && count > 0 && (
-                    <span style={{ background: kind === "filled" ? C.green : "rgba(0,0,0,0.08)", color: kind === "filled" ? "#fff" : "inherit", borderRadius: 4, padding: "0 5px", fontSize: 10, fontWeight: 700 }}>{count}</span>
-                  )}
-                </span>
-              );
-            };
+                  const nextLabel = si?.nextDate
+                    ? format(new Date(si.nextDate), "dd/MM · HH:mm", { locale: ptBR })
+                    : "—";
+                  const priceLabel = p.session_price != null ? `R$ ${Number(p.session_price).toFixed(0)}` : "—";
 
-            const openCard = (e: React.MouseEvent | React.KeyboardEvent) => {
-              const target = e.target as HTMLElement;
-              // Ignore clicks/keys that originated inside any interactive descendant
-              // (buttons, links, menus, form controls). This is the delegation guard
-              // that replaces the fragile stopPropagation() sprinkled everywhere.
-              if (target.closest('button, a, input, textarea, select, [role="button"], [role="menu"], [role="menuitem"], [data-no-card-open]')) {
-                return;
-              }
-              setSelectedPatient(p);
-            };
-            return (
-              <li
-                key={p.id}
-                role="button"
-                tabIndex={0}
-                aria-label={`Abrir ficha de ${p.full_name}`}
-                onClick={openCard}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    openCard(e);
-                  }
-                }}
-                className="cursor-pointer transition-shadow overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
-                style={{ background: C.card, borderRadius: 10, borderLeft: `3px solid ${borderColor}`, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.06)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)"; }}
-              >
-                <div className="flex flex-wrap items-center gap-4 px-4 sm:px-5 py-4">
-                  <div className="shrink-0 flex items-center justify-center" style={{ width: 42, height: 42, borderRadius: "50%", background: avatarBg, color: C.ink, fontWeight: 700, fontSize: 13 }}>
-                    {initials}
-                  </div>
+                  const openRow = (e: React.MouseEvent | React.KeyboardEvent) => {
+                    const target = e.target as HTMLElement;
+                    if (
+                      target.closest(
+                        'button, a, input, textarea, select, [role="button"], [role="menu"], [role="menuitem"], [data-no-card-open]'
+                      )
+                    ) {
+                      return;
+                    }
+                    setSelectedPatient(p);
+                  };
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate" style={{ fontWeight: 700, fontSize: 15, color: C.ink }}>{p.full_name}</p>
-                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                      <span style={{ background: C.greenSoft, color: C.green, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6 }}>
-                        {p.is_active ? "Ativo" : "Inativo"}
-                      </span>
-                      {isSupervision ? (
-                        <span style={{ background: C.goldSoft, color: C.gold, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6 }}>Supervisão</span>
-                      ) : (
-                        <span style={{ background: "#F3F4F6", color: C.muted, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6 }}>{type}</span>
-                      )}
-                      {p.shared_with_supervisor && (
-                        <span
-                          className="inline-flex items-center gap-1"
-                          title="Este paciente está compartilhado com o(a) supervisor(a)"
-                          style={{ background: "rgba(155,141,184,0.15)", color: "hsl(var(--lilac))", fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6, border: "1px solid rgba(155,141,184,0.35)" }}
+                  return (
+                    <tr
+                      key={p.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Abrir ficha de ${p.full_name}`}
+                      onClick={openRow}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          openRow(e);
+                        }
+                      }}
+                      className="cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
+                      style={{
+                        borderBottom: `1px solid ${C.border}`,
+                        borderLeft: `3px solid ${rowAccent}`,
+                        background: C.card,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = C.neutralBg;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = C.card;
+                      }}
+                    >
+                      {/* Avatar */}
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle" }}>
+                        <div
+                          className="flex items-center justify-center"
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: "50%",
+                            background: avatarBg,
+                            color: C.ink,
+                            fontWeight: 700,
+                            fontSize: 12,
+                          }}
                         >
-                          <Eye className="h-3 w-3" /> Compartilhado c/ supervisor
-                        </span>
-                      )}
-                      {p.phone && (
-                        <span className="inline-flex items-center gap-1" style={{ fontSize: 12, color: C.muted }}>
-                          <Phone className="h-3 w-3" />
-                          <span className="truncate max-w-[140px]">{p.phone}</span>
-                        </span>
-                      )}
-                    </div>
-                    {(() => {
-                      const si = sessionInfo[p.id];
-                      const lastRec = lastDates.records[p.id];
-                      const lastFormU = formulationFilled[p.id];
-                      const statusLabel: Record<string, string> = {
-                        scheduled: "Agendada", confirmed: "Confirmada", completed: "Realizada",
-                        done: "Realizada", attended: "Realizada", cancelled: "Cancelada", no_show: "Faltou",
-                      };
-                      const statusColor: Record<string, string> = {
-                        scheduled: C.purple, confirmed: C.green, completed: C.green,
-                        done: C.green, attended: C.green, cancelled: C.red, no_show: C.gold,
-                      };
-                      const hasAny = si?.lastDate || si?.nextDate || lastRec || lastFormU;
-                      if (!hasAny) return null;
-                      const Item = ({ icon, label, value, color }: any) => (
-                        <span className="inline-flex items-center gap-1" style={{ fontSize: 11, color: C.muted }}>
-                          {icon}
-                          <span>{label}:</span>
-                          <strong style={{ color: color || C.ink, fontWeight: 600 }}>{value}</strong>
-                        </span>
-                      );
-                      return (
-                        <div className="flex items-center gap-x-3 gap-y-1 mt-1.5 flex-wrap">
-                          {si?.lastDate && (
-                            <Item
-                              icon={<CalendarDays className="h-3 w-3" />}
-                              label="Última sessão"
-                              value={`${format(new Date(si.lastDate), "dd/MM/yyyy", { locale: ptBR })}${si.lastStatus ? ` · ${statusLabel[si.lastStatus] || si.lastStatus}` : ""}`}
-                              color={si.lastStatus ? statusColor[si.lastStatus] : undefined}
-                            />
-                          )}
-                          {si?.nextDate && (
-                            <Item
-                              icon={<CalendarDays className="h-3 w-3" />}
-                              label="Próxima"
-                              value={`${format(new Date(si.nextDate), "dd/MM/yyyy", { locale: ptBR })}${si.nextStatus ? ` · ${statusLabel[si.nextStatus] || si.nextStatus}` : ""}`}
-                              color={si.nextStatus ? statusColor[si.nextStatus] : undefined}
-                            />
-                          )}
-                          {lastRec && (
-                            <Item
-                              icon={<FileText className="h-3 w-3" />}
-                              label="Último registro"
-                              value={format(new Date(lastRec), "dd/MM/yyyy", { locale: ptBR })}
-                            />
-                          )}
-                          {lastFormU && (
-                            <Item
-                              icon={<Sparkles className="h-3 w-3" />}
-                              label="Formulação atualizada"
-                              value={format(new Date(lastFormU), "dd/MM/yyyy", { locale: ptBR })}
-                            />
-                          )}
-                          <button
-                            onClick={(e) => { e.stopPropagation(); navigate(`/app/agenda?patient=${p.id}`); }}
-                            className="inline-flex items-center gap-1"
-                            style={{ fontSize: 11, fontWeight: 600, color: C.purple, background: "transparent", border: "none", cursor: "pointer", padding: 0 }}
-                            title="Ver na agenda"
-                          >
-                            <CalendarDays className="h-3 w-3" /> Ver agenda
-                          </button>
+                          {initials}
                         </div>
-                      );
-                    })()}
+                      </td>
 
-                    {/* Mapa de preenchimento — o que existe de cada paciente */}
-                    {(() => {
-                      const te = teData[p.id];
-                      const teHas = !!teFilled[p.id];
-                      const actHas = !!actFilled[p.id];
-                      const items: { key: string; label: string; filled: boolean; color: string; onView: (e: React.MouseEvent) => void }[] = [
-                        { key: "anam", label: "Anamnese", filled: hasAnam, color: "#7A5AA8",
-                          onView: (e) => { e.stopPropagation(); setAnamnesisPatient(p); } },
-                        { key: "tcc", label: "Formulação TCC", filled: hasFormul, color: C.purple,
-                          onView: (e) => { e.stopPropagation(); setPadeksyPatient(p); } },
-                        { key: "te", label: "Formulação TE", filled: teHas, color: "#B8860B",
-                          onView: (e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-te`); } },
-                        { key: "act", label: "Formulação ACT", filled: actHas, color: "#2D6A4F",
-                          onView: (e) => { e.stopPropagation(); navigate(`/app/pacientes/${p.id}/formulacao-act`); } },
-                        { key: "rpd", label: "Registros TCC", filled: cTcc > 0, color: "hsl(var(--moss))",
-                          onView: (e) => { e.stopPropagation(); setTccPatient(p); } },
-                        { key: "sess", label: "Registros sessão", filled: (counts.records[p.id] || 0) > 0, color: C.purple,
-                          onView: (e) => { e.stopPropagation(); setRecordsPatient(p); } },
-                        { key: "plan", label: "Plano", filled: hasPlan, color: "#7A5AA8",
-                          onView: (e) => { e.stopPropagation(); navigate(`/app/plano-tratamento?patient=${p.id}`); } },
-                      ];
-                      const filledCount = items.filter((i) => i.filled).length;
-                      return (
-                        <div className="mt-2 flex items-center gap-x-2 gap-y-1.5 flex-wrap" data-no-card-open>
-                          <span className="uppercase" style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: C.muted }}>
-                            Preenchido {filledCount}/{items.length}:
+                      {/* Nome */}
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle", minWidth: 200 }}>
+                        <div className="min-w-0">
+                          <p className="truncate" style={{ fontWeight: 600, fontSize: 14, color: C.ink }}>
+                            {p.full_name}
+                          </p>
+                          {p.phone && (
+                            <span className="inline-flex items-center gap-1 mt-0.5" style={{ fontSize: 11, color: C.muted }}>
+                              <Phone className="h-3 w-3" />
+                              <span className="truncate max-w-[160px]">{p.phone}</span>
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Pacote */}
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                        {pkg ? (
+                          <span
+                            style={{
+                              background: C.purpleSoft,
+                              color: C.purpleInk,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: "3px 9px",
+                              borderRadius: 40,
+                            }}
+                          >
+                            {pkg.total} sessões
                           </span>
-                          {items.map((it) => (
-                            <button
-                              key={it.key}
-                              type="button"
-                              onClick={it.onView}
-                              title={it.filled ? `Visualizar ${it.label}` : `${it.label} — pendente (clique para abrir)`}
-                              aria-label={`${it.filled ? "Visualizar" : "Abrir"} ${it.label}`}
-                              className="inline-flex items-center gap-1 transition-opacity hover:opacity-80"
+                        ) : isSupervision ? (
+                          <span style={{ background: C.goldSoft, color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
+                            Supervisão
+                          </span>
+                        ) : (
+                          <span style={{ background: "#F3F4F6", color: C.muted, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
+                            {type}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Progresso do pacote */}
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle", minWidth: 140 }}>
+                        {pkg ? (
+                          <div className="flex items-center gap-2">
+                            <div
                               style={{
-                                fontSize: 10.5,
-                                fontWeight: 600,
-                                padding: "2px 7px 2px 8px",
+                                flex: 1,
+                                height: 6,
+                                background: C.border,
                                 borderRadius: 40,
-                                border: `1px solid ${it.filled ? it.color : C.border}`,
-                                background: it.filled ? `${it.color}14` : "transparent",
-                                color: it.filled ? it.color : C.muted,
-                                opacity: it.filled ? 1 : 0.75,
-                                cursor: "pointer",
+                                overflow: "hidden",
+                                minWidth: 60,
                               }}
+                              role="progressbar"
+                              aria-valuenow={progressPct ?? 0}
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-label={`Progresso do pacote ${pkg.current} de ${pkg.total}`}
                             >
-                              <span
-                                aria-hidden
+                              <div
                                 style={{
-                                  width: 6, height: 6, borderRadius: "50%",
-                                  background: it.filled ? it.color : "transparent",
-                                  border: it.filled ? "none" : `1px dashed ${C.muted}`,
+                                  width: `${progressPct}%`,
+                                  height: "100%",
+                                  background: C.purple,
+                                  transition: "width 300ms ease",
                                 }}
                               />
-                              {it.label}
-                              <Eye className="h-3 w-3" style={{ opacity: it.filled ? 1 : 0.55 }} />
-                            </button>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </div>
+                            </div>
+                            <span style={{ fontSize: 11, color: C.muted, fontWeight: 600, whiteSpace: "nowrap" }}>
+                              {pkg.current}/{pkg.total}
+                            </span>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: 12, color: C.muted }}>—</span>
+                        )}
+                      </td>
 
-
-
-                  <div className="flex items-center gap-3 shrink-0 ml-auto">
-                    {p.session_price != null && (
-                      <div className="text-right hidden sm:block">
-                        <span style={{ fontWeight: 700, fontSize: 16, color: C.ink }}>R$ {Number(p.session_price).toFixed(0)}</span>
-                        <span style={{ fontSize: 12, color: C.muted, marginLeft: 2 }}>/sessão</span>
-                      </div>
-                    )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          onClick={(e) => e.stopPropagation()}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
+                      {/* Próxima sessão */}
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                        {si?.nextDate ? (
+                          <button
+                            onClick={(e) => {
                               e.stopPropagation();
-                            }
+                              navigate(`/app/agenda?patient=${p.id}`);
+                            }}
+                            className="inline-flex items-center gap-1"
+                            style={{ fontSize: 12, color: C.ink, background: "transparent", border: "none", padding: 0, cursor: "pointer" }}
+                            title="Ver na agenda"
+                          >
+                            <CalendarDays className="h-3 w-3" style={{ color: C.purple }} />
+                            {nextLabel}
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: 12, color: C.muted }}>—</span>
+                        )}
+                      </td>
+
+                      {/* Valor */}
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>{priceLabel}</span>
+                      </td>
+
+                      {/* Pagamento */}
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                        {pay && pay.total > 0 ? (
+                          <div className="flex items-center gap-1.5">
+                            {pay.pending > 0 ? (
+                              <span
+                                style={{
+                                  background: C.goldSoft,
+                                  color: C.gold,
+                                  border: `1px solid ${C.goldBorder}`,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  padding: "2px 8px",
+                                  borderRadius: 40,
+                                }}
+                                title={`${pay.pending} pendente(s)`}
+                              >
+                                {pay.pending} pendente
+                              </span>
+                            ) : (
+                              <span
+                                style={{
+                                  background: C.greenSoft,
+                                  color: C.green,
+                                  border: `1px solid ${C.greenBorder}`,
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                  padding: "2px 8px",
+                                  borderRadius: 40,
+                                }}
+                              >
+                                Em dia
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: 12, color: C.muted }}>—</span>
+                        )}
+                      </td>
+
+                      {/* Receita Saúde */}
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                        {rs > 0 ? (
+                          <span
+                            style={{
+                              background: C.goldSoft,
+                              color: C.gold,
+                              border: `1px solid ${C.goldBorder}`,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: "2px 8px",
+                              borderRadius: 40,
+                            }}
+                            title="Sessões pagas sem referência para Receita Saúde"
+                          >
+                            {rs} pendente
+                          </span>
+                        ) : pay && pay.paid > 0 ? (
+                          <span
+                            style={{
+                              background: C.greenSoft,
+                              color: C.green,
+                              border: `1px solid ${C.greenBorder}`,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: "2px 8px",
+                              borderRadius: 40,
+                            }}
+                          >
+                            Ok
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 12, color: C.muted }}>—</span>
+                        )}
+                      </td>
+
+                      {/* Status */}
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                        <span
+                          style={{
+                            background: p.is_active ? C.greenSoft : "#F3F4F6",
+                            color: p.is_active ? C.green : C.muted,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            padding: "2px 8px",
+                            borderRadius: 40,
                           }}
-                          className="flex items-center justify-center"
-                          style={{ width: 32, height: 32, borderRadius: 7, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
-                          aria-label="Ações do paciente"
-                          title="Ações do paciente"
                         >
-                          <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        onClick={(e) => e.stopPropagation()}
-                        onCloseAutoFocus={(e) => {
-                          // Keep Radix default: return focus to the trigger button.
-                        }}
-                      >
-                        <DropdownMenuItem onClick={() => openEdit(p)}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toggleActive(p)}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setTccPatient(p)}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-te`)} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setRecordsPatient(p)}><FileText className="h-4 w-4 mr-2" /> Registros de sessão</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setHomeworkPatient(p)}><ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => toggleSharing(p)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          {p.shared_with_supervisor ? "Remover do supervisor" : "Compartilhar com supervisor"}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                          {p.is_active ? "Ativo" : "Inativo"}
+                        </span>
+                        {p.shared_with_supervisor && (
+                          <span
+                            className="inline-flex items-center gap-1 ml-1"
+                            title="Compartilhado com supervisor"
+                            style={{
+                              background: "rgba(155,141,184,0.15)",
+                              color: "hsl(var(--lilac))",
+                              fontSize: 10,
+                              fontWeight: 600,
+                              padding: "2px 6px",
+                              borderRadius: 40,
+                              border: "1px solid rgba(155,141,184,0.35)",
+                            }}
+                          >
+                            <Eye className="h-3 w-3" />
+                          </span>
+                        )}
+                      </td>
 
-                        <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                </div>
-
-                {/* Resumo do cadastro e Resumo IA movidos para a visualização expandida (sheet) */}
-
-                {isCriticalAlert && (
-                  <div style={{ background: C.redSoft, borderTop: `1px solid ${C.border}`, padding: "9px 16px", display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ color: C.red, fontWeight: 700, fontSize: 13 }}>!</span>
-                    <p style={{ color: C.red, fontWeight: 500, fontSize: 12 }}>
-                      Sinais de alerta nas notas — considerar revisar plano clínico na próxima sessão.
-                    </p>
-                  </div>
-                )}
-                {!isCriticalAlert && isAttention && !hasFormul && (
-                  <div style={{ background: C.goldSoft, borderTop: `1px solid ${C.border}`, padding: "9px 16px", display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ color: C.gold, fontWeight: 700, fontSize: 13 }}>!</span>
-                    <p style={{ color: C.gold, fontWeight: 500, fontSize: 12 }}>
-                      Sem formulação há mais de 30 dias — considerar iniciar RPD na próxima sessão.
-                    </p>
-                  </div>
-                )}
-                {!isCriticalAlert && isLowAdherence && att && (
-                  <div style={{ background: C.purpleSoft, borderTop: `1px solid ${C.border}`, padding: "9px 16px", display: "flex", alignItems: "center", gap: 8 }}>
-                    <Sparkles className="h-3 w-3" style={{ color: C.purple }} />
-                    <p style={{ color: C.purple, fontWeight: 500, fontSize: 12 }}>
-                      Comparecimento em {att.pct}% — considerar conversar sobre vínculo terapêutico.
-                    </p>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                      {/* Ações */}
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle" }}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.stopPropagation();
+                                }
+                              }}
+                              className="flex items-center justify-center"
+                              style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: 7,
+                                background: C.card,
+                                border: `1px solid ${C.border}`,
+                                color: C.muted,
+                              }}
+                              aria-label="Ações do paciente"
+                              title="Ações do paciente"
+                            >
+                              <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={() => openEdit(p)}>
+                              <IconPencil className="h-4 w-4 mr-2" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => toggleActive(p)}>
+                              <IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setTccPatient(p)}>
+                              <IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPadeksyPatient(p)}>
+                              <IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-te`)}
+                              className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"
+                            >
+                              <IconTarget className="h-4 w-4 mr-2" /> Formulação TE
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)}
+                              className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"
+                            >
+                              <IconFlame className="h-4 w-4 mr-2" /> Formulação ACT
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setRecordsPatient(p)}>
+                              <FileText className="h-4 w-4 mr-2" /> Registros de sessão
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setHomeworkPatient(p)}>
+                              <ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => toggleSharing(p)}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              {p.shared_with_supervisor ? "Remover do supervisor" : "Compartilhar com supervisor"}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]">
+                              <IconTrash className="h-4 w-4 mr-2" /> Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
 
