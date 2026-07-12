@@ -273,7 +273,22 @@ export default function Humor() {
       });
   }, [aggregates, search, filter]);
 
-  const openPatient = (id: string) => navigate(`/app/pacientes?patient=${id}&tab=overview`);
+  const [openPatientId, setOpenPatientId] = useState<string | null>(null);
+  const openPatient = (id: string) => setOpenPatientId(id);
+  const goToPatientFullView = (id: string) => navigate(`/app/pacientes?patient=${id}&tab=overview`);
+  const openPatientData = useMemo(
+    () => aggregates.find((a) => a.patient.id === openPatientId) ?? null,
+    [aggregates, openPatientId]
+  );
+  const openPatientRecords = useMemo(
+    () =>
+      openPatientId
+        ? progress
+            .filter((r) => r.patient_id === openPatientId)
+            .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())
+        : [],
+    [progress, openPatientId]
+  );
 
   const saveThresholds = () => {
     if (thresholdsDraft.critical >= thresholdsDraft.well - 1) {
