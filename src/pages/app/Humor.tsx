@@ -116,29 +116,47 @@ export default function Humor() {
   const [progress, setProgress] = useState<ProgressRow[]>([]);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       setLoading(true);
-      const since = subDays(new Date(), Math.max(period, 90)).toISOString();
-      const [{ data: pts }, { data: prg }, { data: sess }] = await Promise.all([
-        supabase.from("patients").select("id, full_name, is_active").eq("is_active", true),
-        (supabase as any)
-          .from("patient_progress")
-          .select("id, patient_id, recorded_at, mood_score, wellbeing_score, note, patient_context, clinical_observation, attention_flag, data_model")
-          .gte("recorded_at", since)
-          .order("recorded_at", { ascending: false }),
-        supabase.from("sessions")
-          .select("patient_id, scheduled_at")
-          .gte("scheduled_at", new Date().toISOString())
-          .order("scheduled_at", { ascending: true }),
-      ]);
-      setPatients((pts as PatientRow[]) ?? []);
-      setProgress((prg as ProgressRow[]) ?? []);
-      setSessions((sess as SessionRow[]) ?? []);
-      setLoading(false);
+      setLoadError(null);
+      try {
+        const since = subDays(new Date(), Math.max(period, 90)).toISOString();
+        const [ptsRes, prgRes, sessRes] = await Promise.all([
+          supabase.from("patients").select("id, full_name, is_active").eq("is_active", true),
+          (supabase as any)
+            .from("patient_progress")
+            .select("id, patient_id, recorded_at, mood_score, wellbeing_score, note, patient_context, clinical_observation, attention_flag, data_model")
+            .gte("recorded_at", since)
+            .order("recorded_at", { ascending: false }),
+          supabase.from("sessions")
+            .select("patient_id, scheduled_at")
+            .gte("scheduled_at", new Date().toISOString())
+            .order("scheduled_at", { ascending: true }),
+        ]);
+        if (cancelled) return;
+        const firstError = ptsRes.error || prgRes.error || sessRes.error;
+        if (firstError) throw firstError;
+        setPatients((ptsRes.data as PatientRow[]) ?? []);
+        setProgress((prgRes.data as ProgressRow[]) ?? []);
+        setSessions((sessRes.data as SessionRow[]) ?? []);
+      } catch (err: any) {
+        if (cancelled) return;
+        const msg = err?.message || "Não foi possível carregar os dados de humor.";
+        console.error("[Humor] load failed:", err);
+        setLoadError(msg);
+        toast.error("Falha ao carregar humor", { description: msg });
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
-  }, [period]);
+    return () => { cancelled = true; };
+  }, [period, reloadKey]);
+
 
   /* Aggregate per patient (latest within period) */
   const aggregates = useMemo<PatientAggregate[]>(() => {
@@ -399,6 +417,25 @@ export default function Humor() {
           </Dialog>
         </div>
       </header>
+
+      {loadError && (
+        <div
+          role="alert"
+          className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+        >
+          <div className="flex items-start gap-2 text-sm">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-destructive">Não foi possível carregar o painel de humor</p>
+              <p className="text-muted-foreground">{loadError}</p>
+            </div>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => setReloadKey((k) => k + 1)}>
+            <RotateCcw className="h-4 w-4 mr-2" /> Tentar novamente
+          </Button>
+        </div>
+      )}
+
 
       {/* KPIs */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
