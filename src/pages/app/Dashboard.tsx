@@ -356,52 +356,129 @@ export default function Dashboard() {
                 {totalWeek} sessões distribuídas · {selectedLabel && `${selectedLabel.toLowerCase()}-feira selecionada`}
               </p>
             </div>
-            <Card className="rounded-2xl border-border/60 p-5">
-              <div className="flex items-end justify-between gap-3 h-44">
-                {WEEK.map((d) => {
-                  const active = d.key === selectedDay;
-                  const pct = (d.value / maxWeek) * 100;
+            <Card className="rounded-2xl border-border/60 p-5 space-y-5">
+              <div
+                ref={tabsRef}
+                role="tablist"
+                aria-label="Dias da semana"
+                onKeyDown={onTabsKeyDown}
+                className="flex items-end justify-between gap-3 h-44"
+              >
+                {weekDays.map((d, i) => {
+                  const active = isSameDay(d, selectedDate);
+                  const value = counts[i];
+                  const pct = (value / maxWeek) * 100;
+                  const label = WEEK_DAY_LABELS[i];
+                  const tabId = `weekday-${i}`;
                   return (
                     <button
-                      key={d.key}
-                      onClick={() => setSelectedDay(d.key)}
-                      className="group flex flex-1 flex-col items-center gap-2 focus:outline-none"
-                      aria-label={`${d.label}: ${d.value} sessões`}
+                      key={tabId}
+                      id={tabId}
+                      role="tab"
+                      aria-selected={active}
+                      aria-controls="weekday-panel"
+                      tabIndex={active ? 0 : -1}
+                      onClick={() => setSelectedDate(d)}
+                      className="group flex flex-1 flex-col items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md"
+                      aria-label={`${label}, ${format(d, "d 'de' MMMM", { locale: ptBR })}: ${value} ${value === 1 ? "sessão" : "sessões"}`}
                     >
                       <span
                         className={cn(
-                          "text-xs font-medium",
+                          "text-xs font-medium tabular-nums",
                           active ? "text-foreground" : "text-muted-foreground",
                         )}
                       >
-                        {d.value}
+                        {value}
                       </span>
                       <div className="flex h-32 w-full items-end justify-center">
                         <div
-                          style={{ height: `${pct}%` }}
+                          style={{ height: value === 0 ? "4px" : `${pct}%` }}
                           className={cn(
                             "w-6 md:w-8 rounded-t-md transition-colors",
                             active
                               ? "bg-primary"
-                              : "bg-primary/25 group-hover:bg-primary/40 group-focus-visible:bg-primary/40",
+                              : value === 0
+                                ? "bg-muted"
+                                : "bg-primary/25 group-hover:bg-primary/40",
                           )}
                         />
                       </div>
                       <span
                         className={cn(
-                          "text-xs",
+                          "text-xs flex flex-col items-center leading-tight",
                           active
                             ? "text-foreground font-medium"
                             : "text-muted-foreground",
                         )}
                       >
-                        {d.label}
+                        {label}
+                        {isToday(d) && (
+                          <span className="text-[10px] text-primary">hoje</span>
+                        )}
                       </span>
                     </button>
                   );
                 })}
               </div>
+
+              {/* Resumo do dia selecionado */}
+              <div
+                id="weekday-panel"
+                role="tabpanel"
+                aria-labelledby={`weekday-${weekDays.findIndex((d) => isSameDay(d, selectedDate))}`}
+                className="border-t border-border/60 pt-4"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-medium text-foreground capitalize">
+                    {selectedLabel} · {format(selectedDate, "d 'de' MMMM", { locale: ptBR })}
+                  </p>
+                  <span className="text-xs text-muted-foreground">
+                    {selectedSessions.length} {selectedSessions.length === 1 ? "sessão" : "sessões"}
+                  </span>
+                </div>
+
+                {loadingWeek ? (
+                  <div className="space-y-2">
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="h-10 rounded-lg bg-muted/50 animate-pulse"
+                      />
+                    ))}
+                  </div>
+                ) : selectedSessions.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-6 text-center">
+                    <CalendarDays className="h-5 w-5 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Nenhuma sessão agendada neste dia.
+                    </p>
+                  </div>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {selectedSessions.map((s) => (
+                      <li
+                        key={s.id}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/40 transition-colors"
+                      >
+                        <span className="text-xs font-medium tabular-nums text-muted-foreground w-12 shrink-0">
+                          {format(new Date(s.scheduled_at), "HH:mm")}
+                        </span>
+                        <span className="text-sm text-foreground flex-1 truncate">
+                          {s.patient_name}
+                        </span>
+                        {s.modality && (
+                          <span className="text-xs text-muted-foreground hidden sm:inline">
+                            {s.modality}
+                          </span>
+                        )}
+                        <StatusDot status={s.status} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </Card>
+
           </div>
         </section>
 
