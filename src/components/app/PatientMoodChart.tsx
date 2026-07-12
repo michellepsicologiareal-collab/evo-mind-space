@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Smile, TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react";
+import { Loader2, Smile, TrendingUp, TrendingDown, Minus, AlertTriangle, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis, CartesianGrid, Line } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 
