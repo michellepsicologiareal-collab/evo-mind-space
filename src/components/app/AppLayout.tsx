@@ -36,6 +36,7 @@ const allNavItems: NavItem[] = [
   { to: "/app", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "/app/pacientes", label: "Pacientes", icon: Users },
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
+  { to: "/app/humor", label: "Humor", icon: HeartPulse },
   { to: "/app/registro-sessao", label: "Registro Sessão", icon: ClipboardList },
   { to: "/app/plano-tratamento", label: "Plano de Tratamento", icon: Target },
   { to: "/app/formulacao-ia", label: "Formulação IA", icon: Sparkles },
