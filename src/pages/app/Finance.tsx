@@ -1364,6 +1364,7 @@ const PaymentDetailsDialog = ({
       .update({
         payment_method: method === "none" ? null : method,
         payment_reference: ref.length > 0 ? ref : null,
+        receita_saude_status: receitaSaude === "none" ? null : receitaSaude,
       })
       .eq("id", row.id);
     setSaving(false);
