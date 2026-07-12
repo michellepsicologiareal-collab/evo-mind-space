@@ -76,13 +76,8 @@ const PENDINGS = [
   { icon: UserMinus, label: "Baixa adesão", count: 1, to: "/app/pacientes?filter=baixa-adesao" },
 ];
 
-const WEEK = [
-  { key: "seg", label: "Seg", value: 6 },
-  { key: "ter", label: "Ter", value: 7 },
-  { key: "qua", label: "Qua", value: 4 },
-  { key: "qui", label: "Qui", value: 5 },
-  { key: "sex", label: "Sex", value: 3 },
-];
+const WEEK_DAY_LABELS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
 
 /* ─── UI helpers ─── */
 function greeting() {
