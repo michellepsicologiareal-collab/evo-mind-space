@@ -1111,10 +1111,20 @@ const Finance = () => {
                           </td>
                           <td className={`py-3 px-3 font-medium ${pay.tone}`}>{pay.label}</td>
                           <td
-                            className={`py-3 px-3 text-muted-foreground italic text-xs ${rowClickable ? "cursor-pointer" : ""}`}
+                            className={`py-3 px-3 text-xs ${rowClickable ? "cursor-pointer" : ""}`}
                             onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("finance", "receita-saude"); } : undefined}
                           >
-                            Não informado
+                            {p.receitaToIssueCount > 0 ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-amber-500/10 text-amber-700 dark:text-amber-500">
+                                A emitir{p.receitaToIssueCount > 1 ? ` · ${p.receitaToIssueCount}` : ""}
+                              </span>
+                            ) : p.receitaIssuedCount > 0 ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-moss/10 text-moss">
+                                Emitido{p.receitaIssuedCount > 1 ? ` · ${p.receitaIssuedCount}` : ""}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground italic">Não informado</span>
+                            )}
                           </td>
                           <td className="py-3 px-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${sit.tone}`}>
