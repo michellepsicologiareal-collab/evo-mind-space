@@ -1329,6 +1329,7 @@ const PaymentDetailsDialog = ({
 }) => {
   const [method, setMethod] = useState<PaymentMethod | "none">("none");
   const [reference, setReference] = useState("");
+  const [receitaSaude, setReceitaSaude] = useState<ReceitaSaudeStatus | "none">("none");
   const [saving, setSaving] = useState(false);
   const [refError, setRefError] = useState<string | null>(null);
 
@@ -1336,6 +1337,7 @@ const PaymentDetailsDialog = ({
     if (row) {
       setMethod((row.payment_method as PaymentMethod | null) ?? "none");
       setReference(row.payment_reference ?? "");
+      setReceitaSaude((row.receita_saude_status as ReceitaSaudeStatus | null) ?? "none");
       setRefError(null);
     }
   }, [row]);
