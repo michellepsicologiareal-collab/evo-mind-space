@@ -1065,7 +1065,7 @@ const Finance = () => {
                           <td className={`py-3 px-3 font-medium ${pay.tone}`}>{pay.label}</td>
                           <td
                             className={`py-3 px-3 text-muted-foreground italic text-xs ${rowClickable ? "cursor-pointer" : ""}`}
-                            onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("finance"); } : undefined}
+                            onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("finance", "receita-saude"); } : undefined}
                           >
                             Não informado
                           </td>
