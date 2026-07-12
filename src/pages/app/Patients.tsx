@@ -1356,23 +1356,8 @@ const Patients = () => {
                         >
                           {p.is_active ? "Ativo" : "Inativo"}
                         </span>
-                        {p.shared_with_supervisor && (
-                          <span
-                            className="inline-flex items-center gap-1 ml-1"
-                            title="Compartilhado com supervisor"
-                            style={{
-                              background: "rgba(155,141,184,0.15)",
-                              color: "hsl(var(--lilac))",
-                              fontSize: 10,
-                              fontWeight: 600,
-                              padding: "2px 6px",
-                              borderRadius: 40,
-                              border: "1px solid rgba(155,141,184,0.35)",
-                            }}
-                          >
-                            <Eye className="h-3 w-3" />
-                          </span>
-                        )}
+                        {/* Badge "compartilhado com supervisor" removido no hotfix Fase 1:
+                            supervisoras não têm mais acesso via RLS, então o indicador seria enganoso. */}
                       </td>
 
                       {/* Ações */}
