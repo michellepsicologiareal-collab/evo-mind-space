@@ -344,6 +344,11 @@ const Finance = () => {
     [billable]
   );
 
+  const receitaSaudeToIssue = useMemo(
+    () => fortnightAllValid.filter((r) => r.receita_saude_status === "to_issue"),
+    [fortnightAllValid]
+  );
+
   const recentMissing = useMemo(() => {
     if (!reminderEnabled) return [];
     const cutoff = Date.now() - reminderWindow * 60 * 60 * 1000;
