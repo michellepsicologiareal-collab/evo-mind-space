@@ -198,6 +198,70 @@ interface Patient {
 
 const FREE_PATIENT_LIMIT = 5;
 
+const hasMeaningfulClinicalValue = (value: unknown): boolean => {
+  if (value == null) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value === "boolean") return value;
+  if (Array.isArray(value)) return value.some(hasMeaningfulClinicalValue);
+  if (typeof value === "object") return Object.values(value as Record<string, unknown>).some(hasMeaningfulClinicalValue);
+  return false;
+};
+
+const clinicalText = (value: unknown): string => {
+  if (value == null) return "";
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) {
+    return value.map(clinicalText).filter(Boolean).join(" · ");
+  }
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const preferred = [record.objective, record.text, record.hypothesis, record.manifestacao, record.observacao, record.valor_declarado, record.acoes_alinhadas, record.barreiras];
+    const direct = preferred.map(clinicalText).filter(Boolean).join(" · ");
+    if (direct) return direct;
+    return Object.values(record).map(clinicalText).filter(Boolean).join(" · ");
+  }
+  return "";
+};
+
+const hasTccFormulation = (f?: Record<string, unknown> | null) => !!f && [
+  f.ai_summary,
+  f.environment,
+  f.thoughts,
+  f.emotions,
+  f.behaviors,
+  f.physical_reactions,
+  f.core_beliefs,
+  f.treatment_goals,
+].some(hasMeaningfulClinicalValue);
+
+const hasSchemaFormulation = (f?: Record<string, unknown> | null) => !!f && [
+  f.ambiente_familiar,
+  f.figuras_vinculacao,
+  f.eventos_marcantes,
+  f.padrao_identificado,
+  f.historia_origem,
+  f.necessidades,
+  f.outras_necessidades,
+  f.esquemas,
+  f.modos,
+  f.adulto_saudavel_forca,
+  f.conexao_gerada,
+  f.foco_terapeutico,
+  f.observacoes_terapeuta,
+].some(hasMeaningfulClinicalValue);
+
+const hasActFormulation = (f?: Record<string, unknown> | null) => !!f && [
+  f.apresentacao_problema,
+  f.hexaflex,
+  f.valores,
+  f.matriz_act,
+  f.barreiras_geradas,
+  f.direcionamento_gerado,
+  f.observacoes_terapeuta,
+].some(hasMeaningfulClinicalValue);
+
 const Patients = () => {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
@@ -317,8 +381,8 @@ const Patients = () => {
       supabase.from("treatment_goals").select("patient_id").eq("user_id", user.id),
       supabase.from("treatment_techniques").select("patient_id").eq("user_id", user.id),
       supabase.from("treatment_revisions").select("patient_id").eq("user_id", user.id),
-      supabase.from("schema_formulations").select("patient_id, padrao_identificado, foco_terapeutico, conexao_gerada, updated_at").eq("therapist_id", user.id),
-      supabase.from("act_formulations").select("patient_id, apresentacao_problema, direcionamento_gerado, updated_at").eq("therapist_id", user.id),
+      supabase.from("schema_formulations").select("patient_id, ambiente_familiar, figuras_vinculacao, eventos_marcantes, padrao_identificado, historia_origem, necessidades, outras_necessidades, esquemas, modos, adulto_saudavel_forca, conexao_gerada, foco_terapeutico, observacoes_terapeuta, updated_at").eq("therapist_id", user.id),
+      supabase.from("act_formulations").select("patient_id, apresentacao_problema, hexaflex, valores, matriz_act, barreiras_geradas, direcionamento_gerado, observacoes_terapeuta, updated_at").eq("therapist_id", user.id),
 
     ]);
     if (patientsRes.error) toast.error("Erro ao carregar pacientes");
@@ -350,8 +414,9 @@ const Patients = () => {
     const dataMap: Record<string, any> = {};
     (formRes.data ?? []).forEach((f: any) => {
       if (!f.patient_id) return;
-      formMap[f.patient_id] = f.updated_at;
-      if (f.ai_summary) sumMap[f.patient_id] = f.ai_summary;
+      if (hasTccFormulation(f)) formMap[f.patient_id] = f.updated_at || new Date().toISOString();
+      const summary = clinicalText(f.ai_summary) || clinicalText(f.treatment_goals) || clinicalText(f.core_beliefs) || clinicalText(f.environment);
+      if (summary) sumMap[f.patient_id] = summary;
       dataMap[f.patient_id] = f;
     });
     setFormulationFilled(formMap);
@@ -359,12 +424,12 @@ const Patients = () => {
     setFormulationData(dataMap);
     const teMap: Record<string, boolean> = {};
     const teDataMap: Record<string, any> = {};
-    (teRes.data ?? []).forEach((r: any) => { if (r.patient_id) { teMap[r.patient_id] = true; teDataMap[r.patient_id] = r; } });
+    (teRes.data ?? []).forEach((r: any) => { if (r.patient_id) { teMap[r.patient_id] = hasSchemaFormulation(r); teDataMap[r.patient_id] = r; } });
     setTeFilled(teMap);
     setTeData(teDataMap);
     const actMap: Record<string, boolean> = {};
     const actDataMap: Record<string, any> = {};
-    (actRes.data ?? []).forEach((r: any) => { if (r.patient_id) { actMap[r.patient_id] = true; actDataMap[r.patient_id] = r; } });
+    (actRes.data ?? []).forEach((r: any) => { if (r.patient_id) { actMap[r.patient_id] = hasActFormulation(r); actDataMap[r.patient_id] = r; } });
     setActFilled(actMap);
     setActData(actDataMap);
 
