@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, CalendarDays, Smile, FileText, Baby, Sparkles, Maximize2, Minimize2, X, Printer, BookOpen, RefreshCw, ChevronDown } from "lucide-react";
@@ -306,6 +306,29 @@ const Patients = () => {
     } catch {}
   }, [homeworkPatient]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedTab, setSelectedTab] = useState<string>("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const VALID_TABS = ["overview", "formulations", "sessions", "plan", "anamnesis", "documents", "finance"];
+
+  // Abrir Sheet automaticamente quando a URL trouxer ?patient=<id>&tab=<value>
+  // (utilizado pela tela Financeiro para reutilizar o mesmo Sheet).
+  useEffect(() => {
+    const pid = searchParams.get("patient");
+    const tab = searchParams.get("tab");
+    if (!pid) return;
+    if (!patients.length) return;
+    const target = patients.find((x) => x.id === pid);
+    if (!target) return;
+    setSelectedPatient(target);
+    setSelectedTab(tab && VALID_TABS.includes(tab) ? tab : "overview");
+    // limpa params para não reabrir em navegações internas
+    const next = new URLSearchParams(searchParams);
+    next.delete("patient");
+    next.delete("tab");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patients, searchParams]);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
   const [profCrp, setProfCrp] = useState<string>("");
@@ -1423,7 +1446,7 @@ const Patients = () => {
 
 
       {/* Side panel */}
-      <Sheet open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
+      <Sheet open={!!selectedPatient} onOpenChange={(o) => { if (!o) { setSelectedPatient(null); setSelectedTab("overview"); } }}>
         <SheetContent side="right" className="w-full sm:max-w-[640px] p-0" style={{ background: "hsl(var(--card))", borderLeft: "0.5px solid hsl(var(--border))" }}>
           <VisuallyHidden>
             <SheetTitle>{selectedPatient?.full_name ?? "Ficha do paciente"}</SheetTitle>
@@ -1534,7 +1557,7 @@ const Patients = () => {
                 </div>
 
                 <div className="px-4 sm:px-6 pt-4 pb-8 min-w-0">
-                  <Tabs defaultValue="overview" className="w-full">
+                  <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
                     <TabsList className="w-full overflow-x-auto flex justify-start gap-1 h-auto p-1 flex-nowrap">
                       <TabsTrigger value="overview" className="text-[11px] whitespace-nowrap">Visão geral</TabsTrigger>
                       <TabsTrigger value="formulations" className="text-[11px] whitespace-nowrap">Formulações</TabsTrigger>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
@@ -81,7 +82,7 @@ interface Row {
   price: number | null;
   paid_at: string | null;
   session_type: string | null;
-  patient: { full_name: string } | null;
+  patient: { id: string; full_name: string } | null;
   service: { name: string } | null;
 }
 
@@ -105,6 +106,7 @@ type QuickAlert = "none" | "receita_saude" | "sem_pagamento" | "pix_sem_conf" | 
 
 const Finance = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [monthCursor, setMonthCursor] = useState<Date>(new Date());
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,7 +130,7 @@ const Finance = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const selectCols = "id, scheduled_at, status, payment_status, payment_method, payment_reference, price, paid_at, is_expense, session_type, patient:patients!sessions_patient_id_fkey(full_name), service:services(name)";
+    const selectCols = "id, scheduled_at, status, payment_status, payment_method, payment_reference, price, paid_at, is_expense, session_type, patient:patients!sessions_patient_id_fkey(id, full_name), service:services(name)";
 
     const { data, error } = await supabase
       .from("sessions")
@@ -873,6 +875,7 @@ const Finance = () => {
           type Aggregate = {
             key: string;
             name: string;
+            patientId: string | null;
             realizadas: number;
             pagas: number;
             totalValue: number;
@@ -891,6 +894,7 @@ const Finance = () => {
               e = {
                 key: name,
                 name,
+                patientId: r.patient?.id ?? null,
                 realizadas: 0,
                 pagas: 0,
                 totalValue: 0,
@@ -902,6 +906,7 @@ const Finance = () => {
               };
               map.set(name, e);
             }
+            if (!e.patientId && r.patient?.id) e.patientId = r.patient.id;
             if (r.status === "completed") {
               e.realizadas++;
               e.totalValue += Number(r.price ?? 0);
@@ -997,18 +1002,39 @@ const Finance = () => {
                         p.realizadas > 0
                           ? `${p.realizadas} ${p.realizadas === 1 ? "sessão" : "sessões"}`
                           : "Não informado";
+                      const openPatient = (tab: "finance" | "sessions") => {
+                        if (!p.patientId) return;
+                        navigate(`/app/pacientes?patient=${p.patientId}&tab=${tab}`);
+                      };
+                      const rowClickable = !!p.patientId;
                       return (
                         <tr
                           key={p.key}
-                          className="border-b border-border/60 hover:bg-secondary/30 transition-colors"
+                          role={rowClickable ? "button" : undefined}
+                          tabIndex={rowClickable ? 0 : undefined}
+                          aria-label={rowClickable ? `Abrir ficha financeira de ${p.name}` : undefined}
+                          onClick={rowClickable ? () => openPatient("finance") : undefined}
+                          onKeyDown={rowClickable ? (e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              openPatient("finance");
+                            }
+                          } : undefined}
+                          className={`border-b border-border/60 hover:bg-secondary/30 transition-colors ${rowClickable ? "cursor-pointer" : ""}`}
                         >
                           <td className="py-3 px-3">
                             <p className="font-medium text-foreground truncate max-w-[220px]">{p.name}</p>
                           </td>
-                          <td className="py-3 px-3 text-muted-foreground">
+                          <td
+                            className={`py-3 px-3 text-muted-foreground ${rowClickable ? "cursor-pointer" : ""}`}
+                            onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("sessions"); } : undefined}
+                          >
                             <span className={p.realizadas === 0 ? "italic" : ""}>{sessionsLabel}</span>
                           </td>
-                          <td className="py-3 px-3">
+                          <td
+                            className={`py-3 px-3 ${rowClickable ? "cursor-pointer" : ""}`}
+                            onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("sessions"); } : undefined}
+                          >
                             {p.realizadas > 0 ? (
                               <div className="flex items-center gap-2">
                                 <div className="h-1.5 flex-1 rounded-full bg-secondary overflow-hidden">
@@ -1036,20 +1062,26 @@ const Finance = () => {
                             {p.totalValue > 0 ? formatBRL(p.totalValue) : <span className="text-muted-foreground italic">Não informado</span>}
                           </td>
                           <td className={`py-3 px-3 font-medium ${pay.tone}`}>{pay.label}</td>
-                          <td className="py-3 px-3 text-muted-foreground italic text-xs">Não informado</td>
+                          <td
+                            className={`py-3 px-3 text-muted-foreground italic text-xs ${rowClickable ? "cursor-pointer" : ""}`}
+                            onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("finance"); } : undefined}
+                          >
+                            Não informado
+                          </td>
                           <td className="py-3 px-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${sit.tone}`}>
                               {sit.label}
                             </span>
                           </td>
-                          <td className="py-3 px-3 text-right">
+                          <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
                             <div className="inline-flex items-center gap-1">
                               {p.latestBillable && p.hasPending && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   className="h-8"
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     const pending = p.allBillable.find((r) => r.payment_status === "pending");
                                     if (pending) updatePayment(pending.id, "paid");
                                   }}
@@ -1062,7 +1094,7 @@ const Finance = () => {
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8"
-                                  onClick={() => setEditing(p.latestBillable!)}
+                                  onClick={(e) => { e.stopPropagation(); setEditing(p.latestBillable!); }}
                                   title="Editar pagamento"
                                 >
                                   <Pencil className="h-4 w-4" />
