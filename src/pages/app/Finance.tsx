@@ -135,7 +135,7 @@ const Finance = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const selectCols = "id, scheduled_at, status, payment_status, payment_method, payment_reference, price, paid_at, is_expense, session_type, patient:patients!sessions_patient_id_fkey(id, full_name), service:services(name)";
+    const selectCols = "id, scheduled_at, status, payment_status, payment_method, payment_reference, receita_saude_status, price, paid_at, is_expense, session_type, patient:patients!sessions_patient_id_fkey(id, full_name), service:services(name)";
 
     const { data, error } = await supabase
       .from("sessions")
