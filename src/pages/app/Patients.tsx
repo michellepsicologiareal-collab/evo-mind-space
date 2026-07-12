@@ -308,6 +308,27 @@ const Patients = () => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [selectedTab, setSelectedTab] = useState<string>("overview");
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const VALID_TABS = ["overview", "formulations", "sessions", "plan", "anamnesis", "documents", "finance"];
+
+  // Abrir Sheet automaticamente quando a URL trouxer ?patient=<id>&tab=<value>
+  // (utilizado pela tela Financeiro para reutilizar o mesmo Sheet).
+  useEffect(() => {
+    const pid = searchParams.get("patient");
+    const tab = searchParams.get("tab");
+    if (!pid) return;
+    if (!patients.length) return;
+    const target = patients.find((x) => x.id === pid);
+    if (!target) return;
+    setSelectedPatient(target);
+    setSelectedTab(tab && VALID_TABS.includes(tab) ? tab : "overview");
+    // limpa params para não reabrir em navegações internas
+    const next = new URLSearchParams(searchParams);
+    next.delete("patient");
+    next.delete("tab");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patients, searchParams]);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
   const [profCrp, setProfCrp] = useState<string>("");
