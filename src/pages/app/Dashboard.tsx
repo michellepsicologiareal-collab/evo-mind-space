@@ -1,7 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, KeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  addDays,
+  isSameDay,
+  isToday,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   Search,
@@ -16,6 +24,7 @@ import {
   UserMinus,
   MoreHorizontal,
   CheckCircle2,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -28,6 +37,15 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+/* ─── Real data types ─── */
+interface WeekSession {
+  id: string;
+  scheduled_at: string;
+  status: string;
+  modality: string | null;
+  patient_name: string;
+}
 
 /* ─── Mock data (será substituído por queries reais no próximo passo) ─── */
 const KPI = [
