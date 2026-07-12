@@ -36,19 +36,33 @@ const sourceLabel = (s: string | null) =>
 export const PatientMoodChart = ({ patientId }: Props) => {
   const [rows, setRows] = useState<ProgressRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data } = await (supabase as any)
-        .from("patient_progress")
-        .select("id, recorded_at, mood_score, note, wellbeing_score, wellbeing_source, patient_context, clinical_observation, attention_flag, data_model")
-        .eq("patient_id", patientId)
-        .order("recorded_at", { ascending: true });
-      setRows((data as ProgressRow[]) ?? []);
-      setLoading(false);
+      setError(null);
+      try {
+        const { data, error: err } = await (supabase as any)
+          .from("patient_progress")
+          .select("id, recorded_at, mood_score, note, wellbeing_score, wellbeing_source, patient_context, clinical_observation, attention_flag, data_model")
+          .eq("patient_id", patientId)
+          .order("recorded_at", { ascending: true });
+        if (cancelled) return;
+        if (err) throw err;
+        setRows((data as ProgressRow[]) ?? []);
+      } catch (e: any) {
+        if (cancelled) return;
+        console.error("[PatientMoodChart] load failed:", e);
+        setError(e?.message || "Não foi possível carregar o histórico de humor.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     })();
-  }, [patientId]);
+    return () => { cancelled = true; };
+  }, [patientId, reloadKey]);
 
   if (loading) {
     return (
@@ -57,6 +71,26 @@ export const PatientMoodChart = ({ patientId }: Props) => {
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
+        <div className="flex items-start gap-2">
+          <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-semibold text-destructive">Falha ao carregar histórico</p>
+            <p className="text-muted-foreground mt-0.5">{error}</p>
+          </div>
+        </div>
+        <div className="mt-3 flex justify-end">
+          <Button size="sm" variant="outline" onClick={() => setReloadKey((k) => k + 1)}>
+            <RotateCcw className="h-4 w-4 mr-2" /> Tentar novamente
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
 
   const v2Rows = rows.filter((r) => r.data_model === "v2_structured" && r.wellbeing_score != null);
   const legacyRows = rows.filter((r) => r.data_model !== "v2_structured" && r.mood_score != null);
