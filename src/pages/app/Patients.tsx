@@ -1344,10 +1344,10 @@ const Patients = () => {
 
       {/* Side panel */}
       <Sheet open={!!selectedPatient} onOpenChange={(o) => !o && setSelectedPatient(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-full p-0" style={{ background: "hsl(var(--card))", borderLeft: "0.5px solid hsl(var(--border))" }}>
+        <SheetContent side="right" className="w-full sm:max-w-[640px] p-0" style={{ background: "hsl(var(--card))", borderLeft: "0.5px solid hsl(var(--border))" }}>
           <VisuallyHidden>
             <SheetTitle>{selectedPatient?.full_name ?? "Ficha do paciente"}</SheetTitle>
-            <SheetDescription>Ficha completa do paciente com resumo clínico, formulações e ações.</SheetDescription>
+            <SheetDescription>Ficha clínica do paciente com abas de visão geral, formulações, sessões, plano, anamneses, documentos e financeiro.</SheetDescription>
           </VisuallyHidden>
           {selectedPatient && (() => {
             const p = selectedPatient;
@@ -1358,6 +1358,10 @@ const Patients = () => {
             const hasAnam = !!anamneseFilled[p.id];
             const url = buildWhatsAppUrl(p);
             const type = PATIENT_CATEGORIES.find(c => c.value === p.category)?.label ?? "Individual";
+            const info = sessionInfo[p.id];
+            const pay = paymentInfo[p.id];
+            const NI = <span style={{ color: "hsl(var(--muted-foreground))", fontStyle: "italic" }}>Não informado</span>;
+            const fmtDate = (d?: string) => d ? format(new Date(d), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : null;
             const Chip = ({ label, count, onClick }: { label: string; count?: number; onClick: () => void }) => (
               <button
                 onClick={onClick}
@@ -1372,10 +1376,16 @@ const Patients = () => {
                 )}
               </button>
             );
+            const InfoRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
+              <div className="flex items-start justify-between gap-3 py-1.5" style={{ borderBottom: "0.5px dashed hsl(var(--border))" }}>
+                <span style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))", textTransform: "uppercase" }}>{label}</span>
+                <span className="text-right min-w-0 break-words" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--foreground))" }}>{value ?? NI}</span>
+              </div>
+            );
             return (
               <div className="h-full overflow-y-auto relative">
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
-                <div className="absolute right-4 top-4 flex items-center gap-1">
+                <div className="absolute right-4 top-4 flex items-center gap-1 z-30" onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
@@ -1383,23 +1393,13 @@ const Patients = () => {
                         style={{ width: 28, height: 28, borderRadius: 6, color: "hsl(var(--muted-foreground))" }}
                         onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; e.currentTarget.style.color = "hsl(var(--primary))"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.stopPropagation();
-                          }
-                        }}
                         aria-label="Ações do paciente"
                         title="Ações do paciente"
                       >
                         <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      onCloseAutoFocus={(e) => {
-                        // Keep Radix default: return focus to the trigger button.
-                      }}
-                    >
+                    <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); openEdit(p); }}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); toggleActive(p); }}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -1411,12 +1411,12 @@ const Patients = () => {
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); setRecordsPatient(p); }}><FileText className="h-4 w-4 mr-2" /> Registros de sessão</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }}><ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões</DropdownMenuItem>
                       <DropdownMenuSeparator />
-
                       <DropdownMenuItem onClick={() => { setSelectedPatient(null); handleDelete(p); }} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <button
                     onClick={() => setSelectedPatient(null)}
+                    aria-label="Fechar"
                     className="flex items-center justify-center transition-colors"
                     style={{ width: 28, height: 28, borderRadius: 6, color: "hsl(var(--muted-foreground))" }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; e.currentTarget.style.color = "hsl(var(--primary))"; }}
@@ -1425,167 +1425,202 @@ const Patients = () => {
                     <X className="h-4 w-4" />
                   </button>
                 </div>
-                <div className="max-w-3xl mx-auto">
-                  <div
-                    className="sticky top-0 z-20 px-4 sm:px-6 pt-10 pb-4"
-                    style={{ background: "hsl(var(--card))", borderBottom: "0.5px solid hsl(var(--border))" }}
-                  >
-                    <div className="flex items-center gap-3 pr-16 sm:pr-20">
-                      <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
-                        {p.full_name.charAt(0).toUpperCase()}
+
+                {/* Header */}
+                <div
+                  className="sticky top-0 z-20 px-4 sm:px-6 pt-10 pb-4"
+                  style={{ background: "hsl(var(--card))", borderBottom: "0.5px solid hsl(var(--border))" }}
+                >
+                  <div className="flex items-center gap-3 pr-16 sm:pr-20">
+                    <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
+                      {p.full_name.split(" ").map(w => w[0]).slice(0,2).join("").toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16, color: "hsl(var(--foreground))" }}>{p.full_name}</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="uppercase" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "hsl(var(--brown))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 8px", letterSpacing: "0.04em" }}>{type}</span>
+                        <span className="inline-flex items-center gap-1" style={{ fontSize: 10, color: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }} />
+                          {p.is_active ? "Ativo" : "Inativo"}
+                        </span>
+                        {p.phone && <span className="inline-flex items-center gap-1 min-w-0 max-w-full" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--muted-foreground))" }}><Phone className="h-3 w-3 shrink-0" /> <span className="truncate">{p.phone}</span></span>}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16, color: "hsl(var(--foreground))" }}>{p.full_name}</p>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <span className="uppercase" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "hsl(var(--brown))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 8px", letterSpacing: "0.04em" }}>{type}</span>
-                          {p.is_active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "hsl(var(--moss))" }} />}
-                          {p.phone && <span className="inline-flex items-center gap-1 min-w-0 max-w-full" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--muted-foreground))" }}><Phone className="h-3 w-3 shrink-0" /> <span className="truncate">{p.phone}</span></span>}
-                          {p.session_price != null && <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--brown))", fontWeight: 600 }}>R$ {Number(p.session_price).toFixed(2).replace(".", ",")}</span>}
-                        </div>
+                      <div className="flex items-center gap-3 mt-1.5 flex-wrap" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
+                        <span><b style={{ color: "hsl(var(--foreground))", fontWeight: 600 }}>Próxima:</b> {fmtDate(info?.nextDate) ?? "Não informado"}</span>
+                        <span><b style={{ color: "hsl(var(--foreground))", fontWeight: 600 }}>Última:</b> {fmtDate(info?.lastDate) ?? "Não informado"}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="px-4 sm:px-6 pt-4 pb-6 min-w-0">
+                </div>
 
-                  <div className="space-y-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--brown))" }}>
-                    {p.email && <p className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" style={{ color: "hsl(var(--muted-foreground))" }} /> {p.email}</p>}
-                  </div>
+                <div className="px-4 sm:px-6 pt-4 pb-8 min-w-0">
+                  <Tabs defaultValue="overview" className="w-full">
+                    <TabsList className="w-full overflow-x-auto flex justify-start gap-1 h-auto p-1 flex-nowrap">
+                      <TabsTrigger value="overview" className="text-[11px] whitespace-nowrap">Visão geral</TabsTrigger>
+                      <TabsTrigger value="formulations" className="text-[11px] whitespace-nowrap">Formulações</TabsTrigger>
+                      <TabsTrigger value="sessions" className="text-[11px] whitespace-nowrap">Sessões</TabsTrigger>
+                      <TabsTrigger value="plan" className="text-[11px] whitespace-nowrap">Plano</TabsTrigger>
+                      <TabsTrigger value="anamnesis" className="text-[11px] whitespace-nowrap">Anamneses</TabsTrigger>
+                      <TabsTrigger value="documents" className="text-[11px] whitespace-nowrap">Documentos</TabsTrigger>
+                      <TabsTrigger value="finance" className="text-[11px] whitespace-nowrap">Financeiro</TabsTrigger>
+                    </TabsList>
 
-                  <div className="mt-6">
-                    <p className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", color: "hsl(var(--muted-foreground))" }}>Resumo clínico</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      <Chip label="Humor" count={cMood} onClick={() => { setSelectedPatient(null); setMoodPatient(p); }} />
-                      <Chip label="Histórico" count={cHist} onClick={() => { setSelectedPatient(null); setHistoryPatient(p); }} />
-                      <Chip label="Sessões" count={cRec} onClick={() => { setSelectedPatient(null); setRecordsPatient(p); }} />
-                      <Chip label="Anamnese" count={hasAnam ? 1 : 0} onClick={() => { setSelectedPatient(null); setAnamnesisPatient(p); }} />
-                      <Chip label="Plano" onClick={() => { setSelectedPatient(null); navigate(`/app/plano-tratamento?patient=${p.id}`); }} />
-                      <Chip label="Plano entre Sessões" onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }} />
-                    </div>
-                  </div>
-
-                  {(() => {
-                    const trunc = (t?: string, n = 180) => !t ? "" : (t.length > n ? t.slice(0, n).trimEnd() + "…" : t);
-                    const tccSummary = formulationSummaries[p.id] || formulationData[p.id]?.treatment_goals || formulationData[p.id]?.core_beliefs || "";
-                    const te = teData[p.id];
-                    const teSummary = te?.foco_terapeutico || te?.padrao_identificado || te?.conexao_gerada || "";
-                    const act = actData[p.id];
-                    const actSummary = act?.direcionamento_gerado || act?.apresentacao_problema || "";
-                    const items = [
-                      {
-                        key: "tcc",
-                        label: "TCC — Formulação de caso",
-                        filled: !!formulationFilled[p.id],
-                        summary: trunc(tccSummary),
-                        fullSummary: tccSummary,
-                        accent: "hsl(var(--primary))",
-                        onView: () => { setSelectedPatient(null); setPadeksyPatient(p); },
-                      },
-                      {
-                        key: "te",
-                        label: "TE — Terapia do Esquema",
-                        filled: !!teFilled[p.id],
-                        summary: trunc(teSummary),
-                        fullSummary: teSummary,
-                        accent: "#B8860B",
-                        onView: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); },
-                      },
-                      {
-                        key: "act",
-                        label: "ACT — Terapia de Aceitação",
-                        filled: !!actFilled[p.id],
-                        summary: trunc(actSummary),
-                        fullSummary: actSummary,
-                        accent: "#2D6A4F",
-                        onView: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); },
-                      },
-                      {
-                        key: "rpd",
-                        label: "RPD — Registros TCC",
-                        filled: cTcc > 0,
-                        summary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "",
-                        fullSummary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "",
-                        accent: "hsl(var(--moss))",
-                        onView: () => { setSelectedPatient(null); setTccPatient(p); },
-                      },
-                    ];
-                    return (
-                      <div className="mt-6">
-                        <p className="uppercase mb-2" style={{ fontFamily: "Syne, sans-serif", fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", color: "hsl(var(--muted-foreground))" }}>Formulações</p>
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          {items.map((it) => (
-                            <FormulationItemCard key={it.key} item={it} />
-                          ))}
-                        </div>
-
-
+                    {/* Visão geral */}
+                    <TabsContent value="overview" className="mt-4 space-y-4">
+                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                        <InfoRow label="Nome" value={p.full_name} />
+                        <InfoRow label="Telefone" value={p.phone || null} />
+                        <InfoRow label="E-mail" value={p.email || null} />
+                        <InfoRow label="Categoria" value={type} />
+                        <InfoRow label="Modalidade" value={p.modality ? (p.modality === "online" ? "Online" : "Presencial") : null} />
+                        <InfoRow label="Status" value={p.is_active ? "Ativo" : "Inativo"} />
+                        <InfoRow label="Início do tratamento" value={p.treatment_start_date ? format(new Date(p.treatment_start_date), "dd/MM/yyyy") : null} />
+                        <InfoRow label="Próxima sessão" value={fmtDate(info?.nextDate)} />
+                        <InfoRow label="Última sessão" value={fmtDate(info?.lastDate)} />
                       </div>
-                    );
-                  })()}
+                      <AIClinicalSummary patientId={p.id} />
+                      <IntegratedCaseSummary patientId={p.id} />
+                    </TabsContent>
 
-                  <AIClinicalSummary patientId={p.id} />
+                    {/* Formulações */}
+                    <TabsContent value="formulations" className="mt-4">
+                      {(() => {
+                        const trunc = (t?: string, n = 180) => !t ? "" : (t.length > n ? t.slice(0, n).trimEnd() + "…" : t);
+                        const tccSummary = formulationSummaries[p.id] || formulationData[p.id]?.treatment_goals || formulationData[p.id]?.core_beliefs || "";
+                        const te = teData[p.id];
+                        const teSummary = te?.foco_terapeutico || te?.padrao_identificado || te?.conexao_gerada || "";
+                        const act = actData[p.id];
+                        const actSummary = act?.direcionamento_gerado || act?.apresentacao_problema || "";
+                        const items = [
+                          { key: "tcc", label: "TCC — Formulação de caso", filled: !!formulationFilled[p.id], summary: trunc(tccSummary), fullSummary: tccSummary, accent: "hsl(var(--primary))", onView: () => { setSelectedPatient(null); setPadeksyPatient(p); } },
+                          { key: "te", label: "TE — Terapia do Esquema", filled: !!teFilled[p.id], summary: trunc(teSummary), fullSummary: teSummary, accent: "#B8860B", onView: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); } },
+                          { key: "act", label: "ACT — Terapia de Aceitação", filled: !!actFilled[p.id], summary: trunc(actSummary), fullSummary: actSummary, accent: "#2D6A4F", onView: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); } },
+                          { key: "rpd", label: "RPD — Registros TCC", filled: cTcc > 0, summary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", fullSummary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", accent: "hsl(var(--moss))", onView: () => { setSelectedPatient(null); setTccPatient(p); } },
+                        ];
+                        return (
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            {items.map((it) => (<FormulationItemCard key={it.key} item={it} />))}
+                          </div>
+                        );
+                      })()}
+                    </TabsContent>
 
-                  <IntegratedCaseSummary patientId={p.id} />
-
-
-
-
-
-                  <div className="mt-6 space-y-2">
-                    {url && (
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    {/* Sessões */}
+                    <TabsContent value="sessions" className="mt-4 space-y-4">
+                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                        <InfoRow label="Próxima sessão" value={fmtDate(info?.nextDate)} />
+                        <InfoRow label="Última sessão" value={fmtDate(info?.lastDate)} />
+                        <InfoRow label="Total de registros" value={cRec > 0 ? cRec : null} />
+                        <InfoRow label="Histórico de sessões" value={cHist > 0 ? cHist : null} />
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        <Chip label="Humor" count={cMood} onClick={() => { setSelectedPatient(null); setMoodPatient(p); }} />
+                        <Chip label="Histórico" count={cHist} onClick={() => { setSelectedPatient(null); setHistoryPatient(p); }} />
+                        <Chip label="Registros" count={cRec} onClick={() => { setSelectedPatient(null); setRecordsPatient(p); }} />
+                      </div>
+                      <button
+                        onClick={() => { setSelectedPatient(null); navigate("/app/agenda"); }}
                         className="flex items-center justify-center gap-2 w-full"
-                        style={{ background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", border: "0.5px solid rgba(150,117,206,0.25)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+                        style={{ background: "hsl(var(--primary))", color: "#fff", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
                       >
-                        <MessageCircle className="h-4 w-4" /> Cobrar via WhatsApp
-                      </a>
-                    )}
-                    <button
-                      onClick={() => { setSelectedPatient(null); navigate("/app/agenda"); }}
-                      className="flex items-center justify-center gap-2 w-full"
-                      style={{ background: "hsl(var(--primary))", color: "#fff", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
-                    >
-                      <CalendarDays className="h-4 w-4" /> Nova sessão
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const isChild = p.category === "crianca";
-                        const table = isChild ? "anamnesis_invites" : "adult_anamnesis_invites";
-                        const routeSlug = isChild ? "anamnese-crianca" : "anamnese-adulto";
-                        const { data, error } = await supabase
-                          .from(table)
-                          .insert({ patient_id: p.id, user_id: (await supabase.auth.getUser()).data.user?.id })
-                          .select("token")
-                          .single();
-                        if (error || !data?.token) {
-                          toast.error("Não foi possível gerar o link.");
-                          return;
-                        }
-                        const link = `${window.location.origin}/${routeSlug}/${data.token}`;
-                        const phone = (p.phone || "").replace(/\D/g, "");
-                        const msg = `Olá! Para iniciarmos o atendimento de ${p.full_name}, por favor preencha a anamnese neste link: ${link}`;
-                        if (phone) {
-                          window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, "_blank");
-                        } else {
-                          navigator.clipboard.writeText(link);
-                          toast.success("Link da anamnese copiado!");
-                        }
-                      }}
-                      className="flex items-center justify-center gap-2 w-full"
-                      style={{ background: "rgba(29,158,117,0.10)", color: "hsl(var(--moss))", border: "0.5px solid rgba(29,158,117,0.3)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
-                    >
-                      <Baby className="h-4 w-4" /> Enviar anamnese
-                    </button>
-                    <button
-                      onClick={() => window.open(`https://wa.me/5511947388423?text=${encodeURIComponent(`Olá Michelle, preciso de supervisão para o caso do(a) paciente: ${p.full_name}`)}`, "_blank")}
-                      className="flex items-center justify-center gap-2 w-full"
-                      style={{ background: "rgba(201,168,76,0.10)", color: "hsl(var(--brown))", border: "0.5px solid rgba(201,168,76,0.3)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
-                    >
-                      <Stethoscope className="h-4 w-4" /> Pedir supervisão
-                    </button>
-                  </div>
+                        <CalendarDays className="h-4 w-4" /> Ver na agenda
+                      </button>
+                    </TabsContent>
+
+                    {/* Plano terapêutico */}
+                    <TabsContent value="plan" className="mt-4 space-y-3">
+                      {(() => {
+                        const tp = treatmentPlans[p.id];
+                        return (
+                          <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                            <InfoRow label="Status" value={tp?.status || null} />
+                            <InfoRow label="CID" value={tp?.cid || null} />
+                            <InfoRow label="Abordagem" value={tp?.abordagem?.length ? tp.abordagem.join(", ") : null} />
+                            <InfoRow label="Objetivos" value={tp?.goals_count ? tp.goals_count : null} />
+                            <InfoRow label="Técnicas" value={tp?.techniques_count ? tp.techniques_count : null} />
+                            <InfoRow label="Revisões" value={tp?.revisions_count ? tp.revisions_count : null} />
+                          </div>
+                        );
+                      })()}
+                      <div className="flex flex-wrap gap-1.5">
+                        <Chip label="Abrir plano" onClick={() => { setSelectedPatient(null); navigate(`/app/plano-tratamento?patient=${p.id}`); }} />
+                        <Chip label="Plano entre Sessões" onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }} />
+                      </div>
+                    </TabsContent>
+
+                    {/* Anamneses e instrumentos */}
+                    <TabsContent value="anamnesis" className="mt-4 space-y-3">
+                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                        <InfoRow label="Anamnese" value={hasAnam ? `Preenchida em ${format(new Date(anamneseFilled[p.id]), "dd/MM/yyyy")}` : null} />
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        <Chip label="Ver anamnese" count={hasAnam ? 1 : 0} onClick={() => { setSelectedPatient(null); setAnamnesisPatient(p); }} />
+                      </div>
+                      <button
+                        onClick={async () => {
+                          const isChild = p.category === "crianca";
+                          const table = isChild ? "anamnesis_invites" : "adult_anamnesis_invites";
+                          const routeSlug = isChild ? "anamnese-crianca" : "anamnese-adulto";
+                          const { data, error } = await supabase
+                            .from(table)
+                            .insert({ patient_id: p.id, user_id: (await supabase.auth.getUser()).data.user?.id })
+                            .select("token")
+                            .single();
+                          if (error || !data?.token) {
+                            toast.error("Não foi possível gerar o link.");
+                            return;
+                          }
+                          const link = `${window.location.origin}/${routeSlug}/${data.token}`;
+                          const phone = (p.phone || "").replace(/\D/g, "");
+                          const msg = `Olá! Para iniciarmos o atendimento de ${p.full_name}, por favor preencha a anamnese neste link: ${link}`;
+                          if (phone) {
+                            window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+                          } else {
+                            navigator.clipboard.writeText(link);
+                            toast.success("Link da anamnese copiado!");
+                          }
+                        }}
+                        className="flex items-center justify-center gap-2 w-full"
+                        style={{ background: "rgba(29,158,117,0.10)", color: "hsl(var(--moss))", border: "0.5px solid rgba(29,158,117,0.3)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+                      >
+                        <Baby className="h-4 w-4" /> Enviar anamnese
+                      </button>
+                    </TabsContent>
+
+                    {/* Documentos */}
+                    <TabsContent value="documents" className="mt-4 space-y-3">
+                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                        <InfoRow label="Contratos" value={null} />
+                        <InfoRow label="Anexos" value={null} />
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        <Chip label="Abrir contratos" onClick={() => { setSelectedPatient(null); navigate("/app/contratos"); }} />
+                      </div>
+                    </TabsContent>
+
+                    {/* Financeiro */}
+                    <TabsContent value="finance" className="mt-4 space-y-3">
+                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                        <InfoRow label="Valor da sessão" value={p.session_price != null ? `R$ ${Number(p.session_price).toFixed(2).replace(".", ",")}` : null} />
+                        <InfoRow label="Pagas" value={pay?.paid ? pay.paid : null} />
+                        <InfoRow label="Pendentes" value={pay?.pending ? pay.pending : null} />
+                        <InfoRow label="Total de sessões" value={pay?.total ? pay.total : null} />
+                        <InfoRow label="Receita Saúde pendente" value={receitaSaudePending[p.id] ? receitaSaudePending[p.id] : null} />
+                      </div>
+                      {url && (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 w-full"
+                          style={{ background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", border: "0.5px solid rgba(150,117,206,0.25)", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
+                        >
+                          <MessageCircle className="h-4 w-4" /> Cobrar via WhatsApp
+                        </a>
+                      )}
+                      <Chip label="Abrir financeiro" onClick={() => { setSelectedPatient(null); navigate("/app/financeiro"); }} />
+                    </TabsContent>
+                  </Tabs>
 
                   <div className="mt-6 flex items-center justify-between pt-4" style={{ borderTop: "0.5px solid hsl(var(--border))" }}>
                     <div className="flex items-center gap-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
@@ -1593,13 +1628,13 @@ const Patients = () => {
                     </div>
                     <Switch checked={p.shared_with_supervisor} onCheckedChange={() => toggleSharing(p)} />
                   </div>
-                  </div>
                 </div>
               </div>
             );
           })()}
         </SheetContent>
       </Sheet>
+
 
       {/* New/Edit patient dialog */}
       <Dialog open={open} onOpenChange={(v) => { if (!v) { patientGuard.guardClose(() => { if (!editing) clearDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
