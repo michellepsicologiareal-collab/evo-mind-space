@@ -1432,6 +1432,20 @@ const PaymentDetailsDialog = ({
             ) : null}
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="receita-saude">Receita Saúde</Label>
+            <Select value={receitaSaude} onValueChange={(v) => setReceitaSaude(v as ReceitaSaudeStatus | "none")}>
+              <SelectTrigger id="receita-saude">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Não selecionado</SelectItem>
+                <SelectItem value="to_issue">Emitir Receita Saúde</SelectItem>
+                <SelectItem value="issued">Emitido Receita Saúde</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
         </div>
 
         <DialogFooter>
