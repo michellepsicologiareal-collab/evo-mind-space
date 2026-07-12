@@ -867,89 +867,220 @@ const Finance = () => {
         </Alert>
       )}
 
-      {/* Service breakdown */}
-      {serviceBreakdown.length > 0 && (
-        <section className="rounded-3xl bg-card border border-border shadow-card p-6 lg:p-8">
-          <h2 className="font-display text-lg font-semibold mb-1">Por serviço</h2>
-          <p className="text-xs text-muted-foreground mb-4">Comparação entre o que está previsto no mês e o que já foi realizado.</p>
-          <ul className="space-y-2">
-            {serviceBreakdown.map((s) => (
-              <li key={s.name} className="rounded-xl bg-secondary/40 p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-medium truncate">{s.name}</p>
-                  <div className="flex items-center gap-4 shrink-0 text-right">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Previsto</p>
-                      <p className="font-display font-semibold text-sm">{formatBRL(s.previstoTotal)}</p>
-                      <p className="text-[10px] text-muted-foreground">{s.previstoCount} {s.previstoCount === 1 ? "sessão" : "sessões"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wide text-moss">Realizado</p>
-                      <p className="font-display font-semibold text-sm text-moss">{formatBRL(s.realizadoTotal)}</p>
-                      <p className="text-[10px] text-muted-foreground">{s.realizadoCount} {s.realizadoCount === 1 ? "sessão" : "sessões"}</p>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <section ref={sessionsSectionRef} className="rounded-3xl bg-card border border-border shadow-card p-6 lg:p-8">
-        <Tabs defaultValue="all">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <h2 className="font-display text-2xl font-semibold">Sessões realizadas</h2>
-            <div className="flex flex-wrap items-center gap-2">
-              {quickAlert !== "none" && (
-                <button
-                  type="button"
-                  onClick={() => setQuickAlert("none")}
-                  className="text-xs px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
-                >
-                  Limpar alerta
-                </button>
-              )}
-              <TabsList>
-                <TabsTrigger value="all">Todas</TabsTrigger>
-                <TabsTrigger value="pending">Pendentes</TabsTrigger>
-                <TabsTrigger value="paid">Realizadas</TabsTrigger>
-              </TabsList>
-            </div>
-          </div>
-
-          {(() => {
-            const applyAlert = (list: Row[]) => {
-              switch (quickAlert) {
-                case "receita_saude":
-                  return list.filter((r) => missingReference.some((m) => m.id === r.id));
-                case "sem_pagamento":
-                  return list.filter((r) => r.payment_status === "pending");
-                case "pix_sem_conf":
-                  return list.filter((r) => recentMissing.some((m) => m.id === r.id));
-                case "pacotes_vencendo":
-                  return list;
-                default:
-                  return list;
+      {/* Operational patient table */}
+      <section ref={sessionsSectionRef} className="rounded-3xl bg-card border border-border shadow-card p-4 lg:p-6">
+        {(() => {
+          type Aggregate = {
+            key: string;
+            name: string;
+            realizadas: number;
+            pagas: number;
+            totalValue: number;
+            nextSession: Date | null;
+            allBillable: Row[];
+            latestBillable: Row | null;
+            hasPending: boolean;
+            oldestPendingDays: number;
+          };
+          const now = Date.now();
+          const map = new Map<string, Aggregate>();
+          for (const r of fortnightAllValid) {
+            const name = r.patient?.full_name ?? "—";
+            let e = map.get(name);
+            if (!e) {
+              e = {
+                key: name,
+                name,
+                realizadas: 0,
+                pagas: 0,
+                totalValue: 0,
+                nextSession: null,
+                allBillable: [],
+                latestBillable: null,
+                hasPending: false,
+                oldestPendingDays: 0,
+              };
+              map.set(name, e);
+            }
+            if (r.status === "completed") {
+              e.realizadas++;
+              e.totalValue += Number(r.price ?? 0);
+              e.allBillable.push(r);
+              if (r.payment_status === "paid") e.pagas++;
+              else {
+                e.hasPending = true;
+                const days = Math.floor((now - new Date(r.scheduled_at).getTime()) / 86400000);
+                if (days > e.oldestPendingDays) e.oldestPendingDays = days;
               }
-            };
-            const base = applyAlert(fortnightBillable);
+              if (!e.latestBillable || new Date(r.scheduled_at) > new Date(e.latestBillable.scheduled_at)) {
+                e.latestBillable = r;
+              }
+            } else if (r.status === "scheduled" || r.status === "confirmed") {
+              const d = new Date(r.scheduled_at);
+              if (d.getTime() >= now && (!e.nextSession || d < e.nextSession)) {
+                e.nextSession = d;
+              }
+            }
+          }
+          const patients = Array.from(map.values()).sort((a, b) =>
+            a.name.localeCompare(b.name, "pt-BR")
+          );
+
+          if (loading) {
+            return <p className="text-center py-12 text-muted-foreground">Carregando…</p>;
+          }
+          if (patients.length === 0) {
             return (
-              <>
-                <TabsContent value="all">
-                  <SessionsTable rows={base} loading={loading} onChange={updatePayment} onEdit={setEditing} allRows={fortnightBillable} />
-                </TabsContent>
-                <TabsContent value="pending">
-                  <SessionsTable rows={base.filter((r) => r.payment_status === "pending")} loading={loading} onChange={updatePayment} onEdit={setEditing} allRows={fortnightBillable} />
-                </TabsContent>
-                <TabsContent value="paid">
-                  <SessionsTable rows={base.filter((r) => r.payment_status === "paid")} loading={loading} onChange={updatePayment} onEdit={setEditing} allRows={fortnightBillable} />
-                </TabsContent>
-              </>
+              <div className="rounded-2xl border border-dashed border-border bg-card p-14 text-center">
+                <Wallet className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
+                <p className="font-display text-lg font-medium text-foreground/70">Sem pacientes no período</p>
+                <p className="text-sm mt-1 text-muted-foreground">Ajuste os filtros de mês ou quinzena para ver movimentos.</p>
+              </div>
             );
-          })()}
-        </Tabs>
+          }
+
+          const situacaoFor = (p: Aggregate) => {
+            if (p.realizadas === 0) return { label: "Agendado", tone: "bg-secondary text-secondary-foreground" };
+            if (!p.hasPending) return { label: "Em dia", tone: "bg-moss/10 text-moss" };
+            if (p.oldestPendingDays > 7) return { label: "Atrasado", tone: "bg-destructive/10 text-destructive" };
+            return { label: "Pendente", tone: "bg-amber-500/10 text-amber-700 dark:text-amber-500" };
+          };
+
+          const pagamentoFor = (p: Aggregate) => {
+            if (p.realizadas === 0) return { label: "—", tone: "text-muted-foreground" };
+            if (p.pagas === p.realizadas) return { label: "Pago", tone: "text-moss" };
+            if (p.pagas === 0) return { label: "Pendente", tone: "text-destructive" };
+            return { label: `${p.pagas}/${p.realizadas} pago`, tone: "text-amber-600" };
+          };
+
+          return (
+            <>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div>
+                  <h2 className="font-display text-lg font-semibold">Pacientes do período</h2>
+                  <p className="text-xs text-muted-foreground">
+                    {patients.length} {patients.length === 1 ? "paciente" : "pacientes"} · reutilizando os dados do mês selecionado
+                  </p>
+                </div>
+                {quickAlert !== "none" && (
+                  <button
+                    type="button"
+                    onClick={() => setQuickAlert("none")}
+                    className="text-xs px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                  >
+                    Limpar alerta
+                  </button>
+                )}
+              </div>
+
+              <div className="overflow-x-auto -mx-4 lg:mx-0">
+                <table className="w-full min-w-[900px] text-sm">
+                  <thead>
+                    <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border">
+                      <th className="py-2.5 px-3 font-medium">Paciente</th>
+                      <th className="py-2.5 px-3 font-medium">Pacote / sessões</th>
+                      <th className="py-2.5 px-3 font-medium w-[120px]">Progresso</th>
+                      <th className="py-2.5 px-3 font-medium">Próxima sessão</th>
+                      <th className="py-2.5 px-3 font-medium">Valor</th>
+                      <th className="py-2.5 px-3 font-medium">Pagamento</th>
+                      <th className="py-2.5 px-3 font-medium">Receita Saúde</th>
+                      <th className="py-2.5 px-3 font-medium">Situação</th>
+                      <th className="py-2.5 px-3 font-medium text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {patients.map((p) => {
+                      const sit = situacaoFor(p);
+                      const pay = pagamentoFor(p);
+                      const progress = p.realizadas > 0 ? (p.pagas / p.realizadas) * 100 : 0;
+                      const sessionsLabel =
+                        p.realizadas > 0
+                          ? `${p.realizadas} ${p.realizadas === 1 ? "sessão" : "sessões"}`
+                          : "Não informado";
+                      return (
+                        <tr
+                          key={p.key}
+                          className="border-b border-border/60 hover:bg-secondary/30 transition-colors"
+                        >
+                          <td className="py-3 px-3">
+                            <p className="font-medium text-foreground truncate max-w-[220px]">{p.name}</p>
+                          </td>
+                          <td className="py-3 px-3 text-muted-foreground">
+                            <span className={p.realizadas === 0 ? "italic" : ""}>{sessionsLabel}</span>
+                          </td>
+                          <td className="py-3 px-3">
+                            {p.realizadas > 0 ? (
+                              <div className="flex items-center gap-2">
+                                <div className="h-1.5 flex-1 rounded-full bg-secondary overflow-hidden">
+                                  <div
+                                    className="h-full bg-primary/70 transition-all"
+                                    style={{ width: `${progress}%` }}
+                                  />
+                                </div>
+                                <span className="text-[11px] text-muted-foreground tabular-nums w-10 text-right">
+                                  {p.pagas}/{p.realizadas}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground italic">Não informado</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 text-muted-foreground">
+                            {p.nextSession ? (
+                              format(p.nextSession, "dd/MM 'às' HH:mm", { locale: ptBR })
+                            ) : (
+                              <span className="italic">Não informado</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 font-medium tabular-nums">
+                            {p.totalValue > 0 ? formatBRL(p.totalValue) : <span className="text-muted-foreground italic">Não informado</span>}
+                          </td>
+                          <td className={`py-3 px-3 font-medium ${pay.tone}`}>{pay.label}</td>
+                          <td className="py-3 px-3 text-muted-foreground italic text-xs">Não informado</td>
+                          <td className="py-3 px-3">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${sit.tone}`}>
+                              {sit.label}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <div className="inline-flex items-center gap-1">
+                              {p.latestBillable && p.hasPending && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8"
+                                  onClick={() => {
+                                    const pending = p.allBillable.find((r) => r.payment_status === "pending");
+                                    if (pending) updatePayment(pending.id, "paid");
+                                  }}
+                                >
+                                  Marcar pago
+                                </Button>
+                              )}
+                              {p.latestBillable && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => setEditing(p.latestBillable!)}
+                                  title="Editar pagamento"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          );
+        })()}
       </section>
+
 
 
 
