@@ -313,22 +313,37 @@ const Patients = () => {
 
   // Abrir Sheet automaticamente quando a URL trouxer ?patient=<id>&tab=<value>
   // (utilizado pela tela Financeiro para reutilizar o mesmo Sheet).
+  const [focusReceitaSaude, setFocusReceitaSaude] = useState(false);
+  const receitaSaudeRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     const pid = searchParams.get("patient");
     const tab = searchParams.get("tab");
+    const focus = searchParams.get("focus");
     if (!pid) return;
     if (!patients.length) return;
     const target = patients.find((x) => x.id === pid);
     if (!target) return;
     setSelectedPatient(target);
     setSelectedTab(tab && VALID_TABS.includes(tab) ? tab : "overview");
-    // limpa params para não reabrir em navegações internas
+    if (focus === "receita-saude") setFocusReceitaSaude(true);
     const next = new URLSearchParams(searchParams);
     next.delete("patient");
     next.delete("tab");
+    next.delete("focus");
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patients, searchParams]);
+
+  // Rolar e destacar o bloco Receita Saúde ao abrir com focus.
+  useEffect(() => {
+    if (!focusReceitaSaude || !selectedPatient || selectedTab !== "finance") return;
+    const t = window.setTimeout(() => {
+      receitaSaudeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
+    const clear = window.setTimeout(() => setFocusReceitaSaude(false), 2600);
+    return () => { window.clearTimeout(t); window.clearTimeout(clear); };
+  }, [focusReceitaSaude, selectedPatient, selectedTab]);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
   const [profCrp, setProfCrp] = useState<string>("");
@@ -1713,6 +1728,26 @@ const Patients = () => {
                         <InfoRow label="Pendentes" value={pay?.pending ? pay.pending : null} />
                         <InfoRow label="Total de sessões" value={pay?.total ? pay.total : null} />
                         <InfoRow label="Receita Saúde pendente" value={receitaSaudePending[p.id] ? receitaSaudePending[p.id] : null} />
+                      </div>
+
+                      {/* Bloco Receita Saúde (manual e opcional). Sem inferência automática. */}
+                      <div
+                        id="receita-saude-block"
+                        ref={receitaSaudeRef}
+                        className={`rounded-xl p-3 transition-all duration-500 ${focusReceitaSaude ? "ring-2 ring-primary/50 shadow-sm" : ""}`}
+                        style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs font-semibold" style={{ fontFamily: "Instrument Sans, sans-serif", color: "hsl(var(--foreground))" }}>
+                            Receita Saúde
+                          </p>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-secondary text-muted-foreground">
+                            Não definido
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground" style={{ fontFamily: "Instrument Sans, sans-serif" }}>
+                          Estado manual e opcional. Enquanto não for registrado, o status é “Não definido”.
+                        </p>
                       </div>
                       {url && (
                         <a

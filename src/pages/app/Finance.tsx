@@ -1002,9 +1002,10 @@ const Finance = () => {
                         p.realizadas > 0
                           ? `${p.realizadas} ${p.realizadas === 1 ? "sessão" : "sessões"}`
                           : "Não informado";
-                      const openPatient = (tab: "finance" | "sessions") => {
+                      const openPatient = (tab: "finance" | "sessions", focus?: string) => {
                         if (!p.patientId) return;
-                        navigate(`/app/pacientes?patient=${p.patientId}&tab=${tab}`);
+                        const focusParam = focus ? `&focus=${focus}` : "";
+                        navigate(`/app/pacientes?patient=${p.patientId}&tab=${tab}${focusParam}`);
                       };
                       const rowClickable = !!p.patientId;
                       return (
@@ -1064,7 +1065,7 @@ const Finance = () => {
                           <td className={`py-3 px-3 font-medium ${pay.tone}`}>{pay.label}</td>
                           <td
                             className={`py-3 px-3 text-muted-foreground italic text-xs ${rowClickable ? "cursor-pointer" : ""}`}
-                            onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("finance"); } : undefined}
+                            onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("finance", "receita-saude"); } : undefined}
                           >
                             Não informado
                           </td>
