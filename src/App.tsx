@@ -41,6 +41,7 @@ const FormulacaoTCC = lazy(() => import("./pages/app/FormulacaoTCC"));
 const ContratoPublico = lazy(() => import("./pages/ContratoPublico"));
 const AnamnesePublica = lazy(() => import("./pages/AnamnesePublica"));
 const AnamneseAdultoPublica = lazy(() => import("./pages/AnamneseAdultoPublica"));
+const Humor = lazy(() => import("./pages/app/Humor"));
 
 const queryClient = new QueryClient();
 
@@ -143,6 +144,7 @@ const App = () => (
                   <Route index element={<Dashboard />} />
                   <Route path="pacientes" element={<Patients />} />
                   <Route path="agenda" element={<Agenda />} />
+                  <Route path="humor" element={<Humor />} />
                   <Route path="plano-tratamento" element={<PlanoTratamento />} />
                   <Route path="formulacao-ia" element={<FormulacaoIA />} />
                   <Route path="formulacao-livre" element={<FormulacaoLivre />} />
