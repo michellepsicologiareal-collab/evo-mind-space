@@ -1760,11 +1760,11 @@ const Patients = () => {
                     </TabsContent>
                   </Tabs>
 
-                  <div className="mt-6 flex items-center justify-between pt-4" style={{ borderTop: "0.5px solid hsl(var(--border))" }}>
-                    <div className="flex items-center gap-2" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
-                      <Eye className="h-3.5 w-3.5" /> Visível ao supervisor
+                  <div className="mt-6 pt-4" style={{ borderTop: "0.5px solid hsl(var(--border))" }}>
+                    <div className="flex items-start gap-2 rounded-xl bg-muted/40 p-3" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
+                      <Eye className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+                      <span>O compartilhamento de casos está temporariamente indisponível para revisão de privacidade.</span>
                     </div>
-                    <Switch checked={p.shared_with_supervisor} onCheckedChange={() => toggleSharing(p)} />
                   </div>
                 </div>
               </div>
