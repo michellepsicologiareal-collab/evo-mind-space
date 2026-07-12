@@ -762,15 +762,11 @@ const Patients = () => {
     await preserveScroll(() => load());
   };
 
-  const toggleSharing = async (p: Patient) => {
-    const { error } = await supabase
-      .from("patients")
-      .update({ shared_with_supervisor: !p.shared_with_supervisor } as any)
-      .eq("id", p.id);
-    if (error) return toast.error("Erro ao atualizar compartilhamento");
-    setPatients((prev) =>
-      prev.map((x) => (x.id === p.id ? { ...x, shared_with_supervisor: !x.shared_with_supervisor } : x))
-    );
+  const toggleSharing = async (_p: Patient) => {
+    // FASE 1 HOTFIX — Compartilhamento antigo desativado para revisão de privacidade.
+    // Nenhum valor de `shared_with_supervisor` é alterado. Um novo fluxo de casos
+    // de supervisão pseudonimizados será entregue na Fase 2.
+    toast.info("O compartilhamento de casos está temporariamente indisponível para revisão de privacidade.");
   };
 
   const activeCount = patients.filter((p) => p.is_active).length;
