@@ -202,6 +202,20 @@ const Patients = () => {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
   const navigate = useNavigate();
+  /**
+   * Guarda cliques em recursos ainda não preenchidos dentro do Drawer.
+   * Não navega, não fecha o Sheet, não troca aba nem paciente selecionado.
+   * Se `onCreate` for informado, mostra ação "Preencher agora" no toast.
+   */
+  const guardMissing = (
+    filled: boolean,
+    onOpen: () => void,
+    opts?: { label?: string; onCreate?: () => void; createLabel?: string }
+  ) => {
+    if (filled) { onOpen(); return; }
+    const { label = "Este conteúdo", onCreate, createLabel = "Preencher agora" } = opts || {};
+    toast(`${label} ainda não foi preenchido para este paciente.`, onCreate ? { action: { label: createLabel, onClick: onCreate } } : undefined);
+  };
   const [patients, setPatients] = useState<Patient[]>([]);
   const [gateOpen, setGateOpen] = useState(false);
   const [loading, setLoading] = useState(true);
