@@ -106,7 +106,7 @@ type QuickAlert = "none" | "receita_saude" | "sem_pagamento" | "pix_sem_conf" | 
 
 const Finance = () => {
   const { user } = useAuth();
-  const [monthCursor, setMonthCursor] = useState<Date>(new Date());
+  const navigate = useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
