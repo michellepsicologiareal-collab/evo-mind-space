@@ -637,11 +637,12 @@ const Finance = () => {
         </div>
       </header>
 
-      {/* KPI Cards — 4 cards */}
-      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={Wallet} label="Recebido" value={formatBRL(totalRecebido)} hint={`${sessoesPagas} sessões`} accent />
-        <KpiCard icon={Clock} label="A Receber" value={formatBRL(totalAReceber)} hint={`${sessoesAgendadas - sessoesPagas} sessões`} />
-        <KpiCard icon={Receipt} label="Receita Saúde pendente" value={formatBRL(missingReference.reduce((s, r) => s + Number(r.price ?? 0), 0))} hint={`${missingReference.length} sem referência`} />
+      {/* KPI Cards — 5 cards */}
+      <section className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <KpiCard icon={Wallet} label="Recebido no período" value={formatBRL(totalRecebido)} hint={`Pagamentos confirmados no período · ${sessoesPagas} sessões`} accent />
+        <KpiCard icon={Receipt} label="Receita realizada" value={formatBRL(totalReceitaRealizada)} hint={`${sessoesRealizadas} sessões realizadas`} />
+        <KpiCard icon={CalendarClock} label="Saldo pago a realizar" value={formatBRL(totalSaldoPagoARealizar)} hint={`${sessoesFuturasPagas} sessões futuras já pagas`} />
+        <KpiCard icon={Clock} label="A receber" value={formatBRL(totalAReceber)} hint={`${sessoesPendentes} pagamentos pendentes`} />
         <KpiCard icon={CalendarClock} label="Receita prevista do mês" value={formatBRL(totalPrevisto)} hint={`${sessoesAgendadas} sessões agendadas`} />
       </section>
 
