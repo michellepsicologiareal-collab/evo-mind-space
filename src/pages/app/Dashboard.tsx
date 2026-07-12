@@ -353,7 +353,7 @@ export default function Dashboard() {
                 Agenda da semana
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
-                {totalWeek} sessões distribuídas · {selectedLabel && `${selectedLabel.toLowerCase()}-feira selecionada`}
+                {totalWeek} {totalWeek === 1 ? "sessão" : "sessões"} de segunda a sexta · <span className="capitalize">{selectedLabel}</span> selecionada
               </p>
             </div>
             <Card className="rounded-2xl border-border/60 p-5 space-y-5">
