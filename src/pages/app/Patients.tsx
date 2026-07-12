@@ -1569,7 +1569,7 @@ const Patients = () => {
                         <InfoRow label="Anamnese" value={hasAnam ? `Preenchida em ${format(new Date(anamneseFilled[p.id]), "dd/MM/yyyy")}` : null} />
                       </div>
                       <div className="flex flex-wrap gap-1.5">
-                        <Chip label="Ver anamnese" count={hasAnam ? 1 : 0} onClick={() => { setSelectedPatient(null); setAnamnesisPatient(p); }} />
+                        <Chip label="Ver anamnese" count={hasAnam ? 1 : 0} onClick={() => guardMissing(hasAnam, () => { setSelectedPatient(null); setAnamnesisPatient(p); }, { label: "Anamnese" })} />
                       </div>
                       <button
                         onClick={async () => {
