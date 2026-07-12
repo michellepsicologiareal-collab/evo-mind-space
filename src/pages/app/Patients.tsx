@@ -424,6 +424,44 @@ const Patients = () => {
       info[s.patient_id] = cur;
     });
     setSessionInfo(info);
+
+    // Package progress (from notes pattern "Plano N sessões (i/N)"), payment counters and Receita Saúde pendings
+    const pkg: Record<string, { total: number; current: number; latestTs: number }> = {};
+    const pay: Record<string, { pending: number; paid: number; total: number }> = {};
+    const rsPend: Record<string, number> = {};
+    const pkgRe = /Plano\s+(\d+)\s+sess[õo]es\s*\((\d+)\/(\d+)\)/i;
+    (historyRes.data ?? []).forEach((s: any) => {
+      if (!s.patient_id) return;
+      // Package inference: use the most recent session with a package pattern in notes
+      const m = s.notes ? String(s.notes).match(pkgRe) : null;
+      if (m) {
+        const total = parseInt(m[3], 10);
+        const current = parseInt(m[2], 10);
+        const ts = s.scheduled_at ? new Date(s.scheduled_at).getTime() : 0;
+        const cur = pkg[s.patient_id];
+        if (!cur || ts > cur.latestTs) {
+          pkg[s.patient_id] = { total, current, latestTs: ts };
+        }
+      }
+      // Payments — only count past/realized sessions with a price
+      const past = s.scheduled_at ? new Date(s.scheduled_at).getTime() <= nowTs : false;
+      if (past && s.price != null && Number(s.price) > 0) {
+        const cur = pay[s.patient_id] ?? { pending: 0, paid: 0, total: 0 };
+        cur.total += 1;
+        if (s.payment_status === "paid") cur.paid += 1;
+        else if (s.payment_status === "pending") cur.pending += 1;
+        pay[s.patient_id] = cur;
+        if (s.payment_status === "paid" && !s.payment_reference) {
+          rsPend[s.patient_id] = (rsPend[s.patient_id] ?? 0) + 1;
+        }
+      }
+    });
+    const pkgOut: Record<string, { total: number; current: number }> = {};
+    Object.entries(pkg).forEach(([k, v]) => { pkgOut[k] = { total: v.total, current: v.current }; });
+    setPackageInfo(pkgOut);
+    setPaymentInfo(pay);
+    setReceitaSaudePending(rsPend);
+
     setLoading(false);
   };
 
