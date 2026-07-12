@@ -1,7 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, KeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  addDays,
+  isSameDay,
+  isToday,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   Search,
@@ -16,6 +24,7 @@ import {
   UserMinus,
   MoreHorizontal,
   CheckCircle2,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -28,6 +37,15 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+/* ─── Real data types ─── */
+interface WeekSession {
+  id: string;
+  scheduled_at: string;
+  status: string;
+  modality: string | null;
+  patient_name: string;
+}
 
 /* ─── Mock data (será substituído por queries reais no próximo passo) ─── */
 const KPI = [
@@ -58,13 +76,8 @@ const PENDINGS = [
   { icon: UserMinus, label: "Baixa adesão", count: 1, to: "/app/pacientes?filter=baixa-adesao" },
 ];
 
-const WEEK = [
-  { key: "seg", label: "Seg", value: 6 },
-  { key: "ter", label: "Ter", value: 7 },
-  { key: "qua", label: "Qua", value: 4 },
-  { key: "qui", label: "Qui", value: 5 },
-  { key: "sex", label: "Sex", value: 3 },
-];
+const WEEK_DAY_LABELS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
 
 /* ─── UI helpers ─── */
 function greeting() {
@@ -93,19 +106,109 @@ export default function Dashboard() {
     return (meta?.name || meta?.full_name || user?.email?.split("@")[0] || "Michelle") as string;
   }, [user]);
 
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
   const dateStr = format(today, "EEEE, d 'de' MMMM", { locale: ptBR });
   const capDate = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
   const nextTime = TODAY[0]?.time ?? "—";
 
-  const [selectedDay, setSelectedDay] = useState<string>("qui");
-  const maxWeek = Math.max(...WEEK.map((w) => w.value));
-  const totalWeek = WEEK.reduce((a, w) => a + w.value, 0);
-  const selectedLabel =
-    WEEK.find((w) => w.key === selectedDay)?.label ?? "";
+  /* ── Sessões reais da semana ── */
+  const weekStart = useMemo(
+    () => startOfWeek(today, { weekStartsOn: 1 }),
+    [today],
+  );
+  const weekEnd = useMemo(
+    () => endOfWeek(today, { weekStartsOn: 1 }),
+    [today],
+  );
+  const weekDays = useMemo(
+    () => Array.from({ length: 5 }, (_, i) => addDays(weekStart, i)),
+    [weekStart],
+  );
+
+  const [weekSessions, setWeekSessions] = useState<WeekSession[]>([]);
+  const [loadingWeek, setLoadingWeek] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const t = new Date();
+    const day = t.getDay();
+    if (day === 0 || day === 6) return addDays(weekStart, 0); // fim de semana -> segunda
+    return t;
+  });
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      setLoadingWeek(true);
+      const { data, error } = await supabase
+        .from("sessions")
+        .select("id, scheduled_at, status, modality, patients(full_name)")
+        .eq("user_id", user.id)
+        .gte("scheduled_at", weekStart.toISOString())
+        .lte("scheduled_at", weekEnd.toISOString())
+        .order("scheduled_at", { ascending: true });
+      if (cancelled) return;
+      if (error) {
+        toast.error("Não foi possível carregar a agenda da semana");
+        setWeekSessions([]);
+      } else {
+        setWeekSessions(
+          (data ?? []).map((r: any) => ({
+            id: r.id,
+            scheduled_at: r.scheduled_at,
+            status: r.status,
+            modality: r.modality,
+            patient_name: r.patients?.full_name ?? "Paciente",
+          })),
+        );
+      }
+      setLoadingWeek(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, weekStart, weekEnd]);
+
+  const sessionsByDay = useMemo(() => {
+    const map = new Map<string, WeekSession[]>();
+    weekDays.forEach((d) => map.set(d.toDateString(), []));
+    weekSessions.forEach((s) => {
+      const key = new Date(s.scheduled_at).toDateString();
+      if (map.has(key)) map.get(key)!.push(s);
+    });
+    return map;
+  }, [weekDays, weekSessions]);
+
+  const counts = weekDays.map(
+    (d) => sessionsByDay.get(d.toDateString())?.length ?? 0,
+  );
+  const maxWeek = Math.max(1, ...counts);
+  const totalWeek = counts.reduce((a, b) => a + b, 0);
+  const selectedSessions =
+    sessionsByDay.get(selectedDate.toDateString()) ?? [];
+  const selectedLabel = format(selectedDate, "EEEE", { locale: ptBR });
+
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const onTabsKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const idx = weekDays.findIndex((d) =>
+      isSameDay(d, selectedDate),
+    );
+    let next = idx;
+    if (e.key === "ArrowRight") next = Math.min(weekDays.length - 1, idx + 1);
+    else if (e.key === "ArrowLeft") next = Math.max(0, idx - 1);
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = weekDays.length - 1;
+    else return;
+    e.preventDefault();
+    setSelectedDate(weekDays[next]);
+    const btn = tabsRef.current?.querySelectorAll<HTMLButtonElement>(
+      '[role="tab"]',
+    )[next];
+    btn?.focus();
+  };
 
   const handleAction = (label: string) =>
     toast.success(label, { description: "Ação simulada nesta versão." });
+
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -250,55 +353,132 @@ export default function Dashboard() {
                 Agenda da semana
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
-                {totalWeek} sessões distribuídas · {selectedLabel && `${selectedLabel.toLowerCase()}-feira selecionada`}
+                {totalWeek} {totalWeek === 1 ? "sessão" : "sessões"} de segunda a sexta · <span className="capitalize">{selectedLabel}</span> selecionada
               </p>
             </div>
-            <Card className="rounded-2xl border-border/60 p-5">
-              <div className="flex items-end justify-between gap-3 h-44">
-                {WEEK.map((d) => {
-                  const active = d.key === selectedDay;
-                  const pct = (d.value / maxWeek) * 100;
+            <Card className="rounded-2xl border-border/60 p-5 space-y-5">
+              <div
+                ref={tabsRef}
+                role="tablist"
+                aria-label="Dias da semana"
+                onKeyDown={onTabsKeyDown}
+                className="flex items-end justify-between gap-3 h-44"
+              >
+                {weekDays.map((d, i) => {
+                  const active = isSameDay(d, selectedDate);
+                  const value = counts[i];
+                  const pct = (value / maxWeek) * 100;
+                  const label = WEEK_DAY_LABELS[i];
+                  const tabId = `weekday-${i}`;
                   return (
                     <button
-                      key={d.key}
-                      onClick={() => setSelectedDay(d.key)}
-                      className="group flex flex-1 flex-col items-center gap-2 focus:outline-none"
-                      aria-label={`${d.label}: ${d.value} sessões`}
+                      key={tabId}
+                      id={tabId}
+                      role="tab"
+                      aria-selected={active}
+                      aria-controls="weekday-panel"
+                      tabIndex={active ? 0 : -1}
+                      onClick={() => setSelectedDate(d)}
+                      className="group flex flex-1 flex-col items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md"
+                      aria-label={`${label}, ${format(d, "d 'de' MMMM", { locale: ptBR })}: ${value} ${value === 1 ? "sessão" : "sessões"}`}
                     >
                       <span
                         className={cn(
-                          "text-xs font-medium",
+                          "text-xs font-medium tabular-nums",
                           active ? "text-foreground" : "text-muted-foreground",
                         )}
                       >
-                        {d.value}
+                        {value}
                       </span>
                       <div className="flex h-32 w-full items-end justify-center">
                         <div
-                          style={{ height: `${pct}%` }}
+                          style={{ height: value === 0 ? "4px" : `${pct}%` }}
                           className={cn(
                             "w-6 md:w-8 rounded-t-md transition-colors",
                             active
                               ? "bg-primary"
-                              : "bg-primary/25 group-hover:bg-primary/40 group-focus-visible:bg-primary/40",
+                              : value === 0
+                                ? "bg-muted"
+                                : "bg-primary/25 group-hover:bg-primary/40",
                           )}
                         />
                       </div>
                       <span
                         className={cn(
-                          "text-xs",
+                          "text-xs flex flex-col items-center leading-tight",
                           active
                             ? "text-foreground font-medium"
                             : "text-muted-foreground",
                         )}
                       >
-                        {d.label}
+                        {label}
+                        {isToday(d) && (
+                          <span className="text-[10px] text-primary">hoje</span>
+                        )}
                       </span>
                     </button>
                   );
                 })}
               </div>
+
+              {/* Resumo do dia selecionado */}
+              <div
+                id="weekday-panel"
+                role="tabpanel"
+                aria-labelledby={`weekday-${weekDays.findIndex((d) => isSameDay(d, selectedDate))}`}
+                className="border-t border-border/60 pt-4"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-medium text-foreground capitalize">
+                    {selectedLabel} · {format(selectedDate, "d 'de' MMMM", { locale: ptBR })}
+                  </p>
+                  <span className="text-xs text-muted-foreground">
+                    {selectedSessions.length} {selectedSessions.length === 1 ? "sessão" : "sessões"}
+                  </span>
+                </div>
+
+                {loadingWeek ? (
+                  <div className="space-y-2">
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="h-10 rounded-lg bg-muted/50 animate-pulse"
+                      />
+                    ))}
+                  </div>
+                ) : selectedSessions.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-6 text-center">
+                    <CalendarDays className="h-5 w-5 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Nenhuma sessão agendada neste dia.
+                    </p>
+                  </div>
+                ) : (
+                  <ul className="space-y-1.5">
+                    {selectedSessions.map((s) => (
+                      <li
+                        key={s.id}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted/40 transition-colors"
+                      >
+                        <span className="text-xs font-medium tabular-nums text-muted-foreground w-12 shrink-0">
+                          {format(new Date(s.scheduled_at), "HH:mm")}
+                        </span>
+                        <span className="text-sm text-foreground flex-1 truncate">
+                          {s.patient_name}
+                        </span>
+                        {s.modality && (
+                          <span className="text-xs text-muted-foreground hidden sm:inline">
+                            {s.modality}
+                          </span>
+                        )}
+                        <StatusDot status={s.status} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </Card>
+
           </div>
         </section>
 
@@ -420,3 +600,26 @@ function TodayRow({
     </div>
   );
 }
+
+function StatusDot({ status }: { status: string }) {
+  const map: Record<string, { color: string; label: string }> = {
+    confirmed: { color: "bg-emerald-500", label: "Confirmada" },
+    scheduled: { color: "bg-primary/60", label: "Agendada" },
+    completed: { color: "bg-muted-foreground/40", label: "Realizada" },
+    cancelled: { color: "bg-destructive/60", label: "Cancelada" },
+    no_show: { color: "bg-amber-500", label: "Falta" },
+  };
+  const s = map[status] ?? { color: "bg-muted-foreground/40", label: status };
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          aria-label={s.label}
+          className={cn("inline-block h-2 w-2 rounded-full shrink-0", s.color)}
+        />
+      </TooltipTrigger>
+      <TooltipContent>{s.label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
