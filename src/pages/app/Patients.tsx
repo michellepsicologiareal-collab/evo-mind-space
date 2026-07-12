@@ -1729,6 +1729,26 @@ const Patients = () => {
                         <InfoRow label="Total de sessões" value={pay?.total ? pay.total : null} />
                         <InfoRow label="Receita Saúde pendente" value={receitaSaudePending[p.id] ? receitaSaudePending[p.id] : null} />
                       </div>
+
+                      {/* Bloco Receita Saúde (manual e opcional). Sem inferência automática. */}
+                      <div
+                        id="receita-saude-block"
+                        ref={receitaSaudeRef}
+                        className={`rounded-xl p-3 transition-all duration-500 ${focusReceitaSaude ? "ring-2 ring-primary/50 shadow-sm" : ""}`}
+                        style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs font-semibold" style={{ fontFamily: "Instrument Sans, sans-serif", color: "hsl(var(--foreground))" }}>
+                            Receita Saúde
+                          </p>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-secondary text-muted-foreground">
+                            Não definido
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground" style={{ fontFamily: "Instrument Sans, sans-serif" }}>
+                          Estado manual e opcional. Enquanto não for registrado, o status é “Não definido”.
+                        </p>
+                      </div>
                       {url && (
                         <a
                           href={url}
