@@ -106,19 +106,109 @@ export default function Dashboard() {
     return (meta?.name || meta?.full_name || user?.email?.split("@")[0] || "Michelle") as string;
   }, [user]);
 
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
   const dateStr = format(today, "EEEE, d 'de' MMMM", { locale: ptBR });
   const capDate = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
   const nextTime = TODAY[0]?.time ?? "—";
 
-  const [selectedDay, setSelectedDay] = useState<string>("qui");
-  const maxWeek = Math.max(...WEEK.map((w) => w.value));
-  const totalWeek = WEEK.reduce((a, w) => a + w.value, 0);
-  const selectedLabel =
-    WEEK.find((w) => w.key === selectedDay)?.label ?? "";
+  /* ── Sessões reais da semana ── */
+  const weekStart = useMemo(
+    () => startOfWeek(today, { weekStartsOn: 1 }),
+    [today],
+  );
+  const weekEnd = useMemo(
+    () => endOfWeek(today, { weekStartsOn: 1 }),
+    [today],
+  );
+  const weekDays = useMemo(
+    () => Array.from({ length: 5 }, (_, i) => addDays(weekStart, i)),
+    [weekStart],
+  );
+
+  const [weekSessions, setWeekSessions] = useState<WeekSession[]>([]);
+  const [loadingWeek, setLoadingWeek] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    const t = new Date();
+    const day = t.getDay();
+    if (day === 0 || day === 6) return addDays(weekStart, 0); // fim de semana -> segunda
+    return t;
+  });
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      setLoadingWeek(true);
+      const { data, error } = await supabase
+        .from("sessions")
+        .select("id, scheduled_at, status, modality, patients(full_name)")
+        .eq("user_id", user.id)
+        .gte("scheduled_at", weekStart.toISOString())
+        .lte("scheduled_at", weekEnd.toISOString())
+        .order("scheduled_at", { ascending: true });
+      if (cancelled) return;
+      if (error) {
+        toast.error("Não foi possível carregar a agenda da semana");
+        setWeekSessions([]);
+      } else {
+        setWeekSessions(
+          (data ?? []).map((r: any) => ({
+            id: r.id,
+            scheduled_at: r.scheduled_at,
+            status: r.status,
+            modality: r.modality,
+            patient_name: r.patients?.full_name ?? "Paciente",
+          })),
+        );
+      }
+      setLoadingWeek(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, weekStart, weekEnd]);
+
+  const sessionsByDay = useMemo(() => {
+    const map = new Map<string, WeekSession[]>();
+    weekDays.forEach((d) => map.set(d.toDateString(), []));
+    weekSessions.forEach((s) => {
+      const key = new Date(s.scheduled_at).toDateString();
+      if (map.has(key)) map.get(key)!.push(s);
+    });
+    return map;
+  }, [weekDays, weekSessions]);
+
+  const counts = weekDays.map(
+    (d) => sessionsByDay.get(d.toDateString())?.length ?? 0,
+  );
+  const maxWeek = Math.max(1, ...counts);
+  const totalWeek = counts.reduce((a, b) => a + b, 0);
+  const selectedSessions =
+    sessionsByDay.get(selectedDate.toDateString()) ?? [];
+  const selectedLabel = format(selectedDate, "EEEE", { locale: ptBR });
+
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const onTabsKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const idx = weekDays.findIndex((d) =>
+      isSameDay(d, selectedDate),
+    );
+    let next = idx;
+    if (e.key === "ArrowRight") next = Math.min(weekDays.length - 1, idx + 1);
+    else if (e.key === "ArrowLeft") next = Math.max(0, idx - 1);
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = weekDays.length - 1;
+    else return;
+    e.preventDefault();
+    setSelectedDate(weekDays[next]);
+    const btn = tabsRef.current?.querySelectorAll<HTMLButtonElement>(
+      '[role="tab"]',
+    )[next];
+    btn?.focus();
+  };
 
   const handleAction = (label: string) =>
     toast.success(label, { description: "Ação simulada nesta versão." });
+
 
   return (
     <TooltipProvider delayDuration={200}>
