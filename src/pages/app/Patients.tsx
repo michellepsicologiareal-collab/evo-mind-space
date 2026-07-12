@@ -313,22 +313,37 @@ const Patients = () => {
 
   // Abrir Sheet automaticamente quando a URL trouxer ?patient=<id>&tab=<value>
   // (utilizado pela tela Financeiro para reutilizar o mesmo Sheet).
+  const [focusReceitaSaude, setFocusReceitaSaude] = useState(false);
+  const receitaSaudeRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     const pid = searchParams.get("patient");
     const tab = searchParams.get("tab");
+    const focus = searchParams.get("focus");
     if (!pid) return;
     if (!patients.length) return;
     const target = patients.find((x) => x.id === pid);
     if (!target) return;
     setSelectedPatient(target);
     setSelectedTab(tab && VALID_TABS.includes(tab) ? tab : "overview");
-    // limpa params para não reabrir em navegações internas
+    if (focus === "receita-saude") setFocusReceitaSaude(true);
     const next = new URLSearchParams(searchParams);
     next.delete("patient");
     next.delete("tab");
+    next.delete("focus");
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patients, searchParams]);
+
+  // Rolar e destacar o bloco Receita Saúde ao abrir com focus.
+  useEffect(() => {
+    if (!focusReceitaSaude || !selectedPatient || selectedTab !== "finance") return;
+    const t = window.setTimeout(() => {
+      receitaSaudeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 120);
+    const clear = window.setTimeout(() => setFocusReceitaSaude(false), 2600);
+    return () => { window.clearTimeout(t); window.clearTimeout(clear); };
+  }, [focusReceitaSaude, selectedPatient, selectedTab]);
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
   const [profCrp, setProfCrp] = useState<string>("");
