@@ -231,17 +231,41 @@ const Finance = () => {
   const totalPrevisto = fortnightAllValid.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const totalFaturado = fortnightBillable.reduce((s, r) => s + Number(r.price ?? 0), 0);
 
-  // Recebido = completed + paid sessions this month
-  const totalRecebido = fortnightBillable
-    .filter((r) => r.payment_status === "paid")
-    .reduce((s, r) => s + Number(r.price ?? 0), 0);
+  // 1) Recebido no período: pagamentos confirmados (payment_status='paid') cuja paid_at cai no período.
+  //    Observação: usamos as linhas já carregadas (filtradas por scheduled_at no mês).
+  //    Um pagamento antecipado feito em mês diferente do agendamento é contado no mês do agendamento.
+  const monthStartMs = monthStart.getTime();
+  const monthEndMs = monthEnd.getTime();
+  const paidInPeriod = fortnightAllValid.filter(
+    (r) => r.payment_status === "paid" && r.paid_at && (() => {
+      const t = new Date(r.paid_at as string).getTime();
+      return t >= monthStartMs && t <= monthEndMs;
+    })()
+  );
+  const totalRecebido = paidInPeriod.reduce((s, r) => s + Number(r.price ?? 0), 0);
+  const sessoesPagas = paidInPeriod.length;
 
-  const totalPendente = totalFaturado - totalRecebido;
-  const totalAReceber = totalPrevisto - totalRecebido;
-  const sessoesPagas = fortnightBillable.filter((r) => r.payment_status === "paid").length;
-  const sessoesPendentes = fortnightBillable.filter((r) => r.payment_status === "pending").length;
-  const sessoesAgendadas = fortnightAllValid.length;
+  // 2) Receita realizada: sessões com status "completed" no período (independente de pagamento).
+  const totalReceitaRealizada = fortnightBillable.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const sessoesRealizadas = fortnightBillable.length;
+
+  // 3) Saldo pago a realizar: pagamentos confirmados vinculados a sessões futuras ainda não realizadas.
+  const futurePaidRows = fortnightAllValid.filter(
+    (r) => r.payment_status === "paid" && (r.status === "scheduled" || r.status === "confirmed")
+  );
+  const totalSaldoPagoARealizar = futurePaidRows.reduce((s, r) => s + Number(r.price ?? 0), 0);
+  const sessoesFuturasPagas = futurePaidRows.length;
+
+  // 4) A receber: somente pagamento pendente (não inclui sessão futura já paga).
+  const pendingRows = fortnightAllValid.filter((r) => r.payment_status === "pending");
+  const totalAReceber = pendingRows.reduce((s, r) => s + Number(r.price ?? 0), 0);
+  const sessoesPendentes = pendingRows.length;
+
+  // 5) Receita prevista do mês
+  const sessoesAgendadas = fortnightAllValid.length;
+
+  // legado (mantido para compat de UI existente)
+  const totalPendente = totalFaturado - fortnightBillable.filter((r) => r.payment_status === "paid").reduce((s, r) => s + Number(r.price ?? 0), 0);
 
   // Weekly chart data for the month
   const weeklyChartData = useMemo(() => {
