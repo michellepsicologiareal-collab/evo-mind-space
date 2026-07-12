@@ -15,7 +15,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
+import { PatientMoodChart } from "@/components/app/PatientMoodChart";
+import { ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 /* =========================================================================
@@ -270,7 +273,22 @@ export default function Humor() {
       });
   }, [aggregates, search, filter]);
 
-  const openPatient = (id: string) => navigate(`/app/pacientes?patient=${id}&tab=overview`);
+  const [openPatientId, setOpenPatientId] = useState<string | null>(null);
+  const openPatient = (id: string) => setOpenPatientId(id);
+  const goToPatientFullView = (id: string) => navigate(`/app/pacientes?patient=${id}&tab=overview`);
+  const openPatientData = useMemo(
+    () => aggregates.find((a) => a.patient.id === openPatientId) ?? null,
+    [aggregates, openPatientId]
+  );
+  const openPatientRecords = useMemo(
+    () =>
+      openPatientId
+        ? progress
+            .filter((r) => r.patient_id === openPatientId)
+            .sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime())
+        : [],
+    [progress, openPatientId]
+  );
 
   const saveThresholds = () => {
     if (thresholdsDraft.critical >= thresholdsDraft.well - 1) {
@@ -606,6 +624,109 @@ export default function Humor() {
         <Info className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
         As informações de humor servem como apoio ao acompanhamento e não substituem a avaliação profissional.
       </p>
+
+      {/* Patient side panel */}
+      <Sheet open={!!openPatientId} onOpenChange={(o) => !o && setOpenPatientId(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+          {openPatientData && openPatientId && (
+            <>
+              <SheetHeader className="pb-4 border-b border-border">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <SheetTitle className="font-display text-xl">
+                      {openPatientData.patient.full_name}
+                    </SheetTitle>
+                    <SheetDescription className="mt-1 flex flex-wrap items-center gap-2">
+                      <BandBadge score={openPatientData.score} band={openPatientData.band} />
+                      <FlagBadge flag={openPatientData.flag} />
+                      <TrendPill delta={openPatientData.delta} />
+                    </SheetDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => goToPatientFullView(openPatientId)}
+                    className="gap-1.5 flex-shrink-0"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" /> Ficha completa
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground pt-2">
+                  {openPatientData.lastAt
+                    ? `Último registro há ${openPatientData.daysSince} dia(s)`
+                    : "Sem registro no período"}
+                  {openPatientData.nextSession
+                    ? ` · Próxima sessão em ${format(new Date(openPatientData.nextSession), "dd/MM", { locale: ptBR })}`
+                    : ""}
+                </div>
+              </SheetHeader>
+
+              <div className="py-4 space-y-6">
+                <section>
+                  <h3 className="font-display text-sm font-semibold uppercase text-muted-foreground mb-3">
+                    Evolução do humor
+                  </h3>
+                  <PatientMoodChart
+                    patientId={openPatientId}
+                    patientName={openPatientData.patient.full_name}
+                  />
+                </section>
+
+                <section>
+                  <h3 className="font-display text-sm font-semibold uppercase text-muted-foreground mb-3">
+                    Registros ({openPatientRecords.length})
+                  </h3>
+                  {openPatientRecords.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+                      Nenhum registro no período selecionado.
+                    </div>
+                  ) : (
+                    <ul className="space-y-2">
+                      {openPatientRecords.map((r) => {
+                        const isV2 = r.data_model === "v2_structured";
+                        const score = isV2 ? r.wellbeing_score : r.mood_score;
+                        const origin = isV2
+                          ? "Bem-estar (v2)"
+                          : "Humor legado";
+                        return (
+                          <li
+                            key={r.id}
+                            className={`rounded-xl border p-3 text-xs ${
+                              isV2 ? "border-border bg-muted/20" : "border-amber-200/60 bg-amber-50/40"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-foreground">
+                                  {score != null ? `${score}/10` : "sem nota"}
+                                </span>
+                                <span className="rounded-full px-2 py-0.5 bg-background border border-border text-muted-foreground">
+                                  {origin}
+                                </span>
+                                {r.attention_flag && r.attention_flag !== "not_assessed" && (
+                                  <FlagBadge flag={r.attention_flag} />
+                                )}
+                              </div>
+                              <span className="text-muted-foreground">
+                                {format(new Date(r.recorded_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                              </span>
+                            </div>
+                            {(r.patient_context || r.clinical_observation || r.note) && (
+                              <p className="text-foreground/80 mt-2 whitespace-pre-line">
+                                {[r.patient_context, r.clinical_observation, r.note].filter(Boolean).join("\n")}
+                              </p>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </section>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
