@@ -1557,7 +1557,7 @@ const Patients = () => {
                 </div>
 
                 <div className="px-4 sm:px-6 pt-4 pb-8 min-w-0">
-                  <Tabs defaultValue="overview" className="w-full">
+                  <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
                     <TabsList className="w-full overflow-x-auto flex justify-start gap-1 h-auto p-1 flex-nowrap">
                       <TabsTrigger value="overview" className="text-[11px] whitespace-nowrap">Visão geral</TabsTrigger>
                       <TabsTrigger value="formulations" className="text-[11px] whitespace-nowrap">Formulações</TabsTrigger>
