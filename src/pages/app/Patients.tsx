@@ -1435,9 +1435,13 @@ const Patients = () => {
                               <ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => toggleSharing(p)}>
+                            <DropdownMenuItem
+                              disabled
+                              aria-disabled="true"
+                              title="Compartilhamento indisponível para revisão de privacidade"
+                            >
                               <Eye className="h-4 w-4 mr-2" />
-                              {p.shared_with_supervisor ? "Remover do supervisor" : "Compartilhar com supervisor"}
+                              Compartilhamento indisponível
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]">
