@@ -1002,9 +1002,10 @@ const Finance = () => {
                         p.realizadas > 0
                           ? `${p.realizadas} ${p.realizadas === 1 ? "sessão" : "sessões"}`
                           : "Não informado";
-                      const openPatient = (tab: "finance" | "sessions") => {
+                      const openPatient = (tab: "finance" | "sessions", focus?: string) => {
                         if (!p.patientId) return;
-                        navigate(`/app/pacientes?patient=${p.patientId}&tab=${tab}`);
+                        const focusParam = focus ? `&focus=${focus}` : "";
+                        navigate(`/app/pacientes?patient=${p.patientId}&tab=${tab}${focusParam}`);
                       };
                       const rowClickable = !!p.patientId;
                       return (
