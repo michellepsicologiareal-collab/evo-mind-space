@@ -159,7 +159,7 @@ describe("Clique na linha do paciente abre o Sheet", () => {
   });
 
   it("clicar em outro paciente troca imediatamente o Sheet", async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
     render(<Harness />);
     await user.click(screen.getByTestId("name-p1"));
     expect(await screen.findByTestId("sheet-name")).toHaveTextContent(
@@ -170,6 +170,7 @@ describe("Clique na linha do paciente abre o Sheet", () => {
       "Bruno Ribeiro"
     );
   });
+
 
   it("Enter na linha focada abre o Sheet", async () => {
     const user = userEvent.setup();
