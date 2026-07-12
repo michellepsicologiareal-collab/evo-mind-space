@@ -202,6 +202,20 @@ const Patients = () => {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
   const navigate = useNavigate();
+  /**
+   * Guarda cliques em recursos ainda não preenchidos dentro do Drawer.
+   * Não navega, não fecha o Sheet, não troca aba nem paciente selecionado.
+   * Se `onCreate` for informado, mostra ação "Preencher agora" no toast.
+   */
+  const guardMissing = (
+    filled: boolean,
+    onOpen: () => void,
+    opts?: { label?: string; onCreate?: () => void; createLabel?: string }
+  ) => {
+    if (filled) { onOpen(); return; }
+    const { label = "Este conteúdo", onCreate, createLabel = "Preencher agora" } = opts || {};
+    toast(`${label} ainda não foi preenchido para este paciente.`, onCreate ? { action: { label: createLabel, onClick: onCreate } } : undefined);
+  };
   const [patients, setPatients] = useState<Patient[]>([]);
   const [gateOpen, setGateOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -1493,10 +1507,10 @@ const Patients = () => {
                         const act = actData[p.id];
                         const actSummary = act?.direcionamento_gerado || act?.apresentacao_problema || "";
                         const items = [
-                          { key: "tcc", label: "TCC — Formulação de caso", filled: !!formulationFilled[p.id], summary: trunc(tccSummary), fullSummary: tccSummary, accent: "hsl(var(--primary))", onView: () => { setSelectedPatient(null); setPadeksyPatient(p); } },
-                          { key: "te", label: "TE — Terapia do Esquema", filled: !!teFilled[p.id], summary: trunc(teSummary), fullSummary: teSummary, accent: "#B8860B", onView: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); } },
-                          { key: "act", label: "ACT — Terapia de Aceitação", filled: !!actFilled[p.id], summary: trunc(actSummary), fullSummary: actSummary, accent: "#2D6A4F", onView: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); } },
-                          { key: "rpd", label: "RPD — Registros TCC", filled: cTcc > 0, summary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", fullSummary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", accent: "hsl(var(--moss))", onView: () => { setSelectedPatient(null); setTccPatient(p); } },
+                          { key: "tcc", label: "TCC — Formulação de caso", filled: !!formulationFilled[p.id], summary: trunc(tccSummary), fullSummary: tccSummary, accent: "hsl(var(--primary))", onView: () => guardMissing(!!formulationFilled[p.id], () => { setSelectedPatient(null); setPadeksyPatient(p); }, { label: "Formulação TCC", onCreate: () => { setSelectedPatient(null); setPadeksyPatient(p); } }) },
+                          { key: "te", label: "TE — Terapia do Esquema", filled: !!teFilled[p.id], summary: trunc(teSummary), fullSummary: teSummary, accent: "#B8860B", onView: () => guardMissing(!!teFilled[p.id], () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); }, { label: "Formulação TE", onCreate: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); } }) },
+                          { key: "act", label: "ACT — Terapia de Aceitação", filled: !!actFilled[p.id], summary: trunc(actSummary), fullSummary: actSummary, accent: "#2D6A4F", onView: () => guardMissing(!!actFilled[p.id], () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); }, { label: "Formulação ACT", onCreate: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); } }) },
+                          { key: "rpd", label: "RPD — Registros TCC", filled: cTcc > 0, summary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", fullSummary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", accent: "hsl(var(--moss))", onView: () => guardMissing(cTcc > 0, () => { setSelectedPatient(null); setTccPatient(p); }, { label: "Registros TCC", onCreate: () => { setSelectedPatient(null); setTccPatient(p); } }) },
                         ];
                         return (
                           <div className="grid gap-2 sm:grid-cols-2">
@@ -1515,9 +1529,9 @@ const Patients = () => {
                         <InfoRow label="Histórico de sessões" value={cHist > 0 ? cHist : null} />
                       </div>
                       <div className="flex flex-wrap gap-1.5">
-                        <Chip label="Humor" count={cMood} onClick={() => { setSelectedPatient(null); setMoodPatient(p); }} />
-                        <Chip label="Histórico" count={cHist} onClick={() => { setSelectedPatient(null); setHistoryPatient(p); }} />
-                        <Chip label="Registros" count={cRec} onClick={() => { setSelectedPatient(null); setRecordsPatient(p); }} />
+                        <Chip label="Humor" count={cMood} onClick={() => guardMissing(cMood > 0, () => { setSelectedPatient(null); setMoodPatient(p); }, { label: "Humor", onCreate: () => { setSelectedPatient(null); setMoodPatient(p); } })} />
+                        <Chip label="Histórico" count={cHist} onClick={() => guardMissing(cHist > 0, () => { setSelectedPatient(null); setHistoryPatient(p); }, { label: "Histórico", onCreate: () => { setSelectedPatient(null); setHistoryPatient(p); } })} />
+                        <Chip label="Registros" count={cRec} onClick={() => guardMissing(cRec > 0, () => { setSelectedPatient(null); setRecordsPatient(p); }, { label: "Registros de sessão", onCreate: () => { setSelectedPatient(null); setRecordsPatient(p); } })} />
                       </div>
                       <button
                         onClick={() => { setSelectedPatient(null); navigate("/app/agenda"); }}
@@ -1544,7 +1558,7 @@ const Patients = () => {
                         );
                       })()}
                       <div className="flex flex-wrap gap-1.5">
-                        <Chip label="Abrir plano" onClick={() => { setSelectedPatient(null); navigate(`/app/plano-tratamento?patient=${p.id}`); }} />
+                        <Chip label="Abrir plano" onClick={() => guardMissing(!!treatmentPlans[p.id], () => { setSelectedPatient(null); navigate(`/app/plano-tratamento?patient=${p.id}`); }, { label: "Plano terapêutico", onCreate: () => { setSelectedPatient(null); navigate(`/app/plano-tratamento?patient=${p.id}`); } })} />
                         <Chip label="Plano entre Sessões" onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }} />
                       </div>
                     </TabsContent>
@@ -1555,7 +1569,7 @@ const Patients = () => {
                         <InfoRow label="Anamnese" value={hasAnam ? `Preenchida em ${format(new Date(anamneseFilled[p.id]), "dd/MM/yyyy")}` : null} />
                       </div>
                       <div className="flex flex-wrap gap-1.5">
-                        <Chip label="Ver anamnese" count={hasAnam ? 1 : 0} onClick={() => { setSelectedPatient(null); setAnamnesisPatient(p); }} />
+                        <Chip label="Ver anamnese" count={hasAnam ? 1 : 0} onClick={() => guardMissing(hasAnam, () => { setSelectedPatient(null); setAnamnesisPatient(p); }, { label: "Anamnese" })} />
                       </div>
                       <button
                         onClick={async () => {
