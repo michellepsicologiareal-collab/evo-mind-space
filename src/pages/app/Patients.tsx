@@ -306,6 +306,8 @@ const Patients = () => {
     } catch {}
   }, [homeworkPatient]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedTab, setSelectedTab] = useState<string>("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [pixKey, setPixKey] = useState<string>("");
   const [profName, setProfName] = useState<string>("");
   const [profCrp, setProfCrp] = useState<string>("");
