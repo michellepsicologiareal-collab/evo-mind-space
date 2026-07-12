@@ -995,15 +995,16 @@ const Patients = () => {
 
                   const openRow = (e: React.MouseEvent | React.KeyboardEvent) => {
                     const target = e.target as HTMLElement;
-                    if (
-                      target.closest(
-                        'button, a, input, textarea, select, [role="button"], [role="menu"], [role="menuitem"], [data-no-card-open]'
-                      )
-                    ) {
+                    // Ignora cliques em elementos interativos internos, mas não na própria linha (tr role="button")
+                    const interactive = target.closest(
+                      'button, a, input, textarea, select, [role="menu"], [role="menuitem"], [data-no-card-open]'
+                    );
+                    if (interactive && interactive !== e.currentTarget) {
                       return;
                     }
                     setSelectedPatient(p);
                   };
+
 
                   return (
                     <tr
