@@ -875,6 +875,7 @@ const Finance = () => {
           type Aggregate = {
             key: string;
             name: string;
+            patientId: string | null;
             realizadas: number;
             pagas: number;
             totalValue: number;
@@ -893,6 +894,7 @@ const Finance = () => {
               e = {
                 key: name,
                 name,
+                patientId: r.patient?.id ?? null,
                 realizadas: 0,
                 pagas: 0,
                 totalValue: 0,
@@ -904,6 +906,7 @@ const Finance = () => {
               };
               map.set(name, e);
             }
+            if (!e.patientId && r.patient?.id) e.patientId = r.patient.id;
             if (r.status === "completed") {
               e.realizadas++;
               e.totalValue += Number(r.price ?? 0);
