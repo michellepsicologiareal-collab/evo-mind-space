@@ -600,3 +600,26 @@ function TodayRow({
     </div>
   );
 }
+
+function StatusDot({ status }: { status: string }) {
+  const map: Record<string, { color: string; label: string }> = {
+    confirmed: { color: "bg-emerald-500", label: "Confirmada" },
+    scheduled: { color: "bg-primary/60", label: "Agendada" },
+    completed: { color: "bg-muted-foreground/40", label: "Realizada" },
+    cancelled: { color: "bg-destructive/60", label: "Cancelada" },
+    no_show: { color: "bg-amber-500", label: "Falta" },
+  };
+  const s = map[status] ?? { color: "bg-muted-foreground/40", label: status };
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          aria-label={s.label}
+          className={cn("inline-block h-2 w-2 rounded-full shrink-0", s.color)}
+        />
+      </TooltipTrigger>
+      <TooltipContent>{s.label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
