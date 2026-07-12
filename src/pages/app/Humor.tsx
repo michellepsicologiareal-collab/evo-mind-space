@@ -418,6 +418,25 @@ export default function Humor() {
         </div>
       </header>
 
+      {loadError && (
+        <div
+          role="alert"
+          className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+        >
+          <div className="flex items-start gap-2 text-sm">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-destructive">Não foi possível carregar o painel de humor</p>
+              <p className="text-muted-foreground">{loadError}</p>
+            </div>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => setReloadKey((k) => k + 1)}>
+            <RotateCcw className="h-4 w-4 mr-2" /> Tentar novamente
+          </Button>
+        </div>
+      )}
+
+
       {/* KPIs */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Kpi
