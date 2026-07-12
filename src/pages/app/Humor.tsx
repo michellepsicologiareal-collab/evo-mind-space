@@ -126,15 +126,29 @@ export default function Humor() {
       setLoadError(null);
       try {
         const since = subDays(new Date(), Math.max(period, 90)).toISOString();
+        // FASE 1 HOTFIX — Isolamento por proprietária.
+        // RLS já restringe SELECT a auth.uid() = user_id nas tabelas clínicas
+        // após a remoção das policies de supervisão. O filtro explícito
+        // .eq("user_id", uid) abaixo é uma camada adicional de escopo do
+        // recurso e NÃO substitui a RLS.
+        const { data: authRes, error: authErr } = await supabase.auth.getUser();
+        if (authErr) throw authErr;
+        const uid = authRes.user?.id;
+        if (!uid) throw new Error("Sessão expirada. Faça login novamente.");
         const [ptsRes, prgRes, sessRes] = await Promise.all([
-          supabase.from("patients").select("id, full_name, is_active").eq("is_active", true),
+          supabase.from("patients")
+            .select("id, full_name, is_active")
+            .eq("user_id", uid)
+            .eq("is_active", true),
           (supabase as any)
             .from("patient_progress")
             .select("id, patient_id, recorded_at, mood_score, wellbeing_score, note, patient_context, clinical_observation, attention_flag, data_model")
+            .eq("user_id", uid)
             .gte("recorded_at", since)
             .order("recorded_at", { ascending: false }),
           supabase.from("sessions")
             .select("patient_id, scheduled_at")
+            .eq("user_id", uid)
             .gte("scheduled_at", new Date().toISOString())
             .order("scheduled_at", { ascending: true }),
         ]);
