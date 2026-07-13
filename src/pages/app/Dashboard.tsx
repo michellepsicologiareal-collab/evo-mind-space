@@ -21,7 +21,7 @@ import {
   ArrowRight,
   Video,
   MapPin,
-  ClipboardList,
+  FileText,
   CalendarX,
   CircleDollarSign,
   UserMinus,
