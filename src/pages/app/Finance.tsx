@@ -1075,7 +1075,7 @@ const Finance = () => {
                       <th className="py-2.5 px-3 font-medium">Próxima sessão</th>
                       <th className="py-2.5 px-3 font-medium">Valor</th>
                       <th className="py-2.5 px-3 font-medium">Pagamento</th>
-                      <th className="py-2.5 px-3 font-medium">Receita Saúde</th>
+                      <th className="py-2.5 px-3 font-medium">RS</th>
                       <th className="py-2.5 px-3 font-medium">Situação</th>
                       <th className="py-2.5 px-3 font-medium text-right">Ações</th>
                     </tr>
