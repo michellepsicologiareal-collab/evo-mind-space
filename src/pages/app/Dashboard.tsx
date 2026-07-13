@@ -9,6 +9,9 @@ import {
   addDays,
   isSameDay,
   isToday,
+  startOfMonth,
+  endOfMonth,
+  subDays,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -47,37 +50,15 @@ interface WeekSession {
   patient_name: string;
 }
 
-/* ─── Mock data (será substituído por queries reais no próximo passo) ─── */
-const KPI = [
-  { label: "Pacientes ativos", value: "38", hint: "+3 neste mês", to: "/app/pacientes" },
-  { label: "Sessões na semana", value: "15", hint: "5 ainda por realizar", to: "/app/agenda" },
-  { label: "Comparecimento", value: "86%", hint: "+6% sobre o mês anterior", to: "/app/agenda" },
-];
-
 type TodayItem = {
   id: string;
   time: string;
   name: string;
-  session: number;
   mode: "Online" | "Presencial";
-  status: "scheduled" | "to-confirm" | "confirmed";
+  status: "scheduled" | "to-confirm" | "confirmed" | "completed" | "no_show";
 };
 
-const TODAY: TodayItem[] = [
-  { id: "1", time: "08:00", name: "Pamela Tanaka", session: 17, mode: "Online", status: "scheduled" },
-  { id: "2", time: "09:00", name: "Ingrid Aparecida Maia", session: 6, mode: "Presencial", status: "to-confirm" },
-  { id: "3", time: "10:00", name: "Romara M. Miranda", session: 6, mode: "Online", status: "confirmed" },
-];
-
-const PENDINGS = [
-  { icon: ClipboardList, label: "Registros pendentes", count: 5, to: "/app/registro-sessao" },
-  { icon: CalendarX, label: "Sem próxima sessão", count: 3, to: "/app/pacientes?filter=sem-proxima" },
-  { icon: CircleDollarSign, label: "Pagamentos atrasados", count: 2, to: "/app/financeiro?filter=atrasados" },
-  { icon: UserMinus, label: "Baixa adesão", count: 1, to: "/app/pacientes?filter=baixa-adesao" },
-];
-
 const WEEK_DAY_LABELS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-
 
 /* ─── UI helpers ─── */
 function greeting() {
@@ -97,43 +78,52 @@ function initials(name: string) {
     .toUpperCase();
 }
 
+function fmtBRL(n: number) {
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+}
+
 /* ─── Page ─── */
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const displayName = useMemo(() => {
     const meta: any = user?.user_metadata;
-    return (meta?.name || meta?.full_name || user?.email?.split("@")[0] || "Michelle") as string;
+    return (meta?.name || meta?.full_name || user?.email?.split("@")[0] || "") as string;
   }, [user]);
 
   const today = useMemo(() => new Date(), []);
   const dateStr = format(today, "EEEE, d 'de' MMMM", { locale: ptBR });
   const capDate = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
-  const nextTime = TODAY[0]?.time ?? "—";
 
   /* ── Sessões reais da semana ── */
-  const weekStart = useMemo(
-    () => startOfWeek(today, { weekStartsOn: 1 }),
-    [today],
-  );
-  const weekEnd = useMemo(
-    () => endOfWeek(today, { weekStartsOn: 1 }),
-    [today],
-  );
-  const weekDays = useMemo(
-    () => Array.from({ length: 5 }, (_, i) => addDays(weekStart, i)),
-    [weekStart],
-  );
+  const weekStart = useMemo(() => startOfWeek(today, { weekStartsOn: 1 }), [today]);
+  const weekEnd = useMemo(() => endOfWeek(today, { weekStartsOn: 1 }), [today]);
+  const weekDays = useMemo(() => Array.from({ length: 5 }, (_, i) => addDays(weekStart, i)), [weekStart]);
 
   const [weekSessions, setWeekSessions] = useState<WeekSession[]>([]);
   const [loadingWeek, setLoadingWeek] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const t = new Date();
     const day = t.getDay();
-    if (day === 0 || day === 6) return addDays(weekStart, 0); // fim de semana -> segunda
+    if (day === 0 || day === 6) return addDays(weekStart, 0);
     return t;
   });
 
+  // KPIs & cards reais
+  const [activePatients, setActivePatients] = useState(0);
+  const [newPatientsMonth, setNewPatientsMonth] = useState(0);
+  const [attendancePct, setAttendancePct] = useState<number | null>(null);
+  const [attendanceDelta, setAttendanceDelta] = useState<number | null>(null);
+  const [pendingRecords, setPendingRecords] = useState(0);
+  const [semProxima, setSemProxima] = useState(0);
+  const [pagamentosAtrasados, setPagamentosAtrasados] = useState(0);
+  const [baixaAdesao, setBaixaAdesao] = useState(0);
+  const [finRecebido, setFinRecebido] = useState(0);
+  const [finAReceber, setFinAReceber] = useState(0);
+  const [finAtrasoCount, setFinAtrasoCount] = useState(0);
+  const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
+
+  // Weekly sessions (real)
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
@@ -145,6 +135,7 @@ export default function Dashboard() {
         .eq("user_id", user.id)
         .gte("scheduled_at", weekStart.toISOString())
         .lte("scheduled_at", weekEnd.toISOString())
+        .neq("status", "cancelled")
         .order("scheduled_at", { ascending: true });
       if (cancelled) return;
       if (error) {
@@ -163,10 +154,164 @@ export default function Dashboard() {
       }
       setLoadingWeek(false);
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [user?.id, weekStart, weekEnd]);
+
+  // KPIs, pendings, finance
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      const now = new Date();
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
+      const attendanceFrom = subDays(now, 60);
+      const attendancePrevFrom = subDays(now, 120);
+      const adesaoCutoff = subDays(now, 30);
+
+      const [patientsRes, attendanceRes, atrasoRes, futureRes, monthPayRes, recordsSrcRes] = await Promise.all([
+        supabase
+          .from("patients")
+          .select("id, is_active, created_at")
+          .eq("user_id", user.id),
+        supabase
+          .from("sessions")
+          .select("id, status, scheduled_at")
+          .eq("user_id", user.id)
+          .in("status", ["completed", "no_show"])
+          .gte("scheduled_at", attendancePrevFrom.toISOString()),
+        supabase
+          .from("sessions")
+          .select("id, price, scheduled_at")
+          .eq("user_id", user.id)
+          .eq("payment_status", "pending")
+          .neq("status", "cancelled")
+          .lt("scheduled_at", now.toISOString()),
+        supabase
+          .from("sessions")
+          .select("patient_id, scheduled_at, status")
+          .eq("user_id", user.id)
+          .neq("status", "cancelled")
+          .gte("scheduled_at", now.toISOString()),
+        supabase
+          .from("sessions")
+          .select("id, price, status, payment_status, scheduled_at")
+          .eq("user_id", user.id)
+          .neq("status", "cancelled")
+          .gte("scheduled_at", monthStart.toISOString())
+          .lte("scheduled_at", monthEnd.toISOString()),
+        supabase
+          .from("sessions")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("status", "completed"),
+      ]);
+      if (cancelled) return;
+
+      // Pacientes ativos
+      const patientsAll = (patientsRes.data ?? []) as any[];
+      const activeList = patientsAll.filter((p) => p.is_active);
+      setActivePatients(activeList.length);
+      setNewPatientsMonth(
+        patientsAll.filter(
+          (p) => p.created_at && new Date(p.created_at) >= monthStart && p.is_active,
+        ).length,
+      );
+
+      // Comparecimento (últimos 60 dias vs 60 anteriores)
+      const attSessions = (attendanceRes.data ?? []) as any[];
+      const inWindow = (from: Date, to: Date) =>
+        attSessions.filter((s) => {
+          const d = new Date(s.scheduled_at);
+          return d >= from && d < to;
+        });
+      const cur = inWindow(attendanceFrom, now);
+      const prev = inWindow(attendancePrevFrom, attendanceFrom);
+      const pct = (arr: any[]) => {
+        const total = arr.length;
+        if (!total) return null;
+        const done = arr.filter((s) => s.status === "completed").length;
+        return Math.round((done / total) * 100);
+      };
+      const curPct = pct(cur);
+      const prevPct = pct(prev);
+      setAttendancePct(curPct);
+      setAttendanceDelta(curPct != null && prevPct != null ? curPct - prevPct : null);
+
+      // Pagamentos atrasados
+      const atrasoRows = (atrasoRes.data ?? []) as any[];
+      setPagamentosAtrasados(atrasoRows.length);
+
+      // Registros pendentes = sessões completed sem session_record
+      const completedIds = ((recordsSrcRes.data ?? []) as any[]).map((s) => s.id);
+      let pendingCount = 0;
+      if (completedIds.length > 0) {
+        const { data: recs } = await supabase
+          .from("session_records")
+          .select("session_id")
+          .in("session_id", completedIds);
+        const withRec = new Set((recs ?? []).map((r: any) => r.session_id));
+        pendingCount = completedIds.filter((id) => !withRec.has(id)).length;
+      }
+      if (!cancelled) setPendingRecords(pendingCount);
+
+      // Sem próxima sessão + baixa adesão
+      const future = (futureRes.data ?? []) as any[];
+      const patientsWithFuture = new Set(future.map((s) => s.patient_id));
+      setSemProxima(activeList.filter((p) => !patientsWithFuture.has(p.id)).length);
+
+      // Baixa adesão: ativos cujo último atendimento (completed) foi há >30 dias
+      const { data: lastCompleted } = await supabase
+        .from("sessions")
+        .select("patient_id, scheduled_at")
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .order("scheduled_at", { ascending: false });
+      const lastByPatient = new Map<string, string>();
+      ((lastCompleted ?? []) as any[]).forEach((s) => {
+        if (!lastByPatient.has(s.patient_id)) lastByPatient.set(s.patient_id, s.scheduled_at);
+      });
+      const baixa = activeList.filter((p) => {
+        const last = lastByPatient.get(p.id);
+        if (!last) return false;
+        return new Date(last) < adesaoCutoff && patientsWithFuture.has(p.id) === false;
+      }).length;
+      if (!cancelled) setBaixaAdesao(baixa);
+
+      // Financeiro do mês corrente
+      const monthRows = (monthPayRes.data ?? []) as any[];
+      let recebido = 0, aReceber = 0, atrasoQtd = 0;
+      monthRows.forEach((s) => {
+        const price = Number(s.price ?? 0);
+        if (s.payment_status === "paid") recebido += price;
+        else if (s.status === "completed") aReceber += price;
+      });
+      atrasoQtd = atrasoRows.length;
+      setFinRecebido(recebido);
+      setFinAReceber(aReceber);
+      setFinAtrasoCount(atrasoQtd);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  // TODAY list derived from weekSessions
+  useEffect(() => {
+    const list = weekSessions
+      .filter((s) => isSameDay(new Date(s.scheduled_at), new Date()))
+      .map<TodayItem>((s) => ({
+        id: s.id,
+        time: format(new Date(s.scheduled_at), "HH:mm"),
+        name: s.patient_name,
+        mode: (s.modality?.toLowerCase() === "presencial" ? "Presencial" : "Online"),
+        status:
+          s.status === "confirmed" ? "confirmed"
+          : s.status === "completed" ? "completed"
+          : s.status === "no_show" ? "no_show"
+          : s.status === "scheduled" ? "scheduled"
+          : "to-confirm",
+      }));
+    setTodayItems(list);
+  }, [weekSessions]);
 
   const sessionsByDay = useMemo(() => {
     const map = new Map<string, WeekSession[]>();
@@ -178,20 +323,62 @@ export default function Dashboard() {
     return map;
   }, [weekDays, weekSessions]);
 
-  const counts = weekDays.map(
-    (d) => sessionsByDay.get(d.toDateString())?.length ?? 0,
-  );
+  const counts = weekDays.map((d) => sessionsByDay.get(d.toDateString())?.length ?? 0);
   const maxWeek = Math.max(1, ...counts);
   const totalWeek = counts.reduce((a, b) => a + b, 0);
-  const selectedSessions =
-    sessionsByDay.get(selectedDate.toDateString()) ?? [];
+  const weekRemaining = weekSessions.filter(
+    (s) => s.status !== "completed" && s.status !== "no_show",
+  ).length;
+  const selectedSessions = sessionsByDay.get(selectedDate.toDateString()) ?? [];
   const selectedLabel = format(selectedDate, "EEEE", { locale: ptBR });
+
+  const nextTime = useMemo(() => {
+    const now = new Date();
+    const upcoming = weekSessions
+      .filter((s) => new Date(s.scheduled_at) >= now && s.status !== "completed" && s.status !== "no_show")
+      .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0];
+    return upcoming ? format(new Date(upcoming.scheduled_at), "HH:mm") : "—";
+  }, [weekSessions]);
+
+  const KPI = useMemo(
+    () => [
+      {
+        label: "Pacientes ativos",
+        value: String(activePatients),
+        hint: newPatientsMonth > 0 ? `+${newPatientsMonth} neste mês` : "Nenhum novo neste mês",
+        to: "/app/pacientes",
+      },
+      {
+        label: "Sessões na semana",
+        value: String(totalWeek),
+        hint: `${weekRemaining} ainda por realizar`,
+        to: "/app/agenda",
+      },
+      {
+        label: "Comparecimento",
+        value: attendancePct == null ? "—" : `${attendancePct}%`,
+        hint:
+          attendancePct == null
+            ? "Sem sessões suficientes"
+            : attendanceDelta == null
+              ? "Últimos 60 dias"
+              : `${attendanceDelta >= 0 ? "+" : ""}${attendanceDelta}% sobre período anterior`,
+        to: "/app/agenda",
+      },
+    ],
+    [activePatients, newPatientsMonth, totalWeek, weekRemaining, attendancePct, attendanceDelta],
+  );
+
+  const PENDINGS = [
+    { icon: ClipboardList, label: "Registros pendentes", count: pendingRecords, to: "/app/registro-sessao" },
+    { icon: CalendarX, label: "Sem próxima sessão", count: semProxima, to: "/app/pacientes?filter=sem-proxima" },
+    { icon: CircleDollarSign, label: "Pagamentos atrasados", count: pagamentosAtrasados, to: "/app/financeiro?filter=atrasados" },
+    { icon: UserMinus, label: "Baixa adesão", count: baixaAdesao, to: "/app/pacientes?filter=baixa-adesao" },
+  ];
 
   const tabsRef = useRef<HTMLDivElement>(null);
   const onTabsKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    const idx = weekDays.findIndex((d) =>
-      isSameDay(d, selectedDate),
-    );
+    const idx = weekDays.findIndex((d) => isSameDay(d, selectedDate));
     let next = idx;
     if (e.key === "ArrowRight") next = Math.min(weekDays.length - 1, idx + 1);
     else if (e.key === "ArrowLeft") next = Math.max(0, idx - 1);
@@ -200,15 +387,12 @@ export default function Dashboard() {
     else return;
     e.preventDefault();
     setSelectedDate(weekDays[next]);
-    const btn = tabsRef.current?.querySelectorAll<HTMLButtonElement>(
-      '[role="tab"]',
-    )[next];
+    const btn = tabsRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next];
     btn?.focus();
   };
 
   const handleAction = (label: string) =>
     toast.success(label, { description: "Ação simulada nesta versão." });
-
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -217,7 +401,7 @@ export default function Dashboard() {
         <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
             <h1 className="font-display text-2xl md:text-[28px] leading-tight font-semibold tracking-tight text-foreground">
-              {greeting()}, {displayName}
+              {greeting()}{displayName ? `, ${displayName}` : ""}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {capDate} · Próxima sessão às{" "}
@@ -229,7 +413,7 @@ export default function Dashboard() {
               variant="outline"
               size="sm"
               className="h-10 rounded-full gap-2"
-              onClick={() => handleAction("Buscar paciente")}
+              onClick={() => navigate("/app/pacientes")}
             >
               <Search className="h-4 w-4" />
               Buscar paciente
@@ -237,7 +421,7 @@ export default function Dashboard() {
             <Button
               size="sm"
               className="h-10 rounded-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => handleAction("Nova sessão")}
+              onClick={() => navigate("/app/agenda")}
             >
               <Plus className="h-4 w-4" />
               Nova sessão
@@ -285,10 +469,7 @@ export default function Dashboard() {
         {/* ─ Hoje ─ */}
         <section aria-labelledby="today-heading" className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2
-              id="today-heading"
-              className="font-display text-xl font-semibold tracking-tight"
-            >
+            <h2 id="today-heading" className="font-display text-xl font-semibold tracking-tight">
               Hoje
             </h2>
             <Button
@@ -302,14 +483,20 @@ export default function Dashboard() {
           </div>
 
           <Card className="rounded-2xl border-border/60 divide-y divide-border/60 overflow-hidden">
-            {TODAY.map((s) => (
-              <TodayRow
-                key={s.id}
-                item={s}
-                onOpen={() => handleAction(`Abrindo sessão de ${s.name}`)}
-                onConfirm={() => handleAction(`Sessão de ${s.name} confirmada`)}
-              />
-            ))}
+            {todayItems.length === 0 ? (
+              <div className="px-5 py-8 text-center text-sm text-muted-foreground">
+                Nenhuma sessão agendada para hoje.
+              </div>
+            ) : (
+              todayItems.map((s) => (
+                <TodayRow
+                  key={s.id}
+                  item={s}
+                  onOpen={() => navigate("/app/agenda")}
+                  onConfirm={() => handleAction(`Sessão de ${s.name} confirmada`)}
+                />
+              ))
+            )}
           </Card>
         </section>
 
@@ -406,22 +593,17 @@ export default function Dashboard() {
                       <span
                         className={cn(
                           "text-xs flex flex-col items-center leading-tight",
-                          active
-                            ? "text-foreground font-medium"
-                            : "text-muted-foreground",
+                          active ? "text-foreground font-medium" : "text-muted-foreground",
                         )}
                       >
                         {label}
-                        {isToday(d) && (
-                          <span className="text-[10px] text-primary">hoje</span>
-                        )}
+                        {isToday(d) && <span className="text-[10px] text-primary">hoje</span>}
                       </span>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Resumo do dia selecionado */}
               <div
                 id="weekday-panel"
                 role="tabpanel"
@@ -440,10 +622,7 @@ export default function Dashboard() {
                 {loadingWeek ? (
                   <div className="space-y-2">
                     {[0, 1, 2].map((i) => (
-                      <div
-                        key={i}
-                        className="h-10 rounded-lg bg-muted/50 animate-pulse"
-                      />
+                      <div key={i} className="h-10 rounded-lg bg-muted/50 animate-pulse" />
                     ))}
                   </div>
                 ) : selectedSessions.length === 0 ? (
@@ -478,7 +657,6 @@ export default function Dashboard() {
                 )}
               </div>
             </Card>
-
           </div>
         </section>
 
@@ -490,19 +668,19 @@ export default function Dashboard() {
                 <div>
                   <p className="text-xs text-muted-foreground">Recebido</p>
                   <p className="mt-1 font-display text-lg font-semibold text-emerald-700 dark:text-emerald-400">
-                    R$ 2.005
+                    {fmtBRL(finRecebido)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">A receber</p>
                   <p className="mt-1 font-display text-lg font-semibold text-foreground">
-                    R$ 7.992
+                    {fmtBRL(finAReceber)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Em atraso</p>
                   <p className="mt-1 font-display text-lg font-semibold text-amber-700 dark:text-amber-400">
-                    2 pagamentos
+                    {finAtrasoCount} {finAtrasoCount === 1 ? "pagamento" : "pagamentos"}
                   </p>
                 </div>
               </div>
@@ -549,8 +727,6 @@ function TodayRow({
           {item.name}
         </p>
         <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
-          Sessão {item.session}
-          <span className="text-muted-foreground/50">·</span>
           <ModeIcon className="h-3 w-3" />
           {item.mode}
         </p>
@@ -564,23 +740,17 @@ function TodayRow({
             <CheckCircle2 className="h-3 w-3" />
             Confirmada
           </Badge>
-        ) : item.status === "to-confirm" ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onConfirm}
-            className="rounded-full h-8"
-          >
-            Confirmar
+        ) : item.status === "completed" ? (
+          <Badge variant="secondary" className="rounded-full">Realizada</Badge>
+        ) : item.status === "no_show" ? (
+          <Badge variant="secondary" className="rounded-full bg-amber-50 text-amber-700 border-amber-100">Falta</Badge>
+        ) : item.status === "scheduled" ? (
+          <Button variant="outline" size="sm" onClick={onOpen} className="rounded-full h-8">
+            Abrir sessão
           </Button>
         ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onOpen}
-            className="rounded-full h-8"
-          >
-            Abrir sessão
+          <Button variant="outline" size="sm" onClick={onConfirm} className="rounded-full h-8">
+            Confirmar
           </Button>
         )}
         <Tooltip>
@@ -622,4 +792,3 @@ function StatusDot({ status }: { status: string }) {
     </Tooltip>
   );
 }
-
