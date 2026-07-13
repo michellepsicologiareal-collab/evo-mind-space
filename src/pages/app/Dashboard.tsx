@@ -83,6 +83,25 @@ function fmtBRL(n: number) {
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }
 
+function fmtBRL2(n: number) {
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Detecta sessão de Plano de Atendimento (série recorrente) pelo marcador na notes
+const PLAN_MARKER_RE = /Plano\s+\d+\s+sess/i;
+const GROUP_ID_RE = /\[([^\]]+)\]/;
+function isRecurringSession(notes: string | null | undefined) {
+  return !!notes && PLAN_MARKER_RE.test(notes);
+}
+function getSeriesKey(s: { patient_id: string; notes: string | null | undefined }) {
+  if (!s.notes) return null;
+  const g = s.notes.match(GROUP_ID_RE);
+  if (g) return `g:${g[1]}`;
+  const m = s.notes.match(/Plano\s+(\d+)\s+sess/i);
+  if (m) return `p:${s.patient_id}:${m[1]}`;
+  return null;
+}
+
 /* ─── Page ─── */
 export default function Dashboard() {
   const { user } = useAuth();
