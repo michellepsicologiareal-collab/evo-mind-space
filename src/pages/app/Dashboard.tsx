@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { fetchWeekSessions } from "@/lib/sessions/weekSessions";
 
 /* ─── Real data types ─── */
 interface WeekSession {
@@ -123,39 +124,24 @@ export default function Dashboard() {
   const [finAtrasoCount, setFinAtrasoCount] = useState(0);
   const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
 
-  // Weekly sessions (real)
+  // Weekly sessions (real) — fonte única compartilhada com a Agenda semanal
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
     (async () => {
       setLoadingWeek(true);
-      const { data, error } = await supabase
-        .from("sessions")
-        .select("id, scheduled_at, status, modality, patient:patients!sessions_patient_id_fkey(full_name)")
-        .eq("user_id", user.id)
-        .gte("scheduled_at", weekStart.toISOString())
-        .lte("scheduled_at", weekEnd.toISOString())
-        .neq("status", "cancelled")
-        .order("scheduled_at", { ascending: true });
+      const { data, error } = await fetchWeekSessions({ userId: user.id, reference: today });
       if (cancelled) return;
       if (error) {
         toast.error("Não foi possível carregar a agenda da semana");
         setWeekSessions([]);
       } else {
-        setWeekSessions(
-          (data ?? []).map((r: any) => ({
-            id: r.id,
-            scheduled_at: r.scheduled_at,
-            status: r.status,
-            modality: r.modality,
-            patient_name: r.patient?.full_name ?? "Paciente",
-          })),
-        );
+        setWeekSessions(data);
       }
       setLoadingWeek(false);
     })();
     return () => { cancelled = true; };
-  }, [user?.id, weekStart, weekEnd]);
+  }, [user?.id, today]);
 
   // KPIs, pendings, finance
   useEffect(() => {
