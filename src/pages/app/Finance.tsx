@@ -137,7 +137,21 @@ const Finance = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [monthCursor, setMonthCursor] = useState<Date>(new Date());
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rawRows, setRawRows] = useState<Row[]>([]);
+  const [patientFilter, setPatientFilter] = useState<string>("all");
+  const rows = useMemo(
+    () => (patientFilter === "all" ? rawRows : rawRows.filter((r) => r.patient?.id === patientFilter)),
+    [rawRows, patientFilter]
+  );
+  const patientOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const r of rawRows) {
+      if (r.patient?.id && r.patient?.full_name) map.set(r.patient.id, r.patient.full_name);
+    }
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  }, [rawRows]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
   const [fortnightFilter, setFortnightFilter] = useState<FortnightFilter>("all");
