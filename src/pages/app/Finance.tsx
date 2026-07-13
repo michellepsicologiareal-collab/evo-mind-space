@@ -137,7 +137,21 @@ const Finance = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [monthCursor, setMonthCursor] = useState<Date>(new Date());
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rawRows, setRawRows] = useState<Row[]>([]);
+  const [patientFilter, setPatientFilter] = useState<string>("all");
+  const rows = useMemo(
+    () => (patientFilter === "all" ? rawRows : rawRows.filter((r) => r.patient?.id === patientFilter)),
+    [rawRows, patientFilter]
+  );
+  const patientOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const r of rawRows) {
+      if (r.patient?.id && r.patient?.full_name) map.set(r.patient.id, r.patient.full_name);
+    }
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+  }, [rawRows]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
   const [fortnightFilter, setFortnightFilter] = useState<FortnightFilter>("all");
@@ -175,7 +189,7 @@ const Finance = () => {
       setLoading(false);
       return;
     }
-    setRows((data ?? []) as any);
+    setRawRows((data ?? []) as any);
     setLoading(false);
   };
 
@@ -785,6 +799,29 @@ const Finance = () => {
               <SelectItem value="issued">Emitido</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="patient-filter" className="text-xs text-muted-foreground">Paciente</Label>
+          <Select value={patientFilter} onValueChange={setPatientFilter}>
+            <SelectTrigger id="patient-filter" className="h-9 w-[220px]">
+              <SelectValue placeholder="Todos os pacientes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os pacientes</SelectItem>
+              {patientOptions.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {patientFilter !== "all" && (
+            <button
+              type="button"
+              onClick={() => setPatientFilter("all")}
+              className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+            >
+              limpar
+            </button>
+          )}
         </div>
       </div>
 
