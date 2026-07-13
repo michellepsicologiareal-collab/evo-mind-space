@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { fetchWeekSessions } from "@/lib/sessions/weekSessions";
 
 /* ─── Real data types ─── */
 interface WeekSession {
