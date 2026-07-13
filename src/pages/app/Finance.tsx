@@ -354,6 +354,43 @@ const Finance = () => {
     [fortnightAllValid]
   );
 
+  // Volume de atendimentos — sessões não canceladas no período/quinzena
+  const volumeRows = useMemo(
+    () => fortnightFilter_(rows.filter((r) => r.status !== "cancelled")),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rows, fortnightFilter]
+  );
+
+  // Pacotes no mês: contar referências distintas (por paciente + referência)
+  const packagesStats = useMemo(() => {
+    const packageKeys = new Set<string>();
+    let sessionsInPackages = 0;
+    for (const r of volumeRows) {
+      const ref = (r.payment_reference ?? "").trim();
+      if (!ref) continue;
+      const pid = r.patient?.id ?? r.patient?.full_name ?? "—";
+      packageKeys.add(`${pid}::${ref.toLowerCase()}`);
+      sessionsInPackages++;
+    }
+    return { count: packageKeys.size, sessions: sessionsInPackages };
+  }, [volumeRows]);
+
+  // Sessões avulsas no mês: sessões sem referência de pacote
+  const avulsasStats = useMemo(() => {
+    let count = 0;
+    const patients = new Set<string>();
+    for (const r of volumeRows) {
+      const ref = (r.payment_reference ?? "").trim();
+      if (ref) continue;
+      count++;
+      const pid = r.patient?.id ?? r.patient?.full_name;
+      if (pid) patients.add(pid);
+    }
+    return { count, patients: patients.size };
+  }, [volumeRows]);
+
+
+
   const recentMissing = useMemo(() => {
     if (!reminderEnabled) return [];
     const cutoff = Date.now() - reminderWindow * 60 * 60 * 1000;
