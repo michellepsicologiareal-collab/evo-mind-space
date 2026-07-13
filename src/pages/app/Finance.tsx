@@ -700,34 +700,50 @@ const Finance = () => {
       </section>
 
       {/* Alerts row — filtros clicáveis que refinam a lista de sessões */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <section className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {([
-          { key: "receita_saude" as QuickAlert, label: "Receita Saúde pendente", icon: Receipt, count: receitaSaudeToIssue.length, tone: "text-amber-600 bg-amber-50 border-amber-200" },
-          { key: "sem_pagamento" as QuickAlert, label: "Sessões realizadas sem pagamento", icon: FileWarning, count: sessoesPendentes, tone: "text-destructive bg-destructive/10 border-destructive/30" },
-          { key: "pix_sem_conf" as QuickAlert, label: "PIX recebido sem confirmação", icon: AlertTriangle, count: recentMissing.length, tone: "text-amber-700 bg-amber-50 border-amber-200" },
-          { key: "pacotes_vencendo" as QuickAlert, label: "Pacotes vencendo", icon: PackageOpen, count: 0, tone: "text-primary bg-secondary/60 border-border" },
-        ]).map((a) => {
-          const active = quickAlert === a.key;
+          { key: "receita_saude" as QuickAlert, label: "Receita Saúde pendente", hint: `${receitaSaudeToIssue.length} a emitir`, icon: Receipt, count: receitaSaudeToIssue.length, tone: "text-amber-600 bg-amber-50 border-amber-200", clickable: true },
+          { key: "sem_pagamento" as QuickAlert, label: "Sessões realizadas sem pagamento", hint: `${sessoesPendentes} pendentes`, icon: FileWarning, count: sessoesPendentes, tone: "text-destructive bg-destructive/10 border-destructive/30", clickable: true },
+          { key: "none" as QuickAlert, label: "Pacotes no mês", hint: `${packagesStats.sessions} ${packagesStats.sessions === 1 ? "sessão vinculada" : "sessões vinculadas"} a pacotes`, icon: PackageOpen, count: packagesStats.count, tone: "text-primary bg-secondary/60 border-border", clickable: false },
+          { key: "none" as QuickAlert, label: "Sessões avulsas no mês", hint: `${avulsasStats.patients} ${avulsasStats.patients === 1 ? "paciente" : "pacientes"} com sessões avulsas`, icon: CalendarClock, count: avulsasStats.count, tone: "text-foreground bg-card border-border", clickable: false },
+          { key: "pacotes_vencendo" as QuickAlert, label: "Pacotes vencendo", hint: "sem regra definida", icon: PackageOpen, count: 0, tone: "text-muted-foreground bg-secondary/40 border-border", clickable: false },
+        ]).map((a, idx) => {
+          const active = a.clickable && quickAlert === a.key;
           const Icon = a.icon;
-          return (
-            <button
-              key={a.key}
-              type="button"
-              onClick={() => {
-                setQuickAlert((cur) => (cur === a.key ? "none" : a.key));
-                sessionsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-              className={`text-left rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:shadow-soft ${a.tone} ${active ? "ring-2 ring-offset-2 ring-primary/60" : ""}`}
-            >
+          const commonClass = `text-left rounded-2xl border p-4 transition-all ${a.tone} ${a.clickable ? "hover:-translate-y-0.5 hover:shadow-soft" : "cursor-default"} ${active ? "ring-2 ring-offset-2 ring-primary/60" : ""}`;
+          const content = (
+            <>
               <div className="flex items-center justify-between gap-3">
                 <Icon className="h-4 w-4 shrink-0" />
                 <span className="font-display text-2xl font-semibold">{a.count}</span>
               </div>
               <p className="mt-2 text-xs font-medium leading-snug">{a.label}</p>
+              {a.hint && <p className="mt-0.5 text-[11px] opacity-80 leading-snug">{a.hint}</p>}
+            </>
+          );
+          if (!a.clickable) {
+            return (
+              <div key={`${a.label}-${idx}`} className={commonClass}>
+                {content}
+              </div>
+            );
+          }
+          return (
+            <button
+              key={`${a.label}-${idx}`}
+              type="button"
+              onClick={() => {
+                setQuickAlert((cur) => (cur === a.key ? "none" : a.key));
+                sessionsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              className={commonClass}
+            >
+              {content}
             </button>
           );
         })}
       </section>
+
 
       {/* Fortnight filter */}
       <div className="flex flex-wrap items-center gap-3">
