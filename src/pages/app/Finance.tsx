@@ -800,6 +800,29 @@ const Finance = () => {
             </SelectContent>
           </Select>
         </div>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="patient-filter" className="text-xs text-muted-foreground">Paciente</Label>
+          <Select value={patientFilter} onValueChange={setPatientFilter}>
+            <SelectTrigger id="patient-filter" className="h-9 w-[220px]">
+              <SelectValue placeholder="Todos os pacientes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os pacientes</SelectItem>
+              {patientOptions.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {patientFilter !== "all" && (
+            <button
+              type="button"
+              onClick={() => setPatientFilter("all")}
+              className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+            >
+              limpar
+            </button>
+          )}
+        </div>
       </div>
 
 
