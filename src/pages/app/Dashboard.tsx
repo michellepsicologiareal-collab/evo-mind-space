@@ -313,6 +313,29 @@ export default function Dashboard() {
       setFinRecebido(recebido);
       setFinAReceber(aReceber);
       setFinAtrasoCount(atrasoQtd);
+
+      // Valor médio por sessão (mês) — sessões com price > 0, não canceladas
+      const validPriced = monthRows.filter((s) => Number(s.price ?? 0) > 0);
+      const avgS = validPriced.length
+        ? validPriced.reduce((acc, s) => acc + Number(s.price), 0) / validPriced.length
+        : null;
+      setAvgSessionPrice(avgS);
+
+      // Valor médio do Plano de Atendimento (mês) — série recorrente identificada via notes
+      const seriesTotals = new Map<string, number>();
+      monthRows.forEach((s) => {
+        if (!isRecurringSession(s.notes)) return;
+        const key = getSeriesKey(s);
+        if (!key) return;
+        const price = Number(s.price ?? 0);
+        if (!(price > 0)) return;
+        seriesTotals.set(key, (seriesTotals.get(key) ?? 0) + price);
+      });
+      const planCount = seriesTotals.size;
+      const avgP = planCount
+        ? Array.from(seriesTotals.values()).reduce((a, b) => a + b, 0) / planCount
+        : null;
+      setAvgPlanValue(avgP);
     })();
     return () => { cancelled = true; };
   }, [user?.id]);
