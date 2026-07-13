@@ -1104,12 +1104,12 @@ const Finance = () => {
             const pkgCount = p.packageCounts.size;
             const pkgSessions = Array.from(p.packageCounts.values()).reduce((s, n) => s + n, 0);
             const av = p.avulsasCount;
-            const avLabel = av > 0 ? `${av} ${av === 1 ? "avulsa" : "avulsas"}` : "";
+            const avLabel = av > 0 ? `${av} ${av === 1 ? "sessão única" : "sessões únicas"}` : "";
             let pkgLabel = "";
             if (pkgCount === 1) {
-              pkgLabel = `Pacote com ${pkgSessions} ${pkgSessions === 1 ? "sessão" : "sessões"}`;
+              pkgLabel = `Plano de Atendimento • ${pkgSessions} ${pkgSessions === 1 ? "sessão" : "sessões"}`;
             } else if (pkgCount > 1) {
-              pkgLabel = `${pkgCount} pacotes, total de ${pkgSessions} ${pkgSessions === 1 ? "sessão" : "sessões"}`;
+              pkgLabel = `${pkgCount} Planos de Atendimento, total de ${pkgSessions} ${pkgSessions === 1 ? "sessão" : "sessões"}`;
             }
             if (avLabel && pkgLabel) return `${avLabel} + ${pkgLabel.toLowerCase()}`;
             return avLabel || pkgLabel || "—";
