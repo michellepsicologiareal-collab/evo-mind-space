@@ -325,7 +325,7 @@ export default function Dashboard() {
 
   const counts = weekDays.map((d) => sessionsByDay.get(d.toDateString())?.length ?? 0);
   const maxWeek = Math.max(1, ...counts);
-  const totalWeek = counts.reduce((a, b) => a + b, 0);
+  const totalWeek = weekSessions.length;
   const weekRemaining = weekSessions.filter(
     (s) => s.status !== "completed" && s.status !== "no_show",
   ).length;
