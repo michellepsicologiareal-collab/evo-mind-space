@@ -925,11 +925,15 @@ const Finance = () => {
             key: string;
             name: string;
             patientId: string | null;
+            referenceLabel: string;
+            isAvulsa: boolean;
             realizadas: number;
+            previstas: number;
             pagas: number;
             totalValue: number;
             nextSession: Date | null;
             allBillable: Row[];
+            allInGroup: Row[];
             latestBillable: Row | null;
             hasPending: boolean;
             oldestPendingDays: number;
@@ -940,30 +944,42 @@ const Finance = () => {
           const map = new Map<string, Aggregate>();
           for (const r of fortnightAllValid) {
             const name = r.patient?.full_name ?? "—";
-            let e = map.get(name);
+            const patientId = r.patient?.id ?? null;
+            const rawRef = (r.payment_reference ?? "").trim();
+            const hasRef = rawRef.length > 0;
+            const groupKey = hasRef
+              ? `${patientId ?? name}::ref::${rawRef.toLowerCase()}`
+              : `${patientId ?? name}::avulsa::${r.id}`;
+            let e = map.get(groupKey);
             if (!e) {
               e = {
-                key: name,
+                key: groupKey,
                 name,
-                patientId: r.patient?.id ?? null,
+                patientId,
+                referenceLabel: hasRef ? rawRef : "Sessão avulsa",
+                isAvulsa: !hasRef,
                 realizadas: 0,
+                previstas: 0,
                 pagas: 0,
                 totalValue: 0,
                 nextSession: null,
                 allBillable: [],
+                allInGroup: [],
                 latestBillable: null,
                 hasPending: false,
                 oldestPendingDays: 0,
                 receitaToIssueCount: 0,
                 receitaIssuedCount: 0,
               };
-              map.set(name, e);
+              map.set(groupKey, e);
             }
-            if (!e.patientId && r.patient?.id) e.patientId = r.patient.id;
+            if (!e.patientId && patientId) e.patientId = patientId;
+            e.allInGroup.push(r);
             if (r.receita_saude_status === "to_issue") e.receitaToIssueCount++;
             else if (r.receita_saude_status === "issued") e.receitaIssuedCount++;
             if (r.status === "completed") {
               e.realizadas++;
+              e.previstas++;
               e.totalValue += Number(r.price ?? 0);
               e.allBillable.push(r);
               if (r.payment_status === "paid") e.pagas++;
@@ -976,20 +992,25 @@ const Finance = () => {
                 e.latestBillable = r;
               }
             } else if (r.status === "scheduled" || r.status === "confirmed") {
+              e.previstas++;
               const d = new Date(r.scheduled_at);
               if (d.getTime() >= now && (!e.nextSession || d < e.nextSession)) {
                 e.nextSession = d;
               }
             }
           }
-          const allAggregates = Array.from(map.values()).sort((a, b) =>
-            a.name.localeCompare(b.name, "pt-BR")
-          );
+          const allAggregates = Array.from(map.values()).sort((a, b) => {
+            const byName = a.name.localeCompare(b.name, "pt-BR");
+            if (byName !== 0) return byName;
+            if (a.isAvulsa !== b.isAvulsa) return a.isAvulsa ? 1 : -1;
+            return a.referenceLabel.localeCompare(b.referenceLabel, "pt-BR");
+          });
           const patients = allAggregates.filter((p) => {
             if (receitaSaudeFilter === "to_issue") return p.receitaToIssueCount > 0;
             if (receitaSaudeFilter === "issued") return p.receitaIssuedCount > 0 && p.receitaToIssueCount === 0;
             return true;
           });
+
 
           if (loading) {
             return <p className="text-center py-12 text-muted-foreground">Carregando…</p>;
@@ -1039,12 +1060,13 @@ const Finance = () => {
               </div>
 
               <div className="overflow-x-auto -mx-4 lg:mx-0">
-                <table className="w-full min-w-[900px] text-sm">
+                <table className="w-full min-w-[1040px] text-sm">
                   <thead>
                     <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border">
                       <th className="py-2.5 px-3 font-medium">Paciente</th>
-                      <th className="py-2.5 px-3 font-medium">Pacote / sessões</th>
-                      <th className="py-2.5 px-3 font-medium w-[120px]">Progresso</th>
+                      <th className="py-2.5 px-3 font-medium">Referência</th>
+                      <th className="py-2.5 px-3 font-medium">Sessões</th>
+                      <th className="py-2.5 px-3 font-medium w-[130px]">Progresso</th>
                       <th className="py-2.5 px-3 font-medium">Próxima sessão</th>
                       <th className="py-2.5 px-3 font-medium">Valor</th>
                       <th className="py-2.5 px-3 font-medium">Pagamento</th>
@@ -1057,11 +1079,12 @@ const Finance = () => {
                     {patients.map((p) => {
                       const sit = situacaoFor(p);
                       const pay = pagamentoFor(p);
-                      const progress = p.realizadas > 0 ? (p.pagas / p.realizadas) * 100 : 0;
-                      const sessionsLabel =
-                        p.realizadas > 0
-                          ? `${p.realizadas} ${p.realizadas === 1 ? "sessão" : "sessões"}`
-                          : "Não informado";
+                      const progress = p.previstas > 0 ? (p.realizadas / p.previstas) * 100 : 0;
+                      const totalSessoes = p.allInGroup.length;
+                      const sessionsLabel = totalSessoes > 0
+                        ? `${totalSessoes} ${totalSessoes === 1 ? "sessão" : "sessões"}`
+                        : "Não informado";
+                      const editTarget = p.latestBillable ?? p.allInGroup[0] ?? null;
                       const openPatient = (tab: "finance" | "sessions", focus?: string) => {
                         if (!p.patientId) return;
                         const focusParam = focus ? `&focus=${focus}` : "";
@@ -1073,7 +1096,7 @@ const Finance = () => {
                           key={p.key}
                           role={rowClickable ? "button" : undefined}
                           tabIndex={rowClickable ? 0 : undefined}
-                          aria-label={rowClickable ? `Abrir ficha financeira de ${p.name}` : undefined}
+                          aria-label={rowClickable ? `Abrir ficha financeira de ${p.name} — ${p.referenceLabel}` : undefined}
                           onClick={rowClickable ? () => openPatient("finance") : undefined}
                           onKeyDown={rowClickable ? (e) => {
                             if (e.key === "Enter" || e.key === " ") {
@@ -1086,17 +1109,28 @@ const Finance = () => {
                           <td className="py-3 px-3">
                             <p className="font-medium text-foreground truncate max-w-[220px]">{p.name}</p>
                           </td>
+                          <td className="py-3 px-3">
+                            {p.isAvulsa ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
+                                Sessão avulsa
+                              </span>
+                            ) : (
+                              <span className="text-sm text-foreground truncate max-w-[200px] inline-block align-middle" title={p.referenceLabel}>
+                                {p.referenceLabel}
+                              </span>
+                            )}
+                          </td>
                           <td
                             className={`py-3 px-3 text-muted-foreground ${rowClickable ? "cursor-pointer" : ""}`}
                             onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("sessions"); } : undefined}
                           >
-                            <span className={p.realizadas === 0 ? "italic" : ""}>{sessionsLabel}</span>
+                            <span className={totalSessoes === 0 ? "italic" : ""}>{sessionsLabel}</span>
                           </td>
                           <td
                             className={`py-3 px-3 ${rowClickable ? "cursor-pointer" : ""}`}
                             onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("sessions"); } : undefined}
                           >
-                            {p.realizadas > 0 ? (
+                            {p.previstas > 0 ? (
                               <div className="flex items-center gap-2">
                                 <div className="h-1.5 flex-1 rounded-full bg-secondary overflow-hidden">
                                   <div
@@ -1105,7 +1139,7 @@ const Finance = () => {
                                   />
                                 </div>
                                 <span className="text-[11px] text-muted-foreground tabular-nums w-10 text-right">
-                                  {p.pagas}/{p.realizadas}
+                                  {p.realizadas}/{p.previstas}
                                 </span>
                               </div>
                             ) : (
@@ -1160,12 +1194,12 @@ const Finance = () => {
                                   Marcar pago
                                 </Button>
                               )}
-                              {p.latestBillable && (
+                              {editTarget && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8"
-                                  onClick={(e) => { e.stopPropagation(); setEditing(p.latestBillable!); }}
+                                  onClick={(e) => { e.stopPropagation(); setEditing(editTarget); }}
                                   title="Editar pagamento"
                                 >
                                   <Pencil className="h-4 w-4" />
@@ -1177,6 +1211,7 @@ const Finance = () => {
                       );
                     })}
                   </tbody>
+
                 </table>
               </div>
             </>
