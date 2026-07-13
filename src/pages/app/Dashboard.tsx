@@ -131,7 +131,7 @@ export default function Dashboard() {
       setLoadingWeek(true);
       const { data, error } = await supabase
         .from("sessions")
-        .select("id, scheduled_at, status, modality, patients(full_name)")
+        .select("id, scheduled_at, status, modality, patient:patients!sessions_patient_id_fkey(full_name)")
         .eq("user_id", user.id)
         .gte("scheduled_at", weekStart.toISOString())
         .lte("scheduled_at", weekEnd.toISOString())
@@ -148,7 +148,7 @@ export default function Dashboard() {
             scheduled_at: r.scheduled_at,
             status: r.status,
             modality: r.modality,
-            patient_name: r.patients?.full_name ?? "Paciente",
+            patient_name: r.patient?.full_name ?? "Paciente",
           })),
         );
       }
