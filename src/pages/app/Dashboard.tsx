@@ -148,7 +148,7 @@ export default function Dashboard() {
             scheduled_at: r.scheduled_at,
             status: r.status,
             modality: r.modality,
-            patient_name: r.patients?.full_name ?? "Paciente",
+            patient_name: r.patient?.full_name ?? "Paciente",
           })),
         );
       }
