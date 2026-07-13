@@ -361,7 +361,7 @@ const Finance = () => {
     [rows, fortnightFilter]
   );
 
-  // Pacotes no mês: contar referências distintas (por paciente + referência)
+  // Planos de Atendimento no mês: contar referências distintas (por paciente + referência)
   const packagesStats = useMemo(() => {
     const packageKeys = new Set<string>();
     let sessionsInPackages = 0;
@@ -375,7 +375,7 @@ const Finance = () => {
     return { count: packageKeys.size, sessions: sessionsInPackages };
   }, [volumeRows]);
 
-  // Sessões avulsas no mês: sessões sem referência de pacote
+  // Sessões únicas no mês: sessões sem referência de Plano de Atendimento
   const avulsasStats = useMemo(() => {
     let count = 0;
     const patients = new Set<string>();
@@ -704,9 +704,9 @@ const Finance = () => {
         {([
           { key: "receita_saude" as QuickAlert, label: "Receita Saúde pendente", hint: `${receitaSaudeToIssue.length} a emitir`, icon: Receipt, count: receitaSaudeToIssue.length, tone: "text-amber-600 bg-amber-50 border-amber-200", clickable: true },
           { key: "sem_pagamento" as QuickAlert, label: "Sessões realizadas sem pagamento", hint: `${sessoesPendentes} pendentes`, icon: FileWarning, count: sessoesPendentes, tone: "text-destructive bg-destructive/10 border-destructive/30", clickable: true },
-          { key: "none" as QuickAlert, label: "Pacotes no mês", hint: `${packagesStats.sessions} ${packagesStats.sessions === 1 ? "sessão vinculada" : "sessões vinculadas"} a pacotes`, icon: PackageOpen, count: packagesStats.count, tone: "text-primary bg-secondary/60 border-border", clickable: false },
-          { key: "none" as QuickAlert, label: "Sessões avulsas no mês", hint: `${avulsasStats.patients} ${avulsasStats.patients === 1 ? "paciente" : "pacientes"} com sessões avulsas`, icon: CalendarClock, count: avulsasStats.count, tone: "text-foreground bg-card border-border", clickable: false },
-          { key: "pacotes_vencendo" as QuickAlert, label: "Pacotes vencendo", hint: "sem regra definida", icon: PackageOpen, count: 0, tone: "text-muted-foreground bg-secondary/40 border-border", clickable: false },
+          { key: "none" as QuickAlert, label: "Planos de Atendimento no mês", hint: `${packagesStats.sessions} ${packagesStats.sessions === 1 ? "sessão vinculada" : "sessões vinculadas"} a Planos de Atendimento`, icon: PackageOpen, count: packagesStats.count, tone: "text-primary bg-secondary/60 border-border", clickable: false },
+          { key: "none" as QuickAlert, label: "Sessões únicas no mês", hint: `${avulsasStats.patients} ${avulsasStats.patients === 1 ? "paciente" : "pacientes"} com sessões únicas`, icon: CalendarClock, count: avulsasStats.count, tone: "text-foreground bg-card border-border", clickable: false },
+          { key: "pacotes_vencendo" as QuickAlert, label: "Planos de Atendimento próximos do encerramento", hint: "sem regra definida", icon: PackageOpen, count: 0, tone: "text-muted-foreground bg-secondary/40 border-border", clickable: false },
         ]).map((a, idx) => {
           const active = a.clickable && quickAlert === a.key;
           const Icon = a.icon;
@@ -1104,12 +1104,12 @@ const Finance = () => {
             const pkgCount = p.packageCounts.size;
             const pkgSessions = Array.from(p.packageCounts.values()).reduce((s, n) => s + n, 0);
             const av = p.avulsasCount;
-            const avLabel = av > 0 ? `${av} ${av === 1 ? "avulsa" : "avulsas"}` : "";
+            const avLabel = av > 0 ? `${av} ${av === 1 ? "sessão única" : "sessões únicas"}` : "";
             let pkgLabel = "";
             if (pkgCount === 1) {
-              pkgLabel = `Pacote com ${pkgSessions} ${pkgSessions === 1 ? "sessão" : "sessões"}`;
+              pkgLabel = `Plano de Atendimento • ${pkgSessions} ${pkgSessions === 1 ? "sessão" : "sessões"}`;
             } else if (pkgCount > 1) {
-              pkgLabel = `${pkgCount} pacotes, total de ${pkgSessions} ${pkgSessions === 1 ? "sessão" : "sessões"}`;
+              pkgLabel = `${pkgCount} Planos de Atendimento, total de ${pkgSessions} ${pkgSessions === 1 ? "sessão" : "sessões"}`;
             }
             if (avLabel && pkgLabel) return `${avLabel} + ${pkgLabel.toLowerCase()}`;
             return avLabel || pkgLabel || "—";
