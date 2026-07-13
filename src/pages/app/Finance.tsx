@@ -34,6 +34,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   TrendingUp,
   Wallet,
   Clock,
@@ -1070,7 +1075,7 @@ const Finance = () => {
                       <th className="py-2.5 px-3 font-medium">Próxima sessão</th>
                       <th className="py-2.5 px-3 font-medium">Valor</th>
                       <th className="py-2.5 px-3 font-medium">Pagamento</th>
-                      <th className="py-2.5 px-3 font-medium">Receita Saúde</th>
+                      <th className="py-2.5 px-3 font-medium">RS</th>
                       <th className="py-2.5 px-3 font-medium">Situação</th>
                       <th className="py-2.5 px-3 font-medium text-right">Ações</th>
                     </tr>
@@ -1161,17 +1166,31 @@ const Finance = () => {
                             className={`py-3 px-3 text-xs ${rowClickable ? "cursor-pointer" : ""}`}
                             onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("finance", "receita-saude"); } : undefined}
                           >
-                            {p.receitaToIssueCount > 0 ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-amber-500/10 text-amber-700 dark:text-amber-500">
-                                A emitir{p.receitaToIssueCount > 1 ? ` · ${p.receitaToIssueCount}` : ""}
-                              </span>
-                            ) : p.receitaIssuedCount > 0 ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-moss/10 text-moss">
-                                Emitido{p.receitaIssuedCount > 1 ? ` · ${p.receitaIssuedCount}` : ""}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground italic">Não informado</span>
-                            )}
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span
+                                  className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-sm ${
+                                    p.receitaToIssueCount > 0 || p.receitaIssuedCount > 0
+                                      ? "bg-moss/10 text-moss"
+                                      : "bg-secondary text-muted-foreground"
+                                  }`}
+                                  aria-label={
+                                    p.receitaToIssueCount > 0 || p.receitaIssuedCount > 0
+                                      ? "Receita Saúde"
+                                      : "Atendimento Particular"
+                                  }
+                                >
+                                  {p.receitaToIssueCount > 0 || p.receitaIssuedCount > 0 ? "✅" : "—"}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  {p.receitaToIssueCount > 0 || p.receitaIssuedCount > 0
+                                    ? "✅ Receita Saúde"
+                                    : "— Atendimento Particular"}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
                           </td>
                           <td className="py-3 px-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${sit.tone}`}>
