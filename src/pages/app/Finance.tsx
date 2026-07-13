@@ -380,27 +380,27 @@ const Finance = () => {
     [rows, fortnightFilter]
   );
 
-  // Planos de Atendimento no mês: contar referências distintas (por paciente + referência)
+  // Planos de Atendimento no mês: séries recorrentes distintas com pelo
+  // menos uma sessão no período (identificadas pelo marcador da Agenda em `notes`).
   const packagesStats = useMemo(() => {
-    const packageKeys = new Set<string>();
+    const seriesKeys = new Set<string>();
     let sessionsInPackages = 0;
     for (const r of volumeRows) {
-      const ref = (r.payment_reference ?? "").trim();
-      if (!ref) continue;
-      const pid = r.patient?.id ?? r.patient?.full_name ?? "—";
-      packageKeys.add(`${pid}::${ref.toLowerCase()}`);
+      if (!isRecurringSession(r.notes)) continue;
       sessionsInPackages++;
+      const key = getSeriesKey(r);
+      if (key) seriesKeys.add(key);
     }
-    return { count: packageKeys.size, sessions: sessionsInPackages };
+    return { count: seriesKeys.size, sessions: sessionsInPackages };
   }, [volumeRows]);
 
-  // Sessões únicas no mês: sessões sem referência de Plano de Atendimento
+  // Sessões únicas no mês: agendamentos criados como sessão única na Agenda
+  // (sem marcador de recorrência em `notes`).
   const avulsasStats = useMemo(() => {
     let count = 0;
     const patients = new Set<string>();
     for (const r of volumeRows) {
-      const ref = (r.payment_reference ?? "").trim();
-      if (ref) continue;
+      if (isRecurringSession(r.notes)) continue;
       count++;
       const pid = r.patient?.id ?? r.patient?.full_name;
       if (pid) patients.add(pid);
