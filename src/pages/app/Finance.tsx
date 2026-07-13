@@ -189,7 +189,7 @@ const Finance = () => {
       setLoading(false);
       return;
     }
-    setRows((data ?? []) as any);
+    setRawRows((data ?? []) as any);
     setLoading(false);
   };
 
