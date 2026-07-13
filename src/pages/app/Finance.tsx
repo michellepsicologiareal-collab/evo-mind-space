@@ -930,65 +930,83 @@ const Finance = () => {
             key: string;
             name: string;
             patientId: string | null;
-            referenceLabel: string;
-            isAvulsa: boolean;
+            totalSessions: number;
             realizadas: number;
-            previstas: number;
-            pagas: number;
+            faltas: number;
+            aRealizar: number;
+            avulsasCount: number;
+            packageCounts: Map<string, number>;
             totalValue: number;
             nextSession: Date | null;
             allBillable: Row[];
             allInGroup: Row[];
             latestBillable: Row | null;
+            paidCount: number;
+            pendingCount: number;
             hasPending: boolean;
             oldestPendingDays: number;
             receitaToIssueCount: number;
             receitaIssuedCount: number;
+            receitaNoneCount: number;
           };
           const now = Date.now();
+          // Base: fortnight + non-cancelled (includes no_show for Faltas)
+          const baseRows = fortnightFilter_(rows.filter((r) => r.status !== "cancelled"));
           const map = new Map<string, Aggregate>();
-          for (const r of fortnightAllValid) {
+          for (const r of baseRows) {
             const name = r.patient?.full_name ?? "—";
             const patientId = r.patient?.id ?? null;
-            const rawRef = (r.payment_reference ?? "").trim();
-            const hasRef = rawRef.length > 0;
-            const groupKey = hasRef
-              ? `${patientId ?? name}::ref::${rawRef.toLowerCase()}`
-              : `${patientId ?? name}::avulsa::${r.id}`;
+            const groupKey = patientId ?? `name::${name}`;
             let e = map.get(groupKey);
             if (!e) {
               e = {
                 key: groupKey,
                 name,
                 patientId,
-                referenceLabel: hasRef ? rawRef : "Sessão avulsa",
-                isAvulsa: !hasRef,
+                totalSessions: 0,
                 realizadas: 0,
-                previstas: 0,
-                pagas: 0,
+                faltas: 0,
+                aRealizar: 0,
+                avulsasCount: 0,
+                packageCounts: new Map(),
                 totalValue: 0,
                 nextSession: null,
                 allBillable: [],
                 allInGroup: [],
                 latestBillable: null,
+                paidCount: 0,
+                pendingCount: 0,
                 hasPending: false,
                 oldestPendingDays: 0,
                 receitaToIssueCount: 0,
                 receitaIssuedCount: 0,
+                receitaNoneCount: 0,
               };
               map.set(groupKey, e);
             }
             if (!e.patientId && patientId) e.patientId = patientId;
             e.allInGroup.push(r);
+            e.totalSessions++;
+            e.totalValue += Number(r.price ?? 0);
+
+            const rawRef = (r.payment_reference ?? "").trim();
+            if (rawRef.length > 0) {
+              const k = rawRef.toLowerCase();
+              e.packageCounts.set(k, (e.packageCounts.get(k) ?? 0) + 1);
+            } else {
+              e.avulsasCount++;
+            }
+
             if (r.receita_saude_status === "to_issue") e.receitaToIssueCount++;
             else if (r.receita_saude_status === "issued") e.receitaIssuedCount++;
+            else e.receitaNoneCount++;
+
             if (r.status === "completed") {
               e.realizadas++;
-              e.previstas++;
-              e.totalValue += Number(r.price ?? 0);
               e.allBillable.push(r);
-              if (r.payment_status === "paid") e.pagas++;
+              if (r.payment_status === "paid") e.paidCount++;
               else {
+                e.pendingCount++;
                 e.hasPending = true;
                 const days = Math.floor((now - new Date(r.scheduled_at).getTime()) / 86400000);
                 if (days > e.oldestPendingDays) e.oldestPendingDays = days;
@@ -996,20 +1014,19 @@ const Finance = () => {
               if (!e.latestBillable || new Date(r.scheduled_at) > new Date(e.latestBillable.scheduled_at)) {
                 e.latestBillable = r;
               }
+            } else if (r.status === "no_show") {
+              e.faltas++;
             } else if (r.status === "scheduled" || r.status === "confirmed") {
-              e.previstas++;
+              e.aRealizar++;
               const d = new Date(r.scheduled_at);
               if (d.getTime() >= now && (!e.nextSession || d < e.nextSession)) {
                 e.nextSession = d;
               }
             }
           }
-          const allAggregates = Array.from(map.values()).sort((a, b) => {
-            const byName = a.name.localeCompare(b.name, "pt-BR");
-            if (byName !== 0) return byName;
-            if (a.isAvulsa !== b.isAvulsa) return a.isAvulsa ? 1 : -1;
-            return a.referenceLabel.localeCompare(b.referenceLabel, "pt-BR");
-          });
+          const allAggregates = Array.from(map.values()).sort((a, b) =>
+            a.name.localeCompare(b.name, "pt-BR")
+          );
           const patients = allAggregates.filter((p) => {
             if (receitaSaudeFilter === "to_issue") return p.receitaToIssueCount > 0;
             if (receitaSaudeFilter === "issued") return p.receitaIssuedCount > 0 && p.receitaToIssueCount === 0;
@@ -1030,18 +1047,35 @@ const Finance = () => {
             );
           }
 
-          const situacaoFor = (p: Aggregate) => {
-            if (p.realizadas === 0) return { label: "Agendado", tone: "bg-secondary text-secondary-foreground" };
-            if (!p.hasPending) return { label: "Em dia", tone: "bg-moss/10 text-moss" };
-            if (p.oldestPendingDays > 7) return { label: "Atrasado", tone: "bg-destructive/10 text-destructive" };
-            return { label: "Pendente", tone: "bg-amber-500/10 text-amber-700 dark:text-amber-500" };
+          const modalidadeFor = (p: Aggregate): string => {
+            const pkgCount = p.packageCounts.size;
+            const pkgSessions = Array.from(p.packageCounts.values()).reduce((s, n) => s + n, 0);
+            const av = p.avulsasCount;
+            const avLabel = av > 0 ? `${av} ${av === 1 ? "avulsa" : "avulsas"}` : "";
+            let pkgLabel = "";
+            if (pkgCount === 1) {
+              pkgLabel = `Pacote com ${pkgSessions} ${pkgSessions === 1 ? "sessão" : "sessões"}`;
+            } else if (pkgCount > 1) {
+              pkgLabel = `${pkgCount} pacotes, total de ${pkgSessions} ${pkgSessions === 1 ? "sessão" : "sessões"}`;
+            }
+            if (avLabel && pkgLabel) return `${avLabel} + ${pkgLabel.toLowerCase()}`;
+            return avLabel || pkgLabel || "—";
+          };
+
+          const receitaSaudeFor = (p: Aggregate): { label: string; tone: string } => {
+            const hasIssue = p.receitaToIssueCount > 0;
+            const hasIssued = p.receitaIssuedCount > 0;
+            if (hasIssue && hasIssued) return { label: "Misto", tone: "bg-amber-500/10 text-amber-700 dark:text-amber-500" };
+            if (hasIssue) return { label: "Emitir Receita Saúde", tone: "bg-primary/10 text-primary" };
+            if (hasIssued) return { label: "Receita Saúde emitida", tone: "bg-moss/10 text-moss" };
+            return { label: "Não se aplica", tone: "bg-secondary text-muted-foreground" };
           };
 
           const pagamentoFor = (p: Aggregate) => {
             if (p.realizadas === 0) return { label: "—", tone: "text-muted-foreground" };
-            if (p.pagas === p.realizadas) return { label: "Pago", tone: "text-moss" };
-            if (p.pagas === 0) return { label: "Pendente", tone: "text-destructive" };
-            return { label: `${p.pagas}/${p.realizadas} pago`, tone: "text-amber-600" };
+            if (p.paidCount > 0 && p.pendingCount === 0) return { label: "Pago", tone: "text-moss" };
+            if (p.paidCount === 0 && p.pendingCount > 0) return { label: "Pendente", tone: "text-destructive" };
+            return { label: "Parcial", tone: "text-amber-600" };
           };
 
           return (
@@ -1050,7 +1084,7 @@ const Finance = () => {
                 <div>
                   <h2 className="font-display text-lg font-semibold">Pacientes do período</h2>
                   <p className="text-xs text-muted-foreground">
-                    {patients.length} {patients.length === 1 ? "paciente" : "pacientes"} · reutilizando os dados do mês selecionado
+                    {patients.length} {patients.length === 1 ? "paciente" : "pacientes"} · uma linha por paciente no período selecionado
                   </p>
                 </div>
                 {quickAlert !== "none" && (
@@ -1065,30 +1099,26 @@ const Finance = () => {
               </div>
 
               <div className="overflow-x-auto -mx-4 lg:mx-0">
-                <table className="w-full min-w-[1040px] text-sm">
+                <table className="w-full min-w-[1180px] text-sm">
                   <thead>
                     <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border">
                       <th className="py-2.5 px-3 font-medium">Paciente</th>
-                      <th className="py-2.5 px-3 font-medium">Referência</th>
-                      <th className="py-2.5 px-3 font-medium">Sessões</th>
-                      <th className="py-2.5 px-3 font-medium w-[130px]">Progresso</th>
-                      <th className="py-2.5 px-3 font-medium">Próxima sessão</th>
-                      <th className="py-2.5 px-3 font-medium">Valor</th>
+                      <th className="py-2.5 px-3 font-medium text-center">Sessões no mês</th>
+                      <th className="py-2.5 px-3 font-medium text-center">Realizadas</th>
+                      <th className="py-2.5 px-3 font-medium text-center">Faltas</th>
+                      <th className="py-2.5 px-3 font-medium text-center">A realizar</th>
+                      <th className="py-2.5 px-3 font-medium">Modalidade de cobrança</th>
+                      <th className="py-2.5 px-3 font-medium">Receita Saúde</th>
+                      <th className="py-2.5 px-3 font-medium">Valor total</th>
                       <th className="py-2.5 px-3 font-medium">Pagamento</th>
-                      <th className="py-2.5 px-3 font-medium">RS</th>
-                      <th className="py-2.5 px-3 font-medium">Situação</th>
                       <th className="py-2.5 px-3 font-medium text-right">Ações</th>
                     </tr>
                   </thead>
                   <tbody>
                     {patients.map((p) => {
-                      const sit = situacaoFor(p);
                       const pay = pagamentoFor(p);
-                      const progress = p.previstas > 0 ? (p.realizadas / p.previstas) * 100 : 0;
-                      const totalSessoes = p.allInGroup.length;
-                      const sessionsLabel = totalSessoes > 0
-                        ? `${totalSessoes} ${totalSessoes === 1 ? "sessão" : "sessões"}`
-                        : "Não informado";
+                      const rs = receitaSaudeFor(p);
+                      const modalidade = modalidadeFor(p);
                       const editTarget = p.latestBillable ?? p.allInGroup[0] ?? null;
                       const openPatient = (tab: "finance" | "sessions", focus?: string) => {
                         if (!p.patientId) return;
@@ -1101,7 +1131,7 @@ const Finance = () => {
                           key={p.key}
                           role={rowClickable ? "button" : undefined}
                           tabIndex={rowClickable ? 0 : undefined}
-                          aria-label={rowClickable ? `Abrir ficha financeira de ${p.name} — ${p.referenceLabel}` : undefined}
+                          aria-label={rowClickable ? `Abrir ficha financeira de ${p.name}` : undefined}
                           onClick={rowClickable ? () => openPatient("finance") : undefined}
                           onKeyDown={rowClickable ? (e) => {
                             if (e.key === "Enter" || e.key === " ") {
@@ -1114,89 +1144,27 @@ const Finance = () => {
                           <td className="py-3 px-3">
                             <p className="font-medium text-foreground truncate max-w-[220px]">{p.name}</p>
                           </td>
-                          <td className="py-3 px-3">
-                            {p.isAvulsa ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
-                                Sessão avulsa
-                              </span>
-                            ) : (
-                              <span className="text-sm text-foreground truncate max-w-[200px] inline-block align-middle" title={p.referenceLabel}>
-                                {p.referenceLabel}
-                              </span>
-                            )}
+                          <td className="py-3 px-3 text-center tabular-nums">{p.totalSessions}</td>
+                          <td className="py-3 px-3 text-center tabular-nums text-moss">{p.realizadas}</td>
+                          <td className={`py-3 px-3 text-center tabular-nums ${p.faltas > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                            {p.faltas}
                           </td>
-                          <td
-                            className={`py-3 px-3 text-muted-foreground ${rowClickable ? "cursor-pointer" : ""}`}
-                            onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("sessions"); } : undefined}
-                          >
-                            <span className={totalSessoes === 0 ? "italic" : ""}>{sessionsLabel}</span>
+                          <td className="py-3 px-3 text-center tabular-nums text-muted-foreground">{p.aRealizar}</td>
+                          <td className="py-3 px-3">
+                            <span className="text-sm text-foreground">{modalidade}</span>
                           </td>
                           <td
                             className={`py-3 px-3 ${rowClickable ? "cursor-pointer" : ""}`}
-                            onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("sessions"); } : undefined}
-                          >
-                            {p.previstas > 0 ? (
-                              <div className="flex items-center gap-2">
-                                <div className="h-1.5 flex-1 rounded-full bg-secondary overflow-hidden">
-                                  <div
-                                    className="h-full bg-primary/70 transition-all"
-                                    style={{ width: `${progress}%` }}
-                                  />
-                                </div>
-                                <span className="text-[11px] text-muted-foreground tabular-nums w-10 text-right">
-                                  {p.realizadas}/{p.previstas}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground italic">Não informado</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-3 text-muted-foreground">
-                            {p.nextSession ? (
-                              format(p.nextSession, "dd/MM 'às' HH:mm", { locale: ptBR })
-                            ) : (
-                              <span className="italic">Não informado</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-3 font-medium tabular-nums">
-                            {p.totalValue > 0 ? formatBRL(p.totalValue) : <span className="text-muted-foreground italic">Não informado</span>}
-                          </td>
-                          <td className={`py-3 px-3 font-medium ${pay.tone}`}>{pay.label}</td>
-                          <td
-                            className={`py-3 px-3 text-xs ${rowClickable ? "cursor-pointer" : ""}`}
                             onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("finance", "receita-saude"); } : undefined}
                           >
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span
-                                  className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-sm ${
-                                    p.receitaToIssueCount > 0 || p.receitaIssuedCount > 0
-                                      ? "bg-moss/10 text-moss"
-                                      : "bg-secondary text-muted-foreground"
-                                  }`}
-                                  aria-label={
-                                    p.receitaToIssueCount > 0 || p.receitaIssuedCount > 0
-                                      ? "Receita Saúde"
-                                      : "Atendimento Particular"
-                                  }
-                                >
-                                  {p.receitaToIssueCount > 0 || p.receitaIssuedCount > 0 ? "✅" : "—"}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>
-                                  {p.receitaToIssueCount > 0 || p.receitaIssuedCount > 0
-                                    ? "✅ Receita Saúde"
-                                    : "— Atendimento Particular"}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </td>
-                          <td className="py-3 px-3">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${sit.tone}`}>
-                              {sit.label}
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${rs.tone}`}>
+                              {rs.label}
                             </span>
                           </td>
+                          <td className="py-3 px-3 font-medium tabular-nums">
+                            {p.totalValue > 0 ? formatBRL(p.totalValue) : <span className="text-muted-foreground italic">—</span>}
+                          </td>
+                          <td className={`py-3 px-3 font-medium ${pay.tone}`}>{pay.label}</td>
                           <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
                             <div className="inline-flex items-center gap-1">
                               {p.latestBillable && p.hasPending && (
@@ -1211,6 +1179,17 @@ const Finance = () => {
                                   }}
                                 >
                                   Marcar pago
+                                </Button>
+                              )}
+                              {rowClickable && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8"
+                                  onClick={(e) => { e.stopPropagation(); openPatient("finance"); }}
+                                  title="Ver detalhamento"
+                                >
+                                  Detalhes
                                 </Button>
                               )}
                               {editTarget && (
@@ -1236,6 +1215,7 @@ const Finance = () => {
             </>
           );
         })()}
+
       </section>
 
 
