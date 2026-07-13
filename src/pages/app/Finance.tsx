@@ -90,9 +90,28 @@ interface Row {
   price: number | null;
   paid_at: string | null;
   session_type: string | null;
+  notes: string | null;
   patient: { id: string; full_name: string } | null;
   service: { name: string } | null;
 }
+
+// Recurrence detection (mirrors Agenda: recurring sessions are created with a
+// "Plano N sessões (i/N)" marker in `notes`, and single-payment groups embed a
+// short id as "[groupId]"). This is the only field that identifies a session
+// created as recurring on the Agenda.
+const isRecurringSession = (notes: string | null): boolean =>
+  !!notes && /Plano \d+ sess/.test(notes);
+
+const getSeriesKey = (row: { notes: string | null; patient?: { id: string } | null }): string | null => {
+  const notes = row.notes;
+  if (!notes) return null;
+  const totalMatch = notes.match(/Plano (\d+) sess[õo]es/);
+  if (!totalMatch) return null;
+  const gidMatch = notes.match(/Pgto [úu]nico \[([^\]]+)\]/);
+  if (gidMatch) return `gid::${gidMatch[1]}`;
+  const pid = row.patient?.id ?? "—";
+  return `pn::${pid}::${totalMatch[1]}`;
+};
 
 type ReceitaSaudeFilter = "all" | "to_issue" | "issued";
 
@@ -141,7 +160,7 @@ const Finance = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const selectCols = "id, scheduled_at, status, payment_status, payment_method, payment_reference, receita_saude_status, price, paid_at, is_expense, session_type, patient:patients!sessions_patient_id_fkey(id, full_name), service:services(name)";
+    const selectCols = "id, scheduled_at, status, payment_status, payment_method, payment_reference, receita_saude_status, price, paid_at, is_expense, session_type, notes, patient:patients!sessions_patient_id_fkey(id, full_name), service:services(name)";
 
     const { data, error } = await supabase
       .from("sessions")
@@ -361,27 +380,27 @@ const Finance = () => {
     [rows, fortnightFilter]
   );
 
-  // Planos de Atendimento no mês: contar referências distintas (por paciente + referência)
+  // Planos de Atendimento no mês: séries recorrentes distintas com pelo
+  // menos uma sessão no período (identificadas pelo marcador da Agenda em `notes`).
   const packagesStats = useMemo(() => {
-    const packageKeys = new Set<string>();
+    const seriesKeys = new Set<string>();
     let sessionsInPackages = 0;
     for (const r of volumeRows) {
-      const ref = (r.payment_reference ?? "").trim();
-      if (!ref) continue;
-      const pid = r.patient?.id ?? r.patient?.full_name ?? "—";
-      packageKeys.add(`${pid}::${ref.toLowerCase()}`);
+      if (!isRecurringSession(r.notes)) continue;
       sessionsInPackages++;
+      const key = getSeriesKey(r);
+      if (key) seriesKeys.add(key);
     }
-    return { count: packageKeys.size, sessions: sessionsInPackages };
+    return { count: seriesKeys.size, sessions: sessionsInPackages };
   }, [volumeRows]);
 
-  // Sessões únicas no mês: sessões sem referência de Plano de Atendimento
+  // Sessões únicas no mês: agendamentos criados como sessão única na Agenda
+  // (sem marcador de recorrência em `notes`).
   const avulsasStats = useMemo(() => {
     let count = 0;
     const patients = new Set<string>();
     for (const r of volumeRows) {
-      const ref = (r.payment_reference ?? "").trim();
-      if (ref) continue;
+      if (isRecurringSession(r.notes)) continue;
       count++;
       const pid = r.patient?.id ?? r.patient?.full_name;
       if (pid) patients.add(pid);
@@ -1042,9 +1061,8 @@ const Finance = () => {
             e.totalSessions++;
             e.totalValue += Number(r.price ?? 0);
 
-            const rawRef = (r.payment_reference ?? "").trim();
-            if (rawRef.length > 0) {
-              const k = rawRef.toLowerCase();
+            if (isRecurringSession(r.notes)) {
+              const k = getSeriesKey(r) ?? `unknown::${r.id}`;
               e.packageCounts.set(k, (e.packageCounts.get(k) ?? 0) + 1);
             } else {
               e.avulsasCount++;
