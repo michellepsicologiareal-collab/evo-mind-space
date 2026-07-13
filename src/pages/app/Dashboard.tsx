@@ -180,7 +180,7 @@ export default function Dashboard() {
       const [patientsRes, attendanceRes, atrasoRes, futureRes, monthPayRes, recordsSrcRes] = await Promise.all([
         supabase
           .from("patients")
-          .select("id, is_active, created_at")
+          .select("id, is_active, created_at, modality")
           .eq("user_id", user.id),
         supabase
           .from("sessions")
@@ -203,14 +203,14 @@ export default function Dashboard() {
           .gte("scheduled_at", now.toISOString()),
         supabase
           .from("sessions")
-          .select("id, price, status, payment_status, scheduled_at")
+          .select("id, patient_id, price, status, payment_status, scheduled_at, notes")
           .eq("user_id", user.id)
           .neq("status", "cancelled")
           .gte("scheduled_at", monthStart.toISOString())
           .lte("scheduled_at", monthEnd.toISOString()),
         supabase
           .from("sessions")
-          .select("id")
+          .select("id, patient_id")
           .eq("user_id", user.id)
           .eq("status", "completed"),
       ]);
