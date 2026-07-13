@@ -1061,9 +1061,8 @@ const Finance = () => {
             e.totalSessions++;
             e.totalValue += Number(r.price ?? 0);
 
-            const rawRef = (r.payment_reference ?? "").trim();
-            if (rawRef.length > 0) {
-              const k = rawRef.toLowerCase();
+            if (isRecurringSession(r.notes)) {
+              const k = getSeriesKey(r) ?? `unknown::${r.id}`;
               e.packageCounts.set(k, (e.packageCounts.get(k) ?? 0) + 1);
             } else {
               e.avulsasCount++;
