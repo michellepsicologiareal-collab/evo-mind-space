@@ -134,7 +134,10 @@ export default function Dashboard() {
   const [newPatientsMonth, setNewPatientsMonth] = useState(0);
   const [attendancePct, setAttendancePct] = useState<number | null>(null);
   const [attendanceDelta, setAttendanceDelta] = useState<number | null>(null);
-  const [pendingRecords, setPendingRecords] = useState(0);
+  const [pendingFormulations, setPendingFormulations] = useState(0);
+  const [modalityBreakdown, setModalityBreakdown] = useState<{ online: number; presencial: number; hibrido: number; sem: number }>({ online: 0, presencial: 0, hibrido: 0, sem: 0 });
+  const [avgSessionPrice, setAvgSessionPrice] = useState<number | null>(null);
+  const [avgPlanValue, setAvgPlanValue] = useState<number | null>(null);
   const [semProxima, setSemProxima] = useState(0);
   const [pagamentosAtrasados, setPagamentosAtrasados] = useState(0);
   const [baixaAdesao, setBaixaAdesao] = useState(0);
