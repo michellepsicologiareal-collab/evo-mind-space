@@ -386,12 +386,23 @@ export default function Dashboard() {
     return upcoming ? format(new Date(upcoming.scheduled_at), "HH:mm") : "—";
   }, [weekSessions]);
 
+  const modalityParts = useMemo(() => {
+    const parts: string[] = [];
+    if (modalityBreakdown.online > 0) parts.push(`${modalityBreakdown.online} Online`);
+    if (modalityBreakdown.presencial > 0) parts.push(`${modalityBreakdown.presencial} Presenciais`);
+    if (modalityBreakdown.hibrido > 0) parts.push(`${modalityBreakdown.hibrido} Híbridos`);
+    return parts.join(" · ");
+  }, [modalityBreakdown]);
+
   const KPI = useMemo(
     () => [
       {
         label: "Pacientes ativos",
         value: String(activePatients),
         hint: newPatientsMonth > 0 ? `+${newPatientsMonth} neste mês` : "Nenhum novo neste mês",
+        sub: modalityParts
+          ? `Modalidade: ${modalityParts}${modalityBreakdown.sem > 0 ? ` · ${modalityBreakdown.sem} sem modalidade` : ""}`
+          : undefined,
         to: "/app/pacientes",
       },
       {
@@ -411,12 +422,24 @@ export default function Dashboard() {
               : `${attendanceDelta >= 0 ? "+" : ""}${attendanceDelta}% sobre período anterior`,
         to: "/app/agenda",
       },
+      {
+        label: "Valor médio por sessão",
+        value: avgSessionPrice == null ? "—" : fmtBRL2(avgSessionPrice),
+        hint: avgSessionPrice == null ? "Sem sessões com valor no mês" : "Mês corrente",
+        to: "/app/financeiro",
+      },
+      {
+        label: "Valor médio do Plano de Atendimento",
+        value: avgPlanValue == null ? "—" : fmtBRL2(avgPlanValue),
+        hint: avgPlanValue == null ? "Sem dados no período" : "Mês corrente",
+        to: "/app/financeiro",
+      },
     ],
-    [activePatients, newPatientsMonth, totalWeek, weekRemaining, attendancePct, attendanceDelta],
+    [activePatients, newPatientsMonth, totalWeek, weekRemaining, attendancePct, attendanceDelta, modalityParts, modalityBreakdown.sem, avgSessionPrice, avgPlanValue],
   );
 
   const PENDINGS = [
-    { icon: ClipboardList, label: "Registros pendentes", count: pendingRecords, to: "/app/registro-sessao" },
+    { icon: FileText, label: "Formulações de Caso pendentes", count: pendingFormulations, to: "/app/pacientes" },
     { icon: CalendarX, label: "Sem próxima sessão", count: semProxima, to: "/app/pacientes?filter=sem-proxima" },
     { icon: CircleDollarSign, label: "Pagamentos atrasados", count: pagamentosAtrasados, to: "/app/financeiro?filter=atrasados" },
     { icon: UserMinus, label: "Baixa adesão", count: baixaAdesao, to: "/app/pacientes?filter=baixa-adesao" },
