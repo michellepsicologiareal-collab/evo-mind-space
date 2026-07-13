@@ -90,9 +90,28 @@ interface Row {
   price: number | null;
   paid_at: string | null;
   session_type: string | null;
+  notes: string | null;
   patient: { id: string; full_name: string } | null;
   service: { name: string } | null;
 }
+
+// Recurrence detection (mirrors Agenda: recurring sessions are created with a
+// "Plano N sessões (i/N)" marker in `notes`, and single-payment groups embed a
+// short id as "[groupId]"). This is the only field that identifies a session
+// created as recurring on the Agenda.
+const isRecurringSession = (notes: string | null): boolean =>
+  !!notes && /Plano \d+ sess/.test(notes);
+
+const getSeriesKey = (row: { notes: string | null; patient?: { id: string } | null }): string | null => {
+  const notes = row.notes;
+  if (!notes) return null;
+  const totalMatch = notes.match(/Plano (\d+) sess[õo]es/);
+  if (!totalMatch) return null;
+  const gidMatch = notes.match(/Pgto [úu]nico \[([^\]]+)\]/);
+  if (gidMatch) return `gid::${gidMatch[1]}`;
+  const pid = row.patient?.id ?? "—";
+  return `pn::${pid}::${totalMatch[1]}`;
+};
 
 type ReceitaSaudeFilter = "all" | "to_issue" | "issued";
 
