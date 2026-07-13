@@ -925,11 +925,15 @@ const Finance = () => {
             key: string;
             name: string;
             patientId: string | null;
+            referenceLabel: string;
+            isAvulsa: boolean;
             realizadas: number;
+            previstas: number;
             pagas: number;
             totalValue: number;
             nextSession: Date | null;
             allBillable: Row[];
+            allInGroup: Row[];
             latestBillable: Row | null;
             hasPending: boolean;
             oldestPendingDays: number;
@@ -940,30 +944,42 @@ const Finance = () => {
           const map = new Map<string, Aggregate>();
           for (const r of fortnightAllValid) {
             const name = r.patient?.full_name ?? "—";
-            let e = map.get(name);
+            const patientId = r.patient?.id ?? null;
+            const rawRef = (r.payment_reference ?? "").trim();
+            const hasRef = rawRef.length > 0;
+            const groupKey = hasRef
+              ? `${patientId ?? name}::ref::${rawRef.toLowerCase()}`
+              : `${patientId ?? name}::avulsa::${r.id}`;
+            let e = map.get(groupKey);
             if (!e) {
               e = {
-                key: name,
+                key: groupKey,
                 name,
-                patientId: r.patient?.id ?? null,
+                patientId,
+                referenceLabel: hasRef ? rawRef : "Sessão avulsa",
+                isAvulsa: !hasRef,
                 realizadas: 0,
+                previstas: 0,
                 pagas: 0,
                 totalValue: 0,
                 nextSession: null,
                 allBillable: [],
+                allInGroup: [],
                 latestBillable: null,
                 hasPending: false,
                 oldestPendingDays: 0,
                 receitaToIssueCount: 0,
                 receitaIssuedCount: 0,
               };
-              map.set(name, e);
+              map.set(groupKey, e);
             }
-            if (!e.patientId && r.patient?.id) e.patientId = r.patient.id;
+            if (!e.patientId && patientId) e.patientId = patientId;
+            e.allInGroup.push(r);
             if (r.receita_saude_status === "to_issue") e.receitaToIssueCount++;
             else if (r.receita_saude_status === "issued") e.receitaIssuedCount++;
             if (r.status === "completed") {
               e.realizadas++;
+              e.previstas++;
               e.totalValue += Number(r.price ?? 0);
               e.allBillable.push(r);
               if (r.payment_status === "paid") e.pagas++;
@@ -976,20 +992,25 @@ const Finance = () => {
                 e.latestBillable = r;
               }
             } else if (r.status === "scheduled" || r.status === "confirmed") {
+              e.previstas++;
               const d = new Date(r.scheduled_at);
               if (d.getTime() >= now && (!e.nextSession || d < e.nextSession)) {
                 e.nextSession = d;
               }
             }
           }
-          const allAggregates = Array.from(map.values()).sort((a, b) =>
-            a.name.localeCompare(b.name, "pt-BR")
-          );
+          const allAggregates = Array.from(map.values()).sort((a, b) => {
+            const byName = a.name.localeCompare(b.name, "pt-BR");
+            if (byName !== 0) return byName;
+            if (a.isAvulsa !== b.isAvulsa) return a.isAvulsa ? 1 : -1;
+            return a.referenceLabel.localeCompare(b.referenceLabel, "pt-BR");
+          });
           const patients = allAggregates.filter((p) => {
             if (receitaSaudeFilter === "to_issue") return p.receitaToIssueCount > 0;
             if (receitaSaudeFilter === "issued") return p.receitaIssuedCount > 0 && p.receitaToIssueCount === 0;
             return true;
           });
+
 
           if (loading) {
             return <p className="text-center py-12 text-muted-foreground">Carregando…</p>;
