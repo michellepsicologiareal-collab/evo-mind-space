@@ -250,18 +250,33 @@ export default function Dashboard() {
       const atrasoRows = (atrasoRes.data ?? []) as any[];
       setPagamentosAtrasados(atrasoRows.length);
 
-      // Registros pendentes = sessões completed sem session_record
-      const completedIds = ((recordsSrcRes.data ?? []) as any[]).map((s) => s.id);
-      let pendingCount = 0;
-      if (completedIds.length > 0) {
-        const { data: recs } = await supabase
-          .from("session_records")
-          .select("session_id")
-          .in("session_id", completedIds);
-        const withRec = new Set((recs ?? []).map((r: any) => r.session_id));
-        pendingCount = completedIds.filter((id) => !withRec.has(id)).length;
+      // Modalidade dos pacientes ativos (usa apenas patients.modality — sem inferência)
+      const mb = { online: 0, presencial: 0, hibrido: 0, sem: 0 };
+      activeList.forEach((p) => {
+        const m = (p.modality ?? "").toString().toLowerCase();
+        if (m === "online") mb.online += 1;
+        else if (m === "presencial") mb.presencial += 1;
+        else if (m === "hibrido" || m === "híbrido") mb.hibrido += 1;
+        else mb.sem += 1;
+      });
+      setModalityBreakdown(mb);
+
+      // Formulações de Caso pendentes = pacientes ativos com >=1 sessão completed sem case_formulations
+      const completedRows = (recordsSrcRes.data ?? []) as any[];
+      const activeIds = new Set(activeList.map((p) => p.id));
+      const patientsWithCompleted = new Set(
+        completedRows.map((s) => s.patient_id).filter((pid) => pid && activeIds.has(pid)),
+      );
+      let pendingFormCount = 0;
+      if (patientsWithCompleted.size > 0) {
+        const { data: forms } = await supabase
+          .from("case_formulations")
+          .select("patient_id")
+          .in("patient_id", Array.from(patientsWithCompleted));
+        const withForm = new Set((forms ?? []).map((r: any) => r.patient_id));
+        pendingFormCount = Array.from(patientsWithCompleted).filter((pid) => !withForm.has(pid)).length;
       }
-      if (!cancelled) setPendingRecords(pendingCount);
+      if (!cancelled) setPendingFormulations(pendingFormCount);
 
       // Sem próxima sessão + baixa adesão
       const future = (futureRes.data ?? []) as any[];
