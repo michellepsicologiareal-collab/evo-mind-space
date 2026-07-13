@@ -21,7 +21,7 @@ import {
   ArrowRight,
   Video,
   MapPin,
-  ClipboardList,
+  FileText,
   CalendarX,
   CircleDollarSign,
   UserMinus,
@@ -83,6 +83,25 @@ function fmtBRL(n: number) {
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }
 
+function fmtBRL2(n: number) {
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Detecta sessão de Plano de Atendimento (série recorrente) pelo marcador na notes
+const PLAN_MARKER_RE = /Plano\s+\d+\s+sess/i;
+const GROUP_ID_RE = /\[([^\]]+)\]/;
+function isRecurringSession(notes: string | null | undefined) {
+  return !!notes && PLAN_MARKER_RE.test(notes);
+}
+function getSeriesKey(s: { patient_id: string; notes: string | null | undefined }) {
+  if (!s.notes) return null;
+  const g = s.notes.match(GROUP_ID_RE);
+  if (g) return `g:${g[1]}`;
+  const m = s.notes.match(/Plano\s+(\d+)\s+sess/i);
+  if (m) return `p:${s.patient_id}:${m[1]}`;
+  return null;
+}
+
 /* ─── Page ─── */
 export default function Dashboard() {
   const { user } = useAuth();
@@ -115,7 +134,10 @@ export default function Dashboard() {
   const [newPatientsMonth, setNewPatientsMonth] = useState(0);
   const [attendancePct, setAttendancePct] = useState<number | null>(null);
   const [attendanceDelta, setAttendanceDelta] = useState<number | null>(null);
-  const [pendingRecords, setPendingRecords] = useState(0);
+  const [pendingFormulations, setPendingFormulations] = useState(0);
+  const [modalityBreakdown, setModalityBreakdown] = useState<{ online: number; presencial: number; hibrido: number; sem: number }>({ online: 0, presencial: 0, hibrido: 0, sem: 0 });
+  const [avgSessionPrice, setAvgSessionPrice] = useState<number | null>(null);
+  const [avgPlanValue, setAvgPlanValue] = useState<number | null>(null);
   const [semProxima, setSemProxima] = useState(0);
   const [pagamentosAtrasados, setPagamentosAtrasados] = useState(0);
   const [baixaAdesao, setBaixaAdesao] = useState(0);
@@ -158,7 +180,7 @@ export default function Dashboard() {
       const [patientsRes, attendanceRes, atrasoRes, futureRes, monthPayRes, recordsSrcRes] = await Promise.all([
         supabase
           .from("patients")
-          .select("id, is_active, created_at")
+          .select("id, is_active, created_at, modality")
           .eq("user_id", user.id),
         supabase
           .from("sessions")
@@ -181,14 +203,14 @@ export default function Dashboard() {
           .gte("scheduled_at", now.toISOString()),
         supabase
           .from("sessions")
-          .select("id, price, status, payment_status, scheduled_at")
+          .select("id, patient_id, price, status, payment_status, scheduled_at, notes")
           .eq("user_id", user.id)
           .neq("status", "cancelled")
           .gte("scheduled_at", monthStart.toISOString())
           .lte("scheduled_at", monthEnd.toISOString()),
         supabase
           .from("sessions")
-          .select("id")
+          .select("id, patient_id")
           .eq("user_id", user.id)
           .eq("status", "completed"),
       ]);
@@ -228,18 +250,33 @@ export default function Dashboard() {
       const atrasoRows = (atrasoRes.data ?? []) as any[];
       setPagamentosAtrasados(atrasoRows.length);
 
-      // Registros pendentes = sessões completed sem session_record
-      const completedIds = ((recordsSrcRes.data ?? []) as any[]).map((s) => s.id);
-      let pendingCount = 0;
-      if (completedIds.length > 0) {
-        const { data: recs } = await supabase
-          .from("session_records")
-          .select("session_id")
-          .in("session_id", completedIds);
-        const withRec = new Set((recs ?? []).map((r: any) => r.session_id));
-        pendingCount = completedIds.filter((id) => !withRec.has(id)).length;
+      // Modalidade dos pacientes ativos (usa apenas patients.modality — sem inferência)
+      const mb = { online: 0, presencial: 0, hibrido: 0, sem: 0 };
+      activeList.forEach((p) => {
+        const m = (p.modality ?? "").toString().toLowerCase();
+        if (m === "online") mb.online += 1;
+        else if (m === "presencial") mb.presencial += 1;
+        else if (m === "hibrido" || m === "híbrido") mb.hibrido += 1;
+        else mb.sem += 1;
+      });
+      setModalityBreakdown(mb);
+
+      // Formulações de Caso pendentes = pacientes ativos com >=1 sessão completed sem case_formulations
+      const completedRows = (recordsSrcRes.data ?? []) as any[];
+      const activeIds = new Set(activeList.map((p) => p.id));
+      const patientsWithCompleted = new Set(
+        completedRows.map((s) => s.patient_id).filter((pid) => pid && activeIds.has(pid)),
+      );
+      let pendingFormCount = 0;
+      if (patientsWithCompleted.size > 0) {
+        const { data: forms } = await supabase
+          .from("case_formulations")
+          .select("patient_id")
+          .in("patient_id", Array.from(patientsWithCompleted));
+        const withForm = new Set((forms ?? []).map((r: any) => r.patient_id));
+        pendingFormCount = Array.from(patientsWithCompleted).filter((pid) => !withForm.has(pid)).length;
       }
-      if (!cancelled) setPendingRecords(pendingCount);
+      if (!cancelled) setPendingFormulations(pendingFormCount);
 
       // Sem próxima sessão + baixa adesão
       const future = (futureRes.data ?? []) as any[];
@@ -276,6 +313,29 @@ export default function Dashboard() {
       setFinRecebido(recebido);
       setFinAReceber(aReceber);
       setFinAtrasoCount(atrasoQtd);
+
+      // Valor médio por sessão (mês) — sessões com price > 0, não canceladas
+      const validPriced = monthRows.filter((s) => Number(s.price ?? 0) > 0);
+      const avgS = validPriced.length
+        ? validPriced.reduce((acc, s) => acc + Number(s.price), 0) / validPriced.length
+        : null;
+      setAvgSessionPrice(avgS);
+
+      // Valor médio do Plano de Atendimento (mês) — série recorrente identificada via notes
+      const seriesTotals = new Map<string, number>();
+      monthRows.forEach((s) => {
+        if (!isRecurringSession(s.notes)) return;
+        const key = getSeriesKey(s);
+        if (!key) return;
+        const price = Number(s.price ?? 0);
+        if (!(price > 0)) return;
+        seriesTotals.set(key, (seriesTotals.get(key) ?? 0) + price);
+      });
+      const planCount = seriesTotals.size;
+      const avgP = planCount
+        ? Array.from(seriesTotals.values()).reduce((a, b) => a + b, 0) / planCount
+        : null;
+      setAvgPlanValue(avgP);
     })();
     return () => { cancelled = true; };
   }, [user?.id]);
@@ -326,12 +386,23 @@ export default function Dashboard() {
     return upcoming ? format(new Date(upcoming.scheduled_at), "HH:mm") : "—";
   }, [weekSessions]);
 
+  const modalityParts = useMemo(() => {
+    const parts: string[] = [];
+    if (modalityBreakdown.online > 0) parts.push(`${modalityBreakdown.online} Online`);
+    if (modalityBreakdown.presencial > 0) parts.push(`${modalityBreakdown.presencial} Presenciais`);
+    if (modalityBreakdown.hibrido > 0) parts.push(`${modalityBreakdown.hibrido} Híbridos`);
+    return parts.join(" · ");
+  }, [modalityBreakdown]);
+
   const KPI = useMemo(
     () => [
       {
         label: "Pacientes ativos",
         value: String(activePatients),
         hint: newPatientsMonth > 0 ? `+${newPatientsMonth} neste mês` : "Nenhum novo neste mês",
+        sub: modalityParts
+          ? `Modalidade: ${modalityParts}${modalityBreakdown.sem > 0 ? ` · ${modalityBreakdown.sem} sem modalidade` : ""}`
+          : undefined,
         to: "/app/pacientes",
       },
       {
@@ -351,12 +422,24 @@ export default function Dashboard() {
               : `${attendanceDelta >= 0 ? "+" : ""}${attendanceDelta}% sobre período anterior`,
         to: "/app/agenda",
       },
+      {
+        label: "Valor médio por sessão",
+        value: avgSessionPrice == null ? "—" : fmtBRL2(avgSessionPrice),
+        hint: avgSessionPrice == null ? "Sem sessões com valor no mês" : "Mês corrente",
+        to: "/app/financeiro",
+      },
+      {
+        label: "Valor médio do Plano de Atendimento",
+        value: avgPlanValue == null ? "—" : fmtBRL2(avgPlanValue),
+        hint: avgPlanValue == null ? "Sem dados no período" : "Mês corrente",
+        to: "/app/financeiro",
+      },
     ],
-    [activePatients, newPatientsMonth, totalWeek, weekRemaining, attendancePct, attendanceDelta],
+    [activePatients, newPatientsMonth, totalWeek, weekRemaining, attendancePct, attendanceDelta, modalityParts, modalityBreakdown.sem, avgSessionPrice, avgPlanValue],
   );
 
   const PENDINGS = [
-    { icon: ClipboardList, label: "Registros pendentes", count: pendingRecords, to: "/app/registro-sessao" },
+    { icon: FileText, label: "Formulações de Caso pendentes", count: pendingFormulations, to: "/app/pacientes" },
     { icon: CalendarX, label: "Sem próxima sessão", count: semProxima, to: "/app/pacientes?filter=sem-proxima" },
     { icon: CircleDollarSign, label: "Pagamentos atrasados", count: pagamentosAtrasados, to: "/app/financeiro?filter=atrasados" },
     { icon: UserMinus, label: "Baixa adesão", count: baixaAdesao, to: "/app/pacientes?filter=baixa-adesao" },
@@ -431,7 +514,7 @@ export default function Dashboard() {
         {/* ─ KPIs ─ */}
         <section
           aria-label="Indicadores principais"
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
         >
           {KPI.map((k) => (
             <Link
@@ -439,7 +522,7 @@ export default function Dashboard() {
               to={k.to}
               className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
             >
-              <Card className="rounded-2xl border-border/60 bg-card p-5 shadow-none transition-colors hover:border-border">
+              <Card className="rounded-2xl border-border/60 bg-card p-5 shadow-none transition-colors hover:border-border h-full">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {k.label}
                 </p>
@@ -447,6 +530,9 @@ export default function Dashboard() {
                   {k.value}
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">{k.hint}</p>
+                {("sub" in k) && k.sub ? (
+                  <p className="mt-1 text-xs text-muted-foreground/90">{k.sub}</p>
+                ) : null}
               </Card>
             </Link>
           ))}
