@@ -361,7 +361,7 @@ const Finance = () => {
     [rows, fortnightFilter]
   );
 
-  // Pacotes no mês: contar referências distintas (por paciente + referência)
+  // Planos de Atendimento no mês: contar referências distintas (por paciente + referência)
   const packagesStats = useMemo(() => {
     const packageKeys = new Set<string>();
     let sessionsInPackages = 0;
@@ -375,7 +375,7 @@ const Finance = () => {
     return { count: packageKeys.size, sessions: sessionsInPackages };
   }, [volumeRows]);
 
-  // Sessões avulsas no mês: sessões sem referência de pacote
+  // Sessões únicas no mês: sessões sem referência de Plano de Atendimento
   const avulsasStats = useMemo(() => {
     let count = 0;
     const patients = new Set<string>();
