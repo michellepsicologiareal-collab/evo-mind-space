@@ -514,7 +514,7 @@ export default function Dashboard() {
         {/* ─ KPIs ─ */}
         <section
           aria-label="Indicadores principais"
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
         >
           {KPI.map((k) => (
             <Link
@@ -522,7 +522,7 @@ export default function Dashboard() {
               to={k.to}
               className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
             >
-              <Card className="rounded-2xl border-border/60 bg-card p-5 shadow-none transition-colors hover:border-border">
+              <Card className="rounded-2xl border-border/60 bg-card p-5 shadow-none transition-colors hover:border-border h-full">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {k.label}
                 </p>
@@ -530,6 +530,9 @@ export default function Dashboard() {
                   {k.value}
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">{k.hint}</p>
+                {("sub" in k) && k.sub ? (
+                  <p className="mt-1 text-xs text-muted-foreground/90">{k.sub}</p>
+                ) : null}
               </Card>
             </Link>
           ))}
