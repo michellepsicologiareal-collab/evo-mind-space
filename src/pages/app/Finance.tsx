@@ -1563,8 +1563,8 @@ const Finance = () => {
                             variant="outline"
                             size="sm"
                             className="flex-1 h-11 min-h-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                            onClick={() => openPatient("finance")}
-                            aria-label={`Ver detalhes financeiros de ${p.name}`}
+                            onClick={openFinanceHistory}
+                            aria-label={`Ver histórico financeiro de ${p.name}`}
                           >
                             Ver detalhes
                           </Button>
