@@ -1299,7 +1299,7 @@ const Patients = () => {
                                   e.stopPropagation();
                                 }
                               }}
-                              className="flex items-center justify-center"
+                              className="flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--primary))]"
                               style={{
                                 width: 32,
                                 height: 32,
