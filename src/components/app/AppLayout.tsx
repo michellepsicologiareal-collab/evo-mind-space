@@ -7,7 +7,7 @@ import {
   GraduationCap, ShieldCheck, Crown, Lock, BookOpen, Flower2, FileText,
   FileCheck, Shield, UserCog, Sparkles, ClipboardList, Baby, MoreHorizontal, Target, HeartPulse,
 } from "lucide-react";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
@@ -273,19 +273,24 @@ export const AppLayout = () => {
               className={({ isActive }) =>
                 cn(
                   "flex flex-col items-center justify-center gap-1 min-h-[52px] py-1.5 text-[10px] leading-tight font-medium transition-colors rounded-lg mx-0.5",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   isActive ? "text-primary bg-[rgba(150,117,206,0.10)]" : "text-muted-foreground"
                 )
               }
             >
-              <item.icon className="h-[18px] w-[18px]" />
+              <item.icon className="h-[18px] w-[18px]" aria-hidden />
               <span className="text-center line-clamp-1 px-0.5">{item.label}</span>
             </NavLink>
           ))}
           <button
+            type="button"
             onClick={() => setMoreOpen(true)}
-            className="flex flex-col items-center justify-center gap-1 min-h-[52px] py-1.5 text-[10px] leading-tight font-medium text-muted-foreground rounded-lg mx-0.5"
+            aria-label="Abrir mais opções de navegação"
+            aria-haspopup="dialog"
+            aria-expanded={moreOpen}
+            className="flex flex-col items-center justify-center gap-1 min-h-[52px] py-1.5 text-[10px] leading-tight font-medium text-muted-foreground rounded-lg mx-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            <MoreHorizontal className="h-[18px] w-[18px]" />
+            <MoreHorizontal className="h-[18px] w-[18px]" aria-hidden />
             <span>Mais</span>
           </button>
         </div>
@@ -295,40 +300,49 @@ export const AppLayout = () => {
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent side="bottom" className="md:hidden rounded-t-3xl max-h-[80vh] overflow-y-auto p-0">
           <div className="p-5">
-            <div className="font-display text-base font-semibold text-foreground mb-4">Mais opções</div>
-            <div className="grid grid-cols-3 gap-2">
+            <SheetTitle className="font-display text-base font-semibold text-foreground mb-4">
+              Mais opções
+            </SheetTitle>
+            <ul className="grid grid-cols-3 gap-2 list-none p-0 m-0">
               {mobileSecondary.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.end}
-                  onClick={(e) => { handleNavClick(e, item); setMoreOpen(false); }}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex flex-col items-center justify-center gap-1.5 min-h-[72px] p-2 rounded-xl border text-[11px] font-medium text-center leading-tight",
-                      isActive
-                        ? "bg-[rgba(150,117,206,0.10)] border-primary/30 text-primary-dark"
-                        : "bg-muted border-border text-brown"
-                    )
-                  }
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span className="line-clamp-2">{item.label}</span>
-                  {item.premium && !isPremium && <Lock className="h-3 w-3 opacity-50" />}
-                </NavLink>
+                <li key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    end={item.end}
+                    onClick={(e) => { handleNavClick(e, item); setMoreOpen(false); }}
+                    aria-label={item.premium && !isPremium ? `${item.label} (recurso Essencial)` : item.label}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex flex-col items-center justify-center gap-1.5 min-h-[72px] p-2 rounded-xl border text-[11px] font-medium text-center leading-tight",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                        isActive
+                          ? "bg-[rgba(150,117,206,0.10)] border-primary/30 text-primary-dark"
+                          : "bg-muted border-border text-brown"
+                      )
+                    }
+                  >
+                    <item.icon className="h-5 w-5" aria-hidden />
+                    <span className="line-clamp-2">{item.label}</span>
+                    {item.premium && !isPremium && (
+                      <Lock className="h-3 w-3 opacity-50" aria-label="Bloqueado" />
+                    )}
+                  </NavLink>
+                </li>
               ))}
               {isAdmin && adminNavItems.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => setMoreOpen(false)}
-                  className="flex flex-col items-center justify-center gap-1.5 min-h-[72px] p-2 rounded-xl border text-[11px] font-medium text-center leading-tight bg-[hsl(var(--admin-accent))]/10 border-[hsl(var(--admin-accent))]/30 text-[hsl(var(--admin-accent))]"
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span className="line-clamp-2">{item.label}</span>
-                </NavLink>
+                <li key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    onClick={() => setMoreOpen(false)}
+                    aria-label={item.label}
+                    className="flex flex-col items-center justify-center gap-1.5 min-h-[72px] p-2 rounded-xl border text-[11px] font-medium text-center leading-tight bg-[hsl(var(--admin-accent))]/10 border-[hsl(var(--admin-accent))]/30 text-[hsl(var(--admin-accent))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--admin-accent))] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  >
+                    <item.icon className="h-5 w-5" aria-hidden />
+                    <span className="line-clamp-2">{item.label}</span>
+                  </NavLink>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </SheetContent>
       </Sheet>
