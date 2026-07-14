@@ -839,6 +839,7 @@ const Patients = () => {
     const a = attendance[p.id];
     return a && a.total >= 3 && a.pct < 50;
   });
+  const noNextSessionPatients = activePatients.filter((p) => !sessionInfo[p.id]?.nextDate);
 
   const todayLabel = format(new Date(), "EEEE',' d 'de' MMMM 'de' yyyy", { locale: ptBR });
   const todayLabelCap = todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1);
@@ -907,8 +908,8 @@ const Patients = () => {
 
 
       {/* ─────────── INSIGHT STRIP ─────────── */}
-      {(attentionPatients.length > 0 || lowAdherencePatients.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+      {(attentionPatients.length > 0 || lowAdherencePatients.length > 0 || noNextSessionPatients.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
           {attentionPatients.length > 0 && (
             <div style={{ background: C.goldSoft, borderLeft: `3px solid ${C.gold}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
               <div className="flex items-start gap-2.5">
@@ -951,6 +952,31 @@ const Patients = () => {
                     ))}
                     {lowAdherencePatients.length > 3 && (
                       <span style={{ background: "rgba(83,74,183,0.14)", color: C.purple, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>+ {lowAdherencePatients.length - 3}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {noNextSessionPatients.length > 0 && (
+            <div style={{ background: C.redSoft, borderLeft: `3px solid ${C.red}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+              <div className="flex items-start gap-2.5">
+                <div className="shrink-0 flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(192,57,43,0.16)", color: C.red }}>
+                  <CalendarDays className="h-3 w-3" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p style={{ fontSize: 11, fontWeight: 700, color: C.red, textTransform: "uppercase", letterSpacing: "0.08em" }}>Sem próxima sessão</p>
+                  <p className="mt-0.5" style={{ fontSize: 13, color: C.ink, lineHeight: 1.45 }}>
+                    {noNextSessionPatients.length} {noNextSessionPatients.length === 1 ? "paciente ativo sem próxima sessão agendada" : "pacientes ativos sem próxima sessão agendada"}.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {noNextSessionPatients.slice(0, 3).map((p) => (
+                      <span key={p.id} style={{ background: "rgba(192,57,43,0.12)", color: C.red, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
+                        {p.full_name.split(" ").slice(0, 2).join(" ")}
+                      </span>
+                    ))}
+                    {noNextSessionPatients.length > 3 && (
+                      <span style={{ background: "rgba(192,57,43,0.12)", color: C.red, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>+ {noNextSessionPatients.length - 3}</span>
                     )}
                   </div>
                 </div>
@@ -1057,13 +1083,11 @@ const Patients = () => {
                 <tr style={{ background: C.neutralBg, borderBottom: `1px solid ${C.border}` }}>
                   {[
                     { k: "avatar", label: "", w: 52 },
-                    { k: "nome", label: "Nome" },
-                    { k: "pacote", label: "Pacote" },
-                    { k: "progresso", label: "Progresso" },
+                    { k: "nome", label: "Paciente" },
+                    { k: "ultima", label: "Última sessão" },
                     { k: "proxima", label: "Próxima sessão" },
-                    { k: "valor", label: "Valor" },
-                    { k: "pagamento", label: "Pagamento" },
-                    { k: "receita", label: "Receita Saúde" },
+                    { k: "plano", label: "Plano de Atendimento" },
+                    { k: "formulacao", label: "Formulação de Caso" },
                     { k: "status", label: "Status" },
                     { k: "acoes", label: "", w: 56 },
                   ].map((h) => (
@@ -1178,64 +1202,13 @@ const Patients = () => {
                         </div>
                       </td>
 
-                      {/* Pacote */}
+                      {/* Última sessão */}
                       <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                        {pkg ? (
-                          <span
-                            style={{
-                              background: C.purpleSoft,
-                              color: C.purpleInk,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              padding: "3px 9px",
-                              borderRadius: 40,
-                            }}
-                          >
-                            {pkg.total} sessões
+                        {si?.lastDate ? (
+                          <span className="inline-flex items-center gap-1" style={{ fontSize: 12, color: C.ink }}>
+                            <CalendarDays className="h-3 w-3" style={{ color: C.muted }} />
+                            {format(new Date(si.lastDate), "dd/MM · HH:mm", { locale: ptBR })}
                           </span>
-                        ) : isSupervision ? (
-                          <span style={{ background: C.goldSoft, color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
-                            Supervisão
-                          </span>
-                        ) : (
-                          <span style={{ background: "#F3F4F6", color: C.muted, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
-                            {type}
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Progresso do pacote */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", minWidth: 140 }}>
-                        {pkg ? (
-                          <div className="flex items-center gap-2">
-                            <div
-                              style={{
-                                flex: 1,
-                                height: 6,
-                                background: C.border,
-                                borderRadius: 40,
-                                overflow: "hidden",
-                                minWidth: 60,
-                              }}
-                              role="progressbar"
-                              aria-valuenow={progressPct ?? 0}
-                              aria-valuemin={0}
-                              aria-valuemax={100}
-                              aria-label={`Progresso do pacote ${pkg.current} de ${pkg.total}`}
-                            >
-                              <div
-                                style={{
-                                  width: `${progressPct}%`,
-                                  height: "100%",
-                                  background: C.purple,
-                                  transition: "width 300ms ease",
-                                }}
-                              />
-                            </div>
-                            <span style={{ fontSize: 11, color: C.muted, fontWeight: 600, whiteSpace: "nowrap" }}>
-                              {pkg.current}/{pkg.total}
-                            </span>
-                          </div>
                         ) : (
                           <span style={{ fontSize: 12, color: C.muted }}>—</span>
                         )}
@@ -1261,86 +1234,60 @@ const Patients = () => {
                         )}
                       </td>
 
-                      {/* Valor */}
+                      {/* Plano de Atendimento */}
                       <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>{priceLabel}</span>
-                      </td>
-
-                      {/* Pagamento */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                        {pay && pay.total > 0 ? (
-                          <div className="flex items-center gap-1.5">
-                            {pay.pending > 0 ? (
-                              <span
-                                style={{
-                                  background: C.goldSoft,
-                                  color: C.gold,
-                                  border: `1px solid ${C.goldBorder}`,
-                                  fontSize: 11,
-                                  fontWeight: 600,
-                                  padding: "2px 8px",
-                                  borderRadius: 40,
-                                }}
-                                title={`${pay.pending} pendente(s)`}
-                              >
-                                {pay.pending} pendente
-                              </span>
-                            ) : (
-                              <span
-                                style={{
-                                  background: C.greenSoft,
-                                  color: C.green,
-                                  border: `1px solid ${C.greenBorder}`,
-                                  fontSize: 11,
-                                  fontWeight: 600,
-                                  padding: "2px 8px",
-                                  borderRadius: 40,
-                                }}
-                              >
-                                Em dia
-                              </span>
-                            )}
-                          </div>
+                        {pkg ? (
+                          <span
+                            style={{
+                              background: C.purpleSoft,
+                              color: C.purpleInk,
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: "3px 9px",
+                              borderRadius: 40,
+                            }}
+                            title={`Plano de Atendimento — ${pkg.current} de ${pkg.total} sessões realizadas`}
+                          >
+                            Plano · {pkg.current}/{pkg.total}
+                          </span>
+                        ) : isSupervision ? (
+                          <span style={{ background: C.goldSoft, color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
+                            Supervisão
+                          </span>
                         ) : (
-                          <span style={{ fontSize: 12, color: C.muted }}>—</span>
+                          <span style={{ background: "#F3F4F6", color: C.muted, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
+                            Sessão única
+                          </span>
                         )}
                       </td>
 
-                      {/* Receita Saúde */}
+                      {/* Formulação de Caso */}
                       <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                        {rs > 0 ? (
-                          <span
-                            style={{
-                              background: C.goldSoft,
-                              color: C.gold,
-                              border: `1px solid ${C.goldBorder}`,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              padding: "2px 8px",
-                              borderRadius: 40,
-                            }}
-                            title="Sessões pagas sem referência para Receita Saúde"
-                          >
-                            {rs} pendente
-                          </span>
-                        ) : pay && pay.paid > 0 ? (
-                          <span
-                            style={{
-                              background: C.greenSoft,
-                              color: C.green,
-                              border: `1px solid ${C.greenBorder}`,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              padding: "2px 8px",
-                              borderRadius: 40,
-                            }}
-                          >
-                            Ok
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: 12, color: C.muted }}>—</span>
-                        )}
+                        {(() => {
+                          const hasForm = !!formulationFilled[p.id];
+                          const hasCompleted = (attendance[p.id]?.attended ?? 0) > 0;
+                          if (hasForm) {
+                            return (
+                              <span style={{ background: C.greenSoft, color: C.green, border: `1px solid ${C.greenBorder}`, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 40 }}>
+                                Completa
+                              </span>
+                            );
+                          }
+                          if (hasCompleted) {
+                            return (
+                              <span style={{ background: C.goldSoft, color: C.gold, border: `1px solid ${C.goldBorder}`, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 40 }}>
+                                Pendente
+                              </span>
+                            );
+                          }
+                          return (
+                            <span style={{ background: "#F3F4F6", color: C.muted, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 40 }}>
+                              Não iniciada
+                            </span>
+                          );
+                        })()}
                       </td>
+
 
                       {/* Status */}
                       <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
