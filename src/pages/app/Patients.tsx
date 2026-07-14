@@ -1067,7 +1067,7 @@ const Patients = () => {
             overflow: "hidden",
           }}
         >
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full" style={{ borderCollapse: "collapse", fontSize: 13, minWidth: 1080 }}>
               <thead>
                 <tr style={{ background: C.neutralBg, borderBottom: `1px solid ${C.border}` }}>
