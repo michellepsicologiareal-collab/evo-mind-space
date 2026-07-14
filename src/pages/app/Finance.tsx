@@ -80,6 +80,7 @@ import {
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { PageIntro } from "@/components/app/PageIntro";
+import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 
 type PaymentStatus = "pending" | "paid";
 type PaymentMethod = "pix" | "card" | "cash";
