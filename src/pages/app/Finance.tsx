@@ -1435,8 +1435,8 @@ const Finance = () => {
                                   variant="ghost"
                                   size="sm"
                                   className="h-8"
-                                  onClick={(e) => { e.stopPropagation(); openPatient("finance"); }}
-                                  title="Ver detalhamento"
+                                  onClick={(e) => { e.stopPropagation(); openFinanceHistory(); }}
+                                  title="Ver histórico financeiro"
                                 >
                                   Detalhes
                                 </Button>
