@@ -908,8 +908,8 @@ const Patients = () => {
 
 
       {/* ─────────── INSIGHT STRIP ─────────── */}
-      {(attentionPatients.length > 0 || lowAdherencePatients.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+      {(attentionPatients.length > 0 || lowAdherencePatients.length > 0 || noNextSessionPatients.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
           {attentionPatients.length > 0 && (
             <div style={{ background: C.goldSoft, borderLeft: `3px solid ${C.gold}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
               <div className="flex items-start gap-2.5">
