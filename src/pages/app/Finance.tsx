@@ -823,21 +823,71 @@ const Finance = () => {
           </div>
           <p className="mt-2 text-xs font-medium leading-snug">Distribuição dos Honorários</p>
           <div className="mt-2 space-y-1 text-[11px] leading-snug">
-            <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => feeBands.low.length && setFeeBandOpen("low")}
+              disabled={!feeBands.low.length}
+              className="flex w-full items-center justify-between rounded-md px-1 py-0.5 -mx-1 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-70 disabled:hover:bg-transparent disabled:cursor-default text-left"
+            >
               <span className="text-muted-foreground">Até R$ 100</span>
-              <span className="tabular-nums font-medium">{feeBands.low}</span>
-            </div>
-            <div className="flex items-center justify-between">
+              <span className="tabular-nums font-medium">{feeBands.low.length}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => feeBands.mid.length && setFeeBandOpen("mid")}
+              disabled={!feeBands.mid.length}
+              className="flex w-full items-center justify-between rounded-md px-1 py-0.5 -mx-1 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-70 disabled:hover:bg-transparent disabled:cursor-default text-left"
+            >
               <span className="text-muted-foreground">R$ 100,01–180</span>
-              <span className="tabular-nums font-medium">{feeBands.mid}</span>
-            </div>
-            <div className="flex items-center justify-between">
+              <span className="tabular-nums font-medium">{feeBands.mid.length}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => feeBands.high.length && setFeeBandOpen("high")}
+              disabled={!feeBands.high.length}
+              className="flex w-full items-center justify-between rounded-md px-1 py-0.5 -mx-1 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-70 disabled:hover:bg-transparent disabled:cursor-default text-left"
+            >
               <span className="text-muted-foreground">Acima de R$ 180</span>
-              <span className="tabular-nums font-medium">{feeBands.high}</span>
-            </div>
+              <span className="tabular-nums font-medium">{feeBands.high.length}</span>
+            </button>
           </div>
         </div>
       </section>
+
+      {/* Drawer lateral com pacientes por faixa de honorários */}
+      <Sheet open={feeBandOpen !== null} onOpenChange={(o) => !o && setFeeBandOpen(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>
+              {feeBandOpen === "low" && "Honorários — Até R$ 100,00"}
+              {feeBandOpen === "mid" && "Honorários — R$ 100,01 a R$ 180,00"}
+              {feeBandOpen === "high" && "Honorários — Acima de R$ 180,00"}
+            </SheetTitle>
+            <SheetDescription>
+              {feeBandOpen ? `${feeBands[feeBandOpen].length} paciente(s) ativo(s) nesta faixa` : ""}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 max-h-[calc(100vh-8rem)] overflow-y-auto pr-1">
+            <ul className="divide-y divide-border">
+              {feeBandOpen && feeBands[feeBandOpen].map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => { setFeeBandOpen(null); navigate(`/app/pacientes?open=${p.id}`); }}
+                    className="flex w-full items-center justify-between gap-3 py-2.5 text-left hover:bg-muted/60 rounded-md px-2 -mx-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className="text-sm font-medium truncate">{p.name}</span>
+                    <span className="text-sm tabular-nums text-muted-foreground shrink-0">
+                      {p.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </SheetContent>
+      </Sheet>
+
 
 
       {/* Fortnight filter */}
