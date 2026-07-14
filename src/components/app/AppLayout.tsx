@@ -78,8 +78,30 @@ export const AppLayout = () => {
     const keys = ["/app", "/app/pacientes", "/app/agenda", "/app/registro-sessao"];
     return keys.map((k) => navItems.find((n) => n.to === k)).filter(Boolean) as NavItem[];
   }, [navItems]);
+  // Ordem do "Mais" segue a mesma sequência das seções do desktop
+  const mobileSecondaryOrder = [
+    "/app/comece-por-aqui",
+    "/app/financeiro",
+    "/app/formulacao-ia",
+    "/app/humor",
+    "/app/plano-tratamento",
+    "/app/anamneses",
+    "/app/contrato-modelo",
+    "/app/contratos",
+    "/app/supervisionandos",
+    "/app/formulacao-livre",
+    "/app/biblioteca",
+    "/app/autocuidado",
+    "/app/perfil",
+  ];
   const mobileSecondary = useMemo(
-    () => navItems.filter((n) => !mobilePrimary.includes(n)),
+    () => {
+      const rest = navItems.filter((n) => !mobilePrimary.includes(n));
+      return mobileSecondaryOrder
+        .map((r) => rest.find((n) => n.to === r))
+        .filter(Boolean)
+        .concat(rest.filter((n) => !mobileSecondaryOrder.includes(n.to))) as NavItem[];
+    },
     [navItems, mobilePrimary]
   );
   const [moreOpen, setMoreOpen] = useState(false);
@@ -148,8 +170,11 @@ export const AppLayout = () => {
           {(() => {
             const sections: { label: string; routes: string[] }[] = [
               { label: "INÍCIO", routes: ["/app/comece-por-aqui", "/app"] },
-              { label: "CLÍNICA", routes: ["/app/pacientes", "/app/agenda", "/app/humor", "/app/registro-sessao", "/app/plano-tratamento", "/app/anamneses", "/app/financeiro", "/app/supervisionandos"] },
-              { label: "RECURSOS", routes: ["/app/biblioteca", "/app/autocuidado", "/app/contrato-modelo", "/app/contratos", "/app/perfil"] },
+              { label: "CLÍNICA", routes: ["/app/pacientes", "/app/agenda", "/app/financeiro"] },
+              { label: "ATENDIMENTO", routes: ["/app/registro-sessao", "/app/formulacao-ia", "/app/humor", "/app/plano-tratamento", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
+              { label: "SUPERVISÃO", routes: ["/app/supervisionandos", "/app/formulacao-livre"] },
+              { label: "RECURSOS", routes: ["/app/biblioteca", "/app/autocuidado"] },
+              { label: "CONFIGURAÇÕES", routes: ["/app/perfil"] },
             ];
             return sections.map((sec) => {
               const items = sec.routes
