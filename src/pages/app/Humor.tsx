@@ -55,6 +55,7 @@ interface PatientAggregate {
   delta: number | null;
   preview: string;
   nextSession: string | null;
+  records: number;
 }
 
 /* =========================================================================
