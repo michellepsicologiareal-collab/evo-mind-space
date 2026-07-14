@@ -1475,6 +1475,10 @@ const Finance = () => {
                     navigate(`/app/pacientes?patient=${p.patientId}&tab=${tab}${focusParam}`);
                   };
                   const rowClickable = !!p.patientId;
+                  const openFinanceHistory = () => {
+                    if (!p.patientId) return;
+                    setFinanceHistory({ id: p.patientId, name: p.name });
+                  };
                   const payBadgeTone =
                     pay.label === "Pago" ? "bg-moss/10 text-moss border-moss/20" :
                     pay.label === "Pendente" ? "bg-destructive/10 text-destructive border-destructive/20" :
