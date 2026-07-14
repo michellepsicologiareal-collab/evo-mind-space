@@ -886,18 +886,18 @@ const Patients = () => {
             <p className="mt-1.5 text-sm md:text-base text-muted-foreground max-w-2xl">{todayLabelCap}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap sm:justify-end">
-          <div className="relative">
+        <div className="flex items-center gap-2 flex-wrap sm:justify-end w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-none min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar paciente..."
-              className="pl-9 w-[220px] rounded-full"
+              className="pl-9 w-full sm:w-[220px] rounded-full"
             />
           </div>
-          <Button onClick={openNew} variant="accent" className="rounded-full font-display font-semibold">
-            <Plus className="h-4 w-4" /> Novo paciente
+          <Button onClick={openNew} variant="accent" className="rounded-full font-display font-semibold whitespace-nowrap">
+            <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Novo paciente</span><span className="sm:hidden">Novo</span>
           </Button>
         </div>
       </header>

@@ -1,62 +1,75 @@
-## O que será entregue
 
-Uma nova anamnese inicial para **pacientes adultos**, seguindo o mesmo padrão da anamnese infantil já existente: a psicóloga gera um link com token, o paciente preenche sem login e as respostas caem automaticamente na ficha clínica.
+# Auditoria de Responsividade — PsiReal
 
-## Estrutura
+Escopo grande (30+ telas + componentes). Antes de aplicar, alinho o plano de execução para não desconfigurar telas que já estão OK.
 
-### 1. Banco de dados (nova migration)
-- Tabela `adult_anamneses` com todos os 12 blocos do escopo:
-  - Dados pessoais (nome, nascimento, telefone, e-mail, profissão, estado civil, contato de emergência)
-  - Motivo da procura, tempo do problema, impacto (0-10)
-  - Sintomas (jsonb com marcados + campo "outro")
-  - Tratamentos anteriores (medicação, psicoterapia, psiquiatra)
-  - Escalas de vida (sono, alimentação, trabalho, relacionamentos, lazer, saúde — 0-10 cada)
-  - Rede de apoio, eventos importantes, objetivos, informações adicionais
-  - **Segurança**: `risk_ideation` (`none` / `sometimes` / `frequent`) + flag `risk_flag` calculado
-  - `status` ('recebida' por padrão), `submitted_at`, `authorized_lgpd`
-- Novo tipo de convite: reuso da tabela `anamnesis_invites` com coluna `anamnesis_type` (`child` | `adult`), ou tabela irmã `adult_anamnesis_invites` (vou usar a segunda para não impactar o fluxo infantil).
-- RPCs `SECURITY DEFINER`:
-  - `get_adult_anamnesis_by_invite_token(_token)` → devolve nome do profissional e status.
-  - `submit_adult_anamnesis(_token, _payload, _ip, _ua)` → trava atômica, cria/atualiza `patients` se necessário (busca por telefone/email do mesmo user_id; senão insere novo com o nome informado), grava anamnese, vincula ao invite, notifica psicóloga (com prefixo ⚠️ quando há risco).
-- RLS: psicóloga (owner) lê/edita/exclui as próprias anamneses; nada exposto ao paciente autenticado. GRANTs para `authenticated` e `service_role`.
+## Abordagem
 
-### 2. Edge function `public-adult-anamnesis`
-- Espelha `public-anamnesis`: throttle por IP/token, valida UUID, chama as RPCs com service role, trata erros (`invite_revoked`, `invite_expired`, `invite_already_used`, `lgpd_required`, `missing_required_fields`).
+Faço em **3 ondas**, priorizando o que hoje quebra mais em mobile (tabelas densas, drawers, formulários longos). Cada onda é auditada em headless browser a 360/390/768px, corrigida e verificada. Nada de mudança de regra de negócio, query ou cálculo — só camada de apresentação (Tailwind, layout, overflow, empty states).
 
-### 3. Página pública `/anamnese-adulto/:token`
-- Nova rota em `App.tsx`, lazy-loaded.
-- Layout responsivo, mobile-first, identidade PsiReal (logo, gradient hero, cards `rounded-2xl`, `font-display`).
-- **Barra de progresso fixa no topo** calculada a partir dos campos preenchidos.
-- **12 seções em cards**, cada uma com título e ícone leve.
-- **Autosave em `localStorage`** com chave por token (rascunho + indicador "Salvo automaticamente").
-- Botão "Continuar" faz scroll para próxima seção; "Enviar Anamnese" só habilita após consentimento LGPD.
-- Sintomas via `Checkbox` grid 2 colunas + campo "Outro" condicional.
-- Impacto e escalas de vida usando `Slider` (0-10) com label numérico grande.
-- Medicação/psicoterapia/psiquiatra via `RadioGroup`; medicamento aparece condicional.
-- **Seção 12 (Segurança)** obrigatória. Ao escolher "Algumas vezes" ou "Frequentemente", mostra alerta acolhedor abaixo do campo (não bloqueia envio).
-- Tela pós-envio com mensagem de agradecimento e ícone.
+### Padrões que vou aplicar (sem inventar novos componentes)
 
-### 4. Integração na ficha do profissional
-- Página `/app/anamneses` ganha **tabs**: "Crianças" | "Adultos".
-- Nova aba lista adult_anamneses com nome, data de envio, badge de status ("Recebida") e **badge vermelha "⚠️ Atenção"** quando `risk_flag`.
-- Modal de leitura em formato organizado (mesmo componente com blocos), somente-leitura por padrão + botão "Editar" que libera edição pelo psicólogo.
-- Botão **"Exportar PDF"** usando `jsPDF` (já instalado) com nome do paciente, profissional, seções.
-- Botão **"Gerar link de anamnese adulto"** na ficha do paciente (Patients.tsx) — cria invite e copia URL, espelhando o fluxo do infantil.
+- **Tabelas densas** (Financeiro, Pacientes, Sessões, Supervisão):
+  - Desktop/tablet ≥768px: tabela atual.
+  - Mobile <768px: mesma fonte, virar **lista de cards** (um card por linha) usando `<div className="md:hidden">` + `hidden md:block` na tabela. Reaproveita os mesmos badges/ações. Ações vão para menu `...` já existente onde aplicável.
+- **Filtros/chips**: `flex-wrap gap-2` + `overflow-x-auto -mx-4 px-4 snap-x` quando forem muitos, para não empilhar em 3 linhas em telas pequenas.
+- **KPI cards / grids**: revisar `grid-cols-*` para começar em `grid-cols-1`, `sm:grid-cols-2`, `lg:grid-cols-N`. Hoje muitos usam `md:grid-cols-5` direto, que quebra em 768px.
+- **Modais/Dialogs**: `max-w-*` + `w-[95vw]` + `max-h-[90vh] overflow-y-auto` para telas pequenas.
+- **Drawers laterais** (Ficha do Paciente, Financeiro): `w-full sm:max-w-md md:max-w-2xl` — hoje alguns forçam largura fixa.
+- **Formulários longos** (Registro de Sessão, Anamneses, Formulações): revisar grids de 2/3 colunas para colapsar em 1 no mobile; botões de ação (Salvar/Cancelar) `sticky bottom-0` no mobile para não sumir depois do scroll.
+- **Gráficos** (Humor, Dashboard, Financeiro): garantir `ResponsiveContainer` com altura fixa e wrapper com `overflow-x-auto` quando o eixo X for denso.
+- **Calendário (Agenda)**: view diária/semanal — no mobile forçar view diária, com scroll horizontal para a semana; header de dias com `overflow-x-auto snap-x`.
+- **PageHeader**: título + ações — hoje alguns quebram; ajustar para `flex-col sm:flex-row` e ações em `w-full sm:w-auto`.
+- **Landing Page**: revisar seções hero/features/pricing para clampar tamanhos de fonte (`text-4xl md:text-6xl`) e paddings.
+- **Auth (Login/Cadastro)**: já é card centralizado; revisar apenas paddings em 320px.
+- **Bottom bar mobile**: garantir `pb-20` nas páginas para conteúdo não ficar atrás da bottom bar.
 
-### 5. Mapa de preenchimento
-- Incluir a anamnese adulto no "Mapa de preenchimento" dos cards em Patients.tsx quando o paciente é adulto (mostra pill "Anamnese adulto" preenchido/pendente).
+### Ondas
 
-## Detalhes técnicos
+**Onda 1 — Alta densidade / maior impacto**
+1. Financeiro (`Finance.tsx`) — tabela agrupada, KPI grid 5-col, filtros, drawer.
+2. Pacientes (`Patients.tsx`) — tabela + chips + drawer da ficha.
+3. Agenda (`Agenda.tsx`) — calendário, modais de nova sessão/recorrente.
+4. Painel (`Dashboard.tsx`) — KPI grid.
+5. `AppLayout.tsx` — sidebar/bottom bar, paddings globais.
 
-- Sem alteração do fluxo infantil existente.
-- Design system: apenas tokens semânticos (`bg-card`, `text-foreground`, `variant="accent"`).
-- Sem novas dependências; usa `jspdf` já presente no projeto.
-- Types do Supabase regeneram automaticamente após a migration.
+**Onda 2 — Formulários longos e detalhamento clínico**
+6. Registro de Sessão (`RegistroSessao.tsx` + Hub).
+7. Formulações (`FormulacaoACT/TCC/TE/Livre/IA.tsx` + `CaseFormulation.tsx`).
+8. Plano de Atendimento (`PlanoTratamento.tsx` + Hub + `PlanModal.tsx`).
+9. Anamneses (`Anamneses.tsx` + `ChildAnamnesisForm.tsx` + `AdultAnamnesisViewer.tsx`).
+10. Ficha do paciente drawer (dentro de `Patients.tsx`).
 
-## Ordem de execução
+**Onda 3 — Auxiliares e públicas**
+11. Supervisão (`Supervision.tsx`, `SupervisaoCaso.tsx`, `Supervisees.tsx`).
+12. Humor (`Humor.tsx`) — gráficos.
+13. Configurações (`Profile.tsx`).
+14. Comece Por Aqui, Biblioteca, Autocuidado, Contratos, Tarefas.
+15. Landing (`Index.tsx` + `src/components/landing/*`).
+16. Auth, ResetPassword, Admin.
+17. Páginas públicas: `AnamnesePublica`, `AnamneseAdultoPublica`, `ContratoPublico`, `ConfirmarSessao`, `SessaoConfirmada`.
 
-1. Migration (tabela + invites + RPCs + RLS + GRANTs).
-2. Edge function `public-adult-anamnesis`.
-3. Página pública + rota.
-4. UI da ficha profissional (tabs em Anamneses, botão de convite em Patients, exportação PDF).
-5. Verificação: `tsgo`, revisar console/network no formulário, testar submit fake.
+### Verificação por onda
+
+Para cada onda rodo um script Playwright headless nos viewports 360, 390, 768, 1024 tirando screenshots das rotas alteradas, e leio-os para confirmar visualmente. Sem restart do dev server.
+
+## Restrições que respeitarei
+
+- **Sem** mudanças em `src/integrations/supabase/*`, queries, handlers, cálculos financeiros.
+- **Sem** reduzir font-size em tabelas.
+- **Sem** cortar informações — em mobile, tabela vira cards com os mesmos dados.
+- Mesma paleta (Terracota/Musgo/Lilás/Champagne), mesmos componentes shadcn, mesma tipografia (Plus Jakarta Sans / Inter).
+
+## Entrega final
+
+Ao terminar as 3 ondas, retorno:
+- Lista de telas ajustadas.
+- Lista de componentes ajustados.
+- Problemas encontrados × correções aplicadas.
+- Confirmação de typecheck limpo + evidências (screenshots) por viewport.
+
+## Duração estimada
+
+Trabalho grande — múltiplas rodadas de edição + verificação. Sigo direto até o fim se aprovar, sem parar para confirmar cada tela.
+
+Confirmo a abordagem para iniciar pela **Onda 1**?
