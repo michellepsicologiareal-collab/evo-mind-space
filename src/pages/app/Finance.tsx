@@ -767,7 +767,6 @@ const Finance = () => {
           { key: "sem_pagamento" as QuickAlert, label: "Sessões realizadas sem pagamento", hint: `${sessoesPendentes} pendentes`, icon: FileWarning, count: sessoesPendentes, tone: "text-destructive bg-destructive/10 border-destructive/30", clickable: true },
           { key: "none" as QuickAlert, label: "Planos de Atendimento no mês", hint: `${packagesStats.sessions} ${packagesStats.sessions === 1 ? "sessão vinculada" : "sessões vinculadas"} a Planos de Atendimento`, icon: PackageOpen, count: packagesStats.count, tone: "text-primary bg-secondary/60 border-border", clickable: false },
           { key: "none" as QuickAlert, label: "Sessões únicas no mês", hint: `${avulsasStats.patients} ${avulsasStats.patients === 1 ? "paciente" : "pacientes"} com sessões únicas`, icon: CalendarClock, count: avulsasStats.count, tone: "text-foreground bg-card border-border", clickable: false },
-          { key: "pacotes_vencendo" as QuickAlert, label: "Planos de Atendimento próximos do encerramento", hint: "sem regra definida", icon: PackageOpen, count: 0, tone: "text-muted-foreground bg-secondary/40 border-border", clickable: false },
         ]).map((a, idx) => {
           const active = a.clickable && quickAlert === a.key;
           const Icon = a.icon;
@@ -803,6 +802,29 @@ const Finance = () => {
             </button>
           );
         })}
+
+        {/* Distribuição dos Honorários — carteira ativa (independe de mês/quinzena/filtros) */}
+        <div className="rounded-2xl border border-border bg-card p-4 text-foreground">
+          <div className="flex items-center justify-between gap-3">
+            <Wallet className="h-4 w-4 shrink-0 text-primary" />
+            <span className="font-display text-2xl font-semibold">{feeBands.total - feeBands.invalid}</span>
+          </div>
+          <p className="mt-2 text-xs font-medium leading-snug">Distribuição dos Honorários</p>
+          <div className="mt-2 space-y-1 text-[11px] leading-snug">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Até R$ 100</span>
+              <span className="tabular-nums font-medium">{feeBands.low}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">R$ 100,01–180</span>
+              <span className="tabular-nums font-medium">{feeBands.mid}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Acima de R$ 180</span>
+              <span className="tabular-nums font-medium">{feeBands.high}</span>
+            </div>
+          </div>
+        </div>
       </section>
 
 
