@@ -1632,18 +1632,18 @@ const Patients = () => {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); openEdit(p); }}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); toggleActive(p); }}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { openEdit(p); }}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { toggleActive(p); }}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); setTccPatient(p); }}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => guardMissing(!!formulationFilled[p.id], () => { setSelectedPatient(null); setPadeksyPatient(p); }, { label: "Formulação TCC" })}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => guardMissing(!!teFilled[p.id], () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); }, { label: "Formulação TE" })} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => guardMissing(!!actFilled[p.id], () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); }, { label: "Formulação ACT" })} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setTccPatient(p); }}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => guardMissing(!!formulationFilled[p.id], () => { setPadeksyPatient(p); }, { label: "Formulação TCC" })}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => guardMissing(!!teFilled[p.id], () => { navigate(`/app/pacientes/${p.id}/formulacao-te`); }, { label: "Formulação TE" })} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => guardMissing(!!actFilled[p.id], () => { navigate(`/app/pacientes/${p.id}/formulacao-act`); }, { label: "Formulação ACT" })} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); setRecordsPatient(p); }}><FileText className="h-4 w-4 mr-2" /> Registros de sessão</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }}><ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setRecordsPatient(p); }}><FileText className="h-4 w-4 mr-2" /> Registros de sessão</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { setHomeworkPatient(p); }}><ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => { setSelectedPatient(null); handleDelete(p); }} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { handleDelete(p); }} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <button
@@ -1728,10 +1728,10 @@ const Patients = () => {
                         const hasAct = hasActFormulation(act);
                         const actSummary = clinicalText(act?.direcionamento_gerado) || clinicalText(act?.apresentacao_problema) || clinicalText(act?.matriz_act) || clinicalText(act?.valores);
                         const items = [
-                          { key: "tcc", label: "TCC — Formulação de caso", filled: hasTcc, summary: trunc(tccSummary), fullSummary: tccSummary, accent: "hsl(var(--primary))", onView: () => guardMissing(hasTcc, () => { setSelectedPatient(null); setPadeksyPatient(p); }, { label: "Formulação TCC", onCreate: () => { setSelectedPatient(null); setPadeksyPatient(p); } }) },
-                          { key: "te", label: "TE — Terapia do Esquema", filled: hasTe, summary: trunc(teSummary), fullSummary: teSummary, accent: "#B8860B", onView: () => guardMissing(hasTe, () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); }, { label: "Formulação TE", onCreate: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-te`); } }) },
-                          { key: "act", label: "ACT — Terapia de Aceitação", filled: hasAct, summary: trunc(actSummary), fullSummary: actSummary, accent: "#2D6A4F", onView: () => guardMissing(hasAct, () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); }, { label: "Formulação ACT", onCreate: () => { setSelectedPatient(null); navigate(`/app/pacientes/${p.id}/formulacao-act`); } }) },
-                          { key: "rpd", label: "RPD — Registros TCC", filled: cTcc > 0, summary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", fullSummary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", accent: "hsl(var(--moss))", onView: () => guardMissing(cTcc > 0, () => { setSelectedPatient(null); setTccPatient(p); }, { label: "Registros TCC", onCreate: () => { setSelectedPatient(null); setTccPatient(p); } }) },
+                          { key: "tcc", label: "TCC — Formulação de caso", filled: hasTcc, summary: trunc(tccSummary), fullSummary: tccSummary, accent: "hsl(var(--primary))", onView: () => guardMissing(hasTcc, () => { setPadeksyPatient(p); }, { label: "Formulação TCC", onCreate: () => { setPadeksyPatient(p); } }) },
+                          { key: "te", label: "TE — Terapia do Esquema", filled: hasTe, summary: trunc(teSummary), fullSummary: teSummary, accent: "#B8860B", onView: () => guardMissing(hasTe, () => { navigate(`/app/pacientes/${p.id}/formulacao-te`); }, { label: "Formulação TE", onCreate: () => { navigate(`/app/pacientes/${p.id}/formulacao-te`); } }) },
+                          { key: "act", label: "ACT — Terapia de Aceitação", filled: hasAct, summary: trunc(actSummary), fullSummary: actSummary, accent: "#2D6A4F", onView: () => guardMissing(hasAct, () => { navigate(`/app/pacientes/${p.id}/formulacao-act`); }, { label: "Formulação ACT", onCreate: () => { navigate(`/app/pacientes/${p.id}/formulacao-act`); } }) },
+                          { key: "rpd", label: "RPD — Registros TCC", filled: cTcc > 0, summary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", fullSummary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", accent: "hsl(var(--moss))", onView: () => guardMissing(cTcc > 0, () => { setTccPatient(p); }, { label: "Registros TCC", onCreate: () => { setTccPatient(p); } }) },
                         ];
                         return (
                           <div className="grid gap-2 sm:grid-cols-2">
@@ -1750,12 +1750,12 @@ const Patients = () => {
                         <InfoRow label="Histórico de sessões" value={cHist > 0 ? cHist : null} />
                       </div>
                       <div className="flex flex-wrap gap-1.5">
-                        <Chip label="Humor" count={cMood} onClick={() => guardMissing(cMood > 0, () => { setSelectedPatient(null); setMoodPatient(p); }, { label: "Humor", onCreate: () => { setSelectedPatient(null); setMoodPatient(p); } })} />
-                        <Chip label="Histórico" count={cHist} onClick={() => guardMissing(cHist > 0, () => { setSelectedPatient(null); setHistoryPatient(p); }, { label: "Histórico", onCreate: () => { setSelectedPatient(null); setHistoryPatient(p); } })} />
-                        <Chip label="Registros" count={cRec} onClick={() => guardMissing(cRec > 0, () => { setSelectedPatient(null); setRecordsPatient(p); }, { label: "Registros de sessão", onCreate: () => { setSelectedPatient(null); setRecordsPatient(p); } })} />
+                        <Chip label="Humor" count={cMood} onClick={() => guardMissing(cMood > 0, () => { setMoodPatient(p); }, { label: "Humor", onCreate: () => { setMoodPatient(p); } })} />
+                        <Chip label="Histórico" count={cHist} onClick={() => guardMissing(cHist > 0, () => { setHistoryPatient(p); }, { label: "Histórico", onCreate: () => { setHistoryPatient(p); } })} />
+                        <Chip label="Registros" count={cRec} onClick={() => guardMissing(cRec > 0, () => { setRecordsPatient(p); }, { label: "Registros de sessão", onCreate: () => { setRecordsPatient(p); } })} />
                       </div>
                       <button
-                        onClick={() => { setSelectedPatient(null); navigate("/app/agenda"); }}
+                        onClick={() => { navigate("/app/agenda"); }}
                         className="flex items-center justify-center gap-2 w-full"
                         style={{ background: "hsl(var(--primary))", color: "#fff", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
                       >
@@ -1779,8 +1779,8 @@ const Patients = () => {
                         );
                       })()}
                       <div className="flex flex-wrap gap-1.5">
-                        <Chip label="Abrir plano" onClick={() => guardMissing(!!treatmentPlans[p.id], () => { setSelectedPatient(null); navigate(`/app/plano-tratamento?patient=${p.id}`); }, { label: "Plano terapêutico", onCreate: () => { setSelectedPatient(null); navigate(`/app/plano-tratamento?patient=${p.id}`); } })} />
-                        <Chip label="Plano entre Sessões" onClick={() => { setSelectedPatient(null); setHomeworkPatient(p); }} />
+                        <Chip label="Abrir plano" onClick={() => guardMissing(!!treatmentPlans[p.id], () => { navigate(`/app/plano-tratamento?patient=${p.id}`); }, { label: "Plano terapêutico", onCreate: () => { navigate(`/app/plano-tratamento?patient=${p.id}`); } })} />
+                        <Chip label="Plano entre Sessões" onClick={() => { setHomeworkPatient(p); }} />
                       </div>
                     </TabsContent>
 
@@ -1790,7 +1790,7 @@ const Patients = () => {
                         <InfoRow label="Anamnese" value={hasAnam ? `Preenchida em ${format(new Date(anamneseFilled[p.id]), "dd/MM/yyyy")}` : null} />
                       </div>
                       <div className="flex flex-wrap gap-1.5">
-                        <Chip label="Ver anamnese" count={hasAnam ? 1 : 0} onClick={() => guardMissing(hasAnam, () => { setSelectedPatient(null); setAnamnesisPatient(p); }, { label: "Anamnese" })} />
+                        <Chip label="Ver anamnese" count={hasAnam ? 1 : 0} onClick={() => guardMissing(hasAnam, () => { setAnamnesisPatient(p); }, { label: "Anamnese" })} />
                       </div>
                       <button
                         onClick={async () => {
@@ -1830,7 +1830,7 @@ const Patients = () => {
                         <InfoRow label="Anexos" value={null} />
                       </div>
                       <div className="flex flex-wrap gap-1.5">
-                        <Chip label="Abrir contratos" onClick={() => { setSelectedPatient(null); navigate("/app/contratos"); }} />
+                        <Chip label="Abrir contratos" onClick={() => { navigate("/app/contratos"); }} />
                       </div>
                     </TabsContent>
 
@@ -1874,7 +1874,7 @@ const Patients = () => {
                           <MessageCircle className="h-4 w-4" /> Cobrar via WhatsApp
                         </a>
                       )}
-                      <Chip label="Abrir financeiro" onClick={() => { setSelectedPatient(null); navigate("/app/financeiro"); }} />
+                      <Chip label="Abrir financeiro" onClick={() => { navigate("/app/financeiro"); }} />
                     </TabsContent>
                   </Tabs>
 
