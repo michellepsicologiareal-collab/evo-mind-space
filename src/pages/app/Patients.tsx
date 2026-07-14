@@ -316,24 +316,49 @@ const Patients = () => {
   const [focusReceitaSaude, setFocusReceitaSaude] = useState(false);
   const receitaSaudeRef = useRef<HTMLDivElement | null>(null);
 
+  // URL → estado: abre/atualiza a ficha lateral a partir de ?patient=&tab=
+  // Mantém os params durante a navegação para que o botão "voltar" do
+  // navegador (e retornos de subtelas como Agenda/Formulações/etc.) reabram
+  // a mesma ficha na mesma aba.
   useEffect(() => {
+    if (!patients.length) return;
     const pid = searchParams.get("patient");
     const tab = searchParams.get("tab");
     const focus = searchParams.get("focus");
-    if (!pid) return;
-    if (!patients.length) return;
-    const target = patients.find((x) => x.id === pid);
-    if (!target) return;
-    setSelectedPatient(target);
-    setSelectedTab(tab && VALID_TABS.includes(tab) ? tab : "overview");
-    if (focus === "receita-saude") setFocusReceitaSaude(true);
-    const next = new URLSearchParams(searchParams);
-    next.delete("patient");
-    next.delete("tab");
-    next.delete("focus");
-    setSearchParams(next, { replace: true });
+    if (pid) {
+      const target = patients.find((x) => x.id === pid);
+      if (target && selectedPatient?.id !== pid) setSelectedPatient(target);
+      const nextTab = tab && VALID_TABS.includes(tab) ? tab : "overview";
+      if (selectedTab !== nextTab) setSelectedTab(nextTab);
+      if (focus === "receita-saude") setFocusReceitaSaude(true);
+    } else if (selectedPatient) {
+      setSelectedPatient(null);
+      setSelectedTab("overview");
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patients, searchParams]);
+
+  // Estado → URL: reflete a ficha/aba abertas nos query params, para
+  // preservar o contexto ao navegar para subtelas e retornar via "voltar".
+  useEffect(() => {
+    const currentPid = searchParams.get("patient");
+    const currentTab = searchParams.get("tab");
+    if (selectedPatient) {
+      if (currentPid !== selectedPatient.id || currentTab !== selectedTab) {
+        const next = new URLSearchParams(searchParams);
+        next.set("patient", selectedPatient.id);
+        next.set("tab", selectedTab);
+        setSearchParams(next, { replace: true });
+      }
+    } else if (currentPid || currentTab) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("patient");
+      next.delete("tab");
+      next.delete("focus");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPatient, selectedTab]);
 
   // Rolar e destacar o bloco Receita Saúde ao abrir com focus.
   useEffect(() => {
