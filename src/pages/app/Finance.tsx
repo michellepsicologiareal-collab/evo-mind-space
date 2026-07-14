@@ -1258,14 +1258,36 @@ const Finance = () => {
             return <p className="text-center py-12 text-muted-foreground">Carregando…</p>;
           }
           if (patients.length === 0) {
+            const hasActiveFilters =
+              patientFilter !== "all" || receitaSaudeFilter !== "all" || fortnightFilter !== "all";
+            const clearFilters = () => {
+              setPatientFilter("all");
+              setReceitaSaudeFilter("all");
+              setFortnightFilter("all");
+            };
             return (
-              <div className="rounded-2xl border border-dashed border-border bg-card p-14 text-center">
-                <Wallet className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
-                <p className="font-display text-lg font-medium text-foreground/70">Sem pacientes no período</p>
-                <p className="text-sm mt-1 text-muted-foreground">Ajuste os filtros de mês ou quinzena para ver movimentos.</p>
+              <div className="rounded-2xl border border-dashed border-border bg-card p-10 md:p-14 text-center">
+                <Wallet className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" aria-hidden="true" />
+                <p className="font-display text-lg font-medium text-foreground/80">
+                  Nenhum paciente encontrado neste período.
+                </p>
+                <p className="text-sm mt-1 text-muted-foreground max-w-md mx-auto">
+                  Ajuste os filtros ou selecione outro período para visualizar os dados financeiros.
+                </p>
+                {hasActiveFilters && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-5 h-10 min-h-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    onClick={clearFilters}
+                  >
+                    Limpar filtros
+                  </Button>
+                )}
               </div>
             );
           }
+
 
           const modalidadeFor = (p: Aggregate): string => {
             const pkgCount = p.packageCounts.size;
