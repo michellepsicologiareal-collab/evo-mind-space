@@ -1083,13 +1083,11 @@ const Patients = () => {
                 <tr style={{ background: C.neutralBg, borderBottom: `1px solid ${C.border}` }}>
                   {[
                     { k: "avatar", label: "", w: 52 },
-                    { k: "nome", label: "Nome" },
-                    { k: "pacote", label: "Pacote" },
-                    { k: "progresso", label: "Progresso" },
+                    { k: "nome", label: "Paciente" },
+                    { k: "ultima", label: "Última sessão" },
                     { k: "proxima", label: "Próxima sessão" },
-                    { k: "valor", label: "Valor" },
-                    { k: "pagamento", label: "Pagamento" },
-                    { k: "receita", label: "Receita Saúde" },
+                    { k: "plano", label: "Plano de Atendimento" },
+                    { k: "formulacao", label: "Formulação de Caso" },
                     { k: "status", label: "Status" },
                     { k: "acoes", label: "", w: 56 },
                   ].map((h) => (
