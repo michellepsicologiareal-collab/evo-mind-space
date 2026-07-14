@@ -162,6 +162,7 @@ const Finance = () => {
   }, [rawRows]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
+  const [financeHistory, setFinanceHistory] = useState<{ id: string; name: string } | null>(null);
   const [fortnightFilter, setFortnightFilter] = useState<FortnightFilter>("all");
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderWindow, setReminderWindow] = useState(24);
