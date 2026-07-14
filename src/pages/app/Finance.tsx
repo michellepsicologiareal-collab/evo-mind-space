@@ -779,18 +779,18 @@ const Finance = () => {
 
 
       {/* Fortnight filter */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Tabs value={fortnightFilter} onValueChange={(v) => setFortnightFilter(v as FortnightFilter)}>
-          <TabsList>
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+        <Tabs value={fortnightFilter} onValueChange={(v) => setFortnightFilter(v as FortnightFilter)} className="w-full sm:w-auto">
+          <TabsList className="w-full sm:w-auto overflow-x-auto no-scrollbar">
             <TabsTrigger value="all">Mês todo</TabsTrigger>
-            <TabsTrigger value="first">1ª Quinzena (1–15)</TabsTrigger>
-            <TabsTrigger value="second">2ª Quinzena (16–fim)</TabsTrigger>
+            <TabsTrigger value="first">1ª Quinzena</TabsTrigger>
+            <TabsTrigger value="second">2ª Quinzena</TabsTrigger>
           </TabsList>
         </Tabs>
-        <div className="flex items-center gap-2">
-          <Label htmlFor="receita-saude-filter" className="text-xs text-muted-foreground">Receita Saúde</Label>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Label htmlFor="receita-saude-filter" className="text-xs text-muted-foreground whitespace-nowrap">Receita Saúde</Label>
           <Select value={receitaSaudeFilter} onValueChange={(v) => setReceitaSaudeFilter(v as ReceitaSaudeFilter)}>
-            <SelectTrigger id="receita-saude-filter" className="h-9 w-[160px]">
+            <SelectTrigger id="receita-saude-filter" className="h-9 flex-1 sm:w-[160px] sm:flex-none">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -800,10 +800,10 @@ const Finance = () => {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center gap-2">
-          <Label htmlFor="patient-filter" className="text-xs text-muted-foreground">Paciente</Label>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Label htmlFor="patient-filter" className="text-xs text-muted-foreground whitespace-nowrap">Paciente</Label>
           <Select value={patientFilter} onValueChange={setPatientFilter}>
-            <SelectTrigger id="patient-filter" className="h-9 w-[220px]">
+            <SelectTrigger id="patient-filter" className="h-9 flex-1 sm:w-[220px] sm:flex-none">
               <SelectValue placeholder="Todos os pacientes" />
             </SelectTrigger>
             <SelectContent>
