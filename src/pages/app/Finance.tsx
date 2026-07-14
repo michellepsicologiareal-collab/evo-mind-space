@@ -168,6 +168,34 @@ const Finance = () => {
   const recentAlertRef = useRef<HTMLDivElement | null>(null);
   const sessionsSectionRef = useRef<HTMLElement | null>(null);
 
+  // Distribuição de honorários (carteira ativa — independente do mês/filtros)
+  const [feeBands, setFeeBands] = useState<{ low: number; mid: number; high: number; invalid: number; total: number }>({ low: 0, mid: 0, high: 0, invalid: 0, total: 0 });
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("patients")
+        .select("id, session_price")
+        .eq("user_id", user.id)
+        .eq("is_active", true);
+      if (error || !data) return;
+      let low = 0, mid = 0, high = 0, invalid = 0;
+      const seen = new Set<string>();
+      for (const p of data as Array<{ id: string; session_price: number | string | null }>) {
+        if (seen.has(p.id)) continue;
+        seen.add(p.id);
+        const raw = p.session_price;
+        const v = raw == null ? NaN : Number(raw);
+        if (!Number.isFinite(v) || v <= 0) { invalid++; continue; }
+        if (v <= 100) low++;
+        else if (v <= 180) mid++;
+        else high++;
+      }
+      setFeeBands({ low, mid, high, invalid, total: seen.size });
+    })();
+  }, [user]);
+
+
   const monthStart = useMemo(() => startOfMonth(monthCursor), [monthCursor]);
   const monthEnd = useMemo(() => endOfMonth(monthCursor), [monthCursor]);
 
