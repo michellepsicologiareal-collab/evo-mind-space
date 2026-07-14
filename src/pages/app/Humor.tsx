@@ -177,7 +177,9 @@ export default function Humor() {
   const aggregates = useMemo<PatientAggregate[]>(() => {
     const since = subDays(new Date(), period);
     const byPatient = new Map<string, ProgressRow[]>();
+    const countByPatient = new Map<string, number>();
     for (const r of progress) {
+      countByPatient.set(r.patient_id, (countByPatient.get(r.patient_id) ?? 0) + 1);
       if (!isAfter(new Date(r.recorded_at), since)) continue;
       const list = byPatient.get(r.patient_id) ?? [];
       list.push(r);
@@ -211,6 +213,7 @@ export default function Humor() {
         delta,
         preview,
         nextSession: nextByPatient.get(p.id) ?? null,
+        records: countByPatient.get(p.id) ?? 0,
       };
     });
   }, [patients, progress, sessions, period, thresholds]);
