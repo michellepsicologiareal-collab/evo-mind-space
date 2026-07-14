@@ -1418,7 +1418,7 @@ const Patients = () => {
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCard(e); }
                   }}
-                  className="p-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))] cursor-pointer"
+                  className="p-4 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--primary))] cursor-pointer"
                   style={{ background: C.card, borderLeft: `3px solid ${rowAccent}` }}
                 >
                   {/* Header: avatar + nome/telefone + ações */}
@@ -1426,6 +1426,7 @@ const Patients = () => {
                     <div
                       className="flex items-center justify-center shrink-0"
                       style={{ width: 40, height: 40, borderRadius: "50%", background: avatarBg, color: C.ink, fontWeight: 700, fontSize: 13 }}
+                      aria-hidden="true"
                     >
                       {initials}
                     </div>
@@ -1437,10 +1438,11 @@ const Patients = () => {
                         <a
                           href={`tel:${p.phone.replace(/\D/g, "")}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 mt-1"
+                          aria-label={`Ligar para ${p.full_name} no telefone ${p.phone}`}
+                          className="inline-flex items-center gap-1 mt-1 min-h-[32px] rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--primary))]"
                           style={{ fontSize: 12, color: C.muted }}
                         >
-                          <Phone className="h-3 w-3" />
+                          <Phone className="h-3 w-3" aria-hidden="true" />
                           <span className="truncate">{p.phone}</span>
                         </a>
                       )}
@@ -1450,9 +1452,10 @@ const Patients = () => {
                         <button
                           onClick={(e) => e.stopPropagation()}
                           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") e.stopPropagation(); }}
-                          className="flex items-center justify-center shrink-0"
-                          style={{ width: 36, height: 36, borderRadius: 8, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
+                          className="flex items-center justify-center shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--primary))]"
+                          style={{ width: 44, height: 44, borderRadius: 8, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
                           aria-label="Ações do paciente"
+                          title="Ações do paciente"
                         >
                           <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                         </button>
@@ -1473,6 +1476,7 @@ const Patients = () => {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
+
 
                   {/* Próxima sessão em destaque + Última sessão em grade 2 col */}
                   <div className="grid grid-cols-2 gap-2 mt-3">
