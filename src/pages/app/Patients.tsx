@@ -958,6 +958,31 @@ const Patients = () => {
               </div>
             </div>
           )}
+          {noNextSessionPatients.length > 0 && (
+            <div style={{ background: C.redSoft, borderLeft: `3px solid ${C.red}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+              <div className="flex items-start gap-2.5">
+                <div className="shrink-0 flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(192,57,43,0.16)", color: C.red }}>
+                  <CalendarDays className="h-3 w-3" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p style={{ fontSize: 11, fontWeight: 700, color: C.red, textTransform: "uppercase", letterSpacing: "0.08em" }}>Sem próxima sessão</p>
+                  <p className="mt-0.5" style={{ fontSize: 13, color: C.ink, lineHeight: 1.45 }}>
+                    {noNextSessionPatients.length} {noNextSessionPatients.length === 1 ? "paciente ativo sem próxima sessão agendada" : "pacientes ativos sem próxima sessão agendada"}.
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {noNextSessionPatients.slice(0, 3).map((p) => (
+                      <span key={p.id} style={{ background: "rgba(192,57,43,0.12)", color: C.red, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
+                        {p.full_name.split(" ").slice(0, 2).join(" ")}
+                      </span>
+                    ))}
+                    {noNextSessionPatients.length > 3 && (
+                      <span style={{ background: "rgba(192,57,43,0.12)", color: C.red, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>+ {noNextSessionPatients.length - 3}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
