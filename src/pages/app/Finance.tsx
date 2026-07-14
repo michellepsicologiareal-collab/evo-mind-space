@@ -1371,17 +1371,21 @@ const Finance = () => {
                         navigate(`/app/pacientes?patient=${p.patientId}&tab=${tab}${focusParam}`);
                       };
                       const rowClickable = !!p.patientId;
+                      const openFinanceHistory = () => {
+                        if (!p.patientId) return;
+                        setFinanceHistory({ id: p.patientId, name: p.name });
+                      };
                       return (
                         <tr
                           key={p.key}
                           role={rowClickable ? "button" : undefined}
                           tabIndex={rowClickable ? 0 : undefined}
-                          aria-label={rowClickable ? `Abrir ficha financeira de ${p.name}` : undefined}
-                          onClick={rowClickable ? () => openPatient("finance") : undefined}
+                          aria-label={rowClickable ? `Abrir histórico financeiro de ${p.name}` : undefined}
+                          onClick={rowClickable ? openFinanceHistory : undefined}
                           onKeyDown={rowClickable ? (e) => {
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();
-                              openPatient("finance");
+                              openFinanceHistory();
                             }
                           } : undefined}
                           className={`border-b border-border/60 hover:bg-secondary/30 transition-colors ${rowClickable ? "cursor-pointer" : ""}`}
