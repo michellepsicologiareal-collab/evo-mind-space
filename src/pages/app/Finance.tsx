@@ -80,6 +80,7 @@ import {
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { PageIntro } from "@/components/app/PageIntro";
+import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 
 type PaymentStatus = "pending" | "paid";
 type PaymentMethod = "pix" | "card" | "cash";
@@ -161,6 +162,7 @@ const Finance = () => {
   }, [rawRows]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
+  const [financeHistory, setFinanceHistory] = useState<{ id: string; name: string } | null>(null);
   const [fortnightFilter, setFortnightFilter] = useState<FortnightFilter>("all");
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderWindow, setReminderWindow] = useState(24);
@@ -1369,17 +1371,21 @@ const Finance = () => {
                         navigate(`/app/pacientes?patient=${p.patientId}&tab=${tab}${focusParam}`);
                       };
                       const rowClickable = !!p.patientId;
+                      const openFinanceHistory = () => {
+                        if (!p.patientId) return;
+                        setFinanceHistory({ id: p.patientId, name: p.name });
+                      };
                       return (
                         <tr
                           key={p.key}
                           role={rowClickable ? "button" : undefined}
                           tabIndex={rowClickable ? 0 : undefined}
-                          aria-label={rowClickable ? `Abrir ficha financeira de ${p.name}` : undefined}
-                          onClick={rowClickable ? () => openPatient("finance") : undefined}
+                          aria-label={rowClickable ? `Abrir histórico financeiro de ${p.name}` : undefined}
+                          onClick={rowClickable ? openFinanceHistory : undefined}
                           onKeyDown={rowClickable ? (e) => {
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();
-                              openPatient("finance");
+                              openFinanceHistory();
                             }
                           } : undefined}
                           className={`border-b border-border/60 hover:bg-secondary/30 transition-colors ${rowClickable ? "cursor-pointer" : ""}`}
@@ -1429,8 +1435,8 @@ const Finance = () => {
                                   variant="ghost"
                                   size="sm"
                                   className="h-8"
-                                  onClick={(e) => { e.stopPropagation(); openPatient("finance"); }}
-                                  title="Ver detalhamento"
+                                  onClick={(e) => { e.stopPropagation(); openFinanceHistory(); }}
+                                  title="Ver histórico financeiro"
                                 >
                                   Detalhes
                                 </Button>
@@ -1469,6 +1475,10 @@ const Finance = () => {
                     navigate(`/app/pacientes?patient=${p.patientId}&tab=${tab}${focusParam}`);
                   };
                   const rowClickable = !!p.patientId;
+                  const openFinanceHistory = () => {
+                    if (!p.patientId) return;
+                    setFinanceHistory({ id: p.patientId, name: p.name });
+                  };
                   const payBadgeTone =
                     pay.label === "Pago" ? "bg-moss/10 text-moss border-moss/20" :
                     pay.label === "Pendente" ? "bg-destructive/10 text-destructive border-destructive/20" :
@@ -1553,8 +1563,8 @@ const Finance = () => {
                             variant="outline"
                             size="sm"
                             className="flex-1 h-11 min-h-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                            onClick={() => openPatient("finance")}
-                            aria-label={`Ver detalhes financeiros de ${p.name}`}
+                            onClick={openFinanceHistory}
+                            aria-label={`Ver histórico financeiro de ${p.name}`}
                           >
                             Ver detalhes
                           </Button>
@@ -1596,6 +1606,42 @@ const Finance = () => {
           load();
         }}
       />
+
+      {/* Histórico financeiro do paciente — permanece dentro do contexto do Financeiro */}
+      <Sheet open={!!financeHistory} onOpenChange={(open) => { if (!open) setFinanceHistory(null); }}>
+        <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle className="font-display">Histórico financeiro</SheetTitle>
+            <SheetDescription>
+              {financeHistory?.name ?? ""} · resumo, sessões, pagamentos e Receita Saúde
+            </SheetDescription>
+          </SheetHeader>
+
+          {financeHistory && (
+            <div className="mt-4 space-y-4">
+              <PatientSessionHistory
+                patientId={financeHistory.id}
+                patientName={financeHistory.name}
+              />
+
+              <div className="pt-2 border-t border-border/60 flex flex-col sm:flex-row gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="sm:ml-auto focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  onClick={() => {
+                    const id = financeHistory.id;
+                    setFinanceHistory(null);
+                    navigate(`/app/pacientes?patient=${id}`);
+                  }}
+                >
+                  Abrir ficha do paciente
+                </Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
