@@ -1552,8 +1552,9 @@ const Finance = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1 h-10"
+                            className="flex-1 h-11 min-h-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                             onClick={() => openPatient("finance")}
+                            aria-label={`Ver detalhes financeiros de ${p.name}`}
                           >
                             Ver detalhes
                           </Button>
@@ -1562,16 +1563,18 @@ const Finance = () => {
                           <Button
                             variant="accent"
                             size="sm"
-                            className="flex-1 h-10"
+                            className="flex-1 h-11 min-h-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                             onClick={() => {
                               const pending = p.allBillable.find((r) => r.payment_status === "pending");
                               if (pending) updatePayment(pending.id, "paid");
                             }}
+                            aria-label={`Marcar sessão de ${p.name} como paga`}
                           >
                             Marcar pago
                           </Button>
                         )}
                       </div>
+
                     </li>
                   );
                 })}
