@@ -1490,14 +1490,15 @@ const Finance = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-9 w-9 shrink-0 -mr-1 -mt-1"
+                            className="h-11 w-11 min-h-11 min-w-11 shrink-0 -mr-1 -mt-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                             onClick={(e) => { e.stopPropagation(); setEditing(editTarget); }}
-                            aria-label="Editar pagamento"
+                            aria-label={`Editar pagamento de ${p.name}`}
                             title="Editar pagamento"
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         )}
+
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 mb-3">
