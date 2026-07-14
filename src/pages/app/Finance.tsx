@@ -1318,7 +1318,8 @@ const Finance = () => {
                 )}
               </div>
 
-              <div className="overflow-x-auto -mx-4 lg:mx-0">
+              {/* Desktop / tablet amplo: tabela original */}
+              <div className="hidden md:block overflow-x-auto -mx-4 lg:mx-0">
                 <table className="w-full min-w-[1180px] text-sm">
                   <thead>
                     <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border">
@@ -1432,6 +1433,126 @@ const Finance = () => {
 
                 </table>
               </div>
+
+              {/* Mobile: cards */}
+              <ul className="md:hidden space-y-3 pb-24">
+                {patients.map((p) => {
+                  const pay = pagamentoFor(p);
+                  const rs = receitaSaudeFor(p);
+                  const modalidade = modalidadeFor(p);
+                  const editTarget = p.latestBillable ?? p.allInGroup[0] ?? null;
+                  const openPatient = (tab: "finance" | "sessions", focus?: string) => {
+                    if (!p.patientId) return;
+                    const focusParam = focus ? `&focus=${focus}` : "";
+                    navigate(`/app/pacientes?patient=${p.patientId}&tab=${tab}${focusParam}`);
+                  };
+                  const rowClickable = !!p.patientId;
+                  const payBadgeTone =
+                    pay.label === "Pago" ? "bg-moss/10 text-moss border-moss/20" :
+                    pay.label === "Pendente" ? "bg-destructive/10 text-destructive border-destructive/20" :
+                    pay.label === "Parcial" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                    "bg-secondary text-muted-foreground border-border";
+                  return (
+                    <li
+                      key={p.key}
+                      className="rounded-xl border border-border bg-card shadow-sm p-4"
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <p className="font-medium text-foreground text-[15px] leading-snug line-clamp-2 flex-1">
+                          {p.name}
+                        </p>
+                        <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${payBadgeTone}`}>
+                          {pay.label}
+                        </span>
+                        {editTarget && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 shrink-0 -mr-1 -mt-1"
+                            onClick={(e) => { e.stopPropagation(); setEditing(editTarget); }}
+                            aria-label="Editar pagamento"
+                            title="Editar pagamento"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        <div className="rounded-lg bg-secondary/40 px-3 py-2">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Sessões no mês</p>
+                          <p className="text-base font-semibold tabular-nums">{p.totalSessions}</p>
+                        </div>
+                        <div className="rounded-lg bg-secondary/40 px-3 py-2">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Realizadas</p>
+                          <p className="text-base font-semibold tabular-nums text-moss">{p.realizadas}</p>
+                        </div>
+                        <div className="rounded-lg bg-secondary/40 px-3 py-2">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Faltas</p>
+                          <p className={`text-base font-semibold tabular-nums ${p.faltas > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                            {p.faltas}
+                          </p>
+                        </div>
+                        <div className="rounded-lg bg-secondary/40 px-3 py-2">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">A realizar</p>
+                          <p className="text-base font-semibold tabular-nums text-muted-foreground">{p.aRealizar}</p>
+                        </div>
+                      </div>
+
+                      <dl className="space-y-1.5 text-sm mb-3">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <dt className="text-muted-foreground text-xs">Modalidade</dt>
+                          <dd className="text-foreground text-right">{modalidade}</dd>
+                        </div>
+                        <div className="flex items-baseline justify-between gap-3">
+                          <dt className="text-muted-foreground text-xs">Receita Saúde</dt>
+                          <dd>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${rs.tone}`}>
+                              {rs.label}
+                            </span>
+                          </dd>
+                        </div>
+                        <div className="flex items-baseline justify-between gap-3">
+                          <dt className="text-muted-foreground text-xs">Valor total</dt>
+                          <dd className="font-semibold tabular-nums whitespace-nowrap">
+                            {p.totalValue > 0 ? formatBRL(p.totalValue) : <span className="text-muted-foreground italic font-normal">—</span>}
+                          </dd>
+                        </div>
+                        <div className="flex items-baseline justify-between gap-3">
+                          <dt className="text-muted-foreground text-xs">Pagamento</dt>
+                          <dd className={`font-medium ${pay.tone}`}>{pay.label}</dd>
+                        </div>
+                      </dl>
+
+                      <div className="flex items-center gap-2 pt-2 border-t border-border/60">
+                        {rowClickable && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 h-10"
+                            onClick={() => openPatient("finance")}
+                          >
+                            Ver detalhes
+                          </Button>
+                        )}
+                        {p.latestBillable && p.hasPending && (
+                          <Button
+                            variant="accent"
+                            size="sm"
+                            className="flex-1 h-10"
+                            onClick={() => {
+                              const pending = p.allBillable.find((r) => r.payment_status === "pending");
+                              if (pending) updatePayment(pending.id, "paid");
+                            }}
+                          >
+                            Marcar pago
+                          </Button>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             </>
           );
         })()}
