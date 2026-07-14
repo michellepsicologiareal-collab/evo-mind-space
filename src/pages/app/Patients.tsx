@@ -1067,7 +1067,7 @@ const Patients = () => {
             overflow: "hidden",
           }}
         >
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full" style={{ borderCollapse: "collapse", fontSize: 13, minWidth: 1080 }}>
               <thead>
                 <tr style={{ background: C.neutralBg, borderBottom: `1px solid ${C.border}` }}>
@@ -1369,6 +1369,178 @@ const Patients = () => {
               </tbody>
             </table>
           </div>
+
+          {/* ─────────── MOBILE CARDS ─────────── */}
+          <ul className="md:hidden divide-y" style={{ borderColor: C.border }}>
+            {filtered.map((p, idx) => {
+              const isCriticalAlert = p.notes ? /(crise|resist|abandon|suic|término)/i.test(p.notes) : false;
+              const isAttention = attentionPatients.some((x) => x.id === p.id);
+              const rowAccent = isCriticalAlert ? C.red : isAttention ? C.gold : "transparent";
+              const isSupervision = p.category === "supervisao";
+              const initials = p.full_name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+              const avatarBg = avatarPalette[idx % avatarPalette.length];
+              const si = sessionInfo[p.id];
+              const pkg = packageInfo[p.id];
+              const nextLabel = si?.nextDate ? format(new Date(si.nextDate), "dd/MM · HH:mm", { locale: ptBR }) : null;
+              const lastLabel = si?.lastDate ? format(new Date(si.lastDate), "dd/MM · HH:mm", { locale: ptBR }) : null;
+              const m = (p.modality ?? "").toString().toLowerCase();
+              const modalityBadge =
+                m === "online"
+                  ? { label: "Online", bg: C.purpleSoft, fg: C.purpleInk }
+                  : m === "presencial"
+                  ? { label: "Presencial", bg: C.greenSoft, fg: C.green }
+                  : m === "hibrido" || m === "híbrido"
+                  ? { label: "Híbrido", bg: C.goldSoft, fg: C.gold }
+                  : null;
+              const planBadge = pkg
+                ? { label: "Plano de Atendimento", bg: C.purpleSoft, fg: C.purpleInk }
+                : isSupervision
+                ? { label: "Supervisão", bg: C.goldSoft, fg: C.gold }
+                : { label: "Sessão única", bg: "#F3F4F6", fg: C.muted };
+              const formBadge = formulationFilled[p.id]
+                ? { label: "Preenchida", bg: C.greenSoft, fg: C.green }
+                : { label: "Pendente", bg: C.goldSoft, fg: C.gold };
+
+              const openCard = (e: React.MouseEvent | React.KeyboardEvent) => {
+                const target = e.target as HTMLElement;
+                const interactive = target.closest('button, a, input, textarea, select, [role="menu"], [role="menuitem"], [data-no-card-open]');
+                if (interactive && interactive !== e.currentTarget) return;
+                setSelectedPatient(p);
+              };
+
+              return (
+                <li
+                  key={p.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Abrir ficha de ${p.full_name}`}
+                  onClick={openCard}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCard(e); }
+                  }}
+                  className="p-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))] cursor-pointer"
+                  style={{ background: C.card, borderLeft: `3px solid ${rowAccent}` }}
+                >
+                  {/* Header: avatar + nome/telefone + ações */}
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="flex items-center justify-center shrink-0"
+                      style={{ width: 40, height: 40, borderRadius: "50%", background: avatarBg, color: C.ink, fontWeight: 700, fontSize: 13 }}
+                    >
+                      {initials}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate" style={{ fontWeight: 700, fontSize: 15, color: C.ink, lineHeight: 1.25 }}>
+                        {p.full_name}
+                      </p>
+                      {p.phone && (
+                        <a
+                          href={`tel:${p.phone.replace(/\D/g, "")}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 mt-1"
+                          style={{ fontSize: 12, color: C.muted }}
+                        >
+                          <Phone className="h-3 w-3" />
+                          <span className="truncate">{p.phone}</span>
+                        </a>
+                      )}
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") e.stopPropagation(); }}
+                          className="flex items-center justify-center shrink-0"
+                          style={{ width: 36, height: 36, borderRadius: 8, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
+                          aria-label="Ações do paciente"
+                        >
+                          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => openEdit(p)}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => toggleActive(p)}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setTccPatient(p)}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => guardMissing(!!formulationFilled[p.id], () => setPadeksyPatient(p), { label: "Formulação TCC" })}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => guardMissing(!!teFilled[p.id], () => navigate(`/app/pacientes/${p.id}/formulacao-te`), { label: "Formulação TE" })} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => guardMissing(!!actFilled[p.id], () => navigate(`/app/pacientes/${p.id}/formulacao-act`), { label: "Formulação ACT" })} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setRecordsPatient(p)}><FileText className="h-4 w-4 mr-2" /> Registros de sessão</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setHomeworkPatient(p)}><ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  {/* Próxima sessão em destaque + Última sessão em grade 2 col */}
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    <div
+                      className="rounded-lg p-2.5"
+                      style={{ background: nextLabel ? C.purpleSoft : "#F5F5F7", border: `1px solid ${nextLabel ? "rgba(83,74,183,0.25)" : C.border}` }}
+                    >
+                      <p style={{ fontSize: 10, fontWeight: 700, color: nextLabel ? C.purple : C.muted, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                        Próxima sessão
+                      </p>
+                      {nextLabel ? (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); navigate(`/app/agenda?patient=${p.id}`); }}
+                          className="inline-flex items-center gap-1 mt-1"
+                          style={{ fontSize: 13, fontWeight: 600, color: C.ink, background: "transparent", border: "none", padding: 0, whiteSpace: "nowrap" }}
+                        >
+                          <CalendarDays className="h-3.5 w-3.5" style={{ color: C.purple }} />
+                          {nextLabel}
+                        </button>
+                      ) : (
+                        <p className="mt-1" style={{ fontSize: 12, color: C.muted, fontStyle: "italic" }}>Sem próxima sessão</p>
+                      )}
+                    </div>
+                    <div className="rounded-lg p-2.5" style={{ background: C.neutralBg, border: `1px solid ${C.border}` }}>
+                      <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                        Última sessão
+                      </p>
+                      {lastLabel ? (
+                        <p className="inline-flex items-center gap-1 mt-1" style={{ fontSize: 13, fontWeight: 600, color: C.ink, whiteSpace: "nowrap" }}>
+                          <CalendarDays className="h-3.5 w-3.5" style={{ color: C.muted }} />
+                          {lastLabel}
+                        </p>
+                      ) : (
+                        <p className="mt-1" style={{ fontSize: 12, color: C.muted, fontStyle: "italic" }}>—</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Badges: modalidade, tipo, formulação, status */}
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {modalityBadge && (
+                      <span style={{ background: modalityBadge.bg, color: modalityBadge.fg, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
+                        {modalityBadge.label}
+                      </span>
+                    )}
+                    <span style={{ background: planBadge.bg, color: planBadge.fg, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
+                      {planBadge.label}
+                    </span>
+                    <span style={{ background: formBadge.bg, color: formBadge.fg, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
+                      Formulação: {formBadge.label}
+                    </span>
+                    <span
+                      style={{
+                        background: p.is_active ? C.greenSoft : "#F3F4F6",
+                        color: p.is_active ? C.green : C.muted,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        padding: "3px 9px",
+                        borderRadius: 40,
+                      }}
+                    >
+                      {p.is_active ? "Ativo" : "Inativo"}
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 
