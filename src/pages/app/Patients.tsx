@@ -1192,18 +1192,6 @@ const Patients = () => {
                         </div>
                       </td>
 
-                      {/* Última sessão */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                        {si?.lastDate ? (
-                          <span className="inline-flex items-center gap-1" style={{ fontSize: 12, color: C.ink }}>
-                            <CalendarDays className="h-3 w-3" style={{ color: C.muted }} />
-                            {format(new Date(si.lastDate), "dd/MM · HH:mm", { locale: ptBR })}
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: 12, color: C.muted }}>—</span>
-                        )}
-                      </td>
-
                       {/* Próxima sessão */}
                       <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
                         {si?.nextDate ? (
@@ -1224,7 +1212,36 @@ const Patients = () => {
                         )}
                       </td>
 
-                      {/* Plano de Atendimento */}
+                      {/* Última sessão */}
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                        {si?.lastDate ? (
+                          <span className="inline-flex items-center gap-1" style={{ fontSize: 12, color: C.ink }}>
+                            <CalendarDays className="h-3 w-3" style={{ color: C.muted }} />
+                            {format(new Date(si.lastDate), "dd/MM · HH:mm", { locale: ptBR })}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 12, color: C.muted }}>—</span>
+                        )}
+                      </td>
+
+                      {/* Modalidade */}
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                        {(() => {
+                          const m = (p.modality ?? "").toString().toLowerCase();
+                          if (m === "online") {
+                            return <span style={{ background: C.purpleSoft, color: C.purpleInk, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>Online</span>;
+                          }
+                          if (m === "presencial") {
+                            return <span style={{ background: C.greenSoft, color: C.green, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>Presencial</span>;
+                          }
+                          if (m === "hibrido" || m === "híbrido") {
+                            return <span style={{ background: C.goldSoft, color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>Híbrido</span>;
+                          }
+                          return <span style={{ fontSize: 12, color: C.muted }}>—</span>;
+                        })()}
+                      </td>
+
+                      {/* Plano */}
                       <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
                         {pkg ? (
                           <span
@@ -1236,9 +1253,9 @@ const Patients = () => {
                               padding: "3px 9px",
                               borderRadius: 40,
                             }}
-                            title={`Plano de Atendimento — ${pkg.current} de ${pkg.total} sessões realizadas`}
+                            title="Plano de Atendimento"
                           >
-                            Plano · {pkg.current}/{pkg.total}
+                            Plano de Atendimento
                           </span>
                         ) : isSupervision ? (
                           <span style={{ background: C.goldSoft, color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
@@ -1251,32 +1268,6 @@ const Patients = () => {
                         )}
                       </td>
 
-                      {/* Formulação de Caso */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                        {(() => {
-                          const hasForm = !!formulationFilled[p.id];
-                          const hasCompleted = (attendance[p.id]?.attended ?? 0) > 0;
-                          if (hasForm) {
-                            return (
-                              <span style={{ background: C.greenSoft, color: C.green, border: `1px solid ${C.greenBorder}`, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 40 }}>
-                                Completa
-                              </span>
-                            );
-                          }
-                          if (hasCompleted) {
-                            return (
-                              <span style={{ background: C.goldSoft, color: C.gold, border: `1px solid ${C.goldBorder}`, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 40 }}>
-                                Pendente
-                              </span>
-                            );
-                          }
-                          return (
-                            <span style={{ background: "#F3F4F6", color: C.muted, fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 40 }}>
-                              Não iniciada
-                            </span>
-                          );
-                        })()}
-                      </td>
 
 
                       {/* Status */}
