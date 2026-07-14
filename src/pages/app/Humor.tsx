@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { format, subDays, startOfWeek, differenceInDays, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -309,19 +309,7 @@ export default function Humor() {
       });
   }, [aggregates, search, filter]);
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  const openPatientId = searchParams.get("patient");
-  const setOpenPatientId = (id: string | null) => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        if (id) next.set("patient", id);
-        else next.delete("patient");
-        return next;
-      },
-      { replace: false }
-    );
-  };
+  const [openPatientId, setOpenPatientId] = useState<string | null>(null);
   const openPatient = (id: string) => setOpenPatientId(id);
   const goToPatientFullView = (id: string) => navigate(`/app/pacientes?patient=${id}&tab=overview`);
   const openPatientData = useMemo(
