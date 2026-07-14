@@ -636,6 +636,7 @@ export default function Humor() {
                       <Td><FlagBadge flag={a.flag} /></Td>
                       <Td>{a.lastAt ? `há ${a.daysSince} dia(s)` : <span className="text-muted-foreground">sem registro</span>}</Td>
                       <Td>{a.nextSession ? format(new Date(a.nextSession), "dd/MM", { locale: ptBR }) : <span className="text-muted-foreground">—</span>}</Td>
+                      <Td className="text-right tabular-nums">{a.records}</Td>
                       <Td className="text-right">
                         <Button variant="ghost" size="sm" onClick={() => openPatient(a.patient.id)}>
                           Abrir <ChevronRight className="h-4 w-4 ml-1" />
