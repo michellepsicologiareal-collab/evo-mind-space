@@ -55,6 +55,7 @@ interface PatientAggregate {
   delta: number | null;
   preview: string;
   nextSession: string | null;
+  records: number;
 }
 
 /* =========================================================================
@@ -176,7 +177,9 @@ export default function Humor() {
   const aggregates = useMemo<PatientAggregate[]>(() => {
     const since = subDays(new Date(), period);
     const byPatient = new Map<string, ProgressRow[]>();
+    const countByPatient = new Map<string, number>();
     for (const r of progress) {
+      countByPatient.set(r.patient_id, (countByPatient.get(r.patient_id) ?? 0) + 1);
       if (!isAfter(new Date(r.recorded_at), since)) continue;
       const list = byPatient.get(r.patient_id) ?? [];
       list.push(r);
@@ -210,6 +213,7 @@ export default function Humor() {
         delta,
         preview,
         nextSession: nextByPatient.get(p.id) ?? null,
+        records: countByPatient.get(p.id) ?? 0,
       };
     });
   }, [patients, progress, sessions, period, thresholds]);
@@ -612,6 +616,7 @@ export default function Humor() {
                     <Th>Avaliação profissional</Th>
                     <Th>Último registro</Th>
                     <Th>Próxima sessão</Th>
+                    <Th className="text-right whitespace-nowrap">Registros</Th>
                     <Th className="text-right">Ações</Th>
                   </tr>
                 </thead>
@@ -631,6 +636,7 @@ export default function Humor() {
                       <Td><FlagBadge flag={a.flag} /></Td>
                       <Td>{a.lastAt ? `há ${a.daysSince} dia(s)` : <span className="text-muted-foreground">sem registro</span>}</Td>
                       <Td>{a.nextSession ? format(new Date(a.nextSession), "dd/MM", { locale: ptBR }) : <span className="text-muted-foreground">—</span>}</Td>
+                      <Td className="text-right tabular-nums">{a.records}</Td>
                       <Td className="text-right">
                         <Button variant="ghost" size="sm" onClick={() => openPatient(a.patient.id)}>
                           Abrir <ChevronRight className="h-4 w-4 ml-1" />
@@ -662,6 +668,9 @@ export default function Humor() {
                     {a.nextSession && (
                       <span className="text-muted-foreground">Próx. {format(new Date(a.nextSession), "dd/MM")}</span>
                     )}
+                    <span className="text-muted-foreground ml-auto tabular-nums">
+                      {a.records} {a.records === 1 ? "registro" : "registros"}
+                    </span>
                   </div>
                 </li>
               ))}
