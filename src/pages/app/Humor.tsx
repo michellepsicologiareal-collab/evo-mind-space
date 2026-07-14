@@ -668,6 +668,9 @@ export default function Humor() {
                     {a.nextSession && (
                       <span className="text-muted-foreground">Próx. {format(new Date(a.nextSession), "dd/MM")}</span>
                     )}
+                    <span className="text-muted-foreground ml-auto tabular-nums">
+                      {a.records} {a.records === 1 ? "registro" : "registros"}
+                    </span>
                   </div>
                 </li>
               ))}
