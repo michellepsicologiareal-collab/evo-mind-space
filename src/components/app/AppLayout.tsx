@@ -78,8 +78,30 @@ export const AppLayout = () => {
     const keys = ["/app", "/app/pacientes", "/app/agenda", "/app/registro-sessao"];
     return keys.map((k) => navItems.find((n) => n.to === k)).filter(Boolean) as NavItem[];
   }, [navItems]);
+  // Ordem do "Mais" segue a mesma sequência das seções do desktop
+  const mobileSecondaryOrder = [
+    "/app/comece-por-aqui",
+    "/app/financeiro",
+    "/app/formulacao-ia",
+    "/app/humor",
+    "/app/plano-tratamento",
+    "/app/anamneses",
+    "/app/contrato-modelo",
+    "/app/contratos",
+    "/app/supervisionandos",
+    "/app/formulacao-livre",
+    "/app/biblioteca",
+    "/app/autocuidado",
+    "/app/perfil",
+  ];
   const mobileSecondary = useMemo(
-    () => navItems.filter((n) => !mobilePrimary.includes(n)),
+    () => {
+      const rest = navItems.filter((n) => !mobilePrimary.includes(n));
+      return mobileSecondaryOrder
+        .map((r) => rest.find((n) => n.to === r))
+        .filter(Boolean)
+        .concat(rest.filter((n) => !mobileSecondaryOrder.includes(n.to))) as NavItem[];
+    },
     [navItems, mobilePrimary]
   );
   const [moreOpen, setMoreOpen] = useState(false);
