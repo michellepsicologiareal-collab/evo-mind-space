@@ -986,22 +986,37 @@ const Patients = () => {
         </div>
       )}
 
-      {/* ─────────── FILTER TABS (sticky) ─────────── */}
+      {/* ─────────── FILTER CHIPS (sticky) ─────────── */}
       <div
         className="flex flex-wrap items-center gap-2 mb-4 sticky top-16 md:top-0 z-10 py-2 -mx-4 px-4 sm:-mx-6 sm:px-6"
         style={{ background: "hsl(var(--background))" }}
       >
-        <div className="inline-flex items-center gap-1 p-1" style={{ background: C.neutralBg, borderRadius: 10, border: `1px solid ${C.border}` }}>
-          {[
-            { k: "active", label: "Ativos", n: activeCount },
-            { k: "inactive", label: "Inativos", n: inactiveCount },
-            { k: "all", label: "Todos", n: patients.length },
-          ].map((t) => {
-            const isActive = statusFilter === t.k;
+        <div className="inline-flex items-center gap-1 p-1 flex-wrap" style={{ background: C.neutralBg, borderRadius: 10, border: `1px solid ${C.border}` }}>
+          {([
+            { k: "active", label: "Ativos", n: activeCount, status: "active", formul: "all" },
+            { k: "inactive", label: "Inativos", n: inactiveCount, status: "inactive", formul: "all" },
+            { k: "with-form", label: "Com Formulação", n: withFormulCount, status: "active", formul: "with" },
+            { k: "without-form", label: "Sem Formulação", n: withoutFormulCount, status: "active", formul: "without" },
+            { k: "all", label: "Todos", n: patients.length, status: "all", formul: "all" },
+          ] as const).map((t) => {
+            const isActive =
+              statusFilter === t.status &&
+              formulFilter === t.formul &&
+              // discriminação entre "Ativos" e "Com/Sem Formulação" (todos usam status="active")
+              (t.k === "active"
+                ? formulFilter === "all"
+                : t.k === "with-form"
+                  ? formulFilter === "with"
+                  : t.k === "without-form"
+                    ? formulFilter === "without"
+                    : true);
             return (
               <button
                 key={t.k}
-                onClick={() => setStatusFilter(t.k as typeof statusFilter)}
+                onClick={() => {
+                  setStatusFilter(t.status as typeof statusFilter);
+                  setFormulFilter(t.formul as typeof formulFilter);
+                }}
                 style={{
                   background: isActive ? C.card : "transparent",
                   border: isActive ? `1px solid ${C.border}` : "1px solid transparent",
@@ -1018,31 +1033,6 @@ const Patients = () => {
               >
                 {t.label}
                 <span style={{ background: isActive ? C.purpleSoft : C.border, color: isActive ? C.purple : C.muted, fontSize: 11, fontWeight: 700, padding: "1px 7px", borderRadius: 40 }}>{t.n}</span>
-              </button>
-            );
-          })}
-        </div>
-        <div className="ml-auto flex items-center gap-2 flex-wrap">
-          {[
-            { k: "with" as const, label: "Com formulação", n: withFormulCount, highlight: false },
-            { k: "without" as const, label: "Sem formulação", n: withoutFormulCount, highlight: true },
-          ].map((t) => {
-            const isActive = formulFilter === t.k;
-            return (
-              <button
-                key={t.k}
-                onClick={() => setFormulFilter(isActive ? "all" : t.k)}
-                style={{
-                  background: t.highlight ? C.goldSoft : (isActive ? C.purpleSoft : C.card),
-                  border: `1px solid ${t.highlight ? C.goldBorder : C.border}`,
-                  color: t.highlight ? C.gold : (isActive ? C.purple : C.muted),
-                  fontWeight: 600,
-                  fontSize: 12,
-                  padding: "6px 12px",
-                  borderRadius: 8,
-                }}
-              >
-                {t.label} · {t.n}
               </button>
             );
           })}
