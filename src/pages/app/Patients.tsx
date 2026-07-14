@@ -839,6 +839,7 @@ const Patients = () => {
     const a = attendance[p.id];
     return a && a.total >= 3 && a.pct < 50;
   });
+  const noNextSessionPatients = activePatients.filter((p) => !sessionInfo[p.id]?.nextDate);
 
   const todayLabel = format(new Date(), "EEEE',' d 'de' MMMM 'de' yyyy", { locale: ptBR });
   const todayLabelCap = todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1);
