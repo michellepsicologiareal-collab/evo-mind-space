@@ -29,6 +29,13 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -169,28 +176,33 @@ const Finance = () => {
   const sessionsSectionRef = useRef<HTMLElement | null>(null);
 
   // Distribuição de honorários (carteira ativa — independente do mês/filtros)
-  const [feeBands, setFeeBands] = useState<{ low: number; mid: number; high: number; invalid: number; total: number }>({ low: 0, mid: 0, high: 0, invalid: 0, total: 0 });
+  type FeePatient = { id: string; name: string; price: number };
+  const [feeBands, setFeeBands] = useState<{ low: FeePatient[]; mid: FeePatient[]; high: FeePatient[]; invalid: number; total: number }>({ low: [], mid: [], high: [], invalid: 0, total: 0 });
+  const [feeBandOpen, setFeeBandOpen] = useState<null | "low" | "mid" | "high">(null);
   useEffect(() => {
     if (!user) return;
     (async () => {
       const { data, error } = await supabase
         .from("patients")
-        .select("id, session_price")
+        .select("id, full_name, session_price")
         .eq("user_id", user.id)
         .eq("is_active", true);
       if (error || !data) return;
-      let low = 0, mid = 0, high = 0, invalid = 0;
+      const low: FeePatient[] = [], mid: FeePatient[] = [], high: FeePatient[] = [];
+      let invalid = 0;
       const seen = new Set<string>();
-      for (const p of data as Array<{ id: string; session_price: number | string | null }>) {
+      for (const p of data as Array<{ id: string; full_name: string | null; session_price: number | string | null }>) {
         if (seen.has(p.id)) continue;
         seen.add(p.id);
-        const raw = p.session_price;
-        const v = raw == null ? NaN : Number(raw);
+        const v = p.session_price == null ? NaN : Number(p.session_price);
         if (!Number.isFinite(v) || v <= 0) { invalid++; continue; }
-        if (v <= 100) low++;
-        else if (v <= 180) mid++;
-        else high++;
+        const entry: FeePatient = { id: p.id, name: p.full_name || "Paciente", price: v };
+        if (v <= 100) low.push(entry);
+        else if (v <= 180) mid.push(entry);
+        else high.push(entry);
       }
+      const byName = (a: FeePatient, b: FeePatient) => a.name.localeCompare(b.name, "pt-BR");
+      low.sort(byName); mid.sort(byName); high.sort(byName);
       setFeeBands({ low, mid, high, invalid, total: seen.size });
     })();
   }, [user]);
@@ -811,21 +823,71 @@ const Finance = () => {
           </div>
           <p className="mt-2 text-xs font-medium leading-snug">Distribuição dos Honorários</p>
           <div className="mt-2 space-y-1 text-[11px] leading-snug">
-            <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => feeBands.low.length && setFeeBandOpen("low")}
+              disabled={!feeBands.low.length}
+              className="flex w-full items-center justify-between rounded-md px-1 py-0.5 -mx-1 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-70 disabled:hover:bg-transparent disabled:cursor-default text-left"
+            >
               <span className="text-muted-foreground">Até R$ 100</span>
-              <span className="tabular-nums font-medium">{feeBands.low}</span>
-            </div>
-            <div className="flex items-center justify-between">
+              <span className="tabular-nums font-medium">{feeBands.low.length}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => feeBands.mid.length && setFeeBandOpen("mid")}
+              disabled={!feeBands.mid.length}
+              className="flex w-full items-center justify-between rounded-md px-1 py-0.5 -mx-1 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-70 disabled:hover:bg-transparent disabled:cursor-default text-left"
+            >
               <span className="text-muted-foreground">R$ 100,01–180</span>
-              <span className="tabular-nums font-medium">{feeBands.mid}</span>
-            </div>
-            <div className="flex items-center justify-between">
+              <span className="tabular-nums font-medium">{feeBands.mid.length}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => feeBands.high.length && setFeeBandOpen("high")}
+              disabled={!feeBands.high.length}
+              className="flex w-full items-center justify-between rounded-md px-1 py-0.5 -mx-1 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-70 disabled:hover:bg-transparent disabled:cursor-default text-left"
+            >
               <span className="text-muted-foreground">Acima de R$ 180</span>
-              <span className="tabular-nums font-medium">{feeBands.high}</span>
-            </div>
+              <span className="tabular-nums font-medium">{feeBands.high.length}</span>
+            </button>
           </div>
         </div>
       </section>
+
+      {/* Drawer lateral com pacientes por faixa de honorários */}
+      <Sheet open={feeBandOpen !== null} onOpenChange={(o) => !o && setFeeBandOpen(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>
+              {feeBandOpen === "low" && "Honorários — Até R$ 100,00"}
+              {feeBandOpen === "mid" && "Honorários — R$ 100,01 a R$ 180,00"}
+              {feeBandOpen === "high" && "Honorários — Acima de R$ 180,00"}
+            </SheetTitle>
+            <SheetDescription>
+              {feeBandOpen ? `${feeBands[feeBandOpen].length} paciente(s) ativo(s) nesta faixa` : ""}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 max-h-[calc(100vh-8rem)] overflow-y-auto pr-1">
+            <ul className="divide-y divide-border">
+              {feeBandOpen && feeBands[feeBandOpen].map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => { setFeeBandOpen(null); navigate(`/app/pacientes?patient=${p.id}`); }}
+                    className="flex w-full items-center justify-between gap-3 py-2.5 text-left hover:bg-muted/60 rounded-md px-2 -mx-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className="text-sm font-medium truncate">{p.name}</span>
+                    <span className="text-sm tabular-nums text-muted-foreground shrink-0">
+                      {p.price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </SheetContent>
+      </Sheet>
+
 
 
       {/* Fortnight filter */}
