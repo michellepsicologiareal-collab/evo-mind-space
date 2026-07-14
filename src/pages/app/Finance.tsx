@@ -873,7 +873,7 @@ const Finance = () => {
                 <li key={p.id}>
                   <button
                     type="button"
-                    onClick={() => { setFeeBandOpen(null); navigate(`/app/pacientes?open=${p.id}`); }}
+                    onClick={() => { setFeeBandOpen(null); navigate(`/app/pacientes?patient=${p.id}`); }}
                     className="flex w-full items-center justify-between gap-3 py-2.5 text-left hover:bg-muted/60 rounded-md px-2 -mx-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span className="text-sm font-medium truncate">{p.name}</span>
