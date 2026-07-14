@@ -273,19 +273,24 @@ export const AppLayout = () => {
               className={({ isActive }) =>
                 cn(
                   "flex flex-col items-center justify-center gap-1 min-h-[52px] py-1.5 text-[10px] leading-tight font-medium transition-colors rounded-lg mx-0.5",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                   isActive ? "text-primary bg-[rgba(150,117,206,0.10)]" : "text-muted-foreground"
                 )
               }
             >
-              <item.icon className="h-[18px] w-[18px]" />
+              <item.icon className="h-[18px] w-[18px]" aria-hidden />
               <span className="text-center line-clamp-1 px-0.5">{item.label}</span>
             </NavLink>
           ))}
           <button
+            type="button"
             onClick={() => setMoreOpen(true)}
-            className="flex flex-col items-center justify-center gap-1 min-h-[52px] py-1.5 text-[10px] leading-tight font-medium text-muted-foreground rounded-lg mx-0.5"
+            aria-label="Abrir mais opções de navegação"
+            aria-haspopup="dialog"
+            aria-expanded={moreOpen}
+            className="flex flex-col items-center justify-center gap-1 min-h-[52px] py-1.5 text-[10px] leading-tight font-medium text-muted-foreground rounded-lg mx-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            <MoreHorizontal className="h-[18px] w-[18px]" />
+            <MoreHorizontal className="h-[18px] w-[18px]" aria-hidden />
             <span>Mais</span>
           </button>
         </div>
