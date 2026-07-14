@@ -1074,10 +1074,10 @@ const Patients = () => {
                   {[
                     { k: "avatar", label: "", w: 52 },
                     { k: "nome", label: "Paciente" },
-                    { k: "ultima", label: "Última sessão" },
                     { k: "proxima", label: "Próxima sessão" },
-                    { k: "plano", label: "Plano de Atendimento" },
-                    { k: "formulacao", label: "Formulação de Caso" },
+                    { k: "ultima", label: "Última sessão" },
+                    { k: "modalidade", label: "Modalidade" },
+                    { k: "plano", label: "Plano" },
                     { k: "status", label: "Status" },
                     { k: "acoes", label: "", w: 56 },
                   ].map((h) => (
