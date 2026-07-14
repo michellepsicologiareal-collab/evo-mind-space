@@ -616,6 +616,7 @@ export default function Humor() {
                     <Th>Avaliação profissional</Th>
                     <Th>Último registro</Th>
                     <Th>Próxima sessão</Th>
+                    <Th className="text-right whitespace-nowrap">Registros</Th>
                     <Th className="text-right">Ações</Th>
                   </tr>
                 </thead>
