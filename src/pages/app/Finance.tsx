@@ -176,28 +176,33 @@ const Finance = () => {
   const sessionsSectionRef = useRef<HTMLElement | null>(null);
 
   // Distribuição de honorários (carteira ativa — independente do mês/filtros)
-  const [feeBands, setFeeBands] = useState<{ low: number; mid: number; high: number; invalid: number; total: number }>({ low: 0, mid: 0, high: 0, invalid: 0, total: 0 });
+  type FeePatient = { id: string; name: string; price: number };
+  const [feeBands, setFeeBands] = useState<{ low: FeePatient[]; mid: FeePatient[]; high: FeePatient[]; invalid: number; total: number }>({ low: [], mid: [], high: [], invalid: 0, total: 0 });
+  const [feeBandOpen, setFeeBandOpen] = useState<null | "low" | "mid" | "high">(null);
   useEffect(() => {
     if (!user) return;
     (async () => {
       const { data, error } = await supabase
         .from("patients")
-        .select("id, session_price")
+        .select("id, full_name, session_price")
         .eq("user_id", user.id)
         .eq("is_active", true);
       if (error || !data) return;
-      let low = 0, mid = 0, high = 0, invalid = 0;
+      const low: FeePatient[] = [], mid: FeePatient[] = [], high: FeePatient[] = [];
+      let invalid = 0;
       const seen = new Set<string>();
-      for (const p of data as Array<{ id: string; session_price: number | string | null }>) {
+      for (const p of data as Array<{ id: string; full_name: string | null; session_price: number | string | null }>) {
         if (seen.has(p.id)) continue;
         seen.add(p.id);
-        const raw = p.session_price;
-        const v = raw == null ? NaN : Number(raw);
+        const v = p.session_price == null ? NaN : Number(p.session_price);
         if (!Number.isFinite(v) || v <= 0) { invalid++; continue; }
-        if (v <= 100) low++;
-        else if (v <= 180) mid++;
-        else high++;
+        const entry: FeePatient = { id: p.id, name: p.full_name || "Paciente", price: v };
+        if (v <= 100) low.push(entry);
+        else if (v <= 180) mid.push(entry);
+        else high.push(entry);
       }
+      const byName = (a: FeePatient, b: FeePatient) => a.name.localeCompare(b.name, "pt-BR");
+      low.sort(byName); mid.sort(byName); high.sort(byName);
       setFeeBands({ low, mid, high, invalid, total: seen.size });
     })();
   }, [user]);
