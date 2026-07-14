@@ -1606,6 +1606,42 @@ const Finance = () => {
           load();
         }}
       />
+
+      {/* Histórico financeiro do paciente — permanece dentro do contexto do Financeiro */}
+      <Sheet open={!!financeHistory} onOpenChange={(open) => { if (!open) setFinanceHistory(null); }}>
+        <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle className="font-display">Histórico financeiro</SheetTitle>
+            <SheetDescription>
+              {financeHistory?.name ?? ""} · resumo, sessões, pagamentos e Receita Saúde
+            </SheetDescription>
+          </SheetHeader>
+
+          {financeHistory && (
+            <div className="mt-4 space-y-4">
+              <PatientSessionHistory
+                patientId={financeHistory.id}
+                patientName={financeHistory.name}
+              />
+
+              <div className="pt-2 border-t border-border/60 flex flex-col sm:flex-row gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="sm:ml-auto focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  onClick={() => {
+                    const id = financeHistory.id;
+                    setFinanceHistory(null);
+                    navigate(`/app/pacientes?patient=${id}`);
+                  }}
+                >
+                  Abrir ficha do paciente
+                </Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
