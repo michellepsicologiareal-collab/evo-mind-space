@@ -7,6 +7,7 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, MoreHorizontal, Bell,
+  ClipboardList,
 } from "lucide-react";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
@@ -34,7 +35,7 @@ import { ClinicalV2Block, EMOTIONS_V2 } from "@/components/app/ClinicalV2Block";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
@@ -1548,6 +1549,16 @@ const Agenda = () => {
               >
                 <Bell className="h-3 w-3" /> Lembrete enviado · {format(new Date(s.confirmation_sent_at), "dd/MM HH:mm")}
               </span>
+            )}
+            {!isSupervisionCard && s.patient_id && (
+              <Link
+                to={`/app/plano-tratamento?patient=${s.patient_id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                aria-label={`Abrir plano de tratamento de ${s.patient_name || "paciente"}`}
+              >
+                <ClipboardList className="h-3 w-3" /> Plano de tratamento
+              </Link>
             )}
           </div>
         )}
