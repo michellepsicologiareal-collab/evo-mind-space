@@ -26,49 +26,153 @@ type Entry = {
 };
 
 export const DSM5_CATALOG_KEYWORDS: Record<string, string[]> = {
+  // Ansiedade
   TAG: ["preocupação", "ansiedade generalizada", "tensão", "insônia", "ruminação"],
-  PANICO: ["ataque", "taquicardia", "falta de ar", "agorafobia", "morte"],
+  PANICO: ["ataque", "taquicardia", "falta de ar", "morte"],
+  AGORA: ["agorafobia", "sair de casa", "multidão", "transporte"],
   FS: ["social", "vergonha", "timidez", "desempenho", "público"],
+  FE: ["fobia", "animal", "altura", "sangue", "avião"],
+  TAS: ["separação", "apego", "infância"],
+  MS: ["mutismo", "seletivo", "criança", "não fala"],
+  // TOC e relacionados
   TOC: ["obsessão", "compulsão", "ritual", "limpeza", "verificação", "contaminação"],
+  TDC: ["dismórfico", "imagem corporal", "aparência", "defeito"],
+  TACU: ["acumulação", "descarte", "hoarding"],
+  TRIC: ["tricotilomania", "arrancar cabelo"],
+  TESC: ["escoriação", "beliscar pele"],
+  // Somático
   TAD: ["hipocondria", "saúde", "doença", "somático"],
+  TSS: ["sintomas somáticos", "dor", "queixas físicas"],
+  TCONV: ["conversão", "neurológico funcional", "paralisia", "convulsão psicogênica"],
+  TFAC: ["factício", "simulação", "adoecer intencional"],
+  // Humor
   EDM: ["depressão", "tristeza", "anedonia", "suicídio", "humor"],
   TDP: ["distimia", "crônica", "desesperança"],
+  TDDH: ["irritabilidade", "criança", "explosão", "humor disruptivo"],
+  TDPM: ["pré-menstrual", "TPM", "disfórico"],
+  // Bipolar
   TB1: ["mania", "bipolar", "euforia", "grandiosidade"],
   TB2: ["hipomania", "bipolar", "ciclos"],
+  CICLO: ["ciclotimia", "oscilação leve"],
+  // Psicóticos
+  ESQ: ["esquizofrenia", "alucinação", "delírio", "psicose"],
+  ESQAF: ["esquizoafetivo"],
+  ESQFORME: ["esquizofreniforme"],
+  TPB_PSI: ["psicótico breve"],
+  TDEL: ["delirante", "paranoide crônico"],
+  // Personalidade
   TPB: ["borderline", "abandono", "instabilidade", "automutilação", "limítrofe"],
   TPN: ["narcisista", "grandiosidade", "admiração", "empatia"],
+  TPPAR: ["paranoide", "desconfiança"],
+  TPESQ: ["esquizoide", "isolamento", "frio"],
+  TPESQT: ["esquizotípica", "excêntrico", "pensamento mágico"],
+  TPAS: ["antissocial", "psicopatia", "sociopata"],
+  TPHIS: ["histriônica", "dramática", "atenção"],
+  TPEV: ["evitativa", "inibição", "inadequação"],
+  TPDEP: ["dependente", "submissão", "cuidados"],
+  TPOC: ["obsessivo-compulsiva", "perfeccionismo", "rigidez"],
+  // Neurodesenvolvimento
   TDAH: ["atenção", "hiperatividade", "impulsividade", "concentração", "desatenção"],
+  TEA: ["autismo", "espectro", "comunicação social", "estereotipia"],
+  DI: ["deficiência intelectual", "QI", "atraso cognitivo"],
+  TAPR: ["dislexia", "discalculia", "aprendizagem"],
+  TCOM: ["linguagem", "fala", "gagueira", "pragmática"],
+  TTIC: ["tique", "Tourette", "vocal", "motor"],
+  // Trauma
   TEPT: ["trauma", "pesadelo", "flashback", "estresse pós", "hipervigilância"],
+  TEA_AG: ["estresse agudo"],
   TA: ["ajustamento", "estressor", "luto", "adaptação"],
-  TAS: ["separação", "apego", "infância"],
+  TLP: ["luto prolongado", "luto complicado"],
+  TAR: ["apego reativo", "criança institucional"],
+  TESD: ["envolvimento social desinibido"],
+  // Dissociativo
+  TID: ["identidade dissociativa", "múltiplas personalidades"],
+  AD: ["amnésia dissociativa", "fuga"],
+  TDR: ["despersonalização", "desrealização"],
+  // Alimentar
   TCAP: ["compulsão alimentar", "binge", "comida"],
   BN: ["bulimia", "purga", "vômito", "compensação"],
   AN: ["anorexia", "magreza", "restrição alimentar", "imagem corporal"],
+  ARFID: ["ARFID", "restritivo evitativo", "seletividade alimentar"],
+  PICA: ["pica", "ingestão não alimentar"],
+  TRUM: ["ruminação", "regurgitação"],
+  // Eliminação
+  ENUR: ["enurese", "urina", "xixi na cama"],
+  ENCO: ["encoprese", "fezes"],
+  // Sono
+  INS: ["insônia"],
+  HIPER: ["hipersonolência", "sonolência excessiva"],
+  NARCO: ["narcolepsia", "cataplexia"],
+  APN: ["apneia do sono"],
+  PES: ["pesadelo"],
+  TSREM: ["comportamento REM"],
+  SPI: ["pernas inquietas"],
+  // Sexual / Gênero
+  DE: ["disfunção erétil"],
+  EJP: ["ejaculação precoce"],
+  TDSM: ["desejo sexual", "libido"],
+  DG: ["disforia de gênero"],
+  // Disruptivos
+  TOD: ["opositivo desafiador", "birra"],
+  TC: ["transtorno de conduta", "agressividade", "delinquência"],
+  TEI: ["explosivo intermitente", "raiva", "descontrole"],
+  PIRO: ["piromania", "fogo"],
+  CLEP: ["cleptomania", "furto"],
+  // Substância
+  TUA: ["álcool", "alcoolismo"],
+  TUS: ["substância", "droga", "dependência química"],
+  TJOGO: ["jogo patológico", "aposta", "gambling"],
+  // Neurocognitivos
+  DEL: ["delirium", "confusão aguda"],
+  TNCM: ["demência", "neurocognitivo maior", "Alzheimer"],
+  TNCL: ["neurocognitivo leve", "declínio cognitivo"],
 };
 
 export type DSM5Category =
   | "Ansiedade"
   | "TOC"
+  | "Somático"
   | "Humor"
   | "Bipolar"
+  | "Psicótico"
   | "Personalidade"
   | "Neurodesenvolvimento"
   | "Trauma"
-  | "Alimentar";
+  | "Dissociativo"
+  | "Alimentar"
+  | "Eliminação"
+  | "Sono"
+  | "Sexual/Gênero"
+  | "Disruptivo"
+  | "Substância"
+  | "Neurocognitivo";
 
 export const DSM5_CATEGORY_OF: Record<string, DSM5Category> = {
-  TAG: "Ansiedade", PANICO: "Ansiedade", FS: "Ansiedade", TAD: "Ansiedade", TAS: "Ansiedade",
-  TOC: "TOC",
-  EDM: "Humor", TDP: "Humor",
-  TB1: "Bipolar", TB2: "Bipolar",
-  TPB: "Personalidade", TPN: "Personalidade",
-  TDAH: "Neurodesenvolvimento",
-  TEPT: "Trauma", TA: "Trauma",
-  TCAP: "Alimentar", BN: "Alimentar", AN: "Alimentar",
+  TAG: "Ansiedade", PANICO: "Ansiedade", AGORA: "Ansiedade", FS: "Ansiedade", FE: "Ansiedade", TAS: "Ansiedade", MS: "Ansiedade",
+  TOC: "TOC", TDC: "TOC", TACU: "TOC", TRIC: "TOC", TESC: "TOC",
+  TAD: "Somático", TSS: "Somático", TCONV: "Somático", TFAC: "Somático",
+  EDM: "Humor", TDP: "Humor", TDDH: "Humor", TDPM: "Humor",
+  TB1: "Bipolar", TB2: "Bipolar", CICLO: "Bipolar",
+  ESQ: "Psicótico", ESQAF: "Psicótico", ESQFORME: "Psicótico", TPB_PSI: "Psicótico", TDEL: "Psicótico",
+  TPB: "Personalidade", TPN: "Personalidade", TPPAR: "Personalidade", TPESQ: "Personalidade", TPESQT: "Personalidade",
+  TPAS: "Personalidade", TPHIS: "Personalidade", TPEV: "Personalidade", TPDEP: "Personalidade", TPOC: "Personalidade",
+  TDAH: "Neurodesenvolvimento", TEA: "Neurodesenvolvimento", DI: "Neurodesenvolvimento",
+  TAPR: "Neurodesenvolvimento", TCOM: "Neurodesenvolvimento", TTIC: "Neurodesenvolvimento",
+  TEPT: "Trauma", TEA_AG: "Trauma", TA: "Trauma", TLP: "Trauma", TAR: "Trauma", TESD: "Trauma",
+  TID: "Dissociativo", AD: "Dissociativo", TDR: "Dissociativo",
+  TCAP: "Alimentar", BN: "Alimentar", AN: "Alimentar", ARFID: "Alimentar", PICA: "Alimentar", TRUM: "Alimentar",
+  ENUR: "Eliminação", ENCO: "Eliminação",
+  INS: "Sono", HIPER: "Sono", NARCO: "Sono", APN: "Sono", PES: "Sono", TSREM: "Sono", SPI: "Sono",
+  DE: "Sexual/Gênero", EJP: "Sexual/Gênero", TDSM: "Sexual/Gênero", DG: "Sexual/Gênero",
+  TOD: "Disruptivo", TC: "Disruptivo", TEI: "Disruptivo", PIRO: "Disruptivo", CLEP: "Disruptivo",
+  TUA: "Substância", TUS: "Substância", TJOGO: "Substância",
+  DEL: "Neurocognitivo", TNCM: "Neurocognitivo", TNCL: "Neurocognitivo",
 };
 
 const CATEGORY_OPTIONS: DSM5Category[] = [
-  "Ansiedade", "TOC", "Humor", "Bipolar", "Personalidade", "Neurodesenvolvimento", "Trauma", "Alimentar",
+  "Ansiedade", "TOC", "Somático", "Humor", "Bipolar", "Psicótico", "Personalidade",
+  "Neurodesenvolvimento", "Trauma", "Dissociativo", "Alimentar", "Eliminação", "Sono",
+  "Sexual/Gênero", "Disruptivo", "Substância", "Neurocognitivo",
 ];
 
 const SEVERITY_OPTIONS = ["Leve", "Moderado", "Grave"];
