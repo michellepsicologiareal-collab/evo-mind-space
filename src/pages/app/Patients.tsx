@@ -1350,17 +1350,17 @@ const Patients = () => {
                             <DropdownMenuItem onClick={() => setTccPatient(p)}>
                               <IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => guardMissing(!!formulationFilled[p.id], () => setPadeksyPatient(p), { label: "Formulação TCC" })}>
+                            <DropdownMenuItem onClick={() => setPadeksyPatient(p)}>
                               <IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => guardMissing(!!teFilled[p.id], () => navigate(`/app/pacientes/${p.id}/formulacao-te`), { label: "Formulação TE" })}
+                              onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-te`)}
                               className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"
                             >
                               <IconTarget className="h-4 w-4 mr-2" /> Formulação TE
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => guardMissing(!!actFilled[p.id], () => navigate(`/app/pacientes/${p.id}/formulacao-act`), { label: "Formulação ACT" })}
+                              onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)}
                               className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"
                             >
                               <IconFlame className="h-4 w-4 mr-2" /> Formulação ACT
