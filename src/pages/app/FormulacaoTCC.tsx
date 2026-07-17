@@ -250,13 +250,9 @@ export default function FormulacaoTCC() {
           </div>
         </header>
 
-        {/* Conteúdo da formulação (componente original — sem alteração de lógica ou campos) */}
-        <section
-          className="bg-white rounded-[10px] p-4 sm:p-6"
-          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}
-        >
-          <CaseFormulation patientId={patientId} />
-        </section>
+        {/* Conteúdo da formulação — mesmo modelo de Blocos da ACT/TE.
+            Fields e lógica preservados (CaseFormulation). */}
+        <CaseFormulation patientId={patientId} />
       </div>
     </div>
   );
