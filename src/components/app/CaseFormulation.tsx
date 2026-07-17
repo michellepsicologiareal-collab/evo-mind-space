@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// Tabs removidos — layout agora é sequencial (Blocos), espelhando ACT/TE.
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -520,30 +520,38 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
           </Link>
         </div>
       )}
-      <Tabs defaultValue="formulation" className="space-y-4">
-      <TabsList className="w-full grid grid-cols-4">
-        <TabsTrigger value="formulation" className="text-xs sm:text-sm">
-          <LogoIcon className="h-4 w-4 mr-1 hidden sm:inline" /> 5 Sistemas
-        </TabsTrigger>
-        <TabsTrigger value="goals" className="text-xs sm:text-sm">
-          <ListChecks className="h-4 w-4 mr-1 hidden sm:inline" /> Plano
-        </TabsTrigger>
-        <TabsTrigger value="evolution" className="text-xs sm:text-sm">
-          <BookOpen className="h-4 w-4 mr-1 hidden sm:inline" /> Evolução
-        </TabsTrigger>
-        <TabsTrigger value="coach" className="text-xs sm:text-sm">
-          <Sparkles className="h-4 w-4 mr-1 hidden sm:inline" /> Pensar c/ IA
-        </TabsTrigger>
-      </TabsList>
+      {/* Layout sequencial (Blocos) — espelha ACT/TE. Fields e lógica inalterados. */}
+      {(() => {
+        const TCC = "#534AB7";
+        const TCC_BORDER = "#C9C3F0";
+        const INK = "#1A1A2E";
+        const MUTED = "#6B7280";
+        const cardStyle: React.CSSProperties = {
+          boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+          borderLeft: `3px solid ${TCC}`,
+        };
+        const Bloco = ({
+          n, title, subtitle, icon: Icon, children,
+        }: { n: string; title: string; subtitle?: string; icon?: any; children: React.ReactNode }) => (
+          <section className="bg-white rounded-[10px] p-5 sm:p-6 space-y-4" style={cardStyle}>
+            <header className="space-y-1">
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: TCC, textTransform: "uppercase" }}>
+                {n}
+              </p>
+              <h2 className="font-display flex items-center gap-2" style={{ fontSize: 15, fontWeight: 700, color: INK }}>
+                {Icon && <Icon className="h-4 w-4" style={{ color: TCC }} />}
+                {title}
+              </h2>
+              {subtitle && <p style={{ fontSize: 12, color: MUTED }}>{subtitle}</p>}
+            </header>
+            {children}
+          </section>
+        );
+        return (
+          <div className="space-y-4 sm:space-y-5">
 
-      {/* ── 5 Systems + Core Beliefs ── */}
-      <TabsContent value="formulation" className="space-y-4">
-        <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
-          <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-1">
-            <LogoIcon className="h-4 w-4" /> Formulação de Caso — 5 Aspectos
-          </h3>
-          <p className="text-xs text-muted-foreground">Formulação cognitivo-comportamental integrada.</p>
-        </div>
+      {/* ── BLOCO 1 · 5 Systems + Core Beliefs ── */}
+      <Bloco n="Bloco 1" title="Formulação de Caso — 5 Aspectos" subtitle="Formulação cognitivo-comportamental integrada (Padesky)." icon={LogoIcon}>
 
         {FIVE_SYSTEMS.map((sys) => (
           <div key={sys.key} className="space-y-1.5">
@@ -564,7 +572,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
 
         <div className="space-y-1.5 pt-2">
           <Label className="font-semibold text-sm flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 text-accent" /> Crenças Nucleares
+            <MessageSquare className="h-4 w-4" style={{ color: TCC }} /> Crenças Nucleares
           </Label>
           <p className="text-xs text-muted-foreground mb-1">Visão de Si, do Mundo e do Futuro</p>
           {readOnly ? (
@@ -572,7 +580,8 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
           ) : (
             <Textarea
               rows={4}
-              className="min-h-[90px] scroll-mt-24 border-accent/30"
+              className="min-h-[90px] scroll-mt-24"
+              style={{ borderColor: TCC_BORDER }}
               placeholder="Ex.: 'Eu sou incapaz' (Si) · 'O mundo é ameaçador' (Mundo) · 'Nada vai melhorar' (Futuro)"
               value={coreBeliefs}
               onChange={(e) => setCoreBeliefs(e.target.value)}
@@ -581,26 +590,20 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
         </div>
 
         {!readOnly && (
-          <Button variant="accent" className="min-h-[44px] w-full" onClick={saveFormulation} disabled={saving}>
+          <Button className="min-h-[44px] w-full" style={{ background: TCC, color: "#fff", fontWeight: 600 }} onClick={saveFormulation} disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Salvar Formulação
           </Button>
         )}
-      </TabsContent>
+      </Bloco>
 
-      {/* ── Plano Terapêutico ── */}
-      <TabsContent value="goals" className="space-y-4">
-        <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
-          <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-1">
-            <ListChecks className="h-4 w-4 text-accent" /> Plano Terapêutico
-          </h3>
-          <p className="text-xs text-muted-foreground">5 Sistemas → Hipóteses → Plano → Evolução</p>
-          {planSavedAt && (
-            <p className="text-xs text-accent mt-2 font-medium">
-              Última atualização: {format(new Date(planSavedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-            </p>
-          )}
-        </div>
+      {/* ── BLOCO 2 · Plano Terapêutico ── */}
+      <Bloco n="Bloco 2" title="Plano Terapêutico" subtitle="5 Sistemas → Hipóteses → Plano → Evolução" icon={ListChecks}>
+        {planSavedAt && (
+          <p className="text-xs font-medium" style={{ color: TCC }}>
+            Última atualização: {format(new Date(planSavedAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+          </p>
+        )}
 
         {plans.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground py-8">Nenhum objetivo terapêutico ainda. Adicione o primeiro abaixo.</p>
@@ -750,27 +753,22 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
             <Button
               type="button"
               variant="outline"
-              className="w-full min-h-[44px] border-dashed border-accent/40 text-accent hover:bg-accent/10"
+              className="w-full min-h-[44px] border-dashed"
+              style={{ borderColor: TCC_BORDER, color: TCC }}
               onClick={addPlan}
             >
               <Plus className="h-4 w-4 mr-1" /> Adicionar Objetivo
             </Button>
-            <Button variant="accent" className="min-h-[44px] w-full" onClick={saveFormulation} disabled={saving}>
+            <Button className="min-h-[44px] w-full" style={{ background: TCC, color: "#fff", fontWeight: 600 }} onClick={saveFormulation} disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Salvar Plano Terapêutico
             </Button>
           </>
         )}
-      </TabsContent>
+      </Bloco>
 
-      {/* ── Session Evolution ── */}
-      <TabsContent value="evolution" className="space-y-4">
-        <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
-          <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-1">
-            <BookOpen className="h-4 w-4 text-accent" /> Evolução Diária
-          </h3>
-          <p className="text-xs text-muted-foreground">Registre o resumo e a tarefa de casa de cada sessão.</p>
-        </div>
+      {/* ── BLOCO 3 · Session Evolution ── */}
+      <Bloco n="Bloco 3" title="Evolução Diária" subtitle="Registre o resumo e a tarefa de casa de cada sessão." icon={BookOpen}>
 
         {!readOnly && (
           <div className="space-y-3 rounded-xl border border-border p-4">
@@ -798,14 +796,15 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="min-h-[44px] flex-1 border-primary/30 text-primary hover:bg-primary/10"
+                className="min-h-[44px] flex-1"
+                style={{ borderColor: TCC_BORDER, color: TCC }}
                 onClick={organizeNotes}
                 disabled={organizing || !evoSummary.trim()}
               >
                 {organizing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
                 ✨ Organizar Notas
               </Button>
-              <Button variant="accent" className="min-h-[44px] flex-1" onClick={saveEvolution} disabled={savingEvo}>
+              <Button className="min-h-[44px] flex-1" style={{ background: TCC, color: "#fff", fontWeight: 600 }} onClick={saveEvolution} disabled={savingEvo}>
                 {savingEvo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                 Registrar Evolução
               </Button>
@@ -815,19 +814,19 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
 
         {/* AI Result */}
         {aiResult && (
-          <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-5 space-y-3">
+          <div className="rounded-xl border-2 p-5 space-y-3" style={{ borderColor: TCC_BORDER, background: "#EEEDFE" }}>
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <h4 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" /> Notas Organizadas
+                <Sparkles className="h-4 w-4" style={{ color: TCC }} /> Notas Organizadas
               </h4>
               <div className="flex items-center gap-2 flex-wrap">
                 <AbordagemBadge abordagem={aiNotesMeta?.abordagem} label={aiNotesMeta?.label} />
-                <Button size="sm" variant="accent" className="min-h-[36px]" onClick={copyToEvolution}>
+                <Button size="sm" className="min-h-[36px]" style={{ background: TCC, color: "#fff" }} onClick={copyToEvolution}>
                   <Copy className="h-3.5 w-3.5 mr-1" /> Copiar para a Evolução
                 </Button>
               </div>
             </div>
-            <div className="prose prose-sm max-w-none text-foreground [&_h2]:text-sm [&_h2]:font-display [&_h2]:font-bold [&_h2]:text-primary [&_h2]:mt-3 [&_h2]:mb-1 [&_p]:text-sm [&_p]:leading-relaxed [&_ul]:text-sm [&_li]:text-sm">
+            <div className="prose prose-sm max-w-none text-foreground [&_h2]:text-sm [&_h2]:font-display [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-1 [&_p]:text-sm [&_p]:leading-relaxed [&_ul]:text-sm [&_li]:text-sm">
               <ReactMarkdown>{aiResult}</ReactMarkdown>
             </div>
           </div>
@@ -881,7 +880,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
                         <Button type="button" variant="outline" size="sm" onClick={cancelEditEvo} disabled={savingEvoEdit}>
                           Cancelar
                         </Button>
-                        <Button type="button" variant="accent" size="sm" onClick={saveEditEvo} disabled={savingEvoEdit}>
+                        <Button type="button" size="sm" style={{ background: TCC, color: "#fff" }} onClick={saveEditEvo} disabled={savingEvoEdit}>
                           {savingEvoEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                           Salvar alteração
                         </Button>
@@ -897,7 +896,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
                       )}
                       {evo.homework && (
                         <div>
-                          <p className="text-xs font-semibold text-accent">Tarefa de Casa</p>
+                          <p className="text-xs font-semibold" style={{ color: TCC }}>Tarefa de Casa</p>
                           <p className="text-sm text-foreground whitespace-pre-wrap">{evo.homework}</p>
                         </div>
                       )}
@@ -908,18 +907,10 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
             })}
           </ul>
         )}
-      </TabsContent>
+      </Bloco>
 
-      {/* ── Coach IA Padesky ── */}
-      <TabsContent value="coach" className="space-y-4">
-        <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
-          <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-1">
-            <Sparkles className="h-4 w-4 text-accent" /> Pensar com IA — método 5 Aspectos
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            A IA atua como supervisora Socrática: lê os 5 sistemas que você preencheu e te devolve <strong>perguntas</strong>, hipóteses cognitivas e intervenções TCC para você raciocinar — não dá diagnóstico pronto.
-          </p>
-        </div>
+      {/* ── BLOCO 4 · Coach IA Padesky ── */}
+      <Bloco n="Bloco 4" title="Pensar com IA — método 5 Aspectos" subtitle="A IA atua como supervisora Socrática: devolve perguntas, hipóteses cognitivas e intervenções TCC — não dá diagnóstico pronto." icon={Sparkles}>
 
         <div className="space-y-2">
           <Label className="text-sm font-semibold">Pergunta específica (opcional)</Label>
@@ -929,16 +920,16 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
             value={coachQuestion}
             onChange={(e) => setCoachQuestion(e.target.value)}
           />
-          <Button variant="accent" className="w-full min-h-[44px]" onClick={askCoach} disabled={coachLoading}>
+          <Button className="w-full min-h-[44px]" style={{ background: TCC, color: "#fff", fontWeight: 600 }} onClick={askCoach} disabled={coachLoading}>
             {coachLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {coachLoading ? "Pensando junto com você..." : "Pedir ajuda para pensar"}
           </Button>
         </div>
 
         {coachAnswer && (
-          <div className="rounded-xl border border-accent/30 bg-background p-4 space-y-2">
+          <div className="rounded-xl border bg-background p-4 space-y-2" style={{ borderColor: TCC_BORDER }}>
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <p className="text-xs font-semibold text-accent flex items-center gap-1.5">
+              <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: TCC }}>
                 <Sparkles className="h-3.5 w-3.5" /> Devolutiva da supervisora-IA
               </p>
               <div className="flex items-center gap-2 flex-wrap">
@@ -952,7 +943,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
                 </Button>
               </div>
             </div>
-            <div className="prose prose-sm max-w-none text-sm text-foreground [&_h2]:font-display [&_h2]:text-accent [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:text-base [&_ul]:list-disc [&_ul]:pl-5 [&_p]:my-1">
+            <div className="prose prose-sm max-w-none text-sm text-foreground [&_h2]:font-display [&_h2]:mt-3 [&_h2]:mb-1 [&_h2]:text-base [&_ul]:list-disc [&_ul]:pl-5 [&_p]:my-1">
               <ReactMarkdown>{coachAnswer}</ReactMarkdown>
             </div>
             <p className="text-[10px] text-muted-foreground italic pt-2 border-t border-border">
@@ -960,8 +951,10 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
             </p>
           </div>
         )}
-      </TabsContent>
-      </Tabs>
+      </Bloco>
+          </div>
+        );
+      })()}
     </div>
   );
 };
