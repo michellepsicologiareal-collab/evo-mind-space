@@ -2181,7 +2181,7 @@ const Patients = () => {
                     }} className="inline-flex items-center gap-1.5" style={{ background: "#fff", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--primary-dark))", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
                       <Printer className="h-3.5 w-3.5" /> Imprimir / PDF
                     </button>
-                    <button onClick={() => { setReadPatient(null); setPadeksyPatient(readPatient); }} className="inline-flex items-center gap-1.5" style={{ background: "hsl(var(--primary))", color: "#fff", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
+                    <button onClick={() => { const pid = readPatient?.id; setReadPatient(null); if (pid) navigate(`/app/pacientes/${pid}/formulacao-tcc`); }} className="inline-flex items-center gap-1.5" style={{ background: "hsl(var(--primary))", color: "#fff", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
                       <Pencil className="h-3.5 w-3.5" /> Editar
                     </button>
                   </div>
