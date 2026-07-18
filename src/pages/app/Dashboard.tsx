@@ -347,7 +347,7 @@ export default function Dashboard() {
       setAvgPlanValue(avgP);
     })();
     return () => { cancelled = true; };
-  }, [user?.id]);
+  }, [user?.id, selectedMonth]);
 
   // TODAY list derived from weekSessions
   useEffect(() => {
