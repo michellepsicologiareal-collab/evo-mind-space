@@ -444,7 +444,7 @@ export default function Dashboard() {
         to: "/app/financeiro",
       },
     ],
-    [activePatients, newPatientsMonth, totalWeek, weekRemaining, attendancePct, attendanceDelta, modalityParts, modalityBreakdown.sem, avgSessionPrice, avgPlanValue],
+    [activePatients, newPatientsMonth, totalWeek, weekRemaining, attendancePct, attendanceDelta, modalityParts, modalityBreakdown.sem, avgSessionPrice, avgPlanValue, selectedMonthLabel],
   );
 
   const PENDINGS = [
