@@ -180,8 +180,8 @@ export default function Dashboard() {
     let cancelled = false;
     (async () => {
       const now = new Date();
-      const monthStart = startOfMonth(now);
-      const monthEnd = endOfMonth(now);
+      const monthStart = startOfMonth(selectedMonth);
+      const monthEnd = endOfMonth(selectedMonth);
       const attendanceFrom = subDays(now, 60);
       const attendancePrevFrom = subDays(now, 120);
       const adesaoCutoff = subDays(now, 30);
