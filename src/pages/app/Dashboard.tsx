@@ -520,6 +520,37 @@ export default function Dashboard() {
           </div>
         </header>
 
+        {/* ─ Filtro de mês ─ */}
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor="dash-month" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Mês de referência
+          </label>
+          <input
+            id="dash-month"
+            type="month"
+            value={format(selectedMonth, "yyyy-MM")}
+            onChange={(e) => {
+              const v = e.target.value; // "YYYY-MM"
+              if (!v) return;
+              const [y, m] = v.split("-").map(Number);
+              setSelectedMonth(startOfMonth(new Date(y, (m ?? 1) - 1, 1)));
+            }}
+            className="h-9 rounded-full border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            aria-label="Selecionar mês de referência"
+          />
+          <span className="text-sm text-muted-foreground">{selectedMonthLabel}</span>
+          {!isCurrentMonth && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 rounded-full text-xs"
+              onClick={() => setSelectedMonth(startOfMonth(new Date()))}
+            >
+              Voltar ao mês atual
+            </Button>
+          )}
+        </div>
+
         {/* ─ KPIs ─ */}
         <section
           aria-label="Indicadores principais"
