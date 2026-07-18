@@ -434,13 +434,13 @@ export default function Dashboard() {
       {
         label: "Valor médio por sessão",
         value: avgSessionPrice == null ? "—" : fmtBRL2(avgSessionPrice),
-        hint: avgSessionPrice == null ? "Sem sessões com valor no mês" : "Mês corrente",
+        hint: avgSessionPrice == null ? `Sem sessões com valor em ${selectedMonthLabel}` : selectedMonthLabel,
         to: "/app/financeiro",
       },
       {
         label: "Valor médio do Plano de Atendimento",
         value: avgPlanValue == null ? "—" : fmtBRL2(avgPlanValue),
-        hint: avgPlanValue == null ? "Sem dados no período" : "Mês corrente",
+        hint: avgPlanValue == null ? `Sem dados em ${selectedMonthLabel}` : selectedMonthLabel,
         to: "/app/financeiro",
       },
     ],
