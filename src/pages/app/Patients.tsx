@@ -1350,7 +1350,7 @@ const Patients = () => {
                             <DropdownMenuItem onClick={() => setTccPatient(p)}>
                               <IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setPadeksyPatient(p)}>
+                            <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-tcc`)}>
                               <IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC
                             </DropdownMenuItem>
                             <DropdownMenuItem
@@ -1490,7 +1490,7 @@ const Patients = () => {
                         <DropdownMenuItem onClick={() => toggleActive(p)}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => setTccPatient(p)}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setPadeksyPatient(p)}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-tcc`)}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-te`)} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -1636,7 +1636,7 @@ const Patients = () => {
                       <DropdownMenuItem onClick={() => { toggleActive(p); }}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => { setTccPatient(p); }}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setPadeksyPatient(p); }}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { navigate(`/app/pacientes/${p.id}/formulacao-tcc`); }}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { navigate(`/app/pacientes/${p.id}/formulacao-te`); }} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => { navigate(`/app/pacientes/${p.id}/formulacao-act`); }} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -1728,7 +1728,7 @@ const Patients = () => {
                         const hasAct = hasActFormulation(act);
                         const actSummary = clinicalText(act?.direcionamento_gerado) || clinicalText(act?.apresentacao_problema) || clinicalText(act?.matriz_act) || clinicalText(act?.valores);
                         const items = [
-                          { key: "tcc", label: "TCC — Formulação de caso", filled: hasTcc, summary: trunc(tccSummary), fullSummary: tccSummary, accent: "hsl(var(--primary))", onView: () => guardMissing(hasTcc, () => { setPadeksyPatient(p); }, { label: "Formulação TCC", onCreate: () => { setPadeksyPatient(p); } }) },
+                          { key: "tcc", label: "TCC — Formulação de caso", filled: hasTcc, summary: trunc(tccSummary), fullSummary: tccSummary, accent: "hsl(var(--primary))", onView: () => guardMissing(hasTcc, () => { navigate(`/app/pacientes/${p.id}/formulacao-tcc`); }, { label: "Formulação TCC", onCreate: () => { navigate(`/app/pacientes/${p.id}/formulacao-tcc`); } }) },
                           { key: "te", label: "TE — Terapia do Esquema", filled: hasTe, summary: trunc(teSummary), fullSummary: teSummary, accent: "#B8860B", onView: () => guardMissing(hasTe, () => { navigate(`/app/pacientes/${p.id}/formulacao-te`); }, { label: "Formulação TE", onCreate: () => { navigate(`/app/pacientes/${p.id}/formulacao-te`); } }) },
                           { key: "act", label: "ACT — Terapia de Aceitação", filled: hasAct, summary: trunc(actSummary), fullSummary: actSummary, accent: "#2D6A4F", onView: () => guardMissing(hasAct, () => { navigate(`/app/pacientes/${p.id}/formulacao-act`); }, { label: "Formulação ACT", onCreate: () => { navigate(`/app/pacientes/${p.id}/formulacao-act`); } }) },
                           { key: "rpd", label: "RPD — Registros TCC", filled: cTcc > 0, summary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", fullSummary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", accent: "hsl(var(--moss))", onView: () => guardMissing(cTcc > 0, () => { setTccPatient(p); }, { label: "Registros TCC", onCreate: () => { setTccPatient(p); } }) },
@@ -2181,7 +2181,7 @@ const Patients = () => {
                     }} className="inline-flex items-center gap-1.5" style={{ background: "#fff", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--primary-dark))", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
                       <Printer className="h-3.5 w-3.5" /> Imprimir / PDF
                     </button>
-                    <button onClick={() => { setReadPatient(null); setPadeksyPatient(readPatient); }} className="inline-flex items-center gap-1.5" style={{ background: "hsl(var(--primary))", color: "#fff", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
+                    <button onClick={() => { const pid = readPatient?.id; setReadPatient(null); if (pid) navigate(`/app/pacientes/${pid}/formulacao-tcc`); }} className="inline-flex items-center gap-1.5" style={{ background: "hsl(var(--primary))", color: "#fff", padding: "6px 12px", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 11 }}>
                       <Pencil className="h-3.5 w-3.5" /> Editar
                     </button>
                   </div>
