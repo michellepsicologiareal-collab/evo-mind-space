@@ -145,6 +145,15 @@ export default function Dashboard() {
   const [finAReceber, setFinAReceber] = useState(0);
   const [finAtrasoCount, setFinAtrasoCount] = useState(0);
   const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
+  const isCurrentMonth = useMemo(
+    () => selectedMonth.getMonth() === new Date().getMonth() && selectedMonth.getFullYear() === new Date().getFullYear(),
+    [selectedMonth],
+  );
+  const selectedMonthLabel = useMemo(() => {
+    const s = format(selectedMonth, "MMMM 'de' yyyy", { locale: ptBR });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }, [selectedMonth]);
 
   // Weekly sessions (real) — fonte única compartilhada com a Agenda semanal
   useEffect(() => {
