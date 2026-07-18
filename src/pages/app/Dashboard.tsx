@@ -778,7 +778,7 @@ export default function Dashboard() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="grid flex-1 gap-4 sm:grid-cols-3">
                 <div>
-                  <p className="text-xs text-muted-foreground">Recebido</p>
+                  <p className="text-xs text-muted-foreground">Recebido · {selectedMonthLabel}</p>
                   <p className="mt-1 font-display text-lg font-semibold text-emerald-700 dark:text-emerald-400">
                     {fmtBRL(finRecebido)}
                   </p>
