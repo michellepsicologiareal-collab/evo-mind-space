@@ -1350,7 +1350,7 @@ const Patients = () => {
                             <DropdownMenuItem onClick={() => setTccPatient(p)}>
                               <IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setPadeksyPatient(p)}>
+                            <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-tcc`)}>
                               <IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC
                             </DropdownMenuItem>
                             <DropdownMenuItem
