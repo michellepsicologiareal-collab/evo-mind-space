@@ -145,6 +145,15 @@ export default function Dashboard() {
   const [finAReceber, setFinAReceber] = useState(0);
   const [finAtrasoCount, setFinAtrasoCount] = useState(0);
   const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
+  const isCurrentMonth = useMemo(
+    () => selectedMonth.getMonth() === new Date().getMonth() && selectedMonth.getFullYear() === new Date().getFullYear(),
+    [selectedMonth],
+  );
+  const selectedMonthLabel = useMemo(() => {
+    const s = format(selectedMonth, "MMMM 'de' yyyy", { locale: ptBR });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }, [selectedMonth]);
 
   // Weekly sessions (real) — fonte única compartilhada com a Agenda semanal
   useEffect(() => {
@@ -171,8 +180,8 @@ export default function Dashboard() {
     let cancelled = false;
     (async () => {
       const now = new Date();
-      const monthStart = startOfMonth(now);
-      const monthEnd = endOfMonth(now);
+      const monthStart = startOfMonth(selectedMonth);
+      const monthEnd = endOfMonth(selectedMonth);
       const attendanceFrom = subDays(now, 60);
       const attendancePrevFrom = subDays(now, 120);
       const adesaoCutoff = subDays(now, 30);
@@ -338,7 +347,7 @@ export default function Dashboard() {
       setAvgPlanValue(avgP);
     })();
     return () => { cancelled = true; };
-  }, [user?.id]);
+  }, [user?.id, selectedMonth]);
 
   // TODAY list derived from weekSessions
   useEffect(() => {
@@ -399,7 +408,7 @@ export default function Dashboard() {
       {
         label: "Pacientes ativos",
         value: String(activePatients),
-        hint: newPatientsMonth > 0 ? `+${newPatientsMonth} neste mês` : "Nenhum novo neste mês",
+        hint: newPatientsMonth > 0 ? `+${newPatientsMonth} em ${selectedMonthLabel}` : `Nenhum novo em ${selectedMonthLabel}`,
         sub: modalityParts
           ? `Modalidade: ${modalityParts}${modalityBreakdown.sem > 0 ? ` · ${modalityBreakdown.sem} sem modalidade` : ""}`
           : undefined,
@@ -425,17 +434,17 @@ export default function Dashboard() {
       {
         label: "Valor médio por sessão",
         value: avgSessionPrice == null ? "—" : fmtBRL2(avgSessionPrice),
-        hint: avgSessionPrice == null ? "Sem sessões com valor no mês" : "Mês corrente",
+        hint: avgSessionPrice == null ? `Sem sessões com valor em ${selectedMonthLabel}` : selectedMonthLabel,
         to: "/app/financeiro",
       },
       {
         label: "Valor médio do Plano de Atendimento",
         value: avgPlanValue == null ? "—" : fmtBRL2(avgPlanValue),
-        hint: avgPlanValue == null ? "Sem dados no período" : "Mês corrente",
+        hint: avgPlanValue == null ? `Sem dados em ${selectedMonthLabel}` : selectedMonthLabel,
         to: "/app/financeiro",
       },
     ],
-    [activePatients, newPatientsMonth, totalWeek, weekRemaining, attendancePct, attendanceDelta, modalityParts, modalityBreakdown.sem, avgSessionPrice, avgPlanValue],
+    [activePatients, newPatientsMonth, totalWeek, weekRemaining, attendancePct, attendanceDelta, modalityParts, modalityBreakdown.sem, avgSessionPrice, avgPlanValue, selectedMonthLabel],
   );
 
   const PENDINGS = [
@@ -510,6 +519,37 @@ export default function Dashboard() {
             </Tooltip>
           </div>
         </header>
+
+        {/* ─ Filtro de mês ─ */}
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor="dash-month" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Mês de referência
+          </label>
+          <input
+            id="dash-month"
+            type="month"
+            value={format(selectedMonth, "yyyy-MM")}
+            onChange={(e) => {
+              const v = e.target.value; // "YYYY-MM"
+              if (!v) return;
+              const [y, m] = v.split("-").map(Number);
+              setSelectedMonth(startOfMonth(new Date(y, (m ?? 1) - 1, 1)));
+            }}
+            className="h-9 rounded-full border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            aria-label="Selecionar mês de referência"
+          />
+          <span className="text-sm text-muted-foreground">{selectedMonthLabel}</span>
+          {!isCurrentMonth && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 rounded-full text-xs"
+              onClick={() => setSelectedMonth(startOfMonth(new Date()))}
+            >
+              Voltar ao mês atual
+            </Button>
+          )}
+        </div>
 
         {/* ─ KPIs ─ */}
         <section
@@ -738,7 +778,7 @@ export default function Dashboard() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="grid flex-1 gap-4 sm:grid-cols-3">
                 <div>
-                  <p className="text-xs text-muted-foreground">Recebido</p>
+                  <p className="text-xs text-muted-foreground">Recebido · {selectedMonthLabel}</p>
                   <p className="mt-1 font-display text-lg font-semibold text-emerald-700 dark:text-emerald-400">
                     {fmtBRL(finRecebido)}
                   </p>
