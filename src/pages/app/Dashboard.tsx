@@ -408,7 +408,7 @@ export default function Dashboard() {
       {
         label: "Pacientes ativos",
         value: String(activePatients),
-        hint: newPatientsMonth > 0 ? `+${newPatientsMonth} neste mês` : "Nenhum novo neste mês",
+        hint: newPatientsMonth > 0 ? `+${newPatientsMonth} em ${selectedMonthLabel}` : `Nenhum novo em ${selectedMonthLabel}`,
         sub: modalityParts
           ? `Modalidade: ${modalityParts}${modalityBreakdown.sem > 0 ? ` · ${modalityBreakdown.sem} sem modalidade` : ""}`
           : undefined,
