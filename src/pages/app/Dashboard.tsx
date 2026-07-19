@@ -234,7 +234,12 @@ export default function Dashboard() {
       setActivePatients(activeList.length);
       setNewPatientsMonth(
         patientsAll.filter(
-          (p) => p.created_at && new Date(p.created_at) >= monthStart && p.is_active,
+          (p) => p.created_at && new Date(p.created_at) >= monthStart && new Date(p.created_at) <= monthEnd,
+        ).length,
+      );
+      setInactivatedMonth(
+        patientsAll.filter(
+          (p) => !p.is_active && p.updated_at && new Date(p.updated_at) >= monthStart && new Date(p.updated_at) <= monthEnd,
         ).length,
       );
 
