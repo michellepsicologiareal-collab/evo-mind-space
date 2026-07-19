@@ -12,8 +12,20 @@ import {
   startOfMonth,
   endOfMonth,
   subDays,
+  subMonths,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RTooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 import {
   Search,
   Plus,
