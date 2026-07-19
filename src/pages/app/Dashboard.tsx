@@ -192,7 +192,7 @@ export default function Dashboard() {
       const [patientsRes, attendanceRes, atrasoRes, futureRes, monthPayRes, recordsSrcRes] = await Promise.all([
         supabase
           .from("patients")
-          .select("id, is_active, created_at, modality")
+          .select("id, is_active, created_at, updated_at, modality")
           .eq("user_id", user.id),
         supabase
           .from("sessions")
