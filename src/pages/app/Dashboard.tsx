@@ -131,7 +131,10 @@ export default function Dashboard() {
 
   // KPIs & cards reais
   const [activePatients, setActivePatients] = useState(0);
+  const [activeInMonth, setActiveInMonth] = useState(0);
   const [newPatientsMonth, setNewPatientsMonth] = useState(0);
+  const [inactivatedMonth, setInactivatedMonth] = useState(0);
+  const [monthSessionsTotal, setMonthSessionsTotal] = useState(0);
   const [attendancePct, setAttendancePct] = useState<number | null>(null);
   const [attendanceDelta, setAttendanceDelta] = useState<number | null>(null);
   const [pendingFormulations, setPendingFormulations] = useState(0);
