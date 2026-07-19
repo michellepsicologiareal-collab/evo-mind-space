@@ -12,8 +12,20 @@ import {
   startOfMonth,
   endOfMonth,
   subDays,
+  subMonths,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RTooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 import {
   Search,
   Plus,
@@ -149,6 +161,9 @@ export default function Dashboard() {
   const [finAtrasoCount, setFinAtrasoCount] = useState(0);
   const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
+  const [trendRange, setTrendRange] = useState<6 | 12>(6);
+  const [trendData, setTrendData] = useState<Array<{ key: string; label: string; sessions: number; revenue: number }>>([]);
+  const [loadingTrend, setLoadingTrend] = useState(false);
   const isCurrentMonth = useMemo(
     () => selectedMonth.getMonth() === new Date().getMonth() && selectedMonth.getFullYear() === new Date().getFullYear(),
     [selectedMonth],
@@ -359,6 +374,49 @@ export default function Dashboard() {
     })();
     return () => { cancelled = true; };
   }, [user?.id, selectedMonth]);
+
+  // Trend: últimos N meses terminando no mês selecionado
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      setLoadingTrend(true);
+      const rangeStart = startOfMonth(subMonths(selectedMonth, trendRange - 1));
+      const rangeEnd = endOfMonth(selectedMonth);
+      const { data, error } = await supabase
+        .from("sessions")
+        .select("scheduled_at, price, status, payment_status")
+        .eq("user_id", user.id)
+        .neq("status", "cancelled")
+        .gte("scheduled_at", rangeStart.toISOString())
+        .lte("scheduled_at", rangeEnd.toISOString());
+      if (cancelled) return;
+      if (error) {
+        setTrendData([]);
+        setLoadingTrend(false);
+        return;
+      }
+      const buckets = new Map<string, { key: string; label: string; sessions: number; revenue: number }>();
+      for (let i = trendRange - 1; i >= 0; i--) {
+        const d = subMonths(selectedMonth, i);
+        const key = format(d, "yyyy-MM");
+        const lbl = format(d, "MMM/yy", { locale: ptBR });
+        buckets.set(key, { key, label: lbl.charAt(0).toUpperCase() + lbl.slice(1), sessions: 0, revenue: 0 });
+      }
+      (data ?? []).forEach((s: any) => {
+        const key = format(new Date(s.scheduled_at), "yyyy-MM");
+        const b = buckets.get(key);
+        if (!b) return;
+        b.sessions += 1;
+        if (s.payment_status === "paid") b.revenue += Number(s.price ?? 0);
+      });
+      setTrendData(Array.from(buckets.values()));
+      setLoadingTrend(false);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, selectedMonth, trendRange]);
+
+
 
   // TODAY list derived from weekSessions
   useEffect(() => {
@@ -611,6 +669,76 @@ export default function Dashboard() {
               </Card>
             </Link>
           ))}
+        </section>
+
+        {/* ─ Tendência: Sessões x Faturamento ─ */}
+        <section aria-labelledby="trend-heading" className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 id="trend-heading" className="font-display text-xl font-semibold tracking-tight">
+                Tendência dos últimos {trendRange} meses
+              </h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Sessões totais e faturamento realizado até {selectedMonthLabel}
+              </p>
+            </div>
+            <div
+              role="tablist"
+              aria-label="Janela da tendência"
+              className="inline-flex rounded-full border border-border bg-card p-1 text-xs"
+            >
+              {([6, 12] as const).map((n) => (
+                <button
+                  key={n}
+                  role="tab"
+                  aria-selected={trendRange === n}
+                  onClick={() => setTrendRange(n)}
+                  className={cn(
+                    "h-7 rounded-full px-3 font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    trendRange === n ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {n} meses
+                </button>
+              ))}
+            </div>
+          </div>
+          <Card className="rounded-2xl border-border/60 p-4 md:p-5">
+            {loadingTrend ? (
+              <div className="h-72 rounded-lg bg-muted/40 animate-pulse" />
+            ) : trendData.every((d) => d.sessions === 0 && d.revenue === 0) ? (
+              <div className="h-72 flex items-center justify-center text-sm text-muted-foreground">
+                Sem dados nos últimos {trendRange} meses.
+              </div>
+            ) : (
+              <div className="h-72 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={trendData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis yAxisId="left" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                      tickFormatter={(v: number) => fmtBRL(v)}
+                    />
+                    <RTooltip
+                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
+                      formatter={(value: any, name: string) =>
+                        name === "Faturamento" ? [fmtBRL2(Number(value)), name] : [String(value), name]
+                      }
+                    />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar yAxisId="left" dataKey="sessions" name="Sessões" fill="hsl(var(--primary) / 0.35)" radius={[6, 6, 0, 0]} />
+                    <Line yAxisId="right" type="monotone" dataKey="revenue" name="Faturamento" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </Card>
         </section>
 
         {/* ─ Hoje ─ */}
