@@ -318,8 +318,11 @@ export default function Dashboard() {
       }).length;
       if (!cancelled) setBaixaAdesao(baixa);
 
-      // Financeiro do mês corrente
+      // Financeiro + volume do mês selecionado
       const monthRows = (monthPayRes.data ?? []) as any[];
+      setMonthSessionsTotal(monthRows.length);
+      const patientsInMonth = new Set(monthRows.map((s) => s.patient_id).filter(Boolean));
+      setActiveInMonth(patientsInMonth.size);
       let recebido = 0, aReceber = 0, atrasoQtd = 0;
       monthRows.forEach((s) => {
         const price = Number(s.price ?? 0);
