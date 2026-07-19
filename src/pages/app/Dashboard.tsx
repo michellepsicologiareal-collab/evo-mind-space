@@ -161,6 +161,9 @@ export default function Dashboard() {
   const [finAtrasoCount, setFinAtrasoCount] = useState(0);
   const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
+  const [trendRange, setTrendRange] = useState<6 | 12>(6);
+  const [trendData, setTrendData] = useState<Array<{ key: string; label: string; sessions: number; revenue: number }>>([]);
+  const [loadingTrend, setLoadingTrend] = useState(false);
   const isCurrentMonth = useMemo(
     () => selectedMonth.getMonth() === new Date().getMonth() && selectedMonth.getFullYear() === new Date().getFullYear(),
     [selectedMonth],
