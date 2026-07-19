@@ -375,6 +375,49 @@ export default function Dashboard() {
     return () => { cancelled = true; };
   }, [user?.id, selectedMonth]);
 
+  // Trend: últimos N meses terminando no mês selecionado
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      setLoadingTrend(true);
+      const rangeStart = startOfMonth(subMonths(selectedMonth, trendRange - 1));
+      const rangeEnd = endOfMonth(selectedMonth);
+      const { data, error } = await supabase
+        .from("sessions")
+        .select("scheduled_at, price, status, payment_status")
+        .eq("user_id", user.id)
+        .neq("status", "cancelled")
+        .gte("scheduled_at", rangeStart.toISOString())
+        .lte("scheduled_at", rangeEnd.toISOString());
+      if (cancelled) return;
+      if (error) {
+        setTrendData([]);
+        setLoadingTrend(false);
+        return;
+      }
+      const buckets = new Map<string, { key: string; label: string; sessions: number; revenue: number }>();
+      for (let i = trendRange - 1; i >= 0; i--) {
+        const d = subMonths(selectedMonth, i);
+        const key = format(d, "yyyy-MM");
+        const lbl = format(d, "MMM/yy", { locale: ptBR });
+        buckets.set(key, { key, label: lbl.charAt(0).toUpperCase() + lbl.slice(1), sessions: 0, revenue: 0 });
+      }
+      (data ?? []).forEach((s: any) => {
+        const key = format(new Date(s.scheduled_at), "yyyy-MM");
+        const b = buckets.get(key);
+        if (!b) return;
+        b.sessions += 1;
+        if (s.payment_status === "paid") b.revenue += Number(s.price ?? 0);
+      });
+      setTrendData(Array.from(buckets.values()));
+      setLoadingTrend(false);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, selectedMonth, trendRange]);
+
+
+
   // TODAY list derived from weekSessions
   useEffect(() => {
     const list = weekSessions
