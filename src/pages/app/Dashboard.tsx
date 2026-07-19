@@ -131,7 +131,10 @@ export default function Dashboard() {
 
   // KPIs & cards reais
   const [activePatients, setActivePatients] = useState(0);
+  const [activeInMonth, setActiveInMonth] = useState(0);
   const [newPatientsMonth, setNewPatientsMonth] = useState(0);
+  const [inactivatedMonth, setInactivatedMonth] = useState(0);
+  const [monthSessionsTotal, setMonthSessionsTotal] = useState(0);
   const [attendancePct, setAttendancePct] = useState<number | null>(null);
   const [attendanceDelta, setAttendanceDelta] = useState<number | null>(null);
   const [pendingFormulations, setPendingFormulations] = useState(0);
@@ -189,7 +192,7 @@ export default function Dashboard() {
       const [patientsRes, attendanceRes, atrasoRes, futureRes, monthPayRes, recordsSrcRes] = await Promise.all([
         supabase
           .from("patients")
-          .select("id, is_active, created_at, modality")
+          .select("id, is_active, created_at, updated_at, modality")
           .eq("user_id", user.id),
         supabase
           .from("sessions")
@@ -231,7 +234,12 @@ export default function Dashboard() {
       setActivePatients(activeList.length);
       setNewPatientsMonth(
         patientsAll.filter(
-          (p) => p.created_at && new Date(p.created_at) >= monthStart && p.is_active,
+          (p) => p.created_at && new Date(p.created_at) >= monthStart && new Date(p.created_at) <= monthEnd,
+        ).length,
+      );
+      setInactivatedMonth(
+        patientsAll.filter(
+          (p) => !p.is_active && p.updated_at && new Date(p.updated_at) >= monthStart && new Date(p.updated_at) <= monthEnd,
         ).length,
       );
 
@@ -310,8 +318,11 @@ export default function Dashboard() {
       }).length;
       if (!cancelled) setBaixaAdesao(baixa);
 
-      // Financeiro do mês corrente
+      // Financeiro + volume do mês selecionado
       const monthRows = (monthPayRes.data ?? []) as any[];
+      setMonthSessionsTotal(monthRows.length);
+      const patientsInMonth = new Set(monthRows.map((s) => s.patient_id).filter(Boolean));
+      setActiveInMonth(patientsInMonth.size);
       let recebido = 0, aReceber = 0, atrasoQtd = 0;
       monthRows.forEach((s) => {
         const price = Number(s.price ?? 0);
@@ -406,13 +417,37 @@ export default function Dashboard() {
   const KPI = useMemo(
     () => [
       {
-        label: "Pacientes ativos",
-        value: String(activePatients),
-        hint: newPatientsMonth > 0 ? `+${newPatientsMonth} em ${selectedMonthLabel}` : `Nenhum novo em ${selectedMonthLabel}`,
+        label: "Pacientes ativos no mês",
+        value: String(activeInMonth),
+        hint: `Com sessão em ${selectedMonthLabel}`,
         sub: modalityParts
-          ? `Modalidade: ${modalityParts}${modalityBreakdown.sem > 0 ? ` · ${modalityBreakdown.sem} sem modalidade` : ""}`
+          ? `Modalidade (ativos): ${modalityParts}${modalityBreakdown.sem > 0 ? ` · ${modalityBreakdown.sem} sem modalidade` : ""}`
           : undefined,
         to: "/app/pacientes",
+      },
+      {
+        label: "Novos pacientes do mês",
+        value: String(newPatientsMonth),
+        hint: newPatientsMonth === 0 ? `Nenhum cadastro em ${selectedMonthLabel}` : selectedMonthLabel,
+        to: "/app/pacientes",
+      },
+      {
+        label: "Pacientes inativados no mês",
+        value: String(inactivatedMonth),
+        hint: inactivatedMonth === 0 ? `Nenhuma inativação em ${selectedMonthLabel}` : selectedMonthLabel,
+        to: "/app/pacientes",
+      },
+      {
+        label: "Sessões totais no mês",
+        value: String(monthSessionsTotal),
+        hint: `Não canceladas · ${selectedMonthLabel}`,
+        to: "/app/agenda",
+      },
+      {
+        label: "Faturamento realizado",
+        value: fmtBRL2(finRecebido),
+        hint: `Recebido em ${selectedMonthLabel}`,
+        to: "/app/financeiro",
       },
       {
         label: "Sessões na semana",
@@ -444,7 +479,7 @@ export default function Dashboard() {
         to: "/app/financeiro",
       },
     ],
-    [activePatients, newPatientsMonth, totalWeek, weekRemaining, attendancePct, attendanceDelta, modalityParts, modalityBreakdown.sem, avgSessionPrice, avgPlanValue, selectedMonthLabel],
+    [activeInMonth, newPatientsMonth, inactivatedMonth, monthSessionsTotal, finRecebido, totalWeek, weekRemaining, attendancePct, attendanceDelta, modalityParts, modalityBreakdown.sem, avgSessionPrice, avgPlanValue, selectedMonthLabel],
   );
 
   const PENDINGS = [
