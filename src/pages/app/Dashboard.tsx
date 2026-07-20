@@ -709,6 +709,29 @@ export default function Dashboard() {
                 </button>
               ))}
             </div>
+            <div
+              role="tablist"
+              aria-label="Visualização do faturamento"
+              className="inline-flex rounded-full border border-border bg-card p-1 text-xs"
+            >
+              {([
+                { id: "total", label: "Total" },
+                { id: "split", label: "Recebido x Pendente" },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.id}
+                  role="tab"
+                  aria-selected={trendRevenueView === opt.id}
+                  onClick={() => setTrendRevenueView(opt.id)}
+                  className={cn(
+                    "h-7 rounded-full px-3 font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    trendRevenueView === opt.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
           <Card className="rounded-2xl border-border/60 p-4 md:p-5">
             {loadingTrend ? (
