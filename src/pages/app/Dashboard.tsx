@@ -165,6 +165,10 @@ export default function Dashboard() {
   const [trendRevenueView, setTrendRevenueView] = useState<"total" | "split">("total");
   const [trendData, setTrendData] = useState<Array<{ key: string; label: string; sessions: number; revenue: number; revenuePaid: number; revenuePending: number }>>([]);
   const [loadingTrend, setLoadingTrend] = useState(false);
+  const [trendCompare, setTrendCompare] = useState<{
+    curSessions: number; prevSessions: number;
+    curRevenue: number; prevRevenue: number;
+  }>({ curSessions: 0, prevSessions: 0, curRevenue: 0, prevRevenue: 0 });
   const isCurrentMonth = useMemo(
     () => selectedMonth.getMonth() === new Date().getMonth() && selectedMonth.getFullYear() === new Date().getFullYear(),
     [selectedMonth],
