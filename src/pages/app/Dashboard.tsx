@@ -736,7 +736,7 @@ export default function Dashboard() {
           <Card className="rounded-2xl border-border/60 p-4 md:p-5">
             {loadingTrend ? (
               <div className="h-72 rounded-lg bg-muted/40 animate-pulse" />
-            ) : trendData.every((d) => d.sessions === 0 && d.revenue === 0) ? (
+            ) : trendData.every((d) => d.sessions === 0 && d.revenue === 0 && d.revenuePending === 0) ? (
               <div className="h-72 flex items-center justify-center text-sm text-muted-foreground">
                 Sem dados nos últimos {trendRange} meses.
               </div>
