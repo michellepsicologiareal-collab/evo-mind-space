@@ -165,6 +165,10 @@ export default function Dashboard() {
   const [trendRevenueView, setTrendRevenueView] = useState<"total" | "split">("total");
   const [trendData, setTrendData] = useState<Array<{ key: string; label: string; sessions: number; revenue: number; revenuePaid: number; revenuePending: number }>>([]);
   const [loadingTrend, setLoadingTrend] = useState(false);
+  const [trendCompare, setTrendCompare] = useState<{
+    curSessions: number; prevSessions: number;
+    curRevenue: number; prevRevenue: number;
+  }>({ curSessions: 0, prevSessions: 0, curRevenue: 0, prevRevenue: 0 });
   const isCurrentMonth = useMemo(
     () => selectedMonth.getMonth() === new Date().getMonth() && selectedMonth.getFullYear() === new Date().getFullYear(),
     [selectedMonth],
@@ -384,16 +388,19 @@ export default function Dashboard() {
       setLoadingTrend(true);
       const rangeStart = startOfMonth(subMonths(selectedMonth, trendRange - 1));
       const rangeEnd = endOfMonth(selectedMonth);
+      const prevStart = startOfMonth(subMonths(selectedMonth, trendRange * 2 - 1));
+      const prevEnd = endOfMonth(subMonths(selectedMonth, trendRange));
       const { data, error } = await supabase
         .from("sessions")
         .select("scheduled_at, price, status, payment_status")
         .eq("user_id", user.id)
         .neq("status", "cancelled")
-        .gte("scheduled_at", rangeStart.toISOString())
+        .gte("scheduled_at", prevStart.toISOString())
         .lte("scheduled_at", rangeEnd.toISOString());
       if (cancelled) return;
       if (error) {
         setTrendData([]);
+        setTrendCompare({ curSessions: 0, prevSessions: 0, curRevenue: 0, prevRevenue: 0 });
         setLoadingTrend(false);
         return;
       }
@@ -404,20 +411,36 @@ export default function Dashboard() {
         const lbl = format(d, "MMM/yy", { locale: ptBR });
         buckets.set(key, { key, label: lbl.charAt(0).toUpperCase() + lbl.slice(1), sessions: 0, revenue: 0, revenuePaid: 0, revenuePending: 0 });
       }
+      let curSessions = 0, prevSessions = 0, curRevenue = 0, prevRevenue = 0;
+      const prevStartMs = prevStart.getTime();
+      const prevEndMs = prevEnd.getTime();
+      const curStartMs = rangeStart.getTime();
       (data ?? []).forEach((s: any) => {
-        const key = format(new Date(s.scheduled_at), "yyyy-MM");
-        const b = buckets.get(key);
-        if (!b) return;
-        b.sessions += 1;
+        const dt = new Date(s.scheduled_at);
+        const ms = dt.getTime();
         const price = Number(s.price ?? 0);
-        if (s.payment_status === "paid") {
-          b.revenue += price;
-          b.revenuePaid += price;
-        } else if (s.payment_status === "pending" || s.payment_status === "overdue") {
-          b.revenuePending += price;
+        const isPaid = s.payment_status === "paid";
+        if (ms >= curStartMs) {
+          const key = format(dt, "yyyy-MM");
+          const b = buckets.get(key);
+          if (b) {
+            b.sessions += 1;
+            if (isPaid) {
+              b.revenue += price;
+              b.revenuePaid += price;
+            } else if (s.payment_status === "pending" || s.payment_status === "overdue") {
+              b.revenuePending += price;
+            }
+          }
+          curSessions += 1;
+          if (isPaid) curRevenue += price;
+        } else if (ms >= prevStartMs && ms <= prevEndMs) {
+          prevSessions += 1;
+          if (isPaid) prevRevenue += price;
         }
       });
       setTrendData(Array.from(buckets.values()));
+      setTrendCompare({ curSessions, prevSessions, curRevenue, prevRevenue });
       setLoadingTrend(false);
     })();
     return () => { cancelled = true; };
@@ -733,7 +756,41 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
-          <Card className="rounded-2xl border-border/60 p-4 md:p-5">
+          <Card className="rounded-2xl border-border/60 p-4 md:p-5 space-y-4">
+            {(() => {
+              const { curSessions, prevSessions, curRevenue, prevRevenue } = trendCompare;
+              const pct = (cur: number, prev: number): number | null =>
+                prev > 0 ? ((cur - prev) / prev) * 100 : cur > 0 ? 100 : null;
+              const sPct = pct(curSessions, prevSessions);
+              const rPct = pct(curRevenue, prevRevenue);
+              const fmtPct = (v: number | null) =>
+                v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(1).replace(".", ",")}%`;
+              const toneCls = (v: number | null) =>
+                v == null ? "bg-muted text-muted-foreground" :
+                v > 0 ? "bg-emerald-50 text-emerald-700" :
+                v < 0 ? "bg-destructive/10 text-destructive" :
+                "bg-muted text-muted-foreground";
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Sessões nos últimos {trendRange} meses</p>
+                    <div className="mt-1 flex items-baseline justify-between gap-2">
+                      <p className="font-display text-2xl font-semibold">{curSessions}</p>
+                      <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", toneCls(sPct))}>{fmtPct(sPct)}</span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1">vs {prevSessions} nos {trendRange} meses anteriores</p>
+                  </div>
+                  <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Faturamento realizado nos últimos {trendRange} meses</p>
+                    <div className="mt-1 flex items-baseline justify-between gap-2">
+                      <p className="font-display text-2xl font-semibold">{fmtBRL(curRevenue)}</p>
+                      <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", toneCls(rPct))}>{fmtPct(rPct)}</span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1">vs {fmtBRL(prevRevenue)} nos {trendRange} meses anteriores</p>
+                  </div>
+                </div>
+              );
+            })()}
             {loadingTrend ? (
               <div className="h-72 rounded-lg bg-muted/40 animate-pulse" />
             ) : trendData.every((d) => d.sessions === 0 && d.revenue === 0 && d.revenuePending === 0) ? (
