@@ -758,12 +758,19 @@ export default function Dashboard() {
                     <RTooltip
                       contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
                       formatter={(value: any, name: string) =>
-                        name === "Faturamento" ? [fmtBRL2(Number(value)), name] : [String(value), name]
+                        name === "Sessões" ? [String(value), name] : [fmtBRL2(Number(value)), name]
                       }
                     />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Bar yAxisId="left" dataKey="sessions" name="Sessões" fill="hsl(var(--primary) / 0.35)" radius={[6, 6, 0, 0]} />
-                    <Line yAxisId="right" type="monotone" dataKey="revenue" name="Faturamento" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                    {trendRevenueView === "total" ? (
+                      <Line yAxisId="right" type="monotone" dataKey="revenue" name="Faturamento" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                    ) : (
+                      <>
+                        <Line yAxisId="right" type="monotone" dataKey="revenuePaid" name="Recebido" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                        <Line yAxisId="right" type="monotone" dataKey="revenuePending" name="Pendente" stroke="hsl(var(--accent))" strokeWidth={2.5} strokeDasharray="5 4" dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                      </>
+                    )}
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
