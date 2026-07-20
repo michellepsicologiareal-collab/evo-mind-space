@@ -397,19 +397,25 @@ export default function Dashboard() {
         setLoadingTrend(false);
         return;
       }
-      const buckets = new Map<string, { key: string; label: string; sessions: number; revenue: number }>();
+      const buckets = new Map<string, { key: string; label: string; sessions: number; revenue: number; revenuePaid: number; revenuePending: number }>();
       for (let i = trendRange - 1; i >= 0; i--) {
         const d = subMonths(selectedMonth, i);
         const key = format(d, "yyyy-MM");
         const lbl = format(d, "MMM/yy", { locale: ptBR });
-        buckets.set(key, { key, label: lbl.charAt(0).toUpperCase() + lbl.slice(1), sessions: 0, revenue: 0 });
+        buckets.set(key, { key, label: lbl.charAt(0).toUpperCase() + lbl.slice(1), sessions: 0, revenue: 0, revenuePaid: 0, revenuePending: 0 });
       }
       (data ?? []).forEach((s: any) => {
         const key = format(new Date(s.scheduled_at), "yyyy-MM");
         const b = buckets.get(key);
         if (!b) return;
         b.sessions += 1;
-        if (s.payment_status === "paid") b.revenue += Number(s.price ?? 0);
+        const price = Number(s.price ?? 0);
+        if (s.payment_status === "paid") {
+          b.revenue += price;
+          b.revenuePaid += price;
+        } else if (s.payment_status === "pending" || s.payment_status === "overdue") {
+          b.revenuePending += price;
+        }
       });
       setTrendData(Array.from(buckets.values()));
       setLoadingTrend(false);
