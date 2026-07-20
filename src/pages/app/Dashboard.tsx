@@ -162,7 +162,8 @@ export default function Dashboard() {
   const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
   const [trendRange, setTrendRange] = useState<6 | 12>(6);
-  const [trendData, setTrendData] = useState<Array<{ key: string; label: string; sessions: number; revenue: number }>>([]);
+  const [trendRevenueView, setTrendRevenueView] = useState<"total" | "split">("total");
+  const [trendData, setTrendData] = useState<Array<{ key: string; label: string; sessions: number; revenue: number; revenuePaid: number; revenuePending: number }>>([]);
   const [loadingTrend, setLoadingTrend] = useState(false);
   const isCurrentMonth = useMemo(
     () => selectedMonth.getMonth() === new Date().getMonth() && selectedMonth.getFullYear() === new Date().getFullYear(),
@@ -396,19 +397,25 @@ export default function Dashboard() {
         setLoadingTrend(false);
         return;
       }
-      const buckets = new Map<string, { key: string; label: string; sessions: number; revenue: number }>();
+      const buckets = new Map<string, { key: string; label: string; sessions: number; revenue: number; revenuePaid: number; revenuePending: number }>();
       for (let i = trendRange - 1; i >= 0; i--) {
         const d = subMonths(selectedMonth, i);
         const key = format(d, "yyyy-MM");
         const lbl = format(d, "MMM/yy", { locale: ptBR });
-        buckets.set(key, { key, label: lbl.charAt(0).toUpperCase() + lbl.slice(1), sessions: 0, revenue: 0 });
+        buckets.set(key, { key, label: lbl.charAt(0).toUpperCase() + lbl.slice(1), sessions: 0, revenue: 0, revenuePaid: 0, revenuePending: 0 });
       }
       (data ?? []).forEach((s: any) => {
         const key = format(new Date(s.scheduled_at), "yyyy-MM");
         const b = buckets.get(key);
         if (!b) return;
         b.sessions += 1;
-        if (s.payment_status === "paid") b.revenue += Number(s.price ?? 0);
+        const price = Number(s.price ?? 0);
+        if (s.payment_status === "paid") {
+          b.revenue += price;
+          b.revenuePaid += price;
+        } else if (s.payment_status === "pending" || s.payment_status === "overdue") {
+          b.revenuePending += price;
+        }
       });
       setTrendData(Array.from(buckets.values()));
       setLoadingTrend(false);
@@ -702,11 +709,34 @@ export default function Dashboard() {
                 </button>
               ))}
             </div>
+            <div
+              role="tablist"
+              aria-label="Visualização do faturamento"
+              className="inline-flex rounded-full border border-border bg-card p-1 text-xs"
+            >
+              {([
+                { id: "total", label: "Total" },
+                { id: "split", label: "Recebido x Pendente" },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.id}
+                  role="tab"
+                  aria-selected={trendRevenueView === opt.id}
+                  onClick={() => setTrendRevenueView(opt.id)}
+                  className={cn(
+                    "h-7 rounded-full px-3 font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    trendRevenueView === opt.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
           <Card className="rounded-2xl border-border/60 p-4 md:p-5">
             {loadingTrend ? (
               <div className="h-72 rounded-lg bg-muted/40 animate-pulse" />
-            ) : trendData.every((d) => d.sessions === 0 && d.revenue === 0) ? (
+            ) : trendData.every((d) => d.sessions === 0 && d.revenue === 0 && d.revenuePending === 0) ? (
               <div className="h-72 flex items-center justify-center text-sm text-muted-foreground">
                 Sem dados nos últimos {trendRange} meses.
               </div>
@@ -728,12 +758,19 @@ export default function Dashboard() {
                     <RTooltip
                       contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
                       formatter={(value: any, name: string) =>
-                        name === "Faturamento" ? [fmtBRL2(Number(value)), name] : [String(value), name]
+                        name === "Sessões" ? [String(value), name] : [fmtBRL2(Number(value)), name]
                       }
                     />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Bar yAxisId="left" dataKey="sessions" name="Sessões" fill="hsl(var(--primary) / 0.35)" radius={[6, 6, 0, 0]} />
-                    <Line yAxisId="right" type="monotone" dataKey="revenue" name="Faturamento" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                    {trendRevenueView === "total" ? (
+                      <Line yAxisId="right" type="monotone" dataKey="revenue" name="Faturamento" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                    ) : (
+                      <>
+                        <Line yAxisId="right" type="monotone" dataKey="revenuePaid" name="Recebido" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                        <Line yAxisId="right" type="monotone" dataKey="revenuePending" name="Pendente" stroke="hsl(var(--accent))" strokeWidth={2.5} strokeDasharray="5 4" dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                      </>
+                    )}
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
