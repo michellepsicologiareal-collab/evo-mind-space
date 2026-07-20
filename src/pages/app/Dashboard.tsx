@@ -162,7 +162,8 @@ export default function Dashboard() {
   const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
   const [trendRange, setTrendRange] = useState<6 | 12>(6);
-  const [trendData, setTrendData] = useState<Array<{ key: string; label: string; sessions: number; revenue: number }>>([]);
+  const [trendRevenueView, setTrendRevenueView] = useState<"total" | "split">("total");
+  const [trendData, setTrendData] = useState<Array<{ key: string; label: string; sessions: number; revenue: number; revenuePaid: number; revenuePending: number }>>([]);
   const [loadingTrend, setLoadingTrend] = useState(false);
   const isCurrentMonth = useMemo(
     () => selectedMonth.getMonth() === new Date().getMonth() && selectedMonth.getFullYear() === new Date().getFullYear(),
