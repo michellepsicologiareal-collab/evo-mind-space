@@ -388,16 +388,19 @@ export default function Dashboard() {
       setLoadingTrend(true);
       const rangeStart = startOfMonth(subMonths(selectedMonth, trendRange - 1));
       const rangeEnd = endOfMonth(selectedMonth);
+      const prevStart = startOfMonth(subMonths(selectedMonth, trendRange * 2 - 1));
+      const prevEnd = endOfMonth(subMonths(selectedMonth, trendRange));
       const { data, error } = await supabase
         .from("sessions")
         .select("scheduled_at, price, status, payment_status")
         .eq("user_id", user.id)
         .neq("status", "cancelled")
-        .gte("scheduled_at", rangeStart.toISOString())
+        .gte("scheduled_at", prevStart.toISOString())
         .lte("scheduled_at", rangeEnd.toISOString());
       if (cancelled) return;
       if (error) {
         setTrendData([]);
+        setTrendCompare({ curSessions: 0, prevSessions: 0, curRevenue: 0, prevRevenue: 0 });
         setLoadingTrend(false);
         return;
       }
@@ -408,20 +411,36 @@ export default function Dashboard() {
         const lbl = format(d, "MMM/yy", { locale: ptBR });
         buckets.set(key, { key, label: lbl.charAt(0).toUpperCase() + lbl.slice(1), sessions: 0, revenue: 0, revenuePaid: 0, revenuePending: 0 });
       }
+      let curSessions = 0, prevSessions = 0, curRevenue = 0, prevRevenue = 0;
+      const prevStartMs = prevStart.getTime();
+      const prevEndMs = prevEnd.getTime();
+      const curStartMs = rangeStart.getTime();
       (data ?? []).forEach((s: any) => {
-        const key = format(new Date(s.scheduled_at), "yyyy-MM");
-        const b = buckets.get(key);
-        if (!b) return;
-        b.sessions += 1;
+        const dt = new Date(s.scheduled_at);
+        const ms = dt.getTime();
         const price = Number(s.price ?? 0);
-        if (s.payment_status === "paid") {
-          b.revenue += price;
-          b.revenuePaid += price;
-        } else if (s.payment_status === "pending" || s.payment_status === "overdue") {
-          b.revenuePending += price;
+        const isPaid = s.payment_status === "paid";
+        if (ms >= curStartMs) {
+          const key = format(dt, "yyyy-MM");
+          const b = buckets.get(key);
+          if (b) {
+            b.sessions += 1;
+            if (isPaid) {
+              b.revenue += price;
+              b.revenuePaid += price;
+            } else if (s.payment_status === "pending" || s.payment_status === "overdue") {
+              b.revenuePending += price;
+            }
+          }
+          curSessions += 1;
+          if (isPaid) curRevenue += price;
+        } else if (ms >= prevStartMs && ms <= prevEndMs) {
+          prevSessions += 1;
+          if (isPaid) prevRevenue += price;
         }
       });
       setTrendData(Array.from(buckets.values()));
+      setTrendCompare({ curSessions, prevSessions, curRevenue, prevRevenue });
       setLoadingTrend(false);
     })();
     return () => { cancelled = true; };
