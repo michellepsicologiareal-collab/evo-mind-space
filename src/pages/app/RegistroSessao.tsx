@@ -305,6 +305,9 @@ const RegistroSessao = () => {
   useEffect(() => {
     if (!user || !form.patient_id) {
       setActivePlan({ plan_id: null, plan_status: null, objetivo: "", retomar: "", tecnicas: [], observacoes: "", meta_descricao: null, scheduled_at: null, goals: [], pending_tasks: [], next_revision: null, loaded: false });
+      setPlanGoals([]);
+      setPlanTechniques([]);
+      setNextSessionId(null);
       setPlanPanelCollapsed(false);
       setPlanLoadedIntoForm(false);
       return;
