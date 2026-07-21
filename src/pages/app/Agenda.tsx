@@ -1,3 +1,4 @@
+import { RefreshButton } from "@/components/app/RefreshButton";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { z } from "zod";
@@ -1591,6 +1592,7 @@ const Agenda = () => {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <RefreshButton />
           <Button
             type="button"
             variant={gcalConnected ? "outline" : "secondary"}

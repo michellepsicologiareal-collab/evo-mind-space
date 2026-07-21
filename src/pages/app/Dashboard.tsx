@@ -1,3 +1,4 @@
+import { RefreshButton } from "@/components/app/RefreshButton";
 import { useEffect, useMemo, useRef, useState, KeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -648,6 +649,7 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <RefreshButton />
             <Button
               variant="outline"
               size="sm"
