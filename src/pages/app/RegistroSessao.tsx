@@ -175,13 +175,13 @@ const RegistroSessao = () => {
       meta_descricao = m?.descricao ?? null;
     }
 
-    // 3. Objetivos terapêuticos ativos (todas metas do plano)
+    // 3. Objetivos terapêuticos ativos (todas metas do paciente)
     let goals: { descricao: string }[] = [];
     if (tp?.id) {
       const { data: g } = await supabase
         .from("treatment_goals")
         .select("descricao, ordem")
-        .eq("plan_id", tp.id)
+        .eq("patient_id", patientId)
         .order("ordem");
       goals = (g as any[])?.map((x) => ({ descricao: x.descricao })) ?? [];
     }
