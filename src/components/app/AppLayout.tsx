@@ -30,25 +30,33 @@ interface NavItem {
   hideFromNav?: boolean;
 }
 
-/* ── Navigation items for ALL users (including admin as regular user) ── */
+/* ── Navigation items for ALL users (including admin as regular user) ──
+ *
+ * Reorganização de arquitetura: o Paciente é o centro. Registro de Sessão,
+ * Plano de Tratamento, Humor e Formulações deixam de ser módulos no menu
+ * e passam a ser ações dentro da ficha do paciente. As rotas continuam
+ * existindo (para deep-links e navegação interna), apenas saem do menu.
+ */
 const allNavItems: NavItem[] = [
-  { to: "/app/comece-por-aqui", label: "Comece por Aqui", icon: Sparkles },
   { to: "/app", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "/app/pacientes", label: "Pacientes", icon: Users },
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
-  { to: "/app/humor", label: "Humor", icon: HeartPulse },
-  { to: "/app/registro-sessao", label: "Registro Sessão", icon: ClipboardList },
-  { to: "/app/plano-tratamento", label: "Plano de Tratamento", icon: Target },
-  { to: "/app/formulacao-ia", label: "Formulação IA", icon: Sparkles },
-  { to: "/app/formulacao-livre", label: "Supervisão IA", icon: GraduationCap },
-  { to: "/app/anamneses", label: "Anamneses", icon: Baby },
   { to: "/app/financeiro", label: "Financeiro", icon: Wallet, premium: true },
-  { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap, premium: true, visibleTo: ["supervisor"] },
-  { to: "/app/biblioteca", label: "Biblioteca", icon: BookOpen },
-  { to: "/app/autocuidado", label: "Autocuidado", icon: Flower2 },
-  { to: "/app/contrato-modelo", label: "Termo", icon: FileText },
+  { to: "/app/anamneses", label: "Anamneses", icon: Baby },
   { to: "/app/contratos", label: "Contratos", icon: FileCheck },
-  { to: "/app/perfil", label: "Perfil", icon: Settings },
+  { to: "/app/perfil", label: "Configurações", icon: Settings },
+
+  // Itens que continuam roteáveis, mas ficam fora do menu principal.
+  { to: "/app/comece-por-aqui", label: "Comece por Aqui", icon: Sparkles, hideFromNav: true },
+  { to: "/app/humor", label: "Humor", icon: HeartPulse, hideFromNav: true },
+  { to: "/app/registro-sessao", label: "Registro Sessão", icon: ClipboardList, hideFromNav: true },
+  { to: "/app/plano-tratamento", label: "Plano de Tratamento", icon: Target, hideFromNav: true },
+  { to: "/app/formulacao-ia", label: "Formulação IA", icon: Sparkles, hideFromNav: true },
+  { to: "/app/formulacao-livre", label: "Supervisão IA", icon: GraduationCap, hideFromNav: true },
+  { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap, premium: true, visibleTo: ["supervisor"], hideFromNav: true },
+  { to: "/app/biblioteca", label: "Biblioteca", icon: BookOpen, hideFromNav: true },
+  { to: "/app/autocuidado", label: "Autocuidado", icon: Flower2, hideFromNav: true },
+  { to: "/app/contrato-modelo", label: "Termo", icon: FileText, hideFromNav: true },
 ];
 
 /* ── Admin-only items (shown in a separate section) ── */
@@ -73,25 +81,14 @@ export const AppLayout = () => {
     });
   }, [profileType, isAdmin]);
 
-  // Mobile: 4 key items + "Mais" sheet for the rest
+  // Mobile: 4 primaries + "Mais" para o restante
   const mobilePrimary = useMemo(() => {
-    const keys = ["/app", "/app/pacientes", "/app/agenda", "/app/registro-sessao"];
+    const keys = ["/app", "/app/pacientes", "/app/agenda", "/app/financeiro"];
     return keys.map((k) => navItems.find((n) => n.to === k)).filter(Boolean) as NavItem[];
   }, [navItems]);
-  // Ordem do "Mais" segue a mesma sequência das seções do desktop
   const mobileSecondaryOrder = [
-    "/app/comece-por-aqui",
-    "/app/financeiro",
-    "/app/formulacao-ia",
-    "/app/humor",
-    "/app/plano-tratamento",
     "/app/anamneses",
-    "/app/contrato-modelo",
     "/app/contratos",
-    "/app/supervisionandos",
-    "/app/formulacao-livre",
-    "/app/biblioteca",
-    "/app/autocuidado",
     "/app/perfil",
   ];
   const mobileSecondary = useMemo(
@@ -169,11 +166,8 @@ export const AppLayout = () => {
         <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
           {(() => {
             const sections: { label: string; routes: string[] }[] = [
-              { label: "INÍCIO", routes: ["/app/comece-por-aqui", "/app"] },
-              { label: "CLÍNICA", routes: ["/app/pacientes", "/app/agenda", "/app/financeiro"] },
-              { label: "ATENDIMENTO", routes: ["/app/registro-sessao", "/app/formulacao-ia", "/app/humor", "/app/plano-tratamento", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
-              { label: "SUPERVISÃO", routes: ["/app/supervisionandos", "/app/formulacao-livre"] },
-              { label: "RECURSOS", routes: ["/app/biblioteca", "/app/autocuidado"] },
+              { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda"] },
+              { label: "GESTÃO", routes: ["/app/financeiro", "/app/anamneses", "/app/contratos"] },
               { label: "CONFIGURAÇÕES", routes: ["/app/perfil"] },
             ];
             return sections.map((sec) => {

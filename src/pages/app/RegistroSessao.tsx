@@ -4,7 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, History, Minimize2, Maximize2, Target, ExternalLink, ArrowLeft, CheckSquare, RefreshCw, Pencil as PencilIcon } from "lucide-react";
 import { RegistroSessaoHub } from "@/components/app/RegistroSessaoHub";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -101,6 +101,8 @@ function hasMeaningfulData(f: FormState): boolean {
 
 const RegistroSessao = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -504,9 +506,19 @@ const RegistroSessao = () => {
 
     toast.success(editingId ? "Registro atualizado." : "Registro salvo com sucesso.");
     clearDraft();
+    const keepPatient = form.patient_id;
+
+    // Fluxo com o Paciente no centro: se o Registro foi aberto a partir da
+    // ficha (?patient=…) ou da Agenda, volta automaticamente para a aba
+    // "Sessões" do paciente após salvar um NOVO registro.
+    const cameFromPatient = !!searchParams.get("patient");
+    if (cameFromPatient && !editingId && keepPatient) {
+      navigate(`/app/pacientes?patientId=${keepPatient}&tab=sessions`, { replace: true });
+      return;
+    }
+
     // Mantém o paciente selecionado — reset apenas dos campos do registro,
     // conforme fluxo integrado com o Plano de Tratamento.
-    const keepPatient = form.patient_id;
     setForm({ ...emptyForm, patient_id: keepPatient });
     setEditingId(null);
     await preserveScroll(() => loadRecords());
