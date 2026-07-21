@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Plus, X, FileDown, ClipboardList, Target, Sparkles, History, Stethoscope, ArrowLeft } from "lucide-react";
+import { Loader2, Plus, X, FileDown, ClipboardList, Target, Sparkles, History, Stethoscope, ArrowLeft, Pencil } from "lucide-react";
 import { PlanoTratamentoHub } from "@/components/app/PlanoTratamentoHub";
 import { DSM5Diagnostic, type DSM5Detail, type DSM5HistoryItem, getDsm5EntryByLabel } from "@/components/app/DSM5Diagnostic";
 import { DSM5MultiDiagnostic } from "@/components/app/DSM5MultiDiagnostic";
@@ -79,6 +79,7 @@ const PlanoTratamento = () => {
   const { user } = useAuth();
   const uid = user?.id;
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const queryPatient = searchParams.get("patient");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [patientId, setPatientId] = useState<string>(queryPatient || "");
@@ -556,11 +557,25 @@ const PlanoTratamento = () => {
             ))}
           </div>
 
-          {/* BLOCO 1 — Próxima sessão */}
+          {/* BLOCO 1 — Próxima sessão (somente leitura; edição no Registro de Sessão) */}
           <Card className="p-6 rounded-2xl border-l-4" style={{ borderLeftColor: PURPLE }}>
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="h-5 w-5" style={{ color: PURPLE }} />
-              <h2 className="font-display text-lg font-bold">Próxima sessão</h2>
+            <div className="flex items-center justify-between gap-2 mb-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5" style={{ color: PURPLE }} />
+                <h2 className="font-display text-lg font-bold">Próxima sessão</h2>
+              </div>
+              <Button
+                variant="accent"
+                size="sm"
+                onClick={() =>
+                  navigate(
+                    `/app/registro-sessao?patient=${patientId}${nextSession?.id ? `&session=${nextSession.id}` : ""}&focus=proxima-sessao`
+                  )
+                }
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                Editar planejamento
+              </Button>
             </div>
 
             {nextSession ? (
@@ -571,52 +586,66 @@ const PlanoTratamento = () => {
               <p className="text-sm text-muted-foreground mb-4">Nenhuma sessão futura agendada para este paciente.</p>
             )}
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label>Objetivo da sessão</Label>
-                <Textarea value={sessionPlan.objetivo} onChange={e => setSessionPlan(sp => ({ ...sp, objetivo: e.target.value }))} rows={3} />
-              </div>
-              <div>
-                <Label>Meta vinculada</Label>
-                <Select value={sessionPlan.meta_id || "none"} onValueChange={v => setSessionPlan(sp => ({ ...sp, meta_id: v === "none" ? null : v }))}>
-                  <SelectTrigger><SelectValue placeholder="Selecione uma meta" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">— Nenhuma —</SelectItem>
-                    {goalsForSelect.map(g => (
-                      <SelectItem key={g.id} value={g.id}>[{GOAL_META[g.tipo].label}] {g.descricao.slice(0, 60)}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="md:col-span-2">
-                <Label>O que retomar da sessão anterior</Label>
-                <Textarea value={sessionPlan.retomar} onChange={e => setSessionPlan(sp => ({ ...sp, retomar: e.target.value }))} rows={2} />
-              </div>
-              <div className="md:col-span-2">
-                <Label>Técnicas a utilizar</Label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {techniques.map(t => (
-                    <button key={t.id} type="button" onClick={() => toggleSessionTech(t.nome)}
-                      className={cn("px-3 py-1 rounded-full text-xs border transition-colors",
-                        sessionPlan.tecnicas.includes(t.nome)
-                          ? "bg-primary text-white border-primary"
-                          : "bg-white text-primary border-primary/30 hover:bg-secondary")}>
-                      {t.nome}
-                    </button>
-                  ))}
-                  {techniques.length === 0 && <span className="text-xs text-muted-foreground">Adicione técnicas no bloco abaixo.</span>}
+            {(() => {
+              const hasContent =
+                (sessionPlan.objetivo && sessionPlan.objetivo.trim()) ||
+                (sessionPlan.retomar && sessionPlan.retomar.trim()) ||
+                (sessionPlan.observacoes && sessionPlan.observacoes.trim()) ||
+                (sessionPlan.tecnicas && sessionPlan.tecnicas.length > 0) ||
+                sessionPlan.meta_id;
+              if (!hasContent) {
+                return (
+                  <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground bg-muted/30">
+                    Nenhum planejamento registrado para a próxima sessão.
+                    Use o botão <span className="font-medium">Editar planejamento</span> para começar
+                    — o registro é feito diretamente pelo Registro de Sessão.
+                  </div>
+                );
+              }
+              const metaDescricao = sessionPlan.meta_id
+                ? goalsForSelect.find((g) => g.id === sessionPlan.meta_id)?.descricao ?? null
+                : null;
+              return (
+                <div className="grid gap-4 md:grid-cols-2 text-sm">
+                  {sessionPlan.objetivo?.trim() && (
+                    <div className="md:col-span-2">
+                      <div className="text-xs font-medium text-muted-foreground mb-1">Objetivo</div>
+                      <div className="whitespace-pre-wrap">{sessionPlan.objetivo}</div>
+                    </div>
+                  )}
+                  {metaDescricao && (
+                    <div>
+                      <div className="text-xs font-medium text-muted-foreground mb-1">Meta vinculada</div>
+                      <div>{metaDescricao}</div>
+                    </div>
+                  )}
+                  {sessionPlan.retomar?.trim() && (
+                    <div className="md:col-span-2">
+                      <div className="text-xs font-medium text-muted-foreground mb-1">Retomar</div>
+                      <div className="whitespace-pre-wrap">{sessionPlan.retomar}</div>
+                    </div>
+                  )}
+                  {sessionPlan.tecnicas?.length > 0 && (
+                    <div className="md:col-span-2">
+                      <div className="text-xs font-medium text-muted-foreground mb-1">Técnicas previstas</div>
+                      <div className="flex flex-wrap gap-2">
+                        {sessionPlan.tecnicas.map((t) => (
+                          <span key={t} className="px-2 py-0.5 rounded-full text-xs bg-secondary text-primary">{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {sessionPlan.observacoes?.trim() && (
+                    <div className="md:col-span-2">
+                      <div className="text-xs font-medium text-muted-foreground mb-1">Observações</div>
+                      <div className="whitespace-pre-wrap">{sessionPlan.observacoes}</div>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="md:col-span-2">
-                <Label>Observações / lembretes</Label>
-                <Textarea value={sessionPlan.observacoes} onChange={e => setSessionPlan(sp => ({ ...sp, observacoes: e.target.value }))}
-                  rows={2} placeholder="Ex: paciente mencionou situação com a mãe — retomar se trouxer..." />
-              </div>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <Button variant="accent" size="sm" onClick={saveSessionPlan}>Salvar próxima sessão</Button>
-            </div>
+              );
+            })()}
           </Card>
+
 
           {/* BLOCO 2 — Diagnóstico e Formulação */}
           <Card className="p-6 rounded-2xl">

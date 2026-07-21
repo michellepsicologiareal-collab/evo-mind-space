@@ -6,6 +6,7 @@ import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, Chevron
 import { RegistroSessaoHub } from "@/components/app/RegistroSessaoHub";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,13 @@ const emptyForm = {
   risk_indicator: "none",
   private_notes: "",
   plan_id: null as string | null,
+  // Bloco "Próxima sessão" — fonte única do planejamento
+  next_scheduled_at: "" as string, // datetime-local (yyyy-MM-ddTHH:mm) — vazio = não agendar
+  next_objetivo: "",
+  next_retomar: "",
+  next_meta_id: null as string | null,
+  next_tecnicas: [] as string[],
+  next_observacoes: "",
 };
 
 type FormState = typeof emptyForm;
@@ -96,7 +104,11 @@ function hasMeaningfulData(f: FormState): boolean {
     f.clinical_observations.trim() ||
     f.next_session_plan.trim() ||
     f.private_notes.trim() ||
-    f.themes.length > 0
+    f.themes.length > 0 ||
+    f.next_objetivo.trim() ||
+    f.next_retomar.trim() ||
+    f.next_observacoes.trim() ||
+    f.next_tecnicas.length > 0
   );
 }
 
@@ -141,6 +153,25 @@ const RegistroSessao = () => {
   const [planLoadedIntoForm, setPlanLoadedIntoForm] = useState(false);
   const [planDrawerOpen, setPlanDrawerOpen] = useState(false);
 
+  // Metas e técnicas do plano ativo — usadas pelo bloco "Próxima sessão"
+  const [planGoals, setPlanGoals] = useState<{ id: string; tipo: string; descricao: string }[]>([]);
+  const [planTechniques, setPlanTechniques] = useState<{ id: string; nome: string }[]>([]);
+  // ID da sessão futura já agendada para o paciente (usado no upsert de session_plans)
+  const [nextSessionId, setNextSessionId] = useState<string | null>(null);
+  // Diálogo pós-salvar quando paciente não tiver plano ativo
+  const [noPlanDialogOpen, setNoPlanDialogOpen] = useState(false);
+  const [noPlanContext, setNoPlanContext] = useState<{
+    patientId: string;
+    objetivo: string;
+    metaId: string | null;
+    metaDescricao: string | null;
+    tecnicas: string[];
+  } | null>(null);
+  const [creatingDraftPlan, setCreatingDraftPlan] = useState(false);
+  // Foco automático no bloco de próxima sessão quando vier de "Editar planejamento"
+  const proximaSessaoRef = useRef<HTMLElement | null>(null);
+  const [focusProximaSessao, setFocusProximaSessao] = useState(false);
+
   const loadActivePlan = useCallback(async (patientId: string, uid: string) => {
     // 1. Active treatment plan for this patient
     const { data: tp } = await supabase
@@ -163,13 +194,15 @@ const RegistroSessao = () => {
       .maybeSingle();
 
     let sp: any = null;
+    let sp_id: string | null = null;
     if (ns?.id) {
       const { data } = await supabase
         .from("session_plans")
-        .select("objetivo, retomar, tecnicas, observacoes, meta_id")
+        .select("id, objetivo, retomar, tecnicas, observacoes, meta_id")
         .eq("session_id", ns.id)
         .maybeSingle();
       sp = data;
+      sp_id = data?.id ?? null;
     }
 
     let meta_descricao: string | null = null;
@@ -178,16 +211,30 @@ const RegistroSessao = () => {
       meta_descricao = m?.descricao ?? null;
     }
 
-    // 3. Objetivos terapêuticos ativos (todas metas do paciente)
-    let goals: { descricao: string }[] = [];
-    if (tp?.id) {
-      const { data: g } = await supabase
+    // Metas e técnicas do plano (para o select/chips do bloco Próxima sessão)
+    const [{ data: goalsFull }, { data: techsFull }] = await Promise.all([
+      supabase
         .from("treatment_goals")
-        .select("descricao, ordem")
+        .select("id, tipo, descricao, ordem")
         .eq("patient_id", patientId)
-        .order("ordem");
-      goals = (g as any[])?.map((x) => ({ descricao: x.descricao })) ?? [];
-    }
+        .order("ordem"),
+      supabase
+        .from("treatment_techniques")
+        .select("id, nome")
+        .eq("patient_id", patientId)
+        .order("created_at"),
+    ]);
+    const fullGoals = ((goalsFull as any[]) ?? [])
+      .filter((g) => g.descricao?.trim())
+      .map((g) => ({ id: g.id, tipo: g.tipo, descricao: g.descricao }));
+    const fullTechs = ((techsFull as any[]) ?? [])
+      .filter((t) => t.nome?.trim())
+      .map((t) => ({ id: t.id, nome: t.nome }));
+    setPlanGoals(fullGoals);
+    setPlanTechniques(fullTechs);
+
+    // Objetivos terapêuticos ativos (compat com painel resumido existente)
+    const goals: { descricao: string }[] = fullGoals.map((x) => ({ descricao: x.descricao }));
 
     // 4. Tarefas pendentes (homework com pelo menos uma action !done)
     const { data: tasksData } = await supabase
@@ -226,11 +273,42 @@ const RegistroSessao = () => {
       next_revision: rev ? { data: rev.data, descricao: rev.descricao } : null,
       loaded: true,
     });
+
+    setNextSessionId(ns?.id ?? null);
+
+    // Pré-preencher bloco "Próxima sessão" com o planejamento salvo,
+    // desde que o usuário ainda não tenha começado a digitar algo lá.
+    setForm((prev) => {
+      const hasUserInput =
+        prev.next_objetivo.trim() ||
+        prev.next_retomar.trim() ||
+        prev.next_observacoes.trim() ||
+        prev.next_tecnicas.length > 0 ||
+        prev.next_meta_id ||
+        prev.next_scheduled_at;
+      if (hasUserInput) return prev;
+      return {
+        ...prev,
+        next_objetivo: sp?.objetivo || "",
+        next_retomar: sp?.retomar || "",
+        next_observacoes: sp?.observacoes || "",
+        next_tecnicas: Array.isArray(sp?.tecnicas) ? sp.tecnicas : [],
+        next_meta_id: sp?.meta_id ?? null,
+        next_scheduled_at: ns?.scheduled_at
+          ? format(new Date(ns.scheduled_at), "yyyy-MM-dd'T'HH:mm")
+          : "",
+      };
+    });
   }, []);
+
+
 
   useEffect(() => {
     if (!user || !form.patient_id) {
       setActivePlan({ plan_id: null, plan_status: null, objetivo: "", retomar: "", tecnicas: [], observacoes: "", meta_descricao: null, scheduled_at: null, goals: [], pending_tasks: [], next_revision: null, loaded: false });
+      setPlanGoals([]);
+      setPlanTechniques([]);
+      setNextSessionId(null);
       setPlanPanelCollapsed(false);
       setPlanLoadedIntoForm(false);
       return;
@@ -239,6 +317,17 @@ const RegistroSessao = () => {
     setPlanPanelCollapsed(false);
     setPlanLoadedIntoForm(false);
   }, [user, form.patient_id, loadActivePlan]);
+
+  // Se veio de "Editar planejamento" no Plano Terapêutico, rola até o bloco
+  useEffect(() => {
+    if (searchParams.get("focus") !== "proxima-sessao") return;
+    if (!form.patient_id) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById("proxima-sessao");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchParams, form.patient_id]);
 
   const applyPlanningToForm = () => {
     const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
@@ -501,6 +590,16 @@ const RegistroSessao = () => {
     setEditingId(null);
   };
 
+  // Gera o texto sintético para next_session_plan (compatibilidade com Agenda/ficha)
+  const buildNextSessionSynthetic = (f: FormState): string => {
+    const parts: string[] = [];
+    if (f.next_objetivo.trim()) parts.push(`Objetivo: ${f.next_objetivo.trim()}`);
+    if (f.next_retomar.trim()) parts.push(`Retomar: ${f.next_retomar.trim()}`);
+    if (f.next_tecnicas.length) parts.push(`Técnicas: ${f.next_tecnicas.join(", ")}`);
+    if (f.next_observacoes.trim()) parts.push(`Obs: ${f.next_observacoes.trim()}`);
+    return parts.join("\n\n");
+  };
+
   const handleSave = async () => {
     if (!user) return;
     if (!form.patient_id) {
@@ -509,6 +608,12 @@ const RegistroSessao = () => {
     }
 
     setSaving(true);
+
+    // 1) Preserva compatibilidade: gera texto sintético para o campo antigo,
+    // apenas quando o bloco "Próxima sessão" foi preenchido.
+    const synthetic = buildNextSessionSynthetic(form);
+    const nextSessionPlanText = synthetic || form.next_session_plan;
+
     const payload = {
       user_id: user.id,
       patient_id: form.patient_id,
@@ -520,7 +625,7 @@ const RegistroSessao = () => {
       chief_complaint: form.chief_complaint,
       themes: form.themes,
       clinical_observations: form.clinical_observations,
-      next_session_plan: form.next_session_plan,
+      next_session_plan: nextSessionPlanText,
       engagement: form.engagement,
       risk_indicator: form.risk_indicator,
       private_notes: form.private_notes,
@@ -530,21 +635,120 @@ const RegistroSessao = () => {
     const { error } = editingId
       ? await supabase.from("session_records").update(payload).eq("id", editingId)
       : await supabase.from("session_records").insert(payload);
-    setSaving(false);
 
     if (error) {
+      setSaving(false);
       toast.error("Erro ao salvar registro.");
       console.error(error);
       return;
     }
 
+    // 2) Resolver / atualizar a sessão-alvo da "próxima sessão"
+    const uid = user.id;
+    const pid = form.patient_id;
+    let targetSessionId: string | null = nextSessionId;
+    try {
+      if (form.next_scheduled_at) {
+        const iso = new Date(form.next_scheduled_at).toISOString();
+        if (targetSessionId) {
+          await supabase
+            .from("sessions")
+            .update({ scheduled_at: iso, status: "scheduled" })
+            .eq("id", targetSessionId)
+            .eq("user_id", uid);
+        } else {
+          const { data: created } = await supabase
+            .from("sessions")
+            .insert({
+              user_id: uid,
+              patient_id: pid,
+              scheduled_at: iso,
+              duration_minutes: form.duration_minutes || 50,
+              modality: form.modality || "presencial",
+              status: "scheduled",
+              session_type: "clinical",
+            })
+            .select("id")
+            .single();
+          if (created?.id) targetSessionId = created.id;
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao atualizar Agenda:", e);
+      toast.error("Registro salvo, mas houve um problema ao atualizar a Agenda.");
+    }
+
+    // 3) Upsert do planejamento em session_plans (somente se houver algum campo preenchido)
+    const hasPlanContent =
+      form.next_objetivo.trim() ||
+      form.next_retomar.trim() ||
+      form.next_observacoes.trim() ||
+      form.next_tecnicas.length > 0 ||
+      form.next_meta_id;
+    if (hasPlanContent) {
+      try {
+        // Tenta encontrar um session_plan existente para reutilizar
+        let existingPlanId: string | null = null;
+        if (targetSessionId) {
+          const { data: sp } = await supabase
+            .from("session_plans")
+            .select("id")
+            .eq("session_id", targetSessionId)
+            .maybeSingle();
+          existingPlanId = sp?.id ?? null;
+        }
+        const spPayload = {
+          user_id: uid,
+          patient_id: pid,
+          session_id: targetSessionId,
+          objetivo: form.next_objetivo,
+          retomar: form.next_retomar,
+          tecnicas: form.next_tecnicas,
+          observacoes: form.next_observacoes,
+          meta_id: form.next_meta_id,
+        };
+        if (existingPlanId) {
+          await supabase.from("session_plans").update(spPayload).eq("id", existingPlanId);
+        } else {
+          await supabase.from("session_plans").insert(spPayload);
+        }
+      } catch (e) {
+        console.error("Erro ao salvar planejamento:", e);
+        toast.error("Registro salvo, mas houve um problema ao salvar o planejamento da próxima sessão.");
+      }
+    }
+
+    setSaving(false);
     toast.success(editingId ? "Registro atualizado." : "Registro salvo com sucesso.");
     clearDraft();
     const keepPatient = form.patient_id;
 
-    // Fluxo com o Paciente no centro: se o Registro foi aberto a partir da
-    // ficha (?patient=…) ou da Agenda, volta automaticamente para a aba
-    // "Sessões" do paciente após salvar um NOVO registro.
+    // 4) Verificar se existe Plano Terapêutico ativo — se não, abrir diálogo
+    const { data: activePlanRow } = await supabase
+      .from("treatment_plans")
+      .select("id, status")
+      .eq("patient_id", pid)
+      .eq("user_id", uid)
+      .eq("status", "ativo")
+      .maybeSingle();
+
+    if (!editingId && !activePlanRow) {
+      const metaDesc = form.next_meta_id
+        ? planGoals.find((g) => g.id === form.next_meta_id)?.descricao ?? null
+        : null;
+      setNoPlanContext({
+        patientId: pid,
+        objetivo: form.next_objetivo,
+        metaId: form.next_meta_id,
+        metaDescricao: metaDesc,
+        tecnicas: [...form.next_tecnicas],
+      });
+      setNoPlanDialogOpen(true);
+      // Mantém a página até a psicóloga decidir; ao fechar, seguimos o fluxo abaixo
+      return;
+    }
+
+    // 5) Fluxo padrão: voltar para a ficha se veio de lá
     const cameFromPatient = !!searchParams.get("patient");
     if (cameFromPatient && !editingId && keepPatient) {
       navigate(`/app/pacientes?patientId=${keepPatient}&tab=sessions`, { replace: true });
@@ -560,6 +764,86 @@ const RegistroSessao = () => {
       loadActivePlan(keepPatient, user.id);
     }
   };
+
+  // Cria um Plano Terapêutico Rascunho a partir do bloco "Próxima sessão"
+  const handleCreateDraftPlan = async () => {
+    if (!user || !noPlanContext) return;
+    setCreatingDraftPlan(true);
+    const uid = user.id;
+    const pid = noPlanContext.patientId;
+    try {
+      // 1) Cria o treatment_plan em rascunho
+      const { data: plan, error: planErr } = await supabase
+        .from("treatment_plans")
+        .insert({
+          user_id: uid,
+          patient_id: pid,
+          status: "rascunho",
+          conceitualizacao: noPlanContext.objetivo || "",
+        })
+        .select("id")
+        .single();
+      if (planErr) throw planErr;
+
+      // 2) Meta vinculada — se o usuário selecionou uma meta que já existe, mantemos.
+      //    Se selecionou uma que não existe (por qualquer motivo), cria uma nova.
+      if (noPlanContext.metaDescricao) {
+        const { data: existingGoal } = noPlanContext.metaId
+          ? await supabase.from("treatment_goals").select("id").eq("id", noPlanContext.metaId).maybeSingle()
+          : { data: null } as any;
+        if (!existingGoal) {
+          await supabase.from("treatment_goals").insert({
+            user_id: uid,
+            patient_id: pid,
+            tipo: "geral",
+            descricao: noPlanContext.metaDescricao,
+            ordem: 0,
+          });
+        }
+      }
+
+      // 3) Técnicas previstas
+      if (noPlanContext.tecnicas.length) {
+        const rows = noPlanContext.tecnicas
+          .filter((t) => t.trim())
+          .map((nome) => ({ user_id: uid, patient_id: pid, nome }));
+        if (rows.length) {
+          await supabase.from("treatment_techniques").insert(rows);
+        }
+      }
+
+      toast.success("Plano criado como Rascunho — revise antes de ativar.");
+      setNoPlanDialogOpen(false);
+      setNoPlanContext(null);
+      navigate(`/app/plano-tratamento?patient=${pid}`);
+    } catch (e) {
+      console.error("Erro ao criar plano:", e);
+      toast.error("Não foi possível criar o Plano Terapêutico.");
+    } finally {
+      setCreatingDraftPlan(false);
+    }
+  };
+
+  // "Depois" — apenas segue o fluxo padrão pós-salvamento
+  const handleSkipDraftPlan = async () => {
+    setNoPlanDialogOpen(false);
+    const keepPatient = noPlanContext?.patientId ?? form.patient_id;
+    setNoPlanContext(null);
+
+    const cameFromPatient = !!searchParams.get("patient");
+    if (cameFromPatient && keepPatient) {
+      navigate(`/app/pacientes?patientId=${keepPatient}&tab=sessions`, { replace: true });
+      return;
+    }
+
+    setForm({ ...emptyForm, patient_id: keepPatient });
+    setEditingId(null);
+    await preserveScroll(() => loadRecords());
+    if (keepPatient && user) {
+      loadActivePlan(keepPatient, user.id);
+    }
+  };
+
 
   const handlePolish = async () => {
     const hasText = form.chief_complaint || form.clinical_observations || form.next_session_plan || form.private_notes;
@@ -612,6 +896,7 @@ const RegistroSessao = () => {
     setEditingId(r.id);
     setDraftRestored(false);
     setForm({
+      ...emptyForm,
       patient_id: r.patient_id,
       session_id: (r as any).session_id ?? null,
       session_date: r.session_date,
@@ -1265,21 +1550,139 @@ const RegistroSessao = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Combinados para a próxima sessão</Label>
-              <Textarea
-                rows={2}
-                placeholder="Tarefas, exercícios ou combinados com o paciente..."
-                value={form.next_session_plan}
-                onChange={(e) =>
-                  setForm({ ...form, next_session_plan: e.target.value })
-                }
-                style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
-              />
-            </div>
+            {/* Planejamento da próxima sessão — fonte única do planejamento */}
+            <section
+              id="proxima-sessao"
+              ref={proximaSessaoRef as any}
+              className="mt-2 rounded-lg border p-4 space-y-4"
+              style={{ borderColor: "#E5E7EB", background: "#FAF8FF" }}
+            >
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4" style={{ color: "#534AB7" }} />
+                <h3 className="font-display text-sm font-semibold" style={{ color: "#1A1A2E" }}>
+                  Próxima sessão — planejamento
+                </h3>
+              </div>
+              <p className="text-xs text-muted-foreground -mt-2">
+                O planejamento salvo aqui aparece na Ficha do Paciente (aba Plano Terapêutico).
+              </p>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Data e horário da próxima sessão</Label>
+                  <Input
+                    type="datetime-local"
+                    value={form.next_scheduled_at}
+                    onChange={(e) => setForm({ ...form, next_scheduled_at: e.target.value })}
+                    style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+                  />
+                  <p className="text-[11px] text-muted-foreground">Deixe em branco para não agendar agora.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Meta vinculada</Label>
+                  <Select
+                    value={form.next_meta_id ?? "none"}
+                    onValueChange={(v) => setForm({ ...form, next_meta_id: v === "none" ? null : v })}
+                  >
+                    <SelectTrigger style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13 }}>
+                      <SelectValue placeholder="Sem meta vinculada" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sem meta vinculada</SelectItem>
+                      {planGoals.map((g) => (
+                        <SelectItem key={g.id} value={g.id}>{g.descricao}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Objetivo da próxima sessão</Label>
+                <Textarea
+                  rows={2}
+                  placeholder="O que se pretende trabalhar no próximo encontro..."
+                  value={form.next_objetivo}
+                  onChange={(e) => setForm({ ...form, next_objetivo: e.target.value })}
+                  style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Retomar / Continuidade</Label>
+                <Textarea
+                  rows={2}
+                  placeholder="Assuntos, tarefas ou combinados a serem retomados..."
+                  value={form.next_retomar}
+                  onChange={(e) => setForm({ ...form, next_retomar: e.target.value })}
+                  style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Técnicas previstas</Label>
+                {planTechniques.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {planTechniques.map((t) => {
+                      const active = form.next_tecnicas.includes(t.nome);
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() =>
+                            setForm({
+                              ...form,
+                              next_tecnicas: active
+                                ? form.next_tecnicas.filter((n) => n !== t.nome)
+                                : [...form.next_tecnicas, t.nome],
+                            })
+                          }
+                          className={cn(
+                            "text-xs px-3 py-1 rounded-full border transition-colors",
+                            active ? "bg-[#534AB7] text-white border-[#534AB7]" : "bg-white text-[#1A1A2E] border-[#E5E7EB] hover:border-[#534AB7]"
+                          )}
+                        >
+                          {t.nome}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Nenhuma técnica cadastrada no Plano Terapêutico deste paciente.
+                  </p>
+                )}
+                <Input
+                  placeholder="Adicionar técnica avulsa (Enter para confirmar)"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const v = (e.target as HTMLInputElement).value.trim();
+                      if (v && !form.next_tecnicas.includes(v)) {
+                        setForm({ ...form, next_tecnicas: [...form.next_tecnicas, v] });
+                      }
+                      (e.target as HTMLInputElement).value = "";
+                    }
+                  }}
+                  style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Observações do planejamento</Label>
+                <Textarea
+                  rows={2}
+                  placeholder="Notas adicionais sobre a próxima sessão..."
+                  value={form.next_observacoes}
+                  onChange={(e) => setForm({ ...form, next_observacoes: e.target.value })}
+                  style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+                />
+              </div>
+            </section>
           </>
         )}
       </section>
+
 
 
       {/* ── Seção 3: Avaliação do Terapeuta ── */}
@@ -1779,7 +2182,47 @@ const RegistroSessao = () => {
       </section>
 
       <div className="pb-8" />
+
+      <Dialog open={noPlanDialogOpen} onOpenChange={(o) => { if (!o) handleSkipDraftPlan(); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Este paciente ainda não tem Plano Terapêutico ativo</DialogTitle>
+            <DialogDescription>
+              Deseja criar um rascunho agora usando o objetivo, a meta e as técnicas registradas
+              no planejamento da próxima sessão? Você poderá revisar e ativar depois.
+            </DialogDescription>
+          </DialogHeader>
+          {noPlanContext && (
+            <div className="rounded-md border p-3 space-y-1 text-sm bg-muted/30">
+              {noPlanContext.objetivo && (
+                <div><span className="font-medium">Objetivo:</span> {noPlanContext.objetivo}</div>
+              )}
+              {noPlanContext.metaDescricao && (
+                <div><span className="font-medium">Meta:</span> {noPlanContext.metaDescricao}</div>
+              )}
+              {noPlanContext.tecnicas.length > 0 && (
+                <div><span className="font-medium">Técnicas:</span> {noPlanContext.tecnicas.join(", ")}</div>
+              )}
+              {!noPlanContext.objetivo && !noPlanContext.metaDescricao && noPlanContext.tecnicas.length === 0 && (
+                <div className="text-muted-foreground">
+                  Nenhum campo estruturado preenchido — o rascunho será criado em branco.
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={handleSkipDraftPlan} disabled={creatingDraftPlan}>
+              Depois
+            </Button>
+            <Button variant="accent" onClick={handleCreateDraftPlan} disabled={creatingDraftPlan}>
+              {creatingDraftPlan ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Criar rascunho agora
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 };
 
