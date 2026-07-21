@@ -98,6 +98,14 @@ const Auth = () => {
   const [signupDone, setSignupDone] = useState(false);
   const [suErrors, setSuErrors] = useState<Record<string, string>>({});
   const [suPhoneWarning, setSuPhoneWarning] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
 
 
   useEffect(() => {
