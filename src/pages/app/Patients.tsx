@@ -1067,13 +1067,23 @@ const Patients = () => {
             </div>
           )}
           {noNextSessionPatients.length > 0 && (
-            <div style={{ background: C.redSoft, borderLeft: `3px solid ${C.red}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+            <button
+              type="button"
+              onClick={() => { setStatusFilter("active"); setFormulFilter("all"); setOnlyNoNext(true); }}
+              className="text-left w-full transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
+              style={{ background: C.redSoft, borderLeft: `3px solid ${C.red}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", border: "none", cursor: "pointer" }}
+              title="Ver pacientes sem próxima sessão"
+              aria-label="Filtrar pacientes sem próxima sessão"
+            >
               <div className="flex items-start gap-2.5">
                 <div className="shrink-0 flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(192,57,43,0.16)", color: C.red }}>
                   <CalendarDays className="h-3 w-3" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p style={{ fontSize: 11, fontWeight: 700, color: C.red, textTransform: "uppercase", letterSpacing: "0.08em" }}>Sem próxima sessão</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p style={{ fontSize: 11, fontWeight: 700, color: C.red, textTransform: "uppercase", letterSpacing: "0.08em" }}>Sem próxima sessão</p>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.red }}>Ver lista →</span>
+                  </div>
                   <p className="mt-0.5" style={{ fontSize: 13, color: C.ink, lineHeight: 1.45 }}>
                     {noNextSessionPatients.length} {noNextSessionPatients.length === 1 ? "paciente ativo sem próxima sessão agendada" : "pacientes ativos sem próxima sessão agendada"}.
                   </p>
@@ -1089,7 +1099,7 @@ const Patients = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </button>
           )}
         </div>
       )}
