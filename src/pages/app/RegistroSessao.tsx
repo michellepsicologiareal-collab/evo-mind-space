@@ -72,6 +72,7 @@ interface SavedRecord {
 
 const emptyForm = {
   patient_id: "",
+  session_id: null as string | null,
   session_date: format(new Date(), "yyyy-MM-dd"),
   session_number: "",
   modality: "presencial",
