@@ -1308,51 +1308,66 @@ const Patients = () => {
                       </td>
 
                       {/* Nome */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", minWidth: 200 }}>
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle", minWidth: 220 }}>
                         <div className="min-w-0">
-                          <p className="truncate" style={{ fontWeight: 600, fontSize: 14, color: C.ink }}>
-                            {p.full_name}
-                          </p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="truncate" style={{ fontWeight: 600, fontSize: 14, color: C.ink, maxWidth: 200 }}>
+                              {p.full_name}
+                            </p>
+                            {!formulationFilled[p.id] && (
+                              <span
+                                className="inline-flex items-center gap-0.5"
+                                title="Sem formulação"
+                                aria-label="Sem formulação"
+                                style={{ background: C.goldSoft, color: C.gold, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 40, whiteSpace: "nowrap" }}
+                              >
+                                <ClipboardList className="h-2.5 w-2.5" />
+                                sem formulação
+                              </span>
+                            )}
+                            {p.is_active && !si?.nextDate && (
+                              <span
+                                className="inline-flex items-center gap-0.5"
+                                title="Sem próxima sessão agendada"
+                                aria-label="Sem próxima sessão"
+                                style={{ background: C.redSoft, color: C.red, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 40, whiteSpace: "nowrap" }}
+                              >
+                                <CalendarDays className="h-2.5 w-2.5" />
+                                sem próxima
+                              </span>
+                            )}
+                          </div>
                           {p.phone && (
                             <span className="inline-flex items-center gap-1 mt-0.5" style={{ fontSize: 11, color: C.muted }}>
                               <Phone className="h-3 w-3" />
                               <span className="truncate max-w-[160px]">{p.phone}</span>
                             </span>
                           )}
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5" style={{ fontSize: 11, color: C.muted }}>
+                            <span className="inline-flex items-center gap-1">
+                              <CalendarDays className="h-3 w-3" style={{ color: C.muted }} />
+                              Última: {si?.lastDate ? format(new Date(si.lastDate), "dd/MM", { locale: ptBR }) : "—"}
+                            </span>
+                            {si?.nextDate ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); navigate(`/app/agenda?patient=${p.id}`); }}
+                                className="inline-flex items-center gap-1"
+                                style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", color: C.ink, fontWeight: 600 }}
+                                title="Ver na agenda"
+                              >
+                                <CalendarDays className="h-3 w-3" style={{ color: C.purple }} />
+                                Próxima: {nextLabel}
+                              </button>
+                            ) : (
+                              <span className="inline-flex items-center gap-1">
+                                <CalendarDays className="h-3 w-3" />
+                                Próxima: —
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
 
-                      {/* Próxima sessão */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                        {si?.nextDate ? (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/app/agenda?patient=${p.id}`);
-                            }}
-                            className="inline-flex items-center gap-1"
-                            style={{ fontSize: 12, color: C.ink, background: "transparent", border: "none", padding: 0, cursor: "pointer" }}
-                            title="Ver na agenda"
-                          >
-                            <CalendarDays className="h-3 w-3" style={{ color: C.purple }} />
-                            {nextLabel}
-                          </button>
-                        ) : (
-                          <span style={{ fontSize: 12, color: C.muted }}>—</span>
-                        )}
-                      </td>
-
-                      {/* Última sessão */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                        {si?.lastDate ? (
-                          <span className="inline-flex items-center gap-1" style={{ fontSize: 12, color: C.ink }}>
-                            <CalendarDays className="h-3 w-3" style={{ color: C.muted }} />
-                            {format(new Date(si.lastDate), "dd/MM · HH:mm", { locale: ptBR })}
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: 12, color: C.muted }}>—</span>
-                        )}
-                      </td>
 
                       {/* Modalidade */}
                       <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
