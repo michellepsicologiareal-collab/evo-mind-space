@@ -1158,14 +1158,17 @@ export type Database = {
           phone: string | null
           pix_key: string | null
           profile_type: Database["public"]["Enums"]["profile_type"]
+          rejected_at: string | null
           reminder_enabled: boolean
           reminder_group_by_patient: boolean
           reminder_group_sort: string
           reminder_window_hours: number
           specialty: string | null
+          subscription_ends_at: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status"]
           supervisor_id: string | null
           terms_accepted_at: string | null
+          trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
@@ -1182,14 +1185,17 @@ export type Database = {
           phone?: string | null
           pix_key?: string | null
           profile_type?: Database["public"]["Enums"]["profile_type"]
+          rejected_at?: string | null
           reminder_enabled?: boolean
           reminder_group_by_patient?: boolean
           reminder_group_sort?: string
           reminder_window_hours?: number
           specialty?: string | null
+          subscription_ends_at?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           supervisor_id?: string | null
           terms_accepted_at?: string | null
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -1206,14 +1212,17 @@ export type Database = {
           phone?: string | null
           pix_key?: string | null
           profile_type?: Database["public"]["Enums"]["profile_type"]
+          rejected_at?: string | null
           reminder_enabled?: boolean
           reminder_group_by_patient?: boolean
           reminder_group_sort?: string
           reminder_window_hours?: number
           specialty?: string | null
+          subscription_ends_at?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           supervisor_id?: string | null
           terms_accepted_at?: string | null
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Relationships: [
