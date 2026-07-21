@@ -2,9 +2,10 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, History, Minimize2, Maximize2, Target, ExternalLink, ArrowLeft } from "lucide-react";
+import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, History, Minimize2, Maximize2, Target, ExternalLink, ArrowLeft, CheckSquare, RefreshCw, Pencil as PencilIcon } from "lucide-react";
 import { RegistroSessaoHub } from "@/components/app/RegistroSessaoHub";
 import { Link } from "react-router-dom";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -128,88 +129,131 @@ const RegistroSessao = () => {
     observacoes: string;
     meta_descricao: string | null;
     scheduled_at: string | null;
+    goals: { descricao: string }[];
+    pending_tasks: { id: string; title: string }[];
+    next_revision: { data: string; descricao: string } | null;
     loaded: boolean;
-  }>({ plan_id: null, plan_status: null, objetivo: "", retomar: "", tecnicas: [], observacoes: "", meta_descricao: null, scheduled_at: null, loaded: false });
+  }>({ plan_id: null, plan_status: null, objetivo: "", retomar: "", tecnicas: [], observacoes: "", meta_descricao: null, scheduled_at: null, goals: [], pending_tasks: [], next_revision: null, loaded: false });
   const [planPanelCollapsed, setPlanPanelCollapsed] = useState(false);
   const [planLoadedIntoForm, setPlanLoadedIntoForm] = useState(false);
+  const [planDrawerOpen, setPlanDrawerOpen] = useState(false);
+
+  const loadActivePlan = useCallback(async (patientId: string, uid: string) => {
+    // 1. Active treatment plan for this patient
+    const { data: tp } = await supabase
+      .from("treatment_plans")
+      .select("id, status")
+      .eq("patient_id", patientId)
+      .eq("user_id", uid)
+      .maybeSingle();
+
+    // 2. Next session + plan content
+    const { data: ns } = await supabase
+      .from("sessions")
+      .select("id, scheduled_at")
+      .eq("patient_id", patientId)
+      .eq("user_id", uid)
+      .gte("scheduled_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+      .not("status", "in", "(cancelled,no_show)")
+      .order("scheduled_at")
+      .limit(1)
+      .maybeSingle();
+
+    let sp: any = null;
+    if (ns?.id) {
+      const { data } = await supabase
+        .from("session_plans")
+        .select("objetivo, retomar, tecnicas, observacoes, meta_id")
+        .eq("session_id", ns.id)
+        .maybeSingle();
+      sp = data;
+    }
+
+    let meta_descricao: string | null = null;
+    if (sp?.meta_id) {
+      const { data: m } = await supabase.from("treatment_goals").select("descricao").eq("id", sp.meta_id).maybeSingle();
+      meta_descricao = m?.descricao ?? null;
+    }
+
+    // 3. Objetivos terapêuticos ativos (todas metas do paciente)
+    let goals: { descricao: string }[] = [];
+    if (tp?.id) {
+      const { data: g } = await supabase
+        .from("treatment_goals")
+        .select("descricao, ordem")
+        .eq("patient_id", patientId)
+        .order("ordem");
+      goals = (g as any[])?.map((x) => ({ descricao: x.descricao })) ?? [];
+    }
+
+    // 4. Tarefas pendentes (homework com pelo menos uma action !done)
+    const { data: tasksData } = await supabase
+      .from("homework_tasks")
+      .select("id, title, actions")
+      .eq("patient_id", patientId)
+      .eq("user_id", uid)
+      .order("created_at", { ascending: false });
+    const pending_tasks = ((tasksData as any[]) ?? []).filter((t) => {
+      const acts = Array.isArray(t.actions) ? t.actions : [];
+      if (acts.length === 0) return true;
+      return acts.some((a: any) => !a?.done);
+    }).map((t) => ({ id: t.id, title: t.title }));
+
+    // 5. Última revisão do plano
+    const { data: rev } = await supabase
+      .from("treatment_revisions")
+      .select("data, descricao")
+      .eq("patient_id", patientId)
+      .eq("user_id", uid)
+      .order("data", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    setActivePlan({
+      plan_id: tp?.id ?? null,
+      plan_status: tp?.status ?? null,
+      objetivo: sp?.objetivo || "",
+      retomar: sp?.retomar || "",
+      tecnicas: sp?.tecnicas || [],
+      observacoes: sp?.observacoes || "",
+      meta_descricao,
+      scheduled_at: ns?.scheduled_at ?? null,
+      goals,
+      pending_tasks,
+      next_revision: rev ? { data: rev.data, descricao: rev.descricao } : null,
+      loaded: true,
+    });
+  }, []);
 
   useEffect(() => {
     if (!user || !form.patient_id) {
-      setActivePlan({ plan_id: null, plan_status: null, objetivo: "", retomar: "", tecnicas: [], observacoes: "", meta_descricao: null, scheduled_at: null, loaded: false });
+      setActivePlan({ plan_id: null, plan_status: null, objetivo: "", retomar: "", tecnicas: [], observacoes: "", meta_descricao: null, scheduled_at: null, goals: [], pending_tasks: [], next_revision: null, loaded: false });
       setPlanPanelCollapsed(false);
       setPlanLoadedIntoForm(false);
       return;
     }
-    (async () => {
-      // 1. Active treatment plan for this patient
-      const { data: tp } = await supabase
-        .from("treatment_plans")
-        .select("id, status")
-        .eq("patient_id", form.patient_id)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      // 2. Next session + plan content
-      const { data: ns } = await supabase
-        .from("sessions")
-        .select("id, scheduled_at")
-        .eq("patient_id", form.patient_id)
-        .eq("user_id", user.id)
-        .gte("scheduled_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
-        .not("status", "in", "(cancelled,no_show)")
-        .order("scheduled_at")
-        .limit(1)
-        .maybeSingle();
-
-      let sp: any = null;
-      if (ns?.id) {
-        const { data } = await supabase
-          .from("session_plans")
-          .select("objetivo, retomar, tecnicas, observacoes, meta_id")
-          .eq("session_id", ns.id)
-          .maybeSingle();
-        sp = data;
-      }
-
-      let meta_descricao: string | null = null;
-      if (sp?.meta_id) {
-        const { data: m } = await supabase.from("treatment_goals").select("descricao").eq("id", sp.meta_id).maybeSingle();
-        meta_descricao = m?.descricao ?? null;
-      }
-
-      setActivePlan({
-        plan_id: tp?.id ?? null,
-        plan_status: tp?.status ?? null,
-        objetivo: sp?.objetivo || "",
-        retomar: sp?.retomar || "",
-        tecnicas: sp?.tecnicas || [],
-        observacoes: sp?.observacoes || "",
-        meta_descricao,
-        scheduled_at: ns?.scheduled_at ?? null,
-        loaded: true,
-      });
-      setPlanPanelCollapsed(false);
-      setPlanLoadedIntoForm(false);
-    })();
-  }, [user, form.patient_id]);
+    loadActivePlan(form.patient_id, user.id);
+    setPlanPanelCollapsed(false);
+    setPlanLoadedIntoForm(false);
+  }, [user, form.patient_id, loadActivePlan]);
 
   const applyPlanningToForm = () => {
     setForm((prev) => {
       const next = { ...prev, plan_id: activePlan.plan_id ?? prev.plan_id };
-      // Queixa principal ← meta vinculada (não sobrescreve se já houver texto)
       if (!prev.chief_complaint.trim() && activePlan.meta_descricao) {
         next.chief_complaint = activePlan.meta_descricao;
       }
-      // Observações clínicas ← retomar (não sobrescreve)
       if (!prev.clinical_observations.trim() && activePlan.retomar) {
         next.clinical_observations = activePlan.retomar;
       }
-      // Temas ← técnicas planejadas (mescla sem duplicar)
       if (activePlan.tecnicas.length) {
         const merged = Array.from(new Set([...prev.themes, ...activePlan.tecnicas]));
         next.themes = merged;
       }
-      // next_session_plan permanece em branco para preenchimento
+      // Preenche combinados para a próxima sessão com tarefas pendentes se estiver vazio
+      if (!prev.next_session_plan.trim() && activePlan.pending_tasks.length) {
+        next.next_session_plan = activePlan.pending_tasks.map((t) => `• ${t.title}`).join("\n");
+      }
       return next;
     });
     setPlanLoadedIntoForm(true);
@@ -405,9 +449,15 @@ const RegistroSessao = () => {
 
     toast.success(editingId ? "Registro atualizado." : "Registro salvo com sucesso.");
     clearDraft();
-    setForm({ ...emptyForm });
+    // Mantém o paciente selecionado — reset apenas dos campos do registro,
+    // conforme fluxo integrado com o Plano de Tratamento.
+    const keepPatient = form.patient_id;
+    setForm({ ...emptyForm, patient_id: keepPatient });
     setEditingId(null);
     await preserveScroll(() => loadRecords());
+    if (keepPatient && user) {
+      loadActivePlan(keepPatient, user.id);
+    }
   };
 
   const handlePolish = async () => {
@@ -860,13 +910,14 @@ const RegistroSessao = () => {
                   </p>
                 </div>
               </div>
-              <Link
-                to={`/app/plano-tratamento?patient=${form.patient_id}`}
+              <button
+                type="button"
+                onClick={() => setPlanDrawerOpen(true)}
                 className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white"
                 style={{ backgroundColor: "#534AB7" }}
               >
-                Criar plano <ExternalLink className="h-3.5 w-3.5" />
-              </Link>
+                Criar plano <PencilIcon className="h-3.5 w-3.5" />
+              </button>
             </div>
           ) : (
             <>
@@ -943,7 +994,39 @@ const RegistroSessao = () => {
                         <p className="whitespace-pre-wrap text-foreground mt-0.5">{activePlan.retomar}</p>
                       </div>
                     )}
-                    {!activePlan.objetivo && !activePlan.meta_descricao && !activePlan.tecnicas.length && !activePlan.retomar && (
+                    {activePlan.goals.length > 0 && (
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                          Objetivos terapêuticos ativos
+                        </span>
+                        <ul className="mt-1 space-y-0.5 text-sm text-foreground list-disc list-inside">
+                          {activePlan.goals.slice(0, 5).map((g, i) => (
+                            <li key={i} className="whitespace-pre-wrap">{g.descricao}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {activePlan.pending_tasks.length > 0 && (
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] uppercase font-semibold flex items-center gap-1" style={{ color: "#534AB7" }}>
+                          <CheckSquare className="h-3 w-3" /> Tarefas pendentes ({activePlan.pending_tasks.length})
+                        </span>
+                        <ul className="mt-1 space-y-0.5 text-sm text-foreground list-disc list-inside">
+                          {activePlan.pending_tasks.slice(0, 5).map((t) => (
+                            <li key={t.id} className="whitespace-pre-wrap">{t.title}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {activePlan.next_revision && (
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                          Próxima revisão · {format(new Date(activePlan.next_revision.data), "dd/MM/yyyy")}
+                        </span>
+                        <p className="whitespace-pre-wrap text-foreground mt-0.5 line-clamp-2">{activePlan.next_revision.descricao}</p>
+                      </div>
+                    )}
+                    {!activePlan.objetivo && !activePlan.meta_descricao && !activePlan.tecnicas.length && !activePlan.retomar && !activePlan.goals.length && !activePlan.pending_tasks.length && (
                       <p className="sm:col-span-2 text-sm text-muted-foreground italic">
                         Plano ativo sem planejamento para a próxima sessão.
                       </p>
@@ -959,13 +1042,14 @@ const RegistroSessao = () => {
                     >
                       Carregar no registro
                     </button>
-                    <Link
-                      to={`/app/plano-tratamento?patient=${form.patient_id}`}
-                      className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm bg-transparent hover:bg-white/60 transition-colors"
+                    <button
+                      type="button"
+                      onClick={() => setPlanDrawerOpen(true)}
+                      className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm bg-white hover:bg-white/80 transition-colors"
                       style={{ border: "1px solid #534AB7", color: "#534AB7", fontWeight: 600 }}
                     >
-                      Ver plano completo <ExternalLink className="h-3.5 w-3.5" />
-                    </Link>
+                      <PencilIcon className="h-3.5 w-3.5" /> Atualizar Plano
+                    </button>
                   </div>
                 </>
               )}
@@ -973,6 +1057,39 @@ const RegistroSessao = () => {
           )}
         </section>
       )}
+
+      {/* Drawer com o Plano de Tratamento — atualizar sem sair da tela */}
+      <Sheet
+        open={planDrawerOpen}
+        onOpenChange={(o) => {
+          setPlanDrawerOpen(o);
+          if (!o && form.patient_id && user) {
+            loadActivePlan(form.patient_id, user.id);
+          }
+        }}
+      >
+        <SheetContent side="right" className="w-full sm:max-w-4xl p-0 flex flex-col">
+          <SheetHeader className="px-5 py-3 border-b shrink-0">
+            <SheetTitle className="flex items-center gap-2">
+              <Target className="h-4 w-4" style={{ color: "#534AB7" }} />
+              Plano de Tratamento
+            </SheetTitle>
+            <SheetDescription className="text-xs">
+              Edite o plano sem sair do Registro de Sessão. Ao fechar, o card acima será atualizado.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-hidden">
+            {form.patient_id && (
+              <iframe
+                title="Plano de Tratamento"
+                src={`/app/plano-tratamento?patient=${form.patient_id}&embed=1`}
+                className="w-full h-full border-0"
+              />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
 
 
 
