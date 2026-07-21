@@ -415,7 +415,7 @@ const Admin = () => {
 
   const TableHead = ({ showSupervisor = false }: { showSupervisor?: boolean }) => (
     <thead>
-      <tr className="border-b border-border text-left text-muted-foreground text-xs">
+      <tr className="border-b border-border text-left text-muted-foreground text-xs whitespace-nowrap">
         <th className="pb-3 pr-4 font-medium">Nome</th>
         <th className="pb-3 pr-4 font-medium">Email</th>
         <th className="pb-3 pr-4 font-medium">CRP</th>
