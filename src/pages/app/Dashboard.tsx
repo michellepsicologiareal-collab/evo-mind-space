@@ -73,6 +73,44 @@ type TodayItem = {
 
 const WEEK_DAY_LABELS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
+/* ─── Chart typography tokens (padrão único para todos os gráficos) ─── */
+const CHART_FONT_FAMILY = "Inter, system-ui, sans-serif";
+const CHART_TICK_STYLE = {
+  fontSize: 11,
+  fontFamily: CHART_FONT_FAMILY,
+  fontWeight: 500,
+  letterSpacing: 0.2,
+  fill: "hsl(var(--muted-foreground))",
+} as const;
+const CHART_LEGEND_STYLE = {
+  fontSize: 12,
+  fontFamily: CHART_FONT_FAMILY,
+  fontWeight: 500,
+  letterSpacing: 0.2,
+  paddingTop: 8,
+} as const;
+const CHART_TOOLTIP_CONTENT_STYLE = {
+  background: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: 12,
+  fontSize: 12,
+  fontFamily: CHART_FONT_FAMILY,
+  padding: "8px 10px",
+} as const;
+const CHART_TOOLTIP_LABEL_STYLE = {
+  fontFamily: CHART_FONT_FAMILY,
+  fontWeight: 600,
+  fontSize: 12,
+  marginBottom: 4,
+} as const;
+const CHART_TOOLTIP_ITEM_STYLE = {
+  fontFamily: CHART_FONT_FAMILY,
+  fontWeight: 500,
+  fontSize: 12,
+  lineHeight: "18px",
+} as const;
+
+
 /* ─── UI helpers ─── */
 function greeting() {
   const h = new Date().getHours();
