@@ -424,6 +424,7 @@ const Admin = () => {
         <th className="pb-3 pr-4 font-medium text-center">Pacientes</th>
         <th className="pb-3 pr-4 font-medium text-center">Sessões</th>
         {showSupervisor && <th className="pb-3 pr-4 font-medium">Supervisor</th>}
+        <th className="pb-3 pr-4 font-medium">Status / Vencimento</th>
         <th className="pb-3 pr-4 font-medium">Último login</th>
         <th className="pb-3 font-medium">Ações</th>
       </tr>
