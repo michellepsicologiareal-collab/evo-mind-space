@@ -166,11 +166,8 @@ export const AppLayout = () => {
         <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
           {(() => {
             const sections: { label: string; routes: string[] }[] = [
-              { label: "INÍCIO", routes: ["/app/comece-por-aqui", "/app"] },
-              { label: "CLÍNICA", routes: ["/app/pacientes", "/app/agenda", "/app/financeiro"] },
-              { label: "ATENDIMENTO", routes: ["/app/registro-sessao", "/app/formulacao-ia", "/app/humor", "/app/plano-tratamento", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
-              { label: "SUPERVISÃO", routes: ["/app/supervisionandos", "/app/formulacao-livre"] },
-              { label: "RECURSOS", routes: ["/app/biblioteca", "/app/autocuidado"] },
+              { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda"] },
+              { label: "GESTÃO", routes: ["/app/financeiro", "/app/anamneses", "/app/contratos"] },
               { label: "CONFIGURAÇÕES", routes: ["/app/perfil"] },
             ];
             return sections.map((sec) => {
