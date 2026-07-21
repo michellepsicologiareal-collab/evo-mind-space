@@ -1850,7 +1850,7 @@ const Patients = () => {
                       <TabsTrigger value="overview" className="text-[11px] whitespace-nowrap">Visão geral</TabsTrigger>
                       <TabsTrigger value="formulations" className="text-[11px] whitespace-nowrap">Formulações</TabsTrigger>
                       <TabsTrigger value="sessions" className="text-[11px] whitespace-nowrap">Sessões</TabsTrigger>
-                      <TabsTrigger value="plan" className="text-[11px] whitespace-nowrap">Plano</TabsTrigger>
+                      <TabsTrigger value="plan" className="text-[11px] whitespace-nowrap">Plano Terapêutico</TabsTrigger>
                       <TabsTrigger value="anamnesis" className="text-[11px] whitespace-nowrap">Anamneses</TabsTrigger>
                       <TabsTrigger value="documents" className="text-[11px] whitespace-nowrap">Documentos</TabsTrigger>
                       <TabsTrigger value="finance" className="text-[11px] whitespace-nowrap">Financeiro</TabsTrigger>
