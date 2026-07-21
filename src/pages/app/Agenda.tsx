@@ -8,7 +8,7 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, MoreHorizontal, Bell,
-  ClipboardList,
+  ClipboardList, Play, HeartPulse, Target, AlertCircle, Wallet, NotebookPen,
 } from "lucide-react";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
@@ -36,7 +36,7 @@ import { ClinicalV2Block, EMOTIONS_V2 } from "@/components/app/ClinicalV2Block";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
@@ -146,6 +146,10 @@ const Agenda = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [sessions, setSessions] = useState<Session[]>([]);
+  const navigate = useNavigate();
+  const [prevPlanByPatient, setPrevPlanByPatient] = useState<Map<string, string>>(new Map());
+  const [sessionRecordIds, setSessionRecordIds] = useState<Set<string>>(new Set());
+  const [moodTodayPatients, setMoodTodayPatients] = useState<Set<string>>(new Set());
   const [patients, setPatients] = useState<Patient[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -582,6 +586,42 @@ const Agenda = () => {
   };
 
   useEffect(() => { if (user) { load(); loadPending(); } }, [user, currentMonth]);
+
+  // Enriquece a agenda com dados existentes: registros feitos, combinado da sessão anterior e humor de hoje.
+  useEffect(() => {
+    if (!user) return;
+    const now = new Date();
+    const from = new Date(now); from.setDate(from.getDate() - 90);
+    const to = new Date(now); to.setDate(to.getDate() + 45);
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+    (async () => {
+      const [recs, moods] = await Promise.all([
+        supabase.from("session_records")
+          .select("session_id, patient_id, session_date, next_session_plan")
+          .eq("user_id", user.id)
+          .gte("session_date", from.toISOString().slice(0, 10))
+          .lte("session_date", to.toISOString().slice(0, 10))
+          .order("session_date", { ascending: false }),
+        supabase.from("patient_progress")
+          .select("patient_id, recorded_at")
+          .eq("user_id", user.id)
+          .gte("recorded_at", todayStart.toISOString())
+          .lte("recorded_at", todayEnd.toISOString()),
+      ]);
+      const prev = new Map<string, string>();
+      const recIds = new Set<string>();
+      (recs.data ?? []).forEach((r: any) => {
+        if (r.session_id) recIds.add(r.session_id);
+        if (r.patient_id && r.next_session_plan && !prev.has(r.patient_id)) {
+          prev.set(r.patient_id, r.next_session_plan);
+        }
+      });
+      setPrevPlanByPatient(prev);
+      setSessionRecordIds(recIds);
+      setMoodTodayPatients(new Set((moods.data ?? []).map((m: any) => m.patient_id)));
+    })();
+  }, [user, sessions.length, currentMonth]);
 
   useAutoRefresh(() => { if (user) { load(true); loadPending(true); } }, { routePath: "/app/agenda" });
 
@@ -1375,6 +1415,13 @@ const Agenda = () => {
   const SessionCard = ({ s, compact = false }: { s: Session; compact?: boolean }) => {
     const isSupervisionCard = s.session_type === "supervision";
     const [sheetOpen, setSheetOpen] = useState(false);
+    const nowMs = Date.now();
+    const scheduledMs = new Date(s.scheduled_at).getTime();
+    const isPast = scheduledMs < nowMs;
+    const isActiveStatus = !["cancelled", "no_show", "rescheduled"].includes(s.status);
+    const registroPendente = !isSupervisionCard && isPast && isActiveStatus && !sessionRecordIds.has(s.id) && !!s.patient_id;
+    const prevPlan = !isSupervisionCard && s.patient_id ? prevPlanByPatient.get(s.patient_id) : undefined;
+
 
     const actions = (
       <>
@@ -1513,9 +1560,15 @@ const Agenda = () => {
         </div>
         {!compact && (
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            <span className={cn(PILL_BASE, isSupervisionCard ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
-              {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
-            </span>
+            {registroPendente ? (
+              <span className={cn(PILL_BASE, "bg-amber-100 text-amber-800 border-amber-300 animate-pulse")}>
+                <AlertCircle className="h-3 w-3 mr-1" /> Registro pendente
+              </span>
+            ) : (
+              <span className={cn(PILL_BASE, isSupervisionCard ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
+                {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
+              </span>
+            )}
             {(s as any).modality === "online" ? (
               <span className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
                 <Video className="h-2.5 w-2.5" /> Online
@@ -1561,6 +1614,49 @@ const Agenda = () => {
                 <ClipboardList className="h-3 w-3" /> Plano de tratamento
               </Link>
             )}
+          </div>
+        )}
+
+        {/* Contexto clínico rápido: combinado / próximo passo da sessão anterior */}
+        {!compact && prevPlan && (
+          <div className="mt-2 rounded-lg border border-primary/15 bg-primary/[0.04] px-2.5 py-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-primary/80 font-semibold flex items-center gap-1">
+              <Target className="h-3 w-3" /> Combinado / próximo passo
+            </p>
+            <p className="text-xs text-foreground/85 line-clamp-2 mt-0.5">{prevPlan}</p>
+          </div>
+        )}
+
+        {/* Ações rápidas */}
+        {!compact && !isSupervisionCard && s.patient_id && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {registroPendente ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}`); }}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500 text-white hover:bg-amber-600 transition-colors"
+              >
+                <NotebookPen className="h-3 w-3" /> Registrar sessão
+              </button>
+            ) : (
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}`); }}
+                className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-colors"
+              >
+                <Play className="h-3 w-3" /> Iniciar sessão
+              </button>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}
+              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-muted text-foreground/80 hover:bg-muted/70 border border-border transition-colors"
+            >
+              <User className="h-3 w-3" /> Abrir ficha
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); openEdit(s); }}
+              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-muted text-foreground/80 hover:bg-muted/70 border border-border transition-colors"
+            >
+              <RotateCcw className="h-3 w-3" /> Reagendar
+            </button>
           </div>
         )}
       </div>
@@ -1973,6 +2069,57 @@ const Agenda = () => {
               </SelectContent>
             </Select>
           </div>
+
+          {/* ── Resumo do dia ── */}
+          {(() => {
+            const now = new Date();
+            const dayStart = new Date(now); dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(now); dayEnd.setHours(23, 59, 59, 999);
+            const inToday = (d: Date) => d >= dayStart && d <= dayEnd;
+            const todayCount = sessions.filter((s) => {
+              const d = new Date(s.scheduled_at);
+              return inToday(d) && s.status !== "cancelled";
+            }).length;
+            const pendingRecords = sessions.filter((s) => {
+              const d = new Date(s.scheduled_at);
+              return (
+                s.session_type === "clinical" &&
+                !!s.patient_id &&
+                d < now &&
+                !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
+                !sessionRecordIds.has(s.id)
+              );
+            }).length;
+            const pendingPayments = sessions.filter((s) => (
+              s.session_type === "clinical" &&
+              !s.is_expense &&
+              s.payment_status === "pending" &&
+              !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
+              new Date(s.scheduled_at) < now
+            )).length;
+            const moodCount = moodTodayPatients.size;
+
+            const Item = ({ icon: Icon, label, value, tone }: { icon: any; label: string; value: number; tone: string }) => (
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 min-w-0">
+                <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", tone)}>
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[11px] text-muted-foreground leading-none">{label}</p>
+                  <p className="mt-1 font-display text-lg font-semibold text-foreground leading-none">{value}</p>
+                </div>
+              </div>
+            );
+
+            return (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
+                <Item icon={CalendarCheck} label="Sessões de hoje" value={todayCount} tone="bg-primary/10 text-primary" />
+                <Item icon={AlertCircle} label="Registros pendentes" value={pendingRecords} tone="bg-amber-100 text-amber-700" />
+                <Item icon={Wallet} label="Pagamentos pendentes" value={pendingPayments} tone="bg-emerald-100 text-emerald-700" />
+                <Item icon={HeartPulse} label="Humor respondido hoje" value={moodCount} tone="bg-lilac/40 text-foreground" />
+              </div>
+            );
+          })()}
 
           <Tabs value={viewTab} onValueChange={setViewTab}>
             <TabsList className="w-full sm:w-auto bg-transparent gap-1 p-0 mb-2">
