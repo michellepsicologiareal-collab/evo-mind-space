@@ -89,6 +89,7 @@ export const AppLayout = () => {
   }, [navItems]);
   const mobileSecondaryOrder = [
     "/app/anamneses",
+    "/app/contrato-modelo",
     "/app/contratos",
     "/app/perfil",
   ];
