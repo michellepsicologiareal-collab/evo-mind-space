@@ -362,22 +362,53 @@ const Admin = () => {
       {showSupervisor && (
         <td className="py-3 pr-4 text-sm">{u.supervisor_name || "—"}</td>
       )}
+      <td className="py-3 pr-4 text-xs whitespace-nowrap">
+        {u.rejected_at ? (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 text-red-800"><Ban className="h-3 w-3" /> Reprovado</span>
+        ) : !u.is_approved ? (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3" /> Pendente</span>
+        ) : u.trial_ends_at && new Date(u.trial_ends_at) > new Date() ? (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary" title={`Trial até ${new Date(u.trial_ends_at).toLocaleDateString("pt-BR")}`}>
+            <Clock className="h-3 w-3" /> Trial · {Math.max(0, Math.ceil((new Date(u.trial_ends_at).getTime() - Date.now()) / 86400000))}d
+          </span>
+        ) : u.subscription_ends_at ? (
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${new Date(u.subscription_ends_at) < new Date() ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`} title={`Vence em ${new Date(u.subscription_ends_at).toLocaleDateString("pt-BR")}`}>
+            <Calendar className="h-3 w-3" /> {new Date(u.subscription_ends_at).toLocaleDateString("pt-BR")}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
+      </td>
       <td className="py-3 pr-4 text-xs text-muted-foreground whitespace-nowrap">
         {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("pt-BR") : "Nunca"}
       </td>
-      <td className="py-3 flex items-center gap-1">
-        <Button size="sm" variant="ghost" onClick={() => openLogs(u.id)} title="Ver logs">
-          <Eye className="h-4 w-4" />
-        </Button>
-        {u.is_approved ? (
-          <Button size="sm" variant="outline" onClick={() => handleApproval(u.id, false)} className="text-xs text-destructive hover:text-destructive">
-            Revogar
+      <td className="py-3">
+        <div className="flex items-center gap-1 flex-wrap">
+          <Button size="sm" variant="ghost" onClick={() => openLogs(u.id)} title="Ver logs">
+            <Eye className="h-4 w-4" />
           </Button>
-        ) : (
-          <Button size="sm" variant="accent" onClick={() => handleApproval(u.id, true)} className="gap-1 text-xs">
-            <CheckCircle2 className="h-3.5 w-3.5" /> Aprovar
+          {u.is_approved ? (
+            <Button size="sm" variant="outline" onClick={() => runAction(u.id, "reject")} className="gap-1 text-xs text-destructive hover:text-destructive" title="Reprovar / revogar acesso">
+              <Ban className="h-3.5 w-3.5" /> Reprovar
+            </Button>
+          ) : u.rejected_at ? (
+            <Button size="sm" variant="outline" onClick={() => runAction(u.id, "reactivate")} className="gap-1 text-xs" title="Reativar cadastro">
+              <RotateCcw className="h-3.5 w-3.5" /> Reativar
+            </Button>
+          ) : (
+            <>
+              <Button size="sm" variant="accent" onClick={() => runAction(u.id, "approve")} className="gap-1 text-xs">
+                <CheckCircle2 className="h-3.5 w-3.5" /> Aprovar
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => runAction(u.id, "reject")} className="gap-1 text-xs text-destructive hover:text-destructive">
+                <Ban className="h-3.5 w-3.5" /> Reprovar
+              </Button>
+            </>
+          )}
+          <Button size="sm" variant="ghost" onClick={() => confirmDelete(u)} className="text-destructive hover:text-destructive hover:bg-destructive/10" title="Excluir cadastro">
+            <Trash2 className="h-4 w-4" />
           </Button>
-        )}
+        </div>
       </td>
     </tr>
   );
