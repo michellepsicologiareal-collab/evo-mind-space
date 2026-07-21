@@ -318,17 +318,38 @@ const Patients = () => {
   const navigate = useNavigate();
   /**
    * Guarda cliques em recursos ainda não preenchidos dentro do Drawer.
-   * Não navega, não fecha o Sheet, não troca aba nem paciente selecionado.
-   * Se `onCreate` for informado, mostra ação "Preencher agora" no toast.
+   * Mostra toast com "Preencher agora" que sempre executa a ação com
+   * feedback de carregamento e erro amigável em caso de falha.
    */
+  const runCreate = async (label: string, onCreate: () => void | Promise<void>) => {
+    const loadingId = toast.loading(`Abrindo ${label}...`);
+    try {
+      await Promise.resolve(onCreate());
+      toast.dismiss(loadingId);
+    } catch (err) {
+      console.error(`[guardMissing] Falha ao abrir ${label}:`, err);
+      toast.dismiss(loadingId);
+      toast.error(`Não foi possível abrir ${label}. Tente novamente.`);
+    }
+  };
   const guardMissing = (
     filled: boolean,
     onOpen: () => void,
-    opts?: { label?: string; onCreate?: () => void; createLabel?: string }
+    opts?: { label?: string; onCreate?: () => void | Promise<void>; createLabel?: string }
   ) => {
     if (filled) { onOpen(); return; }
     const { label = "Este conteúdo", onCreate, createLabel = "Preencher agora" } = opts || {};
-    toast(`${label} ainda não foi preenchido para este paciente.`, onCreate ? { action: { label: createLabel, onClick: onCreate } } : undefined);
+    if (!onCreate) {
+      toast(`${label} ainda não foi preenchido para este paciente.`);
+      return;
+    }
+    toast(`${label} ainda não foi preenchido para este paciente.`, {
+      action: {
+        label: createLabel,
+        onClick: () => { void runCreate(label, onCreate); },
+      },
+      duration: 6000,
+    });
   };
   const [patients, setPatients] = useState<Patient[]>([]);
   const [gateOpen, setGateOpen] = useState(false);
