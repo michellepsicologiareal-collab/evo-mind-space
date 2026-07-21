@@ -37,7 +37,7 @@ const profileSchema = z.object({
 type ProfileType = "standard" | "supervisee" | "supervisor";
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, isApproved } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -521,6 +521,32 @@ const Profile = () => {
         subtitle="Suas informações profissionais."
         intro="Suas informações profissionais aparecem em contratos, recibos e PDFs gerados pelo sistema. Mantenha CPF, CRP e dados de contato sempre atualizados."
       />
+
+      {/* Status da conta */}
+      <section
+        className={`rounded-2xl border p-4 flex items-start gap-3 shadow-card ${
+          isApproved
+            ? "bg-green-50 border-green-200"
+            : "bg-yellow-50 border-yellow-200"
+        }`}
+        aria-live="polite"
+      >
+        {isApproved ? (
+          <CheckCircle2 className="h-5 w-5 text-green-700 shrink-0 mt-0.5" />
+        ) : (
+          <Clock className="h-5 w-5 text-yellow-700 shrink-0 mt-0.5" />
+        )}
+        <div className="text-sm">
+          <p className={`font-medium ${isApproved ? "text-green-800" : "text-yellow-800"}`}>
+            Status da conta: {isApproved ? "Aprovada" : "Aguardando liberação"}
+          </p>
+          <p className={`text-xs mt-0.5 ${isApproved ? "text-green-700" : "text-yellow-700"}`}>
+            {isApproved
+              ? "Seu acesso ao Psi Real está ativo."
+              : "Sua conta foi criada e está aguardando aprovação da administração. Você receberá acesso completo assim que for liberada."}
+          </p>
+        </div>
+      </section>
 
 
 
