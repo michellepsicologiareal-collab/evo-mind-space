@@ -1424,7 +1424,9 @@ const Agenda = () => {
     const scheduledMs = new Date(s.scheduled_at).getTime();
     const isPast = scheduledMs < nowMs;
     const isActiveStatus = !["cancelled", "no_show", "rescheduled"].includes(s.status);
-    const registroPendente = !isSupervisionCard && isPast && isActiveStatus && !sessionRecordIds.has(s.id) && !!s.patient_id;
+    const sessionDateKey = s.patient_id ? `${s.patient_id}|${new Date(s.scheduled_at).toISOString().slice(0, 10)}` : "";
+    const hasRecord = sessionRecordIds.has(s.id) || (sessionDateKey && sessionRecordKeys.has(sessionDateKey));
+    const registroPendente = !isSupervisionCard && isPast && isActiveStatus && !hasRecord && !!s.patient_id;
     const prevPlan = !isSupervisionCard && s.patient_id ? prevPlanByPatient.get(s.patient_id) : undefined;
 
 
