@@ -77,6 +77,9 @@ interface AdminUser {
   specialty: string | null;
   patient_count: number;
   session_count: number;
+  rejected_at: string | null;
+  trial_ends_at: string | null;
+  subscription_ends_at: string | null;
 }
 
 interface AdminPatient {
