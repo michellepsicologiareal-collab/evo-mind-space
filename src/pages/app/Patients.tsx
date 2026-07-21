@@ -1134,6 +1134,7 @@ const Patients = () => {
                 onClick={() => {
                   setStatusFilter(t.status as typeof statusFilter);
                   setFormulFilter(t.formul as typeof formulFilter);
+                  setOnlyNoNext(false);
                 }}
                 style={{
                   background: isActive ? C.card : "transparent",
