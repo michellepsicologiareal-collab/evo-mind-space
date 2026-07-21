@@ -69,8 +69,8 @@ export const PatientSessionsQuickView = ({
     })();
   }, [patientId]);
 
-  const fmt = (d: Date | null | undefined) =>
-    d ? format(d, "dd/MM/yyyy", { locale: ptBR }) : "—";
+  const fmt = (d: Date | string | null | undefined) =>
+    d ? format(typeof d === "string" ? new Date(d) : d, "dd/MM/yyyy", { locale: ptBR }) : "—";
 
   return (
     <div className="space-y-4">
