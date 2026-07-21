@@ -43,6 +43,7 @@ const allNavItems: NavItem[] = [
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
   { to: "/app/financeiro", label: "Financeiro", icon: Wallet, premium: true },
   { to: "/app/anamneses", label: "Anamneses", icon: Baby },
+  { to: "/app/contrato-modelo", label: "Termo de Consentimento", icon: FileText },
   { to: "/app/contratos", label: "Contratos", icon: FileCheck },
   { to: "/app/perfil", label: "Configurações", icon: Settings },
 
