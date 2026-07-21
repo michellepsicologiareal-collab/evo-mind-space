@@ -139,14 +139,17 @@ const Auth = () => {
       email: suEmail,
       phone: suPhone,
       password: suPassword,
-      profileType: suProfileType,
+      confirmPassword: suConfirmPassword,
+      professionalProfile: suProfessionalProfile,
       acceptTerms: suAcceptTerms,
+      acceptPrivacy: suAcceptPrivacy,
     });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
       return;
     }
     setLoading(true);
+    const nowIso = new Date().toISOString();
     const { error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
@@ -155,8 +158,11 @@ const Auth = () => {
         data: {
           full_name: parsed.data.fullName,
           phone: parsed.data.phone,
-          profile_type: parsed.data.profileType,
-          terms_accepted_at: new Date().toISOString(),
+          professional_profile: parsed.data.professionalProfile,
+          profile_type: "standard",
+          terms_accepted_at: nowIso,
+          privacy_accepted_at: nowIso,
+          registered_at: nowIso,
         },
       },
     });
@@ -172,8 +178,10 @@ const Auth = () => {
       }
       return;
     }
-    toast.success("Conta criada! Aguarde a aprovação da administradora para acessar o sistema.");
+    setSignupDone(true);
+    toast.success("Cadastro realizado. Seu acesso será liberado em breve.");
   };
+
 
   return (
     <div className="min-h-screen flex bg-gradient-soft">
