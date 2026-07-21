@@ -8,7 +8,7 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, MoreHorizontal, Bell,
-  ClipboardList,
+  ClipboardList, Play, HeartPulse, Target, AlertCircle, Wallet, NotebookPen,
 } from "lucide-react";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
@@ -36,7 +36,7 @@ import { ClinicalV2Block, EMOTIONS_V2 } from "@/components/app/ClinicalV2Block";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
@@ -146,6 +146,10 @@ const Agenda = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [sessions, setSessions] = useState<Session[]>([]);
+  const navigate = useNavigate();
+  const [prevPlanByPatient, setPrevPlanByPatient] = useState<Map<string, string>>(new Map());
+  const [sessionRecordIds, setSessionRecordIds] = useState<Set<string>>(new Set());
+  const [moodTodayPatients, setMoodTodayPatients] = useState<Set<string>>(new Set());
   const [patients, setPatients] = useState<Patient[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -582,6 +586,42 @@ const Agenda = () => {
   };
 
   useEffect(() => { if (user) { load(); loadPending(); } }, [user, currentMonth]);
+
+  // Enriquece a agenda com dados existentes: registros feitos, combinado da sessão anterior e humor de hoje.
+  useEffect(() => {
+    if (!user) return;
+    const now = new Date();
+    const from = new Date(now); from.setDate(from.getDate() - 90);
+    const to = new Date(now); to.setDate(to.getDate() + 45);
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+    (async () => {
+      const [recs, moods] = await Promise.all([
+        supabase.from("session_records")
+          .select("session_id, patient_id, session_date, next_session_plan")
+          .eq("user_id", user.id)
+          .gte("session_date", from.toISOString().slice(0, 10))
+          .lte("session_date", to.toISOString().slice(0, 10))
+          .order("session_date", { ascending: false }),
+        supabase.from("patient_progress")
+          .select("patient_id, recorded_at")
+          .eq("user_id", user.id)
+          .gte("recorded_at", todayStart.toISOString())
+          .lte("recorded_at", todayEnd.toISOString()),
+      ]);
+      const prev = new Map<string, string>();
+      const recIds = new Set<string>();
+      (recs.data ?? []).forEach((r: any) => {
+        if (r.session_id) recIds.add(r.session_id);
+        if (r.patient_id && r.next_session_plan && !prev.has(r.patient_id)) {
+          prev.set(r.patient_id, r.next_session_plan);
+        }
+      });
+      setPrevPlanByPatient(prev);
+      setSessionRecordIds(recIds);
+      setMoodTodayPatients(new Set((moods.data ?? []).map((m: any) => m.patient_id)));
+    })();
+  }, [user, sessions.length, currentMonth]);
 
   useAutoRefresh(() => { if (user) { load(true); loadPending(true); } }, { routePath: "/app/agenda" });
 
