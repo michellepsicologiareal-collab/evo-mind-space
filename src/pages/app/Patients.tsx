@@ -995,6 +995,7 @@ const Patients = () => {
               className="pl-9 w-full sm:w-[220px] rounded-full"
             />
           </div>
+          <RefreshButton />
           <Button onClick={openNew} variant="accent" className="rounded-full font-display font-semibold whitespace-nowrap">
             <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Novo paciente</span><span className="sm:hidden">Novo</span>
           </Button>

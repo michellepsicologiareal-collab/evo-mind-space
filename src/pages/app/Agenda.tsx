@@ -1591,6 +1591,7 @@ const Agenda = () => {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <RefreshButton />
           <Button
             type="button"
             variant={gcalConnected ? "outline" : "secondary"}

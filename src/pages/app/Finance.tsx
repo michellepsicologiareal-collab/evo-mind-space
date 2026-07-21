@@ -631,6 +631,7 @@ const Finance = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+          <RefreshButton />
           <Button
             variant="accent"
             onClick={() => sessionsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}

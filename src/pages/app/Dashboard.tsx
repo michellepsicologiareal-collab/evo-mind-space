@@ -648,6 +648,7 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <RefreshButton />
             <Button
               variant="outline"
               size="sm"
