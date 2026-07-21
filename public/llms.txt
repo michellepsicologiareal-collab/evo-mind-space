@@ -2,7 +2,7 @@
 
 > Sistema de gestão clínica para psicólogos que integra agenda, financeiro, evolução do paciente e raciocínio clínico em TCC em um só lugar.
 
-Psi Real é um software web (SaaS) brasileiro voltado a psicólogos clínicos. Centraliza prontuário, agenda com confirmação automática de sessões, controle financeiro, registros de sessão, formulação de caso em TCC, supervisão e materiais de autocuidado para o profissional.
+Psi Real é um software web (SaaS) brasileiro voltado a psicólogos clínicos. Centraliza prontuário, agenda com confirmação automática de sessões, controle financeiro, registros de sessão, formulação de caso em TCC e materiais de autocuidado para o profissional.
 
 ## Pages
 
