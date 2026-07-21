@@ -580,6 +580,7 @@ const RegistroSessao = () => {
     setDraftRestored(false);
     setForm({
       patient_id: r.patient_id,
+      session_id: (r as any).session_id ?? null,
       session_date: r.session_date,
       session_number: r.session_number?.toString() ?? "",
       modality: r.modality,
