@@ -1009,11 +1009,21 @@ const Patients = () => {
       {(attentionPatients.length > 0 || lowAdherencePatients.length > 0 || noNextSessionPatients.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
           {attentionPatients.length > 0 && (
-            <div style={{ background: C.goldSoft, borderLeft: `3px solid ${C.gold}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+            <button
+              type="button"
+              onClick={() => { setStatusFilter("active"); setFormulFilter("without"); setOnlyNoNext(false); }}
+              className="text-left w-full transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
+              style={{ background: C.goldSoft, borderLeft: `3px solid ${C.gold}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", border: "none", cursor: "pointer" }}
+              title="Ver pacientes sem formulação"
+              aria-label="Filtrar pacientes sem formulação"
+            >
               <div className="flex items-start gap-2.5">
                 <div className="shrink-0 flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(184,134,11,0.18)", color: C.gold, fontWeight: 700, fontSize: 13 }}>!</div>
                 <div className="min-w-0 flex-1">
-                  <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: "0.08em" }}>Atenção Clínica</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: "0.08em" }}>Atenção Clínica</p>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.gold }}>Ver lista →</span>
+                  </div>
                   <p className="mt-0.5" style={{ fontSize: 13, color: C.ink, lineHeight: 1.45 }}>
                     {attentionPatients.length} {attentionPatients.length === 1 ? "paciente sem formulação" : "pacientes sem formulação"} há mais de 30 dias.
                   </p>
@@ -1029,7 +1039,7 @@ const Patients = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </button>
           )}
           {lowAdherencePatients.length > 0 && (
             <div style={{ background: C.purpleSoft, borderLeft: `3px solid ${C.purple}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
