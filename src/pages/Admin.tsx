@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Loader2, Shield, Users, Mail, Calendar, Building2, ArrowLeft,
   ChevronDown, CheckCircle2, XCircle, Search, FileText, UserCheck,
-  Eye, Activity, Heart, ClipboardList, Stethoscope,
+  Eye, Activity, Heart, ClipboardList, Stethoscope, Trash2, RotateCcw, Ban, Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
