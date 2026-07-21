@@ -2070,6 +2070,57 @@ const Agenda = () => {
             </Select>
           </div>
 
+          {/* ── Resumo do dia ── */}
+          {(() => {
+            const now = new Date();
+            const dayStart = new Date(now); dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(now); dayEnd.setHours(23, 59, 59, 999);
+            const inToday = (d: Date) => d >= dayStart && d <= dayEnd;
+            const todayCount = sessions.filter((s) => {
+              const d = new Date(s.scheduled_at);
+              return inToday(d) && s.status !== "cancelled";
+            }).length;
+            const pendingRecords = sessions.filter((s) => {
+              const d = new Date(s.scheduled_at);
+              return (
+                s.session_type === "clinical" &&
+                !!s.patient_id &&
+                d < now &&
+                !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
+                !sessionRecordIds.has(s.id)
+              );
+            }).length;
+            const pendingPayments = sessions.filter((s) => (
+              s.session_type === "clinical" &&
+              !s.is_expense &&
+              s.payment_status === "pending" &&
+              !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
+              new Date(s.scheduled_at) < now
+            )).length;
+            const moodCount = moodTodayPatients.size;
+
+            const Item = ({ icon: Icon, label, value, tone }: { icon: any; label: string; value: number; tone: string }) => (
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 min-w-0">
+                <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", tone)}>
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[11px] text-muted-foreground leading-none">{label}</p>
+                  <p className="mt-1 font-display text-lg font-semibold text-foreground leading-none">{value}</p>
+                </div>
+              </div>
+            );
+
+            return (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
+                <Item icon={CalendarCheck} label="Sessões de hoje" value={todayCount} tone="bg-primary/10 text-primary" />
+                <Item icon={AlertCircle} label="Registros pendentes" value={pendingRecords} tone="bg-amber-100 text-amber-700" />
+                <Item icon={Wallet} label="Pagamentos pendentes" value={pendingPayments} tone="bg-emerald-100 text-emerald-700" />
+                <Item icon={HeartPulse} label="Humor respondido hoje" value={moodCount} tone="bg-lilac/40 text-foreground" />
+              </div>
+            );
+          })()}
+
           <Tabs value={viewTab} onValueChange={setViewTab}>
             <TabsList className="w-full sm:w-auto bg-transparent gap-1 p-0 mb-2">
               <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarDays className="h-3.5 w-3.5 mr-1.5 inline" /> Mês</TabsTrigger>
