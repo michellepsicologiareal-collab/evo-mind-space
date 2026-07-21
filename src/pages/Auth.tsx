@@ -153,11 +153,30 @@ const Auth = () => {
     setForgotSent(true);
   };
 
+  const checkAvailability = async (email: string, phoneDigits: string) => {
+    try {
+      const { data, error } = await (supabase as any).rpc("check_signup_availability", {
+        _email: email,
+        _phone_digits: phoneDigits,
+      });
+      if (error) return { emailExists: false, phoneExists: false };
+      const row = Array.isArray(data) ? data[0] : data;
+      return {
+        emailExists: Boolean(row?.email_exists),
+        phoneExists: Boolean(row?.phone_exists),
+      };
+    } catch {
+      return { emailExists: false, phoneExists: false };
+    }
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSuErrors({});
+    setSuPhoneWarning(null);
     const parsed = signUpSchema.safeParse({
       fullName: suName,
-      email: suEmail,
+      email: suEmail.trim(),
       phone: suPhone,
       password: suPassword,
       confirmPassword: suConfirmPassword,
@@ -166,10 +185,32 @@ const Auth = () => {
       acceptPrivacy: suAcceptPrivacy,
     });
     if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const key = String(issue.path[0] ?? "form");
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setSuErrors(fieldErrors);
       toast.error(parsed.error.issues[0].message);
       return;
     }
+
     setLoading(true);
+
+    // Duplicate checks (email = blocking; phone = warn only)
+    const availability = await checkAvailability(parsed.data.email, parsed.data.phone);
+    if (availability.emailExists) {
+      setSuErrors({ email: "Este e-mail já está cadastrado." });
+      setLoading(false);
+      toast.error("Este e-mail já está cadastrado.");
+      return;
+    }
+    if (availability.phoneExists && suPhoneWarning === null) {
+      setSuPhoneWarning("Este WhatsApp já está cadastrado. Se for número compartilhado da clínica, clique em “Criar minha conta” novamente para prosseguir.");
+      setLoading(false);
+      return;
+    }
+
     const nowIso = new Date().toISOString();
     const { error } = await supabase.auth.signUp({
       email: parsed.data.email,
@@ -190,8 +231,9 @@ const Auth = () => {
     setLoading(false);
     if (error) {
       const msg = error.message || "";
-      if (msg.includes("already")) {
-        toast.error("Este email já está cadastrado");
+      if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("registered")) {
+        setSuErrors({ email: "Este e-mail já está cadastrado." });
+        toast.error("Este e-mail já está cadastrado.");
       } else if (msg.toLowerCase().includes("termos")) {
         toast.error("Você precisa aceitar os Termos de Uso e a Política de Privacidade");
       } else {
@@ -202,6 +244,7 @@ const Auth = () => {
     setSignupDone(true);
     toast.success("Cadastro realizado. Seu acesso será liberado em breve.");
   };
+
 
 
   return (
