@@ -360,6 +360,7 @@ const Patients = () => {
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
   const [formulFilter, setFormulFilter] = useState<"all" | "with" | "without">("all");
+  const [onlyNoNext, setOnlyNoNext] = useState(false);
   const [tccPatient, setTccPatient] = useState<Patient | null>(null);
   const [padeksyPatient, setPadeksyPatient] = useState<Patient | null>(null);
   const [historyPatient, setHistoryPatient] = useState<Patient | null>(null);
@@ -910,6 +911,7 @@ const Patients = () => {
     .filter((p) =>
       formulFilter === "all" ? true : formulFilter === "with" ? !!formulationFilled[p.id] : !formulationFilled[p.id]
     )
+    .filter((p) => (onlyNoNext ? p.is_active && !sessionInfo[p.id]?.nextDate : true))
     .filter((p) =>
       p.full_name.toLowerCase().includes(search.toLowerCase()) ||
       (p.email ?? "").toLowerCase().includes(search.toLowerCase())
@@ -1007,11 +1009,21 @@ const Patients = () => {
       {(attentionPatients.length > 0 || lowAdherencePatients.length > 0 || noNextSessionPatients.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
           {attentionPatients.length > 0 && (
-            <div style={{ background: C.goldSoft, borderLeft: `3px solid ${C.gold}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+            <button
+              type="button"
+              onClick={() => { setStatusFilter("active"); setFormulFilter("without"); setOnlyNoNext(false); }}
+              className="text-left w-full transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
+              style={{ background: C.goldSoft, borderLeft: `3px solid ${C.gold}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", border: "none", cursor: "pointer" }}
+              title="Ver pacientes sem formulação"
+              aria-label="Filtrar pacientes sem formulação"
+            >
               <div className="flex items-start gap-2.5">
                 <div className="shrink-0 flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(184,134,11,0.18)", color: C.gold, fontWeight: 700, fontSize: 13 }}>!</div>
                 <div className="min-w-0 flex-1">
-                  <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: "0.08em" }}>Atenção Clínica</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: "0.08em" }}>Atenção Clínica</p>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.gold }}>Ver lista →</span>
+                  </div>
                   <p className="mt-0.5" style={{ fontSize: 13, color: C.ink, lineHeight: 1.45 }}>
                     {attentionPatients.length} {attentionPatients.length === 1 ? "paciente sem formulação" : "pacientes sem formulação"} há mais de 30 dias.
                   </p>
@@ -1027,7 +1039,7 @@ const Patients = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </button>
           )}
           {lowAdherencePatients.length > 0 && (
             <div style={{ background: C.purpleSoft, borderLeft: `3px solid ${C.purple}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
@@ -1055,13 +1067,23 @@ const Patients = () => {
             </div>
           )}
           {noNextSessionPatients.length > 0 && (
-            <div style={{ background: C.redSoft, borderLeft: `3px solid ${C.red}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+            <button
+              type="button"
+              onClick={() => { setStatusFilter("active"); setFormulFilter("all"); setOnlyNoNext(true); }}
+              className="text-left w-full transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
+              style={{ background: C.redSoft, borderLeft: `3px solid ${C.red}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", border: "none", cursor: "pointer" }}
+              title="Ver pacientes sem próxima sessão"
+              aria-label="Filtrar pacientes sem próxima sessão"
+            >
               <div className="flex items-start gap-2.5">
                 <div className="shrink-0 flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(192,57,43,0.16)", color: C.red }}>
                   <CalendarDays className="h-3 w-3" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p style={{ fontSize: 11, fontWeight: 700, color: C.red, textTransform: "uppercase", letterSpacing: "0.08em" }}>Sem próxima sessão</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p style={{ fontSize: 11, fontWeight: 700, color: C.red, textTransform: "uppercase", letterSpacing: "0.08em" }}>Sem próxima sessão</p>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: C.red }}>Ver lista →</span>
+                  </div>
                   <p className="mt-0.5" style={{ fontSize: 13, color: C.ink, lineHeight: 1.45 }}>
                     {noNextSessionPatients.length} {noNextSessionPatients.length === 1 ? "paciente ativo sem próxima sessão agendada" : "pacientes ativos sem próxima sessão agendada"}.
                   </p>
@@ -1077,7 +1099,7 @@ const Patients = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </button>
           )}
         </div>
       )}
@@ -1112,6 +1134,7 @@ const Patients = () => {
                 onClick={() => {
                   setStatusFilter(t.status as typeof statusFilter);
                   setFormulFilter(t.formul as typeof formulFilter);
+                  setOnlyNoNext(false);
                 }}
                 style={{
                   background: isActive ? C.card : "transparent",
@@ -1133,6 +1156,19 @@ const Patients = () => {
             );
           })}
         </div>
+        {onlyNoNext && (
+          <button
+            type="button"
+            onClick={() => setOnlyNoNext(false)}
+            className="inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
+            style={{ background: C.redSoft, color: C.red, border: `1px solid ${C.red}`, borderRadius: 40, fontSize: 12, fontWeight: 600, padding: "4px 10px" }}
+            title="Remover filtro"
+          >
+            <CalendarDays className="h-3 w-3" />
+            Sem próxima sessão
+            <X className="h-3 w-3" />
+          </button>
+        )}
       </div>
 
       {/* ─────────── PATIENT LIST ─────────── */}
@@ -1170,8 +1206,6 @@ const Patients = () => {
                   {[
                     { k: "avatar", label: "", w: 52 },
                     { k: "nome", label: "Paciente" },
-                    { k: "proxima", label: "Próxima sessão" },
-                    { k: "ultima", label: "Última sessão" },
                     { k: "modalidade", label: "Modalidade" },
                     { k: "plano", label: "Plano" },
                     { k: "status", label: "Status" },
@@ -1274,51 +1308,66 @@ const Patients = () => {
                       </td>
 
                       {/* Nome */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", minWidth: 200 }}>
+                      <td style={{ padding: "10px 12px", verticalAlign: "middle", minWidth: 220 }}>
                         <div className="min-w-0">
-                          <p className="truncate" style={{ fontWeight: 600, fontSize: 14, color: C.ink }}>
-                            {p.full_name}
-                          </p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="truncate" style={{ fontWeight: 600, fontSize: 14, color: C.ink, maxWidth: 200 }}>
+                              {p.full_name}
+                            </p>
+                            {!formulationFilled[p.id] && (
+                              <span
+                                className="inline-flex items-center gap-0.5"
+                                title="Sem formulação"
+                                aria-label="Sem formulação"
+                                style={{ background: C.goldSoft, color: C.gold, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 40, whiteSpace: "nowrap" }}
+                              >
+                                <ClipboardList className="h-2.5 w-2.5" />
+                                sem formulação
+                              </span>
+                            )}
+                            {p.is_active && !si?.nextDate && (
+                              <span
+                                className="inline-flex items-center gap-0.5"
+                                title="Sem próxima sessão agendada"
+                                aria-label="Sem próxima sessão"
+                                style={{ background: C.redSoft, color: C.red, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 40, whiteSpace: "nowrap" }}
+                              >
+                                <CalendarDays className="h-2.5 w-2.5" />
+                                sem próxima
+                              </span>
+                            )}
+                          </div>
                           {p.phone && (
                             <span className="inline-flex items-center gap-1 mt-0.5" style={{ fontSize: 11, color: C.muted }}>
                               <Phone className="h-3 w-3" />
                               <span className="truncate max-w-[160px]">{p.phone}</span>
                             </span>
                           )}
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5" style={{ fontSize: 11, color: C.muted }}>
+                            <span className="inline-flex items-center gap-1">
+                              <CalendarDays className="h-3 w-3" style={{ color: C.muted }} />
+                              Última: {si?.lastDate ? format(new Date(si.lastDate), "dd/MM", { locale: ptBR }) : "—"}
+                            </span>
+                            {si?.nextDate ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); navigate(`/app/agenda?patient=${p.id}`); }}
+                                className="inline-flex items-center gap-1"
+                                style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", color: C.ink, fontWeight: 600 }}
+                                title="Ver na agenda"
+                              >
+                                <CalendarDays className="h-3 w-3" style={{ color: C.purple }} />
+                                Próxima: {nextLabel}
+                              </button>
+                            ) : (
+                              <span className="inline-flex items-center gap-1">
+                                <CalendarDays className="h-3 w-3" />
+                                Próxima: —
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
 
-                      {/* Próxima sessão */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                        {si?.nextDate ? (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/app/agenda?patient=${p.id}`);
-                            }}
-                            className="inline-flex items-center gap-1"
-                            style={{ fontSize: 12, color: C.ink, background: "transparent", border: "none", padding: 0, cursor: "pointer" }}
-                            title="Ver na agenda"
-                          >
-                            <CalendarDays className="h-3 w-3" style={{ color: C.purple }} />
-                            {nextLabel}
-                          </button>
-                        ) : (
-                          <span style={{ fontSize: 12, color: C.muted }}>—</span>
-                        )}
-                      </td>
-
-                      {/* Última sessão */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                        {si?.lastDate ? (
-                          <span className="inline-flex items-center gap-1" style={{ fontSize: 12, color: C.ink }}>
-                            <CalendarDays className="h-3 w-3" style={{ color: C.muted }} />
-                            {format(new Date(si.lastDate), "dd/MM · HH:mm", { locale: ptBR })}
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: 12, color: C.muted }}>—</span>
-                        )}
-                      </td>
 
                       {/* Modalidade */}
                       <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
@@ -1411,6 +1460,16 @@ const Patients = () => {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={() => setSelectedPatient(p)}>
+                              <Eye className="h-4 w-4 mr-2" /> Abrir ficha do paciente
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/app/registro-sessao?patient=${p.id}`)}>
+                              <FileText className="h-4 w-4 mr-2" /> Registrar sessão
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/app/agenda?patient=${p.id}`)}>
+                              <CalendarDays className="h-4 w-4 mr-2" /> Agendar sessão
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => openEdit(p)}>
                               <IconPencil className="h-4 w-4 mr-2" /> Editar
                             </DropdownMenuItem>
@@ -1557,6 +1616,10 @@ const Patients = () => {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => setSelectedPatient(p)}><Eye className="h-4 w-4 mr-2" /> Abrir ficha do paciente</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/app/registro-sessao?patient=${p.id}`)}><FileText className="h-4 w-4 mr-2" /> Registrar sessão</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/app/agenda?patient=${p.id}`)}><CalendarDays className="h-4 w-4 mr-2" /> Agendar sessão</DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => openEdit(p)}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => toggleActive(p)}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
                         <DropdownMenuSeparator />
