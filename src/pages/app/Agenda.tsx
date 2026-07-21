@@ -1560,9 +1560,15 @@ const Agenda = () => {
         </div>
         {!compact && (
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            <span className={cn(PILL_BASE, isSupervisionCard ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
-              {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
-            </span>
+            {registroPendente ? (
+              <span className={cn(PILL_BASE, "bg-amber-100 text-amber-800 border-amber-300 animate-pulse")}>
+                <AlertCircle className="h-3 w-3 mr-1" /> Registro pendente
+              </span>
+            ) : (
+              <span className={cn(PILL_BASE, isSupervisionCard ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
+                {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
+              </span>
+            )}
             {(s as any).modality === "online" ? (
               <span className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
                 <Video className="h-2.5 w-2.5" /> Online
@@ -1608,6 +1614,49 @@ const Agenda = () => {
                 <ClipboardList className="h-3 w-3" /> Plano de tratamento
               </Link>
             )}
+          </div>
+        )}
+
+        {/* Contexto clínico rápido: combinado / próximo passo da sessão anterior */}
+        {!compact && prevPlan && (
+          <div className="mt-2 rounded-lg border border-primary/15 bg-primary/[0.04] px-2.5 py-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-primary/80 font-semibold flex items-center gap-1">
+              <Target className="h-3 w-3" /> Combinado / próximo passo
+            </p>
+            <p className="text-xs text-foreground/85 line-clamp-2 mt-0.5">{prevPlan}</p>
+          </div>
+        )}
+
+        {/* Ações rápidas */}
+        {!compact && !isSupervisionCard && s.patient_id && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {registroPendente ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}`); }}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500 text-white hover:bg-amber-600 transition-colors"
+              >
+                <NotebookPen className="h-3 w-3" /> Registrar sessão
+              </button>
+            ) : (
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}`); }}
+                className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-colors"
+              >
+                <Play className="h-3 w-3" /> Iniciar sessão
+              </button>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}
+              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-muted text-foreground/80 hover:bg-muted/70 border border-border transition-colors"
+            >
+              <User className="h-3 w-3" /> Abrir ficha
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); openEdit(s); }}
+              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-muted text-foreground/80 hover:bg-muted/70 border border-border transition-colors"
+            >
+              <RotateCcw className="h-3 w-3" /> Reagendar
+            </button>
           </div>
         )}
       </div>
