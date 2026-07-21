@@ -58,11 +58,13 @@ interface FormulationItem {
   summary: string;
   fullSummary: string;
   accent: string;
-  onView: () => void;
+  onEdit: () => void;
+  onView?: () => void; // custom viewer (ex.: RPD abre lista de registros); se ausente, usa Dialog local com fullSummary
 }
 
 const FormulationItemCard = ({ item: it }: { item: FormulationItem }) => {
   const [expanded, setExpanded] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const hasMore = !!it.fullSummary && it.fullSummary.length > it.summary.length;
   const toggle = () => { if (hasMore) setExpanded((v) => !v); };
@@ -78,6 +80,18 @@ const FormulationItemCard = ({ item: it }: { item: FormulationItem }) => {
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [expanded]);
+
+  const handleView = () => {
+    if (!it.filled) {
+      toast(`${it.label} ainda não foi preenchida. Clique no lápis para preencher.`);
+      return;
+    }
+    if (it.onView) {
+      it.onView();
+    } else {
+      setViewerOpen(true);
+    }
+  };
 
   return (
     <div ref={cardRef} className="rounded-xl p-3 flex items-start gap-3 min-w-0 w-full" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", borderLeft: `3px solid ${it.accent}` }}>
@@ -142,15 +156,51 @@ const FormulationItemCard = ({ item: it }: { item: FormulationItem }) => {
           </button>
         )}
       </div>
-      <button
-        onClick={it.onView}
-        title="Visualizar"
-        aria-label={`Visualizar ${it.label}`}
-        className="shrink-0 flex items-center justify-center transition-opacity hover:opacity-80"
-        style={{ width: 32, height: 32, borderRadius: 8, background: it.accent, color: "#fff" }}
-      >
-        <Eye className="h-4 w-4" />
-      </button>
+      <div className="shrink-0 flex flex-col gap-1.5">
+        <button
+          onClick={handleView}
+          title={it.filled ? "Visualizar" : "Ainda não preenchida"}
+          aria-label={`Visualizar ${it.label}`}
+          disabled={!it.filled}
+          className="flex items-center justify-center transition-opacity hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{ width: 32, height: 32, borderRadius: 8, background: it.accent, color: "#fff" }}
+        >
+          <Eye className="h-4 w-4" />
+        </button>
+        <button
+          onClick={it.onEdit}
+          title={it.filled ? "Editar" : "Preencher agora"}
+          aria-label={`${it.filled ? "Editar" : "Preencher"} ${it.label}`}
+          className="flex items-center justify-center transition-opacity hover:opacity-80"
+          style={{ width: 32, height: 32, borderRadius: 8, background: "hsl(var(--background))", color: it.accent, border: `1px solid ${it.accent}` }}
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
+      </div>
+
+      <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl" style={{ color: it.accent }}>{it.label}</DialogTitle>
+            <DialogDescription>Conteúdo preenchido nesta formulação (somente leitura).</DialogDescription>
+          </DialogHeader>
+          <div
+            className="whitespace-pre-wrap break-words rounded-xl p-4"
+            style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13.5, lineHeight: 1.6, color: "hsl(var(--foreground))", background: "hsl(var(--muted)/0.3)", border: "0.5px solid hsl(var(--border))" }}
+          >
+            {it.fullSummary || it.summary || <span className="italic text-muted-foreground">Sem conteúdo textual disponível.</span>}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setViewerOpen(false)}>Fechar</Button>
+            <Button
+              onClick={() => { setViewerOpen(false); it.onEdit(); }}
+              style={{ background: it.accent, color: "#fff" }}
+            >
+              <Pencil className="h-4 w-4 mr-2" /> Editar formulação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
