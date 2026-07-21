@@ -238,27 +238,82 @@ const RegistroSessao = () => {
   }, [user, form.patient_id, loadActivePlan]);
 
   const applyPlanningToForm = () => {
+    const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+    const containsLine = (haystack: string, needle: string) => {
+      const h = norm(haystack);
+      const n = norm(needle);
+      return n.length > 0 && h.includes(n);
+    };
+    let addedGoal = false;
+    let addedObs = false;
+    let addedTechniques = 0;
+    let addedTasks = 0;
+
     setForm((prev) => {
       const next = { ...prev, plan_id: activePlan.plan_id ?? prev.plan_id };
-      if (!prev.chief_complaint.trim() && activePlan.meta_descricao) {
-        next.chief_complaint = activePlan.meta_descricao;
+
+      // Objetivo terapêutico (meta) → queixa principal
+      if (activePlan.meta_descricao) {
+        if (!prev.chief_complaint.trim()) {
+          next.chief_complaint = activePlan.meta_descricao;
+          addedGoal = true;
+        } else if (!containsLine(prev.chief_complaint, activePlan.meta_descricao)) {
+          next.chief_complaint = `${prev.chief_complaint.trimEnd()}\n\nObjetivo do plano: ${activePlan.meta_descricao}`;
+          addedGoal = true;
+        }
       }
-      if (!prev.clinical_observations.trim() && activePlan.retomar) {
-        next.clinical_observations = activePlan.retomar;
+
+      // "Retomar da última sessão" → observações clínicas
+      if (activePlan.retomar) {
+        if (!prev.clinical_observations.trim()) {
+          next.clinical_observations = activePlan.retomar;
+          addedObs = true;
+        } else if (!containsLine(prev.clinical_observations, activePlan.retomar)) {
+          next.clinical_observations = `${prev.clinical_observations.trimEnd()}\n\nRetomar do plano: ${activePlan.retomar}`;
+          addedObs = true;
+        }
       }
+
+      // Técnicas planejadas → themes (dedup case-insensitive)
       if (activePlan.tecnicas.length) {
-        const merged = Array.from(new Set([...prev.themes, ...activePlan.tecnicas]));
-        next.themes = merged;
+        const existingNorm = new Set(prev.themes.map(norm));
+        const toAdd = activePlan.tecnicas.filter((t) => t.trim() && !existingNorm.has(norm(t)));
+        if (toAdd.length) {
+          next.themes = [...prev.themes, ...toAdd];
+          addedTechniques = toAdd.length;
+        }
       }
-      // Preenche combinados para a próxima sessão com tarefas pendentes se estiver vazio
-      if (!prev.next_session_plan.trim() && activePlan.pending_tasks.length) {
-        next.next_session_plan = activePlan.pending_tasks.map((t) => `• ${t.title}`).join("\n");
+
+      // Tarefas pendentes → plano da próxima sessão (append linhas ausentes)
+      if (activePlan.pending_tasks.length) {
+        const existing = prev.next_session_plan;
+        const linesToAdd = activePlan.pending_tasks
+          .filter((t) => t.title.trim() && !containsLine(existing, t.title))
+          .map((t) => `• ${t.title}`);
+        if (linesToAdd.length) {
+          next.next_session_plan = existing.trim()
+            ? `${existing.trimEnd()}\n${linesToAdd.join("\n")}`
+            : linesToAdd.join("\n");
+          addedTasks = linesToAdd.length;
+        }
       }
+
       return next;
     });
+
     setPlanLoadedIntoForm(true);
     setPlanPanelCollapsed(true);
-    toast.success("Plano carregado com sucesso");
+
+    const parts: string[] = [];
+    if (addedGoal) parts.push("objetivo");
+    if (addedObs) parts.push("retomada");
+    if (addedTechniques) parts.push(`${addedTechniques} técnica${addedTechniques > 1 ? "s" : ""}`);
+    if (addedTasks) parts.push(`${addedTasks} tarefa${addedTasks > 1 ? "s" : ""}`);
+    if (parts.length === 0) {
+      toast.info("Plano já está refletido no registro — nada foi duplicado");
+    } else {
+      toast.success(`Plano carregado: ${parts.join(", ")}`);
+    }
   };
 
 
