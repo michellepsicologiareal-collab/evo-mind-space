@@ -37,8 +37,8 @@ const InfoRow = ({ label, value }: { label: string; value: string | number | nul
 
 interface Props {
   patientId: string;
-  nextDate: Date | null | undefined;
-  lastDate: Date | null | undefined;
+  nextDate: Date | string | null | undefined;
+  lastDate: Date | string | null | undefined;
   totalRecords: number;
   onOpenFullHistory: () => void;
 }
