@@ -2,10 +2,9 @@ import { Check } from "lucide-react";
 
 const audience = [
   "Psicólogos clínicos — do iniciante ao avançado",
-  "Supervisoras que acompanham supervisionandos e precisam de registro estruturado",
   "Profissionais que querem escalar com organização e clareza financeira",
   "Quem trabalha muito mas não tem visibilidade real dos números",
-  "Psis que querem integrar clínica + gestão + supervisão sem complicação",
+  "Psis que querem integrar clínica e gestão sem complicação",
   "Profissionais comprometidos com as diretrizes do CRP e LGPD",
 ];
 
