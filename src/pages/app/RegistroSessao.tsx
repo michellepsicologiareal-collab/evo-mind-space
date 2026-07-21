@@ -506,9 +506,19 @@ const RegistroSessao = () => {
 
     toast.success(editingId ? "Registro atualizado." : "Registro salvo com sucesso.");
     clearDraft();
+    const keepPatient = form.patient_id;
+
+    // Fluxo com o Paciente no centro: se o Registro foi aberto a partir da
+    // ficha (?patient=…) ou da Agenda, volta automaticamente para a aba
+    // "Sessões" do paciente após salvar um NOVO registro.
+    const cameFromPatient = !!searchParams.get("patient");
+    if (cameFromPatient && !editingId && keepPatient) {
+      navigate(`/app/pacientes?patientId=${keepPatient}&tab=sessions`, { replace: true });
+      return;
+    }
+
     // Mantém o paciente selecionado — reset apenas dos campos do registro,
     // conforme fluxo integrado com o Plano de Tratamento.
-    const keepPatient = form.patient_id;
     setForm({ ...emptyForm, patient_id: keepPatient });
     setEditingId(null);
     await preserveScroll(() => loadRecords());
