@@ -1632,14 +1632,14 @@ const Agenda = () => {
           <div className="mt-2 flex flex-wrap gap-1.5">
             {registroPendente ? (
               <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}`); }}
+                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
                 className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500 text-white hover:bg-amber-600 transition-colors"
               >
                 <NotebookPen className="h-3 w-3" /> Registrar sessão
               </button>
             ) : (
               <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}`); }}
+                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
                 className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-colors"
               >
                 <Play className="h-3 w-3" /> Iniciar sessão
