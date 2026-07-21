@@ -480,6 +480,7 @@ const RegistroSessao = () => {
     const payload = {
       user_id: user.id,
       patient_id: form.patient_id,
+      session_id: form.session_id,
       session_date: form.session_date,
       session_number: form.session_number ? Number(form.session_number) : null,
       modality: form.modality,
