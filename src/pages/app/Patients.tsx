@@ -17,6 +17,7 @@ import { ChildAnamnesisForm } from "@/components/app/ChildAnamnesisForm";
 import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 import { PatientMoodChart } from "@/components/app/PatientMoodChart";
 import { PatientSessionRecords } from "@/components/app/PatientSessionRecords";
+import { PatientSessionsQuickView } from "@/components/app/PatientSessionsQuickView";
 import { CardSkeleton } from "@/components/app/Skeletons";
 import { PatientHomework } from "@/components/app/PatientHomework";
 import { IntegratedCaseSummary } from "@/components/app/IntegratedCaseSummary";
