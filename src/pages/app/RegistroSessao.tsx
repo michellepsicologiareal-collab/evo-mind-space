@@ -193,13 +193,15 @@ const RegistroSessao = () => {
       .maybeSingle();
 
     let sp: any = null;
+    let sp_id: string | null = null;
     if (ns?.id) {
       const { data } = await supabase
         .from("session_plans")
-        .select("objetivo, retomar, tecnicas, observacoes, meta_id")
+        .select("id, objetivo, retomar, tecnicas, observacoes, meta_id")
         .eq("session_id", ns.id)
         .maybeSingle();
       sp = data;
+      sp_id = data?.id ?? null;
     }
 
     let meta_descricao: string | null = null;
@@ -208,16 +210,30 @@ const RegistroSessao = () => {
       meta_descricao = m?.descricao ?? null;
     }
 
-    // 3. Objetivos terapêuticos ativos (todas metas do paciente)
-    let goals: { descricao: string }[] = [];
-    if (tp?.id) {
-      const { data: g } = await supabase
+    // Metas e técnicas do plano (para o select/chips do bloco Próxima sessão)
+    const [{ data: goalsFull }, { data: techsFull }] = await Promise.all([
+      supabase
         .from("treatment_goals")
-        .select("descricao, ordem")
+        .select("id, tipo, descricao, ordem")
         .eq("patient_id", patientId)
-        .order("ordem");
-      goals = (g as any[])?.map((x) => ({ descricao: x.descricao })) ?? [];
-    }
+        .order("ordem"),
+      supabase
+        .from("treatment_techniques")
+        .select("id, nome")
+        .eq("patient_id", patientId)
+        .order("created_at"),
+    ]);
+    const fullGoals = ((goalsFull as any[]) ?? [])
+      .filter((g) => g.descricao?.trim())
+      .map((g) => ({ id: g.id, tipo: g.tipo, descricao: g.descricao }));
+    const fullTechs = ((techsFull as any[]) ?? [])
+      .filter((t) => t.nome?.trim())
+      .map((t) => ({ id: t.id, nome: t.nome }));
+    setPlanGoals(fullGoals);
+    setPlanTechniques(fullTechs);
+
+    // Objetivos terapêuticos ativos (compat com painel resumido existente)
+    const goals: { descricao: string }[] = fullGoals.map((x) => ({ descricao: x.descricao }));
 
     // 4. Tarefas pendentes (homework com pelo menos uma action !done)
     const { data: tasksData } = await supabase
@@ -256,7 +272,35 @@ const RegistroSessao = () => {
       next_revision: rev ? { data: rev.data, descricao: rev.descricao } : null,
       loaded: true,
     });
+
+    setNextSessionId(ns?.id ?? null);
+
+    // Pré-preencher bloco "Próxima sessão" com o planejamento salvo,
+    // desde que o usuário ainda não tenha começado a digitar algo lá.
+    setForm((prev) => {
+      const hasUserInput =
+        prev.next_objetivo.trim() ||
+        prev.next_retomar.trim() ||
+        prev.next_observacoes.trim() ||
+        prev.next_tecnicas.length > 0 ||
+        prev.next_meta_id ||
+        prev.next_scheduled_at;
+      if (hasUserInput) return prev;
+      return {
+        ...prev,
+        next_objetivo: sp?.objetivo || "",
+        next_retomar: sp?.retomar || "",
+        next_observacoes: sp?.observacoes || "",
+        next_tecnicas: Array.isArray(sp?.tecnicas) ? sp.tecnicas : [],
+        next_meta_id: sp?.meta_id ?? null,
+        next_scheduled_at: ns?.scheduled_at
+          ? format(new Date(ns.scheduled_at), "yyyy-MM-dd'T'HH:mm")
+          : "",
+      };
+    });
   }, []);
+
+
 
   useEffect(() => {
     if (!user || !form.patient_id) {
