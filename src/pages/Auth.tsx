@@ -96,6 +96,8 @@ const Auth = () => {
   const [suAcceptTerms, setSuAcceptTerms] = useState(false);
   const [suAcceptPrivacy, setSuAcceptPrivacy] = useState(false);
   const [signupDone, setSignupDone] = useState(false);
+  const [suErrors, setSuErrors] = useState<Record<string, string>>({});
+  const [suPhoneWarning, setSuPhoneWarning] = useState<string | null>(null);
 
 
   useEffect(() => {
