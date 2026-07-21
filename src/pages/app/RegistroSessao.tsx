@@ -578,6 +578,16 @@ const RegistroSessao = () => {
     setEditingId(null);
   };
 
+  // Gera o texto sintético para next_session_plan (compatibilidade com Agenda/ficha)
+  const buildNextSessionSynthetic = (f: FormState): string => {
+    const parts: string[] = [];
+    if (f.next_objetivo.trim()) parts.push(`Objetivo: ${f.next_objetivo.trim()}`);
+    if (f.next_retomar.trim()) parts.push(`Retomar: ${f.next_retomar.trim()}`);
+    if (f.next_tecnicas.length) parts.push(`Técnicas: ${f.next_tecnicas.join(", ")}`);
+    if (f.next_observacoes.trim()) parts.push(`Obs: ${f.next_observacoes.trim()}`);
+    return parts.join("\n\n");
+  };
+
   const handleSave = async () => {
     if (!user) return;
     if (!form.patient_id) {
@@ -586,6 +596,12 @@ const RegistroSessao = () => {
     }
 
     setSaving(true);
+
+    // 1) Preserva compatibilidade: gera texto sintético para o campo antigo,
+    // apenas quando o bloco "Próxima sessão" foi preenchido.
+    const synthetic = buildNextSessionSynthetic(form);
+    const nextSessionPlanText = synthetic || form.next_session_plan;
+
     const payload = {
       user_id: user.id,
       patient_id: form.patient_id,
@@ -597,7 +613,7 @@ const RegistroSessao = () => {
       chief_complaint: form.chief_complaint,
       themes: form.themes,
       clinical_observations: form.clinical_observations,
-      next_session_plan: form.next_session_plan,
+      next_session_plan: nextSessionPlanText,
       engagement: form.engagement,
       risk_indicator: form.risk_indicator,
       private_notes: form.private_notes,
@@ -607,21 +623,120 @@ const RegistroSessao = () => {
     const { error } = editingId
       ? await supabase.from("session_records").update(payload).eq("id", editingId)
       : await supabase.from("session_records").insert(payload);
-    setSaving(false);
 
     if (error) {
+      setSaving(false);
       toast.error("Erro ao salvar registro.");
       console.error(error);
       return;
     }
 
+    // 2) Resolver / atualizar a sessão-alvo da "próxima sessão"
+    const uid = user.id;
+    const pid = form.patient_id;
+    let targetSessionId: string | null = nextSessionId;
+    try {
+      if (form.next_scheduled_at) {
+        const iso = new Date(form.next_scheduled_at).toISOString();
+        if (targetSessionId) {
+          await supabase
+            .from("sessions")
+            .update({ scheduled_at: iso, status: "scheduled" })
+            .eq("id", targetSessionId)
+            .eq("user_id", uid);
+        } else {
+          const { data: created } = await supabase
+            .from("sessions")
+            .insert({
+              user_id: uid,
+              patient_id: pid,
+              scheduled_at: iso,
+              duration_minutes: form.duration_minutes || 50,
+              modality: form.modality || "presencial",
+              status: "scheduled",
+              session_type: "clinical",
+            })
+            .select("id")
+            .single();
+          if (created?.id) targetSessionId = created.id;
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao atualizar Agenda:", e);
+      toast.error("Registro salvo, mas houve um problema ao atualizar a Agenda.");
+    }
+
+    // 3) Upsert do planejamento em session_plans (somente se houver algum campo preenchido)
+    const hasPlanContent =
+      form.next_objetivo.trim() ||
+      form.next_retomar.trim() ||
+      form.next_observacoes.trim() ||
+      form.next_tecnicas.length > 0 ||
+      form.next_meta_id;
+    if (hasPlanContent) {
+      try {
+        // Tenta encontrar um session_plan existente para reutilizar
+        let existingPlanId: string | null = null;
+        if (targetSessionId) {
+          const { data: sp } = await supabase
+            .from("session_plans")
+            .select("id")
+            .eq("session_id", targetSessionId)
+            .maybeSingle();
+          existingPlanId = sp?.id ?? null;
+        }
+        const spPayload = {
+          user_id: uid,
+          patient_id: pid,
+          session_id: targetSessionId,
+          objetivo: form.next_objetivo,
+          retomar: form.next_retomar,
+          tecnicas: form.next_tecnicas,
+          observacoes: form.next_observacoes,
+          meta_id: form.next_meta_id,
+        };
+        if (existingPlanId) {
+          await supabase.from("session_plans").update(spPayload).eq("id", existingPlanId);
+        } else {
+          await supabase.from("session_plans").insert(spPayload);
+        }
+      } catch (e) {
+        console.error("Erro ao salvar planejamento:", e);
+        toast.error("Registro salvo, mas houve um problema ao salvar o planejamento da próxima sessão.");
+      }
+    }
+
+    setSaving(false);
     toast.success(editingId ? "Registro atualizado." : "Registro salvo com sucesso.");
     clearDraft();
     const keepPatient = form.patient_id;
 
-    // Fluxo com o Paciente no centro: se o Registro foi aberto a partir da
-    // ficha (?patient=…) ou da Agenda, volta automaticamente para a aba
-    // "Sessões" do paciente após salvar um NOVO registro.
+    // 4) Verificar se existe Plano Terapêutico ativo — se não, abrir diálogo
+    const { data: activePlanRow } = await supabase
+      .from("treatment_plans")
+      .select("id, status")
+      .eq("patient_id", pid)
+      .eq("user_id", uid)
+      .eq("status", "ativo")
+      .maybeSingle();
+
+    if (!editingId && !activePlanRow) {
+      const metaDesc = form.next_meta_id
+        ? planGoals.find((g) => g.id === form.next_meta_id)?.descricao ?? null
+        : null;
+      setNoPlanContext({
+        patientId: pid,
+        objetivo: form.next_objetivo,
+        metaId: form.next_meta_id,
+        metaDescricao: metaDesc,
+        tecnicas: [...form.next_tecnicas],
+      });
+      setNoPlanDialogOpen(true);
+      // Mantém a página até a psicóloga decidir; ao fechar, seguimos o fluxo abaixo
+      return;
+    }
+
+    // 5) Fluxo padrão: voltar para a ficha se veio de lá
     const cameFromPatient = !!searchParams.get("patient");
     if (cameFromPatient && !editingId && keepPatient) {
       navigate(`/app/pacientes?patientId=${keepPatient}&tab=sessions`, { replace: true });
@@ -637,6 +752,86 @@ const RegistroSessao = () => {
       loadActivePlan(keepPatient, user.id);
     }
   };
+
+  // Cria um Plano Terapêutico Rascunho a partir do bloco "Próxima sessão"
+  const handleCreateDraftPlan = async () => {
+    if (!user || !noPlanContext) return;
+    setCreatingDraftPlan(true);
+    const uid = user.id;
+    const pid = noPlanContext.patientId;
+    try {
+      // 1) Cria o treatment_plan em rascunho
+      const { data: plan, error: planErr } = await supabase
+        .from("treatment_plans")
+        .insert({
+          user_id: uid,
+          patient_id: pid,
+          status: "rascunho",
+          conceitualizacao: noPlanContext.objetivo || "",
+        })
+        .select("id")
+        .single();
+      if (planErr) throw planErr;
+
+      // 2) Meta vinculada — se o usuário selecionou uma meta que já existe, mantemos.
+      //    Se selecionou uma que não existe (por qualquer motivo), cria uma nova.
+      if (noPlanContext.metaDescricao) {
+        const { data: existingGoal } = noPlanContext.metaId
+          ? await supabase.from("treatment_goals").select("id").eq("id", noPlanContext.metaId).maybeSingle()
+          : { data: null } as any;
+        if (!existingGoal) {
+          await supabase.from("treatment_goals").insert({
+            user_id: uid,
+            patient_id: pid,
+            tipo: "geral",
+            descricao: noPlanContext.metaDescricao,
+            ordem: 0,
+          });
+        }
+      }
+
+      // 3) Técnicas previstas
+      if (noPlanContext.tecnicas.length) {
+        const rows = noPlanContext.tecnicas
+          .filter((t) => t.trim())
+          .map((nome) => ({ user_id: uid, patient_id: pid, nome }));
+        if (rows.length) {
+          await supabase.from("treatment_techniques").insert(rows);
+        }
+      }
+
+      toast.success("Plano criado como Rascunho — revise antes de ativar.");
+      setNoPlanDialogOpen(false);
+      setNoPlanContext(null);
+      navigate(`/app/plano-tratamento?patient=${pid}`);
+    } catch (e) {
+      console.error("Erro ao criar plano:", e);
+      toast.error("Não foi possível criar o Plano Terapêutico.");
+    } finally {
+      setCreatingDraftPlan(false);
+    }
+  };
+
+  // "Depois" — apenas segue o fluxo padrão pós-salvamento
+  const handleSkipDraftPlan = async () => {
+    setNoPlanDialogOpen(false);
+    const keepPatient = noPlanContext?.patientId ?? form.patient_id;
+    setNoPlanContext(null);
+
+    const cameFromPatient = !!searchParams.get("patient");
+    if (cameFromPatient && keepPatient) {
+      navigate(`/app/pacientes?patientId=${keepPatient}&tab=sessions`, { replace: true });
+      return;
+    }
+
+    setForm({ ...emptyForm, patient_id: keepPatient });
+    setEditingId(null);
+    await preserveScroll(() => loadRecords());
+    if (keepPatient && user) {
+      loadActivePlan(keepPatient, user.id);
+    }
+  };
+
 
   const handlePolish = async () => {
     const hasText = form.chief_complaint || form.clinical_observations || form.next_session_plan || form.private_notes;
