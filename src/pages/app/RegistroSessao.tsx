@@ -910,13 +910,14 @@ const RegistroSessao = () => {
                   </p>
                 </div>
               </div>
-              <Link
-                to={`/app/plano-tratamento?patient=${form.patient_id}`}
+              <button
+                type="button"
+                onClick={() => setPlanDrawerOpen(true)}
                 className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white"
                 style={{ backgroundColor: "#534AB7" }}
               >
-                Criar plano <ExternalLink className="h-3.5 w-3.5" />
-              </Link>
+                Criar plano <PencilIcon className="h-3.5 w-3.5" />
+              </button>
             </div>
           ) : (
             <>
