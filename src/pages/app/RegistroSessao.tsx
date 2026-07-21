@@ -1538,21 +1538,139 @@ const RegistroSessao = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Combinados para a próxima sessão</Label>
-              <Textarea
-                rows={2}
-                placeholder="Tarefas, exercícios ou combinados com o paciente..."
-                value={form.next_session_plan}
-                onChange={(e) =>
-                  setForm({ ...form, next_session_plan: e.target.value })
-                }
-                style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
-              />
-            </div>
+            {/* Planejamento da próxima sessão — fonte única do planejamento */}
+            <section
+              id="proxima-sessao"
+              ref={proximaSessaoRef as any}
+              className="mt-2 rounded-lg border p-4 space-y-4"
+              style={{ borderColor: "#E5E7EB", background: "#FAF8FF" }}
+            >
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4" style={{ color: "#534AB7" }} />
+                <h3 className="font-display text-sm font-semibold" style={{ color: "#1A1A2E" }}>
+                  Próxima sessão — planejamento
+                </h3>
+              </div>
+              <p className="text-xs text-muted-foreground -mt-2">
+                O planejamento salvo aqui aparece na Ficha do Paciente (aba Plano Terapêutico).
+              </p>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Data e horário da próxima sessão</Label>
+                  <Input
+                    type="datetime-local"
+                    value={form.next_scheduled_at}
+                    onChange={(e) => setForm({ ...form, next_scheduled_at: e.target.value })}
+                    style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+                  />
+                  <p className="text-[11px] text-muted-foreground">Deixe em branco para não agendar agora.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Meta vinculada</Label>
+                  <Select
+                    value={form.next_meta_id ?? "none"}
+                    onValueChange={(v) => setForm({ ...form, next_meta_id: v === "none" ? null : v })}
+                  >
+                    <SelectTrigger style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13 }}>
+                      <SelectValue placeholder="Sem meta vinculada" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sem meta vinculada</SelectItem>
+                      {planGoals.map((g) => (
+                        <SelectItem key={g.id} value={g.id}>{g.descricao}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Objetivo da próxima sessão</Label>
+                <Textarea
+                  rows={2}
+                  placeholder="O que se pretende trabalhar no próximo encontro..."
+                  value={form.next_objetivo}
+                  onChange={(e) => setForm({ ...form, next_objetivo: e.target.value })}
+                  style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Retomar / Continuidade</Label>
+                <Textarea
+                  rows={2}
+                  placeholder="Assuntos, tarefas ou combinados a serem retomados..."
+                  value={form.next_retomar}
+                  onChange={(e) => setForm({ ...form, next_retomar: e.target.value })}
+                  style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Técnicas previstas</Label>
+                {planTechniques.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {planTechniques.map((t) => {
+                      const active = form.next_tecnicas.includes(t.nome);
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() =>
+                            setForm({
+                              ...form,
+                              next_tecnicas: active
+                                ? form.next_tecnicas.filter((n) => n !== t.nome)
+                                : [...form.next_tecnicas, t.nome],
+                            })
+                          }
+                          className={cn(
+                            "text-xs px-3 py-1 rounded-full border transition-colors",
+                            active ? "bg-[#534AB7] text-white border-[#534AB7]" : "bg-white text-[#1A1A2E] border-[#E5E7EB] hover:border-[#534AB7]"
+                          )}
+                        >
+                          {t.nome}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Nenhuma técnica cadastrada no Plano Terapêutico deste paciente.
+                  </p>
+                )}
+                <Input
+                  placeholder="Adicionar técnica avulsa (Enter para confirmar)"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const v = (e.target as HTMLInputElement).value.trim();
+                      if (v && !form.next_tecnicas.includes(v)) {
+                        setForm({ ...form, next_tecnicas: [...form.next_tecnicas, v] });
+                      }
+                      (e.target as HTMLInputElement).value = "";
+                    }
+                  }}
+                  style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Observações do planejamento</Label>
+                <Textarea
+                  rows={2}
+                  placeholder="Notas adicionais sobre a próxima sessão..."
+                  value={form.next_observacoes}
+                  onChange={(e) => setForm({ ...form, next_observacoes: e.target.value })}
+                  style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+                />
+              </div>
+            </section>
           </>
         )}
       </section>
+
 
 
       {/* ── Seção 3: Avaliação do Terapeuta ── */}
