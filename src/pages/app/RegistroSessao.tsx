@@ -2170,7 +2170,47 @@ const RegistroSessao = () => {
       </section>
 
       <div className="pb-8" />
+
+      <Dialog open={noPlanDialogOpen} onOpenChange={(o) => { if (!o) handleSkipDraftPlan(); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Este paciente ainda não tem Plano Terapêutico ativo</DialogTitle>
+            <DialogDescription>
+              Deseja criar um rascunho agora usando o objetivo, a meta e as técnicas registradas
+              no planejamento da próxima sessão? Você poderá revisar e ativar depois.
+            </DialogDescription>
+          </DialogHeader>
+          {noPlanContext && (
+            <div className="rounded-md border p-3 space-y-1 text-sm bg-muted/30">
+              {noPlanContext.objetivo && (
+                <div><span className="font-medium">Objetivo:</span> {noPlanContext.objetivo}</div>
+              )}
+              {noPlanContext.metaDescricao && (
+                <div><span className="font-medium">Meta:</span> {noPlanContext.metaDescricao}</div>
+              )}
+              {noPlanContext.tecnicas.length > 0 && (
+                <div><span className="font-medium">Técnicas:</span> {noPlanContext.tecnicas.join(", ")}</div>
+              )}
+              {!noPlanContext.objetivo && !noPlanContext.metaDescricao && noPlanContext.tecnicas.length === 0 && (
+                <div className="text-muted-foreground">
+                  Nenhum campo estruturado preenchido — o rascunho será criado em branco.
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={handleSkipDraftPlan} disabled={creatingDraftPlan}>
+              Depois
+            </Button>
+            <Button variant="accent" onClick={handleCreateDraftPlan} disabled={creatingDraftPlan}>
+              {creatingDraftPlan ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Criar rascunho agora
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 };
 
