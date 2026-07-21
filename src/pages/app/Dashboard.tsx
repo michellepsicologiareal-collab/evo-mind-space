@@ -73,6 +73,44 @@ type TodayItem = {
 
 const WEEK_DAY_LABELS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
+/* ─── Chart typography tokens (padrão único para todos os gráficos) ─── */
+const CHART_FONT_FAMILY = "Inter, system-ui, sans-serif";
+const CHART_TICK_STYLE = {
+  fontSize: 11,
+  fontFamily: CHART_FONT_FAMILY,
+  fontWeight: 500,
+  letterSpacing: 0.2,
+  fill: "hsl(var(--muted-foreground))",
+} as const;
+const CHART_LEGEND_STYLE = {
+  fontSize: 12,
+  fontFamily: CHART_FONT_FAMILY,
+  fontWeight: 500,
+  letterSpacing: 0.2,
+  paddingTop: 8,
+} as const;
+const CHART_TOOLTIP_CONTENT_STYLE = {
+  background: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: 12,
+  fontSize: 12,
+  fontFamily: CHART_FONT_FAMILY,
+  padding: "8px 10px",
+} as const;
+const CHART_TOOLTIP_LABEL_STYLE = {
+  fontFamily: CHART_FONT_FAMILY,
+  fontWeight: 600,
+  fontSize: 12,
+  marginBottom: 4,
+} as const;
+const CHART_TOOLTIP_ITEM_STYLE = {
+  fontFamily: CHART_FONT_FAMILY,
+  fontWeight: 500,
+  fontSize: 12,
+  lineHeight: "18px",
+} as const;
+
+
 /* ─── UI helpers ─── */
 function greeting() {
   const h = new Date().getHours();
@@ -798,29 +836,31 @@ export default function Dashboard() {
                 Sem dados nos últimos {trendRange} meses.
               </div>
             ) : (
-              <div className="h-72 w-full" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
+              <div className="h-72 w-full" style={{ fontFamily: CHART_FONT_FAMILY }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={trendData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                  <ComposedChart data={trendData} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))", fontFamily: "Inter, system-ui, sans-serif" }} />
-                    <YAxis yAxisId="left" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))", fontFamily: "Inter, system-ui, sans-serif" }} allowDecimals={false} />
+                    <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={CHART_TICK_STYLE} />
+                    <YAxis yAxisId="left" tickLine={false} axisLine={false} tickMargin={8} tick={CHART_TICK_STYLE} allowDecimals={false} />
                     <YAxis
                       yAxisId="right"
                       orientation="right"
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))", fontFamily: "Inter, system-ui, sans-serif" }}
+                      tickMargin={8}
+                      tick={CHART_TICK_STYLE}
                       tickFormatter={(v: number) => fmtBRL(v)}
                     />
                     <RTooltip
-                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12, fontFamily: "Inter, system-ui, sans-serif" }}
-                      labelStyle={{ fontFamily: "Inter, system-ui, sans-serif", fontWeight: 600 }}
-                      itemStyle={{ fontFamily: "Inter, system-ui, sans-serif" }}
+                      contentStyle={CHART_TOOLTIP_CONTENT_STYLE}
+                      labelStyle={CHART_TOOLTIP_LABEL_STYLE}
+                      itemStyle={CHART_TOOLTIP_ITEM_STYLE}
                       formatter={(value: any, name: string) =>
                         name === "Sessões" ? [String(value), name] : [fmtBRL2(Number(value)), name]
                       }
                     />
-                    <Legend wrapperStyle={{ fontSize: 12, fontFamily: "Inter, system-ui, sans-serif" }} />
+                    <Legend wrapperStyle={CHART_LEGEND_STYLE} iconType="circle" iconSize={8} />
+
                     <Bar yAxisId="left" dataKey="sessions" name="Sessões" fill="hsl(var(--primary) / 0.35)" radius={[6, 6, 0, 0]} />
                     {trendRevenueView === "total" ? (
                       <Line yAxisId="right" type="monotone" dataKey="revenue" name="Faturamento" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
