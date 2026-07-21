@@ -83,7 +83,7 @@ export const PatientSessionsQuickView = ({
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [recentRes, firstRes] = await Promise.all([
+      const [recentRes, firstRecordRes, firstSessionRes, patientRes] = await Promise.all([
         supabase
           .from("session_records")
           .select("id, session_date, session_number, modality, duration_minutes, chief_complaint, themes, clinical_observations, next_session_plan, engagement, risk_indicator, private_notes, created_at")
@@ -96,13 +96,34 @@ export const PatientSessionsQuickView = ({
           .eq("patient_id", patientId)
           .order("session_date", { ascending: true })
           .limit(1),
+        supabase
+          .from("sessions")
+          .select("scheduled_at")
+          .eq("patient_id", patientId)
+          .order("scheduled_at", { ascending: true })
+          .limit(1),
+        supabase
+          .from("patients")
+          .select("treatment_start_date, created_at")
+          .eq("id", patientId)
+          .maybeSingle(),
       ]);
       setRecords((recentRes.data as RecordRow[]) ?? []);
-      const first = firstRes.data?.[0]?.session_date;
+
+      // Data de início do acompanhamento: usa treatment_start_date se definido,
+      // senão a primeira sessão (registro ou agendada), senão o cadastro do paciente.
+      const candidates: Array<string | null | undefined> = [
+        patientRes.data?.treatment_start_date,
+        firstRecordRes.data?.[0]?.session_date,
+        firstSessionRes.data?.[0]?.scheduled_at,
+        patientRes.data?.created_at,
+      ];
+      const first = candidates.find((v) => !!v) ?? null;
       setStartDate(first ? new Date(first) : null);
       setLoading(false);
     })();
   }, [patientId]);
+
 
   return (
     <div className="space-y-5">
