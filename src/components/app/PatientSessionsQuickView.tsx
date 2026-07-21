@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { format, differenceInDays, differenceInMonths, differenceInYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { FileText, Loader2, ChevronRight, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { FileText, Loader2, ChevronRight, AlertTriangle, ChevronDown, ChevronUp, Calendar, Target, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -28,13 +28,6 @@ const RISK_LABEL: Record<string, string> = {
   high: "Risco alto",
 };
 
-const InfoRow = ({ label, value }: { label: string; value: string | number | null | undefined }) => (
-  <div className="flex items-center justify-between py-1.5 text-xs">
-    <span className="text-muted-foreground">{label}</span>
-    <span className="font-medium text-foreground">{value ?? "—"}</span>
-  </div>
-);
-
 interface Props {
   patientId: string;
   nextDate: Date | string | null | undefined;
@@ -42,6 +35,37 @@ interface Props {
   totalRecords: number;
   onOpenFullHistory: () => void;
 }
+
+const fmtDate = (d: Date | string | null | undefined) =>
+  d ? format(typeof d === "string" ? new Date(d) : d, "dd/MM/yyyy", { locale: ptBR }) : "—";
+
+const followUpLabel = (start: Date | null): string => {
+  if (!start) return "—";
+  const now = new Date();
+  const days = differenceInDays(now, start);
+  if (days < 0) return "—";
+  if (days < 7) return days <= 1 ? "menos de 1 dia" : `${days} dias`;
+  if (days < 30) {
+    const weeks = Math.floor(days / 7);
+    return weeks === 1 ? "1 semana" : `${weeks} semanas`;
+  }
+  const months = differenceInMonths(now, start);
+  if (months < 12) return months === 1 ? "1 mês" : `${months} meses`;
+  const years = differenceInYears(now, start);
+  const remMonths = months - years * 12;
+  if (remMonths === 0) return years === 1 ? "1 ano" : `${years} anos`;
+  return `${years} ${years === 1 ? "ano" : "anos"} e ${remMonths} ${remMonths === 1 ? "mês" : "meses"}`;
+};
+
+const SummaryTile = ({ label, value }: { label: string; value: string }) => (
+  <div
+    className="rounded-xl p-3"
+    style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}
+  >
+    <p className="text-[11px] text-muted-foreground">{label}</p>
+    <p className="mt-1 text-sm font-display font-semibold text-foreground leading-tight">{value}</p>
+  </div>
+);
 
 export const PatientSessionsQuickView = ({
   patientId,
@@ -54,40 +78,46 @@ export const PatientSessionsQuickView = ({
   const [records, setRecords] = useState<RecordRow[]>([]);
   const [detail, setDetail] = useState<RecordRow | null>(null);
   const [expandedObs, setExpandedObs] = useState<Record<string, boolean>>({});
+  const [startDate, setStartDate] = useState<Date | null>(null);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("session_records")
-        .select("id, session_date, session_number, modality, duration_minutes, chief_complaint, themes, clinical_observations, next_session_plan, engagement, risk_indicator, private_notes, created_at")
-        .eq("patient_id", patientId)
-        .order("session_date", { ascending: false })
-        .limit(5);
-      setRecords((data as RecordRow[]) ?? []);
+      const [recentRes, firstRes] = await Promise.all([
+        supabase
+          .from("session_records")
+          .select("id, session_date, session_number, modality, duration_minutes, chief_complaint, themes, clinical_observations, next_session_plan, engagement, risk_indicator, private_notes, created_at")
+          .eq("patient_id", patientId)
+          .order("session_date", { ascending: false })
+          .limit(3),
+        supabase
+          .from("session_records")
+          .select("session_date")
+          .eq("patient_id", patientId)
+          .order("session_date", { ascending: true })
+          .limit(1),
+      ]);
+      setRecords((recentRes.data as RecordRow[]) ?? []);
+      const first = firstRes.data?.[0]?.session_date;
+      setStartDate(first ? new Date(first) : null);
       setLoading(false);
     })();
   }, [patientId]);
 
-  const fmt = (d: Date | string | null | undefined) =>
-    d ? format(typeof d === "string" ? new Date(d) : d, "dd/MM/yyyy", { locale: ptBR }) : "—";
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Indicadores */}
-      <div
-        className="rounded-xl p-3"
-        style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}
-      >
-        <InfoRow label="Próxima sessão" value={fmt(nextDate)} />
-        <InfoRow label="Última sessão" value={fmt(lastDate)} />
-        <InfoRow label="Total de registros" value={totalRecords > 0 ? totalRecords : "—"} />
+      <div className="grid grid-cols-2 gap-2">
+        <SummaryTile label="Próxima sessão" value={fmtDate(nextDate)} />
+        <SummaryTile label="Última sessão" value={fmtDate(lastDate)} />
+        <SummaryTile label="Sessões registradas" value={totalRecords > 0 ? String(totalRecords) : "—"} />
+        <SummaryTile label="Em acompanhamento há" value={followUpLabel(startDate)} />
       </div>
 
       {/* Últimos registros de sessão */}
       <div>
-        <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">
-          Últimos registros de sessão
+        <h3 className="text-sm font-display font-semibold text-foreground mb-3">
+          Últimos registros
         </h3>
 
         {loading ? (
@@ -100,32 +130,29 @@ export const PatientSessionsQuickView = ({
             <p className="mt-2 text-xs text-muted-foreground">Nenhum registro de sessão ainda.</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {records.map((r) => {
               const themes = (r.themes ?? []).filter(Boolean).slice(0, 3);
               const obs = r.clinical_observations ?? "";
-              const isLong = obs.length > 180;
               const isExpanded = !!expandedObs[r.id];
-              const obsPreview = isLong && !isExpanded ? obs.slice(0, 180).trimEnd() + "…" : obs;
+              // "3 linhas" ≈ ~200 chars; use both length heuristic e line-clamp visual
+              const isLong = obs.length > 200 || obs.split("\n").length > 3;
 
               return (
                 <div
                   key={r.id}
-                  className="rounded-xl p-3 space-y-2"
+                  className="rounded-xl p-4 space-y-4"
                   style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}
                 >
+                  {/* 📅 Data */}
                   <div className="flex items-start justify-between gap-2 flex-wrap">
-                    <div>
-                      <p className="text-sm font-display font-semibold text-foreground">
-                        {format(new Date(r.session_date), "dd 'de' MMM, yyyy", { locale: ptBR })}
-                        {r.session_number != null && (
-                          <span className="ml-2 text-[10px] text-muted-foreground">#{r.session_number}</span>
-                        )}
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-primary" />
+                      <p className="text-base font-display font-semibold text-foreground leading-tight">
+                        {format(new Date(r.session_date), "dd 'de' MMMM, yyyy", { locale: ptBR })}
                       </p>
-                      {r.chief_complaint && (
-                        <p className="text-xs text-foreground/80 mt-0.5 line-clamp-2">
-                          {r.chief_complaint}
-                        </p>
+                      {r.session_number != null && (
+                        <span className="text-[11px] text-muted-foreground">#{r.session_number}</span>
                       )}
                     </div>
                     {r.risk_indicator && r.risk_indicator !== "none" && RISK_LABEL[r.risk_indicator] && (
@@ -135,16 +162,51 @@ export const PatientSessionsQuickView = ({
                     )}
                   </div>
 
+                  {/* 📝 O que aconteceu nesta sessão */}
+                  {(obs || r.chief_complaint) && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">O que aconteceu nesta sessão</p>
+                      {r.chief_complaint && !obs && (
+                        <p className="text-sm text-foreground/90 whitespace-pre-line line-clamp-3">
+                          {r.chief_complaint}
+                        </p>
+                      )}
+                      {obs && (
+                        <>
+                          <p
+                            className={`text-sm text-foreground/90 whitespace-pre-line ${isExpanded ? "" : "line-clamp-3"}`}
+                          >
+                            {obs}
+                          </p>
+                          {isLong && (
+                            <button
+                              type="button"
+                              onClick={() => setExpandedObs((s) => ({ ...s, [r.id]: !isExpanded }))}
+                              className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                            >
+                              {isExpanded ? (
+                                <><ChevronUp className="h-3 w-3" /> Mostrar menos</>
+                              ) : (
+                                <><ChevronDown className="h-3 w-3" /> Mostrar mais</>
+                              )}
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 🎯 Técnicas / Temas */}
                   {themes.length > 0 && (
                     <div>
-                      <p className="text-[10px] uppercase text-muted-foreground mb-1">
-                        Técnicas / temas
+                      <p className="text-xs font-medium text-muted-foreground mb-1.5 inline-flex items-center gap-1">
+                        <Target className="h-3 w-3" /> Técnicas / temas
                       </p>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1.5">
                         {themes.map((t) => (
                           <span
                             key={t}
-                            className="text-[10px] px-2 py-0.5 rounded-full bg-lilac/40 text-foreground"
+                            className="text-[11px] px-2.5 py-0.5 rounded-full bg-lilac/40 text-foreground"
                           >
                             {t}
                           </span>
@@ -153,38 +215,15 @@ export const PatientSessionsQuickView = ({
                     </div>
                   )}
 
+                  {/* 📌 Combinado / Tarefa */}
                   {r.next_session_plan && (
                     <div>
-                      <p className="text-[10px] uppercase text-muted-foreground">
-                        Combinado / tarefa
+                      <p className="text-xs font-medium text-muted-foreground mb-1 inline-flex items-center gap-1">
+                        <ClipboardList className="h-3 w-3" /> Combinado / tarefa
                       </p>
-                      <p className="text-xs text-foreground whitespace-pre-line line-clamp-3">
+                      <p className="text-sm text-foreground whitespace-pre-line line-clamp-3">
                         {r.next_session_plan}
                       </p>
-                    </div>
-                  )}
-
-                  {obs && (
-                    <div>
-                      <p className="text-[10px] uppercase text-muted-foreground">Resumo clínico</p>
-                      <p className="text-xs text-foreground whitespace-pre-line">{obsPreview}</p>
-                      {isLong && (
-                        <button
-                          type="button"
-                          onClick={() => setExpandedObs((s) => ({ ...s, [r.id]: !isExpanded }))}
-                          className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline"
-                        >
-                          {isExpanded ? (
-                            <>
-                              <ChevronUp className="h-3 w-3" /> Mostrar menos
-                            </>
-                          ) : (
-                            <>
-                              <ChevronDown className="h-3 w-3" /> Mostrar mais
-                            </>
-                          )}
-                        </button>
-                      )}
                     </div>
                   )}
 
@@ -192,9 +231,9 @@ export const PatientSessionsQuickView = ({
                     <button
                       type="button"
                       onClick={() => setDetail(r)}
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                     >
-                      Ver registro completo <ChevronRight className="h-3 w-3" />
+                      Abrir registro <ChevronRight className="h-3 w-3" />
                     </button>
                   </div>
                 </div>
