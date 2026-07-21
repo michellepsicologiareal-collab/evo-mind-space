@@ -523,8 +523,14 @@ const Admin = () => {
                         ))}
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <Button size="sm" variant="accent" onClick={() => handleApproval(u.id, true)} className="gap-1 text-xs">
+                    <Button size="sm" variant="accent" onClick={() => runAction(u.id, "approve")} className="gap-1 text-xs">
                       <CheckCircle2 className="h-3.5 w-3.5" /> Aprovar
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => runAction(u.id, "reject")} className="gap-1 text-xs text-destructive hover:text-destructive">
+                      <Ban className="h-3.5 w-3.5" /> Reprovar
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => confirmDelete(u)} className="text-destructive hover:text-destructive hover:bg-destructive/10" title="Excluir cadastro">
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
