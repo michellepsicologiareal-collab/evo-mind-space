@@ -993,7 +993,39 @@ const RegistroSessao = () => {
                         <p className="whitespace-pre-wrap text-foreground mt-0.5">{activePlan.retomar}</p>
                       </div>
                     )}
-                    {!activePlan.objetivo && !activePlan.meta_descricao && !activePlan.tecnicas.length && !activePlan.retomar && (
+                    {activePlan.goals.length > 0 && (
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                          Objetivos terapêuticos ativos
+                        </span>
+                        <ul className="mt-1 space-y-0.5 text-sm text-foreground list-disc list-inside">
+                          {activePlan.goals.slice(0, 5).map((g, i) => (
+                            <li key={i} className="whitespace-pre-wrap">{g.descricao}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {activePlan.pending_tasks.length > 0 && (
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] uppercase font-semibold flex items-center gap-1" style={{ color: "#534AB7" }}>
+                          <CheckSquare className="h-3 w-3" /> Tarefas pendentes ({activePlan.pending_tasks.length})
+                        </span>
+                        <ul className="mt-1 space-y-0.5 text-sm text-foreground list-disc list-inside">
+                          {activePlan.pending_tasks.slice(0, 5).map((t) => (
+                            <li key={t.id} className="whitespace-pre-wrap">{t.title}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {activePlan.next_revision && (
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                          Próxima revisão · {format(new Date(activePlan.next_revision.data), "dd/MM/yyyy")}
+                        </span>
+                        <p className="whitespace-pre-wrap text-foreground mt-0.5 line-clamp-2">{activePlan.next_revision.descricao}</p>
+                      </div>
+                    )}
+                    {!activePlan.objetivo && !activePlan.meta_descricao && !activePlan.tecnicas.length && !activePlan.retomar && !activePlan.goals.length && !activePlan.pending_tasks.length && (
                       <p className="sm:col-span-2 text-sm text-muted-foreground italic">
                         Plano ativo sem planejamento para a próxima sessão.
                       </p>
@@ -1009,13 +1041,14 @@ const RegistroSessao = () => {
                     >
                       Carregar no registro
                     </button>
-                    <Link
-                      to={`/app/plano-tratamento?patient=${form.patient_id}`}
-                      className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm bg-transparent hover:bg-white/60 transition-colors"
+                    <button
+                      type="button"
+                      onClick={() => setPlanDrawerOpen(true)}
+                      className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm bg-white hover:bg-white/80 transition-colors"
                       style={{ border: "1px solid #534AB7", color: "#534AB7", fontWeight: 600 }}
                     >
-                      Ver plano completo <ExternalLink className="h-3.5 w-3.5" />
-                    </Link>
+                      <PencilIcon className="h-3.5 w-3.5" /> Atualizar Plano
+                    </button>
                   </div>
                 </>
               )}
@@ -1023,6 +1056,39 @@ const RegistroSessao = () => {
           )}
         </section>
       )}
+
+      {/* Drawer com o Plano de Tratamento — atualizar sem sair da tela */}
+      <Sheet
+        open={planDrawerOpen}
+        onOpenChange={(o) => {
+          setPlanDrawerOpen(o);
+          if (!o && form.patient_id && user) {
+            loadActivePlan(form.patient_id, user.id);
+          }
+        }}
+      >
+        <SheetContent side="right" className="w-full sm:max-w-4xl p-0 flex flex-col">
+          <SheetHeader className="px-5 py-3 border-b shrink-0">
+            <SheetTitle className="flex items-center gap-2">
+              <Target className="h-4 w-4" style={{ color: "#534AB7" }} />
+              Plano de Tratamento
+            </SheetTitle>
+            <SheetDescription className="text-xs">
+              Edite o plano sem sair do Registro de Sessão. Ao fechar, o card acima será atualizado.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-hidden">
+            {form.patient_id && (
+              <iframe
+                title="Plano de Tratamento"
+                src={`/app/plano-tratamento?patient=${form.patient_id}&embed=1`}
+                className="w-full h-full border-0"
+              />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
 
 
 
