@@ -304,18 +304,57 @@ const Auth = () => {
             </TabsContent>
 
             <TabsContent value="signup" className="mt-6">
+              {signupDone ? (
+                <div className="text-center space-y-4 py-6">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sage/10">
+                    <ArrowLeft className="h-6 w-6 text-sage rotate-180" />
+                  </div>
+                  <h3 className="font-display text-lg font-semibold">Cadastro realizado</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Seu acesso será liberado em breve.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Você receberá uma confirmação assim que a liberação for feita.
+                  </p>
+                </div>
+              ) : (
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="su-name">Nome completo</Label>
                   <Input id="su-name" required value={suName} onChange={(e) => setSuName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="su-email">Email</Label>
+                  <Label htmlFor="su-email">E-mail</Label>
                   <Input id="su-email" type="email" autoComplete="email" required value={suEmail} onChange={(e) => setSuEmail(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="su-phone">Telefone (WhatsApp)</Label>
+                  <Label htmlFor="su-phone">Celular / WhatsApp</Label>
                   <Input id="su-phone" type="tel" autoComplete="tel" required placeholder="(11) 99999-9999" value={suPhone} onChange={(e) => setSuPhone(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Perfil profissional</Label>
+                  <RadioGroup
+                    value={suProfessionalProfile}
+                    onValueChange={(v) => setSuProfessionalProfile(v as "psychologist" | "student" | "other")}
+                    className="grid gap-2"
+                  >
+                    {[
+                      { id: "pp-psychologist", value: "psychologist", label: "Psicólogo(a)" },
+                      { id: "pp-student", value: "student", label: "Estudante de Psicologia" },
+                      { id: "pp-other", value: "other", label: "Outro" },
+                    ].map((opt) => (
+                      <label
+                        key={opt.id}
+                        htmlFor={opt.id}
+                        className={`flex items-center gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
+                          suProfessionalProfile === opt.value ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"
+                        }`}
+                      >
+                        <RadioGroupItem id={opt.id} value={opt.value} />
+                        <span className="text-sm font-medium">{opt.label}</span>
+                      </label>
+                    ))}
+                  </RadioGroup>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="su-password">Senha</Label>
@@ -323,73 +362,47 @@ const Auth = () => {
                   <p className="text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Tipo de perfil</Label>
-                  <RadioGroup
-                    value={suProfileType}
-                    onValueChange={(v) => setSuProfileType(v as "standard" | "supervisee")}
-                    className="grid sm:grid-cols-2 gap-2"
-                  >
-                    <label
-                      htmlFor="pt-standard"
-                      className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
-                        suProfileType === "standard" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"
-                      }`}
-                    >
-                      <RadioGroupItem id="pt-standard" value="standard" className="mt-0.5" />
-                      <span className="text-sm">
-                        <span className="font-medium block">Padrão</span>
-                        <span className="text-xs text-muted-foreground">Psicólogo autônomo, gerencia seus próprios pacientes.</span>
-                      </span>
-                    </label>
-                    <label
-                      htmlFor="pt-supervisee"
-                      className={`flex items-start gap-3 rounded-xl border p-3 cursor-pointer transition-colors ${
-                        suProfileType === "supervisee" ? "border-primary bg-primary/5" : "border-border hover:bg-secondary/50"
-                      }`}
-                    >
-                      <RadioGroupItem id="pt-supervisee" value="supervisee" className="mt-0.5" />
-                      <span className="text-sm">
-                        <span className="font-medium block">Membro Parceiro / Supervisionando</span>
-                        <span className="text-xs text-muted-foreground">Pode vincular um supervisor que verá seus dados em modo leitura.</span>
-                      </span>
-                    </label>
-                  </RadioGroup>
+                  <Label htmlFor="su-confirm-password">Confirmar senha</Label>
+                  <Input id="su-confirm-password" type="password" autoComplete="new-password" required value={suConfirmPassword} onChange={(e) => setSuConfirmPassword(e.target.value)} />
                 </div>
-                <div className="flex items-start gap-3 rounded-xl border border-border bg-secondary/30 p-3">
-                  <Checkbox
-                    id="su-terms"
-                    checked={suAcceptTerms}
-                    onCheckedChange={(v) => setSuAcceptTerms(v === true)}
-                    className="mt-0.5"
-                  />
-                  <Label htmlFor="su-terms" className="text-sm font-normal leading-relaxed cursor-pointer">
-                    Li e aceito os{" "}
-                    <a
-                      href="/termos.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-accent underline hover:no-underline"
-                    >
-                      Termos de Uso
-                    </a>{" "}
-                    e a{" "}
-                    <a
-                      href="/privacidade.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-accent underline hover:no-underline"
-                    >
-                      Política de Privacidade
-                    </a>
-                    .
-                  </Label>
+                <div className="space-y-2">
+                  <div className="flex items-start gap-3 rounded-xl border border-border bg-secondary/30 p-3">
+                    <Checkbox
+                      id="su-terms"
+                      checked={suAcceptTerms}
+                      onCheckedChange={(v) => setSuAcceptTerms(v === true)}
+                      className="mt-0.5"
+                    />
+                    <Label htmlFor="su-terms" className="text-sm font-normal leading-relaxed cursor-pointer">
+                      Li e aceito os{" "}
+                      <a href="/termos.html" target="_blank" rel="noopener noreferrer" className="text-accent underline hover:no-underline">
+                        Termos de Uso
+                      </a>.
+                    </Label>
+                  </div>
+                  <div className="flex items-start gap-3 rounded-xl border border-border bg-secondary/30 p-3">
+                    <Checkbox
+                      id="su-privacy"
+                      checked={suAcceptPrivacy}
+                      onCheckedChange={(v) => setSuAcceptPrivacy(v === true)}
+                      className="mt-0.5"
+                    />
+                    <Label htmlFor="su-privacy" className="text-sm font-normal leading-relaxed cursor-pointer">
+                      Li e aceito a{" "}
+                      <a href="/privacidade.html" target="_blank" rel="noopener noreferrer" className="text-accent underline hover:no-underline">
+                        Política de Privacidade
+                      </a>.
+                    </Label>
+                  </div>
                 </div>
-                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading || !suAcceptTerms}>
+                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading || !suAcceptTerms || !suAcceptPrivacy}>
                   {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Criar conta
+                  Criar minha conta
                 </Button>
               </form>
+              )}
             </TabsContent>
+
           </Tabs>
         </div>
       </main>
