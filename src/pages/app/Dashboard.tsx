@@ -689,7 +689,7 @@ export default function Dashboard() {
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   {k.label}
                 </p>
-                <p className="mt-3 font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
+                <p className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
                   {k.value}
                 </p>
                 <p className="mt-2 text-xs text-muted-foreground">{k.hint}</p>
@@ -775,7 +775,7 @@ export default function Dashboard() {
                   <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Sessões nos últimos {trendRange} meses</p>
                     <div className="mt-1 flex items-baseline justify-between gap-2">
-                      <p className="font-display text-2xl font-semibold">{curSessions}</p>
+                      <p className="text-2xl font-semibold">{curSessions}</p>
                       <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", toneCls(sPct))}>{fmtPct(sPct)}</span>
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-1">vs {prevSessions} nos {trendRange} meses anteriores</p>
@@ -783,7 +783,7 @@ export default function Dashboard() {
                   <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Faturamento realizado nos últimos {trendRange} meses</p>
                     <div className="mt-1 flex items-baseline justify-between gap-2">
-                      <p className="font-display text-2xl font-semibold">{fmtBRL(curRevenue)}</p>
+                      <p className="text-2xl font-semibold">{fmtBRL(curRevenue)}</p>
                       <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", toneCls(rPct))}>{fmtPct(rPct)}</span>
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-1">vs {fmtBRL(prevRevenue)} nos {trendRange} meses anteriores</p>
@@ -1039,19 +1039,19 @@ export default function Dashboard() {
               <div className="grid flex-1 gap-4 sm:grid-cols-3">
                 <div>
                   <p className="text-xs text-muted-foreground">Recebido · {selectedMonthLabel}</p>
-                  <p className="mt-1 font-display text-lg font-semibold text-emerald-700 dark:text-emerald-400">
+                  <p className="mt-1 text-lg font-semibold text-emerald-700 dark:text-emerald-400">
                     {fmtBRL(finRecebido)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">A receber</p>
-                  <p className="mt-1 font-display text-lg font-semibold text-foreground">
+                  <p className="mt-1 text-lg font-semibold text-foreground">
                     {fmtBRL(finAReceber)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Em atraso</p>
-                  <p className="mt-1 font-display text-lg font-semibold text-amber-700 dark:text-amber-400">
+                  <p className="mt-1 text-lg font-semibold text-amber-700 dark:text-amber-400">
                     {finAtrasoCount} {finAtrasoCount === 1 ? "pagamento" : "pagamentos"}
                   </p>
                 </div>
