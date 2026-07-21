@@ -911,6 +911,7 @@ const Patients = () => {
     .filter((p) =>
       formulFilter === "all" ? true : formulFilter === "with" ? !!formulationFilled[p.id] : !formulationFilled[p.id]
     )
+    .filter((p) => (onlyNoNext ? p.is_active && !sessionInfo[p.id]?.nextDate : true))
     .filter((p) =>
       p.full_name.toLowerCase().includes(search.toLowerCase()) ||
       (p.email ?? "").toLowerCase().includes(search.toLowerCase())
