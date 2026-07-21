@@ -57,7 +57,7 @@ const allNavItems: NavItem[] = [
   { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap, premium: true, visibleTo: ["supervisor"], hideFromNav: true },
   { to: "/app/biblioteca", label: "Biblioteca", icon: BookOpen, hideFromNav: true },
   { to: "/app/autocuidado", label: "Autocuidado", icon: Flower2, hideFromNav: true },
-  { to: "/app/contrato-modelo", label: "Termo", icon: FileText, hideFromNav: true },
+  
 ];
 
 /* ── Admin-only items (shown in a separate section) ── */
