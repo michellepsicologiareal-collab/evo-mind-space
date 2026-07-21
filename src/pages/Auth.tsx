@@ -72,8 +72,12 @@ const Auth = () => {
   const [suEmail, setSuEmail] = useState("");
   const [suPhone, setSuPhone] = useState("");
   const [suPassword, setSuPassword] = useState("");
-  const [suProfileType, setSuProfileType] = useState<"standard" | "supervisee">("standard");
+  const [suConfirmPassword, setSuConfirmPassword] = useState("");
+  const [suProfessionalProfile, setSuProfessionalProfile] = useState<"psychologist" | "student" | "other">("psychologist");
   const [suAcceptTerms, setSuAcceptTerms] = useState(false);
+  const [suAcceptPrivacy, setSuAcceptPrivacy] = useState(false);
+  const [signupDone, setSignupDone] = useState(false);
+
 
   useEffect(() => {
     if (searchParams.get("forceLogin") === "1") {
