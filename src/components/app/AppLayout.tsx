@@ -43,6 +43,7 @@ const allNavItems: NavItem[] = [
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
   { to: "/app/financeiro", label: "Financeiro", icon: Wallet, premium: true },
   { to: "/app/anamneses", label: "Anamneses", icon: Baby },
+  { to: "/app/contrato-modelo", label: "Termo de Consentimento", icon: FileText },
   { to: "/app/contratos", label: "Contratos", icon: FileCheck },
   { to: "/app/perfil", label: "Configurações", icon: Settings },
 
@@ -56,7 +57,7 @@ const allNavItems: NavItem[] = [
   { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap, premium: true, visibleTo: ["supervisor"], hideFromNav: true },
   { to: "/app/biblioteca", label: "Biblioteca", icon: BookOpen, hideFromNav: true },
   { to: "/app/autocuidado", label: "Autocuidado", icon: Flower2, hideFromNav: true },
-  { to: "/app/contrato-modelo", label: "Termo", icon: FileText, hideFromNav: true },
+  
 ];
 
 /* ── Admin-only items (shown in a separate section) ── */
@@ -88,6 +89,7 @@ export const AppLayout = () => {
   }, [navItems]);
   const mobileSecondaryOrder = [
     "/app/anamneses",
+    "/app/contrato-modelo",
     "/app/contratos",
     "/app/perfil",
   ];
@@ -167,7 +169,7 @@ export const AppLayout = () => {
           {(() => {
             const sections: { label: string; routes: string[] }[] = [
               { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda"] },
-              { label: "GESTÃO", routes: ["/app/financeiro", "/app/anamneses", "/app/contratos"] },
+              { label: "GESTÃO", routes: ["/app/financeiro", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
               { label: "CONFIGURAÇÕES", routes: ["/app/perfil"] },
             ];
             return sections.map((sec) => {
