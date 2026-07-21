@@ -1460,6 +1460,16 @@ const Patients = () => {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={() => setSelectedPatient(p)}>
+                              <Eye className="h-4 w-4 mr-2" /> Abrir ficha do paciente
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/app/registro-sessao?patient=${p.id}`)}>
+                              <FileText className="h-4 w-4 mr-2" /> Registrar sessão
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/app/agenda?patient=${p.id}`)}>
+                              <CalendarDays className="h-4 w-4 mr-2" /> Agendar sessão
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => openEdit(p)}>
                               <IconPencil className="h-4 w-4 mr-2" /> Editar
                             </DropdownMenuItem>
