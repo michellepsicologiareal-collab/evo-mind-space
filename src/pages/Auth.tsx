@@ -375,10 +375,38 @@ const Auth = () => {
                   </div>
                   <h3 className="font-display text-lg font-semibold">Cadastro realizado</h3>
                   <p className="text-sm text-muted-foreground">
-                    Seu acesso será liberado em breve.
+                    Enviamos um e-mail de confirmação para <strong>{suEmail}</strong>. Clique no link para confirmar seu endereço.
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Você receberá uma confirmação assim que a liberação for feita.
+                    Após confirmar, seu acesso ainda passará por aprovação manual.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={resending || resendCooldown > 0}
+                    onClick={async () => {
+                      if (!suEmail) return;
+                      setResending(true);
+                      const { error } = await supabase.auth.resend({
+                        type: "signup",
+                        email: suEmail,
+                        options: { emailRedirectTo: `${window.location.origin}/app` },
+                      });
+                      setResending(false);
+                      if (error) {
+                        toast.error(error.message || "Não foi possível reenviar o e-mail.");
+                        return;
+                      }
+                      toast.success("E-mail de confirmação reenviado.");
+                      setResendCooldown(60);
+                    }}
+                  >
+                    {resending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                    {resendCooldown > 0 ? `Reenviar em ${resendCooldown}s` : "Reenviar e-mail de confirmação"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Não encontrou? Verifique também a caixa de spam ou promoções.
                   </p>
                 </div>
               ) : (
