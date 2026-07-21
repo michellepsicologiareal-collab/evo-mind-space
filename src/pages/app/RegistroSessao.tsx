@@ -449,9 +449,15 @@ const RegistroSessao = () => {
 
     toast.success(editingId ? "Registro atualizado." : "Registro salvo com sucesso.");
     clearDraft();
-    setForm({ ...emptyForm });
+    // Mantém o paciente selecionado — reset apenas dos campos do registro,
+    // conforme fluxo integrado com o Plano de Tratamento.
+    const keepPatient = form.patient_id;
+    setForm({ ...emptyForm, patient_id: keepPatient });
     setEditingId(null);
     await preserveScroll(() => loadRecords());
+    if (keepPatient && user) {
+      loadActivePlan(keepPatient, user.id);
+    }
   };
 
   const handlePolish = async () => {
