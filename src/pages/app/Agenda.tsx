@@ -1567,13 +1567,12 @@ const Agenda = () => {
         </div>
         {!compact && (
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            {registroPendente ? (
+            <span className={cn(PILL_BASE, isSupervisionCard ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
+              {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
+            </span>
+            {registroPendente && (
               <span className={cn(PILL_BASE, "bg-amber-100 text-amber-800 border-amber-300 animate-pulse")}>
                 <AlertCircle className="h-3 w-3 mr-1" /> Registro pendente
-              </span>
-            ) : (
-              <span className={cn(PILL_BASE, isSupervisionCard ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
-                {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
               </span>
             )}
             {(s as any).modality === "online" ? (
