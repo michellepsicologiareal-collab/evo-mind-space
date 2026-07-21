@@ -13,11 +13,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 
+const onlyDigits = (v: string) => v.replace(/\D/g, "");
+const maskPhoneBR = (v: string) => {
+  const d = onlyDigits(v).slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+};
+
 const signUpSchema = z
   .object({
     fullName: z.string().trim().min(2, "Nome muito curto").max(100),
-    email: z.string().trim().email("Email inválido").max(255),
-    phone: z.string().trim().min(8, "WhatsApp inválido").max(20),
+    email: z
+      .string()
+      .trim()
+      .min(1, "Informe o e-mail")
+      .email("E-mail inválido. Verifique o formato (ex.: nome@dominio.com).")
+      .max(255, "E-mail muito longo (máx. 255)"),
+    phone: z
+      .string()
+      .transform((v) => onlyDigits(v))
+      .refine((v) => v.length >= 10 && v.length <= 11, {
+        message: "WhatsApp inválido. Informe DDD + número (10 ou 11 dígitos).",
+      }),
     password: z.string().min(8, "Mínimo 8 caracteres").max(72),
     confirmPassword: z.string().min(1, "Confirme a senha").max(72),
     professionalProfile: z.enum(["psychologist", "student", "other"], {
