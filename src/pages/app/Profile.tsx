@@ -37,7 +37,7 @@ const profileSchema = z.object({
 type ProfileType = "standard" | "supervisee" | "supervisor";
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, isApproved } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
