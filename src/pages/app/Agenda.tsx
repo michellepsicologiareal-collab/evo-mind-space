@@ -149,6 +149,8 @@ const Agenda = () => {
   const navigate = useNavigate();
   const [prevPlanByPatient, setPrevPlanByPatient] = useState<Map<string, string>>(new Map());
   const [sessionRecordIds, setSessionRecordIds] = useState<Set<string>>(new Set());
+  // Chaves compostas "patient_id|yyyy-MM-dd" para registros salvos sem session_id
+  const [sessionRecordKeys, setSessionRecordKeys] = useState<Set<string>>(new Set());
   const [moodTodayPatients, setMoodTodayPatients] = useState<Set<string>>(new Set());
   const [patients, setPatients] = useState<Patient[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -611,14 +613,17 @@ const Agenda = () => {
       ]);
       const prev = new Map<string, string>();
       const recIds = new Set<string>();
+      const recKeys = new Set<string>();
       (recs.data ?? []).forEach((r: any) => {
         if (r.session_id) recIds.add(r.session_id);
+        if (r.patient_id && r.session_date) recKeys.add(`${r.patient_id}|${r.session_date}`);
         if (r.patient_id && r.next_session_plan && !prev.has(r.patient_id)) {
           prev.set(r.patient_id, r.next_session_plan);
         }
       });
       setPrevPlanByPatient(prev);
       setSessionRecordIds(recIds);
+      setSessionRecordKeys(recKeys);
       setMoodTodayPatients(new Set((moods.data ?? []).map((m: any) => m.patient_id)));
     })();
   }, [user, sessions.length, currentMonth]);
@@ -1419,7 +1424,9 @@ const Agenda = () => {
     const scheduledMs = new Date(s.scheduled_at).getTime();
     const isPast = scheduledMs < nowMs;
     const isActiveStatus = !["cancelled", "no_show", "rescheduled"].includes(s.status);
-    const registroPendente = !isSupervisionCard && isPast && isActiveStatus && !sessionRecordIds.has(s.id) && !!s.patient_id;
+    const sessionDateKey = s.patient_id ? `${s.patient_id}|${new Date(s.scheduled_at).toISOString().slice(0, 10)}` : "";
+    const hasRecord = sessionRecordIds.has(s.id) || (sessionDateKey && sessionRecordKeys.has(sessionDateKey));
+    const registroPendente = !isSupervisionCard && isPast && isActiveStatus && !hasRecord && !!s.patient_id;
     const prevPlan = !isSupervisionCard && s.patient_id ? prevPlanByPatient.get(s.patient_id) : undefined;
 
 
@@ -1632,14 +1639,14 @@ const Agenda = () => {
           <div className="mt-2 flex flex-wrap gap-1.5">
             {registroPendente ? (
               <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}`); }}
+                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
                 className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500 text-white hover:bg-amber-600 transition-colors"
               >
                 <NotebookPen className="h-3 w-3" /> Registrar sessão
               </button>
             ) : (
               <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}`); }}
+                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
                 className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-colors"
               >
                 <Play className="h-3 w-3" /> Iniciar sessão
@@ -2082,12 +2089,14 @@ const Agenda = () => {
             }).length;
             const pendingRecords = sessions.filter((s) => {
               const d = new Date(s.scheduled_at);
+              const key = s.patient_id ? `${s.patient_id}|${d.toISOString().slice(0, 10)}` : "";
               return (
                 s.session_type === "clinical" &&
                 !!s.patient_id &&
                 d < now &&
                 !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
-                !sessionRecordIds.has(s.id)
+                !sessionRecordIds.has(s.id) &&
+                !(key && sessionRecordKeys.has(key))
               );
             }).length;
             const pendingPayments = sessions.filter((s) => (

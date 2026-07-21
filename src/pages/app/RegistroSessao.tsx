@@ -72,6 +72,7 @@ interface SavedRecord {
 
 const emptyForm = {
   patient_id: "",
+  session_id: null as string | null,
   session_date: format(new Date(), "yyyy-MM-dd"),
   session_number: "",
   modality: "presencial",
@@ -428,6 +429,38 @@ const RegistroSessao = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Prefill from URL (?patient=…&session=…) — quando aberto pela Agenda ou ficha
+  useEffect(() => {
+    if (!user || editingId) return;
+    const patientParam = searchParams.get("patient");
+    const sessionParam = searchParams.get("session");
+    if (!patientParam && !sessionParam) return;
+    (async () => {
+      let prefill: Partial<FormState> = {};
+      if (patientParam) prefill.patient_id = patientParam;
+      if (sessionParam) {
+        const { data: sess } = await supabase
+          .from("sessions")
+          .select("id, patient_id, scheduled_at, duration_minutes, modality")
+          .eq("id", sessionParam)
+          .maybeSingle();
+        if (sess) {
+          prefill.session_id = sess.id;
+          prefill.patient_id = sess.patient_id ?? prefill.patient_id ?? "";
+          prefill.session_date = format(new Date(sess.scheduled_at), "yyyy-MM-dd");
+          if (sess.duration_minutes) prefill.duration_minutes = sess.duration_minutes;
+          if (sess.modality) prefill.modality = sess.modality;
+        }
+      }
+      setForm((prev) => {
+        // Não sobrescreve rascunho já preenchido
+        if (hasMeaningfulData(prev) && prev.patient_id) return prev;
+        return { ...prev, ...prefill };
+      });
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, editingId]);
+
   const loadRecords = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
@@ -479,6 +512,7 @@ const RegistroSessao = () => {
     const payload = {
       user_id: user.id,
       patient_id: form.patient_id,
+      session_id: form.session_id,
       session_date: form.session_date,
       session_number: form.session_number ? Number(form.session_number) : null,
       modality: form.modality,
@@ -579,6 +613,7 @@ const RegistroSessao = () => {
     setDraftRestored(false);
     setForm({
       patient_id: r.patient_id,
+      session_id: (r as any).session_id ?? null,
       session_date: r.session_date,
       session_number: r.session_number?.toString() ?? "",
       modality: r.modality,
