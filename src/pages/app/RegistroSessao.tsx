@@ -101,6 +101,8 @@ function hasMeaningfulData(f: FormState): boolean {
 
 const RegistroSessao = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
