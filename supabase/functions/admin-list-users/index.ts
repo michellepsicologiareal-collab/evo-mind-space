@@ -103,6 +103,9 @@ Deno.serve(async (req) => {
         specialty: profile?.specialty ?? null,
         patient_count: patientMap.get(u.id) ?? 0,
         session_count: sessionMap.get(u.id) ?? 0,
+        rejected_at: profile?.rejected_at ?? null,
+        trial_ends_at: profile?.trial_ends_at ?? null,
+        subscription_ends_at: profile?.subscription_ends_at ?? null,
       };
     });
 
