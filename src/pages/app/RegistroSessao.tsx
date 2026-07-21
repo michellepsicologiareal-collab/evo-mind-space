@@ -318,6 +318,17 @@ const RegistroSessao = () => {
     setPlanLoadedIntoForm(false);
   }, [user, form.patient_id, loadActivePlan]);
 
+  // Se veio de "Editar planejamento" no Plano Terapêutico, rola até o bloco
+  useEffect(() => {
+    if (searchParams.get("focus") !== "proxima-sessao") return;
+    if (!form.patient_id) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById("proxima-sessao");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchParams, form.patient_id]);
+
   const applyPlanningToForm = () => {
     const norm = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
     const containsLine = (haystack: string, needle: string) => {
