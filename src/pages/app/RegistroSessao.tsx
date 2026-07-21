@@ -623,6 +623,7 @@ const RegistroSessao = () => {
     setEditingId(r.id);
     setDraftRestored(false);
     setForm({
+      ...emptyForm,
       patient_id: r.patient_id,
       session_id: (r as any).session_id ?? null,
       session_date: r.session_date,
