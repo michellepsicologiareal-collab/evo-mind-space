@@ -79,6 +79,7 @@ const PlanoTratamento = () => {
   const { user } = useAuth();
   const uid = user?.id;
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const queryPatient = searchParams.get("patient");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [patientId, setPatientId] = useState<string>(queryPatient || "");
