@@ -1887,24 +1887,13 @@ const Patients = () => {
 
                     {/* Sessões */}
                     <TabsContent value="sessions" className="mt-4 space-y-4">
-                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
-                        <InfoRow label="Próxima sessão" value={fmtDate(info?.nextDate)} />
-                        <InfoRow label="Última sessão" value={fmtDate(info?.lastDate)} />
-                        <InfoRow label="Total de registros" value={cRec > 0 ? cRec : null} />
-                        <InfoRow label="Histórico de sessões" value={cHist > 0 ? cHist : null} />
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        <Chip label="Humor" count={cMood} onClick={() => guardMissing(cMood > 0, () => { setMoodPatient(p); }, { label: "Humor", onCreate: () => { setMoodPatient(p); } })} />
-                        <Chip label="Histórico" count={cHist} onClick={() => guardMissing(cHist > 0, () => { setHistoryPatient(p); }, { label: "Histórico", onCreate: () => { setHistoryPatient(p); } })} />
-                        <Chip label="Registros" count={cRec} onClick={() => guardMissing(cRec > 0, () => { setRecordsPatient(p); }, { label: "Registros de sessão", onCreate: () => { setRecordsPatient(p); } })} />
-                      </div>
-                      <button
-                        onClick={() => { navigate("/app/agenda"); }}
-                        className="flex items-center justify-center gap-2 w-full"
-                        style={{ background: "hsl(var(--primary))", color: "#fff", borderRadius: 40, padding: "10px 16px", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 12 }}
-                      >
-                        <CalendarDays className="h-4 w-4" /> Ver na agenda
-                      </button>
+                      <PatientSessionsQuickView
+                        patientId={p.id}
+                        nextDate={info?.nextDate}
+                        lastDate={info?.lastDate}
+                        totalRecords={cRec}
+                        onOpenFullHistory={() => setRecordsPatient(p)}
+                      />
                     </TabsContent>
 
                     {/* Plano terapêutico */}
