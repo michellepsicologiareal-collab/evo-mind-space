@@ -1206,8 +1206,6 @@ const Patients = () => {
                   {[
                     { k: "avatar", label: "", w: 52 },
                     { k: "nome", label: "Paciente" },
-                    { k: "proxima", label: "Próxima sessão" },
-                    { k: "ultima", label: "Última sessão" },
                     { k: "modalidade", label: "Modalidade" },
                     { k: "plano", label: "Plano" },
                     { k: "status", label: "Status" },
