@@ -183,12 +183,35 @@ const Admin = () => {
     toast.success(`Status alterado para ${STATUS_LABELS[newStatus]}`);
   };
 
-  const handleApproval = async (userId: string, approve: boolean) => {
-    const { error } = await supabase
-      .from("profiles").update({ is_approved: approve } as any).eq("id", userId);
-    if (error) { toast.error("Erro ao atualizar aprovação"); return; }
-    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_approved: approve } : u)));
-    toast.success(approve ? "Usuário aprovado!" : "Acesso revogado");
+  const runAction = async (userId: string, action: "approve" | "reject" | "reactivate" | "delete") => {
+    const { data, error } = await supabase.functions.invoke("admin-user-action", { body: { userId, action } });
+    if (error || (data as any)?.error) {
+      toast.error("Erro: " + (error?.message || (data as any)?.error));
+      return;
+    }
+    const emailSent = (data as any)?.email?.sent;
+    if (action === "delete") {
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      toast.success("Cadastro excluído");
+      return;
+    }
+    if (action === "approve") {
+      const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_approved: true, rejected_at: null, trial_ends_at: trialEnd } : u)));
+      toast.success(emailSent ? "Aprovado — e-mail enviado" : "Aprovado (e-mail não enviado — configure o domínio)");
+    } else if (action === "reject") {
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_approved: false, rejected_at: new Date().toISOString() } : u)));
+      toast.success(emailSent ? "Reprovado — e-mail enviado" : "Reprovado (e-mail não enviado)");
+    } else if (action === "reactivate") {
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_approved: true, rejected_at: null } : u)));
+      toast.success(emailSent ? "Reativado — e-mail enviado" : "Reativado");
+    }
+  };
+
+  const confirmDelete = (u: AdminUser) => {
+    if (window.confirm(`Excluir permanentemente o cadastro de ${u.full_name || u.email}? Esta ação não pode ser desfeita.`)) {
+      runAction(u.id, "delete");
+    }
   };
 
   const handleProfileTypeChange = async (userId: string, newType: ProfileType) => {
