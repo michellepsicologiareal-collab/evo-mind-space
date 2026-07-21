@@ -2089,12 +2089,14 @@ const Agenda = () => {
             }).length;
             const pendingRecords = sessions.filter((s) => {
               const d = new Date(s.scheduled_at);
+              const key = s.patient_id ? `${s.patient_id}|${d.toISOString().slice(0, 10)}` : "";
               return (
                 s.session_type === "clinical" &&
                 !!s.patient_id &&
                 d < now &&
                 !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
-                !sessionRecordIds.has(s.id)
+                !sessionRecordIds.has(s.id) &&
+                !(key && sessionRecordKeys.has(key))
               );
             }).length;
             const pendingPayments = sessions.filter((s) => (
