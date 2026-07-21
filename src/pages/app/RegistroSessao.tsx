@@ -152,6 +152,25 @@ const RegistroSessao = () => {
   const [planLoadedIntoForm, setPlanLoadedIntoForm] = useState(false);
   const [planDrawerOpen, setPlanDrawerOpen] = useState(false);
 
+  // Metas e técnicas do plano ativo — usadas pelo bloco "Próxima sessão"
+  const [planGoals, setPlanGoals] = useState<{ id: string; tipo: string; descricao: string }[]>([]);
+  const [planTechniques, setPlanTechniques] = useState<{ id: string; nome: string }[]>([]);
+  // ID da sessão futura já agendada para o paciente (usado no upsert de session_plans)
+  const [nextSessionId, setNextSessionId] = useState<string | null>(null);
+  // Diálogo pós-salvar quando paciente não tiver plano ativo
+  const [noPlanDialogOpen, setNoPlanDialogOpen] = useState(false);
+  const [noPlanContext, setNoPlanContext] = useState<{
+    patientId: string;
+    objetivo: string;
+    metaId: string | null;
+    metaDescricao: string | null;
+    tecnicas: string[];
+  } | null>(null);
+  const [creatingDraftPlan, setCreatingDraftPlan] = useState(false);
+  // Foco automático no bloco de próxima sessão quando vier de "Editar planejamento"
+  const proximaSessaoRef = useRef<HTMLElement | null>(null);
+  const [focusProximaSessao, setFocusProximaSessao] = useState(false);
+
   const loadActivePlan = useCallback(async (patientId: string, uid: string) => {
     // 1. Active treatment plan for this patient
     const { data: tp } = await supabase
