@@ -613,14 +613,17 @@ const Agenda = () => {
       ]);
       const prev = new Map<string, string>();
       const recIds = new Set<string>();
+      const recKeys = new Set<string>();
       (recs.data ?? []).forEach((r: any) => {
         if (r.session_id) recIds.add(r.session_id);
+        if (r.patient_id && r.session_date) recKeys.add(`${r.patient_id}|${r.session_date}`);
         if (r.patient_id && r.next_session_plan && !prev.has(r.patient_id)) {
           prev.set(r.patient_id, r.next_session_plan);
         }
       });
       setPrevPlanByPatient(prev);
       setSessionRecordIds(recIds);
+      setSessionRecordKeys(recKeys);
       setMoodTodayPatients(new Set((moods.data ?? []).map((m: any) => m.patient_id)));
     })();
   }, [user, sessions.length, currentMonth]);
