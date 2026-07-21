@@ -13,11 +13,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 
+const onlyDigits = (v: string) => v.replace(/\D/g, "");
+const maskPhoneBR = (v: string) => {
+  const d = onlyDigits(v).slice(0, 11);
+  if (d.length <= 2) return d.length ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+};
+
 const signUpSchema = z
   .object({
     fullName: z.string().trim().min(2, "Nome muito curto").max(100),
-    email: z.string().trim().email("Email inválido").max(255),
-    phone: z.string().trim().min(8, "WhatsApp inválido").max(20),
+    email: z
+      .string()
+      .trim()
+      .min(1, "Informe o e-mail")
+      .email("E-mail inválido. Verifique o formato (ex.: nome@dominio.com).")
+      .max(255, "E-mail muito longo (máx. 255)"),
+    phone: z
+      .string()
+      .transform((v) => onlyDigits(v))
+      .refine((v) => v.length >= 10 && v.length <= 11, {
+        message: "WhatsApp inválido. Informe DDD + número (10 ou 11 dígitos).",
+      }),
     password: z.string().min(8, "Mínimo 8 caracteres").max(72),
     confirmPassword: z.string().min(1, "Confirme a senha").max(72),
     professionalProfile: z.enum(["psychologist", "student", "other"], {
@@ -77,6 +96,8 @@ const Auth = () => {
   const [suAcceptTerms, setSuAcceptTerms] = useState(false);
   const [suAcceptPrivacy, setSuAcceptPrivacy] = useState(false);
   const [signupDone, setSignupDone] = useState(false);
+  const [suErrors, setSuErrors] = useState<Record<string, string>>({});
+  const [suPhoneWarning, setSuPhoneWarning] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -132,11 +153,30 @@ const Auth = () => {
     setForgotSent(true);
   };
 
+  const checkAvailability = async (email: string, phoneDigits: string) => {
+    try {
+      const { data, error } = await (supabase as any).rpc("check_signup_availability", {
+        _email: email,
+        _phone_digits: phoneDigits,
+      });
+      if (error) return { emailExists: false, phoneExists: false };
+      const row = Array.isArray(data) ? data[0] : data;
+      return {
+        emailExists: Boolean(row?.email_exists),
+        phoneExists: Boolean(row?.phone_exists),
+      };
+    } catch {
+      return { emailExists: false, phoneExists: false };
+    }
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSuErrors({});
+    setSuPhoneWarning(null);
     const parsed = signUpSchema.safeParse({
       fullName: suName,
-      email: suEmail,
+      email: suEmail.trim(),
       phone: suPhone,
       password: suPassword,
       confirmPassword: suConfirmPassword,
@@ -145,10 +185,32 @@ const Auth = () => {
       acceptPrivacy: suAcceptPrivacy,
     });
     if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const key = String(issue.path[0] ?? "form");
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setSuErrors(fieldErrors);
       toast.error(parsed.error.issues[0].message);
       return;
     }
+
     setLoading(true);
+
+    // Duplicate checks (email = blocking; phone = warn only)
+    const availability = await checkAvailability(parsed.data.email, parsed.data.phone);
+    if (availability.emailExists) {
+      setSuErrors({ email: "Este e-mail já está cadastrado." });
+      setLoading(false);
+      toast.error("Este e-mail já está cadastrado.");
+      return;
+    }
+    if (availability.phoneExists && suPhoneWarning === null) {
+      setSuPhoneWarning("Este WhatsApp já está cadastrado. Se for número compartilhado da clínica, clique em “Criar minha conta” novamente para prosseguir.");
+      setLoading(false);
+      return;
+    }
+
     const nowIso = new Date().toISOString();
     const { error } = await supabase.auth.signUp({
       email: parsed.data.email,
@@ -169,8 +231,9 @@ const Auth = () => {
     setLoading(false);
     if (error) {
       const msg = error.message || "";
-      if (msg.includes("already")) {
-        toast.error("Este email já está cadastrado");
+      if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("registered")) {
+        setSuErrors({ email: "Este e-mail já está cadastrado." });
+        toast.error("Este e-mail já está cadastrado.");
       } else if (msg.toLowerCase().includes("termos")) {
         toast.error("Você precisa aceitar os Termos de Uso e a Política de Privacidade");
       } else {
@@ -181,6 +244,7 @@ const Auth = () => {
     setSignupDone(true);
     toast.success("Cadastro realizado. Seu acesso será liberado em breve.");
   };
+
 
 
   return (
@@ -321,15 +385,56 @@ const Auth = () => {
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="su-name">Nome completo</Label>
-                  <Input id="su-name" required value={suName} onChange={(e) => setSuName(e.target.value)} />
+                  <Input
+                    id="su-name"
+                    required
+                    value={suName}
+                    onChange={(e) => { setSuName(e.target.value); if (suErrors.fullName) setSuErrors((p) => ({ ...p, fullName: "" })); }}
+                    aria-invalid={!!suErrors.fullName}
+                    aria-describedby={suErrors.fullName ? "su-name-error" : undefined}
+                  />
+                  {suErrors.fullName && <p id="su-name-error" className="text-xs text-destructive">{suErrors.fullName}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="su-email">E-mail</Label>
-                  <Input id="su-email" type="email" autoComplete="email" required value={suEmail} onChange={(e) => setSuEmail(e.target.value)} />
+                  <Input
+                    id="su-email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    required
+                    value={suEmail}
+                    onChange={(e) => { setSuEmail(e.target.value); if (suErrors.email) setSuErrors((p) => ({ ...p, email: "" })); }}
+                    onBlur={(e) => setSuEmail(e.target.value.trim())}
+                    aria-invalid={!!suErrors.email}
+                    aria-describedby={suErrors.email ? "su-email-error" : undefined}
+                  />
+                  {suErrors.email && <p id="su-email-error" className="text-xs text-destructive">{suErrors.email}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="su-phone">Celular / WhatsApp</Label>
-                  <Input id="su-phone" type="tel" autoComplete="tel" required placeholder="(11) 99999-9999" value={suPhone} onChange={(e) => setSuPhone(e.target.value)} />
+                  <Input
+                    id="su-phone"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    required
+                    placeholder="(11) 99999-9999"
+                    value={maskPhoneBR(suPhone)}
+                    onChange={(e) => {
+                      setSuPhone(onlyDigits(e.target.value).slice(0, 11));
+                      if (suErrors.phone) setSuErrors((p) => ({ ...p, phone: "" }));
+                      if (suPhoneWarning) setSuPhoneWarning(null);
+                    }}
+                    aria-invalid={!!suErrors.phone}
+                    aria-describedby={suErrors.phone ? "su-phone-error" : suPhoneWarning ? "su-phone-warning" : undefined}
+                  />
+                  {suErrors.phone && <p id="su-phone-error" className="text-xs text-destructive">{suErrors.phone}</p>}
+                  {!suErrors.phone && suPhoneWarning && (
+                    <p id="su-phone-warning" className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-md px-2 py-1.5">
+                      {suPhoneWarning}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>Perfil profissional</Label>
@@ -358,12 +463,33 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="su-password">Senha</Label>
-                  <Input id="su-password" type="password" autoComplete="new-password" required value={suPassword} onChange={(e) => setSuPassword(e.target.value)} />
-                  <p className="text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
+                  <Input
+                    id="su-password"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    value={suPassword}
+                    onChange={(e) => { setSuPassword(e.target.value); if (suErrors.password) setSuErrors((p) => ({ ...p, password: "" })); }}
+                    aria-invalid={!!suErrors.password}
+                    aria-describedby={suErrors.password ? "su-password-error" : undefined}
+                  />
+                  {suErrors.password
+                    ? <p id="su-password-error" className="text-xs text-destructive">{suErrors.password}</p>
+                    : <p className="text-xs text-muted-foreground">Mínimo 8 caracteres.</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="su-confirm-password">Confirmar senha</Label>
-                  <Input id="su-confirm-password" type="password" autoComplete="new-password" required value={suConfirmPassword} onChange={(e) => setSuConfirmPassword(e.target.value)} />
+                  <Input
+                    id="su-confirm-password"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    value={suConfirmPassword}
+                    onChange={(e) => { setSuConfirmPassword(e.target.value); if (suErrors.confirmPassword) setSuErrors((p) => ({ ...p, confirmPassword: "" })); }}
+                    aria-invalid={!!suErrors.confirmPassword}
+                    aria-describedby={suErrors.confirmPassword ? "su-confirm-error" : undefined}
+                  />
+                  {suErrors.confirmPassword && <p id="su-confirm-error" className="text-xs text-destructive">{suErrors.confirmPassword}</p>}
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-start gap-3 rounded-xl border border-border bg-secondary/30 p-3">

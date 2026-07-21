@@ -2070,6 +2070,13 @@ export type Database = {
         Args: { _patient_id: string }
         Returns: boolean
       }
+      check_signup_availability: {
+        Args: { _email: string; _phone_digits: string }
+        Returns: {
+          email_exists: boolean
+          phone_exists: boolean
+        }[]
+      }
       ensure_current_profile: {
         Args: never
         Returns: {
