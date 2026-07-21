@@ -85,6 +85,13 @@ const emptyForm = {
   risk_indicator: "none",
   private_notes: "",
   plan_id: null as string | null,
+  // Bloco "Próxima sessão" — fonte única do planejamento
+  next_scheduled_at: "" as string, // datetime-local (yyyy-MM-ddTHH:mm) — vazio = não agendar
+  next_objetivo: "",
+  next_retomar: "",
+  next_meta_id: null as string | null,
+  next_tecnicas: [] as string[],
+  next_observacoes: "",
 };
 
 type FormState = typeof emptyForm;
@@ -96,7 +103,11 @@ function hasMeaningfulData(f: FormState): boolean {
     f.clinical_observations.trim() ||
     f.next_session_plan.trim() ||
     f.private_notes.trim() ||
-    f.themes.length > 0
+    f.themes.length > 0 ||
+    f.next_objetivo.trim() ||
+    f.next_retomar.trim() ||
+    f.next_observacoes.trim() ||
+    f.next_tecnicas.length > 0
   );
 }
 
