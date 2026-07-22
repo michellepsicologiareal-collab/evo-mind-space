@@ -863,6 +863,31 @@ const PlanoTratamento = () => {
           </Card>
         </>
       )}
+      <Sheet open={planningOpen} onOpenChange={setPlanningOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Planejar próxima sessão</SheetTitle>
+            <SheetDescription>
+              Edite o planejamento sem sair do Plano Terapêutico. As alterações refletem no Registro de Sessão.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="py-4">
+            <SessionPlanningForm
+              value={planningValue}
+              onChange={(patch) => setPlanningValue((v) => ({ ...v, ...patch }))}
+              planGoals={goalsForSelect}
+              planTechniques={techniques}
+            />
+          </div>
+          <SheetFooter className="gap-2">
+            <Button variant="outline" onClick={() => setPlanningOpen(false)}>Cancelar</Button>
+            <Button variant="accent" onClick={savePlanningFromSheet} disabled={planningSaving}>
+              {planningSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Salvar planejamento
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
