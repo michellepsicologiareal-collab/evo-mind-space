@@ -1,0 +1,2 @@
+ALTER TABLE public.homework_tasks ADD COLUMN session_id uuid NULL REFERENCES public.sessions(id) ON DELETE SET NULL;
+CREATE INDEX idx_homework_tasks_user_session ON public.homework_tasks(user_id, session_id);

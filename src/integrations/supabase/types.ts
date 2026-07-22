@@ -727,6 +727,7 @@ export type Database = {
           id: string
           patient_id: string
           sent_at: string | null
+          session_id: string | null
           session_points: string | null
           session_record_id: string | null
           title: string
@@ -741,6 +742,7 @@ export type Database = {
           id?: string
           patient_id: string
           sent_at?: string | null
+          session_id?: string | null
           session_points?: string | null
           session_record_id?: string | null
           title: string
@@ -755,6 +757,7 @@ export type Database = {
           id?: string
           patient_id?: string
           sent_at?: string | null
+          session_id?: string | null
           session_points?: string | null
           session_record_id?: string | null
           title?: string
@@ -768,6 +771,13 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_tasks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
           {
