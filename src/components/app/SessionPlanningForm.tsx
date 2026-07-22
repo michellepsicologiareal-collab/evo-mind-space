@@ -84,6 +84,8 @@ export function SessionPlanningForm({
   planGoals,
   planTechniques,
   showScheduledAt = true,
+  scheduledAtLocked = false,
+  scheduledAtHint,
   helperText,
   className,
 }: Props) {
@@ -117,10 +119,16 @@ export function SessionPlanningForm({
             <Input
               type="datetime-local"
               value={value.next_scheduled_at}
+              disabled={scheduledAtLocked}
+              readOnly={scheduledAtLocked}
               onChange={(e) => onChange({ next_scheduled_at: e.target.value })}
-              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: scheduledAtLocked ? "#F3F4F6" : "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
             />
-            <p className="text-[11px] text-muted-foreground">Deixe em branco para não agendar agora.</p>
+            <p className="text-[11px] text-muted-foreground">
+              {scheduledAtHint ?? (scheduledAtLocked
+                ? "Vem da próxima sessão já agendada. Para alterar, edite na Agenda."
+                : "Deixe em branco para não agendar agora.")}
+            </p>
           </div>
         )}
         <div className="space-y-2">
