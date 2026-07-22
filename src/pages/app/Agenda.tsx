@@ -153,6 +153,7 @@ const Agenda = () => {
   const [planBySession, setPlanBySession] = useState<Map<string, string>>(new Map());
   const [recordPlanBySession, setRecordPlanBySession] = useState<Map<string, string>>(new Map());
   const [progressPlanBySession, setProgressPlanBySession] = useState<Map<string, string>>(new Map());
+  const [summaryBySession, setSummaryBySession] = useState<Map<string, string>>(new Map());
   const [sessionRecordIds, setSessionRecordIds] = useState<Set<string>>(new Set());
   // Chaves compostas "patient_id|yyyy-MM-dd" para registros salvos sem session_id
   const [sessionRecordKeys, setSessionRecordKeys] = useState<Set<string>>(new Set());
