@@ -1671,6 +1671,15 @@ const Agenda = () => {
 
   return (
     <div className="space-y-6 animate-fade-up">
+      <HelpCard
+        id="agenda"
+        title="Agenda"
+        description="A Agenda organiza seus atendimentos e permite acompanhar sessões, confirmações, pagamentos e acessar rapidamente a ficha do paciente."
+        sections={[
+          { label: "Quando usar", content: "No início do dia para conferir a rotina e ao longo da semana para agendar, confirmar ou reagendar sessões." },
+          { label: "Conexões", content: "Sessões geram lembretes ao paciente, entradas no Google Calendar e linhas no Financeiro. O botão 'Registrar sessão' abre o Registro de Sessão já vinculado." },
+        ]}
+      />
       {/* FAB Nova sessão (mobile) — sempre visível acima da bottom nav */}
       <button
         type="button"

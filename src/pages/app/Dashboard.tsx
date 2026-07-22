@@ -637,6 +637,15 @@ export default function Dashboard() {
   return (
     <TooltipProvider delayDuration={200}>
       <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-6 md:py-8 space-y-8">
+        <HelpCard
+          id="painel"
+          title="Painel"
+          description="Visão geral da sua clínica no período selecionado: pacientes ativos, sessões, humor e indicadores financeiros essenciais."
+          sections={[
+            { label: "Quando usar", content: "No começo da semana para planejar prioridades e ao fim do mês para revisar resultados." },
+            { label: "Conexões", content: "Os números vêm de Pacientes, Agenda, Humor e Financeiro — clique nos atalhos para navegar direto ao módulo correspondente." },
+          ]}
+        />
         {/* ─ Cabeçalho ─ */}
         <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">

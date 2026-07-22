@@ -357,6 +357,15 @@ export default function Humor() {
    * ==================================================================== */
   return (
     <div className="mx-auto max-w-[1400px] px-4 sm:px-6 py-6 space-y-6">
+      <HelpCard
+        id="humor"
+        title="Acompanhamento do humor"
+        description="Consolida os check-ins de humor dos pacientes para você identificar padrões e sinais clínicos entre as sessões."
+        sections={[
+          { label: "Quando usar", content: "Antes de cada sessão para chegar contextualizado e ao longo do tratamento para acompanhar tendências." },
+          { label: "Conexões", content: "Alimentado pelos check-ins de autocuidado do paciente. Complementa o Registro de Sessão e o Plano Terapêutico." },
+        ]}
+      />
       {/* Header */}
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
