@@ -465,9 +465,8 @@ const RegistroSessao = () => {
     const onPageHide = () => flushDraft();
     const onBlur = () => flushDraft();
     const onOffline = () => flushDraft();
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+    const onBeforeUnload = () => {
       flushDraft();
-      if (hasMeaningfulData(formRef.current)) e.preventDefault();
     };
 
     document.addEventListener("visibilitychange", onVisibility);
