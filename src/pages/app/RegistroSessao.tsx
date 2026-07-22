@@ -1636,6 +1636,55 @@ const RegistroSessao = () => {
               />
             </div>
 
+            {/* Planejamento trazido da sessão anterior (read-only) */}
+            {broughtPlanning && (
+              <section
+                className="rounded-lg border p-4 space-y-3 mt-2"
+                style={{ borderColor: "#E5E7EB", background: "#F5F3FF" }}
+              >
+                <h3 className="font-display text-sm font-semibold" style={{ color: "#1A1A2E" }}>
+                  Planejamento trazido da sessão anterior
+                </h3>
+                <p className="text-[11px] text-muted-foreground -mt-2">
+                  Definido no registro da sessão anterior. Use como referência para conduzir esta sessão.
+                </p>
+                {broughtPlanning.meta_descricao && (
+                  <div>
+                    <p className="text-[10px] uppercase text-muted-foreground">Meta vinculada</p>
+                    <p className="text-sm text-foreground">{broughtPlanning.meta_descricao}</p>
+                  </div>
+                )}
+                {broughtPlanning.objetivo && (
+                  <div>
+                    <p className="text-[10px] uppercase text-muted-foreground">Objetivo</p>
+                    <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.objetivo}</p>
+                  </div>
+                )}
+                {broughtPlanning.retomar && (
+                  <div>
+                    <p className="text-[10px] uppercase text-muted-foreground">Retomar / Continuidade</p>
+                    <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.retomar}</p>
+                  </div>
+                )}
+                {broughtPlanning.tecnicas.length > 0 && (
+                  <div>
+                    <p className="text-[10px] uppercase text-muted-foreground mb-1">Técnicas previstas</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {broughtPlanning.tecnicas.map((t) => (
+                        <span key={t} className="text-xs px-2.5 py-0.5 rounded-full border" style={{ background: "#fff", borderColor: "#E5E7EB", color: "#1A1A2E" }}>{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {broughtPlanning.observacoes && (
+                  <div>
+                    <p className="text-[10px] uppercase text-muted-foreground">Observações</p>
+                    <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.observacoes}</p>
+                  </div>
+                )}
+              </section>
+            )}
+
             {/* Planejamento da próxima sessão — fonte única, componente reutilizado */}
             <div id="proxima-sessao" ref={proximaSessaoRef as any} className="mt-2">
               <SessionPlanningForm
@@ -1650,9 +1699,15 @@ const RegistroSessao = () => {
                 onChange={(patch) => setForm({ ...form, ...patch })}
                 planGoals={planGoals}
                 planTechniques={planTechniques}
-                helperText="O planejamento salvo aqui aparece na Ficha do Paciente (aba Plano Terapêutico)."
+                scheduledAtLocked={!!nextSessionId}
+                helperText={
+                  nextSessionId
+                    ? "Este planejamento fica vinculado à próxima sessão já agendada do paciente e aparece automaticamente quando ela for aberta."
+                    : "Sem próxima sessão agendada. O planejamento fica salvo como pendente e será vinculado quando você agendar."
+                }
               />
             </div>
+
           </>
         )}
       </section>
