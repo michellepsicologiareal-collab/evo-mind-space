@@ -174,6 +174,10 @@ const RegistroSessao = () => {
   // Foco automático no bloco de próxima sessão quando vier de "Editar planejamento"
   const proximaSessaoRef = useRef<HTMLElement | null>(null);
   const [focusProximaSessao, setFocusProximaSessao] = useState(false);
+  // Ref/estado para destaque da seleção de sessão-alvo quando houver empate
+  const ambiguousRef = useRef<HTMLElement | null>(null);
+  const [ambiguousPick, setAmbiguousPick] = useState<string | null>(null);
+  const [ambiguousHighlight, setAmbiguousHighlight] = useState(false);
 
   const loadActivePlan = useCallback(async (patientId: string, uid: string, currentSessionId?: string | null) => {
     // 1. Active treatment plan for this patient
@@ -776,7 +780,12 @@ const RegistroSessao = () => {
       form.next_meta_id ||
       form.next_scheduled_at;
     if (ambiguousNext.length > 1 && hasPlanContentEarly) {
-      toast.error("Existe mais de uma sessão futura no mesmo horário. Escolha qual será a próxima sessão antes de salvar o planejamento.");
+      setAmbiguousHighlight(true);
+      setTimeout(() => setAmbiguousHighlight(false), 2400);
+      requestAnimationFrame(() => {
+        ambiguousRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      toast.error("Escolha a qual sessão futura este planejamento deve ser vinculado antes de salvar.");
       return;
     }
 
@@ -1890,47 +1899,97 @@ const RegistroSessao = () => {
             </section>
           )}
 
-          {/* Empate: duas sessões futuras no mesmo horário — psicóloga escolhe */}
+          {/* Empate: duas sessões futuras no mesmo horário — psicóloga escolhe explicitamente */}
           {ambiguousNext.length > 1 && (
-            <section className="rounded-lg border p-4 space-y-3" style={{ borderColor: "#F59E0B", background: "#FFFBEB" }}>
+            <section
+              ref={ambiguousRef as any}
+              className={cn(
+                "rounded-lg border-2 p-4 space-y-4 transition-all scroll-mt-24",
+                ambiguousHighlight && "ring-4 ring-amber-400/60 animate-pulse"
+              )}
+              style={{ borderColor: "#F59E0B", background: "#FFFBEB" }}
+              aria-label="Seleção obrigatória de sessão-alvo"
+            >
               <div className="flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 mt-0.5" style={{ color: "#B45309" }} />
-                <div>
-                  <h3 className="font-display text-sm font-semibold" style={{ color: "#78350F" }}>
-                    Há mais de uma sessão futura neste mesmo horário
+                <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" style={{ color: "#B45309" }} />
+                <div className="flex-1">
+                  <h3 className="font-display text-base font-semibold" style={{ color: "#78350F" }}>
+                    Escolha a qual sessão vincular este planejamento
                   </h3>
-                  <p className="text-xs text-[#78350F]/80">
-                    Escolha a qual sessão este planejamento deve ser vinculado. O vínculo é feito pelo ID da sessão — não pela data.
+                  <p className="text-xs text-[#78350F]/90 mt-1">
+                    Existem <strong>{ambiguousNext.length} sessões futuras</strong> deste paciente no mesmo horário.
+                    Para evitar vincular ao registro errado, selecione abaixo a sessão-alvo antes de salvar.
+                    O vínculo é feito pelo ID da sessão — não pela data.
                   </p>
                 </div>
               </div>
               <div className="space-y-2">
-                {ambiguousNext.map((r) => (
-                  <label key={r.id} className="flex items-start gap-2 rounded-md border bg-white p-2 cursor-pointer hover:border-[#F59E0B]" style={{ borderColor: "#FDE68A" }}>
-                    <input
-                      type="radio"
-                      name="ambiguous-next"
-                      className="mt-1"
-                      onChange={() => chooseNextSession(r.id)}
-                    />
-                    <div className="text-sm">
-                      <div className="font-medium text-[#1A1A2E]">
-                        {format(new Date(r.scheduled_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                {ambiguousNext.map((r, idx) => {
+                  const picked = ambiguousPick === r.id;
+                  return (
+                    <label
+                      key={r.id}
+                      className={cn(
+                        "flex items-start gap-3 rounded-md border-2 bg-white p-3 cursor-pointer transition-colors",
+                        picked ? "border-[#B45309] bg-amber-50" : "border-[#FDE68A] hover:border-[#F59E0B]"
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="ambiguous-next"
+                        className="mt-1"
+                        checked={picked}
+                        onChange={() => setAmbiguousPick(r.id)}
+                      />
+                      <div className="text-sm flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-amber-100 text-[11px] font-bold text-[#78350F]">
+                            {idx + 1}
+                          </span>
+                          <span className="font-semibold text-[#1A1A2E]">
+                            {format(new Date(r.scheduled_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {r.modality ?? "—"} · {r.duration_minutes ?? 50} min
+                          {r.created_at && <> · criada em {format(new Date(r.created_at), "dd/MM/yyyy HH:mm")}</>}
+                        </div>
+                        {r.notes && <div className="text-xs text-muted-foreground truncate mt-0.5">{r.notes}</div>}
+                        <div className="text-[10px] text-muted-foreground mt-0.5 font-mono">ID: {r.id.slice(0, 8)}…</div>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {r.modality ?? "—"} · {r.duration_minutes ?? 50} min
-                        {r.created_at && <> · criada em {format(new Date(r.created_at), "dd/MM/yyyy HH:mm")}</>}
-                      </div>
-                      {r.notes && <div className="text-xs text-muted-foreground truncate max-w-[420px]">{r.notes}</div>}
-                      <div className="text-[10px] text-muted-foreground mt-0.5">ID: {r.id.slice(0, 8)}…</div>
-                    </div>
-                  </label>
-                ))}
+                    </label>
+                  );
+                })}
+              </div>
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-amber-200">
+                <button
+                  type="button"
+                  disabled={!ambiguousPick}
+                  onClick={() => {
+                    if (ambiguousPick) {
+                      chooseNextSession(ambiguousPick);
+                      setAmbiguousPick(null);
+                      toast.success("Sessão-alvo vinculada. Agora você pode preencher o planejamento.");
+                    }
+                  }}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white transition-opacity",
+                    ambiguousPick ? "hover:opacity-90" : "opacity-50 cursor-not-allowed"
+                  )}
+                  style={{ backgroundColor: "#B45309" }}
+                >
+                  Vincular sessão selecionada
+                </button>
               </div>
             </section>
           )}
 
-          <div id="proxima-sessao" ref={proximaSessaoRef as any}>
+          <div
+            id="proxima-sessao"
+            ref={proximaSessaoRef as any}
+            className={cn(ambiguousNext.length > 1 && "opacity-50 pointer-events-none select-none")}
+            aria-disabled={ambiguousNext.length > 1}
+          >
             <SessionPlanningForm
               value={{
                 next_scheduled_at: form.next_scheduled_at,
@@ -1953,6 +2012,7 @@ const RegistroSessao = () => {
               }
             />
           </div>
+
         </section>
       )}
 
