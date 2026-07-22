@@ -1486,9 +1486,6 @@ const Patients = () => {
                             <DropdownMenuItem onClick={() => setSelectedPatient(p)}>
                               <Eye className="h-4 w-4 mr-2" /> Abrir ficha do paciente
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate(`/app/registro-sessao?patient=${p.id}`)}>
-                              <FileText className="h-4 w-4 mr-2" /> Registrar sessão
-                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => navigate(`/app/agenda?patient=${p.id}`)}>
                               <CalendarDays className="h-4 w-4 mr-2" /> Agendar sessão
                             </DropdownMenuItem>
@@ -1519,9 +1516,6 @@ const Patients = () => {
                               <IconFlame className="h-4 w-4 mr-2" /> Formulação ACT
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setRecordsPatient(p)}>
-                              <FileText className="h-4 w-4 mr-2" /> Registros de sessão
-                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setHomeworkPatient(p)}>
                               <ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões
                             </DropdownMenuItem>
@@ -1716,24 +1710,22 @@ const Patients = () => {
                         <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenuItem onClick={() => setSelectedPatient(p)}><Eye className="h-4 w-4 mr-2" /> Abrir ficha do paciente</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/app/registro-sessao?patient=${p.id}`)}><FileText className="h-4 w-4 mr-2" /> Registrar sessão</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/app/agenda?patient=${p.id}`)}><CalendarDays className="h-4 w-4 mr-2" /> Agendar sessão</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => openEdit(p)}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => toggleActive(p)}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setTccPatient(p)}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-tcc`)}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-te`)} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setRecordsPatient(p)}><FileText className="h-4 w-4 mr-2" /> Registros de sessão</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setHomeworkPatient(p)}><ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
-                    </DropdownMenuContent>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => setSelectedPatient(p)}><Eye className="h-4 w-4 mr-2" /> Abrir ficha do paciente</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/app/agenda?patient=${p.id}`)}><CalendarDays className="h-4 w-4 mr-2" /> Agendar sessão</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => openEdit(p)}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => toggleActive(p)}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setTccPatient(p)}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-tcc`)}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-te`)} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setHomeworkPatient(p)}><ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
+                      </DropdownMenuContent>
                   </DropdownMenu>
                 </li>
               );
@@ -1800,20 +1792,19 @@ const Patients = () => {
                         <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => { openEdit(p); }}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { toggleActive(p); }}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => { setTccPatient(p); }}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { navigate(`/app/pacientes/${p.id}/formulacao-tcc`); }}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { navigate(`/app/pacientes/${p.id}/formulacao-te`); }} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { navigate(`/app/pacientes/${p.id}/formulacao-act`); }} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => { setRecordsPatient(p); }}><FileText className="h-4 w-4 mr-2" /> Registros de sessão</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => { setHomeworkPatient(p); }}><ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => { handleDelete(p); }} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
-                    </DropdownMenuContent>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => { openEdit(p); }}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { toggleActive(p); }}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => { setTccPatient(p); }}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { navigate(`/app/pacientes/${p.id}/formulacao-tcc`); }}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { navigate(`/app/pacientes/${p.id}/formulacao-te`); }} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4 mr-2" /> Formulação TE</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { navigate(`/app/pacientes/${p.id}/formulacao-act`); }} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4 mr-2" /> Formulação ACT</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => { setHomeworkPatient(p); }}><ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => { handleDelete(p); }} className="text-[#C0392B]"><IconTrash className="h-4 w-4 mr-2" /> Excluir</DropdownMenuItem>
+                      </DropdownMenuContent>
                   </DropdownMenu>
                   <button
                     onClick={() => setSelectedPatient(null)}
