@@ -730,9 +730,10 @@ export type Database = {
           session_id: string | null
           session_points: string | null
           session_record_id: string | null
-          title: string
+          title: string | null
           updated_at: string
           user_id: string
+          weekly_goal: string | null
           weekly_observations: string | null
         }
         Insert: {
@@ -745,9 +746,10 @@ export type Database = {
           session_id?: string | null
           session_points?: string | null
           session_record_id?: string | null
-          title: string
+          title?: string | null
           updated_at?: string
           user_id: string
+          weekly_goal?: string | null
           weekly_observations?: string | null
         }
         Update: {
@@ -760,9 +762,10 @@ export type Database = {
           session_id?: string | null
           session_points?: string | null
           session_record_id?: string | null
-          title?: string
+          title?: string | null
           updated_at?: string
           user_id?: string
+          weekly_goal?: string | null
           weekly_observations?: string | null
         }
         Relationships: [

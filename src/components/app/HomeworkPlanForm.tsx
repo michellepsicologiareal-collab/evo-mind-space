@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Plus, Send, CheckSquare, Square, X, NotebookPen, ListChecks, Eye } from "lucide-react";
+import { Loader2, Plus, Send, CheckSquare, Square, X, NotebookPen, ListChecks, Eye, Target } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
@@ -19,9 +19,10 @@ import {
 
 export interface HomeworkPlanFormTask {
   id: string;
-  title: string;
+  title: string | null;
   content: string;
   session_points: string | null;
+  weekly_goal: string | null;
   actions: Json | null;
   weekly_observations: string | null;
   sent_at: string | null;
@@ -77,6 +78,7 @@ export const HomeworkPlanForm = ({
 }: HomeworkPlanFormProps) => {
   const [editing, setEditing] = useState<HomeworkPlanFormTask | null>(initialTask);
   const [title, setTitle] = useState(initialTask?.title ?? "");
+  const [weeklyGoal, setWeeklyGoal] = useState(initialTask?.weekly_goal ?? "");
   const [sessionPoints, setSessionPoints] = useState(initialTask?.session_points ?? "");
   const [actions, setActions] = useState<ActionItem[]>(normalizeActions(initialTask?.actions ?? null));
   const [actionInput, setActionInput] = useState("");
@@ -91,6 +93,7 @@ export const HomeworkPlanForm = ({
   useEffect(() => {
     setEditing(initialTask);
     setTitle(initialTask?.title ?? "");
+    setWeeklyGoal(initialTask?.weekly_goal ?? "");
     setSessionPoints(initialTask?.session_points ?? "");
     setActions(normalizeActions(initialTask?.actions ?? null));
     setWeeklyObservations(initialTask?.weekly_observations ?? "");
@@ -129,22 +132,36 @@ export const HomeworkPlanForm = ({
     setActions((prev) => prev.map((a, i) => (i === index ? { ...a, done: !a.done } : a)));
   };
 
-  // Autosave (debounced) — mantém o mesmo comportamento do fluxo original.
+  const defaultTitle = () => `Plano entre Sessões — ${format(new Date(), "dd/MM/yyyy")}`;
+
+  // Returns true when any user-facing field has content — used as the autosave gate.
+  const hasAnyContent = () => (
+    title.trim().length > 0 ||
+    weeklyGoal.trim().length > 0 ||
+    sessionPoints.trim().length > 0 ||
+    weeklyObservations.trim().length > 0 ||
+    actions.some((a) => a.text.trim().length > 0)
+  );
+
+  // Autosave (debounced). Triggers on ANY filled field. Title is optional — a neutral
+  // default is generated on the first insert when empty.
   useEffect(() => {
-    if (!title.trim()) return;
+    if (!hasAnyContent()) return;
     const handle = setTimeout(async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      const current = editingRef.current;
+      const effectiveTitle = title.trim() || (current?.title ?? defaultTitle());
       const payload: any = {
-        title: title.trim(),
+        title: effectiveTitle,
         content: "",
+        weekly_goal: weeklyGoal.trim() || null,
         session_points: sessionPoints.trim() || null,
         actions: serializeActions(actions),
         weekly_observations: weeklyObservations.trim() || null,
         session_record_id: sourceRecord === "none" ? null : sourceRecord,
       };
       if (sessionId) payload.session_id = sessionId;
-      const current = editingRef.current;
       if (current) {
         const { error } = await supabase.from("homework_tasks").update(payload).eq("id", current.id);
         if (!error) setAutoSavedAt(new Date());
@@ -163,16 +180,18 @@ export const HomeworkPlanForm = ({
     }, 1200);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, sessionPoints, actions, weeklyObservations, sourceRecord, sessionId, patientId]);
+  }, [title, weeklyGoal, sessionPoints, actions, weeklyObservations, sourceRecord, sessionId, patientId]);
 
   const save = async () => {
-    if (!title.trim()) { toast.error("Preencha o título do plano"); return; }
+    if (!hasAnyContent()) { toast.error("Preencha ao menos um campo do plano"); return; }
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSaving(false); return; }
+    const effectiveTitle = title.trim() || (editing?.title ?? defaultTitle());
     const payload: any = {
-      title: title.trim(),
+      title: effectiveTitle,
       content: "",
+      weekly_goal: weeklyGoal.trim() || null,
       session_points: sessionPoints.trim() || null,
       actions: serializeActions(actions),
       weekly_observations: weeklyObservations.trim() || null,
@@ -208,6 +227,7 @@ export const HomeworkPlanForm = ({
     onClose?.();
   };
 
+
   return (
     <div className="space-y-4">
       <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
@@ -230,12 +250,25 @@ export const HomeworkPlanForm = ({
         )}
 
         <div>
-          <Label className="text-xs">Título do plano</Label>
+          <Label className="text-xs">Título do plano <span className="text-muted-foreground">(opcional)</span></Label>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ex: Semana 3 — Consolidando insights"
+            placeholder="Ex: Semana 3 — Consolidando insights (opcional)"
             maxLength={200}
+          />
+        </div>
+
+        <div>
+          <Label className="flex items-center gap-1.5 text-xs">
+            <Target className="h-3.5 w-3.5" /> Objetivo até a próxima sessão
+          </Label>
+          <Textarea
+            value={weeklyGoal}
+            onChange={(e) => setWeeklyGoal(e.target.value)}
+            rows={3}
+            maxLength={1000}
+            placeholder="Ex: Praticar respiração diafragmática antes das reuniões e registrar sensações após cada uso."
           />
         </div>
 
@@ -293,7 +326,7 @@ export const HomeworkPlanForm = ({
 
         <div>
           <Label className="flex items-center gap-1.5 text-xs">
-            <Eye className="h-3.5 w-3.5" /> O que observar durante a semana
+            <Eye className="h-3.5 w-3.5" /> O que observar até a próxima sessão
           </Label>
           <Textarea
             value={weeklyObservations}
@@ -305,12 +338,13 @@ export const HomeworkPlanForm = ({
         </div>
       </div>
 
+
       {!hideFooter && (
         <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
           <span className="text-[11px] text-muted-foreground">
             {autoSavedAt
               ? `Salvo automaticamente às ${format(autoSavedAt, "HH:mm:ss")}`
-              : title.trim() ? "Salvando automaticamente..." : "Comece pelo título para salvar automaticamente"}
+              : hasAnyContent() ? "Salvando automaticamente..." : "Preencha qualquer campo para salvar automaticamente"}
           </span>
           <div className="flex gap-2">
             {onClose && (

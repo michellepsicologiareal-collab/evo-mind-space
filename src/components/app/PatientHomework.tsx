@@ -25,9 +25,10 @@ interface Props {
 
 interface Task {
   id: string;
-  title: string;
+  title: string | null;
   content: string;
   session_points: string | null;
+  weekly_goal: string | null;
   actions: Json | null;
   weekly_observations: string | null;
   sent_at: string | null;
@@ -138,7 +139,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
 
   const openEdit = (t: Task) => {
     setEditing(t);
-    setTitle(t.title);
+    setTitle(t.title ?? "");
     setSessionPoints(t.session_points || "");
     setActions(normalizeActions(t.actions));
     setWeeklyObservations(t.weekly_observations || "");
@@ -263,7 +264,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
     const parts: string[] = [
       `Olá, ${firstName}! Aqui é a ${psiName}.`,
       "",
-      `Segue seu *Plano entre Sessões*: ${task.title}`,
+      `Segue seu *Plano entre Sessões*: ${task.title ?? "sem título"}`,
       "",
     ];
     if (task.session_points) {
@@ -335,7 +336,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
               <div key={t.id} className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2 flex-wrap">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-display font-semibold text-foreground">{t.title}</p>
+                    <p className="text-sm font-display font-semibold text-foreground">{t.title ?? "Plano entre Sessões"}</p>
                     <p className="text-[11px] text-muted-foreground">
                       Criado {format(new Date(t.created_at), "dd/MM/yyyy", { locale: ptBR })}
                       {t.sent_at && ` · Enviado ${format(new Date(t.sent_at), "dd/MM/yyyy", { locale: ptBR })}`}
