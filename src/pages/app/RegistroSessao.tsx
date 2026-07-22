@@ -55,6 +55,8 @@ const ENGAGEMENT_LABELS = ["Muito baixo", "Baixo", "Moderado", "Alto", "Muito al
 interface Patient {
   id: string;
   full_name: string;
+  phone?: string | null;
+  homework_token?: string | null;
 }
 
 interface SavedRecord {
