@@ -183,21 +183,34 @@ const RegistroSessao = () => {
       .eq("user_id", uid)
       .maybeSingle();
 
-    // 2. Next future session (excluindo a sessão atualmente sendo registrada)
+    // 2. Próxima sessão futura — seleção determinística com detecção de empate
+    // Regras: exclui sessão atual, ignora canceladas/no_show, ordena por
+    // scheduled_at, created_at, id. Se houver 2+ sessões válidas com o mesmo
+    // scheduled_at, NÃO vincular automaticamente — a psicóloga escolhe.
     let nsQuery = supabase
       .from("sessions")
-      .select("id, scheduled_at")
+      .select("id, scheduled_at, created_at, modality, duration_minutes, notes")
       .eq("patient_id", patientId)
       .eq("user_id", uid)
       .gte("scheduled_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
       .not("status", "in", "(cancelled,no_show)")
-      .order("scheduled_at")
-      .limit(1);
+      .order("scheduled_at", { ascending: true })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .limit(5);
     if (currentSessionId) nsQuery = nsQuery.neq("id", currentSessionId);
-    const { data: ns } = await nsQuery.maybeSingle();
+    const { data: nsList } = await nsQuery;
+    const rows: any[] = nsList ?? [];
+    let ns: any = null;
+    const tied: any[] = [];
+    if (rows.length > 0) {
+      const first = rows[0];
+      for (const r of rows) if (r.scheduled_at === first.scheduled_at) tied.push(r);
+      if (tied.length === 1) ns = first;
+    }
+    setAmbiguousNext(tied.length > 1 ? tied : []);
 
     let sp: any = null;
-    let sp_id: string | null = null;
     if (ns?.id) {
       const { data } = await supabase
         .from("session_plans")
@@ -205,7 +218,6 @@ const RegistroSessao = () => {
         .eq("session_id", ns.id)
         .maybeSingle();
       sp = data;
-      sp_id = data?.id ?? null;
     }
 
     let meta_descricao: string | null = null;
@@ -307,6 +319,56 @@ const RegistroSessao = () => {
       };
     });
   }, []);
+
+  // Sessões futuras empatadas no mesmo horário — psicóloga escolhe manualmente
+  const [ambiguousNext, setAmbiguousNext] = useState<Array<{ id: string; scheduled_at: string; created_at?: string; modality?: string; duration_minutes?: number; notes?: string | null }>>([]);
+
+  // Aplica manualmente a sessão-alvo escolhida pela psicóloga entre empatadas
+  const chooseNextSession = useCallback(async (sessionId: string) => {
+    const picked = ambiguousNext.find((r) => r.id === sessionId);
+    if (!picked) return;
+    setNextSessionId(sessionId);
+    const { data: sp } = await supabase
+      .from("session_plans")
+      .select("id, objetivo, retomar, tecnicas, observacoes, meta_id")
+      .eq("session_id", sessionId)
+      .maybeSingle();
+    let meta_descricao: string | null = null;
+    if (sp?.meta_id) {
+      const { data: m } = await supabase.from("treatment_goals").select("descricao").eq("id", sp.meta_id).maybeSingle();
+      meta_descricao = m?.descricao ?? null;
+    }
+    setActivePlan((prev) => ({
+      ...prev,
+      objetivo: sp?.objetivo || "",
+      retomar: sp?.retomar || "",
+      tecnicas: sp?.tecnicas || [],
+      observacoes: sp?.observacoes || "",
+      meta_descricao,
+      scheduled_at: picked.scheduled_at,
+    }));
+    setForm((prev) => {
+      const lockedScheduled = format(new Date(picked.scheduled_at), "yyyy-MM-dd'T'HH:mm");
+      const hasUserInput =
+        prev.next_objetivo.trim() ||
+        prev.next_retomar.trim() ||
+        prev.next_observacoes.trim() ||
+        prev.next_tecnicas.length > 0 ||
+        prev.next_meta_id;
+      if (hasUserInput) return { ...prev, next_scheduled_at: lockedScheduled };
+      return {
+        ...prev,
+        next_objetivo: sp?.objetivo || "",
+        next_retomar: sp?.retomar || "",
+        next_observacoes: sp?.observacoes || "",
+        next_tecnicas: Array.isArray(sp?.tecnicas) ? sp.tecnicas : [],
+        next_meta_id: sp?.meta_id ?? null,
+        next_scheduled_at: lockedScheduled,
+      };
+    });
+    setAmbiguousNext([]);
+  }, [ambiguousNext]);
+
 
   // Planejamento trazido da sessão anterior (session_plans atrelado à sessão atual)
   const [broughtPlanning, setBroughtPlanning] = useState<{
@@ -683,8 +745,21 @@ const RegistroSessao = () => {
       toast.error("Selecione um paciente.");
       return;
     }
+    // Bloqueia salvar quando há empate de horário em sessões futuras
+    const hasPlanContentEarly =
+      form.next_objetivo.trim() ||
+      form.next_retomar.trim() ||
+      form.next_observacoes.trim() ||
+      form.next_tecnicas.length > 0 ||
+      form.next_meta_id ||
+      form.next_scheduled_at;
+    if (ambiguousNext.length > 1 && hasPlanContentEarly) {
+      toast.error("Existe mais de uma sessão futura no mesmo horário. Escolha qual será a próxima sessão antes de salvar o planejamento.");
+      return;
+    }
 
     setSaving(true);
+
 
     // 1) Preserva compatibilidade: gera texto sintético para o campo antigo,
     // apenas quando o bloco "Próxima sessão" foi preenchido.
@@ -1685,6 +1760,46 @@ const RegistroSessao = () => {
               </section>
             )}
 
+            {/* Empate: duas sessões futuras no mesmo horário — psicóloga escolhe */}
+            {ambiguousNext.length > 1 && (
+              <section className="rounded-lg border p-4 space-y-3 mt-2" style={{ borderColor: "#F59E0B", background: "#FFFBEB" }}>
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 mt-0.5" style={{ color: "#B45309" }} />
+                  <div>
+                    <h3 className="font-display text-sm font-semibold" style={{ color: "#78350F" }}>
+                      Há mais de uma sessão futura neste mesmo horário
+                    </h3>
+                    <p className="text-xs text-[#78350F]/80">
+                      Escolha a qual sessão este planejamento deve ser vinculado. O vínculo é feito pelo ID da sessão — não pela data.
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {ambiguousNext.map((r) => (
+                    <label key={r.id} className="flex items-start gap-2 rounded-md border bg-white p-2 cursor-pointer hover:border-[#F59E0B]" style={{ borderColor: "#FDE68A" }}>
+                      <input
+                        type="radio"
+                        name="ambiguous-next"
+                        className="mt-1"
+                        onChange={() => chooseNextSession(r.id)}
+                      />
+                      <div className="text-sm">
+                        <div className="font-medium text-[#1A1A2E]">
+                          {format(new Date(r.scheduled_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {r.modality ?? "—"} · {r.duration_minutes ?? 50} min
+                          {r.created_at && <> · criada em {format(new Date(r.created_at), "dd/MM/yyyy HH:mm")}</>}
+                        </div>
+                        {r.notes && <div className="text-xs text-muted-foreground truncate max-w-[420px]">{r.notes}</div>}
+                        <div className="text-[10px] text-muted-foreground mt-0.5">ID: {r.id.slice(0, 8)}…</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Planejamento da próxima sessão — fonte única, componente reutilizado */}
             <div id="proxima-sessao" ref={proximaSessaoRef as any} className="mt-2">
               <SessionPlanningForm
@@ -1701,12 +1816,15 @@ const RegistroSessao = () => {
                 planTechniques={planTechniques}
                 scheduledAtLocked={!!nextSessionId}
                 helperText={
-                  nextSessionId
-                    ? "Este planejamento fica vinculado à próxima sessão já agendada do paciente e aparece automaticamente quando ela for aberta."
-                    : "Sem próxima sessão agendada. O planejamento fica salvo como pendente e será vinculado quando você agendar."
+                  ambiguousNext.length > 1
+                    ? "Selecione acima a sessão-alvo antes de preencher o planejamento."
+                    : nextSessionId
+                      ? "Este planejamento fica vinculado à próxima sessão já agendada do paciente e aparece automaticamente quando ela for aberta."
+                      : "Sem próxima sessão agendada. O planejamento fica salvo como pendente e será vinculado quando você agendar."
                 }
               />
             </div>
+
 
           </>
         )}
