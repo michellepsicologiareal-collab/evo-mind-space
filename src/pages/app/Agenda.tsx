@@ -1727,7 +1727,7 @@ const Agenda = () => {
             <p className="text-[10px] uppercase tracking-wider text-primary/80 font-semibold flex items-center gap-1">
               <Target className="h-3 w-3" /> Combinado / próximo passo
             </p>
-            <p className="text-xs text-foreground/85 line-clamp-2 mt-0.5">{prevPlan}</p>
+            <p className="text-xs text-foreground/85 line-clamp-2 mt-0.5 break-words">{prevPlan}</p>
           </div>
         )}
 
