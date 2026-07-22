@@ -174,7 +174,7 @@ const RegistroSessao = () => {
   const proximaSessaoRef = useRef<HTMLElement | null>(null);
   const [focusProximaSessao, setFocusProximaSessao] = useState(false);
 
-  const loadActivePlan = useCallback(async (patientId: string, uid: string) => {
+  const loadActivePlan = useCallback(async (patientId: string, uid: string, currentSessionId?: string | null) => {
     // 1. Active treatment plan for this patient
     const { data: tp } = await supabase
       .from("treatment_plans")
@@ -183,8 +183,8 @@ const RegistroSessao = () => {
       .eq("user_id", uid)
       .maybeSingle();
 
-    // 2. Next session + plan content
-    const { data: ns } = await supabase
+    // 2. Next future session (excluindo a sessão atualmente sendo registrada)
+    let nsQuery = supabase
       .from("sessions")
       .select("id, scheduled_at")
       .eq("patient_id", patientId)
@@ -192,8 +192,9 @@ const RegistroSessao = () => {
       .gte("scheduled_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
       .not("status", "in", "(cancelled,no_show)")
       .order("scheduled_at")
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
+    if (currentSessionId) nsQuery = nsQuery.neq("id", currentSessionId);
+    const { data: ns } = await nsQuery.maybeSingle();
 
     let sp: any = null;
     let sp_id: string | null = null;
