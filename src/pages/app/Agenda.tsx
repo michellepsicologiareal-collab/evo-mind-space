@@ -9,7 +9,7 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, MoreHorizontal, Bell,
-  ClipboardList, Play, HeartPulse, Target, AlertCircle, Wallet, NotebookPen,
+  ClipboardList, HeartPulse, Target, AlertCircle, Wallet,
 } from "lucide-react";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
