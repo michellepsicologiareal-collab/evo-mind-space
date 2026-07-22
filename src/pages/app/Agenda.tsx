@@ -656,7 +656,8 @@ const Agenda = () => {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
     (async () => {
-      const [recs, moods] = await Promise.all([
+      const sessionIds = sessions.map((s) => s.id).filter(Boolean);
+      const [recs, moods, homework, progressPlans] = await Promise.all([
         supabase.from("session_records")
           .select("session_id, patient_id, session_date, next_session_plan")
           .eq("user_id", user.id)
@@ -668,23 +669,55 @@ const Agenda = () => {
           .eq("user_id", user.id)
           .gte("recorded_at", todayStart.toISOString())
           .lte("recorded_at", todayEnd.toISOString()),
+        sessionIds.length
+          ? supabase.from("homework_tasks")
+              .select("session_id, weekly_goal, actions")
+              .eq("user_id", user.id)
+              .in("session_id", sessionIds)
+          : Promise.resolve({ data: [] as any[] }),
+        sessionIds.length
+          ? supabase.from("patient_progress")
+              .select("session_id, next_session_plan, recorded_at")
+              .eq("user_id", user.id)
+              .in("session_id", sessionIds)
+              .order("recorded_at", { ascending: false })
+          : Promise.resolve({ data: [] as any[] }),
       ]);
-      const prev = new Map<string, string>();
+      const recPlan = new Map<string, string>();
       const recIds = new Set<string>();
       const recKeys = new Set<string>();
       (recs.data ?? []).forEach((r: any) => {
         if (r.session_id) recIds.add(r.session_id);
         if (r.patient_id && r.session_date) recKeys.add(`${r.patient_id}|${r.session_date}`);
-        if (r.patient_id && r.next_session_plan && !prev.has(r.patient_id)) {
-          prev.set(r.patient_id, r.next_session_plan);
+        if (r.session_id && r.next_session_plan && !recPlan.has(r.session_id)) {
+          recPlan.set(r.session_id, r.next_session_plan);
         }
       });
-      setPrevPlanByPatient(prev);
+      const hwPlan = new Map<string, string>();
+      (homework.data ?? []).forEach((h: any) => {
+        if (!h.session_id) return;
+        const goal = typeof h.weekly_goal === "string" ? h.weekly_goal.trim() : "";
+        if (goal) { if (!hwPlan.has(h.session_id)) hwPlan.set(h.session_id, goal); return; }
+        const acts = Array.isArray(h.actions) ? h.actions : [];
+        for (const a of acts) {
+          const t = (a && (a.text ?? a.description ?? a.title ?? "")).toString().trim();
+          if (t) { if (!hwPlan.has(h.session_id)) hwPlan.set(h.session_id, t); break; }
+        }
+      });
+      const progPlan = new Map<string, string>();
+      (progressPlans.data ?? []).forEach((p: any) => {
+        if (!p.session_id) return;
+        const txt = typeof p.next_session_plan === "string" ? p.next_session_plan.trim() : "";
+        if (txt && !progPlan.has(p.session_id)) progPlan.set(p.session_id, txt);
+      });
+      setPlanBySession(hwPlan);
+      setRecordPlanBySession(recPlan);
+      setProgressPlanBySession(progPlan);
       setSessionRecordIds(recIds);
       setSessionRecordKeys(recKeys);
       setMoodTodayPatients(new Set((moods.data ?? []).map((m: any) => m.patient_id)));
     })();
-  }, [user, sessions.length, currentMonth]);
+  }, [user, sessions, currentMonth]);
 
   useAutoRefresh(() => { if (user) { load(true); loadPending(true); } }, { routePath: "/app/agenda" });
 
