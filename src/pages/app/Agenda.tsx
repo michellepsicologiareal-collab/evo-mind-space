@@ -9,8 +9,9 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, MoreHorizontal, Bell,
-  ClipboardList, HeartPulse, Target, AlertCircle, Wallet,
+  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen,
 } from "lucide-react";
+import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
   startOfWeek, startOfMonth, endOfMonth, parse, getDaysInMonth,
