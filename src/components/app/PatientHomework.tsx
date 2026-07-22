@@ -336,7 +336,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
               <div key={t.id} className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2 flex-wrap">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-display font-semibold text-foreground">{t.title}</p>
+                    <p className="text-sm font-display font-semibold text-foreground">{t.title ?? "Plano entre Sessões"}</p>
                     <p className="text-[11px] text-muted-foreground">
                       Criado {format(new Date(t.created_at), "dd/MM/yyyy", { locale: ptBR })}
                       {t.sent_at && ` · Enviado ${format(new Date(t.sent_at), "dd/MM/yyyy", { locale: ptBR })}`}
