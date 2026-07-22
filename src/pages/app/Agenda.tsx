@@ -9,7 +9,7 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, ChevronDown, Bell,
-  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen,
+  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save,
 } from "lucide-react";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
 import { SessionPlanningForm, type SessionPlanningValue, planningValueFromDb } from "@/components/app/SessionPlanningForm";
@@ -347,24 +347,82 @@ const Agenda = () => {
   const [homeworkTask, setHomeworkTask] = useState<HomeworkPlanFormTask | null>(null);
   const [homeworkExists, setHomeworkExists] = useState(false);
 
-  // Preload existence flag whenever the edit dialog opens for a new session.
+  // Preload homework task + planning state whenever the edit dialog opens.
+  // This powers the INLINE HomeworkPlanForm and SessionPlanningForm inside the modal.
   useEffect(() => {
     let cancelled = false;
-    if (!editOpen || !editSessionId) { setHomeworkExists(false); setHomeworkTask(null); return; }
+    if (!editOpen || !editSessionId) {
+      setHomeworkExists(false);
+      setHomeworkTask(null);
+      setHomeworkPatientId(null);
+      setHomeworkSessionId(null);
+      setPlanningPatientId(null);
+      setPlanningTargetSessionId(null);
+      setPlanningExistingPlanId(null);
+      setPlanningPlanGoals([]);
+      setPlanningPlanTechniques([]);
+      setPlanningValue({ next_scheduled_at: "", next_objetivo: "", next_retomar: "", next_meta_id: null, next_tecnicas: [], next_observacoes: "" });
+      return;
+    }
     const session = sessions.find((s) => s.id === editSessionId);
     if (!session?.patient_id) { setHomeworkExists(false); return; }
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || cancelled) return;
-      const { data } = await supabase
+      const pid = session.patient_id!;
+      // Homework linked to THIS session
+      const { data: hw } = await supabase
         .from("homework_tasks")
-        .select("id")
+        .select("*")
         .eq("user_id", user.id)
-        .eq("patient_id", session.patient_id)
+        .eq("patient_id", pid)
         .eq("session_id", session.id)
+        .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (!cancelled) setHomeworkExists(Boolean(data));
+      if (cancelled) return;
+      setHomeworkTask((hw as HomeworkPlanFormTask) ?? null);
+      setHomeworkExists(Boolean(hw));
+      setHomeworkPatientId(pid);
+      setHomeworkSessionId(session.id);
+
+      // Planning for the patient's NEXT future session (excluding the current one)
+      const nowIso = new Date().toISOString();
+      const { data: nextSess } = await supabase
+        .from("sessions")
+        .select("id, scheduled_at")
+        .eq("user_id", user.id)
+        .eq("patient_id", pid)
+        .neq("id", session.id)
+        .gte("scheduled_at", nowIso)
+        .not("status", "in", "(cancelled,no_show)")
+        .order("scheduled_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      const targetSessionId = nextSess?.id ?? null;
+      const [goalsRes, techsRes, planRes] = await Promise.all([
+        supabase.from("treatment_goals").select("id, descricao").eq("patient_id", pid).eq("user_id", user.id).order("ordem"),
+        supabase.from("treatment_techniques").select("id, nome").eq("patient_id", pid).eq("user_id", user.id).order("created_at"),
+        targetSessionId
+          ? supabase.from("session_plans").select("*").eq("session_id", targetSessionId).maybeSingle()
+          : Promise.resolve({ data: null } as any),
+      ]);
+      if (cancelled) return;
+      setPlanningPatientId(pid);
+      setPlanningTargetSessionId(targetSessionId);
+      setPlanningExistingPlanId((planRes as any)?.data?.id ?? null);
+      setPlanningPlanGoals((goalsRes.data || []) as any);
+      setPlanningPlanTechniques((techsRes.data || []) as any);
+      const existing = (planRes as any)?.data;
+      setPlanningValue(planningValueFromDb({
+        scheduled_at: nextSess?.scheduled_at ?? null,
+        objetivo: existing?.objetivo ?? "",
+        retomar: existing?.retomar ?? "",
+        meta_id: existing?.meta_id ?? null,
+        tecnicas: existing?.tecnicas ?? [],
+        observacoes: existing?.observacoes ?? "",
+      }));
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -3118,19 +3176,70 @@ const Agenda = () => {
               const session = sessions.find((s) => s.id === editSessionId);
               if (!session?.patient_id || session.session_type === "supervision") return null;
               return (
-                <div className="rounded-xl border border-border bg-muted/30 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div className="flex items-start gap-2">
-                    <NotebookPen className="h-4 w-4 text-primary mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Plano entre Sessões</p>
-                      <p className="text-xs text-muted-foreground">Vinculado a esta sessão. Independente do botão Salvar.</p>
+                <>
+                  {/* ── Planejamento da Próxima Sessão (inline) ── */}
+                  <section
+                    className="rounded-xl border p-4 space-y-3"
+                    style={{ borderColor: "#E5E7EB", background: "#FFFFFF", borderLeft: "3px solid #B8860B" }}
+                  >
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <Target className="h-4 w-4" style={{ color: "#B8860B" }} />
+                        <div>
+                          <h3 className="font-display text-sm font-semibold text-foreground">Planejamento da Próxima Sessão</h3>
+                          <p className="text-xs text-muted-foreground">
+                            {planningTargetSessionId
+                              ? "Vinculado à próxima sessão futura já agendada deste paciente."
+                              : "Sem próxima sessão agendada. Ao preencher a data, uma nova será criada ao salvar."}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="accent"
+                        size="sm"
+                        onClick={savePlanningFromSheet}
+                        disabled={planningSaving || !planningPatientId}
+                      >
+                        {planningSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar planejamento
+                      </Button>
                     </div>
-                  </div>
-                  <Button type="button" variant="outline" size="sm" onClick={() => openHomeworkForSession()} disabled={homeworkLoading}>
-                    {homeworkLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <NotebookPen className="h-4 w-4" />}
-                    {homeworkExists ? "Abrir Plano entre Sessões" : "Criar Plano entre Sessões"}
-                  </Button>
-                </div>
+                    <SessionPlanningForm
+                      value={planningValue}
+                      onChange={(patch) => setPlanningValue((prev) => ({ ...prev, ...patch }))}
+                      planGoals={planningPlanGoals}
+                      planTechniques={planningPlanTechniques}
+                      scheduledAtLocked={!!planningTargetSessionId}
+                      helperText={
+                        planningTargetSessionId
+                          ? "Este planejamento fica vinculado à próxima sessão já agendada e aparece automaticamente quando ela for aberta."
+                          : "Sem próxima sessão agendada. O planejamento fica salvo como pendente e será vinculado quando você agendar."
+                      }
+                    />
+                  </section>
+
+                  {/* ── Plano entre Sessões (inline, atrelado à sessão atual) ── */}
+                  <section
+                    className="rounded-xl border p-4 space-y-3"
+                    style={{ borderColor: "#E5E7EB", background: "#FFFFFF", borderLeft: "3px solid #3D5C35" }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <NotebookPen className="h-4 w-4" style={{ color: "#3D5C35" }} />
+                      <div>
+                        <h3 className="font-display text-sm font-semibold text-foreground">Plano entre Sessões</h3>
+                        <p className="text-xs text-muted-foreground">Combinados e ações do paciente até a próxima sessão. Salva automaticamente.</p>
+                      </div>
+                    </div>
+                    <HomeworkPlanForm
+                      patientId={session.patient_id}
+                      sessionId={session.id}
+                      initialTask={homeworkTask}
+                      hideFooter
+                      showRecordPicker={false}
+                      onSaved={(t) => { setHomeworkTask(t); setHomeworkExists(true); }}
+                    />
+                  </section>
+                </>
               );
             })()}
             <DialogFooter className="flex-col sm:flex-row gap-2">
