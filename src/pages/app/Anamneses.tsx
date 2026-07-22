@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { HelpCard } from "@/components/app/HelpCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";

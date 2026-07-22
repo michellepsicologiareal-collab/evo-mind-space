@@ -1,4 +1,5 @@
 import { RefreshButton } from "@/components/app/RefreshButton";
+import { HelpCard } from "@/components/app/HelpCard";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { HelpCard } from "@/components/app/HelpCard";
 import { useNavigate } from "react-router-dom";
 import { format, subDays, startOfWeek, differenceInDays, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";

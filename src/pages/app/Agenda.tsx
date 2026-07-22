@@ -1,4 +1,5 @@
 import { RefreshButton } from "@/components/app/RefreshButton";
+import { HelpCard } from "@/components/app/HelpCard";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { z } from "zod";
