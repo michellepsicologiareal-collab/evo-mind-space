@@ -162,7 +162,7 @@ const Agenda = () => {
   const [pixKey, setPixKey] = useState("");
   const [psiName, setPsiName] = useState("");
   const [psiCrp, setPsiCrp] = useState("");
-  const [viewTab, setViewTab] = useState<string>("month");
+  const [viewTab, setViewTab] = useState<string>("day");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
   const [searchParams] = useSearchParams();
