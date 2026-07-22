@@ -12,6 +12,7 @@ import {
   ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen,
 } from "lucide-react";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
+import { SessionPlanningForm, type SessionPlanningValue, planningValueFromDb } from "@/components/app/SessionPlanningForm";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
   startOfWeek, startOfMonth, endOfMonth, parse, getDaysInMonth,
