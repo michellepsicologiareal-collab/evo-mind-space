@@ -347,24 +347,82 @@ const Agenda = () => {
   const [homeworkTask, setHomeworkTask] = useState<HomeworkPlanFormTask | null>(null);
   const [homeworkExists, setHomeworkExists] = useState(false);
 
-  // Preload existence flag whenever the edit dialog opens for a new session.
+  // Preload homework task + planning state whenever the edit dialog opens.
+  // This powers the INLINE HomeworkPlanForm and SessionPlanningForm inside the modal.
   useEffect(() => {
     let cancelled = false;
-    if (!editOpen || !editSessionId) { setHomeworkExists(false); setHomeworkTask(null); return; }
+    if (!editOpen || !editSessionId) {
+      setHomeworkExists(false);
+      setHomeworkTask(null);
+      setHomeworkPatientId(null);
+      setHomeworkSessionId(null);
+      setPlanningPatientId(null);
+      setPlanningTargetSessionId(null);
+      setPlanningExistingPlanId(null);
+      setPlanningPlanGoals([]);
+      setPlanningPlanTechniques([]);
+      setPlanningValue({ next_scheduled_at: "", next_objetivo: "", next_retomar: "", next_meta_id: null, next_tecnicas: [], next_observacoes: "" });
+      return;
+    }
     const session = sessions.find((s) => s.id === editSessionId);
     if (!session?.patient_id) { setHomeworkExists(false); return; }
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || cancelled) return;
-      const { data } = await supabase
+      const pid = session.patient_id!;
+      // Homework linked to THIS session
+      const { data: hw } = await supabase
         .from("homework_tasks")
-        .select("id")
+        .select("*")
         .eq("user_id", user.id)
-        .eq("patient_id", session.patient_id)
+        .eq("patient_id", pid)
         .eq("session_id", session.id)
+        .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (!cancelled) setHomeworkExists(Boolean(data));
+      if (cancelled) return;
+      setHomeworkTask((hw as HomeworkPlanFormTask) ?? null);
+      setHomeworkExists(Boolean(hw));
+      setHomeworkPatientId(pid);
+      setHomeworkSessionId(session.id);
+
+      // Planning for the patient's NEXT future session (excluding the current one)
+      const nowIso = new Date().toISOString();
+      const { data: nextSess } = await supabase
+        .from("sessions")
+        .select("id, scheduled_at")
+        .eq("user_id", user.id)
+        .eq("patient_id", pid)
+        .neq("id", session.id)
+        .gte("scheduled_at", nowIso)
+        .not("status", "in", "(cancelled,no_show)")
+        .order("scheduled_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      const targetSessionId = nextSess?.id ?? null;
+      const [goalsRes, techsRes, planRes] = await Promise.all([
+        supabase.from("treatment_goals").select("id, descricao").eq("patient_id", pid).eq("user_id", user.id).order("ordem"),
+        supabase.from("treatment_techniques").select("id, nome").eq("patient_id", pid).eq("user_id", user.id).order("created_at"),
+        targetSessionId
+          ? supabase.from("session_plans").select("*").eq("session_id", targetSessionId).maybeSingle()
+          : Promise.resolve({ data: null } as any),
+      ]);
+      if (cancelled) return;
+      setPlanningPatientId(pid);
+      setPlanningTargetSessionId(targetSessionId);
+      setPlanningExistingPlanId((planRes as any)?.data?.id ?? null);
+      setPlanningPlanGoals((goalsRes.data || []) as any);
+      setPlanningPlanTechniques((techsRes.data || []) as any);
+      const existing = (planRes as any)?.data;
+      setPlanningValue(planningValueFromDb({
+        scheduled_at: nextSess?.scheduled_at ?? null,
+        objetivo: existing?.objetivo ?? "",
+        retomar: existing?.retomar ?? "",
+        meta_id: existing?.meta_id ?? null,
+        tecnicas: existing?.tecnicas ?? [],
+        observacoes: existing?.observacoes ?? "",
+      }));
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
