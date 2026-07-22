@@ -341,6 +341,30 @@ const Agenda = () => {
   const [homeworkOpen, setHomeworkOpen] = useState(false);
   const [homeworkLoading, setHomeworkLoading] = useState(false);
   const [homeworkTask, setHomeworkTask] = useState<HomeworkPlanFormTask | null>(null);
+  const [homeworkExists, setHomeworkExists] = useState(false);
+
+  // Preload existence flag whenever the edit dialog opens for a new session.
+  useEffect(() => {
+    let cancelled = false;
+    if (!editOpen || !editSessionId) { setHomeworkExists(false); setHomeworkTask(null); return; }
+    const session = sessions.find((s) => s.id === editSessionId);
+    if (!session?.patient_id) { setHomeworkExists(false); return; }
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      const { data } = await supabase
+        .from("homework_tasks")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("patient_id", session.patient_id)
+        .eq("session_id", session.id)
+        .limit(1)
+        .maybeSingle();
+      if (!cancelled) setHomeworkExists(Boolean(data));
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editOpen, editSessionId]);
 
   const openHomeworkForSession = async () => {
     const session = sessions.find((s) => s.id === editSessionId);
