@@ -2983,6 +2983,34 @@ const Agenda = () => {
         </DialogContent>
       </Dialog>
 
+      {/* ── Plano entre Sessões (vinculado à sessão atual) ── */}
+      <Dialog open={homeworkOpen} onOpenChange={setHomeworkOpen}>
+        <DialogContent className="w-[95vw] max-w-[900px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl flex items-center gap-2">
+              <NotebookPen className="h-5 w-5 text-primary" />
+              {homeworkTask ? "Editar Plano entre Sessões" : "Novo Plano entre Sessões"}
+            </DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const session = sessions.find((s) => s.id === editSessionId);
+            if (!session?.patient_id) return null;
+            return (
+              <HomeworkPlanForm
+                patientId={session.patient_id}
+                sessionId={session.id}
+                initialTask={homeworkTask}
+                showRecordPicker={false}
+                submitLabel="Salvar e fechar"
+                onSaved={(saved) => { setHomeworkTask(saved); setHomeworkExists(true); }}
+                onClose={() => setHomeworkOpen(false)}
+              />
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+
       {/* ── Delete Confirmation Modal ── */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
           <DialogContent className="w-[calc(100vw-2rem)] max-w-sm sm:max-w-md mx-auto p-4 sm:p-6 overflow-hidden">
