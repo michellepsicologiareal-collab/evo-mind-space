@@ -250,12 +250,25 @@ export const HomeworkPlanForm = ({
         )}
 
         <div>
-          <Label className="text-xs">Título do plano</Label>
+          <Label className="text-xs">Título do plano <span className="text-muted-foreground">(opcional)</span></Label>
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ex: Semana 3 — Consolidando insights"
+            placeholder="Ex: Semana 3 — Consolidando insights (opcional)"
             maxLength={200}
+          />
+        </div>
+
+        <div>
+          <Label className="flex items-center gap-1.5 text-xs">
+            <Target className="h-3.5 w-3.5" /> Objetivo até a próxima sessão
+          </Label>
+          <Textarea
+            value={weeklyGoal}
+            onChange={(e) => setWeeklyGoal(e.target.value)}
+            rows={3}
+            maxLength={1000}
+            placeholder="Ex: Praticar respiração diafragmática antes das reuniões e registrar sensações após cada uso."
           />
         </div>
 
@@ -313,7 +326,7 @@ export const HomeworkPlanForm = ({
 
         <div>
           <Label className="flex items-center gap-1.5 text-xs">
-            <Eye className="h-3.5 w-3.5" /> O que observar durante a semana
+            <Eye className="h-3.5 w-3.5" /> O que observar até a próxima sessão
           </Label>
           <Textarea
             value={weeklyObservations}
@@ -324,6 +337,7 @@ export const HomeworkPlanForm = ({
           />
         </div>
       </div>
+
 
       {!hideFooter && (
         <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
