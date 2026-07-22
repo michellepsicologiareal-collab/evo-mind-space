@@ -183,21 +183,34 @@ const RegistroSessao = () => {
       .eq("user_id", uid)
       .maybeSingle();
 
-    // 2. Next future session (excluindo a sessão atualmente sendo registrada)
+    // 2. Próxima sessão futura — seleção determinística com detecção de empate
+    // Regras: exclui sessão atual, ignora canceladas/no_show, ordena por
+    // scheduled_at, created_at, id. Se houver 2+ sessões válidas com o mesmo
+    // scheduled_at, NÃO vincular automaticamente — a psicóloga escolhe.
     let nsQuery = supabase
       .from("sessions")
-      .select("id, scheduled_at")
+      .select("id, scheduled_at, created_at, modality, duration_minutes, notes")
       .eq("patient_id", patientId)
       .eq("user_id", uid)
       .gte("scheduled_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
       .not("status", "in", "(cancelled,no_show)")
-      .order("scheduled_at")
-      .limit(1);
+      .order("scheduled_at", { ascending: true })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .limit(5);
     if (currentSessionId) nsQuery = nsQuery.neq("id", currentSessionId);
-    const { data: ns } = await nsQuery.maybeSingle();
+    const { data: nsList } = await nsQuery;
+    const rows: any[] = nsList ?? [];
+    let ns: any = null;
+    const tied: any[] = [];
+    if (rows.length > 0) {
+      const first = rows[0];
+      for (const r of rows) if (r.scheduled_at === first.scheduled_at) tied.push(r);
+      if (tied.length === 1) ns = first;
+    }
+    setAmbiguousNext(tied.length > 1 ? tied : []);
 
     let sp: any = null;
-    let sp_id: string | null = null;
     if (ns?.id) {
       const { data } = await supabase
         .from("session_plans")
@@ -205,7 +218,6 @@ const RegistroSessao = () => {
         .eq("session_id", ns.id)
         .maybeSingle();
       sp = data;
-      sp_id = data?.id ?? null;
     }
 
     let meta_descricao: string | null = null;
@@ -307,6 +319,56 @@ const RegistroSessao = () => {
       };
     });
   }, []);
+
+  // Sessões futuras empatadas no mesmo horário — psicóloga escolhe manualmente
+  const [ambiguousNext, setAmbiguousNext] = useState<Array<{ id: string; scheduled_at: string; created_at?: string; modality?: string; duration_minutes?: number; notes?: string | null }>>([]);
+
+  // Aplica manualmente a sessão-alvo escolhida pela psicóloga entre empatadas
+  const chooseNextSession = useCallback(async (sessionId: string) => {
+    const picked = ambiguousNext.find((r) => r.id === sessionId);
+    if (!picked) return;
+    setNextSessionId(sessionId);
+    const { data: sp } = await supabase
+      .from("session_plans")
+      .select("id, objetivo, retomar, tecnicas, observacoes, meta_id")
+      .eq("session_id", sessionId)
+      .maybeSingle();
+    let meta_descricao: string | null = null;
+    if (sp?.meta_id) {
+      const { data: m } = await supabase.from("treatment_goals").select("descricao").eq("id", sp.meta_id).maybeSingle();
+      meta_descricao = m?.descricao ?? null;
+    }
+    setActivePlan((prev) => ({
+      ...prev,
+      objetivo: sp?.objetivo || "",
+      retomar: sp?.retomar || "",
+      tecnicas: sp?.tecnicas || [],
+      observacoes: sp?.observacoes || "",
+      meta_descricao,
+      scheduled_at: picked.scheduled_at,
+    }));
+    setForm((prev) => {
+      const lockedScheduled = format(new Date(picked.scheduled_at), "yyyy-MM-dd'T'HH:mm");
+      const hasUserInput =
+        prev.next_objetivo.trim() ||
+        prev.next_retomar.trim() ||
+        prev.next_observacoes.trim() ||
+        prev.next_tecnicas.length > 0 ||
+        prev.next_meta_id;
+      if (hasUserInput) return { ...prev, next_scheduled_at: lockedScheduled };
+      return {
+        ...prev,
+        next_objetivo: sp?.objetivo || "",
+        next_retomar: sp?.retomar || "",
+        next_observacoes: sp?.observacoes || "",
+        next_tecnicas: Array.isArray(sp?.tecnicas) ? sp.tecnicas : [],
+        next_meta_id: sp?.meta_id ?? null,
+        next_scheduled_at: lockedScheduled,
+      };
+    });
+    setAmbiguousNext([]);
+  }, [ambiguousNext]);
+
 
   // Planejamento trazido da sessão anterior (session_plans atrelado à sessão atual)
   const [broughtPlanning, setBroughtPlanning] = useState<{
