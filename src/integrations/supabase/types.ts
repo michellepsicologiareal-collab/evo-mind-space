@@ -993,13 +993,16 @@ export type Database = {
           created_at: string
           data_model: Database["public"]["Enums"]["progress_data_model"]
           emotions: Json | null
+          engagement: number | null
           id: string
           mood_score: number | null
           note: string | null
           patient_context: string | null
           patient_id: string
+          private_notes: string | null
           recorded_at: string
           session_id: string | null
+          themes: string[]
           updated_at: string
           user_id: string
           wellbeing_score: number | null
@@ -1015,13 +1018,16 @@ export type Database = {
           created_at?: string
           data_model?: Database["public"]["Enums"]["progress_data_model"]
           emotions?: Json | null
+          engagement?: number | null
           id?: string
           mood_score?: number | null
           note?: string | null
           patient_context?: string | null
           patient_id: string
+          private_notes?: string | null
           recorded_at?: string
           session_id?: string | null
+          themes?: string[]
           updated_at?: string
           user_id: string
           wellbeing_score?: number | null
@@ -1037,13 +1043,16 @@ export type Database = {
           created_at?: string
           data_model?: Database["public"]["Enums"]["progress_data_model"]
           emotions?: Json | null
+          engagement?: number | null
           id?: string
           mood_score?: number | null
           note?: string | null
           patient_context?: string | null
           patient_id?: string
+          private_notes?: string | null
           recorded_at?: string
           session_id?: string | null
+          themes?: string[]
           updated_at?: string
           user_id?: string
           wellbeing_score?: number | null
