@@ -3176,19 +3176,70 @@ const Agenda = () => {
               const session = sessions.find((s) => s.id === editSessionId);
               if (!session?.patient_id || session.session_type === "supervision") return null;
               return (
-                <div className="rounded-xl border border-border bg-muted/30 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div className="flex items-start gap-2">
-                    <NotebookPen className="h-4 w-4 text-primary mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Plano entre Sessões</p>
-                      <p className="text-xs text-muted-foreground">Vinculado a esta sessão. Independente do botão Salvar.</p>
+                <>
+                  {/* ── Planejamento da Próxima Sessão (inline) ── */}
+                  <section
+                    className="rounded-xl border p-4 space-y-3"
+                    style={{ borderColor: "#E5E7EB", background: "#FFFFFF", borderLeft: "3px solid #B8860B" }}
+                  >
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <Target className="h-4 w-4" style={{ color: "#B8860B" }} />
+                        <div>
+                          <h3 className="font-display text-sm font-semibold text-foreground">Planejamento da Próxima Sessão</h3>
+                          <p className="text-xs text-muted-foreground">
+                            {planningTargetSessionId
+                              ? "Vinculado à próxima sessão futura já agendada deste paciente."
+                              : "Sem próxima sessão agendada. Ao preencher a data, uma nova será criada ao salvar."}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="accent"
+                        size="sm"
+                        onClick={savePlanningFromSheet}
+                        disabled={planningSaving || !planningPatientId}
+                      >
+                        {planningSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar planejamento
+                      </Button>
                     </div>
-                  </div>
-                  <Button type="button" variant="outline" size="sm" onClick={() => openHomeworkForSession()} disabled={homeworkLoading}>
-                    {homeworkLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <NotebookPen className="h-4 w-4" />}
-                    {homeworkExists ? "Abrir Plano entre Sessões" : "Criar Plano entre Sessões"}
-                  </Button>
-                </div>
+                    <SessionPlanningForm
+                      value={planningValue}
+                      onChange={(patch) => setPlanningValue((prev) => ({ ...prev, ...patch }))}
+                      planGoals={planningPlanGoals}
+                      planTechniques={planningPlanTechniques}
+                      scheduledAtLocked={!!planningTargetSessionId}
+                      helperText={
+                        planningTargetSessionId
+                          ? "Este planejamento fica vinculado à próxima sessão já agendada e aparece automaticamente quando ela for aberta."
+                          : "Sem próxima sessão agendada. O planejamento fica salvo como pendente e será vinculado quando você agendar."
+                      }
+                    />
+                  </section>
+
+                  {/* ── Plano entre Sessões (inline, atrelado à sessão atual) ── */}
+                  <section
+                    className="rounded-xl border p-4 space-y-3"
+                    style={{ borderColor: "#E5E7EB", background: "#FFFFFF", borderLeft: "3px solid #3D5C35" }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <NotebookPen className="h-4 w-4" style={{ color: "#3D5C35" }} />
+                      <div>
+                        <h3 className="font-display text-sm font-semibold text-foreground">Plano entre Sessões</h3>
+                        <p className="text-xs text-muted-foreground">Combinados e ações do paciente até a próxima sessão. Salva automaticamente.</p>
+                      </div>
+                    </div>
+                    <HomeworkPlanForm
+                      patientId={session.patient_id}
+                      sessionId={session.id}
+                      initialTask={homeworkTask}
+                      hideFooter
+                      showRecordPicker={false}
+                      onSaved={(t) => { setHomeworkTask(t); setHomeworkExists(true); }}
+                    />
+                  </section>
+                </>
               );
             })()}
             <DialogFooter className="flex-col sm:flex-row gap-2">
