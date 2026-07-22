@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
+import { HomeworkPlanForm } from "./HomeworkPlanForm";
 
 interface Props {
   patientId: string;
@@ -389,100 +390,25 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
       )}
 
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="font-display">{editing ? "Editar plano" : "Novo Plano entre Sessões"}</DialogTitle>
             <DialogDescription>Para {patientName}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-            {records.length > 0 && !editing && (
-              <div>
-                <Label className="text-xs">Preencher a partir de um registro de sessão (opcional)</Label>
-                <Select value={sourceRecord} onValueChange={fillFromRecord}>
-                  <SelectTrigger><SelectValue placeholder="Escolher registro..." /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">— Plano livre —</SelectItem>
-                    {records.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {format(new Date(r.session_date), "dd/MM/yyyy", { locale: ptBR })}
-                        {r.session_number != null && ` · Sessão #${r.session_number}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div>
-              <Label className="text-xs">Título do plano</Label>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Semana 3 — Consolidando insights" maxLength={200} />
-            </div>
-
-            <div>
-              <Label className="flex items-center gap-1.5 text-xs"><NotebookPen className="h-3.5 w-3.5" /> Pontos importantes da sessão</Label>
-              <Textarea
-                value={sessionPoints}
-                onChange={(e) => setSessionPoints(e.target.value)}
-                rows={4}
-                maxLength={2000}
-                placeholder="Registre os principais insights, orientações e pontos abordados na sessão..."
-              />
-            </div>
-
-            <div>
-              <Label className="flex items-center gap-1.5 text-xs"><ListChecks className="h-3.5 w-3.5" /> Plano entre Sessões</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={actionInput}
-                  onChange={(e) => setActionInput(e.target.value)}
-                  placeholder="Adicionar uma ação combinada..."
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addAction(); } }}
-                />
-                <Button type="button" variant="outline" size="sm" onClick={addAction}><Plus className="h-4 w-4" /></Button>
-              </div>
-              {actions.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {actions.map((a, i) => (
-                    <div key={i} className="flex items-center gap-2 group">
-                      <button type="button" onClick={() => toggleAction(i)} className="shrink-0">
-                        {a.done ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4 text-muted-foreground" />}
-                      </button>
-                      <span className={`text-sm flex-1 ${a.done ? "line-through text-muted-foreground" : "text-foreground"}`}>{a.text}</span>
-                      <button type="button" onClick={() => removeAction(i)} className="opacity-0 group-hover:opacity-100 transition-opacity" title="Remover">
-                        <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <Label className="flex items-center gap-1.5 text-xs"><Eye className="h-3.5 w-3.5" /> O que observar durante a semana</Label>
-              <Textarea
-                value={weeklyObservations}
-                onChange={(e) => setWeeklyObservations(e.target.value)}
-                rows={4}
-                maxLength={2000}
-                placeholder="Registre pensamentos, emoções, comportamentos, gatilhos ou situações relevantes para observar..."
-              />
-            </div>
-          </div>
-          <DialogFooter className="flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
-            <span className="text-[11px] text-muted-foreground">
-              {autoSavedAt
-                ? `Salvo automaticamente às ${format(autoSavedAt, "HH:mm:ss")}`
-                : title.trim() ? "Salvando automaticamente..." : "Comece pelo título para salvar automaticamente"}
-            </span>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setOpen(false)}>Fechar</Button>
-              <Button variant="accent" onClick={save} disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Salvar e fechar
-              </Button>
-            </div>
-          </DialogFooter>
+          <HomeworkPlanForm
+            patientId={patientId}
+            initialTask={editing}
+            records={records}
+            onSaved={(t) => {
+              try { localStorage.setItem(draftKey, t.id); } catch {}
+              setEditing(t);
+              load();
+            }}
+            onClose={() => { setOpen(false); resetForm(); }}
+          />
         </DialogContent>
       </Dialog>
     </div>
   );
 };
+
