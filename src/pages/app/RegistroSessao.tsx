@@ -780,7 +780,12 @@ const RegistroSessao = () => {
       form.next_meta_id ||
       form.next_scheduled_at;
     if (ambiguousNext.length > 1 && hasPlanContentEarly) {
-      toast.error("Existe mais de uma sessão futura no mesmo horário. Escolha qual será a próxima sessão antes de salvar o planejamento.");
+      setAmbiguousHighlight(true);
+      setTimeout(() => setAmbiguousHighlight(false), 2400);
+      requestAnimationFrame(() => {
+        ambiguousRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      toast.error("Escolha a qual sessão futura este planejamento deve ser vinculado antes de salvar.");
       return;
     }
 
