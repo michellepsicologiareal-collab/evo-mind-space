@@ -22,6 +22,8 @@ import { ptBR } from "date-fns/locale";
 import { jsPDF } from "jspdf";
 import { cn } from "@/lib/utils";
 import { PageIntro } from "@/components/app/PageIntro";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
+import { SessionPlanningForm, type SessionPlanningValue, planningValueFromDb } from "@/components/app/SessionPlanningForm";
 
 type Patient = {
   id: string;
