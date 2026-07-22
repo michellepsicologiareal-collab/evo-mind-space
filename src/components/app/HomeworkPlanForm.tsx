@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Plus, Send, CheckSquare, Square, X, NotebookPen, ListChecks, Eye, Target, MessageCircle } from "lucide-react";
+import { Loader2, Plus, Send, CheckSquare, Square, X, NotebookPen, ListChecks, Eye, Target, MessageCircle, Copy, Lock } from "lucide-react";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -236,6 +236,54 @@ export const HomeworkPlanForm = ({
   };
 
   const [sending, setSending] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [accessPassword, setAccessPassword] = useState<string>("");
+  const [loadedPassword, setLoadedPassword] = useState(false);
+
+  // Load existing patient password (so the psi sees what she already set).
+  useEffect(() => {
+    if (!patientId || loadedPassword) return;
+    (async () => {
+      const { data } = await supabase
+        .from("patients")
+        .select("homework_password")
+        .eq("id", patientId)
+        .maybeSingle();
+      if (data && (data as any).homework_password) {
+        setAccessPassword((data as any).homework_password as string);
+      }
+      setLoadedPassword(true);
+    })();
+  }, [patientId, loadedPassword]);
+
+  const persistPassword = async () => {
+    if (!patientId) return;
+    const value = accessPassword.trim();
+    await supabase
+      .from("patients")
+      .update({ homework_password: value.length > 0 ? value : null })
+      .eq("id", patientId);
+  };
+
+  const buildPublicUrl = () =>
+    homeworkToken ? `${window.location.origin}/tarefas/${homeworkToken}` : null;
+
+  const copyPublicLink = async () => {
+    const url = buildPublicUrl();
+    if (!url) { toast.error("Link público indisponível"); return; }
+    setCopying(true);
+    await persistPassword();
+    const pwd = accessPassword.trim();
+    const text = pwd ? `${url}\nSenha: ${pwd}` : url;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(pwd ? "Link e senha copiados" : "Link copiado");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+    setCopying(false);
+  };
+
   const sendWhatsApp = async () => {
     const digits = normalizePhoneForWhatsApp(patientPhone);
     if (!digits) { toast.error("Paciente sem WhatsApp cadastrado"); return; }
@@ -243,6 +291,8 @@ export const HomeworkPlanForm = ({
     setSending(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSending(false); return; }
+
+    await persistPassword();
 
     // Ensure the plan is persisted before sending (flush current state).
     const effectiveTitle = title.trim() || (editing?.title ?? defaultTitle());
@@ -276,7 +326,8 @@ export const HomeworkPlanForm = ({
     const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
     const psiName = (profile?.full_name ?? "").trim().split(" ")[0] || "sua psi";
     const firstName = (patientName ?? "").trim().split(" ")[0] || "olá";
-    const publicUrl = homeworkToken ? `${window.location.origin}/tarefas/${homeworkToken}` : null;
+    const publicUrl = buildPublicUrl();
+    const pwd = accessPassword.trim();
 
     const parts: string[] = [
       `Olá, ${firstName}! Aqui é a ${psiName}.`,
@@ -308,6 +359,9 @@ export const HomeworkPlanForm = ({
     if (publicUrl) {
       parts.push("Você pode acompanhar seus planos pelo link abaixo (também gera PDF):");
       parts.push(publicUrl);
+      if (pwd) {
+        parts.push(`🔒 Senha de acesso: ${pwd}`);
+      }
       parts.push("");
     }
     parts.push("Qualquer dúvida, estou por aqui.");
@@ -318,26 +372,58 @@ export const HomeworkPlanForm = ({
   };
 
   const canSend = Boolean(patientPhone && normalizePhoneForWhatsApp(patientPhone));
+  const canCopy = Boolean(homeworkToken);
 
 
   return (
     <div className="space-y-4">
-      {(patientName || patientPhone) && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-moss/20 bg-moss/5 px-3 py-2">
-          <span className="text-xs text-moss-foreground/80">
-            Enviar o plano por WhatsApp{patientName ? ` para ${patientName.split(" ")[0]}` : ""}.
-          </span>
-          <Button
-            type="button"
-            size="sm"
-            variant="moss"
-            onClick={sendWhatsApp}
-            disabled={sending || !canSend}
-            title={canSend ? "Enviar por WhatsApp" : "Paciente sem WhatsApp cadastrado"}
-          >
-            {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
-            {editing?.sent_at ? "Reenviar por WhatsApp" : "Enviar por WhatsApp"}
-          </Button>
+      {(patientName || patientPhone || homeworkToken) && (
+        <div className="space-y-2 rounded-lg border border-moss/20 bg-moss/5 px-3 py-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs text-moss-foreground/80">
+              Compartilhar o plano{patientName ? ` com ${patientName.split(" ")[0]}` : ""}.
+            </span>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={copyPublicLink}
+                disabled={copying || !canCopy}
+                title={canCopy ? "Copiar link público" : "Link indisponível"}
+              >
+                {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
+                Copiar link
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="moss"
+                onClick={sendWhatsApp}
+                disabled={sending || !canSend}
+                title={canSend ? "Enviar por WhatsApp" : "Paciente sem WhatsApp cadastrado"}
+              >
+                {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
+                {editing?.sent_at ? "Reenviar por WhatsApp" : "Enviar por WhatsApp"}
+              </Button>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Label className="flex items-center gap-1 text-[11px] text-moss-foreground/80">
+              <Lock className="h-3 w-3" /> Senha de acesso (opcional)
+            </Label>
+            <Input
+              value={accessPassword}
+              onChange={(e) => setAccessPassword(e.target.value)}
+              onBlur={() => { void persistPassword(); }}
+              placeholder="Defina uma senha para o paciente abrir o link"
+              className="h-8 w-full sm:w-64 text-sm"
+              maxLength={60}
+            />
+            {accessPassword.trim() && (
+              <span className="text-[11px] text-muted-foreground">Será exigida ao abrir o link.</span>
+            )}
+          </div>
         </div>
       )}
       <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
