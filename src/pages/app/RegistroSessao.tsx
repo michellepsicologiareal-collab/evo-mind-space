@@ -174,7 +174,7 @@ const RegistroSessao = () => {
   const proximaSessaoRef = useRef<HTMLElement | null>(null);
   const [focusProximaSessao, setFocusProximaSessao] = useState(false);
 
-  const loadActivePlan = useCallback(async (patientId: string, uid: string) => {
+  const loadActivePlan = useCallback(async (patientId: string, uid: string, currentSessionId?: string | null) => {
     // 1. Active treatment plan for this patient
     const { data: tp } = await supabase
       .from("treatment_plans")
@@ -183,8 +183,8 @@ const RegistroSessao = () => {
       .eq("user_id", uid)
       .maybeSingle();
 
-    // 2. Next session + plan content
-    const { data: ns } = await supabase
+    // 2. Next future session (excluindo a sessão atualmente sendo registrada)
+    let nsQuery = supabase
       .from("sessions")
       .select("id, scheduled_at")
       .eq("patient_id", patientId)
@@ -192,8 +192,9 @@ const RegistroSessao = () => {
       .gte("scheduled_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
       .not("status", "in", "(cancelled,no_show)")
       .order("scheduled_at")
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
+    if (currentSessionId) nsQuery = nsQuery.neq("id", currentSessionId);
+    const { data: ns } = await nsQuery.maybeSingle();
 
     let sp: any = null;
     let sp_id: string | null = null;
@@ -280,15 +281,21 @@ const RegistroSessao = () => {
 
     // Pré-preencher bloco "Próxima sessão" com o planejamento salvo,
     // desde que o usuário ainda não tenha começado a digitar algo lá.
+    // Data/hora sempre reflete a próxima sessão agendada quando existir (campo travado na UI).
     setForm((prev) => {
+      const lockedScheduled = ns?.scheduled_at
+        ? format(new Date(ns.scheduled_at), "yyyy-MM-dd'T'HH:mm")
+        : null;
       const hasUserInput =
         prev.next_objetivo.trim() ||
         prev.next_retomar.trim() ||
         prev.next_observacoes.trim() ||
         prev.next_tecnicas.length > 0 ||
-        prev.next_meta_id ||
-        prev.next_scheduled_at;
-      if (hasUserInput) return prev;
+        prev.next_meta_id;
+      if (hasUserInput) {
+        // preserva conteúdo do usuário, mas sincroniza a data quando há sessão agendada
+        return lockedScheduled ? { ...prev, next_scheduled_at: lockedScheduled } : prev;
+      }
       return {
         ...prev,
         next_objetivo: sp?.objetivo || "",
@@ -296,14 +303,19 @@ const RegistroSessao = () => {
         next_observacoes: sp?.observacoes || "",
         next_tecnicas: Array.isArray(sp?.tecnicas) ? sp.tecnicas : [],
         next_meta_id: sp?.meta_id ?? null,
-        next_scheduled_at: ns?.scheduled_at
-          ? format(new Date(ns.scheduled_at), "yyyy-MM-dd'T'HH:mm")
-          : "",
+        next_scheduled_at: lockedScheduled ?? "",
       };
     });
   }, []);
 
-
+  // Planejamento trazido da sessão anterior (session_plans atrelado à sessão atual)
+  const [broughtPlanning, setBroughtPlanning] = useState<{
+    objetivo: string;
+    retomar: string;
+    tecnicas: string[];
+    observacoes: string;
+    meta_descricao: string | null;
+  } | null>(null);
 
   useEffect(() => {
     if (!user || !form.patient_id) {
@@ -313,12 +325,41 @@ const RegistroSessao = () => {
       setNextSessionId(null);
       setPlanPanelCollapsed(false);
       setPlanLoadedIntoForm(false);
+      setBroughtPlanning(null);
       return;
     }
-    loadActivePlan(form.patient_id, user.id);
+    loadActivePlan(form.patient_id, user.id, form.session_id);
     setPlanPanelCollapsed(false);
     setPlanLoadedIntoForm(false);
-  }, [user, form.patient_id, loadActivePlan]);
+  }, [user, form.patient_id, form.session_id, loadActivePlan]);
+
+  // Buscar planejamento trazido (o session_plan atrelado à sessão atual)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!form.session_id) { setBroughtPlanning(null); return; }
+      const { data: sp } = await supabase
+        .from("session_plans")
+        .select("objetivo, retomar, tecnicas, observacoes, meta_id")
+        .eq("session_id", form.session_id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!sp) { setBroughtPlanning(null); return; }
+      let meta_descricao: string | null = null;
+      if (sp.meta_id) {
+        const { data: m } = await supabase.from("treatment_goals").select("descricao").eq("id", sp.meta_id).maybeSingle();
+        meta_descricao = m?.descricao ?? null;
+      }
+      setBroughtPlanning({
+        objetivo: sp.objetivo ?? "",
+        retomar: sp.retomar ?? "",
+        tecnicas: Array.isArray(sp.tecnicas) ? sp.tecnicas : [],
+        observacoes: sp.observacoes ?? "",
+        meta_descricao,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [form.session_id]);
 
   // Se veio de "Editar planejamento" no Plano Terapêutico, rola até o bloco
   useEffect(() => {
@@ -1595,6 +1636,55 @@ const RegistroSessao = () => {
               />
             </div>
 
+            {/* Planejamento trazido da sessão anterior (read-only) */}
+            {broughtPlanning && (
+              <section
+                className="rounded-lg border p-4 space-y-3 mt-2"
+                style={{ borderColor: "#E5E7EB", background: "#F5F3FF" }}
+              >
+                <h3 className="font-display text-sm font-semibold" style={{ color: "#1A1A2E" }}>
+                  Planejamento trazido da sessão anterior
+                </h3>
+                <p className="text-[11px] text-muted-foreground -mt-2">
+                  Definido no registro da sessão anterior. Use como referência para conduzir esta sessão.
+                </p>
+                {broughtPlanning.meta_descricao && (
+                  <div>
+                    <p className="text-[10px] uppercase text-muted-foreground">Meta vinculada</p>
+                    <p className="text-sm text-foreground">{broughtPlanning.meta_descricao}</p>
+                  </div>
+                )}
+                {broughtPlanning.objetivo && (
+                  <div>
+                    <p className="text-[10px] uppercase text-muted-foreground">Objetivo</p>
+                    <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.objetivo}</p>
+                  </div>
+                )}
+                {broughtPlanning.retomar && (
+                  <div>
+                    <p className="text-[10px] uppercase text-muted-foreground">Retomar / Continuidade</p>
+                    <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.retomar}</p>
+                  </div>
+                )}
+                {broughtPlanning.tecnicas.length > 0 && (
+                  <div>
+                    <p className="text-[10px] uppercase text-muted-foreground mb-1">Técnicas previstas</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {broughtPlanning.tecnicas.map((t) => (
+                        <span key={t} className="text-xs px-2.5 py-0.5 rounded-full border" style={{ background: "#fff", borderColor: "#E5E7EB", color: "#1A1A2E" }}>{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {broughtPlanning.observacoes && (
+                  <div>
+                    <p className="text-[10px] uppercase text-muted-foreground">Observações</p>
+                    <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.observacoes}</p>
+                  </div>
+                )}
+              </section>
+            )}
+
             {/* Planejamento da próxima sessão — fonte única, componente reutilizado */}
             <div id="proxima-sessao" ref={proximaSessaoRef as any} className="mt-2">
               <SessionPlanningForm
@@ -1609,9 +1699,15 @@ const RegistroSessao = () => {
                 onChange={(patch) => setForm({ ...form, ...patch })}
                 planGoals={planGoals}
                 planTechniques={planTechniques}
-                helperText="O planejamento salvo aqui aparece na Ficha do Paciente (aba Plano Terapêutico)."
+                scheduledAtLocked={!!nextSessionId}
+                helperText={
+                  nextSessionId
+                    ? "Este planejamento fica vinculado à próxima sessão já agendada do paciente e aparece automaticamente quando ela for aberta."
+                    : "Sem próxima sessão agendada. O planejamento fica salvo como pendente e será vinculado quando você agendar."
+                }
               />
             </div>
+
           </>
         )}
       </section>
