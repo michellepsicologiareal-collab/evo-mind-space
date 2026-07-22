@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 import { SessionPlanningForm } from "@/components/app/SessionPlanningForm";
+import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
 import { preserveScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
 
