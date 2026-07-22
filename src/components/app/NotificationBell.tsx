@@ -59,7 +59,7 @@ export const NotificationBell = () => {
     if (!user) return;
     load();
 
-    const channelName = `notifications:${user.id}:${Date.now()}`;
+    const channelName = `notifications:${user.id}:${instanceIdRef.current}`;
 
     const channel = supabase
       .channel(channelName)
