@@ -31,6 +31,16 @@ export const NotificationBell = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  // ID único por instância — evita colisão de tópico quando o componente é
+  // renderizado em mais de um ponto da árvore (ex.: sidebar desktop e header
+  // mobile) e ambos os useEffect rodam no mesmo tick. Sem isso, o cliente
+  // realtime devolve o MESMO canal já subscribed e o segundo .on() lança
+  // "cannot add postgres_changes callbacks after subscribe()".
+  const instanceIdRef = useRef<string>(
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  );
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
