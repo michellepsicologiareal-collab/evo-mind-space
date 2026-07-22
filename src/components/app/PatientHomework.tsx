@@ -25,9 +25,10 @@ interface Props {
 
 interface Task {
   id: string;
-  title: string;
+  title: string | null;
   content: string;
   session_points: string | null;
+  weekly_goal: string | null;
   actions: Json | null;
   weekly_observations: string | null;
   sent_at: string | null;
