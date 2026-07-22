@@ -451,7 +451,7 @@ export const PatientSessionsQuickView = ({
                   <SourceBadge source={detail.source} />
                 </div>
                 <h2 className="text-lg font-display font-semibold text-foreground">
-                  {format(new Date(detail.session_date), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                  {format(parseSessionDate(detail.session_date) ?? new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
                   {detail.session_number != null && (
                     <span className="ml-2 text-xs text-muted-foreground">Sessão #{detail.session_number}</span>
                   )}
