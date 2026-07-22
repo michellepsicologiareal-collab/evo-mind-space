@@ -1088,6 +1088,7 @@ export type Database = {
           full_name: string
           has_financial_responsible: boolean
           has_psychiatrist: boolean
+          homework_password: string | null
           homework_token: string | null
           id: string
           is_active: boolean
@@ -1117,6 +1118,7 @@ export type Database = {
           full_name: string
           has_financial_responsible?: boolean
           has_psychiatrist?: boolean
+          homework_password?: string | null
           homework_token?: string | null
           id?: string
           is_active?: boolean
@@ -1146,6 +1148,7 @@ export type Database = {
           full_name?: string
           has_financial_responsible?: boolean
           has_psychiatrist?: boolean
+          homework_password?: string | null
           homework_token?: string | null
           id?: string
           is_active?: boolean
@@ -2150,20 +2153,45 @@ export type Database = {
           template_id: string
         }[]
       }
-      get_homework_by_token: {
+      get_homework_by_token:
+        | {
+            Args: { _token: string }
+            Returns: {
+              actions: Json
+              content: string
+              created_at: string
+              patient_name: string
+              sent_at: string
+              session_points: string
+              task_id: string
+              therapist_crp: string
+              therapist_name: string
+              title: string
+              weekly_observations: string
+            }[]
+          }
+        | {
+            Args: { _password: string; _token: string }
+            Returns: {
+              actions: Json
+              content: string
+              created_at: string
+              patient_name: string
+              sent_at: string
+              session_points: string
+              task_id: string
+              therapist_crp: string
+              therapist_name: string
+              title: string
+              weekly_observations: string
+            }[]
+          }
+      get_homework_link_info: {
         Args: { _token: string }
         Returns: {
-          actions: Json
-          content: string
-          created_at: string
+          exists_flag: boolean
+          password_required: boolean
           patient_name: string
-          sent_at: string
-          session_points: string
-          task_id: string
-          therapist_crp: string
-          therapist_name: string
-          title: string
-          weekly_observations: string
         }[]
       }
       get_profile_id_by_email: { Args: { _email: string }; Returns: string }
