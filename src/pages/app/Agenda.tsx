@@ -2961,7 +2961,7 @@ const Agenda = () => {
                   </div>
                   <Button type="button" variant="outline" size="sm" onClick={openHomeworkForSession} disabled={homeworkLoading}>
                     {homeworkLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <NotebookPen className="h-4 w-4" />}
-                    {homeworkTask && homeworkOpen ? "Abrir Plano entre Sessões" : "Criar Plano entre Sessões"}
+                    {homeworkExists ? "Abrir Plano entre Sessões" : "Criar Plano entre Sessões"}
                   </Button>
                 </div>
               );
