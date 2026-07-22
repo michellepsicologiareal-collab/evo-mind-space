@@ -56,8 +56,22 @@ interface Props {
   onOpenFullHistory: () => void;
 }
 
-const fmtDate = (d: Date | string | null | undefined) =>
-  d ? format(typeof d === "string" ? new Date(d) : d, "dd/MM/yyyy", { locale: ptBR }) : "—";
+// Parse "YYYY-MM-DD" como data local (evita shift de timezone que joga 19/05 para 18/05).
+// Datas com horário (ISO com T ou timezone) seguem o parser padrão.
+const parseSessionDate = (v: Date | string | null | undefined): Date | null => {
+  if (!v) return null;
+  if (v instanceof Date) return v;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+    const [y, m, d] = v.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+  return new Date(v);
+};
+
+const fmtDate = (d: Date | string | null | undefined) => {
+  const parsed = parseSessionDate(d);
+  return parsed ? format(parsed, "dd/MM/yyyy", { locale: ptBR }) : "—";
+};
 
 const followUpLabel = (start: Date | null): string => {
   if (!start) return "—";
@@ -134,11 +148,11 @@ export const PatientSessionsQuickView = ({
           .eq("patient_id", patientId)
           .order("session_date", { ascending: false })
           .limit(15),
-        // 2) Novo fluxo — patient_progress + metadata da sessão
+        // 2) Novo fluxo — patient_progress (sem embed; sessions carrega em segunda query)
         // Filtro trata data_model NULL: aceita NULL OU diferente de 'legacy_unclassified'
         supabase
           .from("patient_progress")
-          .select("id, session_id, recorded_at, created_at, wellbeing_score, patient_context, clinical_observation, emotions, themes, engagement, attention_flag, private_notes, data_model, sessions:session_id(scheduled_at, modality, duration_minutes)")
+          .select("id, session_id, recorded_at, created_at, wellbeing_score, patient_context, clinical_observation, emotions, themes, engagement, attention_flag, private_notes, data_model")
           .eq("patient_id", patientId)
           .or("data_model.is.null,data_model.neq.legacy_unclassified")
           .order("recorded_at", { ascending: false })
@@ -165,10 +179,28 @@ export const PatientSessionsQuickView = ({
       const legacyRows = (legacyRes.data ?? []) as any[];
       const v2Rows = (v2Res.data ?? []) as any[];
 
-      // Set de session_id cobertos por registros v2 — usado para deduplicar legado
-      const v2SessionIds = new Set(
-        v2Rows.map((r) => r.session_id).filter((sid): sid is string => !!sid)
+      // Segunda query: buscar metadados das sessões referenciadas pelos registros v2
+      const v2SessionIdList = Array.from(
+        new Set(v2Rows.map((r) => r.session_id).filter((sid): sid is string => !!sid))
       );
+      const sessionsMap = new Map<string, { scheduled_at: string | null; modality: string | null; duration_minutes: number | null; status: string | null }>();
+      if (v2SessionIdList.length > 0) {
+        const { data: sessRows } = await supabase
+          .from("sessions")
+          .select("id, scheduled_at, modality, duration_minutes, status")
+          .in("id", v2SessionIdList);
+        (sessRows ?? []).forEach((s: any) => {
+          sessionsMap.set(s.id, {
+            scheduled_at: s.scheduled_at ?? null,
+            modality: s.modality ?? null,
+            duration_minutes: s.duration_minutes ?? null,
+            status: s.status ?? null,
+          });
+        });
+      }
+
+      // Set de session_id cobertos por registros v2 — usado para deduplicar legado
+      const v2SessionIds = new Set(v2SessionIdList);
 
       const legacyUnified: UnifiedRecord[] = legacyRows
         .filter((r) => !(r.session_id && v2SessionIds.has(r.session_id)))
@@ -193,11 +225,12 @@ export const PatientSessionsQuickView = ({
         }));
 
       const v2Unified: UnifiedRecord[] = v2Rows.map((r) => {
-        const sess = r.sessions ?? null;
+        const sess = r.session_id ? sessionsMap.get(r.session_id) ?? null : null;
         return {
           id: `v2:${r.id}`,
           source: "v2" as const,
           session_id: r.session_id ?? null,
+          // Fallback para recorded_at quando não há sessão vinculada
           session_date: sess?.scheduled_at ?? r.recorded_at ?? r.created_at,
           session_number: null,
           modality: sess?.modality ?? null,
@@ -217,7 +250,7 @@ export const PatientSessionsQuickView = ({
       });
 
       const merged = [...v2Unified, ...legacyUnified]
-        .sort((a, b) => new Date(b.session_date).getTime() - new Date(a.session_date).getTime())
+        .sort((a, b) => (parseSessionDate(b.session_date)?.getTime() ?? 0) - (parseSessionDate(a.session_date)?.getTime() ?? 0))
         .slice(0, 3);
 
       setRecords(merged);
@@ -280,7 +313,7 @@ export const PatientSessionsQuickView = ({
                     <div className="flex items-center gap-2 flex-wrap">
                       <Calendar className="h-4 w-4 text-primary" />
                       <p className="text-base font-display font-semibold text-foreground leading-tight">
-                        {format(new Date(r.session_date), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                        {format(parseSessionDate(r.session_date) ?? new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
                       </p>
                       {r.session_number != null && (
                         <span className="text-[11px] text-muted-foreground">#{r.session_number}</span>
@@ -418,7 +451,7 @@ export const PatientSessionsQuickView = ({
                   <SourceBadge source={detail.source} />
                 </div>
                 <h2 className="text-lg font-display font-semibold text-foreground">
-                  {format(new Date(detail.session_date), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                  {format(parseSessionDate(detail.session_date) ?? new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
                   {detail.session_number != null && (
                     <span className="ml-2 text-xs text-muted-foreground">Sessão #{detail.session_number}</span>
                   )}
