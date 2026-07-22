@@ -281,15 +281,21 @@ const RegistroSessao = () => {
 
     // Pré-preencher bloco "Próxima sessão" com o planejamento salvo,
     // desde que o usuário ainda não tenha começado a digitar algo lá.
+    // Data/hora sempre reflete a próxima sessão agendada quando existir (campo travado na UI).
     setForm((prev) => {
+      const lockedScheduled = ns?.scheduled_at
+        ? format(new Date(ns.scheduled_at), "yyyy-MM-dd'T'HH:mm")
+        : null;
       const hasUserInput =
         prev.next_objetivo.trim() ||
         prev.next_retomar.trim() ||
         prev.next_observacoes.trim() ||
         prev.next_tecnicas.length > 0 ||
-        prev.next_meta_id ||
-        prev.next_scheduled_at;
-      if (hasUserInput) return prev;
+        prev.next_meta_id;
+      if (hasUserInput) {
+        // preserva conteúdo do usuário, mas sincroniza a data quando há sessão agendada
+        return lockedScheduled ? { ...prev, next_scheduled_at: lockedScheduled } : prev;
+      }
       return {
         ...prev,
         next_objetivo: sp?.objetivo || "",
@@ -297,14 +303,19 @@ const RegistroSessao = () => {
         next_observacoes: sp?.observacoes || "",
         next_tecnicas: Array.isArray(sp?.tecnicas) ? sp.tecnicas : [],
         next_meta_id: sp?.meta_id ?? null,
-        next_scheduled_at: ns?.scheduled_at
-          ? format(new Date(ns.scheduled_at), "yyyy-MM-dd'T'HH:mm")
-          : "",
+        next_scheduled_at: lockedScheduled ?? "",
       };
     });
   }, []);
 
-
+  // Planejamento trazido da sessão anterior (session_plans atrelado à sessão atual)
+  const [broughtPlanning, setBroughtPlanning] = useState<{
+    objetivo: string;
+    retomar: string;
+    tecnicas: string[];
+    observacoes: string;
+    meta_descricao: string | null;
+  } | null>(null);
 
   useEffect(() => {
     if (!user || !form.patient_id) {
@@ -314,12 +325,41 @@ const RegistroSessao = () => {
       setNextSessionId(null);
       setPlanPanelCollapsed(false);
       setPlanLoadedIntoForm(false);
+      setBroughtPlanning(null);
       return;
     }
-    loadActivePlan(form.patient_id, user.id);
+    loadActivePlan(form.patient_id, user.id, form.session_id);
     setPlanPanelCollapsed(false);
     setPlanLoadedIntoForm(false);
-  }, [user, form.patient_id, loadActivePlan]);
+  }, [user, form.patient_id, form.session_id, loadActivePlan]);
+
+  // Buscar planejamento trazido (o session_plan atrelado à sessão atual)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!form.session_id) { setBroughtPlanning(null); return; }
+      const { data: sp } = await supabase
+        .from("session_plans")
+        .select("objetivo, retomar, tecnicas, observacoes, meta_id")
+        .eq("session_id", form.session_id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (!sp) { setBroughtPlanning(null); return; }
+      let meta_descricao: string | null = null;
+      if (sp.meta_id) {
+        const { data: m } = await supabase.from("treatment_goals").select("descricao").eq("id", sp.meta_id).maybeSingle();
+        meta_descricao = m?.descricao ?? null;
+      }
+      setBroughtPlanning({
+        objetivo: sp.objetivo ?? "",
+        retomar: sp.retomar ?? "",
+        tecnicas: Array.isArray(sp.tecnicas) ? sp.tecnicas : [],
+        observacoes: sp.observacoes ?? "",
+        meta_descricao,
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [form.session_id]);
 
   // Se veio de "Editar planejamento" no Plano Terapêutico, rola até o bloco
   useEffect(() => {
