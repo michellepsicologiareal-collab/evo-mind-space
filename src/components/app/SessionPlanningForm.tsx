@@ -67,6 +67,8 @@ interface Props {
   planGoals: { id: string; descricao: string }[];
   planTechniques: { id: string; nome: string }[];
   showScheduledAt?: boolean;
+  scheduledAtLocked?: boolean;
+  scheduledAtHint?: string;
   helperText?: string;
   className?: string;
 }
