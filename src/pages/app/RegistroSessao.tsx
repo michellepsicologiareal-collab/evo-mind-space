@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
+import { SessionPlanningForm } from "@/components/app/SessionPlanningForm";
 import { preserveScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
 
