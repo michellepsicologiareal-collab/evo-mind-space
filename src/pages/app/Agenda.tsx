@@ -1876,18 +1876,6 @@ const Agenda = () => {
             >
               <Pencil className="h-3 w-3" /> Registrar sessão
             </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); openPlanningForSession(s); }}
-              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-muted text-foreground/80 hover:bg-muted/70 border border-border transition-colors"
-            >
-              <Target className="h-3 w-3" /> Planejar próxima sessão
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); openHomeworkForSession(s); }}
-              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-muted text-foreground/80 hover:bg-muted/70 border border-border transition-colors"
-            >
-              <NotebookPen className="h-3 w-3" /> Plano entre sessões
-            </button>
           </div>
         )}
       </div>
