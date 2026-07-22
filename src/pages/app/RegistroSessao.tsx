@@ -3,7 +3,7 @@ import { HelpCard } from "@/components/app/HelpCard";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, History, Minimize2, Maximize2, Target, ExternalLink, ArrowLeft, CheckSquare, RefreshCw, Pencil as PencilIcon } from "lucide-react";
+import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, History, Minimize2, Maximize2, Target, ExternalLink, ArrowLeft, CheckSquare, RefreshCw, NotebookPen, Pencil as PencilIcon } from "lucide-react";
 import { RegistroSessaoHub } from "@/components/app/RegistroSessaoHub";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 import { SessionPlanningForm } from "@/components/app/SessionPlanningForm";
+import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
 import { preserveScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
 
@@ -422,6 +423,27 @@ const RegistroSessao = () => {
     })();
     return () => { cancelled = true; };
   }, [form.session_id]);
+
+  // Plano entre Sessões atrelado à sessão atual (para renderização inline no Registro)
+  const [homeworkTask, setHomeworkTask] = useState<HomeworkPlanFormTask | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!form.session_id || !form.patient_id || !user) { setHomeworkTask(null); return; }
+      const { data } = await supabase
+        .from("homework_tasks")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("patient_id", form.patient_id)
+        .eq("session_id", form.session_id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      setHomeworkTask((data as HomeworkPlanFormTask) ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, [form.session_id, form.patient_id, user]);
 
   // Se veio de "Editar planejamento" no Plano Terapêutico, rola até o bloco
   useEffect(() => {
@@ -1432,7 +1454,206 @@ const RegistroSessao = () => {
 
       </section>
 
-      {/* ── Plano de Tratamento Ativo ── */}
+      {/* Plano de Tratamento Ativo — movido para depois do Registro Clínico */}
+
+      {/* Drawer com o Plano de Tratamento — atualizar sem sair da tela */}
+      <Sheet
+        open={planDrawerOpen}
+        onOpenChange={(o) => {
+          setPlanDrawerOpen(o);
+          if (!o && form.patient_id && user) {
+            loadActivePlan(form.patient_id, user.id);
+          }
+        }}
+      >
+        <SheetContent side="right" className="w-full sm:max-w-4xl p-0 flex flex-col">
+          <SheetHeader className="px-5 py-3 border-b shrink-0">
+            <SheetTitle className="flex items-center gap-2">
+              <Target className="h-4 w-4" style={{ color: "#534AB7" }} />
+              Plano de Tratamento
+            </SheetTitle>
+            <SheetDescription className="text-xs">
+              Edite o plano sem sair do Registro de Sessão. Ao fechar, o card acima será atualizado.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-hidden">
+            {form.patient_id && (
+              <iframe
+                title="Plano de Tratamento"
+                src={`/app/plano-tratamento?patient=${form.patient_id}&embed=1`}
+                className="w-full h-full border-0"
+              />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+
+
+
+
+      {/* ── Seção 1: Estado do Paciente ── */}
+      <section
+        className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("estado") ? "p-3" : "p-5 space-y-4")}
+        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #534AB7" }}
+      >
+        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" sectionKey="estado" color="#534AB7" />
+        {isOpen("estado") && (
+          <div className="space-y-2">
+            <Label>Queixa principal / Tema trazido</Label>
+            <Textarea
+              ref={chiefComplaintRef}
+              rows={3}
+              placeholder="Descreva a queixa ou tema central apresentado pelo paciente nesta sessão..."
+              value={form.chief_complaint}
+              onChange={(e) =>
+                setForm({ ...form, chief_complaint: e.target.value })
+              }
+              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+            />
+          </div>
+        )}
+      </section>
+
+
+      {/* ── Seção 2: Conteúdo da Sessão ── */}
+      <section
+        className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("conteudo") ? "p-3" : "p-5 space-y-4")}
+        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #B8860B" }}
+      >
+        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" sectionKey="conteudo" color="#B8860B" />
+        {isOpen("conteudo") && (
+          <>
+            <div className="space-y-2">
+              <Label>Temas abordados</Label>
+              <div className="flex flex-wrap gap-2">
+                {THEME_CHIPS.map((theme) => {
+                  const selected = form.themes.includes(theme);
+                  return (
+                    <button
+                      key={theme}
+                      type="button"
+                      onClick={() => toggleTheme(theme)}
+                      className="px-3 py-1 transition-colors"
+                      style={
+                        selected
+                          ? { backgroundColor: "#EEEDFE", color: "#534AB7", border: "1px solid #AFA9EC", borderRadius: 6, fontSize: 13, fontWeight: 600 }
+                          : { backgroundColor: "#F3F4F6", color: "#6B7280", border: "1px solid #E5E7EB", borderRadius: 6, fontSize: 13, fontWeight: 500 }
+                      }
+                    >
+                      {theme}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Observações clínicas</Label>
+              <Textarea
+                rows={4}
+                placeholder="Registre observações relevantes sobre o conteúdo da sessão..."
+                value={form.clinical_observations}
+                onChange={(e) =>
+                  setForm({ ...form, clinical_observations: e.target.value })
+                }
+                style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+              />
+            </div>
+
+            {/* Planejamento próxima sessão e blocos associados — movidos para depois do Registro Clínico */}
+
+
+          </>
+        )}
+      </section>
+
+
+
+      {/* ── Seção 3: Avaliação do Terapeuta ── */}
+      <section
+        className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("avaliacao") ? "p-3" : "p-5 space-y-4")}
+        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #2D6A4F" }}
+      >
+        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" sectionKey="avaliacao" color="#2D6A4F" />
+        {isOpen("avaliacao") && (
+          <>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Engajamento do paciente</Label>
+                <span className="font-display font-semibold" style={{ fontSize: 12, color: "#534AB7", fontWeight: 700 }}>
+                  {ENGAGEMENT_LABELS[form.engagement - 1]}
+                </span>
+              </div>
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((level) => {
+                  const isCurrent = form.engagement === level;
+                  return (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => setForm({ ...form, engagement: level })}
+                      className="flex-1 h-10 transition-colors"
+                      style={
+                        isCurrent
+                          ? { backgroundColor: "#534AB7", color: "#FFFFFF", border: "1px solid #534AB7", borderRadius: 8, fontSize: 14, fontWeight: 700 }
+                          : { backgroundColor: "#FFFFFF", color: "#6B7280", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 14, fontWeight: 600 }
+                      }
+                      aria-label={`Engajamento nível ${level}`}
+                    >
+                      {level}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                Indicador de risco
+              </Label>
+              <Select
+                value={form.risk_indicator}
+                onValueChange={(v) => setForm({ ...form, risk_indicator: v })}
+              >
+                <SelectTrigger
+                  className={cn(
+                    form.risk_indicator === "high" &&
+                      "border-destructive text-destructive",
+                    form.risk_indicator === "moderate" &&
+                      "border-amber-500 text-amber-700"
+                  )}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RISK_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Notas privadas do terapeuta</Label>
+              <Textarea
+                rows={3}
+                placeholder="Anotações pessoais que não fazem parte do prontuário formal..."
+                value={form.private_notes}
+                onChange={(e) =>
+                  setForm({ ...form, private_notes: e.target.value })
+                }
+              />
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* ── Plano de Tratamento Ativo (consulta) — após o Registro Clínico ── */}
       {form.patient_id && activePlan.loaded && (
         <section
           className="p-4 sm:p-5"
@@ -1476,7 +1697,7 @@ const RegistroSessao = () => {
                     className="uppercase"
                     style={{ color: "#534AB7", fontWeight: 700, fontSize: 11, letterSpacing: "0.08em" }}
                   >
-                    Plano Ativo
+                    Plano Terapêutico Ativo
                   </div>
                   {planLoadedIntoForm && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-white border border-[#534AB7]/30 text-[#534AB7] font-medium">
@@ -1596,7 +1817,7 @@ const RegistroSessao = () => {
                       className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm bg-white hover:bg-white/80 transition-colors"
                       style={{ border: "1px solid #534AB7", color: "#534AB7", fontWeight: 600 }}
                     >
-                      <PencilIcon className="h-3.5 w-3.5" /> Atualizar Plano
+                      <PencilIcon className="h-3.5 w-3.5" /> Abrir Plano Terapêutico
                     </button>
                   </div>
                 </>
@@ -1606,314 +1827,159 @@ const RegistroSessao = () => {
         </section>
       )}
 
-      {/* Drawer com o Plano de Tratamento — atualizar sem sair da tela */}
-      <Sheet
-        open={planDrawerOpen}
-        onOpenChange={(o) => {
-          setPlanDrawerOpen(o);
-          if (!o && form.patient_id && user) {
-            loadActivePlan(form.patient_id, user.id);
-          }
-        }}
-      >
-        <SheetContent side="right" className="w-full sm:max-w-4xl p-0 flex flex-col">
-          <SheetHeader className="px-5 py-3 border-b shrink-0">
-            <SheetTitle className="flex items-center gap-2">
-              <Target className="h-4 w-4" style={{ color: "#534AB7" }} />
-              Plano de Tratamento
-            </SheetTitle>
-            <SheetDescription className="text-xs">
-              Edite o plano sem sair do Registro de Sessão. Ao fechar, o card acima será atualizado.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="flex-1 overflow-hidden">
-            {form.patient_id && (
-              <iframe
-                title="Plano de Tratamento"
-                src={`/app/plano-tratamento?patient=${form.patient_id}&embed=1`}
-                className="w-full h-full border-0"
-              />
-            )}
+      {/* ── Planejamento da Próxima Sessão ── */}
+      {form.patient_id && (
+        <section
+          className="p-5 space-y-4"
+          style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #B8860B" }}
+        >
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4" style={{ color: "#B8860B" }} />
+            <div>
+              <h3 className="font-display text-sm font-semibold text-foreground">Planejamento da Próxima Sessão</h3>
+              <p className="text-xs text-muted-foreground">Combine agora o objetivo e as técnicas da próxima sessão do paciente.</p>
+            </div>
           </div>
-        </SheetContent>
-      </Sheet>
 
+          {/* Planejamento trazido da sessão anterior (read-only) */}
+          {broughtPlanning && (
+            <section
+              className="rounded-lg border p-4 space-y-3"
+              style={{ borderColor: "#E5E7EB", background: "#F5F3FF" }}
+            >
+              <h3 className="font-display text-sm font-semibold" style={{ color: "#1A1A2E" }}>
+                Planejamento trazido da sessão anterior
+              </h3>
+              <p className="text-[11px] text-muted-foreground -mt-2">
+                Definido no registro da sessão anterior. Use como referência para conduzir esta sessão.
+              </p>
+              {broughtPlanning.meta_descricao && (
+                <div>
+                  <p className="text-[10px] uppercase text-muted-foreground">Meta vinculada</p>
+                  <p className="text-sm text-foreground">{broughtPlanning.meta_descricao}</p>
+                </div>
+              )}
+              {broughtPlanning.objetivo && (
+                <div>
+                  <p className="text-[10px] uppercase text-muted-foreground">Objetivo</p>
+                  <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.objetivo}</p>
+                </div>
+              )}
+              {broughtPlanning.retomar && (
+                <div>
+                  <p className="text-[10px] uppercase text-muted-foreground">Retomar / Continuidade</p>
+                  <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.retomar}</p>
+                </div>
+              )}
+              {broughtPlanning.tecnicas.length > 0 && (
+                <div>
+                  <p className="text-[10px] uppercase text-muted-foreground mb-1">Técnicas previstas</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {broughtPlanning.tecnicas.map((t) => (
+                      <span key={t} className="text-xs px-2.5 py-0.5 rounded-full border" style={{ background: "#fff", borderColor: "#E5E7EB", color: "#1A1A2E" }}>{t}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {broughtPlanning.observacoes && (
+                <div>
+                  <p className="text-[10px] uppercase text-muted-foreground">Observações</p>
+                  <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.observacoes}</p>
+                </div>
+              )}
+            </section>
+          )}
 
+          {/* Empate: duas sessões futuras no mesmo horário — psicóloga escolhe */}
+          {ambiguousNext.length > 1 && (
+            <section className="rounded-lg border p-4 space-y-3" style={{ borderColor: "#F59E0B", background: "#FFFBEB" }}>
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 mt-0.5" style={{ color: "#B45309" }} />
+                <div>
+                  <h3 className="font-display text-sm font-semibold" style={{ color: "#78350F" }}>
+                    Há mais de uma sessão futura neste mesmo horário
+                  </h3>
+                  <p className="text-xs text-[#78350F]/80">
+                    Escolha a qual sessão este planejamento deve ser vinculado. O vínculo é feito pelo ID da sessão — não pela data.
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {ambiguousNext.map((r) => (
+                  <label key={r.id} className="flex items-start gap-2 rounded-md border bg-white p-2 cursor-pointer hover:border-[#F59E0B]" style={{ borderColor: "#FDE68A" }}>
+                    <input
+                      type="radio"
+                      name="ambiguous-next"
+                      className="mt-1"
+                      onChange={() => chooseNextSession(r.id)}
+                    />
+                    <div className="text-sm">
+                      <div className="font-medium text-[#1A1A2E]">
+                        {format(new Date(r.scheduled_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {r.modality ?? "—"} · {r.duration_minutes ?? 50} min
+                        {r.created_at && <> · criada em {format(new Date(r.created_at), "dd/MM/yyyy HH:mm")}</>}
+                      </div>
+                      {r.notes && <div className="text-xs text-muted-foreground truncate max-w-[420px]">{r.notes}</div>}
+                      <div className="text-[10px] text-muted-foreground mt-0.5">ID: {r.id.slice(0, 8)}…</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </section>
+          )}
 
-
-
-      {/* ── Seção 1: Estado do Paciente ── */}
-      <section
-        className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("estado") ? "p-3" : "p-5 space-y-4")}
-        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #534AB7" }}
-      >
-        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" sectionKey="estado" color="#534AB7" />
-        {isOpen("estado") && (
-          <div className="space-y-2">
-            <Label>Queixa principal / Tema trazido</Label>
-            <Textarea
-              ref={chiefComplaintRef}
-              rows={3}
-              placeholder="Descreva a queixa ou tema central apresentado pelo paciente nesta sessão..."
-              value={form.chief_complaint}
-              onChange={(e) =>
-                setForm({ ...form, chief_complaint: e.target.value })
+          <div id="proxima-sessao" ref={proximaSessaoRef as any}>
+            <SessionPlanningForm
+              value={{
+                next_scheduled_at: form.next_scheduled_at,
+                next_objetivo: form.next_objetivo,
+                next_retomar: form.next_retomar,
+                next_meta_id: form.next_meta_id,
+                next_tecnicas: form.next_tecnicas,
+                next_observacoes: form.next_observacoes,
+              }}
+              onChange={(patch) => setForm({ ...form, ...patch })}
+              planGoals={planGoals}
+              planTechniques={planTechniques}
+              scheduledAtLocked={!!nextSessionId}
+              helperText={
+                ambiguousNext.length > 1
+                  ? "Selecione acima a sessão-alvo antes de preencher o planejamento."
+                  : nextSessionId
+                    ? "Este planejamento fica vinculado à próxima sessão já agendada do paciente e aparece automaticamente quando ela for aberta."
+                    : "Sem próxima sessão agendada. O planejamento fica salvo como pendente e será vinculado quando você agendar."
               }
-              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
             />
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
-
-      {/* ── Seção 2: Conteúdo da Sessão ── */}
-      <section
-        className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("conteudo") ? "p-3" : "p-5 space-y-4")}
-        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #B8860B" }}
-      >
-        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" sectionKey="conteudo" color="#B8860B" />
-        {isOpen("conteudo") && (
-          <>
-            <div className="space-y-2">
-              <Label>Temas abordados</Label>
-              <div className="flex flex-wrap gap-2">
-                {THEME_CHIPS.map((theme) => {
-                  const selected = form.themes.includes(theme);
-                  return (
-                    <button
-                      key={theme}
-                      type="button"
-                      onClick={() => toggleTheme(theme)}
-                      className="px-3 py-1 transition-colors"
-                      style={
-                        selected
-                          ? { backgroundColor: "#EEEDFE", color: "#534AB7", border: "1px solid #AFA9EC", borderRadius: 6, fontSize: 13, fontWeight: 600 }
-                          : { backgroundColor: "#F3F4F6", color: "#6B7280", border: "1px solid #E5E7EB", borderRadius: 6, fontSize: 13, fontWeight: 500 }
-                      }
-                    >
-                      {theme}
-                    </button>
-                  );
-                })}
-              </div>
+      {/* ── Plano entre Sessões ── */}
+      {form.patient_id && form.session_id && (
+        <section
+          className="p-5 space-y-4"
+          style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #3D5C35" }}
+        >
+          <div className="flex items-center gap-2">
+            <NotebookPen className="h-4 w-4" style={{ color: "#3D5C35" }} />
+            <div>
+              <h3 className="font-display text-sm font-semibold text-foreground">Plano entre Sessões</h3>
+              <p className="text-xs text-muted-foreground">Combinados e ações do paciente até a próxima sessão. Opcional.</p>
             </div>
+          </div>
+          <HomeworkPlanForm
+            patientId={form.patient_id}
+            sessionId={form.session_id}
+            initialTask={homeworkTask}
+            hideFooter
+            showRecordPicker={false}
+            onSaved={(t) => setHomeworkTask(t)}
+          />
+        </section>
+      )}
 
-            <div className="space-y-2">
-              <Label>Observações clínicas</Label>
-              <Textarea
-                rows={4}
-                placeholder="Registre observações relevantes sobre o conteúdo da sessão..."
-                value={form.clinical_observations}
-                onChange={(e) =>
-                  setForm({ ...form, clinical_observations: e.target.value })
-                }
-                style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
-              />
-            </div>
-
-            {/* Planejamento trazido da sessão anterior (read-only) */}
-            {broughtPlanning && (
-              <section
-                className="rounded-lg border p-4 space-y-3 mt-2"
-                style={{ borderColor: "#E5E7EB", background: "#F5F3FF" }}
-              >
-                <h3 className="font-display text-sm font-semibold" style={{ color: "#1A1A2E" }}>
-                  Planejamento trazido da sessão anterior
-                </h3>
-                <p className="text-[11px] text-muted-foreground -mt-2">
-                  Definido no registro da sessão anterior. Use como referência para conduzir esta sessão.
-                </p>
-                {broughtPlanning.meta_descricao && (
-                  <div>
-                    <p className="text-[10px] uppercase text-muted-foreground">Meta vinculada</p>
-                    <p className="text-sm text-foreground">{broughtPlanning.meta_descricao}</p>
-                  </div>
-                )}
-                {broughtPlanning.objetivo && (
-                  <div>
-                    <p className="text-[10px] uppercase text-muted-foreground">Objetivo</p>
-                    <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.objetivo}</p>
-                  </div>
-                )}
-                {broughtPlanning.retomar && (
-                  <div>
-                    <p className="text-[10px] uppercase text-muted-foreground">Retomar / Continuidade</p>
-                    <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.retomar}</p>
-                  </div>
-                )}
-                {broughtPlanning.tecnicas.length > 0 && (
-                  <div>
-                    <p className="text-[10px] uppercase text-muted-foreground mb-1">Técnicas previstas</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {broughtPlanning.tecnicas.map((t) => (
-                        <span key={t} className="text-xs px-2.5 py-0.5 rounded-full border" style={{ background: "#fff", borderColor: "#E5E7EB", color: "#1A1A2E" }}>{t}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {broughtPlanning.observacoes && (
-                  <div>
-                    <p className="text-[10px] uppercase text-muted-foreground">Observações</p>
-                    <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.observacoes}</p>
-                  </div>
-                )}
-              </section>
-            )}
-
-            {/* Empate: duas sessões futuras no mesmo horário — psicóloga escolhe */}
-            {ambiguousNext.length > 1 && (
-              <section className="rounded-lg border p-4 space-y-3 mt-2" style={{ borderColor: "#F59E0B", background: "#FFFBEB" }}>
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 mt-0.5" style={{ color: "#B45309" }} />
-                  <div>
-                    <h3 className="font-display text-sm font-semibold" style={{ color: "#78350F" }}>
-                      Há mais de uma sessão futura neste mesmo horário
-                    </h3>
-                    <p className="text-xs text-[#78350F]/80">
-                      Escolha a qual sessão este planejamento deve ser vinculado. O vínculo é feito pelo ID da sessão — não pela data.
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  {ambiguousNext.map((r) => (
-                    <label key={r.id} className="flex items-start gap-2 rounded-md border bg-white p-2 cursor-pointer hover:border-[#F59E0B]" style={{ borderColor: "#FDE68A" }}>
-                      <input
-                        type="radio"
-                        name="ambiguous-next"
-                        className="mt-1"
-                        onChange={() => chooseNextSession(r.id)}
-                      />
-                      <div className="text-sm">
-                        <div className="font-medium text-[#1A1A2E]">
-                          {format(new Date(r.scheduled_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {r.modality ?? "—"} · {r.duration_minutes ?? 50} min
-                          {r.created_at && <> · criada em {format(new Date(r.created_at), "dd/MM/yyyy HH:mm")}</>}
-                        </div>
-                        {r.notes && <div className="text-xs text-muted-foreground truncate max-w-[420px]">{r.notes}</div>}
-                        <div className="text-[10px] text-muted-foreground mt-0.5">ID: {r.id.slice(0, 8)}…</div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Planejamento da próxima sessão — fonte única, componente reutilizado */}
-            <div id="proxima-sessao" ref={proximaSessaoRef as any} className="mt-2">
-              <SessionPlanningForm
-                value={{
-                  next_scheduled_at: form.next_scheduled_at,
-                  next_objetivo: form.next_objetivo,
-                  next_retomar: form.next_retomar,
-                  next_meta_id: form.next_meta_id,
-                  next_tecnicas: form.next_tecnicas,
-                  next_observacoes: form.next_observacoes,
-                }}
-                onChange={(patch) => setForm({ ...form, ...patch })}
-                planGoals={planGoals}
-                planTechniques={planTechniques}
-                scheduledAtLocked={!!nextSessionId}
-                helperText={
-                  ambiguousNext.length > 1
-                    ? "Selecione acima a sessão-alvo antes de preencher o planejamento."
-                    : nextSessionId
-                      ? "Este planejamento fica vinculado à próxima sessão já agendada do paciente e aparece automaticamente quando ela for aberta."
-                      : "Sem próxima sessão agendada. O planejamento fica salvo como pendente e será vinculado quando você agendar."
-                }
-              />
-            </div>
-
-
-          </>
-        )}
-      </section>
-
-
-
-      {/* ── Seção 3: Avaliação do Terapeuta ── */}
-      <section
-        className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("avaliacao") ? "p-3" : "p-5 space-y-4")}
-        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #2D6A4F" }}
-      >
-        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" sectionKey="avaliacao" color="#2D6A4F" />
-        {isOpen("avaliacao") && (
-          <>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Engajamento do paciente</Label>
-                <span className="font-display font-semibold" style={{ fontSize: 12, color: "#534AB7", fontWeight: 700 }}>
-                  {ENGAGEMENT_LABELS[form.engagement - 1]}
-                </span>
-              </div>
-              <div className="flex gap-1.5">
-                {[1, 2, 3, 4, 5].map((level) => {
-                  const isCurrent = form.engagement === level;
-                  return (
-                    <button
-                      key={level}
-                      type="button"
-                      onClick={() => setForm({ ...form, engagement: level })}
-                      className="flex-1 h-10 transition-colors"
-                      style={
-                        isCurrent
-                          ? { backgroundColor: "#534AB7", color: "#FFFFFF", border: "1px solid #534AB7", borderRadius: 8, fontSize: 14, fontWeight: 700 }
-                          : { backgroundColor: "#FFFFFF", color: "#6B7280", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 14, fontWeight: 600 }
-                      }
-                      aria-label={`Engajamento nível ${level}`}
-                    >
-                      {level}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                Indicador de risco
-              </Label>
-              <Select
-                value={form.risk_indicator}
-                onValueChange={(v) => setForm({ ...form, risk_indicator: v })}
-              >
-                <SelectTrigger
-                  className={cn(
-                    form.risk_indicator === "high" &&
-                      "border-destructive text-destructive",
-                    form.risk_indicator === "moderate" &&
-                      "border-amber-500 text-amber-700"
-                  )}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {RISK_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Notas privadas do terapeuta</Label>
-              <Textarea
-                rows={3}
-                placeholder="Anotações pessoais que não fazem parte do prontuário formal..."
-                value={form.private_notes}
-                onChange={(e) =>
-                  setForm({ ...form, private_notes: e.target.value })
-                }
-              />
-            </div>
-          </>
-        )}
-      </section>
 
       {/* ── Resumo da sessão (revisão rápida) ── */}
       {(() => {
