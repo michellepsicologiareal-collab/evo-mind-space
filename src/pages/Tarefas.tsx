@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, FileText, Printer, X, CheckSquare, NotebookPen, ListChecks, Eye } from "lucide-react";
+import { Loader2, FileText, Printer, X, CheckSquare, NotebookPen, ListChecks, Eye, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { normalizeActions } from "@/components/app/PatientHomework";
 import logoImg from "@/assets/logo-psireal.png";
 
@@ -26,27 +27,90 @@ interface Row {
 const Tarefas = () => {
   const { token } = useParams<{ token: string }>();
   const [rows, setRows] = useState<Row[]>([]);
-  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const [state, setState] = useState<"loading" | "password" | "ready" | "error">("loading");
+  const [password, setPassword] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [pwdError, setPwdError] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Plano entre Sessões — Psi Real";
     return () => { document.title = "Psi Real — Gestão Inteligente para Psicólogos"; };
   }, []);
 
+  const loadRows = async (pwd: string): Promise<boolean> => {
+    const { data, error } = await supabase.rpc("get_homework_by_token", { _token: token as string, _password: pwd });
+    if (error) return false;
+    const list = (data as Row[]) ?? [];
+    if (list.length === 0) return false;
+    setRows(list);
+    setState("ready");
+    return true;
+  };
+
   useEffect(() => {
     if (!token) { setState("error"); return; }
     (async () => {
-      const { data, error } = await supabase.rpc("get_homework_by_token", { _token: token });
-      if (error || !data) { setState("error"); return; }
-      setRows((data as Row[]) ?? []);
-      setState("ready");
+      const { data: info, error: infoErr } = await supabase.rpc("get_homework_link_info", { _token: token });
+      if (infoErr || !info || (info as any[]).length === 0) { setState("error"); return; }
+      const meta = (info as any[])[0];
+      if (meta.password_required) {
+        setState("password");
+      } else {
+        const ok = await loadRows("");
+        if (!ok) setState("error");
+      }
     })();
   }, [token]);
+
+  const submitPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password.trim()) return;
+    setChecking(true);
+    setPwdError(null);
+    const ok = await loadRows(password);
+    setChecking(false);
+    if (!ok) setPwdError("Senha incorreta. Verifique com sua psicóloga.");
+  };
 
   if (state === "loading") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
+  if (state === "password") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <form
+          onSubmit={submitPassword}
+          className="w-full max-w-sm rounded-2xl bg-card border border-border p-8 space-y-4"
+        >
+          <div className="text-center">
+            <div className="mx-auto h-12 w-12 rounded-full bg-lilac/10 flex items-center justify-center">
+              <Lock className="h-6 w-6 text-lilac" />
+            </div>
+            <h2 className="font-display text-xl font-bold text-foreground mt-3">Link protegido</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Digite a senha enviada pela sua psicóloga para acessar seu Plano entre Sessões.
+            </p>
+          </div>
+          <div className="space-y-1">
+            <Input
+              type="password"
+              autoFocus
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Senha"
+              maxLength={60}
+            />
+            {pwdError && <p className="text-xs text-destructive">{pwdError}</p>}
+          </div>
+          <Button type="submit" variant="accent" className="w-full" disabled={checking || !password.trim()}>
+            {checking ? <Loader2 className="h-4 w-4 animate-spin" /> : "Acessar"}
+          </Button>
+        </form>
       </div>
     );
   }
