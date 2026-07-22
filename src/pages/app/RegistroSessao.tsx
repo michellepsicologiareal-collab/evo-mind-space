@@ -424,6 +424,27 @@ const RegistroSessao = () => {
     return () => { cancelled = true; };
   }, [form.session_id]);
 
+  // Plano entre Sessões atrelado à sessão atual (para renderização inline no Registro)
+  const [homeworkTask, setHomeworkTask] = useState<HomeworkPlanFormTask | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!form.session_id || !form.patient_id || !user) { setHomeworkTask(null); return; }
+      const { data } = await supabase
+        .from("homework_tasks")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("patient_id", form.patient_id)
+        .eq("session_id", form.session_id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      setHomeworkTask((data as HomeworkPlanFormTask) ?? null);
+    })();
+    return () => { cancelled = true; };
+  }, [form.session_id, form.patient_id, user]);
+
   // Se veio de "Editar planejamento" no Plano Terapêutico, rola até o bloco
   useEffect(() => {
     if (searchParams.get("focus") !== "proxima-sessao") return;
