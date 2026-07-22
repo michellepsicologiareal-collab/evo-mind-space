@@ -344,7 +344,7 @@ export const HomeworkPlanForm = ({
           <span className="text-[11px] text-muted-foreground">
             {autoSavedAt
               ? `Salvo automaticamente às ${format(autoSavedAt, "HH:mm:ss")}`
-              : title.trim() ? "Salvando automaticamente..." : "Comece pelo título para salvar automaticamente"}
+              : hasAnyContent() ? "Salvando automaticamente..." : "Preencha qualquer campo para salvar automaticamente"}
           </span>
           <div className="flex gap-2">
             {onClose && (
