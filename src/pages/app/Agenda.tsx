@@ -1605,8 +1605,8 @@ const Agenda = () => {
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" aria-label="Ações da sessão" onClick={(e) => e.stopPropagation()}>
-                  <MoreHorizontal className="h-5 w-5" />
+                <Button variant="outline" size="sm" className="h-8 px-2.5 gap-1 text-xs font-medium shrink-0" aria-label="Ações da sessão" onClick={(e) => e.stopPropagation()}>
+                  <MoreHorizontal className="h-4 w-4" /> Ações
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
