@@ -334,6 +334,7 @@ const Agenda = () => {
   });
   const setEditForm: typeof setEditFormRaw = useCallback((v) => { editGuard.markDirty(); setEditFormRaw(v); }, [editGuard.markDirty]);
   const [editProgressId, setEditProgressId] = useState<string | null>(null);
+  const [loadingEditProgress, setLoadingEditProgress] = useState(false);
 
   // Patient filter for pending list
   const [filterPatientId, setFilterPatientId] = useState<string>("all");
