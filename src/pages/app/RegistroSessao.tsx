@@ -1653,6 +1653,334 @@ const RegistroSessao = () => {
         )}
       </section>
 
+      {/* ── Plano de Tratamento Ativo (consulta) — após o Registro Clínico ── */}
+      {form.patient_id && activePlan.loaded && (
+        <section
+          className="p-4 sm:p-5"
+          style={{
+            backgroundColor: "#EEEDFE",
+            borderLeft: "3px solid #534AB7",
+            borderRadius: "10px",
+          }}
+        >
+          {!activePlan.plan_id ? (
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4" style={{ color: "#534AB7" }} />
+                <div>
+                  <div
+                    className="uppercase"
+                    style={{ color: "#534AB7", fontWeight: 700, fontSize: 11, letterSpacing: "0.08em" }}
+                  >
+                    Sem plano
+                  </div>
+                  <p className="text-sm text-foreground mt-0.5">
+                    Nenhum plano ativo para este paciente.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPlanDrawerOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white"
+                style={{ backgroundColor: "#534AB7" }}
+              >
+                Criar plano <PencilIcon className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Target className="h-4 w-4" style={{ color: "#534AB7" }} />
+                  <div
+                    className="uppercase"
+                    style={{ color: "#534AB7", fontWeight: 700, fontSize: 11, letterSpacing: "0.08em" }}
+                  >
+                    Plano Terapêutico Ativo
+                  </div>
+                  {planLoadedIntoForm && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white border border-[#534AB7]/30 text-[#534AB7] font-medium">
+                      carregado
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPlanPanelCollapsed((v) => !v)}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-full hover:bg-white/60 transition-colors"
+                    aria-label={planPanelCollapsed ? "Expandir" : "Recolher"}
+                    style={{ color: "#534AB7" }}
+                  >
+                    <ChevronDown className={cn("h-4 w-4 transition-transform", !planPanelCollapsed && "rotate-180")} />
+                  </button>
+                </div>
+              </div>
+
+              {!planPanelCollapsed && (
+                <>
+                  <div className="grid gap-3 sm:grid-cols-2 text-sm mt-3">
+                    {activePlan.objetivo && (
+                      <div>
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                          Objetivo terapêutico atual
+                        </span>
+                        <p className="whitespace-pre-wrap text-foreground mt-0.5">{activePlan.objetivo}</p>
+                      </div>
+                    )}
+                    {activePlan.meta_descricao && (
+                      <div>
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                          Meta vinculada à próxima sessão
+                        </span>
+                        <p className="whitespace-pre-wrap text-foreground mt-0.5">{activePlan.meta_descricao}</p>
+                      </div>
+                    )}
+                    {activePlan.tecnicas.length > 0 && (
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                          Técnicas planejadas
+                        </span>
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          {activePlan.tecnicas.map((t) => (
+                            <span
+                              key={t}
+                              className="text-[11px] px-2 py-0.5 rounded-full bg-white font-medium"
+                              style={{ border: "1px solid #534AB7", color: "#534AB7" }}
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {activePlan.retomar && (
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                          Retomar da sessão anterior
+                        </span>
+                        <p className="whitespace-pre-wrap text-foreground mt-0.5">{activePlan.retomar}</p>
+                      </div>
+                    )}
+                    {activePlan.goals.length > 0 && (
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                          Objetivos terapêuticos ativos
+                        </span>
+                        <ul className="mt-1 space-y-0.5 text-sm text-foreground list-disc list-inside">
+                          {activePlan.goals.slice(0, 5).map((g, i) => (
+                            <li key={i} className="whitespace-pre-wrap">{g.descricao}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {activePlan.pending_tasks.length > 0 && (
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] uppercase font-semibold flex items-center gap-1" style={{ color: "#534AB7" }}>
+                          <CheckSquare className="h-3 w-3" /> Tarefas pendentes ({activePlan.pending_tasks.length})
+                        </span>
+                        <ul className="mt-1 space-y-0.5 text-sm text-foreground list-disc list-inside">
+                          {activePlan.pending_tasks.slice(0, 5).map((t) => (
+                            <li key={t.id} className="whitespace-pre-wrap">{t.title}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {activePlan.next_revision && (
+                      <div className="sm:col-span-2">
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                          Próxima revisão · {format(new Date(activePlan.next_revision.data), "dd/MM/yyyy")}
+                        </span>
+                        <p className="whitespace-pre-wrap text-foreground mt-0.5 line-clamp-2">{activePlan.next_revision.descricao}</p>
+                      </div>
+                    )}
+                    {!activePlan.objetivo && !activePlan.meta_descricao && !activePlan.tecnicas.length && !activePlan.retomar && !activePlan.goals.length && !activePlan.pending_tasks.length && (
+                      <p className="sm:col-span-2 text-sm text-muted-foreground italic">
+                        Plano ativo sem planejamento para a próxima sessão.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-[#534AB7]/15">
+                    <button
+                      type="button"
+                      onClick={applyPlanningToForm}
+                      className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm text-white hover:opacity-90 transition-opacity"
+                      style={{ backgroundColor: "#534AB7", fontWeight: 600 }}
+                    >
+                      Carregar no registro
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPlanDrawerOpen(true)}
+                      className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm bg-white hover:bg-white/80 transition-colors"
+                      style={{ border: "1px solid #534AB7", color: "#534AB7", fontWeight: 600 }}
+                    >
+                      <PencilIcon className="h-3.5 w-3.5" /> Abrir Plano Terapêutico
+                    </button>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </section>
+      )}
+
+      {/* ── Planejamento da Próxima Sessão ── */}
+      {form.patient_id && (
+        <section
+          className="p-5 space-y-4"
+          style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #B8860B" }}
+        >
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4" style={{ color: "#B8860B" }} />
+            <div>
+              <h3 className="font-display text-sm font-semibold text-foreground">Planejamento da Próxima Sessão</h3>
+              <p className="text-xs text-muted-foreground">Combine agora o objetivo e as técnicas da próxima sessão do paciente.</p>
+            </div>
+          </div>
+
+          {/* Planejamento trazido da sessão anterior (read-only) */}
+          {broughtPlanning && (
+            <section
+              className="rounded-lg border p-4 space-y-3"
+              style={{ borderColor: "#E5E7EB", background: "#F5F3FF" }}
+            >
+              <h3 className="font-display text-sm font-semibold" style={{ color: "#1A1A2E" }}>
+                Planejamento trazido da sessão anterior
+              </h3>
+              <p className="text-[11px] text-muted-foreground -mt-2">
+                Definido no registro da sessão anterior. Use como referência para conduzir esta sessão.
+              </p>
+              {broughtPlanning.meta_descricao && (
+                <div>
+                  <p className="text-[10px] uppercase text-muted-foreground">Meta vinculada</p>
+                  <p className="text-sm text-foreground">{broughtPlanning.meta_descricao}</p>
+                </div>
+              )}
+              {broughtPlanning.objetivo && (
+                <div>
+                  <p className="text-[10px] uppercase text-muted-foreground">Objetivo</p>
+                  <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.objetivo}</p>
+                </div>
+              )}
+              {broughtPlanning.retomar && (
+                <div>
+                  <p className="text-[10px] uppercase text-muted-foreground">Retomar / Continuidade</p>
+                  <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.retomar}</p>
+                </div>
+              )}
+              {broughtPlanning.tecnicas.length > 0 && (
+                <div>
+                  <p className="text-[10px] uppercase text-muted-foreground mb-1">Técnicas previstas</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {broughtPlanning.tecnicas.map((t) => (
+                      <span key={t} className="text-xs px-2.5 py-0.5 rounded-full border" style={{ background: "#fff", borderColor: "#E5E7EB", color: "#1A1A2E" }}>{t}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {broughtPlanning.observacoes && (
+                <div>
+                  <p className="text-[10px] uppercase text-muted-foreground">Observações</p>
+                  <p className="text-sm text-foreground whitespace-pre-line">{broughtPlanning.observacoes}</p>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Empate: duas sessões futuras no mesmo horário — psicóloga escolhe */}
+          {ambiguousNext.length > 1 && (
+            <section className="rounded-lg border p-4 space-y-3" style={{ borderColor: "#F59E0B", background: "#FFFBEB" }}>
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 mt-0.5" style={{ color: "#B45309" }} />
+                <div>
+                  <h3 className="font-display text-sm font-semibold" style={{ color: "#78350F" }}>
+                    Há mais de uma sessão futura neste mesmo horário
+                  </h3>
+                  <p className="text-xs text-[#78350F]/80">
+                    Escolha a qual sessão este planejamento deve ser vinculado. O vínculo é feito pelo ID da sessão — não pela data.
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {ambiguousNext.map((r) => (
+                  <label key={r.id} className="flex items-start gap-2 rounded-md border bg-white p-2 cursor-pointer hover:border-[#F59E0B]" style={{ borderColor: "#FDE68A" }}>
+                    <input
+                      type="radio"
+                      name="ambiguous-next"
+                      className="mt-1"
+                      onChange={() => chooseNextSession(r.id)}
+                    />
+                    <div className="text-sm">
+                      <div className="font-medium text-[#1A1A2E]">
+                        {format(new Date(r.scheduled_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {r.modality ?? "—"} · {r.duration_minutes ?? 50} min
+                        {r.created_at && <> · criada em {format(new Date(r.created_at), "dd/MM/yyyy HH:mm")}</>}
+                      </div>
+                      {r.notes && <div className="text-xs text-muted-foreground truncate max-w-[420px]">{r.notes}</div>}
+                      <div className="text-[10px] text-muted-foreground mt-0.5">ID: {r.id.slice(0, 8)}…</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <div id="proxima-sessao" ref={proximaSessaoRef as any}>
+            <SessionPlanningForm
+              value={{
+                next_scheduled_at: form.next_scheduled_at,
+                next_objetivo: form.next_objetivo,
+                next_retomar: form.next_retomar,
+                next_meta_id: form.next_meta_id,
+                next_tecnicas: form.next_tecnicas,
+                next_observacoes: form.next_observacoes,
+              }}
+              onChange={(patch) => setForm({ ...form, ...patch })}
+              planGoals={planGoals}
+              planTechniques={planTechniques}
+              scheduledAtLocked={!!nextSessionId}
+              helperText={
+                ambiguousNext.length > 1
+                  ? "Selecione acima a sessão-alvo antes de preencher o planejamento."
+                  : nextSessionId
+                    ? "Este planejamento fica vinculado à próxima sessão já agendada do paciente e aparece automaticamente quando ela for aberta."
+                    : "Sem próxima sessão agendada. O planejamento fica salvo como pendente e será vinculado quando você agendar."
+              }
+            />
+          </div>
+        </section>
+      )}
+
+      {/* ── Plano entre Sessões ── */}
+      {form.patient_id && form.session_id && (
+        <section
+          className="p-5 space-y-4"
+          style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #3D5C35" }}
+        >
+          <div className="flex items-center gap-2">
+            <NotebookPen className="h-4 w-4" style={{ color: "#3D5C35" }} />
+            <div>
+              <h3 className="font-display text-sm font-semibold text-foreground">Plano entre Sessões</h3>
+              <p className="text-xs text-muted-foreground">Combinados e ações do paciente até a próxima sessão. Opcional.</p>
+            </div>
+          </div>
+          <HomeworkPlanForm
+            patientId={form.patient_id}
+            sessionId={form.session_id}
+            initialTask={homeworkTask}
+            hideFooter
+            showRecordPicker={false}
+            onSaved={(t) => setHomeworkTask(t)}
+          />
+        </section>
+      )}
+
+
       {/* ── Resumo da sessão (revisão rápida) ── */}
       {(() => {
         const hasContent =
