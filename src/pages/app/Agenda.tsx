@@ -9,8 +9,9 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, MoreHorizontal, Bell,
-  ClipboardList, HeartPulse, Target, AlertCircle, Wallet,
+  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen,
 } from "lucide-react";
+import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
   startOfWeek, startOfMonth, endOfMonth, parse, getDaysInMonth,
@@ -335,6 +336,59 @@ const Agenda = () => {
   const setEditForm: typeof setEditFormRaw = useCallback((v) => { editGuard.markDirty(); setEditFormRaw(v); }, [editGuard.markDirty]);
   const [editProgressId, setEditProgressId] = useState<string | null>(null);
   const [loadingEditProgress, setLoadingEditProgress] = useState(false);
+
+  // Homework plan (Plano entre Sessões) linked to the current edited session
+  const [homeworkOpen, setHomeworkOpen] = useState(false);
+  const [homeworkLoading, setHomeworkLoading] = useState(false);
+  const [homeworkTask, setHomeworkTask] = useState<HomeworkPlanFormTask | null>(null);
+  const [homeworkExists, setHomeworkExists] = useState(false);
+
+  // Preload existence flag whenever the edit dialog opens for a new session.
+  useEffect(() => {
+    let cancelled = false;
+    if (!editOpen || !editSessionId) { setHomeworkExists(false); setHomeworkTask(null); return; }
+    const session = sessions.find((s) => s.id === editSessionId);
+    if (!session?.patient_id) { setHomeworkExists(false); return; }
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+      const { data } = await supabase
+        .from("homework_tasks")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("patient_id", session.patient_id)
+        .eq("session_id", session.id)
+        .limit(1)
+        .maybeSingle();
+      if (!cancelled) setHomeworkExists(Boolean(data));
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editOpen, editSessionId]);
+
+  const openHomeworkForSession = async () => {
+    const session = sessions.find((s) => s.id === editSessionId);
+    if (!session?.id || !session.patient_id) {
+      toast.error("Selecione uma sessão com paciente para criar o plano.");
+      return;
+    }
+    setHomeworkLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setHomeworkLoading(false); return; }
+    const { data, error } = await supabase
+      .from("homework_tasks")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("patient_id", session.patient_id)
+      .eq("session_id", session.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setHomeworkLoading(false);
+    if (error) { toast.error("Erro ao carregar plano existente"); return; }
+    setHomeworkTask((data as HomeworkPlanFormTask) ?? null);
+    setHomeworkOpen(true);
+  };
 
   // Patient filter for pending list
   const [filterPatientId, setFilterPatientId] = useState<string>("all");
@@ -2892,6 +2946,26 @@ const Agenda = () => {
               <Label>Observações</Label>
               <Textarea rows={3} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
             </div>
+
+            {(() => {
+              const session = sessions.find((s) => s.id === editSessionId);
+              if (!session?.patient_id || session.session_type === "supervision") return null;
+              return (
+                <div className="rounded-xl border border-border bg-muted/30 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="flex items-start gap-2">
+                    <NotebookPen className="h-4 w-4 text-primary mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Plano entre Sessões</p>
+                      <p className="text-xs text-muted-foreground">Vinculado a esta sessão. Independente do botão Salvar.</p>
+                    </div>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={openHomeworkForSession} disabled={homeworkLoading}>
+                    {homeworkLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <NotebookPen className="h-4 w-4" />}
+                    {homeworkExists ? "Abrir Plano entre Sessões" : "Criar Plano entre Sessões"}
+                  </Button>
+                </div>
+              );
+            })()}
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
                 type="button" variant="destructive" size="sm"
@@ -2908,6 +2982,34 @@ const Agenda = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* ── Plano entre Sessões (vinculado à sessão atual) ── */}
+      <Dialog open={homeworkOpen} onOpenChange={setHomeworkOpen}>
+        <DialogContent className="w-[95vw] max-w-[900px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl flex items-center gap-2">
+              <NotebookPen className="h-5 w-5 text-primary" />
+              {homeworkTask ? "Editar Plano entre Sessões" : "Novo Plano entre Sessões"}
+            </DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const session = sessions.find((s) => s.id === editSessionId);
+            if (!session?.patient_id) return null;
+            return (
+              <HomeworkPlanForm
+                patientId={session.patient_id}
+                sessionId={session.id}
+                initialTask={homeworkTask}
+                showRecordPicker={false}
+                submitLabel="Salvar e fechar"
+                onSaved={(saved) => { setHomeworkTask(saved); setHomeworkExists(true); }}
+                onClose={() => setHomeworkOpen(false)}
+              />
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
 
       {/* ── Delete Confirmation Modal ── */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
