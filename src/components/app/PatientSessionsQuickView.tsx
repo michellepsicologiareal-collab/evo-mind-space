@@ -6,26 +6,46 @@ import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
-interface RecordRow {
+type RecordSource = "legacy" | "v2";
+
+interface UnifiedRecord {
   id: string;
-  session_date: string;
+  source: RecordSource;
+  session_id: string | null;
+  session_date: string; // ISO
   session_number: number | null;
   modality: string | null;
   duration_minutes: number | null;
-  chief_complaint: string | null;
+  // conteúdo clínico (normalizado)
+  chief_complaint: string | null; // legacy chief_complaint OU v2 patient_context (rótulo "Queixa/contexto")
+  clinical_observations: string | null; // legacy clinical_observations OU v2 clinical_observation
   themes: string[] | null;
-  clinical_observations: string | null;
-  next_session_plan: string | null;
+  emotions: string[] | null; // v2 apenas
+  wellbeing_score: number | null; // v2 apenas
   engagement: number | null;
-  risk_indicator: string | null;
+  attention_flag: string | null; // v2: none|watch|urgent; legacy: mapeado a partir de risk_indicator
   private_notes: string | null;
+  // Combinado/tarefa — preparado para integração futura com session_plans
+  next_session_plan: string | null; // legacy: session_records.next_session_plan; v2: sempre null por enquanto
   created_at: string;
 }
 
-const RISK_LABEL: Record<string, string> = {
+const ATTENTION_LABEL: Record<string, string> = {
+  watch: "Atenção",
+  urgent: "Atenção urgente",
+  // compat legacy
   low: "Risco baixo",
   moderate: "Risco moderado",
   high: "Risco alto",
+};
+
+// Mapeia risk_indicator (legacy) -> attention_flag equivalente para exibição unificada
+const legacyRiskToAttention = (risk: string | null): string | null => {
+  if (!risk || risk === "none") return null;
+  if (risk === "low") return "low";
+  if (risk === "moderate") return "watch";
+  if (risk === "high") return "urgent";
+  return risk;
 };
 
 interface Props {
@@ -57,6 +77,16 @@ const followUpLabel = (start: Date | null): string => {
   return `${years} ${years === 1 ? "ano" : "anos"} e ${remMonths} ${remMonths === 1 ? "mês" : "meses"}`;
 };
 
+const normalizeEmotions = (raw: unknown): string[] | null => {
+  if (!raw) return null;
+  if (Array.isArray(raw)) return raw.map((e) => (typeof e === "string" ? e : (e as any)?.label ?? String(e))).filter(Boolean);
+  if (typeof raw === "object") {
+    const arr = Object.values(raw as Record<string, unknown>);
+    return arr.map((e) => (typeof e === "string" ? e : (e as any)?.label ?? String(e))).filter(Boolean);
+  }
+  return null;
+};
+
 const SummaryTile = ({ label, value }: { label: string; value: string }) => (
   <div
     className="rounded-xl p-3"
@@ -67,6 +97,19 @@ const SummaryTile = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
+const SourceBadge = ({ source }: { source: RecordSource }) => (
+  <span
+    className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+      source === "v2"
+        ? "bg-primary/10 text-primary"
+        : "bg-muted text-muted-foreground"
+    }`}
+    title={source === "v2" ? "Registro do novo fluxo (Agenda → Editar sessão)" : "Registro legado (RegistroSessao)"}
+  >
+    {source === "v2" ? "v2" : "Legado"}
+  </span>
+);
+
 export const PatientSessionsQuickView = ({
   patientId,
   nextDate,
@@ -75,21 +118,31 @@ export const PatientSessionsQuickView = ({
   onOpenFullHistory,
 }: Props) => {
   const [loading, setLoading] = useState(true);
-  const [records, setRecords] = useState<RecordRow[]>([]);
-  const [detail, setDetail] = useState<RecordRow | null>(null);
+  const [records, setRecords] = useState<UnifiedRecord[]>([]);
+  const [detail, setDetail] = useState<UnifiedRecord | null>(null);
   const [expandedObs, setExpandedObs] = useState<Record<string, boolean>>({});
   const [startDate, setStartDate] = useState<Date | null>(null);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [recentRes, firstRecordRes, firstSessionRes, patientRes] = await Promise.all([
+      const [legacyRes, v2Res, firstRecordRes, firstSessionRes, patientRes] = await Promise.all([
+        // 1) Legado — leitura apenas
         supabase
           .from("session_records")
-          .select("id, session_date, session_number, modality, duration_minutes, chief_complaint, themes, clinical_observations, next_session_plan, engagement, risk_indicator, private_notes, created_at")
+          .select("id, session_id, session_date, session_number, modality, duration_minutes, chief_complaint, themes, clinical_observations, next_session_plan, engagement, risk_indicator, private_notes, created_at")
           .eq("patient_id", patientId)
           .order("session_date", { ascending: false })
-          .limit(3),
+          .limit(15),
+        // 2) Novo fluxo — patient_progress + metadata da sessão
+        // Filtro trata data_model NULL: aceita NULL OU diferente de 'legacy_unclassified'
+        supabase
+          .from("patient_progress")
+          .select("id, session_id, recorded_at, created_at, wellbeing_score, patient_context, clinical_observation, emotions, themes, engagement, attention_flag, private_notes, data_model, sessions:session_id(scheduled_at, modality, duration_minutes)")
+          .eq("patient_id", patientId)
+          .or("data_model.is.null,data_model.neq.legacy_unclassified")
+          .order("recorded_at", { ascending: false })
+          .limit(15),
         supabase
           .from("session_records")
           .select("session_date")
@@ -108,10 +161,67 @@ export const PatientSessionsQuickView = ({
           .eq("id", patientId)
           .maybeSingle(),
       ]);
-      setRecords((recentRes.data as RecordRow[]) ?? []);
 
-      // Data de início do acompanhamento: usa treatment_start_date se definido,
-      // senão a primeira sessão (registro ou agendada), senão o cadastro do paciente.
+      const legacyRows = (legacyRes.data ?? []) as any[];
+      const v2Rows = (v2Res.data ?? []) as any[];
+
+      // Set de session_id cobertos por registros v2 — usado para deduplicar legado
+      const v2SessionIds = new Set(
+        v2Rows.map((r) => r.session_id).filter((sid): sid is string => !!sid)
+      );
+
+      const legacyUnified: UnifiedRecord[] = legacyRows
+        .filter((r) => !(r.session_id && v2SessionIds.has(r.session_id)))
+        .map((r) => ({
+          id: `legacy:${r.id}`,
+          source: "legacy" as const,
+          session_id: r.session_id ?? null,
+          session_date: r.session_date,
+          session_number: r.session_number ?? null,
+          modality: r.modality ?? null,
+          duration_minutes: r.duration_minutes ?? null,
+          chief_complaint: r.chief_complaint ?? null,
+          clinical_observations: r.clinical_observations ?? null,
+          themes: r.themes ?? null,
+          emotions: null,
+          wellbeing_score: null,
+          engagement: r.engagement ?? null,
+          attention_flag: legacyRiskToAttention(r.risk_indicator ?? null),
+          private_notes: r.private_notes ?? null,
+          next_session_plan: r.next_session_plan ?? null,
+          created_at: r.created_at,
+        }));
+
+      const v2Unified: UnifiedRecord[] = v2Rows.map((r) => {
+        const sess = r.sessions ?? null;
+        return {
+          id: `v2:${r.id}`,
+          source: "v2" as const,
+          session_id: r.session_id ?? null,
+          session_date: sess?.scheduled_at ?? r.recorded_at ?? r.created_at,
+          session_number: null,
+          modality: sess?.modality ?? null,
+          duration_minutes: sess?.duration_minutes ?? null,
+          chief_complaint: r.patient_context ?? null,
+          clinical_observations: r.clinical_observation ?? null,
+          themes: r.themes ?? null,
+          emotions: normalizeEmotions(r.emotions),
+          wellbeing_score: r.wellbeing_score ?? null,
+          engagement: r.engagement ?? null,
+          attention_flag: r.attention_flag && r.attention_flag !== "none" ? r.attention_flag : null,
+          private_notes: r.private_notes ?? null,
+          // Bloco Combinado/tarefa fica oculto para v2 até integração com session_plans
+          next_session_plan: null,
+          created_at: r.created_at,
+        };
+      });
+
+      const merged = [...v2Unified, ...legacyUnified]
+        .sort((a, b) => new Date(b.session_date).getTime() - new Date(a.session_date).getTime())
+        .slice(0, 3);
+
+      setRecords(merged);
+
       const candidates: Array<string | null | undefined> = [
         patientRes.data?.treatment_start_date,
         firstRecordRes.data?.[0]?.session_date,
@@ -156,8 +266,8 @@ export const PatientSessionsQuickView = ({
               const themes = (r.themes ?? []).filter(Boolean).slice(0, 3);
               const obs = r.clinical_observations ?? "";
               const isExpanded = !!expandedObs[r.id];
-              // "3 linhas" ≈ ~200 chars; use both length heuristic e line-clamp visual
               const isLong = obs.length > 200 || obs.split("\n").length > 3;
+              const attentionLabel = r.attention_flag ? ATTENTION_LABEL[r.attention_flag] : null;
 
               return (
                 <div
@@ -165,9 +275,9 @@ export const PatientSessionsQuickView = ({
                   className="rounded-xl p-4 space-y-4"
                   style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}
                 >
-                  {/* 📅 Data */}
+                  {/* Cabeçalho */}
                   <div className="flex items-start justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Calendar className="h-4 w-4 text-primary" />
                       <p className="text-base font-display font-semibold text-foreground leading-tight">
                         {format(new Date(r.session_date), "dd 'de' MMMM, yyyy", { locale: ptBR })}
@@ -175,15 +285,21 @@ export const PatientSessionsQuickView = ({
                       {r.session_number != null && (
                         <span className="text-[11px] text-muted-foreground">#{r.session_number}</span>
                       )}
+                      <SourceBadge source={r.source} />
+                      {r.source === "v2" && r.wellbeing_score != null && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                          Bem-estar {r.wellbeing_score}/10
+                        </span>
+                      )}
                     </div>
-                    {r.risk_indicator && r.risk_indicator !== "none" && RISK_LABEL[r.risk_indicator] && (
+                    {attentionLabel && (
                       <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium bg-destructive/15 text-destructive">
-                        <AlertTriangle className="h-3 w-3" /> {RISK_LABEL[r.risk_indicator]}
+                        <AlertTriangle className="h-3 w-3" /> {attentionLabel}
                       </span>
                     )}
                   </div>
 
-                  {/* 📝 O que aconteceu nesta sessão */}
+                  {/* Queixa/contexto + Observação clínica */}
                   {(obs || r.chief_complaint) && (
                     <div>
                       <p className="text-xs font-medium text-muted-foreground mb-1">O que aconteceu nesta sessão</p>
@@ -217,7 +333,7 @@ export const PatientSessionsQuickView = ({
                     </div>
                   )}
 
-                  {/* 🎯 Técnicas / Temas */}
+                  {/* Temas */}
                   {themes.length > 0 && (
                     <div>
                       <p className="text-xs font-medium text-muted-foreground mb-1.5 inline-flex items-center gap-1">
@@ -236,8 +352,8 @@ export const PatientSessionsQuickView = ({
                     </div>
                   )}
 
-                  {/* 📌 Combinado / Tarefa */}
-                  {r.next_session_plan && (
+                  {/* Combinado / Tarefa — legado somente (v2 oculto até integração com session_plans) */}
+                  {r.source === "legacy" && r.next_session_plan && (
                     <div>
                       <p className="text-xs font-medium text-muted-foreground mb-1 inline-flex items-center gap-1">
                         <ClipboardList className="h-3 w-3" /> Combinado / tarefa
@@ -297,7 +413,10 @@ export const PatientSessionsQuickView = ({
           {detail && (
             <div className="h-full overflow-y-auto p-5 space-y-4">
               <div>
-                <p className="text-[10px] uppercase text-muted-foreground">Registro de sessão</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-[10px] uppercase text-muted-foreground">Registro de sessão</p>
+                  <SourceBadge source={detail.source} />
+                </div>
                 <h2 className="text-lg font-display font-semibold text-foreground">
                   {format(new Date(detail.session_date), "dd 'de' MMMM, yyyy", { locale: ptBR })}
                   {detail.session_number != null && (
@@ -308,26 +427,51 @@ export const PatientSessionsQuickView = ({
                   {detail.modality ?? "—"}
                   {detail.duration_minutes != null && ` · ${detail.duration_minutes} min`}
                   {detail.engagement != null && ` · Engajamento ${detail.engagement}/5`}
+                  {detail.source === "v2" && detail.wellbeing_score != null && ` · Bem-estar ${detail.wellbeing_score}/10`}
                 </p>
               </div>
 
               {detail.themes && detail.themes.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {detail.themes.map((t) => (
-                    <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-lilac/40 text-foreground">
-                      {t}
-                    </span>
-                  ))}
+                <div>
+                  <p className="text-[10px] uppercase text-muted-foreground mb-1">Temas</p>
+                  <div className="flex flex-wrap gap-1">
+                    {detail.themes.map((t) => (
+                      <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-lilac/40 text-foreground">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {detail.emotions && detail.emotions.length > 0 && (
+                <div>
+                  <p className="text-[10px] uppercase text-muted-foreground mb-1">Emoções observadas</p>
+                  <div className="flex flex-wrap gap-1">
+                    {detail.emotions.map((e) => (
+                      <span key={e} className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-foreground">
+                        {e}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {detail.chief_complaint && (
-                <Section title="Queixa principal / tema">{detail.chief_complaint}</Section>
+                <Section title="Queixa / contexto trazido">{detail.chief_complaint}</Section>
               )}
               {detail.clinical_observations && (
-                <Section title="Observações clínicas">{detail.clinical_observations}</Section>
+                <Section title="Observação clínica">{detail.clinical_observations}</Section>
               )}
-              {detail.next_session_plan && (
+
+              {detail.attention_flag && ATTENTION_LABEL[detail.attention_flag] && (
+                <div className="rounded-lg bg-destructive/10 p-3 border border-destructive/20">
+                  <p className="text-[10px] uppercase text-destructive">Atenção clínica</p>
+                  <p className="text-sm text-foreground">{ATTENTION_LABEL[detail.attention_flag]}</p>
+                </div>
+              )}
+
+              {detail.source === "legacy" && detail.next_session_plan && (
                 <Section title="Combinado / tarefa para a próxima sessão">{detail.next_session_plan}</Section>
               )}
               {detail.private_notes && (
