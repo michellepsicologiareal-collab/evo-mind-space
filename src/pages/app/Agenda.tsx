@@ -334,6 +334,7 @@ const Agenda = () => {
   });
   const setEditForm: typeof setEditFormRaw = useCallback((v) => { editGuard.markDirty(); setEditFormRaw(v); }, [editGuard.markDirty]);
   const [editProgressId, setEditProgressId] = useState<string | null>(null);
+  const [loadingEditProgress, setLoadingEditProgress] = useState(false);
 
   // Patient filter for pending list
   const [filterPatientId, setFilterPatientId] = useState<string>("all");
@@ -1063,26 +1064,31 @@ const Agenda = () => {
     editGuard.resetDirty();
     setEditOpen(true);
     if (s.patient_id && user) {
-      const { data } = await (supabase as any).from("patient_progress")
-        .select("id, mood_score, note, wellbeing_score, wellbeing_source, patient_context, clinical_observation, emotions, attention_flag, data_model")
-        .eq("session_id", s.id).eq("user_id", user.id).maybeSingle();
-      if (data) {
-        setEditProgressId(data.id);
-        const emoList: string[] = Array.isArray(data.emotions)
-          ? data.emotions.map((e: any) => (typeof e === "string" ? e : e?.label)).filter(Boolean)
-          : [];
-        setEditFormRaw((prev) => ({
-          ...prev,
-          wellbeing_score: data.wellbeing_score != null ? String(data.wellbeing_score) : "",
-          wellbeing_source: (data.wellbeing_source ?? "") as any,
-          patient_context: data.patient_context ?? "",
-          clinical_observation: data.clinical_observation ?? "",
-          emotions: emoList,
-          attention_flag: (data.attention_flag ?? "not_assessed") as any,
-          legacy_mood: data.mood_score,
-          legacy_note: data.note ?? "",
-          data_model: (data.data_model ?? "legacy_unclassified") as any,
-        }));
+      setLoadingEditProgress(true);
+      try {
+        const { data } = await (supabase as any).from("patient_progress")
+          .select("id, mood_score, note, wellbeing_score, wellbeing_source, patient_context, clinical_observation, emotions, attention_flag, data_model")
+          .eq("session_id", s.id).eq("user_id", user.id).maybeSingle();
+        if (data) {
+          setEditProgressId(data.id);
+          const emoList: string[] = Array.isArray(data.emotions)
+            ? data.emotions.map((e: any) => (typeof e === "string" ? e : e?.label)).filter(Boolean)
+            : [];
+          setEditFormRaw((prev) => ({
+            ...prev,
+            wellbeing_score: data.wellbeing_score != null ? String(data.wellbeing_score) : "",
+            wellbeing_source: (data.wellbeing_source ?? "") as any,
+            patient_context: data.patient_context ?? "",
+            clinical_observation: data.clinical_observation ?? "",
+            emotions: emoList,
+            attention_flag: (data.attention_flag ?? "not_assessed") as any,
+            legacy_mood: data.mood_score,
+            legacy_note: data.note ?? "",
+            data_model: (data.data_model ?? "legacy_unclassified") as any,
+          }));
+        }
+      } finally {
+        setLoadingEditProgress(false);
       }
     }
   };
@@ -2910,8 +2916,8 @@ const Agenda = () => {
                 <Trash2 className="h-4 w-4" /> Excluir sessão
               </Button>
               <Button type="button" variant="outline" onClick={() => editGuard.guardClose(() => setEditOpen(false))}>Cancelar</Button>
-              <Button type="submit" variant="accent" disabled={editSaving}>
-                {editSaving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
+              <Button type="submit" variant="accent" disabled={editSaving || loadingEditProgress}>
+                {(editSaving || loadingEditProgress) && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
               </Button>
             </DialogFooter>
           </form>
