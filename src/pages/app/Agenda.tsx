@@ -3282,6 +3282,7 @@ const Agenda = () => {
             const patientId = homeworkPatientId ?? fromEdit?.patient_id ?? null;
             const sessionId = homeworkSessionId ?? fromEdit?.id ?? null;
             if (!patientId) return null;
+            const p = patients.find((pp) => pp.id === patientId);
             return (
               <HomeworkPlanForm
                 patientId={patientId}
@@ -3289,6 +3290,9 @@ const Agenda = () => {
                 initialTask={homeworkTask}
                 showRecordPicker={false}
                 submitLabel="Salvar e fechar"
+                patientName={p?.full_name ?? null}
+                patientPhone={p?.phone ?? null}
+                homeworkToken={p?.homework_token ?? null}
                 onSaved={(saved) => { setHomeworkTask(saved); setHomeworkExists(true); }}
                 onClose={() => setHomeworkOpen(false)}
               />
