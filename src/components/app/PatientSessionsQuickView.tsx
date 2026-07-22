@@ -148,11 +148,11 @@ export const PatientSessionsQuickView = ({
           .eq("patient_id", patientId)
           .order("session_date", { ascending: false })
           .limit(15),
-        // 2) Novo fluxo — patient_progress + metadata da sessão
+        // 2) Novo fluxo — patient_progress (sem embed; sessions carrega em segunda query)
         // Filtro trata data_model NULL: aceita NULL OU diferente de 'legacy_unclassified'
         supabase
           .from("patient_progress")
-          .select("id, session_id, recorded_at, created_at, wellbeing_score, patient_context, clinical_observation, emotions, themes, engagement, attention_flag, private_notes, data_model, sessions:session_id(scheduled_at, modality, duration_minutes)")
+          .select("id, session_id, recorded_at, created_at, wellbeing_score, patient_context, clinical_observation, emotions, themes, engagement, attention_flag, private_notes, data_model")
           .eq("patient_id", patientId)
           .or("data_model.is.null,data_model.neq.legacy_unclassified")
           .order("recorded_at", { ascending: false })
