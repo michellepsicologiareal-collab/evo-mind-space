@@ -59,6 +59,10 @@ export interface HomeworkPlanFormProps {
   submitLabel?: string;
   /** Se true, oculta o rodapé (botões e status de autosave) — o parent renderiza seu próprio footer. */
   hideFooter?: boolean;
+  /** Dados do paciente para envio por WhatsApp (opcional). */
+  patientName?: string | null;
+  patientPhone?: string | null;
+  homeworkToken?: string | null;
 }
 
 /**
