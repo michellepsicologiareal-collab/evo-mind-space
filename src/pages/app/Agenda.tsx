@@ -78,6 +78,7 @@ interface Patient {
   has_financial_responsible: boolean;
   financial_responsible_name: string | null;
   financial_responsible_phone: string | null;
+  homework_token?: string | null;
 }
 
 interface Service {
@@ -756,7 +757,7 @@ const Agenda = () => {
         .gte("scheduled_at", mStart.toISOString())
         .lt("scheduled_at", mEnd.toISOString())
         .order("scheduled_at"),
-      supabase.from("patients").select("id, full_name, session_price, phone, has_financial_responsible, financial_responsible_name, financial_responsible_phone").eq("user_id", user.id).eq("is_active", true).order("full_name"),
+      supabase.from("patients").select("id, full_name, session_price, phone, has_financial_responsible, financial_responsible_name, financial_responsible_phone, homework_token").eq("user_id", user.id).eq("is_active", true).order("full_name"),
       (supabase as any).from("services").select("id, name, price, is_active").eq("user_id", user.id).eq("is_active", true).order("name"),
     ]);
     if (sRes.error) toast.error("Erro ao carregar sessões");
@@ -3230,14 +3231,22 @@ const Agenda = () => {
                         <p className="text-xs text-muted-foreground">Combinados e ações do paciente até a próxima sessão. Salva automaticamente.</p>
                       </div>
                     </div>
-                    <HomeworkPlanForm
-                      patientId={session.patient_id}
-                      sessionId={session.id}
-                      initialTask={homeworkTask}
-                      hideFooter
-                      showRecordPicker={false}
-                      onSaved={(t) => { setHomeworkTask(t); setHomeworkExists(true); }}
-                    />
+                    {(() => {
+                      const p = patients.find((pp) => pp.id === session.patient_id);
+                      return (
+                        <HomeworkPlanForm
+                          patientId={session.patient_id}
+                          sessionId={session.id}
+                          initialTask={homeworkTask}
+                          hideFooter
+                          showRecordPicker={false}
+                          patientName={p?.full_name ?? session.patient_name ?? null}
+                          patientPhone={p?.phone ?? null}
+                          homeworkToken={p?.homework_token ?? null}
+                          onSaved={(t) => { setHomeworkTask(t); setHomeworkExists(true); }}
+                        />
+                      );
+                    })()}
                   </section>
                 </>
               );
@@ -3273,6 +3282,7 @@ const Agenda = () => {
             const patientId = homeworkPatientId ?? fromEdit?.patient_id ?? null;
             const sessionId = homeworkSessionId ?? fromEdit?.id ?? null;
             if (!patientId) return null;
+            const p = patients.find((pp) => pp.id === patientId);
             return (
               <HomeworkPlanForm
                 patientId={patientId}
@@ -3280,6 +3290,9 @@ const Agenda = () => {
                 initialTask={homeworkTask}
                 showRecordPicker={false}
                 submitLabel="Salvar e fechar"
+                patientName={p?.full_name ?? null}
+                patientPhone={p?.phone ?? null}
+                homeworkToken={p?.homework_token ?? null}
                 onSaved={(saved) => { setHomeworkTask(saved); setHomeworkExists(true); }}
                 onClose={() => setHomeworkOpen(false)}
               />

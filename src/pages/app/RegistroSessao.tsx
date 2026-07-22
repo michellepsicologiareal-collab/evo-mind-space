@@ -55,6 +55,8 @@ const ENGAGEMENT_LABELS = ["Muito baixo", "Baixo", "Moderado", "Alto", "Muito al
 interface Patient {
   id: string;
   full_name: string;
+  phone?: string | null;
+  homework_token?: string | null;
 }
 
 interface SavedRecord {
@@ -731,7 +733,7 @@ const RegistroSessao = () => {
     (async () => {
       const { data } = await supabase
         .from("patients")
-        .select("id, full_name")
+        .select("id, full_name, phone, homework_token")
         .eq("is_active", true)
         .order("full_name");
       setPatients(data ?? []);
@@ -2035,6 +2037,9 @@ const RegistroSessao = () => {
             initialTask={homeworkTask}
             hideFooter
             showRecordPicker={false}
+            patientName={selectedPatient?.full_name ?? null}
+            patientPhone={(selectedPatient as any)?.phone ?? null}
+            homeworkToken={(selectedPatient as any)?.homework_token ?? null}
             onSaved={(t) => setHomeworkTask(t)}
           />
         </section>

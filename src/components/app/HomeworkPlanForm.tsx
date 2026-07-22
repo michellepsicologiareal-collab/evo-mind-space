@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Plus, Send, CheckSquare, Square, X, NotebookPen, ListChecks, Eye, Target } from "lucide-react";
+import { Loader2, Plus, Send, CheckSquare, Square, X, NotebookPen, ListChecks, Eye, Target, MessageCircle } from "lucide-react";
+import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
@@ -58,6 +59,10 @@ export interface HomeworkPlanFormProps {
   submitLabel?: string;
   /** Se true, oculta o rodapé (botões e status de autosave) — o parent renderiza seu próprio footer. */
   hideFooter?: boolean;
+  /** Dados do paciente para envio por WhatsApp (opcional). */
+  patientName?: string | null;
+  patientPhone?: string | null;
+  homeworkToken?: string | null;
 }
 
 /**
@@ -75,6 +80,9 @@ export const HomeworkPlanForm = ({
   showRecordPicker,
   submitLabel = "Salvar e fechar",
   hideFooter = false,
+  patientName = null,
+  patientPhone = null,
+  homeworkToken = null,
 }: HomeworkPlanFormProps) => {
   const [editing, setEditing] = useState<HomeworkPlanFormTask | null>(initialTask);
   const [title, setTitle] = useState(initialTask?.title ?? "");
@@ -227,10 +235,113 @@ export const HomeworkPlanForm = ({
     onClose?.();
   };
 
+  const [sending, setSending] = useState(false);
+  const sendWhatsApp = async () => {
+    const digits = normalizePhoneForWhatsApp(patientPhone);
+    if (!digits) { toast.error("Paciente sem WhatsApp cadastrado"); return; }
+    if (!hasAnyContent()) { toast.error("Preencha ao menos um campo do plano"); return; }
+    setSending(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setSending(false); return; }
+
+    // Ensure the plan is persisted before sending (flush current state).
+    const effectiveTitle = title.trim() || (editing?.title ?? defaultTitle());
+    const payload: any = {
+      title: effectiveTitle,
+      content: "",
+      weekly_goal: weeklyGoal.trim() || null,
+      session_points: sessionPoints.trim() || null,
+      actions: serializeActions(actions),
+      weekly_observations: weeklyObservations.trim() || null,
+      session_record_id: sourceRecord === "none" ? null : sourceRecord,
+      sent_at: new Date().toISOString(),
+    };
+    if (sessionId) payload.session_id = sessionId;
+
+    let saved: HomeworkPlanFormTask | null = null;
+    if (editing) {
+      const { data } = await supabase.from("homework_tasks").update(payload).eq("id", editing.id).select("*").single();
+      saved = (data as HomeworkPlanFormTask) ?? null;
+    } else {
+      const { data } = await supabase
+        .from("homework_tasks")
+        .insert({ ...payload, patient_id: patientId, user_id: user.id })
+        .select("*")
+        .single();
+      saved = (data as HomeworkPlanFormTask) ?? null;
+    }
+    if (saved) { setEditing(saved); onSaved?.(saved); }
+
+    // Fetch therapist first name for a warmer message.
+    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+    const psiName = (profile?.full_name ?? "").trim().split(" ")[0] || "sua psi";
+    const firstName = (patientName ?? "").trim().split(" ")[0] || "olá";
+    const publicUrl = homeworkToken ? `${window.location.origin}/tarefas/${homeworkToken}` : null;
+
+    const parts: string[] = [
+      `Olá, ${firstName}! Aqui é a ${psiName}.`,
+      "",
+      `Segue seu *Plano entre Sessões*: ${effectiveTitle}`,
+      "",
+    ];
+    if (weeklyGoal.trim()) {
+      parts.push("🎯 *Objetivo até a próxima sessão:*");
+      parts.push(weeklyGoal.trim());
+      parts.push("");
+    }
+    if (sessionPoints.trim()) {
+      parts.push("📝 *Pontos importantes da sessão:*");
+      parts.push(sessionPoints.trim());
+      parts.push("");
+    }
+    const filledActions = actions.filter((a) => a.text.trim());
+    if (filledActions.length > 0) {
+      parts.push("✅ *Ações combinadas:*");
+      filledActions.forEach((a, i) => parts.push(`${i + 1}. ${a.text}`));
+      parts.push("");
+    }
+    if (weeklyObservations.trim()) {
+      parts.push("👀 *O que observar durante a semana:*");
+      parts.push(weeklyObservations.trim());
+      parts.push("");
+    }
+    if (publicUrl) {
+      parts.push("Você pode acompanhar seus planos pelo link abaixo (também gera PDF):");
+      parts.push(publicUrl);
+      parts.push("");
+    }
+    parts.push("Qualquer dúvida, estou por aqui.");
+
+    setSending(false);
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(parts.join("\n"))}`, "_blank");
+    toast.success("Plano enviado por WhatsApp");
+  };
+
+  const canSend = Boolean(patientPhone && normalizePhoneForWhatsApp(patientPhone));
+
 
   return (
     <div className="space-y-4">
+      {(patientName || patientPhone) && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+          <span className="text-xs text-muted-foreground">
+            Enviar o plano por WhatsApp{patientName ? ` para ${patientName.split(" ")[0]}` : ""}.
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={sendWhatsApp}
+            disabled={sending || !canSend}
+            title={canSend ? "Enviar por WhatsApp" : "Paciente sem WhatsApp cadastrado"}
+          >
+            {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
+            {editing?.sent_at ? "Reenviar por WhatsApp" : "Enviar por WhatsApp"}
+          </Button>
+        </div>
+      )}
       <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+
         {showPicker && (
           <div>
             <Label className="text-xs">Preencher a partir de um registro de sessão (opcional)</Label>
