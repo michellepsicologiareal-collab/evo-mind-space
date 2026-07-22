@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { HelpCard } from "@/components/app/HelpCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -152,6 +153,15 @@ const Anamneses = () => {
 
   return (
     <div className="space-y-6 animate-fade-up">
+      <HelpCard
+        id="anamneses"
+        title="Anamneses"
+        description="Colete informações iniciais e acompanhe a evolução clínica desde o início do tratamento."
+        sections={[
+          { label: "Quando usar", content: "Ao receber um novo paciente, envie o link de anamnese para preenchimento antes da primeira sessão." },
+          { label: "Conexões", content: "As respostas ficam vinculadas à ficha do paciente e alimentam a Formulação de Caso e o Plano Terapêutico." },
+        ]}
+      />
       <PageHeader
         icon={Baby}
         title="Anamneses"

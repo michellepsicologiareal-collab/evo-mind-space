@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { HelpCard } from "@/components/app/HelpCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -91,6 +92,15 @@ export default function Contratos() {
 
   return (
     <div className="space-y-6 animate-fade-up">
+      <HelpCard
+        id="contratos"
+        title="Contratos"
+        description="Gerencie os termos de consentimento enviados e assinados pelos pacientes."
+        sections={[
+          { label: "Quando usar", content: "Após enviar um link individual de contrato para acompanhar quem já assinou o enquadre terapêutico." },
+          { label: "Conexões", content: "O modelo do contrato é configurado em Termo de Consentimento. Cada assinatura fica anexada à ficha do paciente." },
+        ]}
+      />
       <PageHeader
         icon={FileCheck}
         title="Contratos Assinados"

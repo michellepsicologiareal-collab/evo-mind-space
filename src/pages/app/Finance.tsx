@@ -1,4 +1,5 @@
 import { RefreshButton } from "@/components/app/RefreshButton";
+import { HelpCard } from "@/components/app/HelpCard";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -618,6 +619,15 @@ const Finance = () => {
 
   return (
     <div className="space-y-8 animate-fade-up">
+      <HelpCard
+        id="financeiro"
+        title="Financeiro"
+        description="Acompanhe pagamentos, sessões faturadas, cobranças e indicadores financeiros da clínica."
+        sections={[
+          { label: "Quando usar", content: "Semanalmente para conferir recebimentos, marcar pagamentos e enviar cobranças; mensalmente para conciliar a Receita Saúde." },
+          { label: "Conexões", content: "Alimentado pelas sessões da Agenda e pelos valores cadastrados em cada paciente. As alterações refletem no histórico financeiro de cada ficha." },
+        ]}
+      />
       <header className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div className="flex items-start gap-3 sm:gap-4 min-w-0">
           <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent">

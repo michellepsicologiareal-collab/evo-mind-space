@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { HelpCard } from "@/components/app/HelpCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -265,6 +266,15 @@ export default function ContratoModelo() {
 
   return (
     <div className="space-y-6 animate-fade-up">
+      <HelpCard
+        id="contrato-modelo"
+        title="Termo de Consentimento"
+        description="Edite o modelo padrão de contrato terapêutico utilizado pela clínica. Aqui você configura o documento-base enviado aos pacientes."
+        sections={[
+          { label: "Quando usar", content: "Ao iniciar a operação ou sempre que precisar ajustar cláusulas, valores ou políticas do enquadre." },
+          { label: "Conexões", content: "Para cada paciente, gere um link individual — assinaturas ficam registradas em Contratos e vinculadas à ficha do paciente." },
+        ]}
+      />
       <PageHeader
         icon={FileText}
         title="Termo de Adesão"

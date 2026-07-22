@@ -1,4 +1,5 @@
 import { RefreshButton } from "@/components/app/RefreshButton";
+import { HelpCard } from "@/components/app/HelpCard";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -1003,6 +1004,15 @@ const Patients = () => {
         </div>
       </header>
 
+      <HelpCard
+        id="pacientes"
+        title="Pacientes"
+        description="Cadastre pacientes, acompanhe o histórico clínico e acesse rapidamente todos os módulos relacionados ao atendimento."
+        sections={[
+          { label: "Quando usar", content: "Ao receber um novo paciente e sempre que precisar consultar histórico, formulação, humor, sessões ou financeiro de um caso." },
+          { label: "Conexões", content: "É o centro do sistema: a ficha do paciente abre Sessões, Plano Terapêutico, Formulações, Humor, Anamneses, Documentos e Financeiro em abas." },
+        ]}
+      />
       <PageIntro description="Cadastro central dos seus pacientes. Daqui você abre a ficha, registra sessões, organiza formulações de caso, acompanha humor e exporta dados clínicos." />
 
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { HelpCard } from "@/components/app/HelpCard";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -1061,6 +1062,15 @@ const RegistroSessao = () => {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-5" style={{ backgroundColor: "#F7F6F3", minHeight: "100%" }}>
+      <HelpCard
+        id="registro-sessao"
+        title="Registro de Sessão"
+        description="Registre os principais acontecimentos da sessão, intervenções realizadas e planeje a próxima sessão. Este é o único local onde o planejamento da próxima sessão é editado."
+        sections={[
+          { label: "Quando usar", content: "Imediatamente após cada atendimento, para não perder observações clínicas relevantes." },
+          { label: "Conexões", content: "Puxa o Plano Terapêutico ativo do paciente e devolve o planejamento da próxima sessão para lá. Marca a sessão como registrada na Agenda." },
+        ]}
+      />
       {/* Topbar */}
       <div
         className="px-5 py-4"

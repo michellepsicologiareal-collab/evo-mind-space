@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { HelpCard } from "@/components/app/HelpCard";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -488,6 +489,15 @@ const PlanoTratamento = () => {
 
   return (
     <div className="space-y-6 animate-fade-up">
+      <HelpCard
+        id="plano-tratamento"
+        title="Plano Terapêutico"
+        description="O Plano Terapêutico reúne a estratégia clínica de longo prazo do paciente. Aqui você acompanha objetivos, metas, técnicas e revisões do tratamento."
+        sections={[
+          { label: "Quando usar", content: "Ao iniciar um caso, em sessões de revisão e sempre que precisar reorientar o tratamento." },
+          { label: "Conexões", content: "O planejamento da próxima sessão é exibido apenas para consulta e é editado no Registro de Sessão. Formulações e humor complementam a leitura clínica." },
+        ]}
+      />
       {/* Header */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
