@@ -3231,14 +3231,22 @@ const Agenda = () => {
                         <p className="text-xs text-muted-foreground">Combinados e ações do paciente até a próxima sessão. Salva automaticamente.</p>
                       </div>
                     </div>
-                    <HomeworkPlanForm
-                      patientId={session.patient_id}
-                      sessionId={session.id}
-                      initialTask={homeworkTask}
-                      hideFooter
-                      showRecordPicker={false}
-                      onSaved={(t) => { setHomeworkTask(t); setHomeworkExists(true); }}
-                    />
+                    {(() => {
+                      const p = patients.find((pp) => pp.id === session.patient_id);
+                      return (
+                        <HomeworkPlanForm
+                          patientId={session.patient_id}
+                          sessionId={session.id}
+                          initialTask={homeworkTask}
+                          hideFooter
+                          showRecordPicker={false}
+                          patientName={p?.full_name ?? session.patient_name ?? null}
+                          patientPhone={p?.phone ?? null}
+                          homeworkToken={p?.homework_token ?? null}
+                          onSaved={(t) => { setHomeworkTask(t); setHomeworkExists(true); }}
+                        />
+                      );
+                    })()}
                   </section>
                 </>
               );
