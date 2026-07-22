@@ -821,6 +821,8 @@ const Agenda = () => {
       const progPlan = new Map<string, string>();
       (progressPlans.data ?? []).forEach((p: any) => {
         if (!p.session_id) return;
+        // Registro clínico feito via modal "Editar sessão" (ClinicalV2Block) também conta como registrado
+        recIds.add(p.session_id);
         const txt = typeof p.next_session_plan === "string" ? p.next_session_plan.trim() : "";
         if (txt && !progPlan.has(p.session_id)) progPlan.set(p.session_id, txt);
         if (!summary.has(p.session_id)) {
@@ -836,6 +838,7 @@ const Agenda = () => {
       setSummaryBySession(summary);
       setSessionRecordIds(recIds);
       setSessionRecordKeys(recKeys);
+
       setMoodTodayPatients(new Set((moods.data ?? []).map((m: any) => m.patient_id)));
     })();
   }, [user, sessions, currentMonth]);
