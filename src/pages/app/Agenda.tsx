@@ -337,6 +337,35 @@ const Agenda = () => {
   const [editProgressId, setEditProgressId] = useState<string | null>(null);
   const [loadingEditProgress, setLoadingEditProgress] = useState(false);
 
+  // Homework plan (Plano entre Sessões) linked to the current edited session
+  const [homeworkOpen, setHomeworkOpen] = useState(false);
+  const [homeworkLoading, setHomeworkLoading] = useState(false);
+  const [homeworkTask, setHomeworkTask] = useState<HomeworkPlanFormTask | null>(null);
+
+  const openHomeworkForSession = async () => {
+    const session = sessions.find((s) => s.id === editSessionId);
+    if (!session?.id || !session.patient_id) {
+      toast.error("Selecione uma sessão com paciente para criar o plano.");
+      return;
+    }
+    setHomeworkLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setHomeworkLoading(false); return; }
+    const { data, error } = await supabase
+      .from("homework_tasks")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("patient_id", session.patient_id)
+      .eq("session_id", session.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setHomeworkLoading(false);
+    if (error) { toast.error("Erro ao carregar plano existente"); return; }
+    setHomeworkTask((data as HomeworkPlanFormTask) ?? null);
+    setHomeworkOpen(true);
+  };
+
   // Patient filter for pending list
   const [filterPatientId, setFilterPatientId] = useState<string>("all");
 
