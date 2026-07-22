@@ -56,8 +56,22 @@ interface Props {
   onOpenFullHistory: () => void;
 }
 
-const fmtDate = (d: Date | string | null | undefined) =>
-  d ? format(typeof d === "string" ? new Date(d) : d, "dd/MM/yyyy", { locale: ptBR }) : "—";
+// Parse "YYYY-MM-DD" como data local (evita shift de timezone que joga 19/05 para 18/05).
+// Datas com horário (ISO com T ou timezone) seguem o parser padrão.
+const parseSessionDate = (v: Date | string | null | undefined): Date | null => {
+  if (!v) return null;
+  if (v instanceof Date) return v;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+    const [y, m, d] = v.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+  return new Date(v);
+};
+
+const fmtDate = (d: Date | string | null | undefined) => {
+  const parsed = parseSessionDate(d);
+  return parsed ? format(parsed, "dd/MM/yyyy", { locale: ptBR }) : "—";
+};
 
 const followUpLabel = (start: Date | null): string => {
   if (!start) return "—";
