@@ -80,6 +80,9 @@ export const HomeworkPlanForm = ({
   showRecordPicker,
   submitLabel = "Salvar e fechar",
   hideFooter = false,
+  patientName = null,
+  patientPhone = null,
+  homeworkToken = null,
 }: HomeworkPlanFormProps) => {
   const [editing, setEditing] = useState<HomeworkPlanFormTask | null>(initialTask);
   const [title, setTitle] = useState(initialTask?.title ?? "");
