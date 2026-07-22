@@ -518,12 +518,17 @@ const RegistroSessao = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Prefill from URL (?patient=…&session=…) — quando aberto pela Agenda ou ficha
+  // Prefill from URL (?patient=…&session=…) — reativo a searchParams (KeepAliveOutlet mantém o componente vivo).
+  // Guard por ref evita reaplicar o mesmo par (patient|session) em loop.
+  const lastPrefillKeyRef = useRef<string | null>(null);
   useEffect(() => {
     if (!user || editingId) return;
     const patientParam = searchParams.get("patient");
     const sessionParam = searchParams.get("session");
     if (!patientParam && !sessionParam) return;
+    const key = `${patientParam ?? ""}|${sessionParam ?? ""}`;
+    if (lastPrefillKeyRef.current === key) return;
+    lastPrefillKeyRef.current = key;
     (async () => {
       let prefill: Partial<FormState> = {};
       if (patientParam) prefill.patient_id = patientParam;
@@ -542,13 +547,43 @@ const RegistroSessao = () => {
         }
       }
       setForm((prev) => {
-        // Não sobrescreve rascunho já preenchido
-        if (hasMeaningfulData(prev) && prev.patient_id) return prev;
-        return { ...prev, ...prefill };
+        const urlPatient = prefill.patient_id;
+        const switchingPatient = !!urlPatient && !!prev.patient_id && urlPatient !== prev.patient_id;
+        const switchingSession = !!prefill.session_id && prev.session_id !== prefill.session_id;
+        // URL prevalece sobre rascunho quando muda o paciente OU a sessão-alvo.
+        if (switchingPatient || switchingSession) {
+          try { localStorage.removeItem(draftKeyFor(editingId)); } catch {}
+          setDraftRestored(false);
+          return {
+            ...initialForm,
+            // preserva preferências de layout
+            session_date: prefill.session_date ?? format(new Date(), "yyyy-MM-dd"),
+            duration_minutes: prefill.duration_minutes ?? initialForm.duration_minutes,
+            modality: prefill.modality ?? initialForm.modality,
+            patient_id: urlPatient ?? "",
+            session_id: prefill.session_id ?? null,
+          };
+        }
+        // Sem rascunho relevante: aplica o prefill normalmente.
+        if (!hasMeaningfulData(prev) || !prev.patient_id) {
+          return {
+            ...prev,
+            ...prefill,
+            // limpa campos next_* para forçar loadActivePlan a recarregar
+            next_session_plan: "",
+            next_objetivo: "",
+            next_retomar: "",
+            next_observacoes: "",
+            next_tecnicas: [],
+            next_meta_id: null,
+            next_scheduled_at: "",
+          };
+        }
+        return prev;
       });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, editingId]);
+  }, [user, editingId, searchParams]);
 
   const loadRecords = useCallback(async () => {
     if (!user) return;
