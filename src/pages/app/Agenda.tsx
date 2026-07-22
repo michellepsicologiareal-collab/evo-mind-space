@@ -1647,6 +1647,7 @@ const Agenda = () => {
     const prevPlan = !isSupervisionCard
       ? (planBySession.get(s.id) || recordPlanBySession.get(s.id) || progressPlanBySession.get(s.id))
       : undefined;
+    const sessionSummary = !isSupervisionCard ? summaryBySession.get(s.id) : undefined;
 
 
     const actions = (
