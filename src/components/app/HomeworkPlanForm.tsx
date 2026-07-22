@@ -235,6 +235,90 @@ export const HomeworkPlanForm = ({
     onClose?.();
   };
 
+  const [sending, setSending] = useState(false);
+  const sendWhatsApp = async () => {
+    const digits = normalizePhoneForWhatsApp(patientPhone);
+    if (!digits) { toast.error("Paciente sem WhatsApp cadastrado"); return; }
+    if (!hasAnyContent()) { toast.error("Preencha ao menos um campo do plano"); return; }
+    setSending(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setSending(false); return; }
+
+    // Ensure the plan is persisted before sending (flush current state).
+    const effectiveTitle = title.trim() || (editing?.title ?? defaultTitle());
+    const payload: any = {
+      title: effectiveTitle,
+      content: "",
+      weekly_goal: weeklyGoal.trim() || null,
+      session_points: sessionPoints.trim() || null,
+      actions: serializeActions(actions),
+      weekly_observations: weeklyObservations.trim() || null,
+      session_record_id: sourceRecord === "none" ? null : sourceRecord,
+      sent_at: new Date().toISOString(),
+    };
+    if (sessionId) payload.session_id = sessionId;
+
+    let saved: HomeworkPlanFormTask | null = null;
+    if (editing) {
+      const { data } = await supabase.from("homework_tasks").update(payload).eq("id", editing.id).select("*").single();
+      saved = (data as HomeworkPlanFormTask) ?? null;
+    } else {
+      const { data } = await supabase
+        .from("homework_tasks")
+        .insert({ ...payload, patient_id: patientId, user_id: user.id })
+        .select("*")
+        .single();
+      saved = (data as HomeworkPlanFormTask) ?? null;
+    }
+    if (saved) { setEditing(saved); onSaved?.(saved); }
+
+    // Fetch therapist first name for a warmer message.
+    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+    const psiName = (profile?.full_name ?? "").trim().split(" ")[0] || "sua psi";
+    const firstName = (patientName ?? "").trim().split(" ")[0] || "olá";
+    const publicUrl = homeworkToken ? `${window.location.origin}/tarefas/${homeworkToken}` : null;
+
+    const parts: string[] = [
+      `Olá, ${firstName}! Aqui é a ${psiName}.`,
+      "",
+      `Segue seu *Plano entre Sessões*: ${effectiveTitle}`,
+      "",
+    ];
+    if (weeklyGoal.trim()) {
+      parts.push("🎯 *Objetivo até a próxima sessão:*");
+      parts.push(weeklyGoal.trim());
+      parts.push("");
+    }
+    if (sessionPoints.trim()) {
+      parts.push("📝 *Pontos importantes da sessão:*");
+      parts.push(sessionPoints.trim());
+      parts.push("");
+    }
+    const filledActions = actions.filter((a) => a.text.trim());
+    if (filledActions.length > 0) {
+      parts.push("✅ *Ações combinadas:*");
+      filledActions.forEach((a, i) => parts.push(`${i + 1}. ${a.text}`));
+      parts.push("");
+    }
+    if (weeklyObservations.trim()) {
+      parts.push("👀 *O que observar durante a semana:*");
+      parts.push(weeklyObservations.trim());
+      parts.push("");
+    }
+    if (publicUrl) {
+      parts.push("Você pode acompanhar seus planos pelo link abaixo (também gera PDF):");
+      parts.push(publicUrl);
+      parts.push("");
+    }
+    parts.push("Qualquer dúvida, estou por aqui.");
+
+    setSending(false);
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(parts.join("\n"))}`, "_blank");
+    toast.success("Plano enviado por WhatsApp");
+  };
+
+  const canSend = Boolean(patientPhone && normalizePhoneForWhatsApp(patientPhone));
+
 
   return (
     <div className="space-y-4">
