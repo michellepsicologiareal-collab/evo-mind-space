@@ -1785,6 +1785,11 @@ const Agenda = () => {
             <p className={cn("text-foreground", compact ? "text-xs" : "text-sm font-medium")}>Paciente</p>
           )}
         </div>
+        {!compact && sessionSummary && (
+          <p className="mt-1.5 text-xs text-foreground/75 line-clamp-2 break-words" title={sessionSummary}>
+            {sessionSummary}
+          </p>
+        )}
         {!compact && (
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
             <span className={cn(PILL_BASE, isSupervisionCard ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
