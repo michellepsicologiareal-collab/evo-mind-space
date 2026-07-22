@@ -2916,8 +2916,8 @@ const Agenda = () => {
                 <Trash2 className="h-4 w-4" /> Excluir sessão
               </Button>
               <Button type="button" variant="outline" onClick={() => editGuard.guardClose(() => setEditOpen(false))}>Cancelar</Button>
-              <Button type="submit" variant="accent" disabled={editSaving}>
-                {editSaving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
+              <Button type="submit" variant="accent" disabled={editSaving || loadingEditProgress}>
+                {(editSaving || loadingEditProgress) && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
               </Button>
             </DialogFooter>
           </form>
