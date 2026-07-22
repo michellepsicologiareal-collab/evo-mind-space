@@ -313,7 +313,7 @@ export const PatientSessionsQuickView = ({
                     <div className="flex items-center gap-2 flex-wrap">
                       <Calendar className="h-4 w-4 text-primary" />
                       <p className="text-base font-display font-semibold text-foreground leading-tight">
-                        {format(new Date(r.session_date), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                        {format(parseSessionDate(r.session_date) ?? new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
                       </p>
                       {r.session_number != null && (
                         <span className="text-[11px] text-muted-foreground">#{r.session_number}</span>
