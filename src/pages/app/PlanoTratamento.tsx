@@ -646,15 +646,7 @@ const PlanoTratamento = () => {
                 <Sparkles className="h-5 w-5" style={{ color: PURPLE }} />
                 <h2 className="font-display text-lg font-bold">Próxima sessão</h2>
               </div>
-              <Button
-                variant="accent"
-                size="sm"
-                onClick={() =>
-                  navigate(
-                    `/app/registro-sessao?patient=${patientId}${nextSession?.id ? `&session=${nextSession.id}` : ""}&focus=proxima-sessao`
-                  )
-                }
-              >
+              <Button variant="accent" size="sm" onClick={openPlanningSheet}>
                 <Pencil className="h-4 w-4 mr-2" />
                 Editar planejamento
               </Button>
