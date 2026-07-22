@@ -139,7 +139,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
 
   const openEdit = (t: Task) => {
     setEditing(t);
-    setTitle(t.title);
+    setTitle(t.title ?? "");
     setSessionPoints(t.session_points || "");
     setActions(normalizeActions(t.actions));
     setWeeklyObservations(t.weekly_observations || "");
