@@ -555,11 +555,11 @@ const RegistroSessao = () => {
           try { localStorage.removeItem(draftKeyFor(editingId)); } catch {}
           setDraftRestored(false);
           return {
-            ...initialForm,
+            ...emptyForm,
             // preserva preferências de layout
             session_date: prefill.session_date ?? format(new Date(), "yyyy-MM-dd"),
-            duration_minutes: prefill.duration_minutes ?? initialForm.duration_minutes,
-            modality: prefill.modality ?? initialForm.modality,
+            duration_minutes: prefill.duration_minutes ?? emptyForm.duration_minutes,
+            modality: prefill.modality ?? emptyForm.modality,
             patient_id: urlPatient ?? "",
             session_id: prefill.session_id ?? null,
           };
