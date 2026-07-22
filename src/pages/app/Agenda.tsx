@@ -2922,6 +2922,26 @@ const Agenda = () => {
               <Label>Observações</Label>
               <Textarea rows={3} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
             </div>
+
+            {(() => {
+              const session = sessions.find((s) => s.id === editSessionId);
+              if (!session?.patient_id || session.session_type === "supervision") return null;
+              return (
+                <div className="rounded-xl border border-border bg-muted/30 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="flex items-start gap-2">
+                    <NotebookPen className="h-4 w-4 text-primary mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Plano entre Sessões</p>
+                      <p className="text-xs text-muted-foreground">Vinculado a esta sessão. Independente do botão Salvar.</p>
+                    </div>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={openHomeworkForSession} disabled={homeworkLoading}>
+                    {homeworkLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <NotebookPen className="h-4 w-4" />}
+                    {homeworkTask && homeworkOpen ? "Abrir Plano entre Sessões" : "Criar Plano entre Sessões"}
+                  </Button>
+                </div>
+              );
+            })()}
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
                 type="button" variant="destructive" size="sm"
