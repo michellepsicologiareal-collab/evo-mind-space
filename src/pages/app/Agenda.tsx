@@ -1587,8 +1587,8 @@ const Agenda = () => {
           </div>
           {isMobile ? (
             <>
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" aria-label="Ações da sessão" onClick={(e) => { e.stopPropagation(); setSheetOpen(true); }}>
-                <MoreHorizontal className="h-5 w-5" />
+              <Button variant="outline" size="sm" className="h-8 px-2.5 gap-1 text-xs font-medium shrink-0" aria-label="Ações da sessão" onClick={(e) => { e.stopPropagation(); setSheetOpen(true); }}>
+                <MoreHorizontal className="h-4 w-4" /> Ações
               </Button>
               <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto p-0" onClick={(e) => e.stopPropagation()}>
