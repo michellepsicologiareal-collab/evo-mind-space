@@ -78,6 +78,7 @@ export const HomeworkPlanForm = ({
 }: HomeworkPlanFormProps) => {
   const [editing, setEditing] = useState<HomeworkPlanFormTask | null>(initialTask);
   const [title, setTitle] = useState(initialTask?.title ?? "");
+  const [weeklyGoal, setWeeklyGoal] = useState(initialTask?.weekly_goal ?? "");
   const [sessionPoints, setSessionPoints] = useState(initialTask?.session_points ?? "");
   const [actions, setActions] = useState<ActionItem[]>(normalizeActions(initialTask?.actions ?? null));
   const [actionInput, setActionInput] = useState("");
@@ -92,6 +93,7 @@ export const HomeworkPlanForm = ({
   useEffect(() => {
     setEditing(initialTask);
     setTitle(initialTask?.title ?? "");
+    setWeeklyGoal(initialTask?.weekly_goal ?? "");
     setSessionPoints(initialTask?.session_points ?? "");
     setActions(normalizeActions(initialTask?.actions ?? null));
     setWeeklyObservations(initialTask?.weekly_observations ?? "");
@@ -130,22 +132,36 @@ export const HomeworkPlanForm = ({
     setActions((prev) => prev.map((a, i) => (i === index ? { ...a, done: !a.done } : a)));
   };
 
-  // Autosave (debounced) — mantém o mesmo comportamento do fluxo original.
+  const defaultTitle = () => `Plano entre Sessões — ${format(new Date(), "dd/MM/yyyy")}`;
+
+  // Returns true when any user-facing field has content — used as the autosave gate.
+  const hasAnyContent = () => (
+    title.trim().length > 0 ||
+    weeklyGoal.trim().length > 0 ||
+    sessionPoints.trim().length > 0 ||
+    weeklyObservations.trim().length > 0 ||
+    actions.some((a) => a.text.trim().length > 0)
+  );
+
+  // Autosave (debounced). Triggers on ANY filled field. Title is optional — a neutral
+  // default is generated on the first insert when empty.
   useEffect(() => {
-    if (!title.trim()) return;
+    if (!hasAnyContent()) return;
     const handle = setTimeout(async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      const current = editingRef.current;
+      const effectiveTitle = title.trim() || (current?.title ?? defaultTitle());
       const payload: any = {
-        title: title.trim(),
+        title: effectiveTitle,
         content: "",
+        weekly_goal: weeklyGoal.trim() || null,
         session_points: sessionPoints.trim() || null,
         actions: serializeActions(actions),
         weekly_observations: weeklyObservations.trim() || null,
         session_record_id: sourceRecord === "none" ? null : sourceRecord,
       };
       if (sessionId) payload.session_id = sessionId;
-      const current = editingRef.current;
       if (current) {
         const { error } = await supabase.from("homework_tasks").update(payload).eq("id", current.id);
         if (!error) setAutoSavedAt(new Date());
@@ -164,16 +180,18 @@ export const HomeworkPlanForm = ({
     }, 1200);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, sessionPoints, actions, weeklyObservations, sourceRecord, sessionId, patientId]);
+  }, [title, weeklyGoal, sessionPoints, actions, weeklyObservations, sourceRecord, sessionId, patientId]);
 
   const save = async () => {
-    if (!title.trim()) { toast.error("Preencha o título do plano"); return; }
+    if (!hasAnyContent()) { toast.error("Preencha ao menos um campo do plano"); return; }
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSaving(false); return; }
+    const effectiveTitle = title.trim() || (editing?.title ?? defaultTitle());
     const payload: any = {
-      title: title.trim(),
+      title: effectiveTitle,
       content: "",
+      weekly_goal: weeklyGoal.trim() || null,
       session_points: sessionPoints.trim() || null,
       actions: serializeActions(actions),
       weekly_observations: weeklyObservations.trim() || null,
@@ -208,6 +226,7 @@ export const HomeworkPlanForm = ({
     onSaved?.(saved);
     onClose?.();
   };
+
 
   return (
     <div className="space-y-4">
