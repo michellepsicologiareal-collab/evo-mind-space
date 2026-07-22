@@ -745,8 +745,21 @@ const RegistroSessao = () => {
       toast.error("Selecione um paciente.");
       return;
     }
+    // Bloqueia salvar quando há empate de horário em sessões futuras
+    const hasPlanContentEarly =
+      form.next_objetivo.trim() ||
+      form.next_retomar.trim() ||
+      form.next_observacoes.trim() ||
+      form.next_tecnicas.length > 0 ||
+      form.next_meta_id ||
+      form.next_scheduled_at;
+    if (ambiguousNext.length > 1 && hasPlanContentEarly) {
+      toast.error("Existe mais de uma sessão futura no mesmo horário. Escolha qual será a próxima sessão antes de salvar o planejamento.");
+      return;
+    }
 
     setSaving(true);
+
 
     // 1) Preserva compatibilidade: gera texto sintético para o campo antigo,
     // apenas quando o bloco "Próxima sessão" foi preenchido.
