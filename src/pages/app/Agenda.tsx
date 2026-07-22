@@ -2820,31 +2820,6 @@ const Agenda = () => {
                 <Input type="number" step="0.01" min="0" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} />
               </div>
             </div>
-            <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Pagamento — preencher após sessão realizada</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Método pagamento</Label>
-                  <Select value={editForm.payment_method} onValueChange={(v) => setEditForm({ ...editForm, payment_method: v as typeof editForm.payment_method })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Não informado</SelectItem>
-                      <SelectItem value="pix">PIX</SelectItem>
-                      <SelectItem value="card">Cartão</SelectItem>
-                      <SelectItem value="cash">Dinheiro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Referência{(editForm.payment_method === "pix" || editForm.payment_method === "card") && <span className="text-destructive ml-1">*</span>}</Label>
-                  <Input maxLength={500} placeholder={editForm.payment_method === "pix" ? "Ex.: comprovante" : editForm.payment_method === "card" ? "Ex.: NSU" : "Opcional"} value={editForm.payment_reference} onChange={(e) => setEditForm({ ...editForm, payment_reference: e.target.value })} />
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Observações</Label>
-              <Textarea rows={3} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
-            </div>
             {(() => {
               const session = sessions.find((s) => s.id === editSessionId);
               if (session?.session_type === "supervision") return null;
@@ -2892,6 +2867,31 @@ const Agenda = () => {
                 </div>
               );
             })()}
+            <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Pagamento — preencher após sessão realizada</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Método pagamento</Label>
+                  <Select value={editForm.payment_method} onValueChange={(v) => setEditForm({ ...editForm, payment_method: v as typeof editForm.payment_method })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Não informado</SelectItem>
+                      <SelectItem value="pix">PIX</SelectItem>
+                      <SelectItem value="card">Cartão</SelectItem>
+                      <SelectItem value="cash">Dinheiro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Referência{(editForm.payment_method === "pix" || editForm.payment_method === "card") && <span className="text-destructive ml-1">*</span>}</Label>
+                  <Input maxLength={500} placeholder={editForm.payment_method === "pix" ? "Ex.: comprovante" : editForm.payment_method === "card" ? "Ex.: NSU" : "Opcional"} value={editForm.payment_reference} onChange={(e) => setEditForm({ ...editForm, payment_reference: e.target.value })} />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Observações</Label>
+              <Textarea rows={3} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
+            </div>
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
                 type="button" variant="destructive" size="sm"
