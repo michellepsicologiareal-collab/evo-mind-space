@@ -2037,6 +2037,9 @@ const RegistroSessao = () => {
             initialTask={homeworkTask}
             hideFooter
             showRecordPicker={false}
+            patientName={selectedPatient?.full_name ?? null}
+            patientPhone={(selectedPatient as any)?.phone ?? null}
+            homeworkToken={(selectedPatient as any)?.homework_token ?? null}
             onSaved={(t) => setHomeworkTask(t)}
           />
         </section>
