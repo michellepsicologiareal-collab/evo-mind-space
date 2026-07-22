@@ -179,10 +179,28 @@ export const PatientSessionsQuickView = ({
       const legacyRows = (legacyRes.data ?? []) as any[];
       const v2Rows = (v2Res.data ?? []) as any[];
 
-      // Set de session_id cobertos por registros v2 — usado para deduplicar legado
-      const v2SessionIds = new Set(
-        v2Rows.map((r) => r.session_id).filter((sid): sid is string => !!sid)
+      // Segunda query: buscar metadados das sessões referenciadas pelos registros v2
+      const v2SessionIdList = Array.from(
+        new Set(v2Rows.map((r) => r.session_id).filter((sid): sid is string => !!sid))
       );
+      const sessionsMap = new Map<string, { scheduled_at: string | null; modality: string | null; duration_minutes: number | null; status: string | null }>();
+      if (v2SessionIdList.length > 0) {
+        const { data: sessRows } = await supabase
+          .from("sessions")
+          .select("id, scheduled_at, modality, duration_minutes, status")
+          .in("id", v2SessionIdList);
+        (sessRows ?? []).forEach((s: any) => {
+          sessionsMap.set(s.id, {
+            scheduled_at: s.scheduled_at ?? null,
+            modality: s.modality ?? null,
+            duration_minutes: s.duration_minutes ?? null,
+            status: s.status ?? null,
+          });
+        });
+      }
+
+      // Set de session_id cobertos por registros v2 — usado para deduplicar legado
+      const v2SessionIds = new Set(v2SessionIdList);
 
       const legacyUnified: UnifiedRecord[] = legacyRows
         .filter((r) => !(r.session_id && v2SessionIds.has(r.session_id)))
@@ -207,11 +225,12 @@ export const PatientSessionsQuickView = ({
         }));
 
       const v2Unified: UnifiedRecord[] = v2Rows.map((r) => {
-        const sess = r.sessions ?? null;
+        const sess = r.session_id ? sessionsMap.get(r.session_id) ?? null : null;
         return {
           id: `v2:${r.id}`,
           source: "v2" as const,
           session_id: r.session_id ?? null,
+          // Fallback para recorded_at quando não há sessão vinculada
           session_date: sess?.scheduled_at ?? r.recorded_at ?? r.created_at,
           session_number: null,
           modality: sess?.modality ?? null,
@@ -231,7 +250,7 @@ export const PatientSessionsQuickView = ({
       });
 
       const merged = [...v2Unified, ...legacyUnified]
-        .sort((a, b) => new Date(b.session_date).getTime() - new Date(a.session_date).getTime())
+        .sort((a, b) => (parseSessionDate(b.session_date)?.getTime() ?? 0) - (parseSessionDate(a.session_date)?.getTime() ?? 0))
         .slice(0, 3);
 
       setRecords(merged);
