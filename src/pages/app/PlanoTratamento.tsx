@@ -105,6 +105,76 @@ const PlanoTratamento = () => {
     session_id: null, objetivo: "", meta_id: null, retomar: "", tecnicas: [], observacoes: "",
   });
 
+  // Planejamento — Sheet reutilizando o mesmo componente do Registro de Sessão
+  const [planningOpen, setPlanningOpen] = useState(false);
+  const [planningValue, setPlanningValue] = useState<SessionPlanningValue>({
+    next_scheduled_at: "", next_objetivo: "", next_retomar: "", next_meta_id: null, next_tecnicas: [], next_observacoes: "",
+  });
+  const [planningSaving, setPlanningSaving] = useState(false);
+
+  const openPlanningSheet = () => {
+    setPlanningValue(planningValueFromDb({
+      scheduled_at: nextSession?.scheduled_at ?? null,
+      objetivo: sessionPlan.objetivo,
+      retomar: sessionPlan.retomar,
+      meta_id: sessionPlan.meta_id,
+      tecnicas: sessionPlan.tecnicas,
+      observacoes: sessionPlan.observacoes,
+    }));
+    setPlanningOpen(true);
+  };
+
+  const savePlanningFromSheet = async () => {
+    if (!uid || !patientId) return;
+    setPlanningSaving(true);
+    try {
+      await ensurePlan();
+      // 1) Resolver sessão-alvo se houver data
+      let targetSessionId: string | null = nextSession?.id ?? sessionPlan.session_id ?? null;
+      if (planningValue.next_scheduled_at) {
+        const iso = new Date(planningValue.next_scheduled_at).toISOString();
+        if (targetSessionId) {
+          await supabase.from("sessions").update({ scheduled_at: iso, status: "scheduled" })
+            .eq("id", targetSessionId).eq("user_id", uid);
+        } else {
+          const { data: created } = await supabase.from("sessions").insert({
+            user_id: uid, patient_id: patientId, scheduled_at: iso,
+            duration_minutes: 50, modality: "presencial", status: "scheduled", session_type: "clinical",
+          }).select("id").single();
+          if (created?.id) targetSessionId = created.id;
+        }
+      }
+      // 2) Upsert session_plans
+      const spPayload = {
+        user_id: uid,
+        patient_id: patientId,
+        session_id: targetSessionId,
+        objetivo: planningValue.next_objetivo,
+        retomar: planningValue.next_retomar,
+        tecnicas: planningValue.next_tecnicas,
+        observacoes: planningValue.next_observacoes,
+        meta_id: planningValue.next_meta_id,
+      };
+      let existingId: string | null = sessionPlan.id ?? null;
+      if (!existingId && targetSessionId) {
+        const { data } = await supabase.from("session_plans").select("id").eq("session_id", targetSessionId).maybeSingle();
+        existingId = data?.id ?? null;
+      }
+      const { error } = existingId
+        ? await supabase.from("session_plans").update(spPayload).eq("id", existingId)
+        : await supabase.from("session_plans").insert(spPayload);
+      if (error) throw error;
+      toast.success("Planejamento salvo");
+      setPlanningOpen(false);
+      await preserveScroll(() => loadAll());
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao salvar planejamento");
+    } finally {
+      setPlanningSaving(false);
+    }
+  };
+
   // load patients
   useEffect(() => {
     if (!uid) return;
