@@ -3148,12 +3148,14 @@ const Agenda = () => {
             </DialogTitle>
           </DialogHeader>
           {(() => {
-            const session = sessions.find((s) => s.id === editSessionId);
-            if (!session?.patient_id) return null;
+            const fromEdit = sessions.find((s) => s.id === editSessionId);
+            const patientId = homeworkPatientId ?? fromEdit?.patient_id ?? null;
+            const sessionId = homeworkSessionId ?? fromEdit?.id ?? null;
+            if (!patientId) return null;
             return (
               <HomeworkPlanForm
-                patientId={session.patient_id}
-                sessionId={session.id}
+                patientId={patientId}
+                sessionId={sessionId}
                 initialTask={homeworkTask}
                 showRecordPicker={false}
                 submitLabel="Salvar e fechar"
@@ -3164,6 +3166,33 @@ const Agenda = () => {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* ── Planejar próxima sessão (Sheet reutilizando SessionPlanningForm) ── */}
+      <Sheet open={planningOpen} onOpenChange={setPlanningOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Planejar próxima sessão</SheetTitle>
+            <SheetDescription>
+              O planejamento salvo aparece no Plano Terapêutico e no Registro de Sessão.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="py-4">
+            <SessionPlanningForm
+              value={planningValue}
+              onChange={(patch) => setPlanningValue((v) => ({ ...v, ...patch }))}
+              planGoals={planningPlanGoals}
+              planTechniques={planningPlanTechniques}
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setPlanningOpen(false)}>Cancelar</Button>
+            <Button variant="accent" onClick={savePlanningFromSheet} disabled={planningSaving}>
+              {planningSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Salvar planejamento
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
 
       {/* ── Delete Confirmation Modal ── */}
