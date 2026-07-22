@@ -174,6 +174,10 @@ const RegistroSessao = () => {
   // Foco automático no bloco de próxima sessão quando vier de "Editar planejamento"
   const proximaSessaoRef = useRef<HTMLElement | null>(null);
   const [focusProximaSessao, setFocusProximaSessao] = useState(false);
+  // Ref/estado para destaque da seleção de sessão-alvo quando houver empate
+  const ambiguousRef = useRef<HTMLElement | null>(null);
+  const [ambiguousPick, setAmbiguousPick] = useState<string | null>(null);
+  const [ambiguousHighlight, setAmbiguousHighlight] = useState(false);
 
   const loadActivePlan = useCallback(async (patientId: string, uid: string, currentSessionId?: string | null) => {
     // 1. Active treatment plan for this patient
