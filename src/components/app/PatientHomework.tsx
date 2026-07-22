@@ -264,7 +264,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
     const parts: string[] = [
       `Olá, ${firstName}! Aqui é a ${psiName}.`,
       "",
-      `Segue seu *Plano entre Sessões*: ${task.title}`,
+      `Segue seu *Plano entre Sessões*: ${task.title ?? "sem título"}`,
       "",
     ];
     if (task.session_points) {
