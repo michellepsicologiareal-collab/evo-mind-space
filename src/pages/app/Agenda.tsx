@@ -153,6 +153,7 @@ const Agenda = () => {
   const [planBySession, setPlanBySession] = useState<Map<string, string>>(new Map());
   const [recordPlanBySession, setRecordPlanBySession] = useState<Map<string, string>>(new Map());
   const [progressPlanBySession, setProgressPlanBySession] = useState<Map<string, string>>(new Map());
+  const [summaryBySession, setSummaryBySession] = useState<Map<string, string>>(new Map());
   const [sessionRecordIds, setSessionRecordIds] = useState<Set<string>>(new Set());
   // Chaves compostas "patient_id|yyyy-MM-dd" para registros salvos sem session_id
   const [sessionRecordKeys, setSessionRecordKeys] = useState<Set<string>>(new Set());
@@ -765,7 +766,7 @@ const Agenda = () => {
       const sessionIds = sessions.map((s) => s.id).filter(Boolean);
       const [recs, moods, homework, progressPlans] = await Promise.all([
         supabase.from("session_records")
-          .select("session_id, patient_id, session_date, next_session_plan")
+          .select("session_id, patient_id, session_date, next_session_plan, clinical_observations, chief_complaint")
           .eq("user_id", user.id)
           .gte("session_date", from.toISOString().slice(0, 10))
           .lte("session_date", to.toISOString().slice(0, 10))
@@ -783,7 +784,7 @@ const Agenda = () => {
           : Promise.resolve({ data: [] as any[] }),
         sessionIds.length
           ? supabase.from("patient_progress")
-              .select("session_id, next_session_plan, recorded_at")
+              .select("session_id, next_session_plan, clinical_observation, patient_context, recorded_at")
               .eq("user_id", user.id)
               .in("session_id", sessionIds)
               .order("recorded_at", { ascending: false })
@@ -792,11 +793,18 @@ const Agenda = () => {
       const recPlan = new Map<string, string>();
       const recIds = new Set<string>();
       const recKeys = new Set<string>();
+      const summary = new Map<string, string>();
       (recs.data ?? []).forEach((r: any) => {
         if (r.session_id) recIds.add(r.session_id);
         if (r.patient_id && r.session_date) recKeys.add(`${r.patient_id}|${r.session_date}`);
         if (r.session_id && r.next_session_plan && !recPlan.has(r.session_id)) {
           recPlan.set(r.session_id, r.next_session_plan);
+        }
+        if (r.session_id && !summary.has(r.session_id)) {
+          const s = (typeof r.clinical_observations === "string" && r.clinical_observations.trim())
+            || (typeof r.chief_complaint === "string" && r.chief_complaint.trim())
+            || "";
+          if (s) summary.set(r.session_id, s);
         }
       });
       const hwPlan = new Map<string, string>();
@@ -815,10 +823,17 @@ const Agenda = () => {
         if (!p.session_id) return;
         const txt = typeof p.next_session_plan === "string" ? p.next_session_plan.trim() : "";
         if (txt && !progPlan.has(p.session_id)) progPlan.set(p.session_id, txt);
+        if (!summary.has(p.session_id)) {
+          const s = (typeof p.clinical_observation === "string" && p.clinical_observation.trim())
+            || (typeof p.patient_context === "string" && p.patient_context.trim())
+            || "";
+          if (s) summary.set(p.session_id, s);
+        }
       });
       setPlanBySession(hwPlan);
       setRecordPlanBySession(recPlan);
       setProgressPlanBySession(progPlan);
+      setSummaryBySession(summary);
       setSessionRecordIds(recIds);
       setSessionRecordKeys(recKeys);
       setMoodTodayPatients(new Set((moods.data ?? []).map((m: any) => m.patient_id)));
@@ -1632,6 +1647,7 @@ const Agenda = () => {
     const prevPlan = !isSupervisionCard
       ? (planBySession.get(s.id) || recordPlanBySession.get(s.id) || progressPlanBySession.get(s.id))
       : undefined;
+    const sessionSummary = !isSupervisionCard ? summaryBySession.get(s.id) : undefined;
 
 
     const actions = (
@@ -1769,6 +1785,11 @@ const Agenda = () => {
             <p className={cn("text-foreground", compact ? "text-xs" : "text-sm font-medium")}>Paciente</p>
           )}
         </div>
+        {!compact && sessionSummary && (
+          <p className="mt-1.5 text-xs text-foreground/75 line-clamp-2 break-words" title={sessionSummary}>
+            {sessionSummary}
+          </p>
+        )}
         {!compact && (
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
             <span className={cn(PILL_BASE, isSupervisionCard ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
