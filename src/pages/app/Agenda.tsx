@@ -3102,7 +3102,7 @@ const Agenda = () => {
                       <p className="text-xs text-muted-foreground">Vinculado a esta sessão. Independente do botão Salvar.</p>
                     </div>
                   </div>
-                  <Button type="button" variant="outline" size="sm" onClick={openHomeworkForSession} disabled={homeworkLoading}>
+                  <Button type="button" variant="outline" size="sm" onClick={() => openHomeworkForSession()} disabled={homeworkLoading}>
                     {homeworkLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <NotebookPen className="h-4 w-4" />}
                     {homeworkExists ? "Abrir Plano entre Sessões" : "Criar Plano entre Sessões"}
                   </Button>
