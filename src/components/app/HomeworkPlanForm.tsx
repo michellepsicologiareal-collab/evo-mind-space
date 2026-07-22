@@ -322,7 +322,26 @@ export const HomeworkPlanForm = ({
 
   return (
     <div className="space-y-4">
+      {(patientName || patientPhone) && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+          <span className="text-xs text-muted-foreground">
+            Enviar o plano por WhatsApp{patientName ? ` para ${patientName.split(" ")[0]}` : ""}.
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={sendWhatsApp}
+            disabled={sending || !canSend}
+            title={canSend ? "Enviar por WhatsApp" : "Paciente sem WhatsApp cadastrado"}
+          >
+            {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
+            {editing?.sent_at ? "Reenviar por WhatsApp" : "Enviar por WhatsApp"}
+          </Button>
+        </div>
+      )}
       <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+
         {showPicker && (
           <div>
             <Label className="text-xs">Preencher a partir de um registro de sessão (opcional)</Label>
