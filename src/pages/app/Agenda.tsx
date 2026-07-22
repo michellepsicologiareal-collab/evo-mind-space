@@ -9,7 +9,7 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, MoreHorizontal, Bell,
-  ClipboardList, Play, HeartPulse, Target, AlertCircle, Wallet, NotebookPen,
+  ClipboardList, HeartPulse, Target, AlertCircle, Wallet,
 } from "lucide-react";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
@@ -1643,21 +1643,6 @@ const Agenda = () => {
         {/* Ações rápidas */}
         {!compact && !isSupervisionCard && s.patient_id && (
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {registroPendente ? (
-              <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500 text-white hover:bg-amber-600 transition-colors"
-              >
-                <NotebookPen className="h-3 w-3" /> Registrar sessão
-              </button>
-            ) : (
-              <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
-                className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-colors"
-              >
-                <Play className="h-3 w-3" /> Iniciar sessão
-              </button>
-            )}
             <button
               onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}
               className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-muted text-foreground/80 hover:bg-muted/70 border border-border transition-colors"
@@ -1684,7 +1669,7 @@ const Agenda = () => {
         description="A Agenda organiza seus atendimentos e permite acompanhar sessões, confirmações, pagamentos e acessar rapidamente a ficha do paciente."
         sections={[
           { label: "Quando usar", content: "No início do dia para conferir a rotina e ao longo da semana para agendar, confirmar ou reagendar sessões." },
-          { label: "Conexões", content: "Sessões geram lembretes ao paciente, entradas no Google Calendar e linhas no Financeiro. O botão 'Registrar sessão' abre o Registro de Sessão já vinculado." },
+          { label: "Conexões", content: "Sessões geram lembretes ao paciente, entradas no Google Calendar e linhas no Financeiro. Ao editar uma sessão, o Registro Clínico da sessão pode ser preenchido no mesmo modal." },
         ]}
       />
       {/* FAB Nova sessão (mobile) — sempre visível acima da bottom nav */}
@@ -2683,7 +2668,7 @@ const Agenda = () => {
 
       {/* ── Edit Session Dialog ── */}
       <Dialog open={editOpen} onOpenChange={(v) => { if (!v) { editGuard.guardClose(() => setEditOpen(false), () => setEditOpen(false)); } else { setEditOpen(true); } }}>
-        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent className="w-[95vw] max-w-[1000px] max-h-[90vh] overflow-y-auto overflow-x-hidden" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">Editar sessão</DialogTitle>
           </DialogHeader>
@@ -2835,31 +2820,6 @@ const Agenda = () => {
                 <Input type="number" step="0.01" min="0" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} />
               </div>
             </div>
-            <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Pagamento — preencher após sessão realizada</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Método pagamento</Label>
-                  <Select value={editForm.payment_method} onValueChange={(v) => setEditForm({ ...editForm, payment_method: v as typeof editForm.payment_method })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Não informado</SelectItem>
-                      <SelectItem value="pix">PIX</SelectItem>
-                      <SelectItem value="card">Cartão</SelectItem>
-                      <SelectItem value="cash">Dinheiro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Referência{(editForm.payment_method === "pix" || editForm.payment_method === "card") && <span className="text-destructive ml-1">*</span>}</Label>
-                  <Input maxLength={500} placeholder={editForm.payment_method === "pix" ? "Ex.: comprovante" : editForm.payment_method === "card" ? "Ex.: NSU" : "Opcional"} value={editForm.payment_reference} onChange={(e) => setEditForm({ ...editForm, payment_reference: e.target.value })} />
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Observações</Label>
-              <Textarea rows={3} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
-            </div>
             {(() => {
               const session = sessions.find((s) => s.id === editSessionId);
               if (session?.session_type === "supervision") return null;
@@ -2907,6 +2867,31 @@ const Agenda = () => {
                 </div>
               );
             })()}
+            <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Pagamento — preencher após sessão realizada</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Método pagamento</Label>
+                  <Select value={editForm.payment_method} onValueChange={(v) => setEditForm({ ...editForm, payment_method: v as typeof editForm.payment_method })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Não informado</SelectItem>
+                      <SelectItem value="pix">PIX</SelectItem>
+                      <SelectItem value="card">Cartão</SelectItem>
+                      <SelectItem value="cash">Dinheiro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Referência{(editForm.payment_method === "pix" || editForm.payment_method === "card") && <span className="text-destructive ml-1">*</span>}</Label>
+                  <Input maxLength={500} placeholder={editForm.payment_method === "pix" ? "Ex.: comprovante" : editForm.payment_method === "card" ? "Ex.: NSU" : "Opcional"} value={editForm.payment_reference} onChange={(e) => setEditForm({ ...editForm, payment_reference: e.target.value })} />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Observações</Label>
+              <Textarea rows={3} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
+            </div>
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
                 type="button" variant="destructive" size="sm"
