@@ -733,7 +733,7 @@ const RegistroSessao = () => {
     (async () => {
       const { data } = await supabase
         .from("patients")
-        .select("id, full_name")
+        .select("id, full_name, phone, homework_token")
         .eq("is_active", true)
         .order("full_name");
       setPatients(data ?? []);
