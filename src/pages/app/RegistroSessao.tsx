@@ -1760,6 +1760,46 @@ const RegistroSessao = () => {
               </section>
             )}
 
+            {/* Empate: duas sessões futuras no mesmo horário — psicóloga escolhe */}
+            {ambiguousNext.length > 1 && (
+              <section className="rounded-lg border p-4 space-y-3 mt-2" style={{ borderColor: "#F59E0B", background: "#FFFBEB" }}>
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 mt-0.5" style={{ color: "#B45309" }} />
+                  <div>
+                    <h3 className="font-display text-sm font-semibold" style={{ color: "#78350F" }}>
+                      Há mais de uma sessão futura neste mesmo horário
+                    </h3>
+                    <p className="text-xs text-[#78350F]/80">
+                      Escolha a qual sessão este planejamento deve ser vinculado. O vínculo é feito pelo ID da sessão — não pela data.
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {ambiguousNext.map((r) => (
+                    <label key={r.id} className="flex items-start gap-2 rounded-md border bg-white p-2 cursor-pointer hover:border-[#F59E0B]" style={{ borderColor: "#FDE68A" }}>
+                      <input
+                        type="radio"
+                        name="ambiguous-next"
+                        className="mt-1"
+                        onChange={() => chooseNextSession(r.id)}
+                      />
+                      <div className="text-sm">
+                        <div className="font-medium text-[#1A1A2E]">
+                          {format(new Date(r.scheduled_at), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {r.modality ?? "—"} · {r.duration_minutes ?? 50} min
+                          {r.created_at && <> · criada em {format(new Date(r.created_at), "dd/MM/yyyy HH:mm")}</>}
+                        </div>
+                        {r.notes && <div className="text-xs text-muted-foreground truncate max-w-[420px]">{r.notes}</div>}
+                        <div className="text-[10px] text-muted-foreground mt-0.5">ID: {r.id.slice(0, 8)}…</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Planejamento da próxima sessão — fonte única, componente reutilizado */}
             <div id="proxima-sessao" ref={proximaSessaoRef as any} className="mt-2">
               <SessionPlanningForm
@@ -1776,12 +1816,15 @@ const RegistroSessao = () => {
                 planTechniques={planTechniques}
                 scheduledAtLocked={!!nextSessionId}
                 helperText={
-                  nextSessionId
-                    ? "Este planejamento fica vinculado à próxima sessão já agendada do paciente e aparece automaticamente quando ela for aberta."
-                    : "Sem próxima sessão agendada. O planejamento fica salvo como pendente e será vinculado quando você agendar."
+                  ambiguousNext.length > 1
+                    ? "Selecione acima a sessão-alvo antes de preencher o planejamento."
+                    : nextSessionId
+                      ? "Este planejamento fica vinculado à próxima sessão já agendada do paciente e aparece automaticamente quando ela for aberta."
+                      : "Sem próxima sessão agendada. O planejamento fica salvo como pendente e será vinculado quando você agendar."
                 }
               />
             </div>
+
 
           </>
         )}
