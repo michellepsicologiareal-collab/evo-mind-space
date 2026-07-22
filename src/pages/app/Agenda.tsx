@@ -78,6 +78,7 @@ interface Patient {
   has_financial_responsible: boolean;
   financial_responsible_name: string | null;
   financial_responsible_phone: string | null;
+  homework_token?: string | null;
 }
 
 interface Service {
