@@ -369,8 +369,8 @@ const Agenda = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editOpen, editSessionId]);
 
-  const openHomeworkForSession = async () => {
-    const session = sessions.find((s) => s.id === editSessionId);
+  const openHomeworkForSession = async (overrideSession?: Session) => {
+    const session = overrideSession ?? sessions.find((s) => s.id === editSessionId);
     if (!session?.id || !session.patient_id) {
       toast.error("Selecione uma sessão com paciente para criar o plano.");
       return;
@@ -390,7 +390,112 @@ const Agenda = () => {
     setHomeworkLoading(false);
     if (error) { toast.error("Erro ao carregar plano existente"); return; }
     setHomeworkTask((data as HomeworkPlanFormTask) ?? null);
+    setHomeworkPatientId(session.patient_id);
+    setHomeworkSessionId(session.id);
     setHomeworkOpen(true);
+  };
+
+  // Homework opener state (for card-triggered flows independent of edit modal)
+  const [homeworkPatientId, setHomeworkPatientId] = useState<string | null>(null);
+  const [homeworkSessionId, setHomeworkSessionId] = useState<string | null>(null);
+
+  // ── Planejar próxima sessão — Sheet reutilizando SessionPlanningForm ──
+  const [planningOpen, setPlanningOpen] = useState(false);
+  const [planningSaving, setPlanningSaving] = useState(false);
+  const [planningPatientId, setPlanningPatientId] = useState<string | null>(null);
+  const [planningTargetSessionId, setPlanningTargetSessionId] = useState<string | null>(null);
+  const [planningExistingPlanId, setPlanningExistingPlanId] = useState<string | null>(null);
+  const [planningPlanGoals, setPlanningPlanGoals] = useState<{ id: string; descricao: string }[]>([]);
+  const [planningPlanTechniques, setPlanningPlanTechniques] = useState<{ id: string; nome: string }[]>([]);
+  const [planningValue, setPlanningValue] = useState<SessionPlanningValue>({
+    next_scheduled_at: "", next_objetivo: "", next_retomar: "", next_meta_id: null, next_tecnicas: [], next_observacoes: "",
+  });
+
+  const openPlanningForSession = async (session: Session) => {
+    if (!session.patient_id) { toast.error("Sessão sem paciente vinculado"); return; }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const pid = session.patient_id;
+    // Descobrir a próxima sessão FUTURA do paciente (ou usa a própria se ainda for futura)
+    const nowIso = new Date().toISOString();
+    const { data: nextSess } = await supabase
+      .from("sessions")
+      .select("id, scheduled_at")
+      .eq("user_id", user.id)
+      .eq("patient_id", pid)
+      .gte("scheduled_at", nowIso)
+      .not("status", "in", "(cancelled,no_show)")
+      .order("scheduled_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    const targetSessionId = nextSess?.id ?? null;
+    // Buscar plan goals/tecnicas + session_plan existente
+    const [goalsRes, techsRes, planRes] = await Promise.all([
+      supabase.from("treatment_goals").select("id, descricao").eq("patient_id", pid).eq("user_id", user.id).order("ordem"),
+      supabase.from("treatment_techniques").select("id, nome").eq("patient_id", pid).eq("user_id", user.id).order("created_at"),
+      targetSessionId
+        ? supabase.from("session_plans").select("*").eq("session_id", targetSessionId).maybeSingle()
+        : Promise.resolve({ data: null } as any),
+    ]);
+    setPlanningPatientId(pid);
+    setPlanningTargetSessionId(targetSessionId);
+    setPlanningExistingPlanId((planRes as any)?.data?.id ?? null);
+    setPlanningPlanGoals((goalsRes.data || []) as any);
+    setPlanningPlanTechniques((techsRes.data || []) as any);
+    const existing = (planRes as any)?.data;
+    setPlanningValue(planningValueFromDb({
+      scheduled_at: nextSess?.scheduled_at ?? null,
+      objetivo: existing?.objetivo ?? "",
+      retomar: existing?.retomar ?? "",
+      meta_id: existing?.meta_id ?? null,
+      tecnicas: existing?.tecnicas ?? [],
+      observacoes: existing?.observacoes ?? "",
+    }));
+    setPlanningOpen(true);
+  };
+
+  const savePlanningFromSheet = async () => {
+    if (!planningPatientId) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    setPlanningSaving(true);
+    try {
+      let targetSessionId = planningTargetSessionId;
+      if (planningValue.next_scheduled_at) {
+        const iso = new Date(planningValue.next_scheduled_at).toISOString();
+        if (targetSessionId) {
+          await supabase.from("sessions").update({ scheduled_at: iso, status: "scheduled" })
+            .eq("id", targetSessionId).eq("user_id", user.id);
+        } else {
+          const { data: created } = await supabase.from("sessions").insert({
+            user_id: user.id, patient_id: planningPatientId, scheduled_at: iso,
+            duration_minutes: 50, modality: "presencial", status: "scheduled", session_type: "clinical",
+          }).select("id").single();
+          if (created?.id) targetSessionId = created.id;
+        }
+      }
+      const payload = {
+        user_id: user.id,
+        patient_id: planningPatientId,
+        session_id: targetSessionId,
+        objetivo: planningValue.next_objetivo,
+        retomar: planningValue.next_retomar,
+        tecnicas: planningValue.next_tecnicas,
+        observacoes: planningValue.next_observacoes,
+        meta_id: planningValue.next_meta_id,
+      };
+      const { error } = planningExistingPlanId
+        ? await supabase.from("session_plans").update(payload).eq("id", planningExistingPlanId)
+        : await supabase.from("session_plans").insert(payload);
+      if (error) throw error;
+      toast.success("Planejamento salvo");
+      setPlanningOpen(false);
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao salvar planejamento");
+    } finally {
+      setPlanningSaving(false);
+    }
   };
 
   // Patient filter for pending list
