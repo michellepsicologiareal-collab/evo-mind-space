@@ -149,7 +149,9 @@ const Agenda = () => {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [sessions, setSessions] = useState<Session[]>([]);
   const navigate = useNavigate();
-  const [prevPlanByPatient, setPrevPlanByPatient] = useState<Map<string, string>>(new Map());
+  const [planBySession, setPlanBySession] = useState<Map<string, string>>(new Map());
+  const [recordPlanBySession, setRecordPlanBySession] = useState<Map<string, string>>(new Map());
+  const [progressPlanBySession, setProgressPlanBySession] = useState<Map<string, string>>(new Map());
   const [sessionRecordIds, setSessionRecordIds] = useState<Set<string>>(new Set());
   // Chaves compostas "patient_id|yyyy-MM-dd" para registros salvos sem session_id
   const [sessionRecordKeys, setSessionRecordKeys] = useState<Set<string>>(new Set());
@@ -160,7 +162,7 @@ const Agenda = () => {
   const [pixKey, setPixKey] = useState("");
   const [psiName, setPsiName] = useState("");
   const [psiCrp, setPsiCrp] = useState("");
-  const [viewTab, setViewTab] = useState<string>("month");
+  const [viewTab, setViewTab] = useState<string>("day");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
   const [searchParams] = useSearchParams();
@@ -654,7 +656,8 @@ const Agenda = () => {
     const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
     (async () => {
-      const [recs, moods] = await Promise.all([
+      const sessionIds = sessions.map((s) => s.id).filter(Boolean);
+      const [recs, moods, homework, progressPlans] = await Promise.all([
         supabase.from("session_records")
           .select("session_id, patient_id, session_date, next_session_plan")
           .eq("user_id", user.id)
@@ -666,23 +669,55 @@ const Agenda = () => {
           .eq("user_id", user.id)
           .gte("recorded_at", todayStart.toISOString())
           .lte("recorded_at", todayEnd.toISOString()),
+        sessionIds.length
+          ? supabase.from("homework_tasks")
+              .select("session_id, weekly_goal, actions")
+              .eq("user_id", user.id)
+              .in("session_id", sessionIds)
+          : Promise.resolve({ data: [] as any[] }),
+        sessionIds.length
+          ? supabase.from("patient_progress")
+              .select("session_id, next_session_plan, recorded_at")
+              .eq("user_id", user.id)
+              .in("session_id", sessionIds)
+              .order("recorded_at", { ascending: false })
+          : Promise.resolve({ data: [] as any[] }),
       ]);
-      const prev = new Map<string, string>();
+      const recPlan = new Map<string, string>();
       const recIds = new Set<string>();
       const recKeys = new Set<string>();
       (recs.data ?? []).forEach((r: any) => {
         if (r.session_id) recIds.add(r.session_id);
         if (r.patient_id && r.session_date) recKeys.add(`${r.patient_id}|${r.session_date}`);
-        if (r.patient_id && r.next_session_plan && !prev.has(r.patient_id)) {
-          prev.set(r.patient_id, r.next_session_plan);
+        if (r.session_id && r.next_session_plan && !recPlan.has(r.session_id)) {
+          recPlan.set(r.session_id, r.next_session_plan);
         }
       });
-      setPrevPlanByPatient(prev);
+      const hwPlan = new Map<string, string>();
+      (homework.data ?? []).forEach((h: any) => {
+        if (!h.session_id) return;
+        const goal = typeof h.weekly_goal === "string" ? h.weekly_goal.trim() : "";
+        if (goal) { if (!hwPlan.has(h.session_id)) hwPlan.set(h.session_id, goal); return; }
+        const acts = Array.isArray(h.actions) ? h.actions : [];
+        for (const a of acts) {
+          const t = (a && (a.text ?? a.description ?? a.title ?? "")).toString().trim();
+          if (t) { if (!hwPlan.has(h.session_id)) hwPlan.set(h.session_id, t); break; }
+        }
+      });
+      const progPlan = new Map<string, string>();
+      (progressPlans.data ?? []).forEach((p: any) => {
+        if (!p.session_id) return;
+        const txt = typeof p.next_session_plan === "string" ? p.next_session_plan.trim() : "";
+        if (txt && !progPlan.has(p.session_id)) progPlan.set(p.session_id, txt);
+      });
+      setPlanBySession(hwPlan);
+      setRecordPlanBySession(recPlan);
+      setProgressPlanBySession(progPlan);
       setSessionRecordIds(recIds);
       setSessionRecordKeys(recKeys);
       setMoodTodayPatients(new Set((moods.data ?? []).map((m: any) => m.patient_id)));
     })();
-  }, [user, sessions.length, currentMonth]);
+  }, [user, sessions, currentMonth]);
 
   useAutoRefresh(() => { if (user) { load(true); loadPending(true); } }, { routePath: "/app/agenda" });
 
@@ -1488,7 +1523,9 @@ const Agenda = () => {
     const sessionDateKey = s.patient_id ? `${s.patient_id}|${new Date(s.scheduled_at).toISOString().slice(0, 10)}` : "";
     const hasRecord = sessionRecordIds.has(s.id) || (sessionDateKey && sessionRecordKeys.has(sessionDateKey));
     const registroPendente = !isSupervisionCard && isPast && isActiveStatus && !hasRecord && !!s.patient_id;
-    const prevPlan = !isSupervisionCard && s.patient_id ? prevPlanByPatient.get(s.patient_id) : undefined;
+    const prevPlan = !isSupervisionCard
+      ? (planBySession.get(s.id) || recordPlanBySession.get(s.id) || progressPlanBySession.get(s.id))
+      : undefined;
 
 
     const actions = (
@@ -1550,8 +1587,8 @@ const Agenda = () => {
           </div>
           {isMobile ? (
             <>
-              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" aria-label="Ações da sessão" onClick={(e) => { e.stopPropagation(); setSheetOpen(true); }}>
-                <MoreHorizontal className="h-5 w-5" />
+              <Button variant="outline" size="sm" className="h-8 px-2.5 gap-1 text-xs font-medium shrink-0" aria-label="Ações da sessão" onClick={(e) => { e.stopPropagation(); setSheetOpen(true); }}>
+                <MoreHorizontal className="h-4 w-4" /> Ações
               </Button>
               <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto p-0" onClick={(e) => e.stopPropagation()}>
@@ -1568,8 +1605,8 @@ const Agenda = () => {
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" aria-label="Ações da sessão" onClick={(e) => e.stopPropagation()}>
-                  <MoreHorizontal className="h-5 w-5" />
+                <Button variant="outline" size="sm" className="h-8 px-2.5 gap-1 text-xs font-medium shrink-0" aria-label="Ações da sessão" onClick={(e) => e.stopPropagation()}>
+                  <MoreHorizontal className="h-4 w-4" /> Ações
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
@@ -1690,7 +1727,7 @@ const Agenda = () => {
             <p className="text-[10px] uppercase tracking-wider text-primary/80 font-semibold flex items-center gap-1">
               <Target className="h-3 w-3" /> Combinado / próximo passo
             </p>
-            <p className="text-xs text-foreground/85 line-clamp-2 mt-0.5">{prevPlan}</p>
+            <p className="text-xs text-foreground/85 line-clamp-2 mt-0.5 break-words">{prevPlan}</p>
           </div>
         )}
 
