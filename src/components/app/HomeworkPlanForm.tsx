@@ -345,44 +345,41 @@ export const HomeworkPlanForm = ({
     const parts: string[] = [
       `Olá, ${firstName}! Aqui é a ${psiName}.`,
       "",
-      `Segue seu *Plano entre Sessões*: ${effectiveTitle}`,
+      `Preparei seu *Plano entre Sessões*${effectiveTitle ? `: ${effectiveTitle}` : ""}.`,
       "",
     ];
-    if (weeklyGoal.trim()) {
-      parts.push("🎯 *Objetivo até a próxima sessão:*");
-      parts.push(weeklyGoal.trim());
-      parts.push("");
-    }
-    if (sessionPoints.trim()) {
-      parts.push("📝 *Pontos importantes da sessão:*");
-      parts.push(sessionPoints.trim());
-      parts.push("");
-    }
-    const filledActions = actions.filter((a) => a.text.trim());
-    if (filledActions.length > 0) {
-      parts.push("✅ *Ações combinadas:*");
-      filledActions.forEach((a, i) => parts.push(`${i + 1}. ${a.text}`));
-      parts.push("");
-    }
-    if (weeklyObservations.trim()) {
-      parts.push("👀 *O que observar durante a semana:*");
-      parts.push(weeklyObservations.trim());
-      parts.push("");
-    }
     if (publicUrl) {
-      parts.push("Aqui está o link para acompanhar este plano (também gera PDF):");
+      parts.push("Você pode acessar o plano completo (e gerar PDF) pelo link abaixo:");
       parts.push(publicUrl);
-      if (pwd) {
-        parts.push("");
-        parts.push("🔒 O link é protegido por senha — te envio a senha em uma mensagem separada.");
-      }
+      parts.push("");
+    }
+    if (pwd) {
+      parts.push("🔒 O link é protegido por senha. Te envio a senha em uma mensagem separada, por segurança.");
       parts.push("");
     }
     parts.push("Qualquer dúvida, estou por aqui.");
 
     setSending(false);
     window.open(`https://wa.me/${digits}?text=${encodeURIComponent(parts.join("\n"))}`, "_blank");
-    toast.success("Plano enviado por WhatsApp");
+    toast.success(pwd ? "Plano enviado. Agora envie a senha em uma mensagem separada." : "Plano enviado por WhatsApp");
+  };
+
+  const sendPasswordWhatsApp = async () => {
+    const digits = normalizePhoneForWhatsApp(patientPhone);
+    if (!digits) { toast.error("Paciente sem WhatsApp cadastrado"); return; }
+    const pwd = accessPassword.trim();
+    if (!pwd) { toast.error("Defina uma senha primeiro"); return; }
+    await persistPassword();
+    const firstName = (patientName ?? "").trim().split(" ")[0] || "olá";
+    const msg = [
+      `Oi, ${firstName}! Esta é a *senha* para abrir o seu Plano entre Sessões:`,
+      "",
+      `🔒 ${pwd}`,
+      "",
+      "Use-a apenas quando abrir o link que te enviei na mensagem anterior.",
+    ].join("\n");
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(msg)}`, "_blank");
+    toast.success("Senha enviada por WhatsApp");
   };
 
   const canSend = Boolean(patientPhone && normalizePhoneForWhatsApp(patientPhone));
