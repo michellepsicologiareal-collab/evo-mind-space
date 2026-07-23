@@ -413,7 +413,7 @@ export const PatientSessionsQuickView = ({
                   )}
 
                   {/* Combinado / Tarefa — legado somente (v2 oculto até integração com session_plans) */}
-                  {r.source === "legacy" && r.next_session_plan && (
+                  {r.next_session_plan && (
                     <div>
                       <p className="text-xs font-medium text-muted-foreground mb-1 inline-flex items-center gap-1">
                         <ClipboardList className="h-3 w-3" /> Combinado / tarefa
