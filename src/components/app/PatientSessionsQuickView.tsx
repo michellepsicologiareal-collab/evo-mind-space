@@ -238,11 +238,27 @@ export const PatientSessionsQuickView = ({
 
       const v2Unified: UnifiedRecord[] = v2Rows.map((r) => {
         const sess = r.session_id ? sessionsMap.get(r.session_id) ?? null : null;
+        const hw = r.session_id ? homeworkMap.get(r.session_id) ?? null : null;
+        // Combinado/tarefa: prioridade homework (weekly_goal > ações > título) > next_session_plan da sessão
+        let combinado: string | null = null;
+        if (hw) {
+          if (hw.weekly_goal && String(hw.weekly_goal).trim()) {
+            combinado = String(hw.weekly_goal).trim();
+          } else if (Array.isArray(hw.actions) && hw.actions.length > 0) {
+            combinado = hw.actions
+              .map((a: any) => (typeof a === "string" ? a : a?.text ?? ""))
+              .filter(Boolean)
+              .map((t: string, i: number) => `${i + 1}. ${t}`)
+              .join("\n");
+          } else if (hw.title && String(hw.title).trim()) {
+            combinado = String(hw.title).trim();
+          }
+        }
+        if (!combinado && sess?.next_session_plan) combinado = sess.next_session_plan;
         return {
           id: `v2:${r.id}`,
           source: "v2" as const,
           session_id: r.session_id ?? null,
-          // Fallback para recorded_at quando não há sessão vinculada
           session_date: sess?.scheduled_at ?? r.recorded_at ?? r.created_at,
           session_number: null,
           modality: sess?.modality ?? null,
@@ -255,8 +271,7 @@ export const PatientSessionsQuickView = ({
           engagement: r.engagement ?? null,
           attention_flag: r.attention_flag && r.attention_flag !== "none" ? r.attention_flag : null,
           private_notes: r.private_notes ?? null,
-          // Bloco Combinado/tarefa fica oculto para v2 até integração com session_plans
-          next_session_plan: null,
+          next_session_plan: combinado,
           created_at: r.created_at,
         };
       });
