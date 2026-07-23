@@ -171,7 +171,8 @@ const Tarefas = () => {
               {tasks.map((t, i) => {
                 const taskActions = normalizeActions(t.actions);
                 return (
-                  <div key={t.task_id!} className="pb-6 border-b border-border last:border-0 last:pb-0 break-inside-avoid">
+                  <div key={t.task_id!} id={`plano-${t.task_id}`} className="pb-6 border-b border-border last:border-0 last:pb-0 break-inside-avoid scroll-mt-6 target:ring-2 target:ring-accent target:rounded-xl">
+
                     <div className="flex items-baseline justify-between gap-2 flex-wrap">
                       <h2 className="font-display text-base font-semibold text-foreground">
                         {i + 1}. {t.title}
