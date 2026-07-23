@@ -62,6 +62,22 @@ const Tarefas = () => {
     })();
   }, [token]);
 
+  // Scroll para o plano específico quando #plano-<id> estiver na URL
+  useEffect(() => {
+    if (state !== "ready") return;
+    const hash = window.location.hash;
+    if (!hash) return;
+    const el = document.getElementById(hash.slice(1));
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        el.classList.add("ring-2", "ring-accent", "rounded-xl");
+        setTimeout(() => el.classList.remove("ring-2", "ring-accent", "rounded-xl"), 2500);
+      }, 150);
+    }
+  }, [state]);
+
+
   const submitPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password.trim()) return;
