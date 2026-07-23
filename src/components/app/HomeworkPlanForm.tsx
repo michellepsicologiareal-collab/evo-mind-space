@@ -265,23 +265,36 @@ export const HomeworkPlanForm = ({
       .eq("id", patientId);
   };
 
-  const buildPublicUrl = () =>
-    homeworkToken ? `${window.location.origin}/tarefas/${homeworkToken}` : null;
+  const buildPublicUrl = () => {
+    if (!homeworkToken) return null;
+    const base = `${window.location.origin}/tarefas/${homeworkToken}`;
+    const id = editingRef.current?.id ?? editing?.id;
+    return id ? `${base}#plano-${id}` : base;
+  };
 
   const copyPublicLink = async () => {
     const url = buildPublicUrl();
     if (!url) { toast.error("Link público indisponível"); return; }
     setCopying(true);
-    await persistPassword();
-    const pwd = accessPassword.trim();
-    const text = pwd ? `${url}\nSenha: ${pwd}` : url;
     try {
-      await navigator.clipboard.writeText(text);
-      toast.success(pwd ? "Link e senha copiados" : "Link copiado");
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado. Envie a senha separadamente.");
     } catch {
       toast.error("Não foi possível copiar");
     }
     setCopying(false);
+  };
+
+  const copyPassword = async () => {
+    const pwd = accessPassword.trim();
+    if (!pwd) { toast.error("Defina uma senha primeiro"); return; }
+    await persistPassword();
+    try {
+      await navigator.clipboard.writeText(pwd);
+      toast.success("Senha copiada");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
   };
 
   const sendWhatsApp = async () => {
