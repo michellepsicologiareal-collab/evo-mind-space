@@ -265,23 +265,36 @@ export const HomeworkPlanForm = ({
       .eq("id", patientId);
   };
 
-  const buildPublicUrl = () =>
-    homeworkToken ? `${window.location.origin}/tarefas/${homeworkToken}` : null;
+  const buildPublicUrl = () => {
+    if (!homeworkToken) return null;
+    const base = `${window.location.origin}/tarefas/${homeworkToken}`;
+    const id = editingRef.current?.id ?? editing?.id;
+    return id ? `${base}#plano-${id}` : base;
+  };
 
   const copyPublicLink = async () => {
     const url = buildPublicUrl();
     if (!url) { toast.error("Link público indisponível"); return; }
     setCopying(true);
-    await persistPassword();
-    const pwd = accessPassword.trim();
-    const text = pwd ? `${url}\nSenha: ${pwd}` : url;
     try {
-      await navigator.clipboard.writeText(text);
-      toast.success(pwd ? "Link e senha copiados" : "Link copiado");
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado. Envie a senha separadamente.");
     } catch {
       toast.error("Não foi possível copiar");
     }
     setCopying(false);
+  };
+
+  const copyPassword = async () => {
+    const pwd = accessPassword.trim();
+    if (!pwd) { toast.error("Defina uma senha primeiro"); return; }
+    await persistPassword();
+    try {
+      await navigator.clipboard.writeText(pwd);
+      toast.success("Senha copiada");
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
   };
 
   const sendWhatsApp = async () => {
@@ -357,10 +370,11 @@ export const HomeworkPlanForm = ({
       parts.push("");
     }
     if (publicUrl) {
-      parts.push("Você pode acompanhar seus planos pelo link abaixo (também gera PDF):");
+      parts.push("Aqui está o link para acompanhar este plano (também gera PDF):");
       parts.push(publicUrl);
       if (pwd) {
-        parts.push(`🔒 Senha de acesso: ${pwd}`);
+        parts.push("");
+        parts.push("🔒 O link é protegido por senha — te envio a senha em uma mensagem separada.");
       }
       parts.push("");
     }
@@ -421,9 +435,21 @@ export const HomeworkPlanForm = ({
               maxLength={60}
             />
             {accessPassword.trim() && (
-              <span className="text-[11px] text-muted-foreground">Será exigida ao abrir o link.</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={copyPassword}
+                title="Copiar senha para enviar separadamente"
+              >
+                <Copy className="h-3.5 w-3.5" /> Copiar senha
+              </Button>
             )}
           </div>
+          <p className="text-[11px] text-muted-foreground">
+            Por privacidade, a senha nunca é incluída na mensagem do WhatsApp — copie e envie separadamente ou combine uma senha fixa com o paciente.
+          </p>
+
         </div>
       )}
       <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">

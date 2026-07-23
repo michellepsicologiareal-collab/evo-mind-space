@@ -183,21 +183,33 @@ export const PatientSessionsQuickView = ({
       const v2SessionIdList = Array.from(
         new Set(v2Rows.map((r) => r.session_id).filter((sid): sid is string => !!sid))
       );
-      const sessionsMap = new Map<string, { scheduled_at: string | null; modality: string | null; duration_minutes: number | null; status: string | null }>();
+      const sessionsMap = new Map<string, { scheduled_at: string | null; modality: string | null; duration_minutes: number | null; status: string | null; next_session_plan: string | null }>();
+      const homeworkMap = new Map<string, { title: string | null; weekly_goal: string | null; actions: any }>();
       if (v2SessionIdList.length > 0) {
-        const { data: sessRows } = await supabase
-          .from("sessions")
-          .select("id, scheduled_at, modality, duration_minutes, status")
-          .in("id", v2SessionIdList);
-        (sessRows ?? []).forEach((s: any) => {
+        const [sessRes, hwRes] = await Promise.all([
+          supabase
+            .from("sessions")
+            .select("id, scheduled_at, modality, duration_minutes, status, next_session_plan")
+            .in("id", v2SessionIdList),
+          supabase
+            .from("homework_tasks")
+            .select("session_id, title, weekly_goal, actions")
+            .in("session_id", v2SessionIdList),
+        ]);
+        (sessRes.data ?? []).forEach((s: any) => {
           sessionsMap.set(s.id, {
             scheduled_at: s.scheduled_at ?? null,
             modality: s.modality ?? null,
             duration_minutes: s.duration_minutes ?? null,
             status: s.status ?? null,
+            next_session_plan: s.next_session_plan ?? null,
           });
         });
+        (hwRes.data ?? []).forEach((h: any) => {
+          if (h.session_id) homeworkMap.set(h.session_id, { title: h.title, weekly_goal: h.weekly_goal, actions: h.actions });
+        });
       }
+
 
       // Set de session_id cobertos por registros v2 — usado para deduplicar legado
       const v2SessionIds = new Set(v2SessionIdList);
@@ -226,11 +238,27 @@ export const PatientSessionsQuickView = ({
 
       const v2Unified: UnifiedRecord[] = v2Rows.map((r) => {
         const sess = r.session_id ? sessionsMap.get(r.session_id) ?? null : null;
+        const hw = r.session_id ? homeworkMap.get(r.session_id) ?? null : null;
+        // Combinado/tarefa: prioridade homework (weekly_goal > ações > título) > next_session_plan da sessão
+        let combinado: string | null = null;
+        if (hw) {
+          if (hw.weekly_goal && String(hw.weekly_goal).trim()) {
+            combinado = String(hw.weekly_goal).trim();
+          } else if (Array.isArray(hw.actions) && hw.actions.length > 0) {
+            combinado = hw.actions
+              .map((a: any) => (typeof a === "string" ? a : a?.text ?? ""))
+              .filter(Boolean)
+              .map((t: string, i: number) => `${i + 1}. ${t}`)
+              .join("\n");
+          } else if (hw.title && String(hw.title).trim()) {
+            combinado = String(hw.title).trim();
+          }
+        }
+        if (!combinado && sess?.next_session_plan) combinado = sess.next_session_plan;
         return {
           id: `v2:${r.id}`,
           source: "v2" as const,
           session_id: r.session_id ?? null,
-          // Fallback para recorded_at quando não há sessão vinculada
           session_date: sess?.scheduled_at ?? r.recorded_at ?? r.created_at,
           session_number: null,
           modality: sess?.modality ?? null,
@@ -243,8 +271,7 @@ export const PatientSessionsQuickView = ({
           engagement: r.engagement ?? null,
           attention_flag: r.attention_flag && r.attention_flag !== "none" ? r.attention_flag : null,
           private_notes: r.private_notes ?? null,
-          // Bloco Combinado/tarefa fica oculto para v2 até integração com session_plans
-          next_session_plan: null,
+          next_session_plan: combinado,
           created_at: r.created_at,
         };
       });
@@ -386,7 +413,7 @@ export const PatientSessionsQuickView = ({
                   )}
 
                   {/* Combinado / Tarefa — legado somente (v2 oculto até integração com session_plans) */}
-                  {r.source === "legacy" && r.next_session_plan && (
+                  {r.next_session_plan && (
                     <div>
                       <p className="text-xs font-medium text-muted-foreground mb-1 inline-flex items-center gap-1">
                         <ClipboardList className="h-3 w-3" /> Combinado / tarefa
