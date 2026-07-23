@@ -370,10 +370,11 @@ export const HomeworkPlanForm = ({
       parts.push("");
     }
     if (publicUrl) {
-      parts.push("Você pode acompanhar seus planos pelo link abaixo (também gera PDF):");
+      parts.push("Aqui está o link para acompanhar este plano (também gera PDF):");
       parts.push(publicUrl);
       if (pwd) {
-        parts.push(`🔒 Senha de acesso: ${pwd}`);
+        parts.push("");
+        parts.push("🔒 O link é protegido por senha — te envio a senha em uma mensagem separada.");
       }
       parts.push("");
     }
