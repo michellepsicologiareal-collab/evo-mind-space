@@ -432,15 +432,27 @@ export const HomeworkPlanForm = ({
               maxLength={60}
             />
             {accessPassword.trim() && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={copyPassword}
-                title="Copiar senha para enviar separadamente"
-              >
-                <Copy className="h-3.5 w-3.5" /> Copiar senha
-              </Button>
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={copyPassword}
+                  title="Copiar senha para enviar separadamente"
+                >
+                  <Copy className="h-3.5 w-3.5" /> Copiar senha
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="moss"
+                  onClick={sendPasswordWhatsApp}
+                  disabled={!canSend}
+                  title={canSend ? "Enviar senha em uma mensagem separada" : "Paciente sem WhatsApp cadastrado"}
+                >
+                  <MessageCircle className="h-3.5 w-3.5" /> {editing?.sent_at ? "Reenviar senha" : "Enviar senha"}
+                </Button>
+              </>
             )}
           </div>
           <p className="text-[11px] text-muted-foreground">
