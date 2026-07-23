@@ -435,9 +435,21 @@ export const HomeworkPlanForm = ({
               maxLength={60}
             />
             {accessPassword.trim() && (
-              <span className="text-[11px] text-muted-foreground">Será exigida ao abrir o link.</span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={copyPassword}
+                title="Copiar senha para enviar separadamente"
+              >
+                <Copy className="h-3.5 w-3.5" /> Copiar senha
+              </Button>
             )}
           </div>
+          <p className="text-[11px] text-muted-foreground">
+            Por privacidade, a senha nunca é incluída na mensagem do WhatsApp — copie e envie separadamente ou combine uma senha fixa com o paciente.
+          </p>
+
         </div>
       )}
       <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
