@@ -572,6 +572,51 @@ export const HomeworkPlanForm = ({
           )}
         </div>
 
+        <div className="rounded-lg border border-lilac/30 bg-lilac/5">
+          <button
+            type="button"
+            onClick={() => setCopingOpen((v) => !v)}
+            className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left"
+            aria-expanded={copingOpen}
+          >
+            <span className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+              <Shield className="h-3.5 w-3.5 text-lilac" /> 🛡️ Cartão de Enfrentamento
+              <span className="text-muted-foreground font-normal">(opcional)</span>
+              {(copingTitle.trim() || copingContent.trim()) && (
+                <span className="ml-1 rounded-full bg-lilac/20 px-1.5 py-0.5 text-[10px] text-lilac-foreground">preenchido</span>
+              )}
+            </span>
+            {copingOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+          </button>
+          {copingOpen && (
+            <div className="px-3 pb-3 space-y-2">
+              <p className="text-[11px] text-muted-foreground">
+                Mensagem curta que o paciente poderá consultar em momentos difíceis entre as sessões.
+              </p>
+              <div>
+                <Label className="text-xs">Título</Label>
+                <Input
+                  value={copingTitle}
+                  onChange={(e) => setCopingTitle(e.target.value)}
+                  placeholder="Ex: Quando a ansiedade chegar..."
+                  maxLength={200}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Conteúdo do cartão</Label>
+                <Textarea
+                  value={copingContent}
+                  onChange={(e) => setCopingContent(e.target.value)}
+                  rows={4}
+                  maxLength={2000}
+                  placeholder="Ex: Respire fundo 3 vezes. Lembre-se: este sentimento é temporário e você já enfrentou situações assim antes..."
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+
         <div>
           <Label className="flex items-center gap-1.5 text-xs">
             <Eye className="h-3.5 w-3.5" /> O que observar até a próxima sessão
