@@ -723,6 +723,8 @@ export type Database = {
         Row: {
           actions: Json | null
           content: string
+          coping_card_content: string | null
+          coping_card_title: string | null
           created_at: string
           id: string
           patient_id: string
@@ -739,6 +741,8 @@ export type Database = {
         Insert: {
           actions?: Json | null
           content: string
+          coping_card_content?: string | null
+          coping_card_title?: string | null
           created_at?: string
           id?: string
           patient_id: string
@@ -755,6 +759,8 @@ export type Database = {
         Update: {
           actions?: Json | null
           content?: string
+          coping_card_content?: string | null
+          coping_card_title?: string | null
           created_at?: string
           id?: string
           patient_id?: string
@@ -2175,6 +2181,8 @@ export type Database = {
             Returns: {
               actions: Json
               content: string
+              coping_card_content: string
+              coping_card_title: string
               created_at: string
               patient_name: string
               sent_at: string
