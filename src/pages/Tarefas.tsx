@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, FileText, Printer, X, CheckSquare, NotebookPen, ListChecks, Eye, Lock } from "lucide-react";
+import { Loader2, FileText, Printer, X, CheckSquare, NotebookPen, ListChecks, Eye, Lock, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
