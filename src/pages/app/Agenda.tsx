@@ -1929,7 +1929,13 @@ const Agenda = () => {
               onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}
               className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-muted text-foreground/80 hover:bg-muted/70 border border-border transition-colors"
             >
-              <User className="h-3 w-3" /> Abrir ficha
+              <DollarSign className="h-3 w-3" /> Financeiro
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setHistoryOpen(true); }}
+              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-muted text-foreground/80 hover:bg-muted/70 border border-border transition-colors"
+            >
+              <ClipboardList className="h-3 w-3" /> Histórico
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); openEdit(s); }}
@@ -1938,6 +1944,17 @@ const Agenda = () => {
               <Pencil className="h-3 w-3" /> Registrar sessão
             </button>
           </div>
+        )}
+        {!isSupervisionCard && s.patient_id && (
+          <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+            <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <SheetHeader className="mb-4">
+                <SheetTitle className="font-display text-xl">Histórico de sessões</SheetTitle>
+                <SheetDescription>{s.patient_name}</SheetDescription>
+              </SheetHeader>
+              <PatientSessionHistory patientId={s.patient_id} patientName={s.patient_name || "Paciente"} />
+            </SheetContent>
+          </Sheet>
         )}
       </div>
     );
