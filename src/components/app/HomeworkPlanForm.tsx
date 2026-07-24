@@ -156,6 +156,8 @@ export const HomeworkPlanForm = ({
     weeklyGoal.trim().length > 0 ||
     sessionPoints.trim().length > 0 ||
     weeklyObservations.trim().length > 0 ||
+    copingTitle.trim().length > 0 ||
+    copingContent.trim().length > 0 ||
     actions.some((a) => a.text.trim().length > 0)
   );
 
