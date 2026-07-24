@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Plus, Send, CheckSquare, Square, X, NotebookPen, ListChecks, Eye, Target, MessageCircle, Copy, Lock } from "lucide-react";
+import { Loader2, Plus, Send, CheckSquare, Square, X, NotebookPen, ListChecks, Eye, Target, MessageCircle, Copy, Lock, Shield, ChevronDown, ChevronRight } from "lucide-react";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +26,8 @@ export interface HomeworkPlanFormTask {
   weekly_goal: string | null;
   actions: Json | null;
   weekly_observations: string | null;
+  coping_card_title?: string | null;
+  coping_card_content?: string | null;
   sent_at: string | null;
   created_at: string;
   session_record_id: string | null;
@@ -91,6 +93,9 @@ export const HomeworkPlanForm = ({
   const [actions, setActions] = useState<ActionItem[]>(normalizeActions(initialTask?.actions ?? null));
   const [actionInput, setActionInput] = useState("");
   const [weeklyObservations, setWeeklyObservations] = useState(initialTask?.weekly_observations ?? "");
+  const [copingTitle, setCopingTitle] = useState(initialTask?.coping_card_title ?? "");
+  const [copingContent, setCopingContent] = useState(initialTask?.coping_card_content ?? "");
+  const [copingOpen, setCopingOpen] = useState<boolean>(Boolean(initialTask?.coping_card_title || initialTask?.coping_card_content));
   const [sourceRecord, setSourceRecord] = useState<string>(initialTask?.session_record_id ?? "none");
   const [saving, setSaving] = useState(false);
   const [autoSavedAt, setAutoSavedAt] = useState<Date | null>(null);
@@ -105,6 +110,9 @@ export const HomeworkPlanForm = ({
     setSessionPoints(initialTask?.session_points ?? "");
     setActions(normalizeActions(initialTask?.actions ?? null));
     setWeeklyObservations(initialTask?.weekly_observations ?? "");
+    setCopingTitle(initialTask?.coping_card_title ?? "");
+    setCopingContent(initialTask?.coping_card_content ?? "");
+    setCopingOpen(Boolean(initialTask?.coping_card_title || initialTask?.coping_card_content));
     setSourceRecord(initialTask?.session_record_id ?? "none");
     setAutoSavedAt(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -148,6 +156,8 @@ export const HomeworkPlanForm = ({
     weeklyGoal.trim().length > 0 ||
     sessionPoints.trim().length > 0 ||
     weeklyObservations.trim().length > 0 ||
+    copingTitle.trim().length > 0 ||
+    copingContent.trim().length > 0 ||
     actions.some((a) => a.text.trim().length > 0)
   );
 
@@ -167,6 +177,8 @@ export const HomeworkPlanForm = ({
         session_points: sessionPoints.trim() || null,
         actions: serializeActions(actions),
         weekly_observations: weeklyObservations.trim() || null,
+        coping_card_title: copingTitle.trim() || null,
+        coping_card_content: copingContent.trim() || null,
         session_record_id: sourceRecord === "none" ? null : sourceRecord,
       };
       if (sessionId) payload.session_id = sessionId;
@@ -188,7 +200,7 @@ export const HomeworkPlanForm = ({
     }, 1200);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, weeklyGoal, sessionPoints, actions, weeklyObservations, sourceRecord, sessionId, patientId]);
+  }, [title, weeklyGoal, sessionPoints, actions, weeklyObservations, copingTitle, copingContent, sourceRecord, sessionId, patientId]);
 
   const save = async () => {
     if (!hasAnyContent()) { toast.error("Preencha ao menos um campo do plano"); return; }
@@ -203,6 +215,8 @@ export const HomeworkPlanForm = ({
       session_points: sessionPoints.trim() || null,
       actions: serializeActions(actions),
       weekly_observations: weeklyObservations.trim() || null,
+      coping_card_title: copingTitle.trim() || null,
+      coping_card_content: copingContent.trim() || null,
       session_record_id: sourceRecord === "none" ? null : sourceRecord,
     };
     if (sessionId) payload.session_id = sessionId;
@@ -316,6 +330,8 @@ export const HomeworkPlanForm = ({
       session_points: sessionPoints.trim() || null,
       actions: serializeActions(actions),
       weekly_observations: weeklyObservations.trim() || null,
+      coping_card_title: copingTitle.trim() || null,
+      coping_card_content: copingContent.trim() || null,
       session_record_id: sourceRecord === "none" ? null : sourceRecord,
       sent_at: new Date().toISOString(),
     };
@@ -555,6 +571,51 @@ export const HomeworkPlanForm = ({
             </div>
           )}
         </div>
+
+        <div className="rounded-lg border border-lilac/30 bg-lilac/5">
+          <button
+            type="button"
+            onClick={() => setCopingOpen((v) => !v)}
+            className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left"
+            aria-expanded={copingOpen}
+          >
+            <span className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+              <Shield className="h-3.5 w-3.5 text-lilac" /> 🛡️ Cartão de Enfrentamento
+              <span className="text-muted-foreground font-normal">(opcional)</span>
+              {(copingTitle.trim() || copingContent.trim()) && (
+                <span className="ml-1 rounded-full bg-lilac/20 px-1.5 py-0.5 text-[10px] text-lilac-foreground">preenchido</span>
+              )}
+            </span>
+            {copingOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+          </button>
+          {copingOpen && (
+            <div className="px-3 pb-3 space-y-2">
+              <p className="text-[11px] text-muted-foreground">
+                Mensagem curta que o paciente poderá consultar em momentos difíceis entre as sessões.
+              </p>
+              <div>
+                <Label className="text-xs">Título</Label>
+                <Input
+                  value={copingTitle}
+                  onChange={(e) => setCopingTitle(e.target.value)}
+                  placeholder="Ex: Quando a ansiedade chegar..."
+                  maxLength={200}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Conteúdo do cartão</Label>
+                <Textarea
+                  value={copingContent}
+                  onChange={(e) => setCopingContent(e.target.value)}
+                  rows={4}
+                  maxLength={2000}
+                  placeholder="Ex: Respire fundo 3 vezes. Lembre-se: este sentimento é temporário e você já enfrentou situações assim antes..."
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
 
         <div>
           <Label className="flex items-center gap-1.5 text-xs">

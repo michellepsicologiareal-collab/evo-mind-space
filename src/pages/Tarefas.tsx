@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, FileText, Printer, X, CheckSquare, NotebookPen, ListChecks, Eye, Lock } from "lucide-react";
+import { Loader2, FileText, Printer, X, CheckSquare, NotebookPen, ListChecks, Eye, Lock, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,8 @@ interface Row {
   session_points: string | null;
   actions: Json | null;
   weekly_observations: string | null;
+  coping_card_title: string | null;
+  coping_card_content: string | null;
   sent_at: string | null;
   created_at: string | null;
 }
@@ -231,6 +233,20 @@ const Tarefas = () => {
                           <Eye className="h-3.5 w-3.5" /> O que observar durante a semana
                         </p>
                         <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">{t.weekly_observations}</p>
+                      </div>
+                    )}
+
+                    {(t.coping_card_title || t.coping_card_content) && (
+                      <div className="mt-4 rounded-xl border border-lilac/30 bg-lilac/5 p-4 break-inside-avoid">
+                        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-lilac mb-2">
+                          <Shield className="h-3.5 w-3.5" /> 🛡️ Cartão de Enfrentamento
+                        </p>
+                        {t.coping_card_title && (
+                          <p className="font-display text-sm font-semibold text-foreground">{t.coping_card_title}</p>
+                        )}
+                        {t.coping_card_content && (
+                          <p className="mt-1 text-sm text-foreground whitespace-pre-line leading-relaxed">{t.coping_card_content}</p>
+                        )}
                       </div>
                     )}
 
