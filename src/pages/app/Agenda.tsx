@@ -1700,6 +1700,7 @@ const Agenda = () => {
   const SessionCard = ({ s, compact = false }: { s: Session; compact?: boolean }) => {
     const isSupervisionCard = s.session_type === "supervision";
     const [sheetOpen, setSheetOpen] = useState(false);
+    const [historyOpen, setHistoryOpen] = useState(false);
     const nowMs = Date.now();
     const scheduledMs = new Date(s.scheduled_at).getTime();
     const isPast = scheduledMs < nowMs;
