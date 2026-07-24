@@ -110,6 +110,9 @@ export const HomeworkPlanForm = ({
     setSessionPoints(initialTask?.session_points ?? "");
     setActions(normalizeActions(initialTask?.actions ?? null));
     setWeeklyObservations(initialTask?.weekly_observations ?? "");
+    setCopingTitle(initialTask?.coping_card_title ?? "");
+    setCopingContent(initialTask?.coping_card_content ?? "");
+    setCopingOpen(Boolean(initialTask?.coping_card_title || initialTask?.coping_card_content));
     setSourceRecord(initialTask?.session_record_id ?? "none");
     setAutoSavedAt(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
