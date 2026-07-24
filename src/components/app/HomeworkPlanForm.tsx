@@ -177,6 +177,8 @@ export const HomeworkPlanForm = ({
         session_points: sessionPoints.trim() || null,
         actions: serializeActions(actions),
         weekly_observations: weeklyObservations.trim() || null,
+        coping_card_title: copingTitle.trim() || null,
+        coping_card_content: copingContent.trim() || null,
         session_record_id: sourceRecord === "none" ? null : sourceRecord,
       };
       if (sessionId) payload.session_id = sessionId;
