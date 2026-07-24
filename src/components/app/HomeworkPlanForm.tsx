@@ -200,7 +200,7 @@ export const HomeworkPlanForm = ({
     }, 1200);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, weeklyGoal, sessionPoints, actions, weeklyObservations, sourceRecord, sessionId, patientId]);
+  }, [title, weeklyGoal, sessionPoints, actions, weeklyObservations, copingTitle, copingContent, sourceRecord, sessionId, patientId]);
 
   const save = async () => {
     if (!hasAnyContent()) { toast.error("Preencha ao menos um campo do plano"); return; }
