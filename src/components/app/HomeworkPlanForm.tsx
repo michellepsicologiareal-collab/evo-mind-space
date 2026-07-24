@@ -26,6 +26,8 @@ export interface HomeworkPlanFormTask {
   weekly_goal: string | null;
   actions: Json | null;
   weekly_observations: string | null;
+  coping_card_title?: string | null;
+  coping_card_content?: string | null;
   sent_at: string | null;
   created_at: string;
   session_record_id: string | null;
