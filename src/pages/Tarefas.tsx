@@ -236,6 +236,20 @@ const Tarefas = () => {
                       </div>
                     )}
 
+                    {(t.coping_card_title || t.coping_card_content) && (
+                      <div className="mt-4 rounded-xl border border-lilac/30 bg-lilac/5 p-4 break-inside-avoid">
+                        <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-lilac mb-2">
+                          <Shield className="h-3.5 w-3.5" /> 🛡️ Cartão de Enfrentamento
+                        </p>
+                        {t.coping_card_title && (
+                          <p className="font-display text-sm font-semibold text-foreground">{t.coping_card_title}</p>
+                        )}
+                        {t.coping_card_content && (
+                          <p className="mt-1 text-sm text-foreground whitespace-pre-line leading-relaxed">{t.coping_card_content}</p>
+                        )}
+                      </div>
+                    )}
+
                     {!t.session_points && taskActions.length === 0 && !t.weekly_observations && t.content && (
                       <p className="mt-3 text-sm text-foreground whitespace-pre-line leading-relaxed">{t.content}</p>
                     )}
