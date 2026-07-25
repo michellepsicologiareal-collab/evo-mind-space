@@ -12,7 +12,7 @@ import {
   ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save,
 } from "lucide-react";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
-import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
+import { PatientSessionsQuickView } from "@/components/app/PatientSessionsQuickView";
 import { SessionPlanningForm, type SessionPlanningValue, planningValueFromDb } from "@/components/app/SessionPlanningForm";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
@@ -283,6 +283,9 @@ const Agenda = () => {
     clinical_observation: "" as string,
     emotions: [] as string[],
     attention_flag: "not_assessed" as "not_assessed" | "none" | "watch" | "urgent",
+    themes: [] as string[],
+    engagement: null as number | null,
+    private_notes: "" as string,
     recurrence: "single" as "single" | "recurring",
     recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
     payment_plan: "per_session" as "per_session" | "single_payment",
@@ -326,6 +329,9 @@ const Agenda = () => {
     clinical_observation: "" as string,
     emotions: [] as string[],
     attention_flag: "not_assessed" as "not_assessed" | "none" | "watch" | "urgent",
+    themes: [] as string[],
+    engagement: null as number | null,
+    private_notes: "" as string,
     // legacy read-only display
     legacy_mood: null as number | null,
     legacy_note: "" as string,
@@ -855,8 +861,14 @@ const Agenda = () => {
       const recKeys = new Set<string>();
       const summary = new Map<string, string>();
       (recs.data ?? []).forEach((r: any) => {
-        if (r.session_id) recIds.add(r.session_id);
-        if (r.patient_id && r.session_date) recKeys.add(`${r.patient_id}|${r.session_date}`);
+        const hasContent =
+          (typeof r.clinical_observations === "string" && r.clinical_observations.trim()) ||
+          (typeof r.chief_complaint === "string" && r.chief_complaint.trim()) ||
+          (typeof r.next_session_plan === "string" && r.next_session_plan.trim());
+        if (hasContent) {
+          if (r.session_id) recIds.add(r.session_id);
+          if (r.patient_id && r.session_date) recKeys.add(`${r.patient_id}|${r.session_date}`);
+        }
         if (r.session_id && r.next_session_plan && !recPlan.has(r.session_id)) {
           recPlan.set(r.session_id, r.next_session_plan);
         }
@@ -879,10 +891,15 @@ const Agenda = () => {
         }
       });
       const progPlan = new Map<string, string>();
+      // Also refresh progress plans query to include content fields for pending check
       (progressPlans.data ?? []).forEach((p: any) => {
         if (!p.session_id) return;
-        // Registro clínico feito via modal "Editar sessão" (ClinicalV2Block) também conta como registrado
-        recIds.add(p.session_id);
+        // Só conta como registrado se há conteúdo real (queixa, observação ou plano)
+        const hasContent =
+          (typeof p.clinical_observation === "string" && p.clinical_observation.trim()) ||
+          (typeof p.patient_context === "string" && p.patient_context.trim()) ||
+          (typeof p.next_session_plan === "string" && p.next_session_plan.trim());
+        if (hasContent) recIds.add(p.session_id);
         const txt = typeof p.next_session_plan === "string" ? p.next_session_plan.trim() : "";
         if (txt && !progPlan.has(p.session_id)) progPlan.set(p.session_id, txt);
         if (!summary.has(p.session_id)) {
@@ -1321,6 +1338,9 @@ const Agenda = () => {
       clinical_observation: "",
       emotions: [],
       attention_flag: "not_assessed",
+      themes: [],
+      engagement: null,
+      private_notes: "",
       legacy_mood: null,
       legacy_note: "",
       data_model: "v2_structured",
@@ -1340,7 +1360,7 @@ const Agenda = () => {
       setLoadingEditProgress(true);
       try {
         const { data } = await (supabase as any).from("patient_progress")
-          .select("id, mood_score, note, wellbeing_score, wellbeing_source, patient_context, clinical_observation, emotions, attention_flag, data_model")
+          .select("id, mood_score, note, wellbeing_score, wellbeing_source, patient_context, clinical_observation, emotions, attention_flag, data_model, themes, engagement, private_notes")
           .eq("session_id", s.id).eq("user_id", user.id).maybeSingle();
         if (data) {
           setEditProgressId(data.id);
@@ -1355,6 +1375,9 @@ const Agenda = () => {
             clinical_observation: data.clinical_observation ?? "",
             emotions: emoList,
             attention_flag: (data.attention_flag ?? "not_assessed") as any,
+            themes: Array.isArray(data.themes) ? data.themes.filter((t: any) => typeof t === "string") : [],
+            engagement: typeof data.engagement === "number" ? data.engagement : null,
+            private_notes: data.private_notes ?? "",
             legacy_mood: data.mood_score,
             legacy_note: data.note ?? "",
             data_model: (data.data_model ?? "legacy_unclassified") as any,
@@ -1480,6 +1503,9 @@ const Agenda = () => {
         ? emos.map((label) => ({ label, source: "clinician" }))
         : null;
       const attentionAssigned = attFlag !== "not_assessed";
+      const themesPayload = Array.isArray(editForm.themes) ? editForm.themes.filter((t) => typeof t === "string" && t.trim().length > 0) : [];
+      const engagementPayload = typeof editForm.engagement === "number" ? editForm.engagement : null;
+      const privateNotesPayload = editForm.private_notes?.trim() || null;
       const payload: any = {
         wellbeing_score: wbValid ? wbNum : null,
         wellbeing_source: wbValid ? editForm.wellbeing_source : null,
@@ -1490,8 +1516,11 @@ const Agenda = () => {
         attention_set_by: attentionAssigned ? user.id : null,
         attention_set_at: attentionAssigned ? new Date().toISOString() : null,
         data_model: "v2_structured",
+        themes: themesPayload,
+        engagement: engagementPayload,
+        private_notes: privateNotesPayload,
       };
-      const hasV2Content = wbValid || pCtx || cObs || emos.length > 0 || attentionAssigned;
+      const hasV2Content = wbValid || pCtx || cObs || emos.length > 0 || attentionAssigned || themesPayload.length > 0 || engagementPayload != null || !!privateNotesPayload;
       if (editProgressId) {
         await (supabase as any).from("patient_progress").update(payload).eq("id", editProgressId);
       } else if (hasV2Content) {
@@ -1935,7 +1964,7 @@ const Agenda = () => {
               onClick={(e) => { e.stopPropagation(); setHistoryOpen(true); }}
               className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-muted text-foreground/80 hover:bg-muted/70 border border-border transition-colors"
             >
-              <ClipboardList className="h-3 w-3" /> Histórico
+              <ClipboardList className="h-3 w-3" /> Sessões
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); openEdit(s); }}
@@ -1949,10 +1978,27 @@ const Agenda = () => {
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
             <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <SheetHeader className="mb-4">
-                <SheetTitle className="font-display text-xl">Histórico de sessões</SheetTitle>
+                <SheetTitle className="font-display text-xl">Sessões</SheetTitle>
                 <SheetDescription>{s.patient_name}</SheetDescription>
               </SheetHeader>
-              <PatientSessionHistory patientId={s.patient_id} patientName={s.patient_name || "Paciente"} />
+              {(() => {
+                const patientSessions = sessions.filter((x) => x.patient_id === s.patient_id && x.session_type !== "supervision");
+                const now = new Date();
+                const past = patientSessions.filter((x) => new Date(x.scheduled_at) <= now).sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at));
+                const future = patientSessions.filter((x) => new Date(x.scheduled_at) > now).sort((a, b) => +new Date(a.scheduled_at) - +new Date(b.scheduled_at));
+                const lastDate = past[0]?.scheduled_at ?? null;
+                const nextDate = future[0]?.scheduled_at ?? null;
+                const totalRecords = patientSessions.filter((x) => sessionRecordIds.has(x.id)).length;
+                return (
+                  <PatientSessionsQuickView
+                    patientId={s.patient_id!}
+                    nextDate={nextDate}
+                    lastDate={lastDate}
+                    totalRecords={totalRecords}
+                    onOpenFullHistory={() => setHistoryOpen(false)}
+                  />
+                );
+              })()}
             </SheetContent>
           </Sheet>
         )}
@@ -2208,27 +2254,6 @@ const Agenda = () => {
                     <Input id="price" type="number" step="0.01" min="0" placeholder="Auto" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
                   </div>
                 </div>
-                <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Pagamento — preencher após sessão realizada</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label>Método pagamento</Label>
-                      <Select value={form.payment_method} onValueChange={(v) => setForm({ ...form, payment_method: v as typeof form.payment_method })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Não informado</SelectItem>
-                          <SelectItem value="pix">PIX</SelectItem>
-                          <SelectItem value="card">Cartão</SelectItem>
-                          <SelectItem value="cash">Dinheiro</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="payref">Referência{(form.payment_method === "pix" || form.payment_method === "card") && <span className="text-destructive ml-1">*</span>}</Label>
-                      <Input id="payref" maxLength={500} placeholder={form.payment_method === "pix" ? "Ex.: comprovante" : form.payment_method === "card" ? "Ex.: NSU" : "Opcional"} value={form.payment_reference} onChange={(e) => setForm({ ...form, payment_reference: e.target.value })} />
-                    </div>
-                  </div>
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="notes">Observações</Label>
                   <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
@@ -2242,6 +2267,9 @@ const Agenda = () => {
                       clinical_observation: form.clinical_observation,
                       emotions: form.emotions,
                       attention_flag: form.attention_flag,
+                      themes: form.themes,
+                      engagement: form.engagement,
+                      private_notes: form.private_notes,
                     }}
                     onChange={(patch) => setForm({ ...form, ...patch })}
                   />
@@ -3156,6 +3184,9 @@ const Agenda = () => {
                       clinical_observation: editForm.clinical_observation,
                       emotions: editForm.emotions,
                       attention_flag: editForm.attention_flag,
+                      themes: editForm.themes,
+                      engagement: editForm.engagement,
+                      private_notes: editForm.private_notes,
                     }}
                     onChange={(patch) => setEditForm({ ...editForm, ...patch })}
                     legacyMood={editForm.legacy_mood}
@@ -3166,27 +3197,6 @@ const Agenda = () => {
                 </div>
               );
             })()}
-            <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">Pagamento — preencher após sessão realizada</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Método pagamento</Label>
-                  <Select value={editForm.payment_method} onValueChange={(v) => setEditForm({ ...editForm, payment_method: v as typeof editForm.payment_method })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Não informado</SelectItem>
-                      <SelectItem value="pix">PIX</SelectItem>
-                      <SelectItem value="card">Cartão</SelectItem>
-                      <SelectItem value="cash">Dinheiro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Referência{(editForm.payment_method === "pix" || editForm.payment_method === "card") && <span className="text-destructive ml-1">*</span>}</Label>
-                  <Input maxLength={500} placeholder={editForm.payment_method === "pix" ? "Ex.: comprovante" : editForm.payment_method === "card" ? "Ex.: NSU" : "Opcional"} value={editForm.payment_reference} onChange={(e) => setEditForm({ ...editForm, payment_reference: e.target.value })} />
-                </div>
-              </div>
-            </div>
             <div className="space-y-2">
               <Label>Observações</Label>
               <Textarea rows={3} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
