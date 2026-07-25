@@ -329,6 +329,9 @@ const Agenda = () => {
     clinical_observation: "" as string,
     emotions: [] as string[],
     attention_flag: "not_assessed" as "not_assessed" | "none" | "watch" | "urgent",
+    themes: [] as string[],
+    engagement: null as number | null,
+    private_notes: "" as string,
     // legacy read-only display
     legacy_mood: null as number | null,
     legacy_note: "" as string,
