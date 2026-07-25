@@ -861,8 +861,14 @@ const Agenda = () => {
       const recKeys = new Set<string>();
       const summary = new Map<string, string>();
       (recs.data ?? []).forEach((r: any) => {
-        if (r.session_id) recIds.add(r.session_id);
-        if (r.patient_id && r.session_date) recKeys.add(`${r.patient_id}|${r.session_date}`);
+        const hasContent =
+          (typeof r.clinical_observations === "string" && r.clinical_observations.trim()) ||
+          (typeof r.chief_complaint === "string" && r.chief_complaint.trim()) ||
+          (typeof r.next_session_plan === "string" && r.next_session_plan.trim());
+        if (hasContent) {
+          if (r.session_id) recIds.add(r.session_id);
+          if (r.patient_id && r.session_date) recKeys.add(`${r.patient_id}|${r.session_date}`);
+        }
         if (r.session_id && r.next_session_plan && !recPlan.has(r.session_id)) {
           recPlan.set(r.session_id, r.next_session_plan);
         }
