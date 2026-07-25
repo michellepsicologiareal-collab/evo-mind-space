@@ -1492,6 +1492,9 @@ const Agenda = () => {
         ? emos.map((label) => ({ label, source: "clinician" }))
         : null;
       const attentionAssigned = attFlag !== "not_assessed";
+      const themesPayload = Array.isArray(editForm.themes) ? editForm.themes.filter((t) => typeof t === "string" && t.trim().length > 0) : [];
+      const engagementPayload = typeof editForm.engagement === "number" ? editForm.engagement : null;
+      const privateNotesPayload = editForm.private_notes?.trim() || null;
       const payload: any = {
         wellbeing_score: wbValid ? wbNum : null,
         wellbeing_source: wbValid ? editForm.wellbeing_source : null,
@@ -1502,8 +1505,11 @@ const Agenda = () => {
         attention_set_by: attentionAssigned ? user.id : null,
         attention_set_at: attentionAssigned ? new Date().toISOString() : null,
         data_model: "v2_structured",
+        themes: themesPayload,
+        engagement: engagementPayload,
+        private_notes: privateNotesPayload,
       };
-      const hasV2Content = wbValid || pCtx || cObs || emos.length > 0 || attentionAssigned;
+      const hasV2Content = wbValid || pCtx || cObs || emos.length > 0 || attentionAssigned || themesPayload.length > 0 || engagementPayload != null || !!privateNotesPayload;
       if (editProgressId) {
         await (supabase as any).from("patient_progress").update(payload).eq("id", editProgressId);
       } else if (hasV2Content) {
