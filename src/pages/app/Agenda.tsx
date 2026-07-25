@@ -2243,27 +2243,6 @@ const Agenda = () => {
                     <Input id="price" type="number" step="0.01" min="0" placeholder="Auto" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
                   </div>
                 </div>
-                <div className="rounded-xl border border-dashed border-border p-3 space-y-3">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Pagamento — preencher após sessão realizada</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label>Método pagamento</Label>
-                      <Select value={form.payment_method} onValueChange={(v) => setForm({ ...form, payment_method: v as typeof form.payment_method })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Não informado</SelectItem>
-                          <SelectItem value="pix">PIX</SelectItem>
-                          <SelectItem value="card">Cartão</SelectItem>
-                          <SelectItem value="cash">Dinheiro</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="payref">Referência{(form.payment_method === "pix" || form.payment_method === "card") && <span className="text-destructive ml-1">*</span>}</Label>
-                      <Input id="payref" maxLength={500} placeholder={form.payment_method === "pix" ? "Ex.: comprovante" : form.payment_method === "card" ? "Ex.: NSU" : "Opcional"} value={form.payment_reference} onChange={(e) => setForm({ ...form, payment_reference: e.target.value })} />
-                    </div>
-                  </div>
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="notes">Observações</Label>
                   <Textarea id="notes" rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
@@ -2277,6 +2256,9 @@ const Agenda = () => {
                       clinical_observation: form.clinical_observation,
                       emotions: form.emotions,
                       attention_flag: form.attention_flag,
+                      themes: form.themes,
+                      engagement: form.engagement,
+                      private_notes: form.private_notes,
                     }}
                     onChange={(patch) => setForm({ ...form, ...patch })}
                   />
