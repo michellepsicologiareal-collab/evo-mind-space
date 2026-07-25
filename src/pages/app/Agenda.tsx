@@ -891,8 +891,15 @@ const Agenda = () => {
         }
       });
       const progPlan = new Map<string, string>();
+      // Also refresh progress plans query to include content fields for pending check
       (progressPlans.data ?? []).forEach((p: any) => {
         if (!p.session_id) return;
+        // Só conta como registrado se há conteúdo real (queixa, observação ou plano)
+        const hasContent =
+          (typeof p.clinical_observation === "string" && p.clinical_observation.trim()) ||
+          (typeof p.patient_context === "string" && p.patient_context.trim()) ||
+          (typeof p.next_session_plan === "string" && p.next_session_plan.trim());
+        if (hasContent) recIds.add(p.session_id);
         // Registro clínico feito via modal "Editar sessão" (ClinicalV2Block) também conta como registrado
         recIds.add(p.session_id);
         const txt = typeof p.next_session_plan === "string" ? p.next_session_plan.trim() : "";
