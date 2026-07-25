@@ -1349,7 +1349,7 @@ const Agenda = () => {
       setLoadingEditProgress(true);
       try {
         const { data } = await (supabase as any).from("patient_progress")
-          .select("id, mood_score, note, wellbeing_score, wellbeing_source, patient_context, clinical_observation, emotions, attention_flag, data_model")
+          .select("id, mood_score, note, wellbeing_score, wellbeing_source, patient_context, clinical_observation, emotions, attention_flag, data_model, themes, engagement, private_notes")
           .eq("session_id", s.id).eq("user_id", user.id).maybeSingle();
         if (data) {
           setEditProgressId(data.id);
