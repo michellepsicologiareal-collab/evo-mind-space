@@ -1935,7 +1935,7 @@ const Agenda = () => {
               onClick={(e) => { e.stopPropagation(); setHistoryOpen(true); }}
               className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-muted text-foreground/80 hover:bg-muted/70 border border-border transition-colors"
             >
-              <ClipboardList className="h-3 w-3" /> Histórico
+              <ClipboardList className="h-3 w-3" /> Sessões
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); openEdit(s); }}
@@ -1949,10 +1949,27 @@ const Agenda = () => {
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
             <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <SheetHeader className="mb-4">
-                <SheetTitle className="font-display text-xl">Histórico de sessões</SheetTitle>
+                <SheetTitle className="font-display text-xl">Sessões</SheetTitle>
                 <SheetDescription>{s.patient_name}</SheetDescription>
               </SheetHeader>
-              <PatientSessionHistory patientId={s.patient_id} patientName={s.patient_name || "Paciente"} />
+              {(() => {
+                const patientSessions = sessions.filter((x) => x.patient_id === s.patient_id && x.session_type !== "supervision");
+                const now = new Date();
+                const past = patientSessions.filter((x) => new Date(x.scheduled_at) <= now).sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at));
+                const future = patientSessions.filter((x) => new Date(x.scheduled_at) > now).sort((a, b) => +new Date(a.scheduled_at) - +new Date(b.scheduled_at));
+                const lastDate = past[0]?.scheduled_at ?? null;
+                const nextDate = future[0]?.scheduled_at ?? null;
+                const totalRecords = patientSessions.filter((x) => sessionRecordIds.has(x.id)).length;
+                return (
+                  <PatientSessionsQuickView
+                    patientId={s.patient_id!}
+                    nextDate={nextDate}
+                    lastDate={lastDate}
+                    totalRecords={totalRecords}
+                    onOpenFullHistory={() => setHistoryOpen(false)}
+                  />
+                );
+              })()}
             </SheetContent>
           </Sheet>
         )}
