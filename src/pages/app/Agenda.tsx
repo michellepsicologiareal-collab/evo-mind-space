@@ -880,8 +880,10 @@ const Agenda = () => {
         }
       });
       const hwPlan = new Map<string, string>();
+      const hwSent = new Map<string, string>();
       (homework.data ?? []).forEach((h: any) => {
         if (!h.session_id) return;
+        if (h.sent_at && !hwSent.has(h.session_id)) hwSent.set(h.session_id, h.sent_at);
         const goal = typeof h.weekly_goal === "string" ? h.weekly_goal.trim() : "";
         if (goal) { if (!hwPlan.has(h.session_id)) hwPlan.set(h.session_id, goal); return; }
         const acts = Array.isArray(h.actions) ? h.actions : [];
@@ -891,17 +893,14 @@ const Agenda = () => {
         }
       });
       const progPlan = new Map<string, string>();
-      // Also refresh progress plans query to include content fields for pending check
       (progressPlans.data ?? []).forEach((p: any) => {
         if (!p.session_id) return;
-        // Só conta como registrado se há conteúdo real (queixa, observação ou plano)
+        // Só conta como registrado se há conteúdo real (queixa, observação clínica ou plano)
         const hasContent =
           (typeof p.clinical_observation === "string" && p.clinical_observation.trim()) ||
           (typeof p.patient_context === "string" && p.patient_context.trim()) ||
-          (typeof p.next_session_plan === "string" && p.next_session_plan.trim());
+          (typeof p.note === "string" && p.note.trim());
         if (hasContent) recIds.add(p.session_id);
-        const txt = typeof p.next_session_plan === "string" ? p.next_session_plan.trim() : "";
-        if (txt && !progPlan.has(p.session_id)) progPlan.set(p.session_id, txt);
         if (!summary.has(p.session_id)) {
           const s = (typeof p.clinical_observation === "string" && p.clinical_observation.trim())
             || (typeof p.patient_context === "string" && p.patient_context.trim())
@@ -910,11 +909,13 @@ const Agenda = () => {
         }
       });
       setPlanBySession(hwPlan);
+      setHomeworkSentBySession(hwSent);
       setRecordPlanBySession(recPlan);
       setProgressPlanBySession(progPlan);
       setSummaryBySession(summary);
       setSessionRecordIds(recIds);
       setSessionRecordKeys(recKeys);
+
 
       setMoodTodayPatients(new Set((moods.data ?? []).map((m: any) => m.patient_id)));
     })();
