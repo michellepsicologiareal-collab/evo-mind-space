@@ -1897,6 +1897,11 @@ const Agenda = () => {
                 <AlertCircle className="h-3 w-3 mr-1" /> Registro pendente
               </span>
             )}
+            {registroFeito && (
+              <span className={cn(PILL_BASE, "bg-muted text-muted-foreground border-border")}>
+                <Check className="h-3 w-3 mr-1" /> Registro feito
+              </span>
+            )}
             {(s as any).modality === "online" ? (
               <span className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
                 <Video className="h-2.5 w-2.5" /> Online
