@@ -143,6 +143,56 @@ const paymentStatusClass: Record<PaymentStatus, string> = {
 };
 const PILL_BASE = "inline-flex items-center text-[11px] font-display font-semibold px-2.5 py-0.5 rounded-[40px] border";
 
+type ClinicalRecordPresence = {
+  hasContent: boolean;
+  summary: string;
+  plan: string;
+  updatedAt: number;
+};
+
+const trimmedText = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+
+const recordTime = (value: unknown) => {
+  if (typeof value !== "string" || !value) return 0;
+  const time = new Date(value).getTime();
+  return Number.isFinite(time) ? time : 0;
+};
+
+const latestRecordTime = (row: any) => Math.max(
+  recordTime(row?.updated_at),
+  recordTime(row?.created_at),
+  recordTime(row?.recorded_at),
+  recordTime(row?.session_date),
+);
+
+const sessionRecordPresence = (row: any): ClinicalRecordPresence => {
+  const complaint = trimmedText(row?.chief_complaint);
+  const plan = trimmedText(row?.next_session_plan);
+  const observation = trimmedText(row?.clinical_observations);
+  return {
+    hasContent: Boolean(complaint || plan || observation),
+    summary: observation || complaint,
+    plan,
+    updatedAt: latestRecordTime(row),
+  };
+};
+
+const progressRecordPresence = (row: any): ClinicalRecordPresence => {
+  const complaint = trimmedText(row?.patient_context);
+  const observation = trimmedText(row?.clinical_observation);
+  return {
+    hasContent: Boolean(complaint || observation),
+    summary: observation || complaint,
+    plan: "",
+    updatedAt: latestRecordTime(row),
+  };
+};
+
+const setLatestPresence = (map: Map<string, ClinicalRecordPresence>, key: string, presence: ClinicalRecordPresence) => {
+  const current = map.get(key);
+  if (!current || presence.updatedAt >= current.updatedAt) map.set(key, presence);
+};
+
 const WEEKDAY_NAMES = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
 const Agenda = () => {
@@ -833,7 +883,7 @@ const Agenda = () => {
       const sessionIds = sessions.map((s) => s.id).filter(Boolean);
       const [recs, moods, homework, progressPlans] = await Promise.all([
         supabase.from("session_records")
-          .select("session_id, patient_id, session_date, next_session_plan, clinical_observations, chief_complaint")
+          .select("session_id, patient_id, session_date, next_session_plan, clinical_observations, chief_complaint, updated_at, created_at")
           .eq("user_id", user.id)
           .gte("session_date", from.toISOString().slice(0, 10))
           .lte("session_date", to.toISOString().slice(0, 10))
@@ -851,7 +901,7 @@ const Agenda = () => {
           : Promise.resolve({ data: [] as any[] }),
         sessionIds.length
           ? supabase.from("patient_progress")
-              .select("session_id, clinical_observation, patient_context, note, recorded_at")
+              .select("session_id, clinical_observation, patient_context, recorded_at, updated_at, created_at")
               .eq("user_id", user.id)
               .in("session_id", sessionIds)
               .order("recorded_at", { ascending: false })
@@ -861,24 +911,13 @@ const Agenda = () => {
       const recIds = new Set<string>();
       const recKeys = new Set<string>();
       const summary = new Map<string, string>();
+      const latestSessionRecords = new Map<string, ClinicalRecordPresence>();
+      const latestSessionRecordKeys = new Map<string, ClinicalRecordPresence>();
+      const latestProgressRecords = new Map<string, ClinicalRecordPresence>();
       (recs.data ?? []).forEach((r: any) => {
-        const hasContent =
-          (typeof r.clinical_observations === "string" && r.clinical_observations.trim()) ||
-          (typeof r.chief_complaint === "string" && r.chief_complaint.trim()) ||
-          (typeof r.next_session_plan === "string" && r.next_session_plan.trim());
-        if (hasContent) {
-          if (r.session_id) recIds.add(r.session_id);
-          if (r.patient_id && r.session_date) recKeys.add(`${r.patient_id}|${r.session_date}`);
-        }
-        if (r.session_id && r.next_session_plan && !recPlan.has(r.session_id)) {
-          recPlan.set(r.session_id, r.next_session_plan);
-        }
-        if (r.session_id && !summary.has(r.session_id)) {
-          const s = (typeof r.clinical_observations === "string" && r.clinical_observations.trim())
-            || (typeof r.chief_complaint === "string" && r.chief_complaint.trim())
-            || "";
-          if (s) summary.set(r.session_id, s);
-        }
+        const presence = sessionRecordPresence(r);
+        if (r.session_id) setLatestPresence(latestSessionRecords, r.session_id, presence);
+        if (r.patient_id && r.session_date) setLatestPresence(latestSessionRecordKeys, `${r.patient_id}|${r.session_date}`, presence);
       });
       const hwPlan = new Map<string, string>();
       const hwSent = new Map<string, string>();
@@ -896,18 +935,21 @@ const Agenda = () => {
       const progPlan = new Map<string, string>();
       (progressPlans.data ?? []).forEach((p: any) => {
         if (!p.session_id) return;
-        // Só conta como registrado se há conteúdo real (queixa, observação clínica ou plano)
-        const hasContent =
-          (typeof p.clinical_observation === "string" && p.clinical_observation.trim()) ||
-          (typeof p.patient_context === "string" && p.patient_context.trim()) ||
-          (typeof p.note === "string" && p.note.trim());
-        if (hasContent) recIds.add(p.session_id);
-        if (!summary.has(p.session_id)) {
-          const s = (typeof p.clinical_observation === "string" && p.clinical_observation.trim())
-            || (typeof p.patient_context === "string" && p.patient_context.trim())
-            || "";
-          if (s) summary.set(p.session_id, s);
-        }
+        setLatestPresence(latestProgressRecords, p.session_id, progressRecordPresence(p));
+      });
+      latestSessionRecords.forEach((presence, sessionId) => {
+        if (!presence.hasContent) return;
+        recIds.add(sessionId);
+        if (presence.plan) recPlan.set(sessionId, presence.plan);
+        if (presence.summary) summary.set(sessionId, presence.summary);
+      });
+      latestProgressRecords.forEach((presence, sessionId) => {
+        if (!presence.hasContent) return;
+        recIds.add(sessionId);
+        if (presence.summary && !summary.has(sessionId)) summary.set(sessionId, presence.summary);
+      });
+      latestSessionRecordKeys.forEach((presence, key) => {
+        if (presence.hasContent) recKeys.add(key);
       });
       setPlanBySession(hwPlan);
       setHomeworkSentBySession(hwSent);
