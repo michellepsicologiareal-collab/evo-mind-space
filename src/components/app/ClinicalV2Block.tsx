@@ -308,7 +308,7 @@ export const ClinicalV2Block = ({ value, onChange, legacyMood, legacyNote, legac
       </section>
 
       {/* ─────── 4. NOTAS PRIVADAS ─────── */}
-      <section className="space-y-2 pt-2 border-t border-border/60">
+      <section className="space-y-2 rounded-lg border border-border/60 border-l-4 border-l-accent bg-accent/[0.05] p-3">
         <Label className="text-xs">
           Notas privadas <span className="text-muted-foreground font-normal">(não aparecem em relatórios)</span>
         </Label>
