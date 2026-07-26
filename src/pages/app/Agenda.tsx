@@ -153,6 +153,7 @@ const Agenda = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const navigate = useNavigate();
   const [planBySession, setPlanBySession] = useState<Map<string, string>>(new Map());
+  const [homeworkSentBySession, setHomeworkSentBySession] = useState<Map<string, string>>(new Map());
   const [recordPlanBySession, setRecordPlanBySession] = useState<Map<string, string>>(new Map());
   const [progressPlanBySession, setProgressPlanBySession] = useState<Map<string, string>>(new Map());
   const [summaryBySession, setSummaryBySession] = useState<Map<string, string>>(new Map());
