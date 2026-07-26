@@ -110,7 +110,7 @@ export const ClinicalV2Block = ({ value, onChange, legacyMood, legacyNote, legac
       )}
 
       {/* ─────── 1. COMO O PACIENTE CHEGOU ─────── */}
-      <section className="space-y-4">
+      <section className="space-y-4 rounded-lg border border-border/60 border-l-4 border-l-primary bg-primary/[0.03] p-3">
         <p className="text-[11px] uppercase tracking-wider text-primary-dark font-semibold">
           1. Como o paciente chegou
         </p>
