@@ -170,7 +170,7 @@ export const ClinicalV2Block = ({ value, onChange, legacyMood, legacyNote, legac
       </section>
 
       {/* ─────── 2. LEITURA CLÍNICA ─────── */}
-      <section className="space-y-4 rounded-lg border border-border/60 border-l-4 border-l-lilac bg-lilac/[0.07] p-3">ized
+      <section className="space-y-4 rounded-lg border border-border/60 border-l-4 border-l-lilac bg-lilac/[0.07] p-3">
         <p className="text-[11px] uppercase tracking-wider text-primary-dark font-semibold">
           2. Leitura clínica
         </p>
