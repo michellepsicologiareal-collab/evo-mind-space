@@ -1937,6 +1937,14 @@ const Agenda = () => {
                 <Bell className="h-3 w-3" /> Lembrete enviado · {format(new Date(s.confirmation_sent_at), "dd/MM HH:mm")}
               </span>
             )}
+            {homeworkSentAt && (
+              <span
+                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm"
+                title={`Plano entre sessões enviado em ${format(new Date(homeworkSentAt), "dd/MM 'às' HH:mm")}`}
+              >
+                <ClipboardList className="h-3 w-3" /> Plano enviado · {format(new Date(homeworkSentAt), "dd/MM HH:mm")}
+              </span>
+            )}
             {!isSupervisionCard && s.patient_id && (
               <Link
                 to={`/app/plano-tratamento?patient=${s.patient_id}`}
