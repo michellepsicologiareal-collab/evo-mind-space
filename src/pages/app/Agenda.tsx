@@ -844,13 +844,13 @@ const Agenda = () => {
           .lte("recorded_at", todayEnd.toISOString()),
         sessionIds.length
           ? supabase.from("homework_tasks")
-              .select("session_id, weekly_goal, actions")
+              .select("session_id, weekly_goal, actions, sent_at")
               .eq("user_id", user.id)
               .in("session_id", sessionIds)
           : Promise.resolve({ data: [] as any[] }),
         sessionIds.length
           ? supabase.from("patient_progress")
-              .select("session_id, next_session_plan, clinical_observation, patient_context, recorded_at")
+              .select("session_id, clinical_observation, patient_context, note, recorded_at")
               .eq("user_id", user.id)
               .in("session_id", sessionIds)
               .order("recorded_at", { ascending: false })
