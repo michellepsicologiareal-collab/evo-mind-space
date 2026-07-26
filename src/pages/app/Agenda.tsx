@@ -1743,6 +1743,8 @@ const Agenda = () => {
       ? (planBySession.get(s.id) || recordPlanBySession.get(s.id) || progressPlanBySession.get(s.id))
       : undefined;
     const sessionSummary = !isSupervisionCard ? summaryBySession.get(s.id) : undefined;
+    const registroFeito = !isSupervisionCard && isPast && isActiveStatus && hasRecord && !!s.patient_id;
+    const homeworkSentAt = !isSupervisionCard ? homeworkSentBySession.get(s.id) : undefined;
 
 
     const actions = (
