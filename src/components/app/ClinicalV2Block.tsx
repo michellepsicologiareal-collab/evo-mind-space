@@ -272,7 +272,7 @@ export const ClinicalV2Block = ({ value, onChange, legacyMood, legacyNote, legac
       </section>
 
       {/* ─────── 3. ATENÇÃO CLÍNICA ─────── */}
-      <section className="space-y-3 pt-2 border-t border-border/60">
+      <section className="space-y-3 rounded-lg border border-border/60 border-l-4 border-l-amber-400 bg-amber-50/40 p-3">
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <p className="text-[11px] uppercase tracking-wider text-primary-dark font-semibold">
