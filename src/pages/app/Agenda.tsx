@@ -153,6 +153,7 @@ const Agenda = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const navigate = useNavigate();
   const [planBySession, setPlanBySession] = useState<Map<string, string>>(new Map());
+  const [homeworkSentBySession, setHomeworkSentBySession] = useState<Map<string, string>>(new Map());
   const [recordPlanBySession, setRecordPlanBySession] = useState<Map<string, string>>(new Map());
   const [progressPlanBySession, setProgressPlanBySession] = useState<Map<string, string>>(new Map());
   const [summaryBySession, setSummaryBySession] = useState<Map<string, string>>(new Map());
@@ -844,13 +845,13 @@ const Agenda = () => {
           .lte("recorded_at", todayEnd.toISOString()),
         sessionIds.length
           ? supabase.from("homework_tasks")
-              .select("session_id, weekly_goal, actions")
+              .select("session_id, weekly_goal, actions, sent_at")
               .eq("user_id", user.id)
               .in("session_id", sessionIds)
           : Promise.resolve({ data: [] as any[] }),
         sessionIds.length
           ? supabase.from("patient_progress")
-              .select("session_id, next_session_plan, clinical_observation, patient_context, recorded_at")
+              .select("session_id, clinical_observation, patient_context, note, recorded_at")
               .eq("user_id", user.id)
               .in("session_id", sessionIds)
               .order("recorded_at", { ascending: false })
@@ -880,8 +881,10 @@ const Agenda = () => {
         }
       });
       const hwPlan = new Map<string, string>();
+      const hwSent = new Map<string, string>();
       (homework.data ?? []).forEach((h: any) => {
         if (!h.session_id) return;
+        if (h.sent_at && !hwSent.has(h.session_id)) hwSent.set(h.session_id, h.sent_at);
         const goal = typeof h.weekly_goal === "string" ? h.weekly_goal.trim() : "";
         if (goal) { if (!hwPlan.has(h.session_id)) hwPlan.set(h.session_id, goal); return; }
         const acts = Array.isArray(h.actions) ? h.actions : [];
@@ -891,17 +894,14 @@ const Agenda = () => {
         }
       });
       const progPlan = new Map<string, string>();
-      // Also refresh progress plans query to include content fields for pending check
       (progressPlans.data ?? []).forEach((p: any) => {
         if (!p.session_id) return;
-        // Só conta como registrado se há conteúdo real (queixa, observação ou plano)
+        // Só conta como registrado se há conteúdo real (queixa, observação clínica ou plano)
         const hasContent =
           (typeof p.clinical_observation === "string" && p.clinical_observation.trim()) ||
           (typeof p.patient_context === "string" && p.patient_context.trim()) ||
-          (typeof p.next_session_plan === "string" && p.next_session_plan.trim());
+          (typeof p.note === "string" && p.note.trim());
         if (hasContent) recIds.add(p.session_id);
-        const txt = typeof p.next_session_plan === "string" ? p.next_session_plan.trim() : "";
-        if (txt && !progPlan.has(p.session_id)) progPlan.set(p.session_id, txt);
         if (!summary.has(p.session_id)) {
           const s = (typeof p.clinical_observation === "string" && p.clinical_observation.trim())
             || (typeof p.patient_context === "string" && p.patient_context.trim())
@@ -910,11 +910,13 @@ const Agenda = () => {
         }
       });
       setPlanBySession(hwPlan);
+      setHomeworkSentBySession(hwSent);
       setRecordPlanBySession(recPlan);
       setProgressPlanBySession(progPlan);
       setSummaryBySession(summary);
       setSessionRecordIds(recIds);
       setSessionRecordKeys(recKeys);
+
 
       setMoodTodayPatients(new Set((moods.data ?? []).map((m: any) => m.patient_id)));
     })();
@@ -1741,6 +1743,8 @@ const Agenda = () => {
       ? (planBySession.get(s.id) || recordPlanBySession.get(s.id) || progressPlanBySession.get(s.id))
       : undefined;
     const sessionSummary = !isSupervisionCard ? summaryBySession.get(s.id) : undefined;
+    const registroFeito = !isSupervisionCard && isPast && isActiveStatus && hasRecord && !!s.patient_id;
+    const homeworkSentAt = !isSupervisionCard ? homeworkSentBySession.get(s.id) : undefined;
 
 
     const actions = (
@@ -1893,6 +1897,11 @@ const Agenda = () => {
                 <AlertCircle className="h-3 w-3 mr-1" /> Registro pendente
               </span>
             )}
+            {registroFeito && (
+              <span className={cn(PILL_BASE, "bg-muted text-muted-foreground border-border")}>
+                <Check className="h-3 w-3 mr-1" /> Registro feito
+              </span>
+            )}
             {(s as any).modality === "online" ? (
               <span className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
                 <Video className="h-2.5 w-2.5" /> Online
@@ -1926,6 +1935,14 @@ const Agenda = () => {
                 title={`Lembrete enviado em ${format(new Date(s.confirmation_sent_at), "dd/MM 'às' HH:mm")}`}
               >
                 <Bell className="h-3 w-3" /> Lembrete enviado · {format(new Date(s.confirmation_sent_at), "dd/MM HH:mm")}
+              </span>
+            )}
+            {homeworkSentAt && (
+              <span
+                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm"
+                title={`Plano entre sessões enviado em ${format(new Date(homeworkSentAt), "dd/MM 'às' HH:mm")}`}
+              >
+                <ClipboardList className="h-3 w-3" /> Plano enviado · {format(new Date(homeworkSentAt), "dd/MM HH:mm")}
               </span>
             )}
             {!isSupervisionCard && s.patient_id && (

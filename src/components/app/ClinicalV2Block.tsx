@@ -110,7 +110,7 @@ export const ClinicalV2Block = ({ value, onChange, legacyMood, legacyNote, legac
       )}
 
       {/* ─────── 1. COMO O PACIENTE CHEGOU ─────── */}
-      <section className="space-y-4">
+      <section className="space-y-4 rounded-lg border border-border/60 border-l-4 border-l-primary bg-primary/[0.03] p-3">
         <p className="text-[11px] uppercase tracking-wider text-primary-dark font-semibold">
           1. Como o paciente chegou
         </p>
@@ -170,7 +170,7 @@ export const ClinicalV2Block = ({ value, onChange, legacyMood, legacyNote, legac
       </section>
 
       {/* ─────── 2. LEITURA CLÍNICA ─────── */}
-      <section className="space-y-4 pt-2 border-t border-border/60">
+      <section className="space-y-4 rounded-lg border border-border/60 border-l-4 border-l-lilac bg-lilac/[0.07] p-3">
         <p className="text-[11px] uppercase tracking-wider text-primary-dark font-semibold">
           2. Leitura clínica
         </p>
@@ -272,7 +272,7 @@ export const ClinicalV2Block = ({ value, onChange, legacyMood, legacyNote, legac
       </section>
 
       {/* ─────── 3. ATENÇÃO CLÍNICA ─────── */}
-      <section className="space-y-3 pt-2 border-t border-border/60">
+      <section className="space-y-3 rounded-lg border border-border/60 border-l-4 border-l-amber-400 bg-amber-50/40 p-3">
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <p className="text-[11px] uppercase tracking-wider text-primary-dark font-semibold">
@@ -308,7 +308,7 @@ export const ClinicalV2Block = ({ value, onChange, legacyMood, legacyNote, legac
       </section>
 
       {/* ─────── 4. NOTAS PRIVADAS ─────── */}
-      <section className="space-y-2 pt-2 border-t border-border/60">
+      <section className="space-y-2 rounded-lg border border-border/60 border-l-4 border-l-accent bg-accent/[0.05] p-3">
         <Label className="text-xs">
           Notas privadas <span className="text-muted-foreground font-normal">(não aparecem em relatórios)</span>
         </Label>
