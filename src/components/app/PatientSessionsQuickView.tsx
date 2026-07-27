@@ -55,6 +55,8 @@ interface Props {
   lastDate: Date | string | null | undefined;
   totalRecords: number;
   onOpenFullHistory: () => void;
+  /** Chamado ao navegar para fora (ex.: fechar a Sheet na Agenda). */
+  onNavigateAway?: () => void;
 }
 
 // Parse "YYYY-MM-DD" como data local (evita shift de timezone que joga 19/05 para 18/05).
@@ -131,6 +133,7 @@ export const PatientSessionsQuickView = ({
   lastDate,
   totalRecords,
   onOpenFullHistory,
+  onNavigateAway,
 }: Props) => {
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<UnifiedRecord[]>([]);
@@ -307,7 +310,7 @@ export const PatientSessionsQuickView = ({
       </div>
 
       {/* Linha do tempo */}
-      <SessionTimeline patientId={patientId} />
+      <SessionTimeline patientId={patientId} onNavigate={onNavigateAway} />
 
       {/* Últimos registros de sessão */}
       <div>
