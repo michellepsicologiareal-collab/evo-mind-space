@@ -3,6 +3,7 @@ import { format, differenceInDays, differenceInMonths, differenceInYears } from 
 import { ptBR } from "date-fns/locale";
 import { FileText, Loader2, ChevronRight, AlertTriangle, ChevronDown, ChevronUp, Calendar, Target, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { SessionTimeline } from "@/components/app/SessionTimeline";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
@@ -304,6 +305,9 @@ export const PatientSessionsQuickView = ({
         <SummaryTile label="Sessões registradas" value={totalRecords > 0 ? String(totalRecords) : "—"} />
         <SummaryTile label="Em acompanhamento há" value={followUpLabel(startDate)} />
       </div>
+
+      {/* Linha do tempo */}
+      <SessionTimeline patientId={patientId} />
 
       {/* Últimos registros de sessão */}
       <div>
