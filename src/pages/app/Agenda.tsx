@@ -2728,49 +2728,8 @@ const Agenda = () => {
                         Dia livre — toque para agendar
                       </button>
                     ) : (
-                      <div className="rounded-2xl bg-card border border-border shadow-card overflow-hidden divide-y divide-border">
-                        {selectedDaySessions.map((s) => {
-                          const isSupervisionRow = s.session_type === "supervision";
-                          return (
-                            <button
-                              key={s.id}
-                              onClick={() => openEdit(s)}
-                              className="w-full flex items-center gap-3 px-3 py-3 hover:bg-secondary/30 active:bg-secondary/50 transition-colors text-left"
-                              aria-label={`Abrir sessão de ${format(new Date(s.scheduled_at), "HH:mm")}`}
-                            >
-                              <div className={cn(
-                                "flex flex-col items-center justify-center w-14 shrink-0 rounded-xl py-1.5 px-1",
-                                isSupervisionRow ? "bg-serene/15 text-serene" :
-                                  s.status === "confirmed" ? "bg-accent/15 text-accent" :
-                                    "bg-primary/10 text-primary"
-                              )}>
-                                <span className="font-display text-sm font-bold leading-none">
-                                  {format(new Date(s.scheduled_at), "HH:mm")}
-                                </span>
-                                <span className="text-[9px] font-medium opacity-70 mt-0.5">{s.duration_minutes}min</span>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm text-foreground truncate">
-                                  {isSupervisionRow ? "Supervisão" : s.patient_name || "Paciente"}
-                                  {isSupervisionRow && s.discussed_patient_name && (
-                                    <span className="text-muted-foreground"> · {s.discussed_patient_name}</span>
-                                  )}
-                                </p>
-                                <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-                                  <span className={cn(PILL_BASE, isSupervisionRow ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
-                                    {isSupervisionRow ? "Supervisão" : statusLabel[s.status]}
-                                  </span>
-                                  {!isSupervisionRow && s.price != null && (
-                                    <span className={cn(PILL_BASE, paymentStatusClass[s.payment_status])}>
-                                      {paymentStatusLabel[s.payment_status]}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                            </button>
-                          );
-                        })}
+                      <div className="space-y-2">
+                        {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} />)}
                       </div>
                     )}
                   </div>
