@@ -133,6 +133,7 @@ export const PatientSessionsQuickView = ({
   lastDate,
   totalRecords,
   onOpenFullHistory,
+  onNavigateAway,
 }: Props) => {
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<UnifiedRecord[]>([]);

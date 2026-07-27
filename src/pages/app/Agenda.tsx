@@ -2055,6 +2055,7 @@ const Agenda = () => {
                     lastDate={lastDate}
                     totalRecords={totalRecords}
                     onOpenFullHistory={() => setHistoryOpen(false)}
+                    onNavigateAway={() => setHistoryOpen(false)}
                   />
                 );
               })()}
