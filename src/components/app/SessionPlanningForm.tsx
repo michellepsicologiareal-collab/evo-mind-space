@@ -99,6 +99,11 @@ export function SessionPlanningForm({
   scheduledAtHint,
   helperText,
   className,
+  onSave,
+  saving = false,
+  savedAt = null,
+  autoSave = false,
+  saveLabel = "Salvar planejamento",
 }: Props) {
   const toggleTech = (nome: string) => {
     onChange({
@@ -107,6 +112,19 @@ export function SessionPlanningForm({
         : [...value.next_tecnicas, nome],
     });
   };
+
+  // Autosave com debounce de qualquer alteração no card
+  const serialized = JSON.stringify(value);
+  const firstRun = useRef(true);
+  const onSaveRef = useRef(onSave);
+  onSaveRef.current = onSave;
+  useEffect(() => {
+    if (!autoSave || !onSaveRef.current) return;
+    if (firstRun.current) { firstRun.current = false; return; }
+    const t = setTimeout(() => { void onSaveRef.current?.(); }, 1200);
+    return () => clearTimeout(t);
+  }, [serialized, autoSave]);
+
 
   return (
     <section
