@@ -74,7 +74,15 @@ interface Props {
   scheduledAtHint?: string;
   helperText?: string;
   className?: string;
+  /** Salva o planejamento (mesmo sem sessão agendada). Habilita rodapé com botão Salvar. */
+  onSave?: () => void | Promise<void>;
+  saving?: boolean;
+  savedAt?: Date | null;
+  /** Salva automaticamente o que for digitado (debounce). */
+  autoSave?: boolean;
+  saveLabel?: string;
 }
+
 
 /**
  * Presentational-only form for the "Próxima sessão" planning block.
