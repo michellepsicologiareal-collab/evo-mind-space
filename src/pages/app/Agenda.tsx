@@ -523,6 +523,7 @@ const Agenda = () => {
   const [planningPatientId, setPlanningPatientId] = useState<string | null>(null);
   const [planningTargetSessionId, setPlanningTargetSessionId] = useState<string | null>(null);
   const [planningExistingPlanId, setPlanningExistingPlanId] = useState<string | null>(null);
+  const [planningSavedAt, setPlanningSavedAt] = useState<Date | null>(null);
   const [planningPlanGoals, setPlanningPlanGoals] = useState<{ id: string; descricao: string }[]>([]);
   const [planningPlanTechniques, setPlanningPlanTechniques] = useState<{ id: string; nome: string }[]>([]);
   const [planningValue, setPlanningValue] = useState<SessionPlanningValue>({
@@ -572,7 +573,8 @@ const Agenda = () => {
     setPlanningOpen(true);
   };
 
-  const savePlanningFromSheet = async () => {
+  const savePlanningFromSheet = async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent === true;
     if (!planningPatientId) return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -602,19 +604,27 @@ const Agenda = () => {
         observacoes: planningValue.next_observacoes,
         meta_id: planningValue.next_meta_id,
       };
-      const { error } = planningExistingPlanId
-        ? await supabase.from("session_plans").update(payload).eq("id", planningExistingPlanId)
-        : await supabase.from("session_plans").insert(payload);
-      if (error) throw error;
-      toast.success("Planejamento salvo");
-      setPlanningOpen(false);
+      if (planningExistingPlanId) {
+        const { error } = await supabase.from("session_plans").update(payload).eq("id", planningExistingPlanId);
+        if (error) throw error;
+      } else {
+        const { data: inserted, error } = await supabase.from("session_plans").insert(payload).select("id").single();
+        if (error) throw error;
+        if (inserted?.id) setPlanningExistingPlanId(inserted.id);
+      }
+      setPlanningSavedAt(new Date());
+      if (!silent) {
+        toast.success("Planejamento salvo");
+        setPlanningOpen(false);
+      }
     } catch (e) {
       console.error(e);
-      toast.error("Erro ao salvar planejamento");
+      if (!silent) toast.error("Erro ao salvar planejamento");
     } finally {
       setPlanningSaving(false);
     }
   };
+
 
   // Patient filter for pending list
   const [filterPatientId, setFilterPatientId] = useState<string>("all");
@@ -3243,15 +3253,6 @@ const Agenda = () => {
                           </p>
                         </div>
                       </div>
-                      <Button
-                        type="button"
-                        variant="accent"
-                        size="sm"
-                        onClick={savePlanningFromSheet}
-                        disabled={planningSaving || !planningPatientId}
-                      >
-                        {planningSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar planejamento
-                      </Button>
                     </div>
                     <SessionPlanningForm
                       value={planningValue}
@@ -3259,12 +3260,18 @@ const Agenda = () => {
                       planGoals={planningPlanGoals}
                       planTechniques={planningPlanTechniques}
                       scheduledAtLocked={!!planningTargetSessionId}
+                      onSave={planningPatientId ? () => savePlanningFromSheet({ silent: true }) : undefined}
+                      onAutoSave={() => savePlanningFromSheet({ silent: true })}
+                      savedAt={planningSavedAt}
+                      saving={planningSaving}
+                      autoSave
                       helperText={
                         planningTargetSessionId
                           ? "Este planejamento fica vinculado à próxima sessão já agendada e aparece automaticamente quando ela for aberta."
                           : "Sem próxima sessão agendada. O planejamento fica salvo como pendente e será vinculado quando você agendar."
                       }
                     />
+
                   </section>
 
                   {/* ── Plano entre Sessões (inline, atrelado à sessão atual) ── */}
@@ -3368,7 +3375,7 @@ const Agenda = () => {
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setPlanningOpen(false)}>Cancelar</Button>
-            <Button variant="accent" onClick={savePlanningFromSheet} disabled={planningSaving}>
+            <Button variant="accent" onClick={() => void savePlanningFromSheet()} disabled={planningSaving}>
               {planningSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Salvar planejamento
             </Button>

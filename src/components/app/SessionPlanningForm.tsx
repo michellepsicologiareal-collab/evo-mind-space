@@ -1,8 +1,10 @@
+import { useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { Target } from "lucide-react";
+import { Target, Save, Loader2, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -11,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+
 
 export interface SessionPlanningValue {
   next_scheduled_at: string; // datetime-local (yyyy-MM-ddTHH:mm) or ""
@@ -71,7 +74,17 @@ interface Props {
   scheduledAtHint?: string;
   helperText?: string;
   className?: string;
+  /** Salva o planejamento (mesmo sem sessão agendada). Habilita rodapé com botão Salvar. */
+  onSave?: () => void | Promise<void>;
+  /** Usado pelo autosave (silencioso). Se ausente, usa onSave. */
+  onAutoSave?: () => void | Promise<void>;
+  saving?: boolean;
+  savedAt?: Date | null;
+  /** Salva automaticamente o que for digitado (debounce). */
+  autoSave?: boolean;
+  saveLabel?: string;
 }
+
 
 /**
  * Presentational-only form for the "Próxima sessão" planning block.
@@ -88,6 +101,12 @@ export function SessionPlanningForm({
   scheduledAtHint,
   helperText,
   className,
+  onSave,
+  onAutoSave,
+  saving = false,
+  savedAt = null,
+  autoSave = false,
+  saveLabel = "Salvar planejamento",
 }: Props) {
   const toggleTech = (nome: string) => {
     onChange({
@@ -96,6 +115,19 @@ export function SessionPlanningForm({
         : [...value.next_tecnicas, nome],
     });
   };
+
+  // Autosave com debounce de qualquer alteração no card
+  const serialized = JSON.stringify(value);
+  const firstRun = useRef(true);
+  const onSaveRef = useRef(onAutoSave ?? onSave);
+  onSaveRef.current = onAutoSave ?? onSave;
+  useEffect(() => {
+    if (!autoSave || !onSaveRef.current) return;
+    if (firstRun.current) { firstRun.current = false; return; }
+    const t = setTimeout(() => { void onSaveRef.current?.(); }, 1200);
+    return () => clearTimeout(t);
+  }, [serialized, autoSave]);
+
 
   return (
     <section
@@ -244,6 +276,32 @@ export function SessionPlanningForm({
           style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
         />
       </div>
+
+      {onSave && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 pt-1 border-t border-border/60">
+          <span className="text-[11px] text-muted-foreground sm:mr-auto inline-flex items-center gap-1">
+            {saving ? (
+              <><Loader2 className="h-3 w-3 animate-spin" /> Salvando…</>
+            ) : savedAt ? (
+              <><Check className="h-3 w-3 text-primary" /> Salvo às {format(savedAt, "HH:mm")}</>
+            ) : autoSave ? (
+              "Salva automaticamente enquanto você digita."
+            ) : null}
+          </span>
+          <Button
+            type="button"
+            variant="accent"
+            size="sm"
+            className="w-full sm:w-auto"
+            onClick={() => void onSave()}
+            disabled={saving}
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+            {saveLabel}
+          </Button>
+        </div>
+      )}
     </section>
+
   );
 }

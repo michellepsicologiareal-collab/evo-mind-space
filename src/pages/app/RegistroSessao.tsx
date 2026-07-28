@@ -163,6 +163,11 @@ const RegistroSessao = () => {
   const [planTechniques, setPlanTechniques] = useState<{ id: string; nome: string }[]>([]);
   // ID da sessão futura já agendada para o paciente (usado no upsert de session_plans)
   const [nextSessionId, setNextSessionId] = useState<string | null>(null);
+  // Salvamento isolado do bloco "Planejamento da Próxima Sessão"
+  const [planningOnlyId, setPlanningOnlyId] = useState<string | null>(null);
+  const [planningOnlySaving, setPlanningOnlySaving] = useState(false);
+  const [planningOnlySavedAt, setPlanningOnlySavedAt] = useState<Date | null>(null);
+
   // Diálogo pós-salvar quando paciente não tiver plano ativo
   const [noPlanDialogOpen, setNoPlanDialogOpen] = useState(false);
   const [noPlanContext, setNoPlanContext] = useState<{
@@ -429,6 +434,68 @@ const RegistroSessao = () => {
     })();
     return () => { cancelled = true; };
   }, [form.session_id]);
+
+  /**
+   * Salva SOMENTE o bloco "Planejamento da Próxima Sessão".
+   * Funciona mesmo sem sessão futura agendada (session_id fica nulo até haver agendamento).
+   */
+  const savePlanningOnly = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent === true;
+    if (!user || !form.patient_id) return;
+    const hasContent =
+      form.next_objetivo.trim() ||
+      form.next_retomar.trim() ||
+      form.next_observacoes.trim() ||
+      form.next_tecnicas.length > 0 ||
+      form.next_meta_id;
+    if (!hasContent) {
+      if (!silent) toast.info("Preencha algum campo do planejamento antes de salvar.");
+      return;
+    }
+    setPlanningOnlySaving(true);
+    try {
+      let planId = planningOnlyId;
+      if (!planId && nextSessionId) {
+        const { data: sp } = await supabase
+          .from("session_plans").select("id").eq("session_id", nextSessionId).maybeSingle();
+        planId = sp?.id ?? null;
+      }
+      const payload = {
+        user_id: user.id,
+        patient_id: form.patient_id,
+        session_id: nextSessionId,
+        objetivo: form.next_objetivo,
+        retomar: form.next_retomar,
+        tecnicas: form.next_tecnicas,
+        observacoes: form.next_observacoes,
+        meta_id: form.next_meta_id,
+      };
+      if (planId) {
+        const { error } = await supabase.from("session_plans").update(payload).eq("id", planId);
+        if (error) throw error;
+        setPlanningOnlyId(planId);
+      } else {
+        const { data: inserted, error } = await supabase
+          .from("session_plans").insert(payload).select("id").single();
+        if (error) throw error;
+        if (inserted?.id) setPlanningOnlyId(inserted.id);
+      }
+      setPlanningOnlySavedAt(new Date());
+      if (!silent) toast.success("Planejamento salvo.");
+    } catch (e) {
+      console.error("Erro ao salvar planejamento:", e);
+      if (!silent) toast.error("Erro ao salvar o planejamento da próxima sessão.");
+    } finally {
+      setPlanningOnlySaving(false);
+    }
+  }, [user, form.patient_id, form.next_objetivo, form.next_retomar, form.next_observacoes, form.next_tecnicas, form.next_meta_id, nextSessionId, planningOnlyId]);
+
+  // Ao trocar de paciente/sessão, esquece o plano salvo isoladamente
+  useEffect(() => {
+    setPlanningOnlyId(null);
+    setPlanningOnlySavedAt(null);
+  }, [form.patient_id, form.session_id]);
+
 
   // Plano entre Sessões atrelado à sessão atual (para renderização inline no Registro)
   const [homeworkTask, setHomeworkTask] = useState<HomeworkPlanFormTask | null>(null);
@@ -2005,6 +2072,12 @@ const RegistroSessao = () => {
               planGoals={planGoals}
               planTechniques={planTechniques}
               scheduledAtLocked={!!nextSessionId}
+              onSave={() => savePlanningOnly()}
+              onAutoSave={() => savePlanningOnly({ silent: true })}
+              saving={planningOnlySaving}
+              savedAt={planningOnlySavedAt}
+              autoSave={ambiguousNext.length <= 1}
+
               helperText={
                 ambiguousNext.length > 1
                   ? "Selecione acima a sessão-alvo antes de preencher o planejamento."
