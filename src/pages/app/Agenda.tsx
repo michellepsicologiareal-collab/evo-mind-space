@@ -3261,6 +3261,7 @@ const Agenda = () => {
                       planTechniques={planningPlanTechniques}
                       scheduledAtLocked={!!planningTargetSessionId}
                       onSave={planningPatientId ? () => savePlanningFromSheet({ silent: true }) : undefined}
+                      onAutoSave={() => savePlanningFromSheet({ silent: true })}
                       savedAt={planningSavedAt}
                       saving={planningSaving}
                       autoSave

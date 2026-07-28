@@ -76,6 +76,8 @@ interface Props {
   className?: string;
   /** Salva o planejamento (mesmo sem sessão agendada). Habilita rodapé com botão Salvar. */
   onSave?: () => void | Promise<void>;
+  /** Usado pelo autosave (silencioso). Se ausente, usa onSave. */
+  onAutoSave?: () => void | Promise<void>;
   saving?: boolean;
   savedAt?: Date | null;
   /** Salva automaticamente o que for digitado (debounce). */
@@ -100,6 +102,7 @@ export function SessionPlanningForm({
   helperText,
   className,
   onSave,
+  onAutoSave,
   saving = false,
   savedAt = null,
   autoSave = false,
@@ -116,8 +119,8 @@ export function SessionPlanningForm({
   // Autosave com debounce de qualquer alteração no card
   const serialized = JSON.stringify(value);
   const firstRun = useRef(true);
-  const onSaveRef = useRef(onSave);
-  onSaveRef.current = onSave;
+  const onSaveRef = useRef(onAutoSave ?? onSave);
+  onSaveRef.current = onAutoSave ?? onSave;
   useEffect(() => {
     if (!autoSave || !onSaveRef.current) return;
     if (firstRun.current) { firstRun.current = false; return; }

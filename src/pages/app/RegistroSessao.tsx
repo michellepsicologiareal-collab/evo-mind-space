@@ -2073,6 +2073,7 @@ const RegistroSessao = () => {
               planTechniques={planTechniques}
               scheduledAtLocked={!!nextSessionId}
               onSave={() => savePlanningOnly()}
+              onAutoSave={() => savePlanningOnly({ silent: true })}
               saving={planningOnlySaving}
               savedAt={planningOnlySavedAt}
               autoSave={ambiguousNext.length <= 1}
