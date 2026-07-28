@@ -572,7 +572,8 @@ const Agenda = () => {
     setPlanningOpen(true);
   };
 
-  const savePlanningFromSheet = async () => {
+  const savePlanningFromSheet = async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent === true;
     if (!planningPatientId) return;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -602,19 +603,26 @@ const Agenda = () => {
         observacoes: planningValue.next_observacoes,
         meta_id: planningValue.next_meta_id,
       };
-      const { error } = planningExistingPlanId
-        ? await supabase.from("session_plans").update(payload).eq("id", planningExistingPlanId)
-        : await supabase.from("session_plans").insert(payload);
-      if (error) throw error;
-      toast.success("Planejamento salvo");
-      setPlanningOpen(false);
+      if (planningExistingPlanId) {
+        const { error } = await supabase.from("session_plans").update(payload).eq("id", planningExistingPlanId);
+        if (error) throw error;
+      } else {
+        const { data: inserted, error } = await supabase.from("session_plans").insert(payload).select("id").single();
+        if (error) throw error;
+        if (inserted?.id) setPlanningExistingPlanId(inserted.id);
+      }
+      if (!silent) {
+        toast.success("Planejamento salvo");
+        setPlanningOpen(false);
+      }
     } catch (e) {
       console.error(e);
-      toast.error("Erro ao salvar planejamento");
+      if (!silent) toast.error("Erro ao salvar planejamento");
     } finally {
       setPlanningSaving(false);
     }
   };
+
 
   // Patient filter for pending list
   const [filterPatientId, setFilterPatientId] = useState<string>("all");
