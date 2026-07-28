@@ -163,6 +163,11 @@ const RegistroSessao = () => {
   const [planTechniques, setPlanTechniques] = useState<{ id: string; nome: string }[]>([]);
   // ID da sessão futura já agendada para o paciente (usado no upsert de session_plans)
   const [nextSessionId, setNextSessionId] = useState<string | null>(null);
+  // Salvamento isolado do bloco "Planejamento da Próxima Sessão"
+  const [planningOnlyId, setPlanningOnlyId] = useState<string | null>(null);
+  const [planningOnlySaving, setPlanningOnlySaving] = useState(false);
+  const [planningOnlySavedAt, setPlanningOnlySavedAt] = useState<Date | null>(null);
+
   // Diálogo pós-salvar quando paciente não tiver plano ativo
   const [noPlanDialogOpen, setNoPlanDialogOpen] = useState(false);
   const [noPlanContext, setNoPlanContext] = useState<{
