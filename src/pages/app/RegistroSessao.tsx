@@ -2072,6 +2072,11 @@ const RegistroSessao = () => {
               planGoals={planGoals}
               planTechniques={planTechniques}
               scheduledAtLocked={!!nextSessionId}
+              onSave={() => savePlanningOnly()}
+              saving={planningOnlySaving}
+              savedAt={planningOnlySavedAt}
+              autoSave={ambiguousNext.length <= 1}
+
               helperText={
                 ambiguousNext.length > 1
                   ? "Selecione acima a sessão-alvo antes de preencher o planejamento."
