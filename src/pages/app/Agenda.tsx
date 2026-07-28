@@ -3243,15 +3243,6 @@ const Agenda = () => {
                           </p>
                         </div>
                       </div>
-                      <Button
-                        type="button"
-                        variant="accent"
-                        size="sm"
-                        onClick={savePlanningFromSheet}
-                        disabled={planningSaving || !planningPatientId}
-                      >
-                        {planningSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Salvar planejamento
-                      </Button>
                     </div>
                     <SessionPlanningForm
                       value={planningValue}
@@ -3259,12 +3250,16 @@ const Agenda = () => {
                       planGoals={planningPlanGoals}
                       planTechniques={planningPlanTechniques}
                       scheduledAtLocked={!!planningTargetSessionId}
+                      onSave={planningPatientId ? savePlanningFromSheet : undefined}
+                      saving={planningSaving}
+                      autoSave
                       helperText={
                         planningTargetSessionId
                           ? "Este planejamento fica vinculado à próxima sessão já agendada e aparece automaticamente quando ela for aberta."
                           : "Sem próxima sessão agendada. O planejamento fica salvo como pendente e será vinculado quando você agendar."
                       }
                     />
+
                   </section>
 
                   {/* ── Plano entre Sessões (inline, atrelado à sessão atual) ── */}
