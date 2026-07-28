@@ -273,6 +273,32 @@ export function SessionPlanningForm({
           style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
         />
       </div>
+
+      {onSave && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 pt-1 border-t border-border/60">
+          <span className="text-[11px] text-muted-foreground sm:mr-auto inline-flex items-center gap-1">
+            {saving ? (
+              <><Loader2 className="h-3 w-3 animate-spin" /> Salvando…</>
+            ) : savedAt ? (
+              <><Check className="h-3 w-3 text-primary" /> Salvo às {format(savedAt, "HH:mm")}</>
+            ) : autoSave ? (
+              "Salva automaticamente enquanto você digita."
+            ) : null}
+          </span>
+          <Button
+            type="button"
+            variant="accent"
+            size="sm"
+            className="w-full sm:w-auto"
+            onClick={() => void onSave()}
+            disabled={saving}
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+            {saveLabel}
+          </Button>
+        </div>
+      )}
     </section>
+
   );
 }
