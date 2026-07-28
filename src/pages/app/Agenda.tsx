@@ -523,6 +523,7 @@ const Agenda = () => {
   const [planningPatientId, setPlanningPatientId] = useState<string | null>(null);
   const [planningTargetSessionId, setPlanningTargetSessionId] = useState<string | null>(null);
   const [planningExistingPlanId, setPlanningExistingPlanId] = useState<string | null>(null);
+  const [planningSavedAt, setPlanningSavedAt] = useState<Date | null>(null);
   const [planningPlanGoals, setPlanningPlanGoals] = useState<{ id: string; descricao: string }[]>([]);
   const [planningPlanTechniques, setPlanningPlanTechniques] = useState<{ id: string; nome: string }[]>([]);
   const [planningValue, setPlanningValue] = useState<SessionPlanningValue>({
@@ -611,6 +612,7 @@ const Agenda = () => {
         if (error) throw error;
         if (inserted?.id) setPlanningExistingPlanId(inserted.id);
       }
+      setPlanningSavedAt(new Date());
       if (!silent) {
         toast.success("Planejamento salvo");
         setPlanningOpen(false);
@@ -3258,7 +3260,8 @@ const Agenda = () => {
                       planGoals={planningPlanGoals}
                       planTechniques={planningPlanTechniques}
                       scheduledAtLocked={!!planningTargetSessionId}
-                      onSave={planningPatientId ? savePlanningFromSheet : undefined}
+                      onSave={planningPatientId ? () => savePlanningFromSheet({ silent: true }) : undefined}
+                      savedAt={planningSavedAt}
                       saving={planningSaving}
                       autoSave
                       helperText={
@@ -3371,7 +3374,7 @@ const Agenda = () => {
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setPlanningOpen(false)}>Cancelar</Button>
-            <Button variant="accent" onClick={savePlanningFromSheet} disabled={planningSaving}>
+            <Button variant="accent" onClick={() => void savePlanningFromSheet()} disabled={planningSaving}>
               {planningSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
               Salvar planejamento
             </Button>
