@@ -554,7 +554,16 @@ const Agenda = () => {
       supabase.from("treatment_techniques").select("id, nome").eq("patient_id", pid).eq("user_id", user.id).order("created_at"),
       targetSessionId
         ? supabase.from("session_plans").select("*").eq("session_id", targetSessionId).maybeSingle()
-        : Promise.resolve({ data: null } as any),
+        // Sem próxima sessão agendada: recupera o último planejamento solto do paciente
+        : supabase
+            .from("session_plans")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("patient_id", pid)
+            .is("session_id", null)
+            .order("updated_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
     ]);
     setPlanningPatientId(pid);
     setPlanningTargetSessionId(targetSessionId);
@@ -570,6 +579,7 @@ const Agenda = () => {
       tecnicas: existing?.tecnicas ?? [],
       observacoes: existing?.observacoes ?? "",
     }));
+
     setPlanningOpen(true);
   };
 
@@ -2036,11 +2046,18 @@ const Agenda = () => {
               <ClipboardList className="h-3 w-3" /> Sessões
             </button>
             <button
+              onClick={(e) => { e.stopPropagation(); void openHomeworkForSession(s); }}
+              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-[#3D5C35]/10 text-[#3D5C35] hover:bg-[#3D5C35]/20 border border-[#3D5C35]/20 transition-colors"
+            >
+              <ClipboardList className="h-3 w-3" /> Plano entre sessões
+            </button>
+            <button
               onClick={(e) => { e.stopPropagation(); openEdit(s); }}
               className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-colors"
             >
               <Pencil className="h-3 w-3" /> Registrar sessão
             </button>
+
           </div>
         )}
         {!isSupervisionCard && s.patient_id && (

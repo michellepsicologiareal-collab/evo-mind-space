@@ -230,7 +230,21 @@ const RegistroSessao = () => {
         .eq("session_id", ns.id)
         .maybeSingle();
       sp = data;
+    } else {
+      // Sem próxima sessão agendada: recupera o último planejamento solto do paciente
+      const { data } = await supabase
+        .from("session_plans")
+        .select("id, objetivo, retomar, tecnicas, observacoes, meta_id")
+        .eq("user_id", uid)
+        .eq("patient_id", patientId)
+        .is("session_id", null)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      sp = data;
     }
+    setPlanningOnlyId(sp?.id ?? null);
+
 
     let meta_descricao: string | null = null;
     if (sp?.meta_id) {
@@ -455,11 +469,14 @@ const RegistroSessao = () => {
     setPlanningOnlySaving(true);
     try {
       let planId = planningOnlyId;
-      if (!planId && nextSessionId) {
-        const { data: sp } = await supabase
-          .from("session_plans").select("id").eq("session_id", nextSessionId).maybeSingle();
+      if (!planId) {
+        const q = supabase.from("session_plans").select("id").eq("user_id", user.id).eq("patient_id", form.patient_id);
+        const { data: sp } = nextSessionId
+          ? await q.eq("session_id", nextSessionId).maybeSingle()
+          : await q.is("session_id", null).order("updated_at", { ascending: false }).limit(1).maybeSingle();
         planId = sp?.id ?? null;
       }
+
       const payload = {
         user_id: user.id,
         patient_id: form.patient_id,
