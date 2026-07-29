@@ -2036,11 +2036,18 @@ const Agenda = () => {
               <ClipboardList className="h-3 w-3" /> Sessões
             </button>
             <button
+              onClick={(e) => { e.stopPropagation(); void openHomeworkForSession(s); }}
+              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-[#3D5C35]/10 text-[#3D5C35] hover:bg-[#3D5C35]/20 border border-[#3D5C35]/20 transition-colors"
+            >
+              <ClipboardList className="h-3 w-3" /> Plano entre sessões
+            </button>
+            <button
               onClick={(e) => { e.stopPropagation(); openEdit(s); }}
               className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-colors"
             >
               <Pencil className="h-3 w-3" /> Registrar sessão
             </button>
+
           </div>
         )}
         {!isSupervisionCard && s.patient_id && (
