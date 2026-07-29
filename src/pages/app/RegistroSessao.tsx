@@ -27,6 +27,7 @@ import { SessionPlanningForm } from "@/components/app/SessionPlanningForm";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
 import { preserveScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
+import { carryOverHomeworkPlan } from "@/lib/homework/carryOver";
 
 const DRAFT_KEY = "rascunho_registro_sessao";
 
@@ -939,7 +940,11 @@ const RegistroSessao = () => {
             })
             .select("id")
             .single();
-          if (created?.id) targetSessionId = created.id;
+          if (created?.id) {
+            targetSessionId = created.id;
+            const copied = await carryOverHomeworkPlan(uid, pid, created.id);
+            if (copied) toast.success("Plano entre sessões copiado para a próxima sessão");
+          }
         }
       }
     } catch (e) {

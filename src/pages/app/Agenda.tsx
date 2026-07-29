@@ -41,6 +41,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { carryOverHomeworkPlan } from "@/lib/homework/carryOver";
 
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
@@ -601,7 +602,11 @@ const Agenda = () => {
             user_id: user.id, patient_id: planningPatientId, scheduled_at: iso,
             duration_minutes: 50, modality: "presencial", status: "scheduled", session_type: "clinical",
           }).select("id").single();
-          if (created?.id) targetSessionId = created.id;
+          if (created?.id) {
+            targetSessionId = created.id;
+            const copied = await carryOverHomeworkPlan(user.id, planningPatientId, created.id);
+            if (copied && !silent) toast.success("Plano entre sessões copiado para a próxima sessão");
+          }
         }
       }
       const payload = {
@@ -1084,6 +1089,15 @@ const Agenda = () => {
     if (gcalConnected && created) {
       Promise.all(created.map((row: any) => syncSessionToGcal(row.id))).catch(() => {});
     }
+
+    // Copia o Plano entre sessões mais recente para a(s) sessão(ões) recém-agendada(s)
+    if (!isSupervision && parsed.data.patient_id && created?.length) {
+      for (const row of created as any[]) {
+        const copied = await carryOverHomeworkPlan(user.id, parsed.data.patient_id, row.id);
+        if (copied) toast.success("Plano entre sessões copiado para a próxima sessão");
+      }
+    }
+
 
     // v2 clinical registration — only when patient session and something was filled
     const wbScore = parsed.data.wellbeing_score ? Number(parsed.data.wellbeing_score) : null;
