@@ -554,7 +554,16 @@ const Agenda = () => {
       supabase.from("treatment_techniques").select("id, nome").eq("patient_id", pid).eq("user_id", user.id).order("created_at"),
       targetSessionId
         ? supabase.from("session_plans").select("*").eq("session_id", targetSessionId).maybeSingle()
-        : Promise.resolve({ data: null } as any),
+        // Sem próxima sessão agendada: recupera o último planejamento solto do paciente
+        : supabase
+            .from("session_plans")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("patient_id", pid)
+            .is("session_id", null)
+            .order("updated_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
     ]);
     setPlanningPatientId(pid);
     setPlanningTargetSessionId(targetSessionId);
@@ -570,6 +579,7 @@ const Agenda = () => {
       tecnicas: existing?.tecnicas ?? [],
       observacoes: existing?.observacoes ?? "",
     }));
+
     setPlanningOpen(true);
   };
 
