@@ -41,6 +41,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { carryOverHomeworkPlan } from "@/lib/homework/carryOver";
 
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
