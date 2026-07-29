@@ -602,7 +602,11 @@ const Agenda = () => {
             user_id: user.id, patient_id: planningPatientId, scheduled_at: iso,
             duration_minutes: 50, modality: "presencial", status: "scheduled", session_type: "clinical",
           }).select("id").single();
-          if (created?.id) targetSessionId = created.id;
+          if (created?.id) {
+            targetSessionId = created.id;
+            const copied = await carryOverHomeworkPlan(user.id, planningPatientId, created.id);
+            if (copied && !silent) toast.success("Plano entre sessões copiado para a próxima sessão");
+          }
         }
       }
       const payload = {
