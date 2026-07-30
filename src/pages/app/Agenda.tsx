@@ -592,7 +592,9 @@ const Agenda = () => {
     setPlanningSaving(true);
     try {
       let targetSessionId = planningTargetSessionId;
-      if (planningValue.next_scheduled_at) {
+      // Só cria/atualiza agendamento no salvamento explícito (nunca no autosave),
+      // evitando criar um evento novo a cada digitação.
+      if (planningValue.next_scheduled_at && !silent) {
         const iso = new Date(planningValue.next_scheduled_at).toISOString();
         if (targetSessionId) {
           await supabase.from("sessions").update({ scheduled_at: iso, status: "scheduled" })
@@ -604,8 +606,9 @@ const Agenda = () => {
           }).select("id").single();
           if (created?.id) {
             targetSessionId = created.id;
+            setPlanningTargetSessionId(created.id);
             const copied = await carryOverHomeworkPlan(user.id, planningPatientId, created.id);
-            if (copied && !silent) toast.success("Plano entre sessões copiado para a próxima sessão");
+            if (copied) toast.success("Plano entre sessões copiado para a próxima sessão");
           }
         }
       }
@@ -619,9 +622,19 @@ const Agenda = () => {
         observacoes: planningValue.next_observacoes,
         meta_id: planningValue.next_meta_id,
       };
-      if (planningExistingPlanId) {
-        const { error } = await supabase.from("session_plans").update(payload).eq("id", planningExistingPlanId);
+      let planId = planningExistingPlanId;
+      if (!planId) {
+        // Reaproveita um planejamento já existente (com ou sem sessão vinculada)
+        const q = supabase.from("session_plans").select("id").eq("user_id", user.id).eq("patient_id", planningPatientId);
+        const { data: found } = targetSessionId
+          ? await q.eq("session_id", targetSessionId).maybeSingle()
+          : await q.is("session_id", null).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        planId = found?.id ?? null;
+      }
+      if (planId) {
+        const { error } = await supabase.from("session_plans").update(payload).eq("id", planId);
         if (error) throw error;
+        setPlanningExistingPlanId(planId);
       } else {
         const { data: inserted, error } = await supabase.from("session_plans").insert(payload).select("id").single();
         if (error) throw error;
@@ -2013,14 +2026,6 @@ const Agenda = () => {
                 <Bell className="h-3 w-3" /> Lembrete enviado · {format(new Date(s.confirmation_sent_at), "dd/MM HH:mm")}
               </span>
             )}
-            {homeworkSentAt && (
-              <span
-                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm"
-                title={`Plano entre sessões enviado em ${format(new Date(homeworkSentAt), "dd/MM 'às' HH:mm")}`}
-              >
-                <ClipboardList className="h-3 w-3" /> Plano enviado · {format(new Date(homeworkSentAt), "dd/MM HH:mm")}
-              </span>
-            )}
             {!isSupervisionCard && s.patient_id && (
               <Link
                 to={`/app/plano-tratamento?patient=${s.patient_id}`}
@@ -2031,6 +2036,15 @@ const Agenda = () => {
                 <ClipboardList className="h-3 w-3" /> Plano de tratamento
               </Link>
             )}
+            {homeworkSentAt && (
+              <span
+                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm"
+                title={`Plano entre sessões enviado em ${format(new Date(homeworkSentAt), "dd/MM 'às' HH:mm")}`}
+              >
+                <ClipboardList className="h-3 w-3" /> Plano enviado · {format(new Date(homeworkSentAt), "dd/MM HH:mm")}
+              </span>
+            )}
+
           </div>
         )}
 
