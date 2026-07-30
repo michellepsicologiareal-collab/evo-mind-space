@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { Target, Save, Loader2, Check } from "lucide-react";
+import { Target, Save, Loader2, Check, CalendarCheck, FileClock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
