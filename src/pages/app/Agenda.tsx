@@ -622,9 +622,19 @@ const Agenda = () => {
         observacoes: planningValue.next_observacoes,
         meta_id: planningValue.next_meta_id,
       };
-      if (planningExistingPlanId) {
-        const { error } = await supabase.from("session_plans").update(payload).eq("id", planningExistingPlanId);
+      let planId = planningExistingPlanId;
+      if (!planId) {
+        // Reaproveita um planejamento já existente (com ou sem sessão vinculada)
+        const q = supabase.from("session_plans").select("id").eq("user_id", user.id).eq("patient_id", planningPatientId);
+        const { data: found } = targetSessionId
+          ? await q.eq("session_id", targetSessionId).maybeSingle()
+          : await q.is("session_id", null).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        planId = found?.id ?? null;
+      }
+      if (planId) {
+        const { error } = await supabase.from("session_plans").update(payload).eq("id", planId);
         if (error) throw error;
+        setPlanningExistingPlanId(planId);
       } else {
         const { data: inserted, error } = await supabase.from("session_plans").insert(payload).select("id").single();
         if (error) throw error;
