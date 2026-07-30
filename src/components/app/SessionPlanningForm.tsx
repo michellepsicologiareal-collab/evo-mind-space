@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { Target, Save, Loader2, Check } from "lucide-react";
+import { Target, Save, Loader2, Check, CalendarCheck, FileClock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -83,6 +83,10 @@ interface Props {
   /** Salva automaticamente o que for digitado (debounce). */
   autoSave?: boolean;
   saveLabel?: string;
+  /** true quando o planejamento está vinculado a uma sessão já agendada. */
+  linkedToSession?: boolean;
+  /** Data/hora da sessão vinculada (opcional, para exibir no selo). */
+  linkedSessionLabel?: string;
 }
 
 
@@ -107,6 +111,8 @@ export function SessionPlanningForm({
   savedAt = null,
   autoSave = false,
   saveLabel = "Salvar planejamento",
+  linkedToSession = false,
+  linkedSessionLabel,
 }: Props) {
   const toggleTech = (nome: string) => {
     onChange({
@@ -134,12 +140,37 @@ export function SessionPlanningForm({
       className={cn("rounded-lg border p-4 space-y-4", className)}
       style={{ borderColor: "#E5E7EB", background: "#FAF8FF" }}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Target className="h-4 w-4" style={{ color: "#534AB7" }} />
         <h3 className="font-display text-sm font-semibold" style={{ color: "#1A1A2E" }}>
           Próxima sessão — planejamento
         </h3>
+        <span
+          className={cn(
+            "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+            linkedToSession
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : "bg-amber-50 text-amber-700 border-amber-200",
+          )}
+          title={
+            linkedToSession
+              ? "Este planejamento está vinculado a uma sessão já agendada."
+              : "Salvo como rascunho: ainda não há sessão agendada. Ao agendar, o planejamento será vinculado automaticamente."
+          }
+        >
+          {linkedToSession ? (
+            <><CalendarCheck className="h-3 w-3" /> Vinculado à sessão{linkedSessionLabel ? ` · ${linkedSessionLabel}` : ""}</>
+          ) : (
+            <><FileClock className="h-3 w-3" /> Rascunho · sem sessão agendada</>
+          )}
+        </span>
       </div>
+      <p className="text-[11px] text-muted-foreground -mt-1">
+        {linkedToSession
+          ? "As alterações são salvas na sessão já agendada."
+          : "As alterações são salvas como rascunho e serão vinculadas automaticamente quando você agendar a próxima sessão."}
+      </p>
+
       {helperText && (
         <p className="text-xs text-muted-foreground -mt-2">{helperText}</p>
       )}
@@ -283,7 +314,8 @@ export function SessionPlanningForm({
             {saving ? (
               <><Loader2 className="h-3 w-3 animate-spin" /> Salvando…</>
             ) : savedAt ? (
-              <><Check className="h-3 w-3 text-primary" /> Salvo às {format(savedAt, "HH:mm")}</>
+              <><Check className="h-3 w-3 text-primary" /> {linkedToSession ? "Salvo na sessão agendada" : "Rascunho salvo"} às {format(savedAt, "HH:mm")}</>
+
             ) : autoSave ? (
               "Salva automaticamente enquanto você digita."
             ) : null}

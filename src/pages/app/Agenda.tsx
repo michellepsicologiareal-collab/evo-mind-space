@@ -3305,6 +3305,7 @@ const Agenda = () => {
                       planGoals={planningPlanGoals}
                       planTechniques={planningPlanTechniques}
                       scheduledAtLocked={!!planningTargetSessionId}
+                      linkedToSession={!!planningTargetSessionId}
                       onSave={planningPatientId ? () => savePlanningFromSheet({ silent: true }) : undefined}
                       onAutoSave={() => savePlanningFromSheet({ silent: true })}
                       savedAt={planningSavedAt}
@@ -3416,6 +3417,7 @@ const Agenda = () => {
               onChange={(patch) => setPlanningValue((v) => ({ ...v, ...patch }))}
               planGoals={planningPlanGoals}
               planTechniques={planningPlanTechniques}
+              linkedToSession={!!planningTargetSessionId}
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
