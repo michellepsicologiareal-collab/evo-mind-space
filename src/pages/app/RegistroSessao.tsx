@@ -2094,6 +2094,7 @@ const RegistroSessao = () => {
               planGoals={planGoals}
               planTechniques={planTechniques}
               scheduledAtLocked={!!nextSessionId}
+              linkedToSession={!!nextSessionId}
               onSave={() => savePlanningOnly()}
               onAutoSave={() => savePlanningOnly({ silent: true })}
               saving={planningOnlySaving}
