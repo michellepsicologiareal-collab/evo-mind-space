@@ -314,7 +314,8 @@ export function SessionPlanningForm({
             {saving ? (
               <><Loader2 className="h-3 w-3 animate-spin" /> Salvando…</>
             ) : savedAt ? (
-              <><Check className="h-3 w-3 text-primary" /> Salvo às {format(savedAt, "HH:mm")}</>
+              <><Check className="h-3 w-3 text-primary" /> {linkedToSession ? "Salvo na sessão agendada" : "Rascunho salvo"} às {format(savedAt, "HH:mm")}</>
+
             ) : autoSave ? (
               "Salva automaticamente enquanto você digita."
             ) : null}
