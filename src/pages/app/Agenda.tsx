@@ -592,7 +592,9 @@ const Agenda = () => {
     setPlanningSaving(true);
     try {
       let targetSessionId = planningTargetSessionId;
-      if (planningValue.next_scheduled_at) {
+      // Só cria/atualiza agendamento no salvamento explícito (nunca no autosave),
+      // evitando criar um evento novo a cada digitação.
+      if (planningValue.next_scheduled_at && !silent) {
         const iso = new Date(planningValue.next_scheduled_at).toISOString();
         if (targetSessionId) {
           await supabase.from("sessions").update({ scheduled_at: iso, status: "scheduled" })
@@ -604,8 +606,9 @@ const Agenda = () => {
           }).select("id").single();
           if (created?.id) {
             targetSessionId = created.id;
+            setPlanningTargetSessionId(created.id);
             const copied = await carryOverHomeworkPlan(user.id, planningPatientId, created.id);
-            if (copied && !silent) toast.success("Plano entre sessões copiado para a próxima sessão");
+            if (copied) toast.success("Plano entre sessões copiado para a próxima sessão");
           }
         }
       }
