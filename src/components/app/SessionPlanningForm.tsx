@@ -83,6 +83,10 @@ interface Props {
   /** Salva automaticamente o que for digitado (debounce). */
   autoSave?: boolean;
   saveLabel?: string;
+  /** true quando o planejamento está vinculado a uma sessão já agendada. */
+  linkedToSession?: boolean;
+  /** Data/hora da sessão vinculada (opcional, para exibir no selo). */
+  linkedSessionLabel?: string;
 }
 
 
