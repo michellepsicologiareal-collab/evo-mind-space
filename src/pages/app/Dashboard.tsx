@@ -729,27 +729,39 @@ export default function Dashboard() {
           aria-label="Indicadores principais"
           className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
         >
-          {KPI.map((k) => (
-            <Link
-              key={k.label}
-              to={k.to}
-              className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
-            >
-              <Card className="rounded-2xl border-border/60 bg-card p-5 shadow-none transition-colors hover:border-border h-full">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {k.label}
-                </p>
-                <p className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
-                  {k.value}
-                </p>
-                <p className="mt-2 text-xs text-muted-foreground">{k.hint}</p>
-                {("sub" in k) && k.sub ? (
-                  <p className="mt-1 text-xs text-muted-foreground/90">{k.sub}</p>
-                ) : null}
-              </Card>
-            </Link>
-          ))}
+          {KPI.map((k, i) => {
+            const tones = ["--primary", "--accent", "--moss", "--lilac", "--gold"] as const;
+            const tone = tones[i % tones.length];
+            return (
+              <Link
+                key={k.label}
+                to={k.to}
+                className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
+              >
+                <Card className="relative overflow-hidden rounded-2xl border-border/60 bg-card p-5 shadow-none transition-all hover:border-border hover:shadow-soft h-full">
+                  {/* Bolha pastel decorativa (pegada do modelo) */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute -bottom-10 -right-8 h-28 w-28 rounded-full opacity-[0.14] transition-opacity group-hover:opacity-25"
+                    style={{ background: `hsl(var(${tone}))` }}
+                  />
+                  <p className="relative flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: `hsl(var(${tone}))` }}>
+                    <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: `hsl(var(${tone}))` }} aria-hidden />
+                    <span className="truncate">{k.label}</span>
+                  </p>
+                  <p className="relative mt-3 font-display text-3xl md:text-[2rem] font-bold tracking-[-0.02em] text-foreground">
+                    {k.value}
+                  </p>
+                  <p className="relative mt-2 text-xs text-muted-foreground">{k.hint}</p>
+                  {("sub" in k) && k.sub ? (
+                    <p className="relative mt-1 text-xs text-muted-foreground/90">{k.sub}</p>
+                  ) : null}
+                </Card>
+              </Link>
+            );
+          })}
         </section>
+
 
         {/* ─ Tendência: Sessões x Faturamento ─ */}
         <section aria-labelledby="trend-heading" className="space-y-3">
