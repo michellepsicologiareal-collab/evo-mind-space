@@ -32,6 +32,16 @@ interface TccRecord {
   created_at: string;
 }
 
+interface RpdInvite {
+  id: string;
+  token: string;
+  password: string | null;
+  expires_at: string;
+  revoked_at: string | null;
+  submissions_count: number;
+  created_at: string;
+}
+
 interface Props {
   patientId: string;
   readOnly?: boolean;
