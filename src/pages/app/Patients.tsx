@@ -1777,8 +1777,8 @@ const Patients = () => {
               </div>
             );
             return (
-              <div className="h-full overflow-y-auto relative">
-                <div className="absolute right-4 top-4 flex items-center gap-1 z-30" onClick={(e) => e.stopPropagation()}>
+              <div className="relative mx-auto w-full max-w-[1200px] px-4 sm:px-8 py-6 sm:py-8">
+                <div className="absolute right-6 sm:right-12 top-8 sm:top-12 flex items-center gap-1 z-30" onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
