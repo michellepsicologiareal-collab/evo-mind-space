@@ -438,7 +438,9 @@ export const HomeworkPlanForm = ({
       "Use-a apenas quando abrir o link que te enviei na mensagem anterior.",
     ].join("\n");
     window.open(`https://wa.me/${digits}?text=${encodeURIComponent(msg)}`, "_blank");
+    void logShare("password");
     toast.success("Senha enviada por WhatsApp");
+
   };
 
   const canSend = Boolean(patientPhone && normalizePhoneForWhatsApp(patientPhone));
