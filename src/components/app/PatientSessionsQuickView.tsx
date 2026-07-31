@@ -31,6 +31,15 @@ interface UnifiedRecord {
   created_at: string;
 }
 
+const SESSION_STATUS_LABEL: Record<string, string> = {
+  scheduled: "Agendada",
+  confirmed: "Confirmada",
+  completed: "Realizada",
+  cancelled: "Cancelada",
+  no_show: "Falta",
+  rescheduled: "Remarcada",
+};
+
 const ATTENTION_LABEL: Record<string, string> = {
   watch: "Atenção",
   urgent: "Atenção urgente",
@@ -137,9 +146,15 @@ export const PatientSessionsQuickView = ({
 }: Props) => {
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<UnifiedRecord[]>([]);
+  const [recordsBySession, setRecordsBySession] = useState<Record<string, UnifiedRecord>>({});
+  const [agenda, setAgenda] = useState<
+    { id: string; scheduled_at: string; status: string; modality: string | null; duration_minutes: number | null }[]
+  >([]);
+  const [expandedSession, setExpandedSession] = useState<Record<string, boolean>>({});
   const [detail, setDetail] = useState<UnifiedRecord | null>(null);
   const [expandedObs, setExpandedObs] = useState<Record<string, boolean>>({});
   const [startDate, setStartDate] = useState<Date | null>(null);
+
 
   useEffect(() => {
     (async () => {
@@ -281,10 +296,23 @@ export const PatientSessionsQuickView = ({
       });
 
       const merged = [...v2Unified, ...legacyUnified]
-        .sort((a, b) => (parseSessionDate(b.session_date)?.getTime() ?? 0) - (parseSessionDate(a.session_date)?.getTime() ?? 0))
-        .slice(0, 3);
+        .sort((a, b) => (parseSessionDate(b.session_date)?.getTime() ?? 0) - (parseSessionDate(a.session_date)?.getTime() ?? 0));
 
-      setRecords(merged);
+      const bySession: Record<string, UnifiedRecord> = {};
+      merged.forEach((r) => {
+        if (r.session_id && !bySession[r.session_id]) bySession[r.session_id] = r;
+      });
+      setRecordsBySession(bySession);
+      setRecords(merged.slice(0, 3));
+
+      const agendaRes = await supabase
+        .from("sessions")
+        .select("id, scheduled_at, status, modality, duration_minutes")
+        .eq("patient_id", patientId)
+        .order("scheduled_at", { ascending: false })
+        .limit(40);
+      setAgenda((agendaRes.data ?? []) as any[]);
+
 
       const candidates: Array<string | null | undefined> = [
         patientRes.data?.treatment_start_date,
@@ -311,6 +339,95 @@ export const PatientSessionsQuickView = ({
 
       {/* Linha do tempo */}
       <SessionTimeline patientId={patientId} onNavigate={onNavigateAway} />
+
+      {/* Sessões agendadas + conteúdo registrado */}
+      <div>
+        <h3 className="text-sm font-display font-semibold text-foreground mb-3">Sessões agendadas</h3>
+        {loading ? (
+          <div className="flex justify-center py-6">
+            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          </div>
+        ) : agenda.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border p-6 text-center">
+            <Calendar className="h-6 w-6 mx-auto text-muted-foreground/40" />
+            <p className="mt-2 text-xs text-muted-foreground">Nenhuma sessão agendada para este paciente.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {agenda.map((s) => {
+              const rec = recordsBySession[s.id] ?? null;
+              const open = !!expandedSession[s.id];
+              const dt = new Date(s.scheduled_at);
+              return (
+                <div
+                  key={s.id}
+                  className="rounded-xl overflow-hidden"
+                  style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => rec && setExpandedSession((st) => ({ ...st, [s.id]: !open }))}
+                    className="w-full flex items-center justify-between gap-2 p-3 text-left"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {format(dt, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground capitalize truncate">
+                        {SESSION_STATUS_LABEL[s.status] ?? s.status}
+                        {s.modality ? ` · ${s.modality}` : ""}
+                        {s.duration_minutes != null ? ` · ${s.duration_minutes} min` : ""}
+                      </p>
+                    </div>
+                    <span className="flex items-center gap-2 shrink-0">
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                          rec ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {rec ? "Com registro" : "Sem registro"}
+                      </span>
+                      {rec && (open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />)}
+                    </span>
+                  </button>
+
+                  {rec && open && (
+                    <div className="px-3 pb-3 space-y-3 border-t border-border/60 pt-3">
+                      {rec.chief_complaint && (
+                        <Section title="Queixa / contexto">{rec.chief_complaint}</Section>
+                      )}
+                      {rec.clinical_observations && (
+                        <Section title="Observação clínica">{rec.clinical_observations}</Section>
+                      )}
+                      {rec.themes && rec.themes.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {rec.themes.filter(Boolean).map((t) => (
+                            <span key={t} className="text-[11px] px-2.5 py-0.5 rounded-full bg-lilac/40 text-foreground">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {rec.next_session_plan && (
+                        <Section title="Combinado / tarefa">{rec.next_session_plan}</Section>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setDetail(rec)}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                      >
+                        Abrir registro completo <ChevronRight className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+
 
       {/* Últimos registros de sessão */}
       <div>
