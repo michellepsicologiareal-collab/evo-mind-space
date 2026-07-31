@@ -2632,11 +2632,52 @@ const Agenda = () => {
           })()}
 
           <Tabs value={viewTab} onValueChange={setViewTab}>
-            <TabsList className="w-full sm:w-auto bg-transparent gap-1 p-0 mb-2">
-              <TabsTrigger value="month" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarDays className="h-3.5 w-3.5 mr-1.5 inline" /> Mês</TabsTrigger>
-              <TabsTrigger value="week" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarRange className="h-3.5 w-3.5 mr-1.5 inline" /> Semana</TabsTrigger>
-              <TabsTrigger value="day" className="flex-1 sm:flex-none rounded-[40px] font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarCheck className="h-3.5 w-3.5 mr-1.5 inline" /> Dia</TabsTrigger>
-            </TabsList>
+            {/* Cabeçalho unificado: visão + navegação de data + nova sessão */}
+            {(() => {
+              const goPrev = () => {
+                if (viewTab === "month") goToMonth(subMonths(currentMonth, 1));
+                else if (viewTab === "week") goToWeek(addWeeks(weekStart, -1));
+                else goToDate(addDays(selectedDate, -1));
+              };
+              const goNext = () => {
+                if (viewTab === "month") goToMonth(addMonths(currentMonth, 1));
+                else if (viewTab === "week") goToWeek(addWeeks(weekStart, 1));
+                else goToDate(addDays(selectedDate, 1));
+              };
+              const label = viewTab === "month"
+                ? format(currentMonth, "MMMM yyyy", { locale: ptBR })
+                : viewTab === "week"
+                  ? `${format(weekStart, "dd/MM")} — ${format(addDays(weekStart, 6), "dd/MM")}`
+                  : format(selectedDate, "EEE, dd 'de' MMM 'de' yyyy", { locale: ptBR });
+
+              return (
+                <div className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl bg-card border border-border shadow-card px-2.5 py-2">
+                  <TabsList className="bg-muted/60 gap-0.5 p-0.5 h-8 rounded-[40px] shrink-0">
+                    <TabsTrigger value="day" className="h-7 px-2.5 rounded-[40px] text-xs font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarCheck className="h-3.5 w-3.5 mr-1 inline" /> Dia</TabsTrigger>
+                    <TabsTrigger value="week" className="h-7 px-2.5 rounded-[40px] text-xs font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarRange className="h-3.5 w-3.5 mr-1 inline" /> Semana</TabsTrigger>
+                    <TabsTrigger value="month" className="h-7 px-2.5 rounded-[40px] text-xs font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarDays className="h-3.5 w-3.5 mr-1 inline" /> Mês</TabsTrigger>
+                  </TabsList>
+
+                  <div className="flex items-center gap-1 min-w-0 flex-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Anterior" onClick={goPrev}>
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <p className="font-display text-sm font-semibold capitalize truncate min-w-0">{label}</p>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Próximo" onClick={goNext}>
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-primary hover:bg-[rgba(150,117,206,0.12)] hover:text-primary shrink-0" onClick={() => goToDate(new Date())}>
+                      Hoje
+                    </Button>
+                  </div>
+
+                  <Button variant="accent" size="sm" className="h-8 rounded-[40px] font-display font-semibold shrink-0" onClick={() => openNew(selectedDate)}>
+                    <Plus className="h-3.5 w-3.5" /> Nova sessão
+                  </Button>
+                </div>
+              );
+            })()}
+
 
             {/* ── MONTH VIEW ── */}
             <TabsContent value="month">
