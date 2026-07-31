@@ -58,15 +58,19 @@ interface SuperviseeRow {
   patients: PatientListItem[];
 }
 
-interface SessionSummary {
-  id: string;
-  scheduled_at: string;
-  status: string;
-  notes: string | null;
+interface ClinicalRecord {
+  session_date: string;
+  session_number: number | null;
+  modality: string | null;
+  themes: string[] | null;
+  chief_complaint: string | null;
+  clinical_observations: string | null;
+  next_session_plan: string | null;
+  engagement: number | null;
+  risk_indicator: string | null;
 }
 
 interface ProgressEntry {
-  id: string;
   recorded_at: string;
   mood_score: number | null;
   note: string | null;
@@ -76,6 +80,31 @@ interface ProgressEntry {
   clinical_observation: string | null;
   attention_flag: "not_assessed" | "none" | "watch" | "urgent" | null;
   data_model: "legacy_unclassified" | "v2_structured" | null;
+  themes: string[] | null;
+  engagement: number | null;
+}
+
+interface ClinicalOverview {
+  code: string | null;
+  is_active: boolean | null;
+  notes: string | null;
+  chief_complaint: string | null;
+  treatment_plan: string | null;
+  last_session_at: string | null;
+  next_session_at: string | null;
+  formulation: {
+    environment: string | null;
+    thoughts: string | null;
+    emotions: string | null;
+    behaviors: string | null;
+    physical_reactions: string | null;
+    core_beliefs: string | null;
+    treatment_goals: unknown;
+    ai_summary: string | null;
+    updated_at: string | null;
+  } | null;
+  records: ClinicalRecord[];
+  progress: ProgressEntry[];
 }
 
 const Supervision = () => {
@@ -90,46 +119,30 @@ const Supervision = () => {
   const [tabFilter, setTabFilter] = useState<Record<string, "active" | "inactive" | "all">>({});
   const [selectedSupervisee, setSelectedSupervisee] = useState<string>("all");
   const [selectedPatientItem, setSelectedPatientItem] = useState<PatientListItem | null>(null);
-  const [selectedPatient, setSelectedPatient] = useState<PatientDetail | null>(null);
-  const [recentSessions, setRecentSessions] = useState<SessionSummary[]>([]);
-  const [latestProgress, setLatestProgress] = useState<ProgressEntry | null>(null);
+  const [clinical, setClinical] = useState<ClinicalOverview | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
   const openPatientDetail = async (item: PatientListItem) => {
     setSelectedPatientItem(item);
-    setSelectedPatient(null);
+    setClinical(null);
     setDetailLoading(true);
-    setRecentSessions([]);
-    setLatestProgress(null);
 
-    const [patRes, sRes, pRes] = await Promise.all([
-      (supabase as any)
-        .rpc("get_supervised_patient_overview", { _patient_id: item.id })
-        .maybeSingle(),
-      supabase
-        .from("sessions")
-        .select("id, scheduled_at, status, notes")
-        .eq("patient_id", item.id)
-        .order("scheduled_at", { ascending: false })
-        .limit(5),
-      (supabase as any)
-        .from("patient_progress")
-        .select("id, recorded_at, mood_score, note, wellbeing_score, wellbeing_source, patient_context, clinical_observation, attention_flag, data_model")
-        .eq("patient_id", item.id)
-        .order("recorded_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-    ]);
+    const { data, error } = await (supabase as any).rpc("get_supervised_patient_clinical", {
+      _patient_id: item.id,
+    });
 
-    setSelectedPatient(patRes.data as PatientDetail | null);
-    setRecentSessions((sRes.data as SessionSummary[]) ?? []);
-    setLatestProgress((pRes.data as ProgressEntry | null) ?? null);
+    if (error) {
+      toast.error("Não foi possível carregar os dados clínicos");
+    } else {
+      setClinical(data as ClinicalOverview);
+    }
     setDetailLoading(false);
 
     if (item.user_id) {
       logSupervisionAccess("patient", item.id, item.user_id, item.id);
     }
   };
+
 
   const load = async () => {
     if (!user) return;
