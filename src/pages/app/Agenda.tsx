@@ -1877,21 +1877,53 @@ const Agenda = () => {
       </>
     );
 
+    const accentClass = isSupervisionCard
+      ? "before:bg-serene"
+      : s.status === "cancelled" ? "before:bg-destructive/70"
+        : s.status === "no_show" ? "before:bg-amber-500"
+          : s.status === "rescheduled" ? "before:bg-sky-500"
+            : s.status === "completed" ? "before:bg-primary"
+              : s.status === "confirmed" ? "before:bg-emerald-500"
+                : "before:bg-border";
+
+    const modalityOnline = (s as any).modality === "online";
+
     return (
       <div
         onClick={() => openEdit(s)}
+        title={isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
         className={cn(
-          "rounded-xl border p-3 group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/20",
-          isSupervisionCard ? "bg-serene/10 border-serene/40"
-            : s.status === "confirmed" ? "bg-background border-[rgba(150,117,206,0.15)]"
-              : "bg-background border-border"
+          "relative overflow-hidden rounded-xl border border-border bg-card p-3 pl-4 group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/15",
+          "before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-['']",
+          accentClass
         )}
       >
-        <div className="flex items-start justify-between gap-1">
-          <div className="flex items-center gap-1.5 min-w-0">
-            {s.status === "confirmed" && <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />}
-            {isSupervisionCard && <GraduationCap className="h-3.5 w-3.5 text-serene shrink-0" />}
-            <p className="font-display text-sm text-primary">{format(new Date(s.scheduled_at), "HH:mm")}</p>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-wrap">
+            <p className="font-display text-sm font-semibold text-foreground">{format(new Date(s.scheduled_at), "HH:mm")}</p>
+            <span className="text-[11px] font-medium text-foreground/70">
+              {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
+            </span>
+            <span className="text-border">·</span>
+            <span className="inline-flex items-center gap-1 text-[11px] text-foreground/70" title={modalityOnline ? "Atendimento online" : "Atendimento presencial"}>
+              {modalityOnline ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+              {modalityOnline ? "Online" : "Presencial"}
+            </span>
+            {!isSupervisionCard && s.price != null && (
+              <>
+                <span className="text-border">·</span>
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 text-[11px] font-medium",
+                    s.payment_status === "paid" ? "text-emerald-700" : "text-amber-700"
+                  )}
+                  title={`Pagamento ${paymentStatusLabel[s.payment_status].toLowerCase()} · R$ ${Number(s.price).toFixed(2)}`}
+                >
+                  <span className={cn("h-1.5 w-1.5 rounded-full", s.payment_status === "paid" ? "bg-emerald-500" : "bg-amber-500")} />
+                  {paymentStatusLabel[s.payment_status]} · R$ {Number(s.price).toFixed(2)}
+                </span>
+              </>
+            )}
           </div>
           {isMobile ? (
             <>
@@ -1946,7 +1978,7 @@ const Agenda = () => {
             </DropdownMenu>
           )}
         </div>
-        <div className="mt-1 min-w-0">
+        <div className="mt-1.5 min-w-0">
           {isSupervisionCard ? (
             <p className={cn("text-foreground", compact ? "text-xs" : "text-sm font-medium")}>
               Supervisão
@@ -1954,7 +1986,7 @@ const Agenda = () => {
             </p>
           ) : s.patient_id && s.patient_name ? (
             <>
-              <p className={cn("text-left font-display font-semibold text-foreground hover:text-primary hover:underline transition-colors cursor-pointer", compact ? "text-xs leading-snug break-words" : "text-sm truncate")}
+              <p className={cn("text-left font-display font-semibold text-foreground hover:text-primary hover:underline transition-colors cursor-pointer", compact ? "text-xs leading-snug break-words" : "text-base truncate")}
                  onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}>
                 {s.patient_name}
               </p>
@@ -1963,7 +1995,7 @@ const Agenda = () => {
                   ? services.find(sv => sv.id === s.service_id)?.name
                   : "Atendimento clínico";
                 return svcName ? (
-                  <p className={cn("text-muted-foreground", compact ? "text-[10px]" : "text-xs")}>{svcName}</p>
+                  <p className={cn("text-foreground/60", compact ? "text-[10px]" : "text-xs")}>{svcName}</p>
                 ) : null;
               })()}
             </>
@@ -1976,75 +2008,39 @@ const Agenda = () => {
             {sessionSummary}
           </p>
         )}
+        {/* Sinalizadores discretos (ícones com tooltip) */}
         {!compact && (
-          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            <span className={cn(PILL_BASE, isSupervisionCard ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
-              {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
-            </span>
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
             {registroPendente && (
-              <span className={cn(PILL_BASE, "bg-amber-100 text-amber-800 border-amber-300 animate-pulse")}>
-                <AlertCircle className="h-3 w-3 mr-1" /> Registro pendente
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700" title="Sessão realizada sem registro clínico">
+                <AlertCircle className="h-3.5 w-3.5" /> Registro pendente
               </span>
             )}
             {registroFeito && (
-              <span className={cn(PILL_BASE, "bg-muted text-muted-foreground border-border")}>
-                <Check className="h-3 w-3 mr-1" /> Registro feito
+              <span className="inline-flex items-center gap-1 text-[11px] text-foreground/60" title="Registro clínico concluído">
+                <Check className="h-3.5 w-3.5" /> Registro feito
               </span>
             )}
-            {(s as any).modality === "online" ? (
-              <span className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                <Video className="h-2.5 w-2.5" /> Online
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                <MapPin className="h-2.5 w-2.5" /> Presencial
-              </span>
-            )}
-            {(s as any).modality === "online" && (s as any).meeting_link && (
-              <a href={(s as any).meeting_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
-                <Link2 className="h-2.5 w-2.5" /> Entrar
+            {modalityOnline && (s as any).meeting_link && (
+              <a href={(s as any).meeting_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline" title="Entrar na sala online">
+                <Link2 className="h-3.5 w-3.5" /> Entrar
               </a>
             )}
-            {!isSupervisionCard && s.price != null && (
-              <span className={cn(PILL_BASE, paymentStatusClass[s.payment_status])}>
-                {paymentStatusLabel[s.payment_status]}
+            {s.confirmation_sent_at && (
+              <span className="text-foreground/50" title={`Lembrete enviado em ${format(new Date(s.confirmation_sent_at), "dd/MM 'às' HH:mm")}`} aria-label="Lembrete enviado">
+                <Bell className="h-3.5 w-3.5" />
               </span>
-            )}
-            {s.price != null && (
-              <span className="text-[10px] text-muted-foreground">R$ {Number(s.price).toFixed(2)}</span>
             )}
             {s.billing_sent_at && (
-              <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
-                💸 Cobrança enviada {format(new Date(s.billing_sent_at), "dd/MM")}
+              <span className="text-green-600" title={`Cobrança enviada em ${format(new Date(s.billing_sent_at), "dd/MM 'às' HH:mm")}`} aria-label="Cobrança enviada">
+                <DollarSign className="h-3.5 w-3.5" />
               </span>
-            )}
-            {s.confirmation_sent_at && (
-              <span
-                className="lilac-comm-badge inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shadow-sm animate-fade-up"
-                title={`Lembrete enviado em ${format(new Date(s.confirmation_sent_at), "dd/MM 'às' HH:mm")}`}
-              >
-                <Bell className="h-3 w-3" /> Lembrete enviado · {format(new Date(s.confirmation_sent_at), "dd/MM HH:mm")}
-              </span>
-            )}
-            {!isSupervisionCard && s.patient_id && (
-              <Link
-                to={`/app/plano-tratamento?patient=${s.patient_id}`}
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                aria-label={`Abrir plano de tratamento de ${s.patient_name || "paciente"}`}
-              >
-                <ClipboardList className="h-3 w-3" /> Plano de tratamento
-              </Link>
             )}
             {homeworkSentAt && (
-              <span
-                className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm"
-                title={`Plano entre sessões enviado em ${format(new Date(homeworkSentAt), "dd/MM 'às' HH:mm")}`}
-              >
-                <ClipboardList className="h-3 w-3" /> Plano enviado · {format(new Date(homeworkSentAt), "dd/MM HH:mm")}
+              <span className="text-emerald-600" title={`Plano entre sessões enviado em ${format(new Date(homeworkSentAt), "dd/MM 'às' HH:mm")}`} aria-label="Plano entre sessões enviado">
+                <ClipboardList className="h-3.5 w-3.5" />
               </span>
             )}
-
           </div>
         )}
 
@@ -2058,36 +2054,47 @@ const Agenda = () => {
           </div>
         )}
 
-        {/* Ações rápidas */}
+        {/* Ação principal + grupo de ações secundárias */}
         {!compact && !isSupervisionCard && s.patient_id && (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            <button
-              onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}
-              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-muted text-foreground/80 hover:bg-muted/70 border border-border transition-colors"
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              className="h-8 rounded-lg px-3 text-xs font-semibold gap-1.5"
+              onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
             >
-              <DollarSign className="h-3 w-3" /> Financeiro
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); setHistoryOpen(true); }}
-              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-muted text-foreground/80 hover:bg-muted/70 border border-border transition-colors"
-            >
-              <ClipboardList className="h-3 w-3" /> Sessões
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); void openHomeworkForSession(s); }}
-              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-[#3D5C35]/10 text-[#3D5C35] hover:bg-[#3D5C35]/20 border border-[#3D5C35]/20 transition-colors"
-            >
-              <ClipboardList className="h-3 w-3" /> Plano entre sessões
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); openEdit(s); }}
-              className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-colors"
-            >
-              <Pencil className="h-3 w-3" /> Registrar sessão
-            </button>
-
+              <Pencil className="h-3.5 w-3.5" /> Registrar sessão
+            </Button>
+            <div className="inline-flex overflow-hidden rounded-lg border border-border divide-x divide-border">
+              <button
+                onClick={(e) => { e.stopPropagation(); setHistoryOpen(true); }}
+                className="inline-flex items-center gap-1.5 px-2.5 h-8 text-[11px] font-medium text-foreground/75 bg-card hover:bg-muted transition-colors"
+              >
+                <ClipboardList className="h-3.5 w-3.5" /> Sessões
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}
+                className="inline-flex items-center gap-1.5 px-2.5 h-8 text-[11px] font-medium text-foreground/75 bg-card hover:bg-muted transition-colors"
+              >
+                <DollarSign className="h-3.5 w-3.5" /> Financeiro
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); void openHomeworkForSession(s); }}
+                className="inline-flex items-center gap-1.5 px-2.5 h-8 text-[11px] font-medium text-foreground/75 bg-card hover:bg-muted transition-colors"
+              >
+                <ClipboardList className="h-3.5 w-3.5" /> Plano entre sessões
+              </button>
+              <Link
+                to={`/app/plano-tratamento?patient=${s.patient_id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1.5 px-2.5 h-8 text-[11px] font-medium text-foreground/75 bg-card hover:bg-muted transition-colors"
+                aria-label={`Abrir plano de tratamento de ${s.patient_name || "paciente"}`}
+              >
+                <Target className="h-3.5 w-3.5" /> Plano de tratamento
+              </Link>
+            </div>
           </div>
         )}
+
         {!isSupervisionCard && s.patient_id && (
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
             <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
