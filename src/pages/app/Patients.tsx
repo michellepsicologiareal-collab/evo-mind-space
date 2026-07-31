@@ -681,6 +681,15 @@ const Patients = () => {
     });
     setSessionInfo(info);
 
+    // Última sessão realizada (completed) por paciente
+    const doneMap: Record<string, string> = {};
+    (historyRes.data ?? []).forEach((s: any) => {
+      if (!s.patient_id || !s.scheduled_at) return;
+      if (s.status !== "completed") return;
+      if (!doneMap[s.patient_id]) doneMap[s.patient_id] = s.scheduled_at;
+    });
+    setLastCompleted(doneMap);
+
     // Package progress (from notes pattern "Plano N sessões (i/N)"), payment counters and Receita Saúde pendings
     const pkg: Record<string, { total: number; current: number; latestTs: number }> = {};
     const pay: Record<string, { pending: number; paid: number; total: number }> = {};
