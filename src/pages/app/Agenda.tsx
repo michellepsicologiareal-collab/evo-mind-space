@@ -1341,11 +1341,14 @@ const Agenda = () => {
     const isOnline = ((s as any).modality || "").toLowerCase() === "online";
     const patient = patients.find((p) => p.id === s.patient_id);
     let extra = "";
+    let contentType: "meeting_link" | "clinic_address" | "none" = "none";
+    let contentValue = "";
     if (isOnline) {
       const link = (s as any).meeting_link?.trim();
       extra = link
         ? `\n\n💻 Sessão online. Link da chamada:\n${link}`
         : "\n\n💻 Sessão online. O link da chamada será enviado em breve.";
+      if (link) { contentType = "meeting_link"; contentValue = link; }
     } else {
       // Endereço específico do paciente tem prioridade sobre o endereço padrão da clínica
       const patientAddress = (patient?.clinic_address || "").trim();
@@ -1355,6 +1358,7 @@ const Agenda = () => {
         ? `\n\n📍 Sessão presencial. Endereço:\n${local}`
         : "\n\n📍 Sessão presencial.";
       if (note) extra += `\n\n${note}`;
+      if (local) { contentType = "clinic_address"; contentValue = local; }
     }
     const message = `Olá, por favor, entre para confirmar sua sessão de terapia🤎\n\n${url}${extra}`;
 
@@ -1367,8 +1371,11 @@ const Agenda = () => {
 
     setConfirmPreview({
       sessionId: s.id,
+      patientId: s.patient_id || null,
       patientName: patient?.full_name || "Paciente",
       modality: isOnline ? "online" : "presencial",
+      contentType,
+      contentValue,
       phone: phoneNumber,
       message,
       original: message,
@@ -1378,6 +1385,22 @@ const Agenda = () => {
   const markConfirmationSent = async (sessionId: string) => {
     await supabase.from("sessions").update({ confirmation_sent_at: new Date().toISOString() }).eq("id", sessionId);
     load(true);
+  };
+
+  // Registra no histórico do paciente o que foi enviado
+  const logConfirmationEvent = async (channel: "whatsapp" | "clipboard") => {
+    if (!confirmPreview) return;
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) return;
+    await supabase.from("session_confirmation_events").insert({
+      user_id: auth.user.id,
+      patient_id: confirmPreview.patientId,
+      session_id: confirmPreview.sessionId,
+      modality: confirmPreview.modality,
+      content_type: confirmPreview.contentType,
+      content: confirmPreview.contentValue || null,
+      channel,
+    });
   };
 
   const sendConfirmationPreview = async () => {
@@ -1391,17 +1414,21 @@ const Agenda = () => {
       await navigator.clipboard.writeText(message);
       toast.success("Lembrete copiado (paciente sem telefone cadastrado)");
     }
+    await logConfirmationEvent(phone ? "whatsapp" : "clipboard");
     setConfirmPreview(null);
     await markConfirmationSent(sessionId);
   };
 
   const copyConfirmationPreview = async () => {
     if (!confirmPreview) return;
+    const sessionId = confirmPreview.sessionId;
     await navigator.clipboard.writeText(confirmPreview.message);
     toast.success("Mensagem copiada");
+    await logConfirmationEvent("clipboard");
     setConfirmPreview(null);
-    await markConfirmationSent(confirmPreview.sessionId);
+    await markConfirmationSent(sessionId);
   };
+
 
 
   const getGroupId = (notes: string | null): string | null => {
