@@ -2485,62 +2485,62 @@ const Agenda = () => {
             </div>
           )}
 
-          {/* Service filter */}
-           <div className="flex min-w-0 flex-wrap items-center gap-2 pb-1 sm:flex-nowrap sm:overflow-x-auto sm:no-scrollbar">
-            <button
-              onClick={() => setServiceFilter("all")}
-              className={cn(
-                 "max-w-full px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border break-words text-left sm:shrink-0 sm:whitespace-nowrap",
-                serviceFilter === "all"
-                  ? "bg-accent text-accent-foreground border-accent"
-                  : "bg-background text-muted-foreground border-border hover:bg-muted"
-              )}
-            >
-              Todos
-            </button>
-            {services.map((svc) => (
+          {/* Service filter — rolagem horizontal em uma linha */}
+          <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar pb-1">
               <button
-                key={svc.id}
-                onClick={() => setServiceFilter(svc.id)}
+                onClick={() => setServiceFilter("all")}
                 className={cn(
-                   "max-w-full px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border break-words text-left sm:shrink-0 sm:whitespace-nowrap",
-                  serviceFilter === svc.id
+                  "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                  serviceFilter === "all"
                     ? "bg-accent text-accent-foreground border-accent"
                     : "bg-background text-muted-foreground border-border hover:bg-muted"
                 )}
               >
-                {svc.name}
+                Todos
               </button>
-            ))}
+              {services.map((svc) => (
+                <button
+                  key={svc.id}
+                  onClick={() => setServiceFilter(svc.id)}
+                  className={cn(
+                    "shrink-0 max-w-[60vw] truncate whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border sm:max-w-none",
+                    serviceFilter === svc.id
+                      ? "bg-accent text-accent-foreground border-accent"
+                      : "bg-background text-muted-foreground border-border hover:bg-muted"
+                  )}
+                >
+                  {svc.name}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Patient filter */}
-          {patients.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Select value={patientFilter} onValueChange={setPatientFilter}>
-                <SelectTrigger className="h-9 rounded-full text-xs font-display font-semibold w-full sm:w-72">
-                  <SelectValue placeholder="Filtrar por paciente" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os pacientes</SelectItem>
-                  {patients.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {patientFilter !== "all" && (
-                <button
-                  onClick={() => setPatientFilter("all")}
-                  className="shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold border border-border text-muted-foreground hover:bg-muted"
-                >
-                  Limpar
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Month selector */}
-          <div className="grid grid-cols-[minmax(0,1fr)_6rem] items-center gap-2 sm:flex sm:flex-wrap">
+          {/* Filtros: paciente + mês/ano */}
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+            {patients.length > 0 && (
+              <div className="col-span-2 flex min-w-0 items-center gap-2">
+                <Select value={patientFilter} onValueChange={setPatientFilter}>
+                  <SelectTrigger className="h-9 min-w-0 flex-1 rounded-full text-xs font-display font-semibold sm:w-72 sm:flex-none">
+                    <SelectValue placeholder="Filtrar por paciente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os pacientes</SelectItem>
+                    {patients.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {patientFilter !== "all" && (
+                  <button
+                    onClick={() => setPatientFilter("all")}
+                    className="shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold border border-border text-muted-foreground hover:bg-muted"
+                  >
+                    Limpar
+                  </button>
+                )}
+              </div>
+            )}
             <Select
               value={String(currentMonth.getMonth() + 1)}
               onValueChange={(v) => {
@@ -2548,9 +2548,9 @@ const Agenda = () => {
                 goToMonth(newMonth);
               }}
             >
-                <SelectTrigger disabled={loading} className="h-9 w-full rounded-full text-xs font-display font-semibold sm:w-40">
-                  <SelectValue placeholder="Mês" />
-                </SelectTrigger>
+              <SelectTrigger disabled={loading} className="h-9 w-full min-w-0 rounded-full text-xs font-display font-semibold sm:w-40">
+                <SelectValue placeholder="Mês" />
+              </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 12 }, (_, i) => (
                   <SelectItem key={i + 1} value={String(i + 1)}>
@@ -2566,9 +2566,9 @@ const Agenda = () => {
                 goToMonth(newMonth);
               }}
             >
-                <SelectTrigger disabled={loading} className="h-9 w-full rounded-full text-xs font-display font-semibold sm:w-24">
-                  <SelectValue placeholder="Ano" />
-                </SelectTrigger>
+              <SelectTrigger disabled={loading} className="h-9 w-full min-w-0 rounded-full text-xs font-display font-semibold sm:w-24">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 11 }, (_, i) => {
                   const year = new Date().getFullYear() - 5 + i;
@@ -2577,6 +2577,7 @@ const Agenda = () => {
               </SelectContent>
             </Select>
           </div>
+
 
           {/* ── Resumo do dia ── */}
           {(() => {
