@@ -3,7 +3,8 @@ import { logClinicalAccess } from "@/utils/auditLog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight, Link2, Copy, MessageCircle, User } from "lucide-react";
+import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight, Link2, Copy, MessageCircle, User, Ban } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,16 @@ interface TccRecord {
   cognitive_distortion: string | null;
   rational_response: string | null;
   filled_by?: string | null;
+  created_at: string;
+}
+
+interface RpdInvite {
+  id: string;
+  token: string;
+  password: string | null;
+  expires_at: string;
+  revoked_at: string | null;
+  submissions_count: number;
   created_at: string;
 }
 
@@ -64,8 +75,12 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkPassword, setLinkPassword] = useState("");
+  const [linkDays, setLinkDays] = useState("30");
   const [publicLink, setPublicLink] = useState<string | null>(null);
   const [patientInfo, setPatientInfo] = useState<{ full_name: string; phone: string | null } | null>(null);
+  const [invites, setInvites] = useState<RpdInvite[]>([]);
+  const [invitesLoading, setInvitesLoading] = useState(false);
+  const [revoking, setRevoking] = useState<string | null>(null);
 
   const load = async () => {
     const { data } = await (supabase as any)
@@ -83,10 +98,24 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
     load();
   }, [patientId]);
 
+  const loadInvites = async () => {
+    setInvitesLoading(true);
+    const { data } = await (supabase as any)
+      .from("rpd_invites")
+      .select("id, token, password, expires_at, revoked_at, submissions_count, created_at")
+      .eq("patient_id", patientId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setInvites(data ?? []);
+    setInvitesLoading(false);
+  };
+
   const openLinkDialog = async () => {
     setLinkOpen(true);
     setPublicLink(null);
     setLinkPassword("");
+    setLinkDays("30");
+    loadInvites();
     const { data } = await (supabase as any)
       .from("patients")
       .select("full_name, phone")
@@ -98,12 +127,15 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const generateLink = async () => {
     if (!user) return;
     setLinkLoading(true);
+    const days = Number(linkDays) || 30;
+    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
     const { data, error } = await (supabase as any)
       .from("rpd_invites")
       .insert({
         user_id: user.id,
         patient_id: patientId,
         password: linkPassword.trim() || null,
+        expires_at: expiresAt,
       })
       .select("token")
       .single();
@@ -113,8 +145,23 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       return;
     }
     setPublicLink(`${window.location.origin}/rpd/${data.token}`);
-    toast.success("Link gerado");
+    toast.success(`Link gerado · válido por ${days} dias`);
+    loadInvites();
   };
+
+  const revokeInvite = async (id: string, token: string) => {
+    setRevoking(id);
+    const { error } = await (supabase as any)
+      .from("rpd_invites")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("id", id);
+    setRevoking(null);
+    if (error) return toast.error("Não foi possível revogar o link.");
+    toast.success("Acesso revogado");
+    if (publicLink?.endsWith(token)) setPublicLink(null);
+    loadInvites();
+  };
+
 
   const copyLink = async () => {
     if (!publicLink) return;
@@ -365,7 +412,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       </Dialog>
 
       <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2" style={{ color: INK }}>
               <Link2 className="h-5 w-5" style={{ color: G }} /> Link do RPD para o paciente
@@ -377,6 +424,20 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
 
           {!publicLink ? (
             <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label>Validade do link</Label>
+                <Select value={linkDays} onValueChange={setLinkDays}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7">7 dias</SelectItem>
+                    <SelectItem value="15">15 dias</SelectItem>
+                    <SelectItem value="30">30 dias</SelectItem>
+                    <SelectItem value="60">60 dias</SelectItem>
+                    <SelectItem value="90">90 dias</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Depois desse prazo o link deixa de funcionar automaticamente.</p>
+              </div>
               <div className="space-y-1.5">
                 <Label>Senha (opcional)</Label>
                 <Input
@@ -413,9 +474,56 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                   <MessageCircle className="h-4 w-4" /> Enviar por WhatsApp
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">O link vale por 90 dias e aceita vários preenchimentos.</p>
+              <p className="text-xs text-muted-foreground">
+                O link vale por {linkDays} dias e aceita vários preenchimentos. Você pode revogar o acesso a qualquer momento abaixo.
+              </p>
             </div>
           )}
+
+          {/* Links gerados */}
+          <div className="space-y-2 border-t pt-3" style={{ borderColor: "#F0E9D8" }}>
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: G }}>Links gerados</p>
+            {invitesLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" style={{ color: G }} />
+            ) : invites.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Nenhum link gerado ainda.</p>
+            ) : (
+              <ul className="space-y-2">
+                {invites.map((inv) => {
+                  const expired = new Date(inv.expires_at) <= new Date();
+                  const revoked = !!inv.revoked_at;
+                  const active = !expired && !revoked;
+                  return (
+                    <li key={inv.id} className="flex items-center justify-between gap-2 rounded-lg border p-2.5" style={{ borderColor: "#EEE7D6" }}>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium" style={{ color: INK }}>
+                          {revoked ? "Revogado" : expired ? "Expirado" : `Válido até ${format(new Date(inv.expires_at), "dd/MM/yyyy", { locale: ptBR })}`}
+                        </p>
+                        <p className="text-[11px]" style={{ color: MUTED }}>
+                          Criado em {format(new Date(inv.created_at), "dd/MM/yyyy", { locale: ptBR })} · {inv.submissions_count} envio{inv.submissions_count === 1 ? "" : "s"}
+                          {inv.password ? " · com senha" : ""}
+                        </p>
+                      </div>
+                      {active ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive shrink-0"
+                          disabled={revoking === inv.id}
+                          onClick={() => revokeInvite(inv.id, inv.token)}
+                        >
+                          {revoking === inv.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />} Revogar
+                        </Button>
+                      ) : (
+                        <span className="text-[11px] shrink-0" style={{ color: MUTED }}>inativo</span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
 
           <DialogFooter>
             <Button variant="ghost" onClick={() => { setLinkOpen(false); preserveScroll(() => load()); }} className="w-full sm:w-auto">
