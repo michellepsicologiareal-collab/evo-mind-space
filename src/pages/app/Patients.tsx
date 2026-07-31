@@ -1567,11 +1567,14 @@ const Patients = () => {
                                 background: C.card,
                                 border: `1px solid ${C.border}`,
                                 color: C.muted,
+                                paddingLeft: 10,
+                                paddingRight: 10,
+                                width: "auto",
                               }}
                               aria-label="Ações do paciente"
                               title="Ações do paciente"
                             >
-                              <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+                              <span className="text-xs font-medium">Ações</span>
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
