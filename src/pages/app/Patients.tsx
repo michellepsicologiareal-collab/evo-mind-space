@@ -1882,13 +1882,13 @@ const Patients = () => {
                     <DropdownMenuTrigger asChild>
                       <button
                         className="flex items-center justify-center transition-colors"
-                        style={{ width: 28, height: 28, borderRadius: 6, color: "hsl(var(--muted-foreground))" }}
+                        style={{ height: 28, paddingLeft: 10, paddingRight: 10, borderRadius: 6, color: "hsl(var(--muted-foreground))" }}
                         onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; e.currentTarget.style.color = "hsl(var(--primary))"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
                         aria-label="Ações do paciente"
                         title="Ações do paciente"
                       >
-                        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                        <span className="text-xs font-medium">Ações</span>
                       </button>
                     </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
