@@ -435,6 +435,11 @@ const Patients = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPatient, selectedTab]);
 
+  // Ao abrir/fechar a ficha em página completa, volta ao topo da área de conteúdo.
+  useEffect(() => {
+    if (selectedPatient) window.scrollTo({ top: 0, behavior: "auto" });
+  }, [selectedPatient?.id]);
+
   // Rolar e destacar o bloco Receita Saúde ao abrir com focus.
   useEffect(() => {
     if (!focusReceitaSaude || !selectedPatient || selectedTab !== "finance") return;
