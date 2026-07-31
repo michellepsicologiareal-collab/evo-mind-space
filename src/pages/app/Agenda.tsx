@@ -1992,7 +1992,7 @@ const Agenda = () => {
             </DropdownMenu>
           )}
         </div>
-        <div className="mt-1.5 min-w-0">
+        <div className={cn("min-w-0", compact ? "mt-0.5 flex items-center gap-2" : "mt-1.5")}>
           {isSupervisionCard ? (
             <p className={cn("text-foreground", compact ? "text-xs" : "text-sm font-medium")}>
               Supervisão
@@ -2000,21 +2000,57 @@ const Agenda = () => {
             </p>
           ) : s.patient_id && s.patient_name ? (
             <>
-              <p className={cn("text-left font-display font-semibold text-foreground hover:text-primary hover:underline transition-colors cursor-pointer", compact ? "text-xs leading-snug break-words" : "text-base truncate")}
+              <p className={cn("text-left font-display font-semibold text-foreground hover:text-primary hover:underline transition-colors cursor-pointer min-w-0", compact ? "text-xs leading-snug truncate" : "text-base truncate")}
                  onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}>
                 {s.patient_name}
               </p>
               {(() => {
+                if (compact) return null;
                 const svcName = s.service_id
                   ? services.find(sv => sv.id === s.service_id)?.name
                   : "Atendimento clínico";
                 return svcName ? (
-                  <p className={cn("text-foreground/60", compact ? "text-[10px]" : "text-xs")}>{svcName}</p>
+                  <p className="text-xs text-foreground/60">{svcName}</p>
                 ) : null;
               })()}
             </>
           ) : (
             <p className={cn("text-foreground", compact ? "text-xs" : "text-sm font-medium")}>Paciente</p>
+          )}
+          {compact && (
+            <div className="ml-auto flex items-center gap-1.5 shrink-0">
+              {registroPendente && (
+                <span className="text-amber-600" title="Sessão realizada sem registro clínico" aria-label="Registro pendente">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                </span>
+              )}
+              {registroFeito && (
+                <span className="text-foreground/45" title="Registro clínico concluído" aria-label="Registro feito">
+                  <Check className="h-3.5 w-3.5" />
+                </span>
+              )}
+              {modalityOnline && (s as any).meeting_link && (
+                <a href={(s as any).meeting_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary" title="Entrar na sala online" aria-label="Entrar na sala online">
+                  <Link2 className="h-3.5 w-3.5" />
+                </a>
+              )}
+              {homeworkSentAt && (
+                <span className="text-emerald-600" title="Plano entre sessões enviado" aria-label="Plano entre sessões enviado">
+                  <ClipboardList className="h-3.5 w-3.5" />
+                </span>
+              )}
+              {!isSupervisionCard && s.patient_id && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-card text-foreground/70 hover:bg-muted transition-colors"
+                  title="Registrar sessão"
+                  aria-label="Registrar sessão"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+              )}
+            </div>
           )}
         </div>
         {!compact && sessionSummary && (
