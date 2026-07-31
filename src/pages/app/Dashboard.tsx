@@ -954,30 +954,38 @@ export default function Dashboard() {
             <h2 className="font-display text-xl font-semibold tracking-tight">
               Atenção necessária
             </h2>
-            <Card className="rounded-2xl border-border/60 divide-y divide-border/60">
+            <Card className="rounded-2xl border-border/60 divide-y divide-border/60 overflow-hidden">
               {PENDINGS.map((p) => (
                 <Link
                   key={p.label}
                   to={p.to}
-                  className="flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-muted/40 transition-colors focus:outline-none focus-visible:bg-muted/40"
+                  aria-label={`${p.label}: ${p.count}. Abrir lista filtrada`}
+                  className="group flex cursor-pointer items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-muted/50 active:bg-muted/70 focus:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40"
                 >
-                  <span className="flex items-center gap-3 text-sm text-foreground">
-                    <p.icon className="h-4 w-4 text-muted-foreground" />
-                    {p.label}
+                  <span className="flex min-w-0 items-center gap-3 text-sm text-foreground">
+                    <p.icon className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                    <span className="truncate group-hover:text-primary transition-colors">{p.label}</span>
                   </span>
-                  <span
-                    className={cn(
-                      "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-xs font-medium",
-                      p.count > 0
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted text-muted-foreground",
-                    )}
-                  >
-                    {p.count}
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    <span
+                      className={cn(
+                        "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-xs font-medium transition-colors",
+                        p.count > 0
+                          ? "bg-primary/10 text-primary group-hover:bg-primary/20"
+                          : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {p.count}
+                    </span>
+                    <ChevronRight
+                      aria-hidden="true"
+                      className="h-4 w-4 text-muted-foreground opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 group-focus-visible:opacity-100 group-focus-visible:translate-x-0 max-md:opacity-60 max-md:translate-x-0"
+                    />
                   </span>
                 </Link>
               ))}
             </Card>
+
           </div>
 
           {/* Semana */}
