@@ -1569,7 +1569,7 @@ const Patients = () => {
                                 color: C.muted,
                                 paddingLeft: 10,
                                 paddingRight: 10,
-                                width: "auto",
+                              
                               }}
                               aria-label="Ações do paciente"
                               title="Ações do paciente"
