@@ -170,6 +170,10 @@
     --sidebar-hover: 258 22% 14%;
     --sidebar-active: 262 65% 74% / 0.18;
     --sidebar-border: 258 18% 20%;
+    --nav-bg: 258 30% 9%;
+    --nav-fg: 258 30% 90%;
+    --nav-muted: 258 15% 62%;
+    --nav-border: 258 18% 20%;
 
     --text-secondary: 258 25% 80%;
     --text-muted: 258 15% 68%;
