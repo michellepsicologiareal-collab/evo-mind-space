@@ -1561,7 +1561,7 @@ const Patients = () => {
                               }}
                               className="flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--primary))]"
                               style={{
-                                width: 32,
+                                width: "auto",
                                 height: 32,
                                 borderRadius: 7,
                                 background: C.card,
