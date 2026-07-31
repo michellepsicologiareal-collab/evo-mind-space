@@ -412,8 +412,9 @@ export const HomeworkPlanForm = ({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="space-y-5">
-        <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-1">
+      <div className="space-y-5 min-w-0">
+        <div className="space-y-5 min-w-0 sm:max-h-[60vh] sm:overflow-y-auto sm:pr-1">
+
 
           {showPicker && (
             <div className="space-y-1.5">
