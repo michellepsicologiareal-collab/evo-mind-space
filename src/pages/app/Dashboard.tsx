@@ -38,6 +38,7 @@ import {
   FileText,
   CalendarX,
   CircleDollarSign,
+  ChevronRight,
   UserMinus,
   MoreHorizontal,
   CheckCircle2,
