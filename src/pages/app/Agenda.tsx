@@ -220,6 +220,8 @@ const Agenda = () => {
   const [pixKey, setPixKey] = useState("");
   const [psiName, setPsiName] = useState("");
   const [psiCrp, setPsiCrp] = useState("");
+  const [clinicName, setClinicName] = useState("");
+  const [clinicAddress, setClinicAddress] = useState("");
   const [viewTab, setViewTab] = useState<string>("day");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
@@ -827,10 +829,14 @@ const Agenda = () => {
   // Fetch pix key + gcal status + handle OAuth callback
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("pix_key, full_name, crp").eq("id", user.id).single().then(({ data }) => {
+    supabase.from("profiles").select("pix_key, full_name, crp, clinic_name").eq("id", user.id).single().then(({ data }) => {
       setPixKey(data?.pix_key || "");
       setPsiName(data?.full_name || "");
       setPsiCrp(data?.crp || "");
+      setClinicName((data as any)?.clinic_name || "");
+    });
+    supabase.from("contract_templates").select("professional_address").eq("user_id", user.id).limit(1).maybeSingle().then(({ data }) => {
+      setClinicAddress((data as any)?.professional_address || "");
     });
     loadGcalStatus();
 
@@ -1316,7 +1322,20 @@ const Agenda = () => {
       if (error) { toast.error("Erro ao gerar link"); return; }
     }
     const url = `${window.location.origin}/confirmar-sessao/${token}`;
-    const message = `Olá, por favor, entre para confirmar sua sessão de terapia🤎\n\n${url}`;
+    const isOnline = ((s as any).modality || "").toLowerCase() === "online";
+    let extra = "";
+    if (isOnline) {
+      const link = (s as any).meeting_link?.trim();
+      extra = link
+        ? `\n\n💻 Sessão online. Link da chamada:\n${link}`
+        : "\n\n💻 Sessão online. O link da chamada será enviado em breve.";
+    } else {
+      const local = [clinicName, clinicAddress].filter(Boolean).join(" — ");
+      extra = local
+        ? `\n\n📍 Sessão presencial. Endereço:\n${local}`
+        : "\n\n📍 Sessão presencial.";
+    }
+    const message = `Olá, por favor, entre para confirmar sua sessão de terapia🤎\n\n${url}${extra}`;
 
     // Open WhatsApp directly when we have the patient's phone, fall back to clipboard
     const patient = patients.find((p) => p.id === s.patient_id);
