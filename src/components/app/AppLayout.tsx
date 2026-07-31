@@ -152,6 +152,7 @@ export const AppLayout = () => {
   const sidebarSections: { label: string; routes: string[] }[] = [
     { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda"] },
     { label: "GESTÃO", routes: ["/app/financeiro", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
+    { label: "SUPERVISÃO", routes: ["/app/supervisao"] },
     { label: "CONFIGURAÇÕES", routes: ["/app/perfil"] },
   ];
 
