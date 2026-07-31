@@ -305,7 +305,13 @@ const Supervision = () => {
     );
   }
 
-  const activeShared = supervisees.reduce(
+  const visibleSupervisees =
+    selectedSupervisee === "all"
+      ? supervisees
+      : supervisees.filter((s) => s.id === selectedSupervisee);
+
+  const scopedShared = visibleSupervisees.reduce((s, r) => s + r.patients.length, 0);
+  const activeShared = visibleSupervisees.reduce(
     (s, r) => s + r.patients.filter((p) => p.is_active).length,
     0,
   );
@@ -313,14 +319,14 @@ const Supervision = () => {
   const kpis = [
     {
       kicker: "Supervisionandos",
-      value: supervisees.length,
-      hint: "profissionais vinculados",
+      value: visibleSupervisees.length,
+      hint: selectedSupervisee === "all" ? "profissionais vinculados" : "filtro aplicado",
       dot: "bg-primary",
       blob: "bg-primary/10",
     },
     {
       kicker: "Pacientes compartilhados",
-      value: totalShared,
+      value: scopedShared,
       hint: "visíveis somente leitura",
       dot: "bg-accent",
       blob: "bg-accent/10",
@@ -333,6 +339,7 @@ const Supervision = () => {
       blob: "bg-moss/10",
     },
   ];
+
 
   return (
     <div className="space-y-8 animate-fade-up max-w-5xl">
