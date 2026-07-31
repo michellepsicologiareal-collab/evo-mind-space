@@ -11,6 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+/** Estilos compartilhados: campos suaves, labels e ícones finos. */
+const FIELD = "border-transparent bg-muted/50 focus-visible:border-primary/40 focus-visible:bg-background";
+const LABEL = "flex items-center gap-1.5 text-xs font-medium text-foreground";
+const ICON = "h-4 w-4 text-primary";
 import {
   actionsSchema,
   normalizeActions,
