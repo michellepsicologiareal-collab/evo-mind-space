@@ -504,6 +504,8 @@ const Patients = () => {
   const [lastDates, setLastDates] = useState<{ mood: Record<string, string>; tcc: Record<string, string>; records: Record<string, string>; history: Record<string, string> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [attendance, setAttendance] = useState<Record<string, { total: number; attended: number; pct: number }>>({});
   const [sessionInfo, setSessionInfo] = useState<Record<string, { lastDate?: string; lastStatus?: string; nextDate?: string; nextStatus?: string }>>({});
+  // Última sessão efetivamente realizada por paciente (usado nos recortes do Painel)
+  const [lastCompleted, setLastCompleted] = useState<Record<string, string>>({});
   const [packageInfo, setPackageInfo] = useState<Record<string, { total: number; current: number }>>({});
   const [paymentInfo, setPaymentInfo] = useState<Record<string, { pending: number; paid: number; total: number }>>({});
   const [receitaSaudePending, setReceitaSaudePending] = useState<Record<string, number>>({});
