@@ -28,6 +28,8 @@ import { PageHeader } from "@/components/app/PageHeader";
 const profileSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(120),
   clinic_name: z.string().trim().max(120).optional().or(z.literal("")),
+  clinic_address: z.string().trim().max(300).optional().or(z.literal("")),
+  presencial_message: z.string().trim().max(500).optional().or(z.literal("")),
   crp: z.string().trim().max(40).optional().or(z.literal("")),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   specialty: z.string().trim().max(120).optional().or(z.literal("")),
