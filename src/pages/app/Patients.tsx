@@ -415,6 +415,36 @@ const Patients = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patients, searchParams]);
 
+  // ?filter= vindo do Painel (Atenção necessária) → aplica o recorte correspondente
+  useEffect(() => {
+    const f = searchParams.get("filter");
+    if (f === "sem-proxima") {
+      setOnlyNoNext(true);
+      setAttentionFilter("none");
+      setStatusFilter("active");
+      setFormulFilter("all");
+    } else if (f === "sem-formulacao") {
+      setAttentionFilter("sem-formulacao");
+      setOnlyNoNext(false);
+      setStatusFilter("active");
+      setFormulFilter("all");
+    } else if (f === "baixa-adesao") {
+      setAttentionFilter("baixa-adesao");
+      setOnlyNoNext(false);
+      setStatusFilter("active");
+      setFormulFilter("all");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const clearAttentionFilter = () => {
+    setAttentionFilter("none");
+    setOnlyNoNext(false);
+    const next = new URLSearchParams(searchParams);
+    next.delete("filter");
+    setSearchParams(next, { replace: true });
+  };
+
   // Estado → URL: reflete a ficha/aba abertas nos query params, para
   // preservar o contexto ao navegar para subtelas e retornar via "voltar".
   useEffect(() => {
