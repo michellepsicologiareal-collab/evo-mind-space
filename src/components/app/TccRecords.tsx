@@ -188,15 +188,27 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
           <p style={{ fontSize: 12, color: MUTED }}>Situação · Pensamento automático · Emoção · Comportamento · Distorção · Resposta racional</p>
         </div>
         {!readOnly && (
-          <Button
-            size="sm"
-            onClick={() => setOpen(true)}
-            className="w-full sm:w-auto shrink-0"
-            style={{ background: G, color: "#fff", fontWeight: 600 }}
-          >
-            <Plus className="h-4 w-4" /> Novo RPD
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={openLinkDialog}
+              className="w-full sm:w-auto"
+              style={{ borderColor: G_BORDER, color: G, fontWeight: 600 }}
+            >
+              <Link2 className="h-4 w-4" /> Enviar link ao paciente
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setOpen(true)}
+              className="w-full sm:w-auto"
+              style={{ background: G, color: "#fff", fontWeight: 600 }}
+            >
+              <Plus className="h-4 w-4" /> Novo RPD
+            </Button>
+          </div>
         )}
+
       </header>
 
       <div className="flex items-center gap-2">
