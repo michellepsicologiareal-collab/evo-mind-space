@@ -976,10 +976,18 @@ const Patients = () => {
       const THIRTY = 30 * 24 * 60 * 60 * 1000;
       return Date.now() - new Date(last).getTime() > THIRTY && !sessionInfo[p.id]?.nextDate;
     })
-    .filter((p) =>
-      p.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      (p.email ?? "").toLowerCase().includes(search.toLowerCase())
-    );
+    .filter((p) => {
+      const q = search.trim().toLowerCase();
+      if (!q) return true;
+      const digits = q.replace(/\D/g, "");
+      const phone = (p.phone ?? "").replace(/\D/g, "");
+      return (
+        p.full_name.toLowerCase().includes(q) ||
+        (p.email ?? "").toLowerCase().includes(q) ||
+        (digits.length >= 3 && phone.includes(digits))
+      );
+    });
+
   // Formulation counts consider only active patients (com/sem formulação só faz sentido entre ativos)
   const activePatients = patients.filter((p) => p.is_active);
   const withFormulCount = activePatients.filter((p) => !!formulationFilled[p.id]).length;
