@@ -497,6 +497,7 @@ export default function Dashboard() {
         id: s.id,
         time: format(new Date(s.scheduled_at), "HH:mm"),
         name: s.patient_name,
+        patientId: (s as any).patient_id ?? null,
         mode: (s.modality?.toLowerCase() === "presencial" ? "Presencial" : "Online"),
         status:
           s.status === "confirmed" ? "confirmed"
