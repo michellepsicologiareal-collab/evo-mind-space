@@ -344,7 +344,9 @@ export const HomeworkPlanForm = ({
     await persistPassword();
     try {
       await navigator.clipboard.writeText(pwd);
+      void logShare("password_copied");
       toast.success("Senha copiada");
+
     } catch {
       toast.error("Não foi possível copiar");
     }
