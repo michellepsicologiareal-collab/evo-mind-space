@@ -3525,11 +3525,11 @@ const Agenda = () => {
 
       {/* ── Plano entre Sessões (vinculado à sessão atual) ── */}
       <Dialog open={homeworkOpen} onOpenChange={setHomeworkOpen}>
-        <DialogContent className="w-[95vw] max-w-[900px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-[900px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl flex items-center gap-2">
-              <NotebookPen className="h-5 w-5 text-primary" />
-              {homeworkTask ? "Editar Plano entre Sessões" : "Novo Plano entre Sessões"}
+            <DialogTitle className="font-display text-xl sm:text-2xl flex items-center gap-2">
+              <NotebookPen className="h-5 w-5 shrink-0 text-primary" />
+              <span className="min-w-0">{homeworkTask ? "Editar Plano entre Sessões" : "Novo Plano entre Sessões"}</span>
             </DialogTitle>
           </DialogHeader>
           {(() => {
