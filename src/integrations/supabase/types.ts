@@ -2275,6 +2275,10 @@ export type Database = {
           therapist_name: string
         }[]
       }
+      get_supervised_patient_clinical: {
+        Args: { _patient_id: string }
+        Returns: Json
+      }
       get_supervised_patient_overview: {
         Args: { _patient_id: string }
         Returns: {
