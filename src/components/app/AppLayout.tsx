@@ -215,28 +215,29 @@ export const AppLayout = () => {
           )}
         </nav>
 
-        <div className="p-4 border-t border-border">
+        <div className="p-3 border-t border-[hsl(var(--nav-border))]">
           <button
             onClick={() => setPlanOpen(true)}
-            className="flex items-center gap-3 px-4 py-3 rounded-[10px] font-display font-semibold text-sm transition-colors w-full"
-            style={{
-              background: "rgba(201,168,76,0.08)",
-              border: "0.5px solid rgba(201,168,76,0.25)",
-              color: "hsl(var(--brown))",
-            }}
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl font-display font-semibold text-sm transition-colors w-full bg-white/5 border border-gold/25 text-[hsl(var(--nav-fg))] hover:bg-white/10"
           >
             <Crown className="h-4 w-4" style={{ color: "hsl(var(--gold))" }} />
             Meu Plano
           </button>
-          <p className="text-xs text-muted-foreground truncate mb-3 mt-3">{user?.email}</p>
+          <p className="text-xs text-[hsl(var(--nav-muted))] truncate mb-3 mt-3 px-1">{user?.email}</p>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="flex-1" onClick={handleSignOut}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-1 justify-start text-[hsl(var(--nav-muted))] hover:bg-white/10 hover:text-[hsl(var(--nav-fg))]"
+              onClick={handleSignOut}
+            >
               <LogOut className="h-4 w-4" /> Sair
             </Button>
             <ThemeToggle />
           </div>
         </div>
       </aside>
+
 
       {/* ── Mobile top header ── */}
       <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-card border-b border-[hsl(var(--sidebar-border))]">
