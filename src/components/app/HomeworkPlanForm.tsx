@@ -401,27 +401,235 @@ export const HomeworkPlanForm = ({
   const canSend = Boolean(patientPhone && normalizePhoneForWhatsApp(patientPhone));
   const canCopy = Boolean(homeworkToken);
 
+  const shareable = Boolean(patientName || patientPhone || homeworkToken);
+  const publicUrl = buildPublicUrl();
 
   return (
-    <div className="space-y-4">
-      {(patientName || patientPhone || homeworkToken) && (
-        <div className="space-y-2 rounded-lg border border-moss/20 bg-moss/5 px-3 py-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-xs text-moss-foreground/80">
-              Compartilhar o plano{patientName ? ` com ${patientName.split(" ")[0]}` : ""}.
-            </span>
-            <div className="flex flex-wrap gap-2">
+    <TooltipProvider delayDuration={200}>
+      <div className="space-y-5">
+        <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-1">
+
+          {showPicker && (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Preencher a partir de um registro de sessão (opcional)</Label>
+              <Select value={sourceRecord} onValueChange={fillFromRecord}>
+                <SelectTrigger className="border-transparent bg-muted/50"><SelectValue placeholder="Escolher registro..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— Plano livre —</SelectItem>
+                  {records.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {format(new Date(r.session_date), "dd/MM/yyyy", { locale: ptBR })}
+                      {r.session_number != null && ` · Sessão #${r.session_number}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <Label className={LABEL}>Título do plano <span className="font-normal text-muted-foreground">(opcional)</span></Label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ex: Semana 3 — Consolidando insights"
+              maxLength={200}
+              className={FIELD}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className={LABEL}>
+              <Target className={ICON} /> Objetivo até a próxima sessão
+            </Label>
+            <Textarea
+              value={weeklyGoal}
+              onChange={(e) => setWeeklyGoal(e.target.value)}
+              rows={2}
+              maxLength={1000}
+              placeholder="Ex: Praticar respiração diafragmática antes das reuniões e registrar sensações após cada uso."
+              className={FIELD}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className={LABEL}>
+              <NotebookPen className={ICON} /> Pontos importantes da sessão
+            </Label>
+            <Textarea
+              value={sessionPoints}
+              onChange={(e) => setSessionPoints(e.target.value)}
+              rows={3}
+              maxLength={2000}
+              placeholder="Principais insights, orientações e pontos abordados na sessão..."
+              className={FIELD}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className={LABEL}>
+              <ListChecks className={ICON} /> Ações combinadas
+            </Label>
+            <div className="relative">
+              <Input
+                value={actionInput}
+                onChange={(e) => setActionInput(e.target.value)}
+                placeholder="Digite uma ação e pressione Enter..."
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addAction(); } }}
+                className={`${FIELD} pr-10`}
+              />
               <Button
                 type="button"
-                size="sm"
-                variant="outline"
-                onClick={copyPublicLink}
-                disabled={copying || !canCopy}
-                title={canCopy ? "Copiar link público" : "Link indisponível"}
+                variant="ghost"
+                size="icon"
+                onClick={addAction}
+                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-primary hover:bg-primary/10"
+                title="Adicionar ação"
               >
-                {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
-                Copiar link
+                <Plus className="h-4 w-4" />
               </Button>
+            </div>
+            {actions.length > 0 && (
+              <div className="mt-2 flex flex-col gap-1">
+                {actions.map((a, i) => (
+                  <div key={i} className="group flex items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5">
+                    <button type="button" onClick={() => toggleAction(i)} className="shrink-0">
+                      {a.done
+                        ? <CheckSquare className="h-4 w-4 text-primary" />
+                        : <Square className="h-4 w-4 text-muted-foreground" />}
+                    </button>
+                    <span className={`flex-1 text-sm ${a.done ? "line-through text-muted-foreground" : "text-foreground"}`}>{a.text}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeAction(i)}
+                      className="opacity-0 transition-opacity group-hover:opacity-100"
+                      title="Remover"
+                    >
+                      <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className={`rounded-xl border transition-colors ${copingOpen ? "border-lilac/40 bg-lilac/10" : "border-lilac/25 bg-lilac/5"}`}>
+            <button
+              type="button"
+              onClick={() => setCopingOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-2 px-3.5 py-3 text-left"
+              aria-expanded={copingOpen}
+            >
+              <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-lilac/20">
+                  <Shield className="h-4 w-4 text-lilac" />
+                </span>
+                Cartão de Enfrentamento
+                <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
+                {(copingTitle.trim() || copingContent.trim()) && (
+                  <span className="rounded-full bg-lilac/20 px-1.5 py-0.5 text-[10px] text-lilac-foreground">preenchido</span>
+                )}
+              </span>
+              <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${copingOpen ? "rotate-180" : ""}`} />
+            </button>
+            {copingOpen && (
+              <div className="space-y-3 px-3.5 pb-3.5">
+                <p className="text-[11px] text-muted-foreground">
+                  Mensagem curta que o paciente poderá consultar em momentos difíceis entre as sessões.
+                </p>
+                <Input
+                  value={copingTitle}
+                  onChange={(e) => setCopingTitle(e.target.value)}
+                  placeholder="Título — Ex: Quando a ansiedade chegar..."
+                  maxLength={200}
+                  className="border-transparent bg-background"
+                />
+                <Textarea
+                  value={copingContent}
+                  onChange={(e) => setCopingContent(e.target.value)}
+                  rows={3}
+                  maxLength={2000}
+                  placeholder="Ex: Respire fundo 3 vezes. Lembre-se: este sentimento é temporário..."
+                  className="border-transparent bg-background"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className={LABEL}>
+              <Eye className={ICON} /> O que observar até a próxima sessão
+            </Label>
+            <Textarea
+              value={weeklyObservations}
+              onChange={(e) => setWeeklyObservations(e.target.value)}
+              rows={3}
+              maxLength={2000}
+              placeholder="Pensamentos, emoções, comportamentos, gatilhos ou situações relevantes..."
+              className={FIELD}
+            />
+          </div>
+        </div>
+
+        {shareable && (
+          <div className="space-y-2 rounded-xl border border-border bg-muted/40 p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-background px-2.5 py-1.5">
+                <Link2 className="h-3.5 w-3.5 shrink-0 text-primary" />
+                <span className="truncate text-xs text-muted-foreground">
+                  {publicUrl ?? "Link disponível após salvar"}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="ml-auto h-7 w-7 shrink-0"
+                  onClick={copyPublicLink}
+                  disabled={copying || !canCopy}
+                  title="Copiar link"
+                >
+                  {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5">
+                <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <Input
+                  value={accessPassword}
+                  onChange={(e) => setAccessPassword(e.target.value)}
+                  onBlur={() => { void persistPassword(); }}
+                  placeholder="Senha (opcional)"
+                  className="h-7 w-36 border-0 bg-transparent px-0 text-xs focus-visible:ring-0"
+                  maxLength={60}
+                />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3.5 w-3.5 shrink-0 cursor-help text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[260px] text-xs">
+                    Por privacidade, a senha nunca vai na mensagem do plano — envie-a separadamente ou combine uma senha fixa com o paciente.
+                  </TooltipContent>
+                </Tooltip>
+                {accessPassword.trim() && (
+                  <>
+                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={copyPassword} title="Copiar senha">
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-moss"
+                      onClick={sendPasswordWhatsApp}
+                      disabled={!canSend}
+                      title="Enviar senha por WhatsApp"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                    </Button>
+                  </>
+                )}
+              </div>
+
               <Button
                 type="button"
                 size="sm"
@@ -431,227 +639,34 @@ export const HomeworkPlanForm = ({
                 title={canSend ? "Enviar por WhatsApp" : "Paciente sem WhatsApp cadastrado"}
               >
                 {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
-                {editing?.sent_at ? "Reenviar por WhatsApp" : "Enviar por WhatsApp"}
+                {editing?.sent_at ? "Reenviar" : "Enviar"}
               </Button>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Label className="flex items-center gap-1 text-[11px] text-moss-foreground/80">
-              <Lock className="h-3 w-3" /> Senha de acesso (opcional)
-            </Label>
-            <Input
-              value={accessPassword}
-              onChange={(e) => setAccessPassword(e.target.value)}
-              onBlur={() => { void persistPassword(); }}
-              placeholder="Defina uma senha para o paciente abrir o link"
-              className="h-8 w-full sm:w-64 text-sm"
-              maxLength={60}
-            />
-            {accessPassword.trim() && (
-              <>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={copyPassword}
-                  title="Copiar senha para enviar separadamente"
-                >
-                  <Copy className="h-3.5 w-3.5" /> Copiar senha
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="moss"
-                  onClick={sendPasswordWhatsApp}
-                  disabled={!canSend}
-                  title={canSend ? "Enviar senha em uma mensagem separada" : "Paciente sem WhatsApp cadastrado"}
-                >
-                  <MessageCircle className="h-3.5 w-3.5" /> {editing?.sent_at ? "Reenviar senha" : "Enviar senha"}
-                </Button>
-              </>
-            )}
-          </div>
-          <p className="text-[11px] text-muted-foreground">
-            Por privacidade, a senha nunca é incluída na mensagem do WhatsApp — copie e envie separadamente ou combine uma senha fixa com o paciente.
-          </p>
-
-        </div>
-      )}
-      <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-
-        {showPicker && (
-          <div>
-            <Label className="text-xs">Preencher a partir de um registro de sessão (opcional)</Label>
-            <Select value={sourceRecord} onValueChange={fillFromRecord}>
-              <SelectTrigger><SelectValue placeholder="Escolher registro..." /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">— Plano livre —</SelectItem>
-                {records.map((r) => (
-                  <SelectItem key={r.id} value={r.id}>
-                    {format(new Date(r.session_date), "dd/MM/yyyy", { locale: ptBR })}
-                    {r.session_number != null && ` · Sessão #${r.session_number}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         )}
 
-        <div>
-          <Label className="text-xs">Título do plano <span className="text-muted-foreground">(opcional)</span></Label>
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ex: Semana 3 — Consolidando insights (opcional)"
-            maxLength={200}
-          />
-        </div>
-
-        <div>
-          <Label className="flex items-center gap-1.5 text-xs">
-            <Target className="h-3.5 w-3.5" /> Objetivo até a próxima sessão
-          </Label>
-          <Textarea
-            value={weeklyGoal}
-            onChange={(e) => setWeeklyGoal(e.target.value)}
-            rows={3}
-            maxLength={1000}
-            placeholder="Ex: Praticar respiração diafragmática antes das reuniões e registrar sensações após cada uso."
-          />
-        </div>
-
-        <div>
-          <Label className="flex items-center gap-1.5 text-xs">
-            <NotebookPen className="h-3.5 w-3.5" /> Pontos importantes da sessão
-          </Label>
-          <Textarea
-            value={sessionPoints}
-            onChange={(e) => setSessionPoints(e.target.value)}
-            rows={4}
-            maxLength={2000}
-            placeholder="Registre os principais insights, orientações e pontos abordados na sessão..."
-          />
-        </div>
-
-        <div>
-          <Label className="flex items-center gap-1.5 text-xs">
-            <ListChecks className="h-3.5 w-3.5" /> Ações combinadas
-          </Label>
-          <div className="flex gap-2">
-            <Input
-              value={actionInput}
-              onChange={(e) => setActionInput(e.target.value)}
-              placeholder="Adicionar uma ação combinada..."
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addAction(); } }}
-            />
-            <Button type="button" variant="outline" size="sm" onClick={addAction}>
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-          {actions.length > 0 && (
-            <div className="mt-2 space-y-1">
-              {actions.map((a, i) => (
-                <div key={i} className="flex items-center gap-2 group">
-                  <button type="button" onClick={() => toggleAction(i)} className="shrink-0">
-                    {a.done
-                      ? <CheckSquare className="h-4 w-4 text-primary" />
-                      : <Square className="h-4 w-4 text-muted-foreground" />}
-                  </button>
-                  <span className={`text-sm flex-1 ${a.done ? "line-through text-muted-foreground" : "text-foreground"}`}>{a.text}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeAction(i)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Remover"
-                  >
-                    <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="rounded-lg border border-lilac/30 bg-lilac/5">
-          <button
-            type="button"
-            onClick={() => setCopingOpen((v) => !v)}
-            className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left"
-            aria-expanded={copingOpen}
-          >
-            <span className="flex items-center gap-1.5 text-xs font-medium text-foreground">
-              <Shield className="h-3.5 w-3.5 text-lilac" /> 🛡️ Cartão de Enfrentamento
-              <span className="text-muted-foreground font-normal">(opcional)</span>
-              {(copingTitle.trim() || copingContent.trim()) && (
-                <span className="ml-1 rounded-full bg-lilac/20 px-1.5 py-0.5 text-[10px] text-lilac-foreground">preenchido</span>
-              )}
+        {!hideFooter && (
+          <div className="flex flex-col-reverse gap-2 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-[11px] text-muted-foreground">
+              {autoSavedAt
+                ? `Salvo automaticamente às ${format(autoSavedAt, "HH:mm:ss")}`
+                : hasAnyContent() ? "Salvando automaticamente..." : "Preencha qualquer campo para salvar automaticamente"}
             </span>
-            {copingOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-          </button>
-          {copingOpen && (
-            <div className="px-3 pb-3 space-y-2">
-              <p className="text-[11px] text-muted-foreground">
-                Mensagem curta que o paciente poderá consultar em momentos difíceis entre as sessões.
-              </p>
-              <div>
-                <Label className="text-xs">Título</Label>
-                <Input
-                  value={copingTitle}
-                  onChange={(e) => setCopingTitle(e.target.value)}
-                  placeholder="Ex: Quando a ansiedade chegar..."
-                  maxLength={200}
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Conteúdo do cartão</Label>
-                <Textarea
-                  value={copingContent}
-                  onChange={(e) => setCopingContent(e.target.value)}
-                  rows={4}
-                  maxLength={2000}
-                  placeholder="Ex: Respire fundo 3 vezes. Lembre-se: este sentimento é temporário e você já enfrentou situações assim antes..."
-                />
-              </div>
+            <div className="flex gap-2">
+              {onClose && (
+                <Button variant="outline" onClick={onClose}>Fechar</Button>
+              )}
+              <Button variant="accent" onClick={save} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {submitLabel}
+              </Button>
             </div>
-          )}
-        </div>
-
-
-        <div>
-          <Label className="flex items-center gap-1.5 text-xs">
-            <Eye className="h-3.5 w-3.5" /> O que observar até a próxima sessão
-          </Label>
-          <Textarea
-            value={weeklyObservations}
-            onChange={(e) => setWeeklyObservations(e.target.value)}
-            rows={4}
-            maxLength={2000}
-            placeholder="Registre pensamentos, emoções, comportamentos, gatilhos ou situações relevantes para observar..."
-          />
-        </div>
-      </div>
-
-
-      {!hideFooter && (
-        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2 pt-2">
-          <span className="text-[11px] text-muted-foreground">
-            {autoSavedAt
-              ? `Salvo automaticamente às ${format(autoSavedAt, "HH:mm:ss")}`
-              : hasAnyContent() ? "Salvando automaticamente..." : "Preencha qualquer campo para salvar automaticamente"}
-          </span>
-          <div className="flex gap-2">
-            {onClose && (
-              <Button variant="outline" onClick={onClose}>Fechar</Button>
-            )}
-            <Button variant="accent" onClick={save} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {submitLabel}
-            </Button>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </TooltipProvider>
   );
 };
+
 
 // Re-export helpers for callers that already import from this file.
 export { actionsSchema, normalizeActions, serializeActions };
