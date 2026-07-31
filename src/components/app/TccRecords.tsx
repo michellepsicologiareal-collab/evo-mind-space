@@ -60,10 +60,17 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
     rational_response: "",
   });
 
+  // Link público para o paciente preencher
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkLoading, setLinkLoading] = useState(false);
+  const [linkPassword, setLinkPassword] = useState("");
+  const [publicLink, setPublicLink] = useState<string | null>(null);
+  const [patientInfo, setPatientInfo] = useState<{ full_name: string; phone: string | null } | null>(null);
+
   const load = async () => {
     const { data } = await (supabase as any)
       .from("tcc_records")
-      .select("id, situation, automatic_thought, emotion, behavior, cognitive_distortion, rational_response, created_at")
+      .select("id, situation, automatic_thought, emotion, behavior, cognitive_distortion, rational_response, filled_by, created_at")
       .eq("patient_id", patientId)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -75,6 +82,56 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   useEffect(() => {
     load();
   }, [patientId]);
+
+  const openLinkDialog = async () => {
+    setLinkOpen(true);
+    setPublicLink(null);
+    setLinkPassword("");
+    const { data } = await (supabase as any)
+      .from("patients")
+      .select("full_name, phone")
+      .eq("id", patientId)
+      .maybeSingle();
+    setPatientInfo(data ?? null);
+  };
+
+  const generateLink = async () => {
+    if (!user) return;
+    setLinkLoading(true);
+    const { data, error } = await (supabase as any)
+      .from("rpd_invites")
+      .insert({
+        user_id: user.id,
+        patient_id: patientId,
+        password: linkPassword.trim() || null,
+      })
+      .select("token")
+      .single();
+    setLinkLoading(false);
+    if (error || !data?.token) {
+      toast.error("Não foi possível gerar o link.");
+      return;
+    }
+    setPublicLink(`${window.location.origin}/rpd/${data.token}`);
+    toast.success("Link gerado");
+  };
+
+  const copyLink = async () => {
+    if (!publicLink) return;
+    await navigator.clipboard.writeText(publicLink);
+    toast.success("Link copiado");
+  };
+
+  const sendWhatsApp = () => {
+    if (!publicLink) return;
+    const phone = (patientInfo?.phone || "").replace(/\D/g, "");
+    const msg = `Olá! Use este link para registrar seus pensamentos (RPD) durante a semana: ${publicLink}${linkPassword.trim() ? `\n\nSenha: ${linkPassword.trim()}` : ""}`;
+    const url = phone
+      ? `https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+  };
+
 
   const handleSave = async () => {
     if (!user) return;
