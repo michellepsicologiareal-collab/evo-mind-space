@@ -730,7 +730,7 @@ export default function Dashboard() {
           className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
         >
           {KPI.map((k, i) => {
-            const tones = ["--primary", "--accent", "--moss", "--lilac", "--gold"] as const;
+            const tones = ["--primary", "--primary", "--lilac", "--primary", "--lilac"] as const;
             const tone = tones[i % tones.length];
             return (
               <Link
