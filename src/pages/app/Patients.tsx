@@ -1233,13 +1233,35 @@ const Patients = () => {
         {onlyNoNext && (
           <button
             type="button"
-            onClick={() => setOnlyNoNext(false)}
+            onClick={clearAttentionFilter}
             className="inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
             style={{ background: C.redSoft, color: C.red, border: `1px solid ${C.red}`, borderRadius: 40, fontSize: 12, fontWeight: 600, padding: "4px 10px" }}
             title="Remover filtro"
           >
             <CalendarDays className="h-3 w-3" />
             Sem próxima sessão
+            <X className="h-3 w-3" />
+          </button>
+        )}
+        {attentionFilter !== "none" && (
+          <button
+            type="button"
+            onClick={clearAttentionFilter}
+            className="inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
+            style={{ background: C.redSoft, color: C.red, border: `1px solid ${C.red}`, borderRadius: 40, fontSize: 12, fontWeight: 600, padding: "4px 10px" }}
+            title="Remover filtro"
+          >
+            {attentionFilter === "sem-formulacao" ? (
+              <>
+                <FileText className="h-3 w-3" />
+                Formulações de Caso pendentes
+              </>
+            ) : (
+              <>
+                <UserMinus className="h-3 w-3" />
+                Baixa adesão
+              </>
+            )}
             <X className="h-3 w-3" />
           </button>
         )}
