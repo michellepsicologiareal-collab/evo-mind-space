@@ -1913,7 +1913,7 @@ const Agenda = () => {
         )}
       >
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0 flex-wrap">
+          <div className="flex flex-1 items-center gap-x-2 gap-y-1 min-w-0 flex-wrap pr-1">
             <p className="font-display text-sm font-semibold text-foreground">{format(new Date(s.scheduled_at), "HH:mm")}</p>
             <span className="text-[11px] font-medium text-foreground/70">
               {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
@@ -1941,8 +1941,8 @@ const Agenda = () => {
           </div>
           {isMobile ? (
             <>
-              <Button variant="outline" size="sm" className={cn("gap-1 text-xs font-medium shrink-0", compact ? "h-7 w-7 p-0" : "h-8 px-2.5")} aria-label="Ações da sessão" onClick={(e) => { e.stopPropagation(); setSheetOpen(true); }}>
-                <ChevronDown className="h-4 w-4" /> {!compact && "Ações"}
+              <Button variant="outline" size="sm" className="h-8 w-8 shrink-0 p-0" aria-label="Ações da sessão" onClick={(e) => { e.stopPropagation(); setSheetOpen(true); }}>
+                <ChevronDown className="h-4 w-4" />
               </Button>
               <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto p-0" onClick={(e) => e.stopPropagation()}>
@@ -2000,7 +2000,7 @@ const Agenda = () => {
             </p>
           ) : s.patient_id && s.patient_name ? (
             <>
-              <p className={cn("text-left font-display font-semibold text-foreground hover:text-primary hover:underline transition-colors cursor-pointer min-w-0", compact ? "text-xs leading-snug truncate" : "text-base truncate")}
+              <p className={cn("text-left font-display font-semibold text-foreground hover:text-primary hover:underline transition-colors cursor-pointer min-w-0 break-words", compact ? "text-xs leading-snug truncate" : "text-sm leading-snug sm:text-base sm:truncate")}
                  onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}>
                 {s.patient_name}
               </p>
@@ -2106,37 +2106,37 @@ const Agenda = () => {
 
         {/* Ação principal + grupo de ações secundárias */}
         {!compact && !isSupervisionCard && s.patient_id && (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
             <Button
               size="sm"
-              className="h-8 rounded-lg px-3 text-xs font-semibold gap-1.5"
+              className="h-8 w-full rounded-lg px-3 text-xs font-semibold gap-1.5 sm:w-auto"
               onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
             >
               <Pencil className="h-3.5 w-3.5" /> Registrar sessão
             </Button>
-            <div className="inline-flex overflow-hidden rounded-lg border border-border divide-x divide-border">
+            <div className="grid min-w-0 grid-cols-2 overflow-hidden rounded-lg border border-border divide-x divide-y divide-border sm:inline-flex sm:w-auto sm:divide-y-0">
               <button
                 onClick={(e) => { e.stopPropagation(); setHistoryOpen(true); }}
-                className="inline-flex items-center gap-1.5 px-2.5 h-8 text-[11px] font-medium text-foreground/75 bg-card hover:bg-muted transition-colors"
+                className="inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-[11px] font-medium text-foreground/75 bg-card hover:bg-muted transition-colors sm:h-8 sm:justify-start sm:px-2.5"
               >
                 <ClipboardList className="h-3.5 w-3.5" /> Sessões
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}
-                className="inline-flex items-center gap-1.5 px-2.5 h-8 text-[11px] font-medium text-foreground/75 bg-card hover:bg-muted transition-colors"
+                className="inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-[11px] font-medium text-foreground/75 bg-card hover:bg-muted transition-colors sm:h-8 sm:justify-start sm:px-2.5"
               >
                 <DollarSign className="h-3.5 w-3.5" /> Financeiro
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); void openHomeworkForSession(s); }}
-                className="inline-flex items-center gap-1.5 px-2.5 h-8 text-[11px] font-medium text-foreground/75 bg-card hover:bg-muted transition-colors"
+                className="inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-center text-[11px] leading-tight font-medium text-foreground/75 bg-card hover:bg-muted transition-colors sm:h-8 sm:justify-start sm:px-2.5 sm:text-left"
               >
                 <ClipboardList className="h-3.5 w-3.5" /> Plano entre sessões
               </button>
               <Link
                 to={`/app/plano-tratamento?patient=${s.patient_id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1.5 px-2.5 h-8 text-[11px] font-medium text-foreground/75 bg-card hover:bg-muted transition-colors"
+                className="inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-center text-[11px] leading-tight font-medium text-foreground/75 bg-card hover:bg-muted transition-colors sm:h-8 sm:justify-start sm:px-2.5 sm:text-left"
                 aria-label={`Abrir plano de tratamento de ${s.patient_name || "paciente"}`}
               >
                 <Target className="h-3.5 w-3.5" /> Plano de tratamento
@@ -2251,7 +2251,7 @@ const Agenda = () => {
           )}
         <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
           <DialogTrigger asChild>
-            <Button variant="accent" size="sm" onClick={() => openNew()} className="rounded-[40px] font-display font-semibold w-full sm:w-auto sm:size-default">
+            <Button variant="accent" size="sm" onClick={() => openNew()} className="hidden rounded-[40px] font-display font-semibold w-full sm:inline-flex sm:w-auto sm:size-default">
               <Plus className="h-4 w-4" /> Nova sessão
             </Button>
           </DialogTrigger>
@@ -2739,22 +2739,22 @@ const Agenda = () => {
                   : format(selectedDate, "EEE, dd 'de' MMM 'de' yyyy", { locale: ptBR });
 
               return (
-                <div className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl bg-card border border-border shadow-card px-2.5 py-2">
-                  <TabsList className="bg-muted/60 gap-0.5 p-0.5 h-8 rounded-[40px] shrink-0">
-                    <TabsTrigger value="day" className="h-7 px-2.5 rounded-[40px] text-xs font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarCheck className="h-3.5 w-3.5 mr-1 inline" /> Dia</TabsTrigger>
-                    <TabsTrigger value="week" className="h-7 px-2.5 rounded-[40px] text-xs font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarRange className="h-3.5 w-3.5 mr-1 inline" /> Semana</TabsTrigger>
-                    <TabsTrigger value="month" className="h-7 px-2.5 rounded-[40px] text-xs font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-none"><CalendarDays className="h-3.5 w-3.5 mr-1 inline" /> Mês</TabsTrigger>
+                <div className="mb-3 grid grid-cols-1 gap-2 rounded-2xl bg-card border border-border shadow-card px-2.5 py-2 sm:flex sm:flex-wrap sm:items-center">
+                  <TabsList className="grid w-full grid-cols-3 bg-muted/60 gap-0.5 p-0.5 h-8 rounded-[40px] sm:flex sm:w-auto sm:shrink-0">
+                    <TabsTrigger value="day" className="h-7 min-w-0 px-1.5 rounded-[40px] text-xs font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:px-2.5"><CalendarCheck className="h-3.5 w-3.5 mr-1 inline shrink-0" /> Dia</TabsTrigger>
+                    <TabsTrigger value="week" className="h-7 min-w-0 px-1.5 rounded-[40px] text-xs font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:px-2.5"><CalendarRange className="h-3.5 w-3.5 mr-1 inline shrink-0" /> Semana</TabsTrigger>
+                    <TabsTrigger value="month" className="h-7 min-w-0 px-1.5 rounded-[40px] text-xs font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:px-2.5"><CalendarDays className="h-3.5 w-3.5 mr-1 inline shrink-0" /> Mês</TabsTrigger>
                   </TabsList>
 
-                  <div className="flex items-center gap-1 min-w-0 flex-1">
+                  <div className="flex w-full items-center gap-1 min-w-0 sm:flex-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Anterior" onClick={goPrev}>
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <p className="font-display text-sm font-semibold capitalize truncate min-w-0">{label}</p>
+                    <p className="flex-1 text-center font-display text-xs font-semibold capitalize truncate min-w-0 sm:text-left sm:text-sm">{label}</p>
                     <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Próximo" onClick={goNext}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-primary hover:bg-[rgba(150,117,206,0.12)] hover:text-primary shrink-0" onClick={() => goToDate(new Date())}>
+                    <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold bg-primary/5 border-primary/25 text-primary hover:bg-primary/10 hover:text-primary shrink-0" onClick={() => goToDate(new Date())}>
                       Hoje
                     </Button>
                   </div>
@@ -2765,7 +2765,7 @@ const Agenda = () => {
                     aria-pressed={dense}
                     title={dense ? "Modo compacto ativo — mostrar cards completos" : "Modo compacto — ver mais atendimentos por tela"}
                     className={cn(
-                      "h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold shrink-0 gap-1.5",
+                      "hidden h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold shrink-0 gap-1.5 sm:inline-flex",
                       dense && "bg-primary/10 border-primary/30 text-primary hover:bg-primary/15 hover:text-primary"
                     )}
                     onClick={toggleDense}
@@ -2774,7 +2774,7 @@ const Agenda = () => {
                     <span className="hidden sm:inline">Compacto</span>
                   </Button>
 
-                  <Button variant="accent" size="sm" className="h-8 rounded-[40px] font-display font-semibold shrink-0" onClick={() => openNew(selectedDate)}>
+                  <Button variant="accent" size="sm" className="hidden h-8 rounded-[40px] font-display font-semibold shrink-0 sm:inline-flex" onClick={() => openNew(selectedDate)}>
                     <Plus className="h-3.5 w-3.5" /> Nova sessão
                   </Button>
                 </div>
