@@ -28,6 +28,8 @@ import { PageHeader } from "@/components/app/PageHeader";
 const profileSchema = z.object({
   full_name: z.string().trim().min(2, "Nome muito curto").max(120),
   clinic_name: z.string().trim().max(120).optional().or(z.literal("")),
+  clinic_address: z.string().trim().max(300).optional().or(z.literal("")),
+  presencial_message: z.string().trim().max(500).optional().or(z.literal("")),
   crp: z.string().trim().max(40).optional().or(z.literal("")),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   specialty: z.string().trim().max(120).optional().or(z.literal("")),
@@ -44,7 +46,7 @@ const Profile = () => {
   const [linkingSupervisor, setLinkingSupervisor] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({ full_name: "", clinic_name: "", crp: "", phone: "", specialty: "", pix_key: "" });
+  const [form, setForm] = useState({ full_name: "", clinic_name: "", clinic_address: "", presencial_message: "", crp: "", phone: "", specialty: "", pix_key: "" });
   const [profileType, setProfileType] = useState<ProfileType>("standard");
   const [supervisorId, setSupervisorId] = useState<string | null>(null);
   const [supervisorName, setSupervisorName] = useState<string | null>(null);
@@ -319,6 +321,8 @@ const Profile = () => {
       setForm({
         full_name: data.full_name ?? "",
         clinic_name: (data as any).clinic_name ?? "",
+        clinic_address: (data as any).clinic_address ?? "",
+        presencial_message: (data as any).presencial_message ?? "",
         crp: data.crp ?? "",
         phone: data.phone ?? "",
         specialty: data.specialty ?? "",
@@ -368,6 +372,8 @@ const Profile = () => {
       .update({
         full_name: parsed.data.full_name,
         clinic_name: parsed.data.clinic_name || null,
+        clinic_address: parsed.data.clinic_address || null,
+        presencial_message: parsed.data.presencial_message || null,
         crp: parsed.data.crp || null,
         phone: parsed.data.phone || null,
          specialty: parsed.data.specialty || null,
@@ -588,6 +594,36 @@ const Profile = () => {
           />
           <p className="text-xs text-muted-foreground">Aparece no topo do seu Painel.</p>
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="clinic_address" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-muted-foreground" /> Endereço da clínica
+          </Label>
+          <Input
+            id="clinic_address"
+            placeholder="Ex.: Rua das Flores, 123 — Sala 4, Bairro, Cidade/UF"
+            value={form.clinic_address}
+            onChange={(e) => setForm({ ...form, clinic_address: e.target.value })}
+          />
+          <p className="text-xs text-muted-foreground">
+            Usado nas mensagens de confirmação de sessões presenciais. Se vazio, o sistema usa o endereço do modelo de contrato.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="presencial_message">Texto complementar (sessão presencial)</Label>
+          <textarea
+            id="presencial_message"
+            rows={3}
+            maxLength={500}
+            placeholder="Ex.: Chegue com 10 minutos de antecedência. Interfone 12. Estacionamento na rua lateral."
+            value={form.presencial_message}
+            onChange={(e) => setForm({ ...form, presencial_message: e.target.value })}
+            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          />
+          <p className="text-xs text-muted-foreground">Enviado junto com o endereço na mensagem de confirmação presencial.</p>
+        </div>
+
 
         <div className="space-y-2">
           <Label htmlFor="profile_type">Tipo de perfil</Label>
