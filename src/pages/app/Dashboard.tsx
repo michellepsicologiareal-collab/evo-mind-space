@@ -69,9 +69,18 @@ type TodayItem = {
   id: string;
   time: string;
   name: string;
+  patientId: string | null;
   mode: "Online" | "Presencial";
   status: "scheduled" | "to-confirm" | "confirmed" | "completed" | "no_show";
 };
+
+/** Abre a Agenda já filtrada pelo paciente da sessão (mês atual). */
+function goToAgendaForPatient(item: { patientId: string | null }) {
+  const month = format(new Date(), "yyyy-MM");
+  return item.patientId
+    ? `/app/agenda?patient=${item.patientId}&month=${month}`
+    : `/app/agenda?month=${month}`;
+}
 
 const WEEK_DAY_LABELS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
@@ -496,6 +505,7 @@ export default function Dashboard() {
         id: s.id,
         time: format(new Date(s.scheduled_at), "HH:mm"),
         name: s.patient_name,
+        patientId: (s as any).patient_id ?? null,
         mode: (s.modality?.toLowerCase() === "presencial" ? "Presencial" : "Online"),
         status:
           s.status === "confirmed" ? "confirmed"
@@ -928,9 +938,9 @@ export default function Dashboard() {
                 <TodayRow
                   key={s.id}
                   item={s}
-                  onOpen={() => navigate("/app/agenda")}
+                  onOpen={() => navigate(goToAgendaForPatient(s))}
                   onConfirm={() => handleAction(`Sessão de ${s.name} confirmada`)}
-                  onMore={() => navigate("/app/agenda")}
+                  onMore={() => navigate(goToAgendaForPatient(s))}
                 />
               ))
             )}
