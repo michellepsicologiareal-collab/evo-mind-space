@@ -276,6 +276,36 @@ export const HomeworkPlanForm = ({
     })();
   }, [patientId, loadedPassword]);
 
+  type ShareEvent = { id: string; event_type: string; created_at: string };
+  const [shareEvents, setShareEvents] = useState<ShareEvent[]>([]);
+
+  const loadShareEvents = async () => {
+    if (!patientId) return;
+    const { data } = await (supabase as any)
+      .from("homework_share_events")
+      .select("id,event_type,created_at")
+      .eq("patient_id", patientId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setShareEvents((data as ShareEvent[]) ?? []);
+  };
+
+  useEffect(() => { void loadShareEvents(); }, [patientId]);
+
+  const logShare = async (eventType: "link" | "password" | "link_copied" | "password_copied") => {
+    if (!patientId) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await (supabase as any).from("homework_share_events").insert({
+      user_id: user.id,
+      patient_id: patientId,
+      task_id: editingRef.current?.id ?? editing?.id ?? null,
+      event_type: eventType,
+      channel: eventType.endsWith("_copied") ? "copy" : "whatsapp",
+    });
+    void loadShareEvents();
+  };
+
   const persistPassword = async () => {
     if (!patientId) return;
     const value = accessPassword.trim();
@@ -284,6 +314,7 @@ export const HomeworkPlanForm = ({
       .update({ homework_password: value.length > 0 ? value : null })
       .eq("id", patientId);
   };
+
 
   const buildPublicUrl = () => {
     if (!homeworkToken) return null;
