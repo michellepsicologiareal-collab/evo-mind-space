@@ -1394,7 +1394,7 @@ const Patients = () => {
                       }}
                     >
                       {/* Avatar */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle" }}>
+                      <td style={{ padding: "16px 18px", verticalAlign: "middle" }}>
                         <div
                           className="flex items-center justify-center"
                           style={{
@@ -1412,7 +1412,7 @@ const Patients = () => {
                       </td>
 
                       {/* Nome */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", minWidth: 220 }}>
+                      <td style={{ padding: "16px 18px", verticalAlign: "middle", minWidth: 220 }}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="min-w-0 cursor-pointer">
@@ -1484,7 +1484,7 @@ const Patients = () => {
 
 
                       {/* Modalidade */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "16px 18px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
                         {(() => {
                           const m = (p.modality ?? "").toString().toLowerCase();
                           if (m === "online") {
@@ -1501,7 +1501,7 @@ const Patients = () => {
                       </td>
 
                       {/* Plano */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "16px 18px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
                         {pkg ? (
                           <span
                             style={{
@@ -1530,7 +1530,7 @@ const Patients = () => {
 
 
                       {/* Status */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "16px 18px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
                         <span
                           style={{
                             background: p.is_active ? C.greenSoft : "#F3F4F6",
@@ -1548,7 +1548,7 @@ const Patients = () => {
                       </td>
 
                       {/* Ações */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle" }}>
+                      <td style={{ padding: "16px 18px", verticalAlign: "middle" }}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
