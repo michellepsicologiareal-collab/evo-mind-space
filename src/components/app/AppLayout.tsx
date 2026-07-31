@@ -5,7 +5,7 @@ import logoSrc from "@/assets/logo-psireal.png";
 import {
   LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut,
   GraduationCap, ShieldCheck, Crown, Lock, BookOpen, Flower2, FileText,
-  FileCheck, Shield, UserCog, Sparkles, ClipboardList, Baby, MoreHorizontal, Target, HeartPulse,
+  FileCheck, Shield, UserCog, Sparkles, ClipboardList, Baby, MoreHorizontal, Target, HeartPulse, Menu,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
@@ -71,7 +71,9 @@ export const AppLayout = () => {
   const location = useLocation();
   const { isPremium, profileType, isAdmin } = useSubscription();
   const [planOpen, setPlanOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
+
 
   const navItems = useMemo(() => {
     return allNavItems.filter((item) => {
@@ -146,6 +148,81 @@ export const AppLayout = () => {
     </NavLink>
   );
 
+  const sidebarSections: { label: string; routes: string[] }[] = [
+    { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda"] },
+    { label: "GESTÃO", routes: ["/app/financeiro", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
+    { label: "CONFIGURAÇÕES", routes: ["/app/perfil"] },
+  ];
+
+  const renderSidebarInner = (onNavigate?: () => void) => (
+    <>
+      <nav
+        aria-label="Navegação principal"
+        className="flex-1 px-3 pb-4 space-y-1 overflow-y-auto"
+        onClick={() => onNavigate?.()}
+      >
+        {sidebarSections.map((sec) => {
+          const items = sec.routes
+            .map((r) => navItems.find((n) => n.to === r))
+            .filter(Boolean) as NavItem[];
+          if (items.length === 0) return null;
+          return (
+            <div key={sec.label} className="space-y-1">
+              <div className="px-3.5 pt-5 pb-2 font-display font-semibold text-[9px] uppercase text-[hsl(var(--nav-muted))]/70" style={{ letterSpacing: "0.16em" }}>
+                {sec.label}
+              </div>
+              {items.map((item) => renderNavLink(item))}
+            </div>
+          );
+        })}
+
+        {/* ── Admin section (visually separated, different color) ── */}
+        {isAdmin && (
+          <>
+            <div className="pt-4 pb-2">
+              <div className="flex items-center gap-2 px-4">
+                <div className="h-px flex-1 bg-[hsl(var(--admin-accent))]/20" />
+                <span className="text-[10px] uppercase tracking-widest font-semibold text-[hsl(var(--admin-accent))]/60">
+                  Administração
+                </span>
+                <div className="h-px flex-1 bg-[hsl(var(--admin-accent))]/20" />
+              </div>
+            </div>
+            <div className="mx-4 mb-2 flex items-center gap-2 rounded-lg bg-[hsl(var(--admin-accent))]/10 px-3 py-2 border border-[hsl(var(--admin-accent))]/20">
+              <ShieldCheck className="h-4 w-4 text-[hsl(var(--admin-accent))]" />
+              <div className="flex flex-col">
+                <span className="text-[11px] font-semibold text-[hsl(var(--admin-accent))]">Admin Master</span>
+                <span className="text-[10px] text-[hsl(var(--admin-accent))]/60">Permissão verificada ✓</span>
+              </div>
+            </div>
+            {adminNavItems.map((item) => renderNavLink(item, true))}
+          </>
+        )}
+      </nav>
+
+      <div className="p-3 border-t border-[hsl(var(--nav-border))]">
+        <button
+          onClick={() => { onNavigate?.(); setPlanOpen(true); }}
+          className="flex items-center gap-3 px-3.5 py-3 rounded-xl font-display font-semibold text-sm transition-colors w-full bg-white/5 border border-gold/25 text-[hsl(var(--nav-fg))] hover:bg-white/10"
+        >
+          <Crown className="h-4 w-4" style={{ color: "hsl(var(--gold))" }} />
+          Meu Plano
+        </button>
+        <p className="text-xs text-[hsl(var(--nav-muted))] truncate mb-3 mt-3 px-1">{user?.email}</p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1 justify-start min-h-11 text-[hsl(var(--nav-muted))] hover:bg-white/10 hover:text-[hsl(var(--nav-fg))]"
+            onClick={handleSignOut}
+          >
+            <LogOut className="h-4 w-4" /> Sair
+          </Button>
+          <ThemeToggle />
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -165,101 +242,57 @@ export const AppLayout = () => {
           </Link>
           <NotificationBell />
         </div>
-
-
-        <nav className="flex-1 px-3 pb-4 space-y-1 overflow-y-auto">
-          {(() => {
-            const sections: { label: string; routes: string[] }[] = [
-              { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda"] },
-              { label: "GESTÃO", routes: ["/app/financeiro", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
-              { label: "CONFIGURAÇÕES", routes: ["/app/perfil"] },
-            ];
-            return sections.map((sec) => {
-              const items = sec.routes
-                .map((r) => navItems.find((n) => n.to === r))
-                .filter(Boolean) as NavItem[];
-              if (items.length === 0) return null;
-              return (
-                <div key={sec.label} className="space-y-1">
-                  <div className="px-3.5 pt-5 pb-2 font-display font-semibold text-[9px] uppercase text-[hsl(var(--nav-muted))]/70" style={{ letterSpacing: "0.16em" }}>
-                    {sec.label}
-                  </div>
-
-                  {items.map((item) => renderNavLink(item))}
-                </div>
-              );
-            });
-          })()}
-
-          {/* ── Admin section (visually separated, different color) ── */}
-          {isAdmin && (
-            <>
-              <div className="pt-4 pb-2">
-                <div className="flex items-center gap-2 px-4">
-                  <div className="h-px flex-1 bg-[hsl(var(--admin-accent))]/20" />
-                  <span className="text-[10px] uppercase tracking-widest font-semibold text-[hsl(var(--admin-accent))]/60">
-                    Administração
-                  </span>
-                  <div className="h-px flex-1 bg-[hsl(var(--admin-accent))]/20" />
-                </div>
-              </div>
-              <div className="mx-4 mb-2 flex items-center gap-2 rounded-lg bg-[hsl(var(--admin-accent))]/10 px-3 py-2 border border-[hsl(var(--admin-accent))]/20">
-                <ShieldCheck className="h-4 w-4 text-[hsl(var(--admin-accent))]" />
-                <div className="flex flex-col">
-                  <span className="text-[11px] font-semibold text-[hsl(var(--admin-accent))]">Admin Master</span>
-                  <span className="text-[10px] text-[hsl(var(--admin-accent))]/60">Permissão verificada ✓</span>
-                </div>
-              </div>
-              {adminNavItems.map((item) => renderNavLink(item, true))}
-            </>
-          )}
-        </nav>
-
-        <div className="p-3 border-t border-[hsl(var(--nav-border))]">
-          <button
-            onClick={() => setPlanOpen(true)}
-            className="flex items-center gap-3 px-3.5 py-3 rounded-xl font-display font-semibold text-sm transition-colors w-full bg-white/5 border border-gold/25 text-[hsl(var(--nav-fg))] hover:bg-white/10"
-          >
-            <Crown className="h-4 w-4" style={{ color: "hsl(var(--gold))" }} />
-            Meu Plano
-          </button>
-          <p className="text-xs text-[hsl(var(--nav-muted))] truncate mb-3 mt-3 px-1">{user?.email}</p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex-1 justify-start text-[hsl(var(--nav-muted))] hover:bg-white/10 hover:text-[hsl(var(--nav-fg))]"
-              onClick={handleSignOut}
-            >
-              <LogOut className="h-4 w-4" /> Sair
-            </Button>
-            <ThemeToggle />
-          </div>
-        </div>
+        {renderSidebarInner()}
       </aside>
 
+      {/* ── Mobile sidebar (menu recolhível) ── */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent
+          side="left"
+          className="md:hidden w-[280px] p-0 flex flex-col bg-[hsl(var(--nav-bg))] text-[hsl(var(--nav-fg))] border-r border-[hsl(var(--nav-border))]"
+        >
+          <div className="px-5 py-5 flex items-center gap-2.5">
+            <img src={logoSrc} alt="" className="h-9 w-9 rounded-xl object-cover flex-shrink-0" aria-hidden />
+            <SheetTitle className="font-display text-lg font-bold tracking-tight flex items-center gap-1.5 text-[hsl(var(--nav-fg))]">
+              <span>Psi</span>
+              <span className="text-primary">Real</span>
+              <span className="inline-block h-2 w-2 rounded-full bg-gold" aria-hidden />
+            </SheetTitle>
+          </div>
+          {renderSidebarInner(() => setSidebarOpen(false))}
+        </SheetContent>
+      </Sheet>
 
       {/* ── Mobile top header ── */}
       <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-card border-b border-[hsl(var(--sidebar-border))]">
-        <div className="flex items-center justify-between px-4 py-3">
-          <Link to="/app" className="flex items-center gap-2">
-            <img src={logoSrc} alt="Psicologia Real" className="h-8 w-8 rounded-full object-cover" />
-            <span className="font-display text-lg font-semibold">Psi <span className="font-extrabold text-accent">Real</span></span>
-          </Link>
+        <div className="flex items-center justify-between px-3 py-3">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="min-h-11 min-w-11"
+              aria-label="Abrir menu de navegação"
+              aria-haspopup="dialog"
+              aria-expanded={sidebarOpen}
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <Link to="/app" className="flex items-center gap-2 min-w-0">
+              <img src={logoSrc} alt="Psicologia Real" className="h-8 w-8 rounded-full object-cover" />
+              <span className="font-display text-lg font-semibold truncate">Psi <span className="font-extrabold text-accent">Real</span></span>
+            </Link>
+          </div>
           <div className="flex items-center gap-1">
             <ThemeToggle />
             <NotificationBell />
-            {isAdmin && (
-              <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} className="text-[hsl(var(--admin-accent))]">
-                <Shield className="h-4 w-4" />
-              </Button>
-            )}
-            <Button variant="ghost" size="icon" onClick={handleSignOut}>
+            <Button variant="ghost" size="icon" className="min-h-11 min-w-11" aria-label="Sair da conta" onClick={handleSignOut}>
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </div>
+
 
       {/* ── Mobile bottom nav (4 primary + Mais) ── */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom">
