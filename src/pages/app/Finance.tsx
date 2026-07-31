@@ -1932,25 +1932,38 @@ const KpiCard = ({
   accent?: boolean;
 }) => (
   <div
-    className={`rounded-2xl border p-6 transition-all hover:-translate-y-0.5 hover:shadow-soft ${
-      accent ? "bg-gradient-hero text-primary-foreground border-transparent" : "bg-card border-border"
+    className={`relative overflow-hidden rounded-2xl border p-6 transition-all hover:-translate-y-0.5 hover:shadow-soft ${
+      accent ? "bg-gradient-hero text-primary-foreground border-transparent" : "bg-card border-border/60"
     }`}
   >
+    {/* Bolha pastel decorativa (pegada do modelo) */}
+    {!accent && (
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -bottom-10 -right-8 h-28 w-28 rounded-full bg-primary opacity-[0.12]"
+      />
+    )}
     <div
-      className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+      className={`relative flex h-10 w-10 items-center justify-center rounded-xl ${
         accent ? "bg-primary-foreground/15" : "bg-secondary text-primary"
       }`}
     >
       <Icon className="h-4 w-4" />
     </div>
-    <p className={`mt-4 text-xs uppercase tracking-wider ${accent ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+    <p
+      className={`relative mt-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] ${
+        accent ? "text-primary-foreground/80" : "text-primary"
+      }`}
+    >
+      <span className={`inline-block h-1.5 w-1.5 rounded-full ${accent ? "bg-primary-foreground/70" : "bg-primary"}`} aria-hidden />
       {label}
     </p>
-    <p className="mt-1 font-display text-3xl font-semibold">{value}</p>
+    <p className="relative mt-1 font-display text-3xl font-bold tracking-[-0.02em]">{value}</p>
     {hint && (
-      <p className={`mt-1 text-xs ${accent ? "text-primary-foreground/70" : "text-muted-foreground"}`}>{hint}</p>
+      <p className={`relative mt-1 text-xs ${accent ? "text-primary-foreground/70" : "text-muted-foreground"}`}>{hint}</p>
     )}
   </div>
 );
+
 
 export default Finance;
