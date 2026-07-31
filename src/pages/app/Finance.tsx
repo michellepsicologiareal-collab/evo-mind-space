@@ -1688,6 +1688,72 @@ const Finance = () => {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Pagamentos atrasados — mesma regra do indicador do Painel */}
+      <Sheet
+        open={overdueOpen}
+        onOpenChange={(open) => {
+          setOverdueOpen(open);
+          if (!open && searchParams.get("filter")) {
+            const next = new URLSearchParams(searchParams);
+            next.delete("filter");
+            setSearchParams(next, { replace: true });
+          }
+        }}
+      >
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle className="font-display">Pagamentos atrasados</SheetTitle>
+            <SheetDescription>
+              Sessões já realizadas (ou passadas) que continuam com pagamento pendente.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-4 space-y-2">
+            {overdueLoading ? (
+              <p className="text-sm text-muted-foreground">Carregando…</p>
+            ) : overdueRows.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nenhum pagamento atrasado por aqui. Tudo em dia! 🌿
+              </p>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  {overdueRows.length} {overdueRows.length === 1 ? "sessão" : "sessões"} ·{" "}
+                  {formatBRL(overdueRows.reduce((s, r) => s + Number(r.price ?? 0), 0))} em aberto
+                </p>
+                {overdueRows.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => {
+                      if (!r.patient) return;
+                      setOverdueOpen(false);
+                      setFinanceHistory({ id: r.patient.id, name: r.patient.full_name });
+                    }}
+                    className="w-full rounded-xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className="flex items-center justify-between gap-3">
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium text-foreground">
+                          {r.patient?.full_name ?? "Paciente"}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                          {format(new Date(r.scheduled_at), "dd/MM/yyyy")}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-sm font-semibold text-foreground">
+                        {formatBRL(Number(r.price ?? 0))}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
     </div>
   );
 };
