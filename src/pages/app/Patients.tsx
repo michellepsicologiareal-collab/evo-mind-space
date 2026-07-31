@@ -976,10 +976,18 @@ const Patients = () => {
       const THIRTY = 30 * 24 * 60 * 60 * 1000;
       return Date.now() - new Date(last).getTime() > THIRTY && !sessionInfo[p.id]?.nextDate;
     })
-    .filter((p) =>
-      p.full_name.toLowerCase().includes(search.toLowerCase()) ||
-      (p.email ?? "").toLowerCase().includes(search.toLowerCase())
-    );
+    .filter((p) => {
+      const q = search.trim().toLowerCase();
+      if (!q) return true;
+      const digits = q.replace(/\D/g, "");
+      const phone = (p.phone ?? "").replace(/\D/g, "");
+      return (
+        p.full_name.toLowerCase().includes(q) ||
+        (p.email ?? "").toLowerCase().includes(q) ||
+        (digits.length >= 3 && phone.includes(digits))
+      );
+    });
+
   // Formulation counts consider only active patients (com/sem formulação só faz sentido entre ativos)
   const activePatients = patients.filter((p) => p.is_active);
   const withFormulCount = activePatients.filter((p) => !!formulationFilled[p.id]).length;
@@ -1002,13 +1010,15 @@ const Patients = () => {
     return a && a.total >= 3 && a.pct < 50;
   });
   const noNextSessionPatients = activePatients.filter((p) => !sessionInfo[p.id]?.nextDate);
+  const pendingFormulationPatients = activePatients.filter((p) => !formulationFilled[p.id]);
+
 
   const todayLabel = format(new Date(), "EEEE',' d 'de' MMMM 'de' yyyy", { locale: ptBR });
   const todayLabelCap = todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1);
 
   // ───────── Color palette (per spec) ─────────
   const C = {
-    pageBg: "#F8F6FC",
+    pageBg: "#F8F9FE",
     card: "#FFFFFF",
     ink: "#17152F",
     muted: "#6B7280",
@@ -1036,236 +1046,233 @@ const Patients = () => {
       className="animate-fade-up -mx-3 sm:-mx-6 -mt-3 sm:-mt-6 px-3 sm:px-6 pt-4 sm:pt-6 pb-10 min-h-screen"
       style={{ background: C.pageBg, fontFamily: "Inter, sans-serif", color: C.ink }}
     >
-      {/* ─────────── TOPBAR ─────────── */}
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-5">
-        <div className="flex items-start gap-3 sm:gap-4 min-w-0">
-          <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent">
-            <User className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Clínica</p>
-            <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Pacientes</h1>
-            <p className="mt-1.5 text-sm md:text-base text-muted-foreground max-w-2xl">{todayLabelCap}</p>
-          </div>
+      {/* ─────────── PAGE HEADER ─────────── */}
+      <header className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between mb-8">
+        <div className="min-w-0">
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: C.muted }}>
+            Gestão clínica
+          </p>
+          <h1 className="mt-2" style={{ fontFamily: "'Inter Tight', Inter, sans-serif", fontSize: 34, lineHeight: 1.1, fontWeight: 700, letterSpacing: "-0.02em", color: C.ink }}>
+            Pacientes e Acompanhamento
+          </h1>
+          <p className="mt-2 max-w-2xl" style={{ fontSize: 14, color: C.muted, lineHeight: 1.5 }}>
+            Acompanhe o histórico clínico, formulações e próximos atendimentos em um só lugar.
+          </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap sm:justify-end w-full sm:w-auto">
-          <div className="relative flex-1 sm:flex-none min-w-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar paciente..."
-              className="pl-9 w-full sm:w-[220px] rounded-full"
-            />
-          </div>
+        <div className="flex items-center gap-2 shrink-0">
           <RefreshButton />
-          <Button onClick={openNew} variant="accent" className="rounded-full font-display font-semibold whitespace-nowrap">
-            <Plus className="h-4 w-4" /> <span className="hidden sm:inline">Novo paciente</span><span className="sm:hidden">Novo</span>
-          </Button>
+          <button
+            type="button"
+            onClick={openNew}
+            className="inline-flex items-center gap-2 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9B72D3]"
+            style={{ background: C.purple, color: "#fff", borderRadius: 10, padding: "10px 16px", fontWeight: 600, fontSize: 14, boxShadow: "0 4px 14px rgba(155,114,211,0.28)" }}
+          >
+            <Plus className="h-4 w-4" strokeWidth={2} />
+            <span className="hidden sm:inline">Novo Paciente</span>
+            <span className="sm:hidden">Novo</span>
+          </button>
         </div>
       </header>
 
-      <HelpCard
-        id="pacientes"
-        title="Pacientes"
-        description="Cadastre pacientes, acompanhe o histórico clínico e acesse rapidamente todos os módulos relacionados ao atendimento."
-        sections={[
-          { label: "Quando usar", content: "Ao receber um novo paciente e sempre que precisar consultar histórico, formulação, humor, sessões ou financeiro de um caso." },
-          { label: "Conexões", content: "É o centro do sistema: a ficha do paciente abre Sessões, Plano Terapêutico, Formulações, Humor, Anamneses, Documentos e Financeiro em abas." },
-        ]}
-      />
-      <PageIntro description="Cadastro central dos seus pacientes. Daqui você abre a ficha, registra sessões, organiza formulações de caso, acompanha humor e exporta dados clínicos." />
-
-
-
-
-      {/* ─────────── INSIGHT STRIP ─────────── */}
-      {(attentionPatients.length > 0 || lowAdherencePatients.length > 0 || noNextSessionPatients.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
-          {attentionPatients.length > 0 && (
-            <button
-              type="button"
-              onClick={() => { setStatusFilter("active"); setFormulFilter("without"); setOnlyNoNext(false); }}
-              className="text-left w-full transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
-              style={{ background: C.goldSoft, borderLeft: `3px solid ${C.gold}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", border: "none", cursor: "pointer" }}
-              title="Ver pacientes sem formulação"
-              aria-label="Filtrar pacientes sem formulação"
-            >
-              <div className="flex items-start gap-2.5">
-                <div className="shrink-0 flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(124,91,175,0.18)", color: C.gold, fontWeight: 700, fontSize: 13 }}>!</div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: "0.08em" }}>Atenção Clínica</p>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: C.gold }}>Ver lista →</span>
-                  </div>
-                  <p className="mt-0.5" style={{ fontSize: 13, color: C.ink, lineHeight: 1.45 }}>
-                    {attentionPatients.length} {attentionPatients.length === 1 ? "paciente sem formulação" : "pacientes sem formulação"} há mais de 30 dias.
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {attentionPatients.slice(0, 3).map((p) => (
-                      <span key={p.id} style={{ background: "rgba(124,91,175,0.14)", color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
-                        {p.full_name.split(" ").slice(0, 2).join(" ")}
-                      </span>
-                    ))}
-                    {attentionPatients.length > 3 && (
-                      <span style={{ background: "rgba(124,91,175,0.14)", color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>+ {attentionPatients.length - 3}</span>
-                    )}
-                  </div>
-                </div>
+      {/* ─────────── SUMMARY CARDS ─────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        {([
+          {
+            k: "formul",
+            title: "Formulações Pendentes",
+            value: pendingFormulationPatients.length,
+            list: pendingFormulationPatients,
+            hint: "Pacientes ativos sem formulação de caso registrada.",
+            onClick: () => { setStatusFilter("active"); setFormulFilter("without"); setOnlyNoNext(false); },
+          },
+          {
+            k: "nonext",
+            title: "Sem Próxima Sessão",
+            value: noNextSessionPatients.length,
+            list: noNextSessionPatients,
+            hint: "Pacientes ativos sem atendimento agendado.",
+            onClick: () => { setStatusFilter("active"); setFormulFilter("all"); setOnlyNoNext(true); },
+          },
+        ] as const).map((card) => (
+          <div
+            key={card.k}
+            style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: "20px 22px", boxShadow: "0 1px 2px rgba(23,21,47,0.04)" }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p style={{ fontSize: 13, fontWeight: 600, color: C.muted }}>{card.title}</p>
+                <p className="mt-1" style={{ fontFamily: "'Inter Tight', Inter, sans-serif", fontSize: 34, fontWeight: 700, lineHeight: 1, letterSpacing: "-0.02em", color: C.ink }}>
+                  {card.value}
+                </p>
               </div>
-            </button>
-          )}
-          {lowAdherencePatients.length > 0 && (
-            <div style={{ background: C.purpleSoft, borderLeft: `3px solid ${C.purple}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-              <div className="flex items-start gap-2.5">
-                <div className="shrink-0 flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(83,74,183,0.18)", color: C.purple }}>
-                  <Sparkles className="h-3 w-3" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p style={{ fontSize: 11, fontWeight: 700, color: C.purple, textTransform: "uppercase", letterSpacing: "0.08em" }}>Baixa Adesão</p>
-                  <p className="mt-0.5" style={{ fontSize: 13, color: C.ink, lineHeight: 1.45 }}>
-                    {lowAdherencePatients.length} {lowAdherencePatients.length === 1 ? "paciente com menos" : "pacientes com menos"} de 50% de comparecimento este mês.
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {lowAdherencePatients.slice(0, 3).map((p) => (
-                      <span key={p.id} style={{ background: "rgba(83,74,183,0.14)", color: C.purple, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
-                        {p.full_name.split(" ").slice(0, 2).join(" ")}
-                      </span>
-                    ))}
-                    {lowAdherencePatients.length > 3 && (
-                      <span style={{ background: "rgba(83,74,183,0.14)", color: C.purple, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>+ {lowAdherencePatients.length - 3}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <span className="shrink-0 flex items-center justify-center" style={{ width: 38, height: 38, borderRadius: 12, background: C.purpleSoft, color: C.purple }}>
+                {card.k === "formul" ? <FileText className="h-4 w-4" /> : <CalendarDays className="h-4 w-4" />}
+              </span>
             </div>
-          )}
-          {noNextSessionPatients.length > 0 && (
-            <button
-              type="button"
-              onClick={() => { setStatusFilter("active"); setFormulFilter("all"); setOnlyNoNext(true); }}
-              className="text-left w-full transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
-              style={{ background: C.redSoft, borderLeft: `3px solid ${C.red}`, borderRadius: 10, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", border: "none", cursor: "pointer" }}
-              title="Ver pacientes sem próxima sessão"
-              aria-label="Filtrar pacientes sem próxima sessão"
-            >
-              <div className="flex items-start gap-2.5">
-                <div className="shrink-0 flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(192,57,43,0.16)", color: C.red }}>
-                  <CalendarDays className="h-3 w-3" />
+            {card.list.length > 0 ? (
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                  {card.list.slice(0, 3).map((p) => (
+                    <span
+                      key={p.id}
+                      className="truncate"
+                      style={{ maxWidth: 140, background: "#F5F3FA", color: C.muted, border: `1px solid ${C.border}`, fontSize: 11.5, fontWeight: 500, padding: "3px 9px", borderRadius: 40 }}
+                    >
+                      {p.full_name.split(" ").slice(0, 2).join(" ")}
+                    </span>
+                  ))}
+                  {card.list.length > 3 && (
+                    <span style={{ fontSize: 11.5, fontWeight: 600, color: C.muted }}>+{card.list.length - 3}</span>
+                  )}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p style={{ fontSize: 11, fontWeight: 700, color: C.red, textTransform: "uppercase", letterSpacing: "0.08em" }}>Sem próxima sessão</p>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: C.red }}>Ver lista →</span>
-                  </div>
-                  <p className="mt-0.5" style={{ fontSize: 13, color: C.ink, lineHeight: 1.45 }}>
-                    {noNextSessionPatients.length} {noNextSessionPatients.length === 1 ? "paciente ativo sem próxima sessão agendada" : "pacientes ativos sem próxima sessão agendada"}.
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {noNextSessionPatients.slice(0, 3).map((p) => (
-                      <span key={p.id} style={{ background: "rgba(192,57,43,0.12)", color: C.red, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
-                        {p.full_name.split(" ").slice(0, 2).join(" ")}
-                      </span>
-                    ))}
-                    {noNextSessionPatients.length > 3 && (
-                      <span style={{ background: "rgba(192,57,43,0.12)", color: C.red, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>+ {noNextSessionPatients.length - 3}</span>
-                    )}
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={card.onClick}
+                  className="shrink-0 transition-opacity hover:opacity-70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9B72D3]"
+                  style={{ fontSize: 12.5, fontWeight: 600, color: C.purple, background: "transparent" }}
+                >
+                  Ver todos →
+                </button>
               </div>
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* ─────────── FILTER CHIPS (sticky) ─────────── */}
-      <div
-        className="flex flex-wrap items-center gap-2 mb-4 sticky top-16 md:top-0 z-10 py-2 -mx-4 px-4 sm:-mx-6 sm:px-6"
-        style={{ background: "hsl(var(--background))" }}
-      >
-        <div className="inline-flex items-center gap-1 p-1 flex-wrap" style={{ background: C.neutralBg, borderRadius: 10, border: `1px solid ${C.border}` }}>
-          {([
-            { k: "active", label: "Ativos", n: activeCount, status: "active", formul: "all" },
-            { k: "inactive", label: "Inativos", n: inactiveCount, status: "inactive", formul: "all" },
-            { k: "with-form", label: "Com Formulação", n: withFormulCount, status: "active", formul: "with" },
-            { k: "without-form", label: "Sem Formulação", n: withoutFormulCount, status: "active", formul: "without" },
-            { k: "all", label: "Todos", n: patients.length, status: "all", formul: "all" },
-          ] as const).map((t) => {
-            const isActive =
-              statusFilter === t.status &&
-              formulFilter === t.formul &&
-              // discriminação entre "Ativos" e "Com/Sem Formulação" (todos usam status="active")
-              (t.k === "active"
-                ? formulFilter === "all"
-                : t.k === "with-form"
-                  ? formulFilter === "with"
-                  : t.k === "without-form"
-                    ? formulFilter === "without"
-                    : true);
-            return (
-              <button
-                key={t.k}
-                onClick={() => {
-                  setStatusFilter(t.status as typeof statusFilter);
-                  setFormulFilter(t.formul as typeof formulFilter);
-                  setOnlyNoNext(false);
-                }}
-                style={{
-                  background: isActive ? C.card : "transparent",
-                  border: isActive ? `1px solid ${C.border}` : "1px solid transparent",
-                  color: isActive ? C.ink : C.muted,
-                  fontWeight: isActive ? 600 : 500,
-                  fontSize: 13,
-                  padding: "6px 12px",
-                  borderRadius: 7,
-                  boxShadow: isActive ? "0 1px 2px rgba(0,0,0,0.04)" : "none",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}
-              >
-                {t.label}
-                <span style={{ background: isActive ? C.purpleSoft : C.border, color: isActive ? C.purple : C.muted, fontSize: 11, fontWeight: 700, padding: "1px 7px", borderRadius: 40 }}>{t.n}</span>
-              </button>
-            );
-          })}
-        </div>
-        {onlyNoNext && (
-          <button
-            type="button"
-            onClick={clearAttentionFilter}
-            className="inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
-            style={{ background: C.redSoft, color: C.red, border: `1px solid ${C.red}`, borderRadius: 40, fontSize: 12, fontWeight: 600, padding: "4px 10px" }}
-            title="Remover filtro"
-          >
-            <CalendarDays className="h-3 w-3" />
-            Sem próxima sessão
-            <X className="h-3 w-3" />
-          </button>
-        )}
-        {attentionFilter !== "none" && (
-          <button
-            type="button"
-            onClick={clearAttentionFilter}
-            className="inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
-            style={{ background: C.redSoft, color: C.red, border: `1px solid ${C.red}`, borderRadius: 40, fontSize: 12, fontWeight: 600, padding: "4px 10px" }}
-            title="Remover filtro"
-          >
-            {attentionFilter === "sem-formulacao" ? (
-              <>
-                <FileText className="h-3 w-3" />
-                Formulações de Caso pendentes
-              </>
             ) : (
-              <>
-                <UserMinus className="h-3 w-3" />
-                Baixa adesão
-              </>
+              <p className="mt-4" style={{ fontSize: 12.5, color: C.muted }}>{card.hint}</p>
             )}
-            <X className="h-3 w-3" />
-          </button>
+          </div>
+        ))}
+      </div>
+
+      {/* ─────────── FILTER BAR ─────────── */}
+      <div
+        className="mb-6 sticky top-16 md:top-0 z-10 -mx-3 px-3 sm:-mx-6 sm:px-6 py-2"
+        style={{ background: C.pageBg }}
+      >
+        <div
+          className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+          style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "10px 12px", boxShadow: "0 1px 2px rgba(23,21,47,0.04)" }}
+        >
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+            {/* Tabs: Ativos / Inativos */}
+            <div className="flex items-center gap-1 shrink-0" style={{ background: "#F5F3FA", borderRadius: 10, padding: 3 }}>
+              {([
+                { k: "active", label: "Ativos", n: activeCount },
+                { k: "inactive", label: "Inativos", n: inactiveCount },
+              ] as const).map((t) => {
+                const isActive = statusFilter === t.k;
+                return (
+                  <button
+                    key={t.k}
+                    type="button"
+                    onClick={() => { setStatusFilter(t.k); setFormulFilter("all"); setOnlyNoNext(false); }}
+                    className="inline-flex items-center gap-1.5 transition-colors"
+                    style={{
+                      background: isActive ? C.card : "transparent",
+                      color: isActive ? C.ink : C.muted,
+                      fontWeight: isActive ? 600 : 500,
+                      fontSize: 13,
+                      padding: "6px 12px",
+                      borderRadius: 8,
+                      boxShadow: isActive ? "0 1px 2px rgba(23,21,47,0.06)" : "none",
+                    }}
+                  >
+                    {t.label}
+                    <span style={{ fontSize: 11, fontWeight: 600, color: isActive ? C.purple : C.muted }}>({t.n})</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Pills: formulação */}
+            <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto no-scrollbar">
+              {([
+                { k: "all", label: "Todos", formul: "all", status: "all" },
+                { k: "with", label: "Com Formulação", formul: "with", status: "active" },
+                { k: "without", label: "Sem Formulação", formul: "without", status: "active" },
+              ] as const).map((pill) => {
+                const isActive = pill.k === "all"
+                  ? statusFilter === "all" && formulFilter === "all"
+                  : formulFilter === pill.k;
+                return (
+                  <button
+                    key={pill.k}
+                    type="button"
+                    onClick={() => {
+                      setStatusFilter(pill.status as typeof statusFilter);
+                      setFormulFilter(pill.formul as typeof formulFilter);
+                      setOnlyNoNext(false);
+                    }}
+                    className="shrink-0 whitespace-nowrap transition-colors"
+                    style={{
+                      background: isActive ? C.purpleSoft : "transparent",
+                      border: `1px solid ${isActive ? "#D9C7F0" : C.border}`,
+                      color: isActive ? C.purpleInk : C.muted,
+                      fontWeight: isActive ? 600 : 500,
+                      fontSize: 12.5,
+                      padding: "6px 12px",
+                      borderRadius: 40,
+                    }}
+                  >
+                    {pill.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Busca */}
+          <div className="relative w-full lg:w-[320px] shrink-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: C.muted }} />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar paciente por nome ou telefone..."
+              className="pl-9 h-10 w-full border-0 focus-visible:ring-1 focus-visible:ring-[#9B72D3]"
+              style={{ background: "#F5F3FA", borderRadius: 10, fontSize: 13 }}
+            />
+          </div>
+        </div>
+
+        {/* Filtros ativos */}
+        {(onlyNoNext || attentionFilter !== "none") && (
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            {onlyNoNext && (
+              <button
+                type="button"
+                onClick={clearAttentionFilter}
+                className="inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9B72D3]"
+                style={{ background: C.card, color: C.purpleInk, border: `1px solid ${C.border}`, borderRadius: 40, fontSize: 12, fontWeight: 600, padding: "5px 11px" }}
+                title="Remover filtro"
+              >
+                <CalendarDays className="h-3 w-3" />
+                Sem próxima sessão
+                <X className="h-3 w-3" />
+              </button>
+            )}
+            {attentionFilter !== "none" && (
+              <button
+                type="button"
+                onClick={clearAttentionFilter}
+                className="inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9B72D3]"
+                style={{ background: C.card, color: C.purpleInk, border: `1px solid ${C.border}`, borderRadius: 40, fontSize: 12, fontWeight: 600, padding: "5px 11px" }}
+                title="Remover filtro"
+              >
+                {attentionFilter === "sem-formulacao" ? (
+                  <>
+                    <FileText className="h-3 w-3" />
+                    Formulações de Caso pendentes
+                  </>
+                ) : (
+                  <>
+                    <UserMinus className="h-3 w-3" />
+                    Baixa adesão
+                  </>
+                )}
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         )}
       </div>
+
 
       {/* ─────────── PATIENT LIST ─────────── */}
       {loading ? (
@@ -1290,33 +1297,33 @@ const Patients = () => {
           style={{
             background: C.card,
             border: `1px solid ${C.border}`,
-            borderRadius: 12,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+            borderRadius: 16,
+            boxShadow: "0 1px 2px rgba(23,21,47,0.04)",
             overflow: "hidden",
           }}
         >
           <div className="hidden md:block overflow-x-auto">
-            <table className="w-full" style={{ borderCollapse: "collapse", fontSize: 13, minWidth: 1080 }}>
+            <table className="w-full" style={{ borderCollapse: "collapse", fontSize: 13, minWidth: 880 }}>
               <thead>
-                <tr style={{ background: C.neutralBg, borderBottom: `1px solid ${C.border}` }}>
+                <tr style={{ background: C.card, borderBottom: `1px solid ${C.border}` }}>
                   {[
-                    { k: "avatar", label: "", w: 52 },
+                    { k: "avatar", label: "", w: 68 },
                     { k: "nome", label: "Paciente" },
                     { k: "modalidade", label: "Modalidade" },
                     { k: "plano", label: "Plano" },
                     { k: "status", label: "Status" },
-                    { k: "acoes", label: "", w: 56 },
+                    { k: "acoes", label: "Ações", w: 72 },
                   ].map((h) => (
                     <th
                       key={h.k}
                       style={{
-                        textAlign: "left",
-                        padding: "10px 12px",
+                        textAlign: h.k === "acoes" ? "right" : "left",
+                        padding: "16px 18px",
                         fontSize: 11,
-                        fontWeight: 700,
-                        color: C.muted,
+                        fontWeight: 600,
+                        color: "#9CA3AF",
                         textTransform: "uppercase",
-                        letterSpacing: "0.06em",
+                        letterSpacing: "0.1em",
                         width: (h as any).w,
                         whiteSpace: "nowrap",
                       }}
@@ -1326,6 +1333,7 @@ const Patients = () => {
                   ))}
                 </tr>
               </thead>
+
               <tbody>
                 {filtered.map((p, idx) => {
                   const isCriticalAlert = p.notes ? /(crise|resist|abandon|suic|término)/i.test(p.notes) : false;
@@ -1386,7 +1394,7 @@ const Patients = () => {
                       }}
                     >
                       {/* Avatar */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle" }}>
+                      <td style={{ padding: "16px 18px", verticalAlign: "middle" }}>
                         <div
                           className="flex items-center justify-center"
                           style={{
@@ -1404,7 +1412,7 @@ const Patients = () => {
                       </td>
 
                       {/* Nome */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", minWidth: 220 }}>
+                      <td style={{ padding: "16px 18px", verticalAlign: "middle", minWidth: 220 }}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="min-w-0 cursor-pointer">
@@ -1476,7 +1484,7 @@ const Patients = () => {
 
 
                       {/* Modalidade */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "16px 18px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
                         {(() => {
                           const m = (p.modality ?? "").toString().toLowerCase();
                           if (m === "online") {
@@ -1493,7 +1501,7 @@ const Patients = () => {
                       </td>
 
                       {/* Plano */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "16px 18px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
                         {pkg ? (
                           <span
                             style={{
@@ -1522,7 +1530,7 @@ const Patients = () => {
 
 
                       {/* Status */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "16px 18px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
                         <span
                           style={{
                             background: p.is_active ? C.greenSoft : "#F3F4F6",
@@ -1540,7 +1548,8 @@ const Patients = () => {
                       </td>
 
                       {/* Ações */}
-                      <td style={{ padding: "10px 12px", verticalAlign: "middle" }}>
+                      <td style={{ padding: "16px 18px", verticalAlign: "middle", textAlign: "right" }}>
+
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
