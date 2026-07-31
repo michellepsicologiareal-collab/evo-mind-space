@@ -3,16 +3,18 @@ import { logClinicalAccess } from "@/utils/auditLog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight, Link2, Copy, MessageCircle, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -26,6 +28,7 @@ interface TccRecord {
   behavior: string | null;
   cognitive_distortion: string | null;
   rational_response: string | null;
+  filled_by?: string | null;
   created_at: string;
 }
 
@@ -33,6 +36,7 @@ interface Props {
   patientId: string;
   readOnly?: boolean;
 }
+
 
 const G = "#B8860B";
 const G_BG = "#FDF6E3";
@@ -56,10 +60,17 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
     rational_response: "",
   });
 
+  // Link público para o paciente preencher
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkLoading, setLinkLoading] = useState(false);
+  const [linkPassword, setLinkPassword] = useState("");
+  const [publicLink, setPublicLink] = useState<string | null>(null);
+  const [patientInfo, setPatientInfo] = useState<{ full_name: string; phone: string | null } | null>(null);
+
   const load = async () => {
     const { data } = await (supabase as any)
       .from("tcc_records")
-      .select("id, situation, automatic_thought, emotion, behavior, cognitive_distortion, rational_response, created_at")
+      .select("id, situation, automatic_thought, emotion, behavior, cognitive_distortion, rational_response, filled_by, created_at")
       .eq("patient_id", patientId)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -71,6 +82,56 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   useEffect(() => {
     load();
   }, [patientId]);
+
+  const openLinkDialog = async () => {
+    setLinkOpen(true);
+    setPublicLink(null);
+    setLinkPassword("");
+    const { data } = await (supabase as any)
+      .from("patients")
+      .select("full_name, phone")
+      .eq("id", patientId)
+      .maybeSingle();
+    setPatientInfo(data ?? null);
+  };
+
+  const generateLink = async () => {
+    if (!user) return;
+    setLinkLoading(true);
+    const { data, error } = await (supabase as any)
+      .from("rpd_invites")
+      .insert({
+        user_id: user.id,
+        patient_id: patientId,
+        password: linkPassword.trim() || null,
+      })
+      .select("token")
+      .single();
+    setLinkLoading(false);
+    if (error || !data?.token) {
+      toast.error("Não foi possível gerar o link.");
+      return;
+    }
+    setPublicLink(`${window.location.origin}/rpd/${data.token}`);
+    toast.success("Link gerado");
+  };
+
+  const copyLink = async () => {
+    if (!publicLink) return;
+    await navigator.clipboard.writeText(publicLink);
+    toast.success("Link copiado");
+  };
+
+  const sendWhatsApp = () => {
+    if (!publicLink) return;
+    const phone = (patientInfo?.phone || "").replace(/\D/g, "");
+    const msg = `Olá! Use este link para registrar seus pensamentos (RPD) durante a semana: ${publicLink}${linkPassword.trim() ? `\n\nSenha: ${linkPassword.trim()}` : ""}`;
+    const url = phone
+      ? `https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+  };
+
 
   const handleSave = async () => {
     if (!user) return;
@@ -127,15 +188,27 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
           <p style={{ fontSize: 12, color: MUTED }}>Situação · Pensamento automático · Emoção · Comportamento · Distorção · Resposta racional</p>
         </div>
         {!readOnly && (
-          <Button
-            size="sm"
-            onClick={() => setOpen(true)}
-            className="w-full sm:w-auto shrink-0"
-            style={{ background: G, color: "#fff", fontWeight: 600 }}
-          >
-            <Plus className="h-4 w-4" /> Novo RPD
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={openLinkDialog}
+              className="w-full sm:w-auto"
+              style={{ borderColor: G_BORDER, color: G, fontWeight: 600 }}
+            >
+              <Link2 className="h-4 w-4" /> Enviar link ao paciente
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setOpen(true)}
+              className="w-full sm:w-auto"
+              style={{ background: G, color: "#fff", fontWeight: 600 }}
+            >
+              <Plus className="h-4 w-4" /> Novo RPD
+            </Button>
+          </div>
         )}
+
       </header>
 
       <div className="flex items-center gap-2">
@@ -173,10 +246,19 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                 >
                   <div className="min-w-0 flex-1">
                     <p className="font-medium truncate" style={{ color: INK }}>{preview}</p>
-                    <p className="text-xs" style={{ color: MUTED }}>
+                    <p className="text-xs flex items-center gap-1.5 flex-wrap" style={{ color: MUTED }}>
                       {format(new Date(r.created_at), "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
+                      {r.filled_by === "patient" && (
+                        <span
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded"
+                          style={{ background: G_BG, color: G, border: `1px solid ${G_BORDER}`, fontSize: 10, fontWeight: 600 }}
+                        >
+                          <User className="h-3 w-3" /> Preenchido pelo paciente
+                        </span>
+                      )}
                     </p>
                   </div>
+
                   {isOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
                 </button>
                 {isOpen && (
@@ -281,6 +363,68 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2" style={{ color: INK }}>
+              <Link2 className="h-5 w-5" style={{ color: G }} /> Link do RPD para o paciente
+            </DialogTitle>
+            <DialogDescription>
+              {patientInfo?.full_name ? `${patientInfo.full_name} ` : ""}poderá preencher o RPD pelo link. Cada envio aparece aqui automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          {!publicLink ? (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label>Senha (opcional)</Label>
+                <Input
+                  value={linkPassword}
+                  onChange={(e) => setLinkPassword(e.target.value)}
+                  placeholder="Ex.: 1234"
+                  maxLength={60}
+                />
+                <p className="text-xs text-muted-foreground">Se preencher, o paciente precisará digitar esta senha para abrir o link.</p>
+              </div>
+              <Button
+                onClick={generateLink}
+                disabled={linkLoading}
+                className="w-full"
+                style={{ background: G, color: "#fff", fontWeight: 600 }}
+              >
+                {linkLoading && <Loader2 className="h-4 w-4 animate-spin" />} Gerar link
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-xs break-all rounded-lg p-3" style={{ background: G_BG, border: `1px solid ${G_BORDER}`, color: INK }}>
+                {publicLink}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" onClick={copyLink} className="w-full sm:flex-1">
+                  <Copy className="h-4 w-4" /> Copiar link
+                </Button>
+                <Button
+                  onClick={sendWhatsApp}
+                  className="w-full sm:flex-1"
+                  style={{ background: "#3D5C35", color: "#fff", fontWeight: 600 }}
+                >
+                  <MessageCircle className="h-4 w-4" /> Enviar por WhatsApp
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">O link vale por 90 dias e aceita vários preenchimentos.</p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setLinkOpen(false); preserveScroll(() => load()); }} className="w-full sm:w-auto">
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
+
   );
 };
