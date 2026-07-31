@@ -2060,8 +2060,8 @@ const Patients = () => {
               </div>
             );
           })()}
-        </SheetContent>
-      </Sheet>
+        </div>
+      )}
 
 
       {/* New/Edit patient dialog */}
