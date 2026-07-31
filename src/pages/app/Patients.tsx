@@ -1303,7 +1303,7 @@ const Patients = () => {
           }}
         >
           <div className="hidden md:block overflow-x-auto">
-            <table className="w-full" style={{ borderCollapse: "collapse", fontSize: 13, minWidth: 1080 }}>
+            <table className="w-full" style={{ borderCollapse: "collapse", fontSize: 13, minWidth: 880 }}>
               <thead>
                 <tr style={{ background: C.card, borderBottom: `1px solid ${C.border}` }}>
                   {[
