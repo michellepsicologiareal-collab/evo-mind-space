@@ -411,7 +411,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       </Dialog>
 
       <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2" style={{ color: INK }}>
               <Link2 className="h-5 w-5" style={{ color: G }} /> Link do RPD para o paciente
@@ -423,6 +423,20 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
 
           {!publicLink ? (
             <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label>Validade do link</Label>
+                <Select value={linkDays} onValueChange={setLinkDays}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="7">7 dias</SelectItem>
+                    <SelectItem value="15">15 dias</SelectItem>
+                    <SelectItem value="30">30 dias</SelectItem>
+                    <SelectItem value="60">60 dias</SelectItem>
+                    <SelectItem value="90">90 dias</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Depois desse prazo o link deixa de funcionar automaticamente.</p>
+              </div>
               <div className="space-y-1.5">
                 <Label>Senha (opcional)</Label>
                 <Input
@@ -459,9 +473,56 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                   <MessageCircle className="h-4 w-4" /> Enviar por WhatsApp
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">O link vale por 90 dias e aceita vários preenchimentos.</p>
+              <p className="text-xs text-muted-foreground">
+                O link vale por {linkDays} dias e aceita vários preenchimentos. Você pode revogar o acesso a qualquer momento abaixo.
+              </p>
             </div>
           )}
+
+          {/* Links gerados */}
+          <div className="space-y-2 border-t pt-3" style={{ borderColor: "#F0E9D8" }}>
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: G }}>Links gerados</p>
+            {invitesLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" style={{ color: G }} />
+            ) : invites.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Nenhum link gerado ainda.</p>
+            ) : (
+              <ul className="space-y-2">
+                {invites.map((inv) => {
+                  const expired = new Date(inv.expires_at) <= new Date();
+                  const revoked = !!inv.revoked_at;
+                  const active = !expired && !revoked;
+                  return (
+                    <li key={inv.id} className="flex items-center justify-between gap-2 rounded-lg border p-2.5" style={{ borderColor: "#EEE7D6" }}>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium" style={{ color: INK }}>
+                          {revoked ? "Revogado" : expired ? "Expirado" : `Válido até ${format(new Date(inv.expires_at), "dd/MM/yyyy", { locale: ptBR })}`}
+                        </p>
+                        <p className="text-[11px]" style={{ color: MUTED }}>
+                          Criado em {format(new Date(inv.created_at), "dd/MM/yyyy", { locale: ptBR })} · {inv.submissions_count} envio{inv.submissions_count === 1 ? "" : "s"}
+                          {inv.password ? " · com senha" : ""}
+                        </p>
+                      </div>
+                      {active ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive shrink-0"
+                          disabled={revoking === inv.id}
+                          onClick={() => revokeInvite(inv.id, inv.token)}
+                        >
+                          {revoking === inv.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ban className="h-3.5 w-3.5" />} Revogar
+                        </Button>
+                      ) : (
+                        <span className="text-[11px] shrink-0" style={{ color: MUTED }}>inativo</span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
 
           <DialogFooter>
             <Button variant="ghost" onClick={() => { setLinkOpen(false); preserveScroll(() => load()); }} className="w-full sm:w-auto">
