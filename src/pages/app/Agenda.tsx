@@ -308,6 +308,7 @@ const Agenda = () => {
   }, [patientFilter, currentMonth]);
 
   // Pending
+  const [pendingRecordsOpen, setPendingRecordsOpen] = useState(false);
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
   const [pendingPackageSessions, setPendingPackageSessions] = useState<Session[]>([]);
   const [loadingPending, setLoadingPending] = useState(true);
