@@ -2759,6 +2759,21 @@ const Agenda = () => {
                     </Button>
                   </div>
 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-pressed={dense}
+                    title={dense ? "Modo compacto ativo — mostrar cards completos" : "Modo compacto — ver mais atendimentos por tela"}
+                    className={cn(
+                      "h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold shrink-0 gap-1.5",
+                      dense && "bg-primary/10 border-primary/30 text-primary hover:bg-primary/15 hover:text-primary"
+                    )}
+                    onClick={toggleDense}
+                  >
+                    <Rows3 className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Compacto</span>
+                  </Button>
+
                   <Button variant="accent" size="sm" className="h-8 rounded-[40px] font-display font-semibold shrink-0" onClick={() => openNew(selectedDate)}>
                     <Plus className="h-3.5 w-3.5" /> Nova sessão
                   </Button>
