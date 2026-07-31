@@ -363,6 +363,68 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2" style={{ color: INK }}>
+              <Link2 className="h-5 w-5" style={{ color: G }} /> Link do RPD para o paciente
+            </DialogTitle>
+            <DialogDescription>
+              {patientInfo?.full_name ? `${patientInfo.full_name} ` : ""}poderá preencher o RPD pelo link. Cada envio aparece aqui automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          {!publicLink ? (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label>Senha (opcional)</Label>
+                <Input
+                  value={linkPassword}
+                  onChange={(e) => setLinkPassword(e.target.value)}
+                  placeholder="Ex.: 1234"
+                  maxLength={60}
+                />
+                <p className="text-xs text-muted-foreground">Se preencher, o paciente precisará digitar esta senha para abrir o link.</p>
+              </div>
+              <Button
+                onClick={generateLink}
+                disabled={linkLoading}
+                className="w-full"
+                style={{ background: G, color: "#fff", fontWeight: 600 }}
+              >
+                {linkLoading && <Loader2 className="h-4 w-4 animate-spin" />} Gerar link
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-xs break-all rounded-lg p-3" style={{ background: G_BG, border: `1px solid ${G_BORDER}`, color: INK }}>
+                {publicLink}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" onClick={copyLink} className="w-full sm:flex-1">
+                  <Copy className="h-4 w-4" /> Copiar link
+                </Button>
+                <Button
+                  onClick={sendWhatsApp}
+                  className="w-full sm:flex-1"
+                  style={{ background: "#3D5C35", color: "#fff", fontWeight: 600 }}
+                >
+                  <MessageCircle className="h-4 w-4" /> Enviar por WhatsApp
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">O link vale por 90 dias e aceita vários preenchimentos.</p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setLinkOpen(false); preserveScroll(() => load()); }} className="w-full sm:w-auto">
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
+
   );
 };
