@@ -46,7 +46,7 @@ const Profile = () => {
   const [linkingSupervisor, setLinkingSupervisor] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({ full_name: "", clinic_name: "", crp: "", phone: "", specialty: "", pix_key: "" });
+  const [form, setForm] = useState({ full_name: "", clinic_name: "", clinic_address: "", presencial_message: "", crp: "", phone: "", specialty: "", pix_key: "" });
   const [profileType, setProfileType] = useState<ProfileType>("standard");
   const [supervisorId, setSupervisorId] = useState<string | null>(null);
   const [supervisorName, setSupervisorName] = useState<string | null>(null);
