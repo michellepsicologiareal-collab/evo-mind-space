@@ -1906,7 +1906,8 @@ const Agenda = () => {
         onClick={() => openEdit(s)}
         title={isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
         className={cn(
-          "relative overflow-hidden rounded-xl border border-border bg-card p-3 pl-4 group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/15",
+          "relative overflow-hidden rounded-xl border border-border bg-card group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/15",
+          compact ? "py-1.5 pr-2 pl-3" : "p-3 pl-4",
           "before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-['']",
           accentClass
         )}
