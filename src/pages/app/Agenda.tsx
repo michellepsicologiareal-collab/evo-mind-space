@@ -1959,8 +1959,8 @@ const Agenda = () => {
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 px-2.5 gap-1 text-xs font-medium shrink-0" aria-label="Ações da sessão" onClick={(e) => e.stopPropagation()}>
-                  <ChevronDown className="h-4 w-4" /> Ações
+                <Button variant="outline" size="sm" className={cn("gap-1 text-xs font-medium shrink-0", compact ? "h-7 w-7 p-0" : "h-8 px-2.5")} aria-label="Ações da sessão" onClick={(e) => e.stopPropagation()}>
+                  <ChevronDown className="h-4 w-4" /> {!compact && "Ações"}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
