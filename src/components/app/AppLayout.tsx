@@ -167,7 +167,7 @@ export const AppLayout = () => {
         </div>
 
 
-        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
+        <nav className="flex-1 px-3 pb-4 space-y-1 overflow-y-auto">
           {(() => {
             const sections: { label: string; routes: string[] }[] = [
               { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda"] },
