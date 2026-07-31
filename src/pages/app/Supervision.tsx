@@ -577,15 +577,15 @@ const Supervision = () => {
         )}
       </section>
 
-      {/* Patient detail dialog */}
-      <Dialog open={!!selectedPatientItem} onOpenChange={(o) => { if (!o) { setSelectedPatientItem(null); setSelectedPatient(null); } }}>
-        <DialogContent className="max-w-lg">
+      {/* Patient detail dialog — clinical only, no financial or personal data */}
+      <Dialog open={!!selectedPatientItem} onOpenChange={(o) => { if (!o) { setSelectedPatientItem(null); setClinical(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">
-              {selectedPatientItem?.initials ?? selectedPatient?.code ?? ""}
+              {selectedPatientItem?.initials ?? clinical?.code ?? ""}
             </DialogTitle>
             <DialogDescription>
-              {(selectedPatient ?? selectedPatientItem)?.is_active ? "Paciente ativo" : "Paciente inativo"} · acesso somente leitura
+              {(clinical?.is_active ?? selectedPatientItem?.is_active) ? "Paciente ativo" : "Paciente inativo"} · acesso somente leitura · identificação anônima
             </DialogDescription>
           </DialogHeader>
 
@@ -595,138 +595,216 @@ const Supervision = () => {
             </div>
           )}
 
-          {selectedPatient && !detailLoading && (
-            <div className="space-y-4">
-              {selectedPatient.notes && (
-                <div>
-                  <div className="flex items-center gap-2 text-sm font-medium mb-2">
-                    <StickyNote className="h-4 w-4 text-muted-foreground" />
-                    Observações
-                  </div>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap rounded-lg bg-secondary/40 p-3">
-                    {selectedPatient.notes}
+          {clinical && !detailLoading && (
+            <div className="space-y-5">
+              {/* Datas */}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl bg-secondary/40 p-3">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Última sessão</p>
+                  <p className="text-sm font-medium">
+                    {clinical.last_session_at
+                      ? format(new Date(clinical.last_session_at), "dd 'de' MMM yyyy", { locale: ptBR })
+                      : "—"}
                   </p>
                 </div>
+                <div className="rounded-xl bg-secondary/40 p-3">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Próxima sessão</p>
+                  <p className="text-sm font-medium">
+                    {clinical.next_session_at
+                      ? format(new Date(clinical.next_session_at), "dd 'de' MMM yyyy", { locale: ptBR })
+                      : "—"}
+                  </p>
+                </div>
+              </div>
+
+              {clinical.chief_complaint && (
+                <section>
+                  <h3 className="text-sm font-semibold mb-2">Queixa principal</h3>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap rounded-lg bg-secondary/40 p-3">
+                    {clinical.chief_complaint}
+                  </p>
+                </section>
               )}
 
+              {clinical.treatment_plan && (
+                <section>
+                  <h3 className="text-sm font-semibold mb-2">Objetivos terapêuticos</h3>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap rounded-lg bg-secondary/40 p-3">
+                    {clinical.treatment_plan}
+                  </p>
+                </section>
+              )}
 
-              <div className="border-t border-border pt-4 space-y-4">
-                {/* Recent sessions */}
-                <div>
-                  <div className="flex items-center gap-2 text-sm font-medium mb-2">
-                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                    Sessões recentes
-                  </div>
-                  {detailLoading ? (
-                    <div className="py-3 text-center"><Loader2 className="h-4 w-4 animate-spin mx-auto text-primary" /></div>
-                  ) : recentSessions.length === 0 ? (
-                    <p className="text-sm text-muted-foreground rounded-lg bg-secondary/40 p-3">
-                      Nenhuma sessão registrada ainda.
-                    </p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {recentSessions.map((s) => (
-                        <li key={s.id} className="rounded-lg bg-secondary/40 p-3 text-sm">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-medium">
-                              {format(new Date(s.scheduled_at), "dd 'de' MMM, HH:mm", { locale: ptBR })}
-                            </span>
-                            <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-background text-muted-foreground">
-                              {s.status}
-                            </span>
-                          </div>
-                          {s.notes && (
-                            <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{s.notes}</p>
-                          )}
-                        </li>
+              {clinical.formulation && (
+                <section>
+                  <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <Brain className="h-4 w-4 text-muted-foreground" /> Formulação de caso
+                  </h3>
+                  <div className="rounded-lg bg-secondary/40 p-3 space-y-2 text-sm">
+                    {([
+                      ["Ambiente", clinical.formulation.environment],
+                      ["Pensamentos", clinical.formulation.thoughts],
+                      ["Emoções", clinical.formulation.emotions],
+                      ["Comportamentos", clinical.formulation.behaviors],
+                      ["Reações físicas", clinical.formulation.physical_reactions],
+                      ["Crenças centrais", clinical.formulation.core_beliefs],
+                      ["Resumo clínico", clinical.formulation.ai_summary],
+                    ] as [string, string | null][])
+                      .filter(([, v]) => !!v)
+                      .map(([label, value]) => (
+                        <p key={label} className="text-muted-foreground whitespace-pre-wrap">
+                          <span className="font-medium text-foreground">{label}: </span>
+                          {value}
+                        </p>
                       ))}
-                    </ul>
-                  )}
-                </div>
-
-                {/* Latest mood / progress */}
-                <div>
-                  <div className="flex items-center gap-2 text-sm font-medium mb-2">
-                    <Activity className="h-4 w-4 text-muted-foreground" />
-                    Último humor / progresso
+                    {Array.isArray(clinical.formulation.treatment_goals) &&
+                      clinical.formulation.treatment_goals.length > 0 && (
+                        <div>
+                          <p className="font-medium text-foreground">Metas de tratamento:</p>
+                          <ul className="list-disc pl-5 text-muted-foreground">
+                            {(clinical.formulation.treatment_goals as any[]).map((g, i) => (
+                              <li key={i}>{typeof g === "string" ? g : g?.descricao ?? g?.title ?? JSON.stringify(g)}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                   </div>
-                  {detailLoading ? null : !latestProgress ? (
-                    <p className="text-sm text-muted-foreground rounded-lg bg-secondary/40 p-3">
-                      Nenhum registro de humor/progresso ainda.
-                    </p>
-                  ) : (
-                    <div className="rounded-lg bg-secondary/40 p-3 space-y-2">
-                      <div className="flex items-center justify-between gap-2 text-sm flex-wrap">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Smile className="h-4 w-4 text-primary" />
-                          {latestProgress.data_model === "v2_structured" ? (
-                            <>
-                              <span className="font-medium">
-                                {latestProgress.wellbeing_score != null
-                                  ? `Bem-estar ${latestProgress.wellbeing_score}/10`
-                                  : "Sem escore de bem-estar"}
-                              </span>
-                              {latestProgress.wellbeing_source && (
-                                <span className="text-[10px] uppercase rounded-full px-2 py-0.5 bg-lilac/40 text-primary-dark font-semibold">
-                                  {latestProgress.wellbeing_source === "patient_self_report"
-                                    ? "Autorrelato"
-                                    : "Estimativa profissional"}
-                                </span>
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              <span className="font-medium">
-                                {latestProgress.mood_score != null
-                                  ? `Humor ${latestProgress.mood_score}/10`
-                                  : "Sem humor"}
-                              </span>
-                              <span className="text-[10px] uppercase rounded-full px-2 py-0.5 bg-amber-200/60 text-amber-900 font-semibold">
-                                Legado
-                              </span>
-                            </>
-                          )}
-                          {latestProgress.attention_flag === "watch" && (
-                            <span className="text-[10px] uppercase rounded-full px-2 py-0.5 bg-amber-200/70 text-amber-900 font-semibold">
-                              Observar
-                            </span>
-                          )}
-                          {latestProgress.attention_flag === "urgent" && (
+                </section>
+              )}
+
+              {clinical.notes && (
+                <section>
+                  <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <StickyNote className="h-4 w-4 text-muted-foreground" /> Pontos importantes
+                  </h3>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap rounded-lg bg-secondary/40 p-3">
+                    {clinical.notes}
+                  </p>
+                </section>
+              )}
+
+              {/* Registros de sessão */}
+              <section>
+                <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" /> Registros de sessão
+                </h3>
+                {clinical.records.length === 0 ? (
+                  <p className="text-sm text-muted-foreground rounded-lg bg-secondary/40 p-3">
+                    Nenhum registro clínico compartilhado ainda.
+                  </p>
+                ) : (
+                  <ul className="space-y-2">
+                    {clinical.records.map((r, i) => (
+                      <li key={i} className="rounded-lg bg-secondary/40 p-3 text-sm space-y-1">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="font-medium">
+                            {format(new Date(r.session_date), "dd/MM/yyyy", { locale: ptBR })}
+                            {r.session_number ? ` · Sessão ${r.session_number}` : ""}
+                          </span>
+                          {r.risk_indicator && r.risk_indicator !== "none" && (
                             <span className="text-[10px] uppercase rounded-full px-2 py-0.5 bg-destructive/15 text-destructive font-semibold">
-                              Urgente
+                              Risco: {r.risk_indicator}
                             </span>
                           )}
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(latestProgress.recorded_at), "dd/MM/yyyy", { locale: ptBR })}
-                        </span>
-                      </div>
-                      {latestProgress.data_model === "v2_structured" ? (
-                        <>
-                          {latestProgress.patient_context && (
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                              <span className="font-medium text-foreground">Contexto do paciente: </span>
-                              {latestProgress.patient_context}
-                            </p>
-                          )}
-                          {latestProgress.clinical_observation && (
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                              <span className="font-medium text-foreground">Observação clínica: </span>
-                              {latestProgress.clinical_observation}
-                            </p>
-                          )}
-                        </>
-                      ) : (
-                        latestProgress.note && (
-                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                            {latestProgress.note}
+                        {r.themes && r.themes.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {r.themes.map((t) => (
+                              <span key={t} className="text-[10px] rounded-full px-2 py-0.5 bg-lilac/30 text-primary-dark font-medium">
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {r.chief_complaint && (
+                          <p className="text-muted-foreground whitespace-pre-wrap">
+                            <span className="font-medium text-foreground">Queixa: </span>{r.chief_complaint}
                           </p>
-                        )
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+                        )}
+                        {r.clinical_observations && (
+                          <p className="text-muted-foreground whitespace-pre-wrap">
+                            <span className="font-medium text-foreground">Observações: </span>{r.clinical_observations}
+                          </p>
+                        )}
+                        {r.next_session_plan && (
+                          <p className="text-muted-foreground whitespace-pre-wrap">
+                            <span className="font-medium text-foreground">Estratégias / próximos passos: </span>{r.next_session_plan}
+                          </p>
+                        )}
+                        {r.engagement != null && (
+                          <p className="text-xs text-muted-foreground">Engajamento: {r.engagement}/10</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              {/* Evolução e humor */}
+              <section>
+                <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-muted-foreground" /> Evolução e humor
+                </h3>
+                {clinical.progress.length === 0 ? (
+                  <p className="text-sm text-muted-foreground rounded-lg bg-secondary/40 p-3">
+                    Nenhum registro de humor/progresso ainda.
+                  </p>
+                ) : (
+                  <ul className="space-y-2">
+                    {clinical.progress.map((g, i) => (
+                      <li key={i} className="rounded-lg bg-secondary/40 p-3 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2 text-sm flex-wrap">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Smile className="h-4 w-4 text-primary" />
+                            {g.data_model === "v2_structured" ? (
+                              <>
+                                <span className="font-medium">
+                                  {g.wellbeing_score != null ? `Bem-estar ${g.wellbeing_score}/10` : "Sem escore de bem-estar"}
+                                </span>
+                                {g.wellbeing_source && (
+                                  <span className="text-[10px] uppercase rounded-full px-2 py-0.5 bg-lilac/40 text-primary-dark font-semibold">
+                                    {g.wellbeing_source === "patient_self_report" ? "Autorrelato" : "Estimativa profissional"}
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <span className="font-medium">
+                                {g.mood_score != null ? `Humor ${g.mood_score}/10` : "Sem humor"}
+                              </span>
+                            )}
+                            {g.attention_flag === "watch" && (
+                              <span className="text-[10px] uppercase rounded-full px-2 py-0.5 bg-amber-200/70 text-amber-900 font-semibold">
+                                Observar
+                              </span>
+                            )}
+                            {g.attention_flag === "urgent" && (
+                              <span className="text-[10px] uppercase rounded-full px-2 py-0.5 bg-destructive/15 text-destructive font-semibold">
+                                Urgente
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(g.recorded_at), "dd/MM/yyyy", { locale: ptBR })}
+                          </span>
+                        </div>
+                        {g.patient_context && (
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                            <span className="font-medium text-foreground">Contexto: </span>{g.patient_context}
+                          </p>
+                        )}
+                        {g.clinical_observation && (
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                            <span className="font-medium text-foreground">Observação clínica: </span>{g.clinical_observation}
+                          </p>
+                        )}
+                        {g.data_model !== "v2_structured" && g.note && (
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{g.note}</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
             </div>
           )}
         </DialogContent>
@@ -736,3 +814,4 @@ const Supervision = () => {
 };
 
 export default Supervision;
+
