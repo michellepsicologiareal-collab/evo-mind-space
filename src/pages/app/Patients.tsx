@@ -1738,7 +1738,7 @@ const Patients = () => {
       {/* Página completa da ficha do paciente (mantém a sidebar principal) */}
       {selectedPatient && (
         <div
-          className="fixed inset-0 z-40 md:left-[248px] overflow-y-auto pt-16 md:pt-0"
+          className="absolute inset-x-0 top-0 z-40 min-h-full"
           style={{ background: "hsl(var(--background))" }}
           role="dialog"
           aria-label={`Ficha de ${selectedPatient.full_name}`}
@@ -1826,7 +1826,7 @@ const Patients = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.10em", color: "hsl(var(--primary))" }}>Paciente</p>
-                      <p className="truncate mt-0.5" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 26, lineHeight: 1.2, color: "hsl(var(--foreground))" }}>{p.full_name}</p>
+                      <p className="mt-0.5 break-words" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 26, lineHeight: 1.2, color: "hsl(var(--foreground))" }}>{p.full_name}</p>
                       <div className="flex items-center gap-2 mt-2 flex-wrap">
                         <span className="uppercase" style={{ background: "rgba(155,114,211,0.10)", border: "0.5px solid rgba(155,114,211,0.28)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 8px", letterSpacing: "0.04em" }}>{type}</span>
                         {p.modality && (
