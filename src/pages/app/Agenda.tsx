@@ -2561,6 +2561,14 @@ const Agenda = () => {
             )).length;
             const moodCount = moodTodayPatients.size;
 
+            const pendingPaymentList = sessions.filter((s) => (
+              s.session_type === "clinical" &&
+              !s.is_expense &&
+              s.payment_status === "pending" &&
+              !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
+              new Date(s.scheduled_at) < now
+            )).sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at));
+
             const pendingRecordList = sessions.filter((s) => {
               const key = s.patient_id ? `${s.patient_id}|${new Date(s.scheduled_at).toISOString().slice(0, 10)}` : "";
               return (
@@ -2573,6 +2581,7 @@ const Agenda = () => {
                 !(key && sessionRecordKeys.has(key))
               );
             }).sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at));
+
 
             const Item = ({ icon: Icon, label, value, tone, onClick }: { icon: any; label: string; value: number; tone: string; onClick?: () => void }) => {
               const Tag: any = onClick ? "button" : "div";
