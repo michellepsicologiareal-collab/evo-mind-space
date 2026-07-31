@@ -64,8 +64,12 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkLoading, setLinkLoading] = useState(false);
   const [linkPassword, setLinkPassword] = useState("");
+  const [linkDays, setLinkDays] = useState("30");
   const [publicLink, setPublicLink] = useState<string | null>(null);
   const [patientInfo, setPatientInfo] = useState<{ full_name: string; phone: string | null } | null>(null);
+  const [invites, setInvites] = useState<RpdInvite[]>([]);
+  const [invitesLoading, setInvitesLoading] = useState(false);
+  const [revoking, setRevoking] = useState<string | null>(null);
 
   const load = async () => {
     const { data } = await (supabase as any)
