@@ -364,6 +364,8 @@ const Patients = () => {
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
   const [formulFilter, setFormulFilter] = useState<"all" | "with" | "without">("all");
   const [onlyNoNext, setOnlyNoNext] = useState(false);
+  // Filtro vindo do Painel (Atenção necessária) via ?filter=
+  const [attentionFilter, setAttentionFilter] = useState<"none" | "sem-formulacao" | "baixa-adesao">("none");
   const [tccPatient, setTccPatient] = useState<Patient | null>(null);
   const [padeksyPatient, setPadeksyPatient] = useState<Patient | null>(null);
   const [historyPatient, setHistoryPatient] = useState<Patient | null>(null);
