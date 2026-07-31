@@ -18,6 +18,8 @@ import {
   CalendarDays,
   Smile,
   Activity,
+  Brain,
+
   Eye,
   MapPin,
   Wifi,
