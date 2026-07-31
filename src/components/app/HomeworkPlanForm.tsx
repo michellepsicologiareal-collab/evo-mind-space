@@ -642,6 +642,7 @@ export const HomeworkPlanForm = ({
                 type="button"
                 size="sm"
                 variant="moss"
+                className="w-full sm:w-auto"
                 onClick={sendWhatsApp}
                 disabled={sending || !canSend}
                 title={canSend ? "Enviar por WhatsApp" : "Paciente sem WhatsApp cadastrado"}
