@@ -329,7 +329,9 @@ export const HomeworkPlanForm = ({
     setCopying(true);
     try {
       await navigator.clipboard.writeText(url);
+      void logShare("link_copied");
       toast.success("Link copiado. Envie a senha separadamente.");
+
     } catch {
       toast.error("Não foi possível copiar");
     }
