@@ -1779,15 +1779,8 @@ const Patients = () => {
                             {p.is_active ? "Ativo" : "Inativo"}
                           </span>
                         </div>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <span className="flex items-center gap-1.5">
-                        <Eye className="h-3.5 w-3.5" />
-                        Abrir ficha
-                      </span>
-                    </TooltipContent>
-                  </Tooltip>
+                  </div>
+
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
