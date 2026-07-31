@@ -235,6 +235,9 @@ const Agenda = () => {
     message: string;
     original: string;
   } | null>(null);
+  const [confirmHistory, setConfirmHistory] = useState<
+    { id: string; modality: string; content_type: string; channel: string; created_at: string }[]
+  >([]);
   const [viewTab, setViewTab] = useState<string>("day");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
