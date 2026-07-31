@@ -2241,7 +2241,7 @@ const Agenda = () => {
               size="sm"
               onClick={syncAllExistingToGcal}
               disabled={bulkSyncing}
-              className="min-w-0 rounded-[40px] font-display font-semibold sm:flex-none"
+              className="shrink-0 min-w-0 rounded-[40px] font-display font-semibold sm:flex-none"
               title="Cria eventos no Google Calendar para todas as sessões futuras ainda não sincronizadas"
             >
               {bulkSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
