@@ -224,6 +224,14 @@ const Agenda = () => {
   const [clinicName, setClinicName] = useState("");
   const [clinicAddress, setClinicAddress] = useState("");
   const [presencialMessage, setPresencialMessage] = useState("");
+  const [confirmPreview, setConfirmPreview] = useState<{
+    sessionId: string;
+    patientName: string;
+    modality: "online" | "presencial";
+    phone: string;
+    message: string;
+    original: string;
+  } | null>(null);
   const [viewTab, setViewTab] = useState<string>("day");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
@@ -1321,6 +1329,7 @@ const Agenda = () => {
   };
 
 
+  // Abre o modo de revisão da mensagem antes do envio
   const copyConfirmationLink = async (s: Session) => {
     let token = s.confirmation_token;
     if (!token) {
@@ -1349,8 +1358,6 @@ const Agenda = () => {
     }
     const message = `Olá, por favor, entre para confirmar sua sessão de terapia🤎\n\n${url}${extra}`;
 
-    // Open WhatsApp directly when we have the patient's phone, fall back to clipboard
-
     let phoneNumber = "";
     if (patient?.has_financial_responsible && patient.financial_responsible_phone) {
       phoneNumber = patient.financial_responsible_phone.replace(/\D/g, "");
@@ -1358,17 +1365,44 @@ const Agenda = () => {
       phoneNumber = patient.phone.replace(/\D/g, "");
     }
 
-    if (phoneNumber) {
-      window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
+    setConfirmPreview({
+      sessionId: s.id,
+      patientName: patient?.full_name || "Paciente",
+      modality: isOnline ? "online" : "presencial",
+      phone: phoneNumber,
+      message,
+      original: message,
+    });
+  };
+
+  const markConfirmationSent = async (sessionId: string) => {
+    await supabase.from("sessions").update({ confirmation_sent_at: new Date().toISOString() }).eq("id", sessionId);
+    load(true);
+  };
+
+  const sendConfirmationPreview = async () => {
+    if (!confirmPreview) return;
+    const { message, phone, sessionId } = confirmPreview;
+    if (!message.trim()) { toast.error("A mensagem está vazia"); return; }
+    if (phone) {
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
       toast.success("Lembrete enviado pelo WhatsApp ✨");
     } else {
       await navigator.clipboard.writeText(message);
       toast.success("Lembrete copiado (paciente sem telefone cadastrado)");
     }
-    // Marca o envio do lembrete para destacar no card
-    await supabase.from("sessions").update({ confirmation_sent_at: new Date().toISOString() }).eq("id", s.id);
-    load(true);
+    setConfirmPreview(null);
+    await markConfirmationSent(sessionId);
   };
+
+  const copyConfirmationPreview = async () => {
+    if (!confirmPreview) return;
+    await navigator.clipboard.writeText(confirmPreview.message);
+    toast.success("Mensagem copiada");
+    setConfirmPreview(null);
+    await markConfirmationSent(confirmPreview.sessionId);
+  };
+
 
   const getGroupId = (notes: string | null): string | null => {
     if (!notes) return null;
@@ -3962,6 +3996,43 @@ const Agenda = () => {
       </Sheet>
       <UnsavedGuardDialog open={newGuard.confirmOpen} onConfirm={newGuard.confirmLeave} onCancel={newGuard.cancelLeave} onSaveDraft={newGuard.saveDraftAndLeave} />
       <UnsavedGuardDialog open={editGuard.confirmOpen} onConfirm={editGuard.confirmLeave} onCancel={editGuard.cancelLeave} onSaveDraft={editGuard.saveDraftAndLeave} />
+
+      {/* Revisão da mensagem antes de enviar no WhatsApp */}
+      <Dialog open={!!confirmPreview} onOpenChange={(o) => !o && setConfirmPreview(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Revisar mensagem</DialogTitle>
+            <DialogDescription>
+              {confirmPreview
+                ? `${confirmPreview.patientName} · sessão ${confirmPreview.modality}${confirmPreview.phone ? "" : " · sem telefone cadastrado"}`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={confirmPreview?.message ?? ""}
+            onChange={(e) => setConfirmPreview((p) => (p ? { ...p, message: e.target.value } : p))}
+            rows={12}
+            className="text-sm font-sans resize-y"
+          />
+          <p className="text-xs text-muted-foreground">
+            {confirmPreview?.modality === "online"
+              ? "O link da chamada está incluído na mensagem."
+              : "O endereço de atendimento está incluído na mensagem."}
+          </p>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => setConfirmPreview((p) => (p ? { ...p, message: p.original } : p))}
+            >
+              Restaurar original
+            </Button>
+            <Button variant="outline" onClick={copyConfirmationPreview}>Copiar</Button>
+            <Button onClick={sendConfirmationPreview} className="bg-[#25D366] hover:bg-[#1fb857] text-white">
+              Enviar no WhatsApp
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
