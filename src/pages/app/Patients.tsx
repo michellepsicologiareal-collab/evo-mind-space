@@ -435,6 +435,11 @@ const Patients = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPatient, selectedTab]);
 
+  // Ao abrir/fechar a ficha em página completa, volta ao topo da área de conteúdo.
+  useEffect(() => {
+    if (selectedPatient) window.scrollTo({ top: 0, behavior: "auto" });
+  }, [selectedPatient?.id]);
+
   // Rolar e destacar o bloco Receita Saúde ao abrir com focus.
   useEffect(() => {
     if (!focusReceitaSaude || !selectedPatient || selectedTab !== "finance") return;
@@ -1735,14 +1740,15 @@ const Patients = () => {
       )}
 
 
-      {/* Side panel */}
-      <Sheet open={!!selectedPatient} onOpenChange={(o) => { if (!o) { setSelectedPatient(null); setSelectedTab("overview"); } }}>
-        <SheetContent side="right" className="w-full sm:max-w-[640px] p-0" style={{ background: "hsl(var(--card))", borderLeft: "0.5px solid hsl(var(--border))" }}>
-          <VisuallyHidden>
-            <SheetTitle>{selectedPatient?.full_name ?? "Ficha do paciente"}</SheetTitle>
-            <SheetDescription>Ficha clínica do paciente com abas de visão geral, formulações, sessões, plano, anamneses, documentos e financeiro.</SheetDescription>
-          </VisuallyHidden>
-          {selectedPatient && (() => {
+      {/* Página completa da ficha do paciente (mantém a sidebar principal) */}
+      {selectedPatient && (
+        <div
+          className="absolute inset-x-0 top-0 z-40 min-h-full"
+          style={{ background: "hsl(var(--background))" }}
+          role="dialog"
+          aria-label={`Ficha de ${selectedPatient.full_name}`}
+        >
+          {(() => {
             const p = selectedPatient;
             const cHist = counts.history[p.id] || 0;
             const cRec = counts.records[p.id] || 0;
@@ -1776,8 +1782,8 @@ const Patients = () => {
               </div>
             );
             return (
-              <div className="h-full overflow-y-auto relative">
-                <div className="absolute right-4 top-4 flex items-center gap-1 z-30" onClick={(e) => e.stopPropagation()}>
+              <div className="relative mx-auto w-full max-w-[1200px] px-4 sm:px-8 py-6 sm:py-8">
+                <div className="absolute right-6 sm:right-12 top-8 sm:top-12 flex items-center gap-1 z-30" onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
@@ -1817,48 +1823,71 @@ const Patients = () => {
                   </button>
                 </div>
 
-                {/* Header */}
-                <div
-                  className="sticky top-0 z-20 px-4 sm:px-6 pt-10 pb-4"
-                  style={{ background: "hsl(var(--card))", borderBottom: "0.5px solid hsl(var(--border))" }}
-                >
-                  <div className="flex items-center gap-3 pr-16 sm:pr-20">
-                    <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 44, height: 44, background: "rgba(150,117,206,0.08)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16 }}>
+                {/* Card superior do paciente */}
+                <div className="rounded-2xl bg-card border border-border p-5 sm:p-7 shadow-[var(--shadow-card)]">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 pr-16 sm:pr-24">
+                    <div className="shrink-0 flex items-center justify-center rounded-full" style={{ width: 60, height: 60, background: "rgba(155,114,211,0.10)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 20 }}>
                       {p.full_name.split(" ").map(w => w[0]).slice(0,2).join("").toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="truncate" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 16, color: "hsl(var(--foreground))" }}>{p.full_name}</p>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="uppercase" style={{ background: "rgba(201,168,76,0.10)", border: "0.5px solid rgba(201,168,76,0.3)", color: "hsl(var(--brown))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 8px", letterSpacing: "0.04em" }}>{type}</span>
-                        <span className="inline-flex items-center gap-1" style={{ fontSize: 10, color: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }}>
+                      <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.10em", color: "hsl(var(--primary))" }}>Paciente</p>
+                      <p className="mt-0.5 break-words" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 26, lineHeight: 1.2, color: "hsl(var(--foreground))" }}>{p.full_name}</p>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <span className="uppercase" style={{ background: "rgba(155,114,211,0.10)", border: "0.5px solid rgba(155,114,211,0.28)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 8px", letterSpacing: "0.04em" }}>{type}</span>
+                        {p.modality && (
+                          <span className="uppercase" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))", color: "hsl(var(--muted-foreground))", fontFamily: "Syne, sans-serif", fontWeight: 600, fontSize: 9, borderRadius: 40, padding: "3px 8px", letterSpacing: "0.04em" }}>{p.modality === "online" ? "Online" : "Presencial"}</span>
+                        )}
+                        <span className="inline-flex items-center gap-1" style={{ fontSize: 11, color: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }}>
                           <span style={{ width: 6, height: 6, borderRadius: "50%", background: p.is_active ? "hsl(var(--moss))" : "hsl(var(--muted-foreground))" }} />
                           {p.is_active ? "Ativo" : "Inativo"}
                         </span>
-                        {p.phone && <span className="inline-flex items-center gap-1 min-w-0 max-w-full" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--muted-foreground))" }}><Phone className="h-3 w-3 shrink-0" /> <span className="truncate">{p.phone}</span></span>}
+                        {p.phone && <span className="inline-flex items-center gap-1 min-w-0 max-w-full" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}><Phone className="h-3 w-3 shrink-0" /> <span className="truncate">{p.phone}</span></span>}
+                        {p.email && <span className="truncate min-w-0" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>{p.email}</span>}
                       </div>
-                      <div className="flex items-center gap-3 mt-1.5 flex-wrap" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
-                        <span><b style={{ color: "hsl(var(--foreground))", fontWeight: 600 }}>Próxima:</b> {fmtDate(info?.nextDate) ?? "Não informado"}</span>
-                        <span><b style={{ color: "hsl(var(--foreground))", fontWeight: 600 }}>Última:</b> {fmtDate(info?.lastDate) ?? "Não informado"}</span>
-                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      <button
+                        onClick={() => { navigate(`/app/registro-sessao?patient=${p.id}`); }}
+                        className="inline-flex items-center gap-2 transition-opacity hover:opacity-90 w-full sm:w-auto justify-center"
+                        style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", borderRadius: 40, padding: "12px 20px", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13 }}
+                      >
+                        Planejar próxima sessão →
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                <div className="px-4 sm:px-6 pt-4 pb-8 min-w-0">
+                {/* Cards resumidos */}
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mt-5">
+                  {[
+                    { label: "Próxima sessão", value: fmtDate(info?.nextDate) },
+                    { label: "Última sessão", value: fmtDate(info?.lastDate) },
+                    { label: "Início do tratamento", value: p.treatment_start_date ? format(new Date(p.treatment_start_date), "dd/MM/yyyy") : null },
+                    { label: "Registros salvos", value: cRec ? String(cRec) : "0" },
+                  ].map((kpi) => (
+                    <div key={kpi.label} className="rounded-2xl bg-card border border-border p-5 shadow-[var(--shadow-card)]">
+                      <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--muted-foreground))" }}>{kpi.label}</p>
+                      <p className="mt-1.5" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 17, color: "hsl(var(--foreground))" }}>{kpi.value ?? "Não informado"}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-6 pb-10 min-w-0">
                   <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-                    <TabsList className="w-full overflow-x-auto flex justify-start gap-1 h-auto p-1 flex-nowrap">
-                      <TabsTrigger value="overview" className="text-[11px] whitespace-nowrap">Visão geral</TabsTrigger>
-                      <TabsTrigger value="formulations" className="text-[11px] whitespace-nowrap">Formulações</TabsTrigger>
-                      <TabsTrigger value="sessions" className="text-[11px] whitespace-nowrap">Sessões</TabsTrigger>
-                      <TabsTrigger value="plan" className="text-[11px] whitespace-nowrap">Plano Terapêutico</TabsTrigger>
-                      <TabsTrigger value="anamnesis" className="text-[11px] whitespace-nowrap">Anamneses</TabsTrigger>
-                      <TabsTrigger value="documents" className="text-[11px] whitespace-nowrap">Documentos</TabsTrigger>
-                      <TabsTrigger value="finance" className="text-[11px] whitespace-nowrap">Financeiro</TabsTrigger>
+                    <TabsList className="w-full flex flex-wrap justify-start gap-1.5 h-auto p-1.5 bg-transparent border-b border-border rounded-none">
+                      <TabsTrigger value="overview" className="text-xs sm:text-[13px] whitespace-nowrap">Visão geral</TabsTrigger>
+                      <TabsTrigger value="formulations" className="text-xs sm:text-[13px] whitespace-nowrap">Formulações</TabsTrigger>
+                      <TabsTrigger value="sessions" className="text-xs sm:text-[13px] whitespace-nowrap">Sessões</TabsTrigger>
+                      <TabsTrigger value="plan" className="text-xs sm:text-[13px] whitespace-nowrap">Plano Terapêutico</TabsTrigger>
+                      <TabsTrigger value="anamnesis" className="text-xs sm:text-[13px] whitespace-nowrap">Anamneses</TabsTrigger>
+                      <TabsTrigger value="documents" className="text-xs sm:text-[13px] whitespace-nowrap">Documentos</TabsTrigger>
+                      <TabsTrigger value="finance" className="text-xs sm:text-[13px] whitespace-nowrap">Financeiro</TabsTrigger>
                     </TabsList>
 
+
                     {/* Visão geral */}
-                    <TabsContent value="overview" className="mt-4 space-y-4">
-                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                    <TabsContent value="overview" className="mt-6 space-y-5">
+                      <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-[var(--shadow-card)]">
                         <InfoRow label="Nome" value={p.full_name} />
                         <InfoRow label="Telefone" value={p.phone || null} />
                         <InfoRow label="E-mail" value={p.email || null} />
@@ -1874,7 +1903,7 @@ const Patients = () => {
                     </TabsContent>
 
                     {/* Formulações */}
-                    <TabsContent value="formulations" className="mt-4">
+                    <TabsContent value="formulations" className="mt-6">
                       {(() => {
                         const trunc = (t?: string, n = 180) => !t ? "" : (t.length > n ? t.slice(0, n).trimEnd() + "…" : t);
                         const tcc = formulationData[p.id];
@@ -1893,7 +1922,7 @@ const Patients = () => {
                           { key: "rpd", label: "RPD — Registros TCC", filled: cTcc > 0, summary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", fullSummary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", accent: "hsl(var(--moss))", onEdit: () => { setTccPatient(p); }, onView: () => { setTccPatient(p); } },
                         ];
                         return (
-                          <div className="grid gap-2 sm:grid-cols-2">
+                          <div className="grid gap-4 sm:grid-cols-2">
                             {items.map((it) => (<FormulationItemCard key={it.key} item={it} />))}
                           </div>
                         );
@@ -1901,7 +1930,7 @@ const Patients = () => {
                     </TabsContent>
 
                     {/* Sessões */}
-                    <TabsContent value="sessions" className="mt-4 space-y-4">
+                    <TabsContent value="sessions" className="mt-6 space-y-5">
                       <PatientSessionsQuickView
                         patientId={p.id}
                         nextDate={info?.nextDate}
@@ -1912,11 +1941,11 @@ const Patients = () => {
                     </TabsContent>
 
                     {/* Plano terapêutico */}
-                    <TabsContent value="plan" className="mt-4 space-y-3">
+                    <TabsContent value="plan" className="mt-6 space-y-5">
                       {(() => {
                         const tp = treatmentPlans[p.id];
                         return (
-                          <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                          <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-[var(--shadow-card)]">
                             <InfoRow label="Status" value={tp?.status || null} />
                             <InfoRow label="CID" value={tp?.cid || null} />
                             <InfoRow label="Abordagem" value={tp?.abordagem?.length ? tp.abordagem.join(", ") : null} />
@@ -1933,8 +1962,8 @@ const Patients = () => {
                     </TabsContent>
 
                     {/* Anamneses e instrumentos */}
-                    <TabsContent value="anamnesis" className="mt-4 space-y-3">
-                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                    <TabsContent value="anamnesis" className="mt-6 space-y-5">
+                      <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-[var(--shadow-card)]">
                         <InfoRow label="Anamnese" value={hasAnam ? `Preenchida em ${format(new Date(anamneseFilled[p.id]), "dd/MM/yyyy")}` : null} />
                       </div>
                       <div className="flex flex-wrap gap-1.5">
@@ -1972,8 +2001,8 @@ const Patients = () => {
                     </TabsContent>
 
                     {/* Documentos */}
-                    <TabsContent value="documents" className="mt-4 space-y-3">
-                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                    <TabsContent value="documents" className="mt-6 space-y-5">
+                      <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-[var(--shadow-card)]">
                         <InfoRow label="Contratos" value={null} />
                         <InfoRow label="Anexos" value={null} />
                       </div>
@@ -1983,8 +2012,8 @@ const Patients = () => {
                     </TabsContent>
 
                     {/* Financeiro */}
-                    <TabsContent value="finance" className="mt-4 space-y-3">
-                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                    <TabsContent value="finance" className="mt-6 space-y-5">
+                      <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-[var(--shadow-card)]">
                         <InfoRow label="Valor da sessão" value={p.session_price != null ? `R$ ${Number(p.session_price).toFixed(2).replace(".", ",")}` : null} />
                         <InfoRow label="Pagas" value={pay?.paid ? pay.paid : null} />
                         <InfoRow label="Pendentes" value={pay?.pending ? pay.pending : null} />
@@ -2036,8 +2065,8 @@ const Patients = () => {
               </div>
             );
           })()}
-        </SheetContent>
-      </Sheet>
+        </div>
+      )}
 
 
       {/* New/Edit patient dialog */}
