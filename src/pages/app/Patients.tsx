@@ -1685,11 +1685,11 @@ const Patients = () => {
                   className="relative p-4 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--primary))] cursor-pointer"
                   style={{ background: C.card, borderLeft: `3px solid ${rowAccent}` }}
                 >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
+                  {/* Sem Tooltip no mobile: em touch o tooltip do Radix intercepta o primeiro toque */}
+                  <div className="min-w-0">
                         {/* Header: avatar + nome/telefone */}
-                        <div className="flex items-start gap-3 pr-12">
+                        <div className="flex items-start gap-3 pr-14 min-w-0">
+
                           <div
                             className="flex items-center justify-center shrink-0"
                             style={{ width: 40, height: 40, borderRadius: "50%", background: avatarBg, color: C.ink, fontWeight: 700, fontSize: 13 }}
