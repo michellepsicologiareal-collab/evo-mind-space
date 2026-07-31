@@ -2949,27 +2949,6 @@ const Agenda = () => {
             {/* ── DAY VIEW ── */}
             <TabsContent value="day">
               <div className="space-y-4">
-                <div className="flex items-center justify-between gap-2 rounded-2xl bg-card border border-border shadow-card p-3 sm:p-4">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 shrink-0" onClick={() => goToDate(addDays(selectedDate, -1))}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <div className="text-center min-w-0">
-                    <p className="font-display text-sm sm:text-lg font-semibold capitalize truncate">{format(selectedDate, "EEEE", { locale: ptBR })}</p>
-                    <p className="text-[10px] sm:text-sm text-muted-foreground truncate">{format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
-                  </div>
-                  <div className="flex gap-1 sm:gap-2 shrink-0">
-                    <Button variant="outline" size="sm" className="h-8 px-2 sm:px-3 text-xs sm:text-sm rounded-[40px] font-display font-semibold bg-[rgba(150,117,206,0.06)] border-[rgba(150,117,206,0.25)] text-primary hover:bg-[rgba(150,117,206,0.12)] hover:text-primary" onClick={() => goToDate(new Date())}>Hoje</Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10" onClick={() => goToDate(addDays(selectedDate, 1))}>
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <Button variant="accent" size="sm" className="rounded-[40px] font-display font-semibold" onClick={() => openNew(selectedDate)}>
-                    <Plus className="h-3.5 w-3.5" /> Nova sessão
-                  </Button>
-                </div>
 
                 {loading ? (
                   <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
