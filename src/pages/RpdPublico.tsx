@@ -96,9 +96,10 @@ const RpdPublico = () => {
             <h2 className="font-display text-xl font-bold text-foreground mt-3">Link protegido</h2>
             <p className="mt-1 text-sm text-muted-foreground">Digite a senha enviada pela sua psicóloga.</p>
           </div>
-          <Input type="password" autoFocus value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha" maxLength={60} />
+          <Input type="password" autoFocus value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha" maxLength={60} className="min-h-12 text-base" />
           {pwdError && <p className="text-xs text-destructive">{pwdError}</p>}
-          <Button type="submit" variant="accent" className="w-full" disabled={!password.trim()}>Acessar</Button>
+          <Button type="submit" variant="accent" className="w-full min-h-12 text-base" disabled={!password.trim()}>Acessar</Button>
+
         </form>
       </div>
     );
