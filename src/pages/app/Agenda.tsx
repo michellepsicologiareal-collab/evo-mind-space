@@ -223,6 +223,7 @@ const Agenda = () => {
   const [psiCrp, setPsiCrp] = useState("");
   const [clinicName, setClinicName] = useState("");
   const [clinicAddress, setClinicAddress] = useState("");
+  const [presencialMessage, setPresencialMessage] = useState("");
   const [viewTab, setViewTab] = useState<string>("day");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
