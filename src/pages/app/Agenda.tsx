@@ -81,6 +81,7 @@ interface Patient {
   financial_responsible_name: string | null;
   financial_responsible_phone: string | null;
   homework_token?: string | null;
+  clinic_address?: string | null;
 }
 
 interface Service {
