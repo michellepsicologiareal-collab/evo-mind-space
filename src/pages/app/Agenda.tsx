@@ -2638,6 +2638,36 @@ const Agenda = () => {
                     )}
                   </SheetContent>
                 </Sheet>
+                <Sheet open={pendingPaymentsOpen} onOpenChange={setPendingPaymentsOpen}>
+                  <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+                    <SheetHeader className="mb-4">
+                      <SheetTitle className="font-display text-xl">Pagamentos pendentes</SheetTitle>
+                      <SheetDescription>Sessões já realizadas com pagamento em aberto</SheetDescription>
+                    </SheetHeader>
+                    {pendingPaymentList.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Nenhum pagamento pendente ✨</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {pendingPaymentList.map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => { setPendingPaymentsOpen(false); navigate(`/app/financeiro?filter=atrasados`); }}
+                            className="w-full text-left rounded-xl border border-border bg-card px-3 py-2.5 hover:bg-muted/60 hover:border-primary/30 transition-colors flex items-center justify-between gap-2"
+                          >
+                            <div className="min-w-0">
+                              <p className="font-display text-sm font-semibold text-foreground truncate">{s.patient_name || "Paciente"}</p>
+                              <p className="text-xs text-foreground/70">{format(new Date(s.scheduled_at), "dd/MM/yyyy 'às' HH:mm")}</p>
+                            </div>
+                            {s.price != null && (
+                              <span className="font-display text-sm font-semibold text-foreground shrink-0">R$ {Number(s.price).toFixed(2)}</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </SheetContent>
+                </Sheet>
               </>
             );
 
