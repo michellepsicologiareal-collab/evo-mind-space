@@ -71,7 +71,9 @@ export const AppLayout = () => {
   const location = useLocation();
   const { isPremium, profileType, isAdmin } = useSubscription();
   const [planOpen, setPlanOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
+
 
   const navItems = useMemo(() => {
     return allNavItems.filter((item) => {
