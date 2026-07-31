@@ -1330,6 +1330,7 @@ const Agenda = () => {
     }
     const url = `${window.location.origin}/confirmar-sessao/${token}`;
     const isOnline = ((s as any).modality || "").toLowerCase() === "online";
+    const patient = patients.find((p) => p.id === s.patient_id);
     let extra = "";
     if (isOnline) {
       const link = (s as any).meeting_link?.trim();
@@ -1337,15 +1338,19 @@ const Agenda = () => {
         ? `\n\n💻 Sessão online. Link da chamada:\n${link}`
         : "\n\n💻 Sessão online. O link da chamada será enviado em breve.";
     } else {
-      const local = [clinicName, clinicAddress].filter(Boolean).join(" — ");
+      // Endereço específico do paciente tem prioridade sobre o endereço padrão da clínica
+      const patientAddress = (patient?.clinic_address || "").trim();
+      const local = patientAddress || [clinicName, clinicAddress].filter(Boolean).join(" — ");
+      const note = presencialMessage.trim();
       extra = local
         ? `\n\n📍 Sessão presencial. Endereço:\n${local}`
         : "\n\n📍 Sessão presencial.";
+      if (note) extra += `\n\n${note}`;
     }
     const message = `Olá, por favor, entre para confirmar sua sessão de terapia🤎\n\n${url}${extra}`;
 
     // Open WhatsApp directly when we have the patient's phone, fall back to clipboard
-    const patient = patients.find((p) => p.id === s.patient_id);
+
     let phoneNumber = "";
     if (patient?.has_financial_responsible && patient.financial_responsible_phone) {
       phoneNumber = patient.financial_responsible_phone.replace(/\D/g, "");
