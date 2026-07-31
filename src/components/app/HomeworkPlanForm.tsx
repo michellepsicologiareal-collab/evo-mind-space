@@ -418,7 +418,9 @@ export const HomeworkPlanForm = ({
 
     setSending(false);
     window.open(`https://wa.me/${digits}?text=${encodeURIComponent(parts.join("\n"))}`, "_blank");
+    void logShare("link");
     toast.success(pwd ? "Plano enviado. Agora envie a senha em uma mensagem separada." : "Plano enviado por WhatsApp");
+
   };
 
   const sendPasswordWhatsApp = async () => {
