@@ -287,10 +287,23 @@ export const PatientSessionsQuickView = ({
       });
 
       const merged = [...v2Unified, ...legacyUnified]
-        .sort((a, b) => (parseSessionDate(b.session_date)?.getTime() ?? 0) - (parseSessionDate(a.session_date)?.getTime() ?? 0))
-        .slice(0, 3);
+        .sort((a, b) => (parseSessionDate(b.session_date)?.getTime() ?? 0) - (parseSessionDate(a.session_date)?.getTime() ?? 0));
 
-      setRecords(merged);
+      const bySession: Record<string, UnifiedRecord> = {};
+      merged.forEach((r) => {
+        if (r.session_id && !bySession[r.session_id]) bySession[r.session_id] = r;
+      });
+      setRecordsBySession(bySession);
+      setRecords(merged.slice(0, 3));
+
+      const agendaRes = await supabase
+        .from("sessions")
+        .select("id, scheduled_at, status, modality, duration_minutes")
+        .eq("patient_id", patientId)
+        .order("scheduled_at", { ascending: false })
+        .limit(40);
+      setAgenda((agendaRes.data ?? []) as any[]);
+
 
       const candidates: Array<string | null | undefined> = [
         patientRes.data?.treatment_start_date,
