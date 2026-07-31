@@ -579,9 +579,25 @@ export const HomeworkPlanForm = ({
         </div>
 
         {shareable && (
-          <div className="space-y-2 rounded-xl border border-border bg-muted/40 p-3 min-w-0">
-            <div className="flex flex-col gap-2 min-w-0 sm:flex-row sm:flex-wrap sm:items-center">
-              <div className="flex min-w-0 items-center gap-2 rounded-lg bg-background px-2.5 py-1.5 sm:flex-1">
+          <div className="space-y-3 rounded-xl border border-border bg-muted/40 p-3 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Envio para o paciente — em duas mensagens
+              </p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3.5 w-3.5 shrink-0 cursor-help text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[260px] text-xs">
+                  Por privacidade, a senha nunca vai na mensagem do plano — envie primeiro o link e depois a senha.
+                </TooltipContent>
+              </Tooltip>
+            </div>
+
+            {/* Passo 1 — link do plano */}
+            <div className="space-y-2 rounded-lg border border-border bg-background p-2.5 min-w-0">
+              <p className="text-xs font-medium text-foreground">1. Enviar o plano (link)</p>
+              <div className="flex min-w-0 items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5">
                 <Link2 className="h-3.5 w-3.5 shrink-0 text-primary" />
                 <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
                   {publicUrl ?? "Link disponível após salvar"}
@@ -598,46 +614,6 @@ export const HomeworkPlanForm = ({
                   {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
                 </Button>
               </div>
-
-              <div className="flex min-w-0 items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5">
-                <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <Input
-                  value={accessPassword}
-                  onChange={(e) => setAccessPassword(e.target.value)}
-                  onBlur={() => { void persistPassword(); }}
-                  placeholder="Senha (opcional)"
-                  className="h-7 min-w-0 flex-1 border-0 bg-transparent px-0 text-xs focus-visible:ring-0 sm:w-36 sm:flex-none"
-                  maxLength={60}
-                />
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-3.5 w-3.5 shrink-0 cursor-help text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-[260px] text-xs">
-                    Por privacidade, a senha nunca vai na mensagem do plano — envie-a separadamente ou combine uma senha fixa com o paciente.
-                  </TooltipContent>
-                </Tooltip>
-                {accessPassword.trim() && (
-                  <>
-                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={copyPassword} title="Copiar senha">
-                      <Copy className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-moss"
-                      onClick={sendPasswordWhatsApp}
-                      disabled={!canSend}
-                      title="Enviar senha por WhatsApp"
-                    >
-                      <MessageCircle className="h-3.5 w-3.5" />
-                    </Button>
-                  </>
-                )}
-              </div>
-
               <Button
                 type="button"
                 size="sm"
@@ -645,14 +621,57 @@ export const HomeworkPlanForm = ({
                 className="w-full sm:w-auto"
                 onClick={sendWhatsApp}
                 disabled={sending || !canSend}
-                title={canSend ? "Enviar por WhatsApp" : "Paciente sem WhatsApp cadastrado"}
+                title={canSend ? "Enviar plano por WhatsApp" : "Paciente sem WhatsApp cadastrado"}
               >
                 {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
-                {editing?.sent_at ? "Reenviar" : "Enviar"}
+                {editing?.sent_at ? "Reenviar plano por WhatsApp" : "Enviar plano por WhatsApp"}
               </Button>
+            </div>
+
+            {/* Passo 2 — senha */}
+            <div className="space-y-2 rounded-lg border border-border bg-background p-2.5 min-w-0">
+              <p className="text-xs font-medium text-foreground">2. Enviar a senha (mensagem separada)</p>
+              <div className="flex min-w-0 items-center gap-1.5 rounded-lg bg-muted/50 px-2.5 py-1.5">
+                <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <Input
+                  value={accessPassword}
+                  onChange={(e) => setAccessPassword(e.target.value)}
+                  onBlur={() => { void persistPassword(); }}
+                  placeholder="Senha salva deste paciente (opcional)"
+                  className="h-7 min-w-0 flex-1 border-0 bg-transparent px-0 text-xs focus-visible:ring-0"
+                  maxLength={60}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0"
+                  onClick={copyPassword}
+                  disabled={!accessPassword.trim()}
+                  title="Copiar senha"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="moss"
+                className="w-full sm:w-auto"
+                onClick={sendPasswordWhatsApp}
+                disabled={!canSend || !accessPassword.trim()}
+                title="Enviar senha por WhatsApp"
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+                Enviar senha por WhatsApp
+              </Button>
+              <p className="text-[11px] text-muted-foreground">
+                A senha fica salva neste paciente e vale para todos os planos dele.
+              </p>
             </div>
           </div>
         )}
+
 
         {!hideFooter && (
           <div className="flex flex-col-reverse gap-2 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
