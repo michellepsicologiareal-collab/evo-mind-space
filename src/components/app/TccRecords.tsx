@@ -246,10 +246,19 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                 >
                   <div className="min-w-0 flex-1">
                     <p className="font-medium truncate" style={{ color: INK }}>{preview}</p>
-                    <p className="text-xs" style={{ color: MUTED }}>
+                    <p className="text-xs flex items-center gap-1.5 flex-wrap" style={{ color: MUTED }}>
                       {format(new Date(r.created_at), "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
+                      {r.filled_by === "patient" && (
+                        <span
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded"
+                          style={{ background: G_BG, color: G, border: `1px solid ${G_BORDER}`, fontSize: 10, fontWeight: 600 }}
+                        >
+                          <User className="h-3 w-3" /> Preenchido pelo paciente
+                        </span>
+                      )}
                     </p>
                   </div>
+
                   {isOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
                 </button>
                 {isOpen && (
