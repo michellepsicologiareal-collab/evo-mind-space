@@ -930,9 +930,9 @@ export default function Dashboard() {
                 <TodayRow
                   key={s.id}
                   item={s}
-                  onOpen={() => navigate("/app/agenda")}
+                  onOpen={() => navigate(goToAgendaForPatient(s))}
                   onConfirm={() => handleAction(`Sessão de ${s.name} confirmada`)}
-                  onMore={() => navigate("/app/agenda")}
+                  onMore={() => navigate(goToAgendaForPatient(s))}
                 />
               ))
             )}
