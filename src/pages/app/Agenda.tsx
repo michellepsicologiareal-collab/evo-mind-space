@@ -1321,6 +1321,7 @@ const Agenda = () => {
   };
 
 
+  // Abre o modo de revisão da mensagem antes do envio
   const copyConfirmationLink = async (s: Session) => {
     let token = s.confirmation_token;
     if (!token) {
@@ -1349,8 +1350,6 @@ const Agenda = () => {
     }
     const message = `Olá, por favor, entre para confirmar sua sessão de terapia🤎\n\n${url}${extra}`;
 
-    // Open WhatsApp directly when we have the patient's phone, fall back to clipboard
-
     let phoneNumber = "";
     if (patient?.has_financial_responsible && patient.financial_responsible_phone) {
       phoneNumber = patient.financial_responsible_phone.replace(/\D/g, "");
@@ -1358,17 +1357,44 @@ const Agenda = () => {
       phoneNumber = patient.phone.replace(/\D/g, "");
     }
 
-    if (phoneNumber) {
-      window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
+    setConfirmPreview({
+      sessionId: s.id,
+      patientName: patient?.full_name || "Paciente",
+      modality: isOnline ? "online" : "presencial",
+      phone: phoneNumber,
+      message,
+      original: message,
+    });
+  };
+
+  const markConfirmationSent = async (sessionId: string) => {
+    await supabase.from("sessions").update({ confirmation_sent_at: new Date().toISOString() }).eq("id", sessionId);
+    load(true);
+  };
+
+  const sendConfirmationPreview = async () => {
+    if (!confirmPreview) return;
+    const { message, phone, sessionId } = confirmPreview;
+    if (!message.trim()) { toast.error("A mensagem está vazia"); return; }
+    if (phone) {
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
       toast.success("Lembrete enviado pelo WhatsApp ✨");
     } else {
       await navigator.clipboard.writeText(message);
       toast.success("Lembrete copiado (paciente sem telefone cadastrado)");
     }
-    // Marca o envio do lembrete para destacar no card
-    await supabase.from("sessions").update({ confirmation_sent_at: new Date().toISOString() }).eq("id", s.id);
-    load(true);
+    setConfirmPreview(null);
+    await markConfirmationSent(sessionId);
   };
+
+  const copyConfirmationPreview = async () => {
+    if (!confirmPreview) return;
+    await navigator.clipboard.writeText(confirmPreview.message);
+    toast.success("Mensagem copiada");
+    setConfirmPreview(null);
+    await markConfirmationSent(confirmPreview.sessionId);
+  };
+
 
   const getGroupId = (notes: string | null): string | null => {
     if (!notes) return null;
