@@ -831,14 +831,19 @@ const Agenda = () => {
   // Fetch pix key + gcal status + handle OAuth callback
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("pix_key, full_name, crp, clinic_name").eq("id", user.id).single().then(({ data }) => {
+    supabase.from("profiles").select("pix_key, full_name, crp, clinic_name, clinic_address, presencial_message").eq("id", user.id).single().then(({ data }) => {
       setPixKey(data?.pix_key || "");
       setPsiName(data?.full_name || "");
       setPsiCrp(data?.crp || "");
       setClinicName((data as any)?.clinic_name || "");
-    });
-    supabase.from("contract_templates").select("professional_address").eq("user_id", user.id).limit(1).maybeSingle().then(({ data }) => {
-      setClinicAddress((data as any)?.professional_address || "");
+      setPresencialMessage((data as any)?.presencial_message || "");
+      const addr = (data as any)?.clinic_address || "";
+      if (addr) setClinicAddress(addr);
+      else {
+        supabase.from("contract_templates").select("professional_address").eq("user_id", user.id).limit(1).maybeSingle().then(({ data: ct }) => {
+          setClinicAddress((ct as any)?.professional_address || "");
+        });
+      }
     });
     loadGcalStatus();
 
