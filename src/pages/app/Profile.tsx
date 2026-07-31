@@ -321,6 +321,8 @@ const Profile = () => {
       setForm({
         full_name: data.full_name ?? "",
         clinic_name: (data as any).clinic_name ?? "",
+        clinic_address: (data as any).clinic_address ?? "",
+        presencial_message: (data as any).presencial_message ?? "",
         crp: data.crp ?? "",
         phone: data.phone ?? "",
         specialty: data.specialty ?? "",
