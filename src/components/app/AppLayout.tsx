@@ -348,8 +348,21 @@ export const AppLayout = () => {
       </Sheet>
 
       {/* ── Main content ── */}
-      <main className="app-shell flex-1 md:ml-[220px] pt-16 pb-28 md:pt-0 md:pb-0 min-w-0 overflow-x-hidden">
+      <main className="app-shell flex-1 md:ml-[248px] pt-16 pb-28 md:pt-0 md:pb-0 min-w-0 overflow-x-hidden">
+        {/* Top bar desktop (pegada FinPilot) */}
+        <div className="hidden md:flex sticky top-0 z-20 items-center justify-between gap-4 border-b border-border bg-background/85 backdrop-blur-lg px-8 xl:px-10 py-3.5">
+          <span className="text-sm font-medium text-muted-foreground truncate">
+            {allNavItems.find((n) => (n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)))?.label ?? "PsiReal"}
+          </span>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button variant="accent" size="sm" onClick={() => setPlanOpen(true)}>
+              <Crown className="h-4 w-4" /> Meu Plano
+            </Button>
+          </div>
+        </div>
         <div className="p-4 sm:p-6 lg:p-8 xl:p-10 max-w-[1600px] mx-auto">
+
           {showGateOverlay ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-6">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent/10">
