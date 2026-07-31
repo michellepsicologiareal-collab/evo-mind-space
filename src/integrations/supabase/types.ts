@@ -1266,6 +1266,53 @@ export type Database = {
           },
         ]
       }
+      rpd_invites: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          password: string | null
+          patient_id: string
+          revoked_at: string | null
+          submissions_count: number
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          password?: string | null
+          patient_id: string
+          revoked_at?: string | null
+          submissions_count?: number
+          token?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          password?: string | null
+          patient_id?: string
+          revoked_at?: string | null
+          submissions_count?: number
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rpd_invites_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schema_formulations: {
         Row: {
           adulto_saudavel_forca: number | null
@@ -1860,6 +1907,7 @@ export type Database = {
           cognitive_distortion: string | null
           created_at: string
           emotion: string | null
+          filled_by: string
           id: string
           patient_id: string
           rational_response: string | null
@@ -1874,6 +1922,7 @@ export type Database = {
           cognitive_distortion?: string | null
           created_at?: string
           emotion?: string | null
+          filled_by?: string
           id?: string
           patient_id: string
           rational_response?: string | null
@@ -1888,6 +1937,7 @@ export type Database = {
           cognitive_distortion?: string | null
           created_at?: string
           emotion?: string | null
+          filled_by?: string
           id?: string
           patient_id?: string
           rational_response?: string | null
@@ -2203,6 +2253,16 @@ export type Database = {
         }[]
       }
       get_profile_id_by_email: { Args: { _email: string }; Returns: string }
+      get_rpd_invite_info: {
+        Args: { _token: string }
+        Returns: {
+          password_required: boolean
+          patient_name: string
+          therapist_crp: string
+          therapist_name: string
+          valid: boolean
+        }[]
+      }
       get_session_by_token: {
         Args: { _token: string }
         Returns: {
@@ -2272,6 +2332,10 @@ export type Database = {
       }
       submit_child_anamnesis: {
         Args: { _ip: string; _payload: Json; _token: string; _ua: string }
+        Returns: string
+      }
+      submit_rpd_by_token: {
+        Args: { _password: string; _payload: Json; _token: string }
         Returns: string
       }
       submit_signed_contract: {
