@@ -221,6 +221,7 @@ const patientSchema = z.object({
   anamnesis: z.string().trim().max(6000).optional().or(z.literal("")),
   category: z.enum(["adolescente", "avaliacao", "casal", "crianca", "grupo", "individual", "sessao_breve", "supervisao"]).optional(),
   modality: z.enum(["presencial", "online"]).optional(),
+  clinic_address: z.string().trim().max(300).optional().or(z.literal("")),
 });
 
 interface Patient {
