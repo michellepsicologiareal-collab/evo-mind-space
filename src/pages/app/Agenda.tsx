@@ -311,6 +311,7 @@ const Agenda = () => {
 
   // Pending
   const [pendingRecordsOpen, setPendingRecordsOpen] = useState(false);
+  const [pendingPaymentsOpen, setPendingPaymentsOpen] = useState(false);
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
   const [pendingPackageSessions, setPendingPackageSessions] = useState<Session[]>([]);
   const [loadingPending, setLoadingPending] = useState(true);
@@ -2560,6 +2561,14 @@ const Agenda = () => {
             )).length;
             const moodCount = moodTodayPatients.size;
 
+            const pendingPaymentList = sessions.filter((s) => (
+              s.session_type === "clinical" &&
+              !s.is_expense &&
+              s.payment_status === "pending" &&
+              !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
+              new Date(s.scheduled_at) < now
+            )).sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at));
+
             const pendingRecordList = sessions.filter((s) => {
               const key = s.patient_id ? `${s.patient_id}|${new Date(s.scheduled_at).toISOString().slice(0, 10)}` : "";
               return (
@@ -2572,6 +2581,7 @@ const Agenda = () => {
                 !(key && sessionRecordKeys.has(key))
               );
             }).sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at));
+
 
             const Item = ({ icon: Icon, label, value, tone, onClick }: { icon: any; label: string; value: number; tone: string; onClick?: () => void }) => {
               const Tag: any = onClick ? "button" : "div";
@@ -2598,9 +2608,9 @@ const Agenda = () => {
             return (
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
-                  <Item icon={CalendarCheck} label="Sessões de hoje" value={todayCount} tone="bg-primary/10 text-primary" />
+                  <Item icon={CalendarCheck} label="Sessões de hoje" value={todayCount} tone="bg-primary/10 text-primary" onClick={() => { goToDate(new Date()); setViewTab("day"); }} />
                   <Item icon={AlertCircle} label="Registros pendentes" value={pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
-                  <Item icon={Wallet} label="Pagamentos pendentes" value={pendingPayments} tone="bg-emerald-100 text-emerald-700" />
+                  <Item icon={Wallet} label="Pagamentos pendentes" value={pendingPayments} tone="bg-emerald-100 text-emerald-700" onClick={() => setPendingPaymentsOpen(true)} />
                   <Item icon={HeartPulse} label="Humor respondido hoje" value={moodCount} tone="bg-lilac/40 text-foreground" />
                 </div>
                 <Sheet open={pendingRecordsOpen} onOpenChange={setPendingRecordsOpen}>
@@ -2622,6 +2632,36 @@ const Agenda = () => {
                           >
                             <p className="font-display text-sm font-semibold text-foreground">{s.patient_name || "Paciente"}</p>
                             <p className="text-xs text-foreground/70">{format(new Date(s.scheduled_at), "dd/MM/yyyy 'às' HH:mm")}</p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </SheetContent>
+                </Sheet>
+                <Sheet open={pendingPaymentsOpen} onOpenChange={setPendingPaymentsOpen}>
+                  <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+                    <SheetHeader className="mb-4">
+                      <SheetTitle className="font-display text-xl">Pagamentos pendentes</SheetTitle>
+                      <SheetDescription>Sessões já realizadas com pagamento em aberto</SheetDescription>
+                    </SheetHeader>
+                    {pendingPaymentList.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Nenhum pagamento pendente ✨</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {pendingPaymentList.map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => { setPendingPaymentsOpen(false); navigate(`/app/financeiro?filter=atrasados`); }}
+                            className="w-full text-left rounded-xl border border-border bg-card px-3 py-2.5 hover:bg-muted/60 hover:border-primary/30 transition-colors flex items-center justify-between gap-2"
+                          >
+                            <div className="min-w-0">
+                              <p className="font-display text-sm font-semibold text-foreground truncate">{s.patient_name || "Paciente"}</p>
+                              <p className="text-xs text-foreground/70">{format(new Date(s.scheduled_at), "dd/MM/yyyy 'às' HH:mm")}</p>
+                            </div>
+                            {s.price != null && (
+                              <span className="font-display text-sm font-semibold text-foreground shrink-0">R$ {Number(s.price).toFixed(2)}</span>
+                            )}
                           </button>
                         ))}
                       </div>
