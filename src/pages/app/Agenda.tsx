@@ -2846,7 +2846,7 @@ const Agenda = () => {
                         </div>
                       ) : (
                         <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                          {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} />)}
+                          {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                         </div>
                       )}
                     </div>
@@ -2868,7 +2868,7 @@ const Agenda = () => {
                           </p>
                         ) : (
                           <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                            {monthFilteredSessions.map((s) => <SessionCard key={s.id} s={s} />)}
+                            {monthFilteredSessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                           </div>
                         )}
                       </div>
@@ -2940,7 +2940,7 @@ const Agenda = () => {
                       </button>
                     ) : (
                       <div className="space-y-2">
-                        {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} />)}
+                        {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                       </div>
                     )}
                   </div>
@@ -3059,7 +3059,7 @@ const Agenda = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} />)}
+                    {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                   </div>
                 )}
               </div>
