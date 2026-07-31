@@ -1548,7 +1548,8 @@ const Patients = () => {
                       </td>
 
                       {/* Ações */}
-                      <td style={{ padding: "16px 18px", verticalAlign: "middle" }}>
+                      <td style={{ padding: "16px 18px", verticalAlign: "middle", textAlign: "right" }}>
+
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
