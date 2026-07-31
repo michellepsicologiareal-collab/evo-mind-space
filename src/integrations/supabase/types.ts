@@ -1132,6 +1132,7 @@ export type Database = {
           birth_date: string | null
           category: Database["public"]["Enums"]["patient_category"]
           chief_complaint: string | null
+          clinic_address: string | null
           created_at: string
           email: string | null
           financial_responsible_name: string | null
@@ -1162,6 +1163,7 @@ export type Database = {
           birth_date?: string | null
           category?: Database["public"]["Enums"]["patient_category"]
           chief_complaint?: string | null
+          clinic_address?: string | null
           created_at?: string
           email?: string | null
           financial_responsible_name?: string | null
@@ -1192,6 +1194,7 @@ export type Database = {
           birth_date?: string | null
           category?: Database["public"]["Enums"]["patient_category"]
           chief_complaint?: string | null
+          clinic_address?: string | null
           created_at?: string
           email?: string | null
           financial_responsible_name?: string | null
@@ -1222,6 +1225,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          clinic_address: string | null
           clinic_name: string | null
           created_at: string
           crp: string | null
@@ -1233,6 +1237,7 @@ export type Database = {
           is_approved: boolean
           phone: string | null
           pix_key: string | null
+          presencial_message: string | null
           profile_type: Database["public"]["Enums"]["profile_type"]
           rejected_at: string | null
           reminder_enabled: boolean
@@ -1249,6 +1254,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          clinic_address?: string | null
           clinic_name?: string | null
           created_at?: string
           crp?: string | null
@@ -1260,6 +1266,7 @@ export type Database = {
           is_approved?: boolean
           phone?: string | null
           pix_key?: string | null
+          presencial_message?: string | null
           profile_type?: Database["public"]["Enums"]["profile_type"]
           rejected_at?: string | null
           reminder_enabled?: boolean
@@ -1276,6 +1283,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          clinic_address?: string | null
           clinic_name?: string | null
           created_at?: string
           crp?: string | null
@@ -1287,6 +1295,7 @@ export type Database = {
           is_approved?: boolean
           phone?: string | null
           pix_key?: string | null
+          presencial_message?: string | null
           profile_type?: Database["public"]["Enums"]["profile_type"]
           rejected_at?: string | null
           reminder_enabled?: boolean
