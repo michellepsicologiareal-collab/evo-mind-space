@@ -1794,10 +1794,10 @@ const Patients = () => {
                         onPointerDown={(e) => e.stopPropagation()}
                         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") e.stopPropagation(); }}
                         className="absolute top-4 right-4 z-10 flex items-center justify-center shrink-0 touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--primary))]"
-                        style={{ width: 44, height: 44, borderRadius: 8, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
+                        style={{ height: 36, paddingLeft: 12, paddingRight: 12, borderRadius: 8, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
                         aria-label="Ações do paciente"
                       >
-                        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                        <span className="text-xs font-medium">Ações</span>
                       </button>
                     </DropdownMenuTrigger>
                       <DropdownMenuContent
