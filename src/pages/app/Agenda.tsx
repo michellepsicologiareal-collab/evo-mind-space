@@ -3996,6 +3996,43 @@ const Agenda = () => {
       </Sheet>
       <UnsavedGuardDialog open={newGuard.confirmOpen} onConfirm={newGuard.confirmLeave} onCancel={newGuard.cancelLeave} onSaveDraft={newGuard.saveDraftAndLeave} />
       <UnsavedGuardDialog open={editGuard.confirmOpen} onConfirm={editGuard.confirmLeave} onCancel={editGuard.cancelLeave} onSaveDraft={editGuard.saveDraftAndLeave} />
+
+      {/* Revisão da mensagem antes de enviar no WhatsApp */}
+      <Dialog open={!!confirmPreview} onOpenChange={(o) => !o && setConfirmPreview(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Revisar mensagem</DialogTitle>
+            <DialogDescription>
+              {confirmPreview
+                ? `${confirmPreview.patientName} · sessão ${confirmPreview.modality}${confirmPreview.phone ? "" : " · sem telefone cadastrado"}`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={confirmPreview?.message ?? ""}
+            onChange={(e) => setConfirmPreview((p) => (p ? { ...p, message: e.target.value } : p))}
+            rows={12}
+            className="text-sm font-sans resize-y"
+          />
+          <p className="text-xs text-muted-foreground">
+            {confirmPreview?.modality === "online"
+              ? "O link da chamada está incluído na mensagem."
+              : "O endereço de atendimento está incluído na mensagem."}
+          </p>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => setConfirmPreview((p) => (p ? { ...p, message: p.original } : p))}
+            >
+              Restaurar original
+            </Button>
+            <Button variant="outline" onClick={copyConfirmationPreview}>Copiar</Button>
+            <Button onClick={sendConfirmationPreview} className="bg-[#25D366] hover:bg-[#1fb857] text-white">
+              Enviar no WhatsApp
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
