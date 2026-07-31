@@ -708,8 +708,41 @@ export const HomeworkPlanForm = ({
                 A senha fica salva neste paciente e vale para todos os planos dele.
               </p>
             </div>
+
+            {/* Histórico de envios do paciente */}
+            <div className="rounded-lg border border-border bg-background p-2.5 min-w-0">
+              <p className="text-xs font-medium text-foreground">Histórico de envios deste paciente</p>
+              {shareEvents.length === 0 ? (
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Nenhum envio registrado ainda.
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-1">
+                  {shareEvents.map((ev) => {
+                    const map: Record<string, { label: string; Icon: typeof Link2 }> = {
+                      link: { label: "Link enviado por WhatsApp", Icon: MessageCircle },
+                      password: { label: "Senha enviada por WhatsApp", Icon: Lock },
+                      link_copied: { label: "Link copiado", Icon: Link2 },
+                      password_copied: { label: "Senha copiada", Icon: Copy },
+                    };
+                    const item = map[ev.event_type] ?? { label: ev.event_type, Icon: Link2 };
+                    const Icon = item.Icon;
+                    return (
+                      <li key={ev.id} className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <Icon className="h-3 w-3 shrink-0 text-primary" />
+                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                        <span className="shrink-0">
+                          {format(new Date(ev.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           </div>
         )}
+
 
 
         {!hideFooter && (
