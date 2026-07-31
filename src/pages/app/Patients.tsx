@@ -947,26 +947,26 @@ const Patients = () => {
 
   // ───────── Color palette (per spec) ─────────
   const C = {
-    pageBg: "#F7F6F3",
+    pageBg: "#F8F6FC",
     card: "#FFFFFF",
-    ink: "#1A1A2E",
+    ink: "#17152F",
     muted: "#6B7280",
-    border: "#E5E7EB",
-    purple: "#534AB7",
-    purpleSoft: "#EEEDFE",
-    purpleInk: "#3C3489",
-    gold: "#B8860B",
-    goldSoft: "#FDF6E3",
-    goldBorder: "#E8C97A",
+    border: "#E5DFEE",
+    purple: "#9B72D3",
+    purpleSoft: "#F2EAFB",
+    purpleInk: "#5B3E8C",
+    gold: "#7C5BAF",
+    goldSoft: "#F2EAFB",
+    goldBorder: "#D6C4EE",
     green: "#2D6A4F",
     greenSoft: "#EAF3DE",
     greenBorder: "#74C69D",
     red: "#C0392B",
     redSoft: "#FDECEA",
     neutralBg: "#F9FAFB",
-    avatarA: "#EEEDFE",
-    avatarB: "#FDF6E3",
-    avatarC: "#EAF3DE",
+    avatarA: "#F2EAFB",
+    avatarB: "#EDE6F8",
+    avatarC: "#E7E0F5",
   };
   const avatarPalette = [C.avatarA, C.avatarB, C.avatarC];
 
@@ -1031,7 +1031,7 @@ const Patients = () => {
               aria-label="Filtrar pacientes sem formulação"
             >
               <div className="flex items-start gap-2.5">
-                <div className="shrink-0 flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(184,134,11,0.18)", color: C.gold, fontWeight: 700, fontSize: 13 }}>!</div>
+                <div className="shrink-0 flex items-center justify-center" style={{ width: 22, height: 22, borderRadius: 6, background: "rgba(124,91,175,0.18)", color: C.gold, fontWeight: 700, fontSize: 13 }}>!</div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <p style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: "0.08em" }}>Atenção Clínica</p>
@@ -1042,12 +1042,12 @@ const Patients = () => {
                   </p>
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {attentionPatients.slice(0, 3).map((p) => (
-                      <span key={p.id} style={{ background: "rgba(184,134,11,0.14)", color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
+                      <span key={p.id} style={{ background: "rgba(124,91,175,0.14)", color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
                         {p.full_name.split(" ").slice(0, 2).join(" ")}
                       </span>
                     ))}
                     {attentionPatients.length > 3 && (
-                      <span style={{ background: "rgba(184,134,11,0.14)", color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>+ {attentionPatients.length - 3}</span>
+                      <span style={{ background: "rgba(124,91,175,0.14)", color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>+ {attentionPatients.length - 3}</span>
                     )}
                   </div>
                 </div>
@@ -1777,7 +1777,6 @@ const Patients = () => {
             );
             return (
               <div className="h-full overflow-y-auto relative">
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
                 <div className="absolute right-4 top-4 flex items-center gap-1 z-30" onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
