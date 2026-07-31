@@ -312,6 +312,15 @@ const Agenda = () => {
   // Pending
   const [pendingRecordsOpen, setPendingRecordsOpen] = useState(false);
   const [pendingPaymentsOpen, setPendingPaymentsOpen] = useState(false);
+  // Modo compacto (mais atendimentos por tela)
+  const [dense, setDense] = useState<boolean>(() => {
+    try { return localStorage.getItem("psireal_agenda_dense") === "1"; } catch { return false; }
+  });
+  const toggleDense = () => setDense((v) => {
+    const next = !v;
+    try { localStorage.setItem("psireal_agenda_dense", next ? "1" : "0"); } catch { /* noop */ }
+    return next;
+  });
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
   const [pendingPackageSessions, setPendingPackageSessions] = useState<Session[]>([]);
   const [loadingPending, setLoadingPending] = useState(true);
