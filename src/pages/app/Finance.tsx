@@ -165,6 +165,13 @@ const Finance = () => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
   const [financeHistory, setFinanceHistory] = useState<{ id: string; name: string } | null>(null);
+  // Pagamentos atrasados (vindo do Painel via ?filter=atrasados): sessões passadas,
+  // não canceladas, com pagamento pendente — mesma regra usada no indicador do Painel.
+  const [overdueOpen, setOverdueOpen] = useState(false);
+  const [overdueRows, setOverdueRows] = useState<
+    { id: string; scheduled_at: string; price: number | null; patient: { id: string; full_name: string } | null }[]
+  >([]);
+  const [overdueLoading, setOverdueLoading] = useState(false);
   const [fortnightFilter, setFortnightFilter] = useState<FortnightFilter>("all");
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderWindow, setReminderWindow] = useState(24);
