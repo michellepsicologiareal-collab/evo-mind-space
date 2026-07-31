@@ -13,7 +13,6 @@ import {
   UserRound,
   ChevronDown,
   ChevronRight,
-  Phone,
   StickyNote,
   CalendarDays,
   Smile,
@@ -46,13 +45,6 @@ interface PatientListItem {
   user_id: string;
 }
 
-interface PatientDetail {
-  id: string;
-  code: string;
-  notes: string | null;
-  is_active: boolean;
-  user_id: string;
-}
 
 interface SuperviseeRow {
   id: string;
