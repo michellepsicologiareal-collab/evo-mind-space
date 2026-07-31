@@ -9,6 +9,9 @@
 
 const UPDATED_FLAG = "psireal:updated-notice";
 const LAST_CHECK_KEY = "psireal:last-update-check";
+const APPLIED_SIGNATURE_KEY = "psireal:last-applied-signature";
+const UPDATE_LOCK_KEY = "psireal:update-lock";
+const UPDATE_LOCK_MS = 5 * 60 * 1000;
 
 /** Assinatura dos scripts/estilos carregados na aba atual. */
 export function currentBuildSignature(): string {
@@ -48,9 +51,28 @@ function normalize(urls: string[]): string {
         return u;
       }
     })
-    .filter((p) => /\.(js|mjs|css)$/.test(p))
+    // Apenas assets gerados pelo build. Scripts injetados pelo navegador ou
+    // por webviews mobile não fazem parte da versão publicada.
+    .filter((p) => /\/assets\/[^/]+\.(js|mjs|css)$/.test(p))
     .sort()
     .join("|");
+}
+
+export function wasSignatureAlreadyApplied(signature: string): boolean {
+  try {
+    return localStorage.getItem(APPLIED_SIGNATURE_KEY) === signature;
+  } catch {
+    return false;
+  }
+}
+
+export function isUpdateLocked(): boolean {
+  try {
+    const lockTime = Number(sessionStorage.getItem(UPDATE_LOCK_KEY));
+    return Number.isFinite(lockTime) && Date.now() - lockTime < UPDATE_LOCK_MS;
+  } catch {
+    return false;
+  }
 }
 
 export function markLastCheck() {
@@ -99,9 +121,12 @@ async function clearHttpCaches() {
   }
 }
 
-export async function applyUpdate() {
+export async function applyUpdate(remoteSignature: string) {
+  if (!remoteSignature || isUpdateLocked() || wasSignatureAlreadyApplied(remoteSignature)) return;
   try {
     sessionStorage.setItem(UPDATED_FLAG, "1");
+    sessionStorage.setItem(UPDATE_LOCK_KEY, String(Date.now()));
+    localStorage.setItem(APPLIED_SIGNATURE_KEY, remoteSignature);
   } catch {
     /* ignore */
   }

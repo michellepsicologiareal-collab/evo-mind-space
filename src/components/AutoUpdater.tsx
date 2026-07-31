@@ -8,8 +8,10 @@ import {
   currentBuildSignature,
   hoursSinceLastCheck,
   isSafeToReload,
+  isUpdateLocked,
   markLastCheck,
   remoteBuildSignature,
+  wasSignatureAlreadyApplied,
 } from "@/lib/appUpdate";
 
 const POLL_MS = 30 * 60 * 1000; // 30 min
@@ -24,6 +26,7 @@ export const AutoUpdater = () => {
   const { user } = useAuth();
   const baseline = useRef<string>("");
   const pending = useRef(false);
+  const pendingSignature = useRef("");
 
   useEffect(() => {
     if (consumeUpdatedNotice()) {
@@ -40,7 +43,13 @@ export const AutoUpdater = () => {
     const maybeApply = () => {
       if (!pending.current || cancelled) return;
       if (!isSafeToReload()) return;
-      void applyUpdate();
+      const signature = pendingSignature.current;
+      if (!signature || isUpdateLocked() || wasSignatureAlreadyApplied(signature)) {
+        pending.current = false;
+        pendingSignature.current = "";
+        return;
+      }
+      void applyUpdate(signature);
     };
 
     const check = async () => {
@@ -49,7 +58,9 @@ export const AutoUpdater = () => {
       const remote = await remoteBuildSignature();
       if (cancelled || !remote || !baseline.current) return;
       if (remote !== baseline.current) {
+        if (isUpdateLocked() || wasSignatureAlreadyApplied(remote)) return;
         pending.current = true;
+        pendingSignature.current = remote;
         maybeApply();
       }
     };
@@ -81,7 +92,10 @@ export const AutoUpdater = () => {
   // Verifica ao entrar/sair de sessão (login) e aplica em troca de página.
   useEffect(() => {
     if (!import.meta.env.PROD) return;
-    if (pending.current && isSafeToReload()) void applyUpdate();
+    if (pending.current && isSafeToReload()) {
+      const signature = pendingSignature.current;
+      if (signature) void applyUpdate(signature);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, user?.id]);
 
