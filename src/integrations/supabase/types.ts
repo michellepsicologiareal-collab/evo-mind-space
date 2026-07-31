@@ -1516,6 +1516,57 @@ export type Database = {
         }
         Relationships: []
       }
+      session_confirmation_events: {
+        Row: {
+          channel: string
+          content: string | null
+          content_type: string
+          created_at: string
+          id: string
+          modality: string
+          patient_id: string | null
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          content?: string | null
+          content_type: string
+          created_at?: string
+          id?: string
+          modality: string
+          patient_id?: string | null
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          content?: string | null
+          content_type?: string
+          created_at?: string
+          id?: string
+          modality?: string
+          patient_id?: string | null
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_confirmation_events_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_confirmation_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_evolutions: {
         Row: {
           created_at: string

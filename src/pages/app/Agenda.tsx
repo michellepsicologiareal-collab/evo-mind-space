@@ -226,12 +226,18 @@ const Agenda = () => {
   const [presencialMessage, setPresencialMessage] = useState("");
   const [confirmPreview, setConfirmPreview] = useState<{
     sessionId: string;
+    patientId: string | null;
     patientName: string;
+    contentType: "meeting_link" | "clinic_address" | "none";
+    contentValue: string;
     modality: "online" | "presencial";
     phone: string;
     message: string;
     original: string;
   } | null>(null);
+  const [confirmHistory, setConfirmHistory] = useState<
+    { id: string; modality: string; content_type: string; channel: string; created_at: string }[]
+  >([]);
   const [viewTab, setViewTab] = useState<string>("day");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
@@ -1341,11 +1347,14 @@ const Agenda = () => {
     const isOnline = ((s as any).modality || "").toLowerCase() === "online";
     const patient = patients.find((p) => p.id === s.patient_id);
     let extra = "";
+    let contentType: "meeting_link" | "clinic_address" | "none" = "none";
+    let contentValue = "";
     if (isOnline) {
       const link = (s as any).meeting_link?.trim();
       extra = link
         ? `\n\n💻 Sessão online. Link da chamada:\n${link}`
         : "\n\n💻 Sessão online. O link da chamada será enviado em breve.";
+      if (link) { contentType = "meeting_link"; contentValue = link; }
     } else {
       // Endereço específico do paciente tem prioridade sobre o endereço padrão da clínica
       const patientAddress = (patient?.clinic_address || "").trim();
@@ -1355,6 +1364,7 @@ const Agenda = () => {
         ? `\n\n📍 Sessão presencial. Endereço:\n${local}`
         : "\n\n📍 Sessão presencial.";
       if (note) extra += `\n\n${note}`;
+      if (local) { contentType = "clinic_address"; contentValue = local; }
     }
     const message = `Olá, por favor, entre para confirmar sua sessão de terapia🤎\n\n${url}${extra}`;
 
@@ -1367,17 +1377,48 @@ const Agenda = () => {
 
     setConfirmPreview({
       sessionId: s.id,
+      patientId: s.patient_id || null,
       patientName: patient?.full_name || "Paciente",
       modality: isOnline ? "online" : "presencial",
+      contentType,
+      contentValue,
       phone: phoneNumber,
       message,
       original: message,
     });
+
+    // Histórico de envios anteriores deste paciente
+    setConfirmHistory([]);
+    if (s.patient_id) {
+      const { data } = await supabase
+        .from("session_confirmation_events")
+        .select("id, modality, content_type, channel, created_at")
+        .eq("patient_id", s.patient_id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      setConfirmHistory(data || []);
+    }
   };
 
   const markConfirmationSent = async (sessionId: string) => {
     await supabase.from("sessions").update({ confirmation_sent_at: new Date().toISOString() }).eq("id", sessionId);
     load(true);
+  };
+
+  // Registra no histórico do paciente o que foi enviado
+  const logConfirmationEvent = async (channel: "whatsapp" | "clipboard") => {
+    if (!confirmPreview) return;
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) return;
+    await supabase.from("session_confirmation_events").insert({
+      user_id: auth.user.id,
+      patient_id: confirmPreview.patientId,
+      session_id: confirmPreview.sessionId,
+      modality: confirmPreview.modality,
+      content_type: confirmPreview.contentType,
+      content: confirmPreview.contentValue || null,
+      channel,
+    });
   };
 
   const sendConfirmationPreview = async () => {
@@ -1391,17 +1432,21 @@ const Agenda = () => {
       await navigator.clipboard.writeText(message);
       toast.success("Lembrete copiado (paciente sem telefone cadastrado)");
     }
+    await logConfirmationEvent(phone ? "whatsapp" : "clipboard");
     setConfirmPreview(null);
     await markConfirmationSent(sessionId);
   };
 
   const copyConfirmationPreview = async () => {
     if (!confirmPreview) return;
+    const sessionId = confirmPreview.sessionId;
     await navigator.clipboard.writeText(confirmPreview.message);
     toast.success("Mensagem copiada");
+    await logConfirmationEvent("clipboard");
     setConfirmPreview(null);
-    await markConfirmationSent(confirmPreview.sessionId);
+    await markConfirmationSent(sessionId);
   };
+
 
 
   const getGroupId = (notes: string | null): string | null => {
@@ -4019,6 +4064,27 @@ const Agenda = () => {
               ? "O link da chamada está incluído na mensagem."
               : "O endereço de atendimento está incluído na mensagem."}
           </p>
+          {confirmHistory.length > 0 && (
+            <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-1.5 max-h-40 overflow-y-auto">
+              <p className="text-xs font-medium text-foreground">Envios anteriores</p>
+              {confirmHistory.map((ev) => (
+                <p key={ev.id} className="text-xs text-muted-foreground">
+                  {new Date(ev.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                  {" · "}
+                  {ev.modality === "online" ? "Online" : "Presencial"}
+                  {" · "}
+                  {ev.content_type === "meeting_link"
+                    ? "link da chamada"
+                    : ev.content_type === "clinic_address"
+                      ? "endereço da clínica"
+                      : "sem local"}
+                  {" · "}
+                  {ev.channel === "whatsapp" ? "WhatsApp" : "copiado"}
+                </p>
+              ))}
+            </div>
+          )}
+
           <DialogFooter className="gap-2 sm:gap-2">
             <Button
               variant="ghost"
