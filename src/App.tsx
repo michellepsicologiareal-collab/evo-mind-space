@@ -134,6 +134,8 @@ const App = () => (
 
                 <Route path="/tarefas/:token" element={<Tarefas />} />
 
+                <Route path="/rpd/:token" element={<RpdPublico />} />
+
                 <Route
                   path="/app"
                   element={
