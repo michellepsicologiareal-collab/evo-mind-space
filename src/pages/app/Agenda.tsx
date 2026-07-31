@@ -143,6 +143,8 @@ const paymentStatusClass: Record<PaymentStatus, string> = {
   paid:    "bg-green-100 text-green-800 border-green-200",
 };
 const PILL_BASE = "inline-flex items-center text-[11px] font-display font-semibold px-2.5 py-0.5 rounded-[40px] border";
+const PILL_COMPACT = "inline-flex items-center text-[10px] font-display font-semibold px-1.5 py-0.5 rounded-[40px] border whitespace-nowrap";
+const ICON_TAG = "inline-flex items-center justify-center h-5 w-5 rounded-full shrink-0";
 
 type ClinicalRecordPresence = {
   hasContent: boolean;
