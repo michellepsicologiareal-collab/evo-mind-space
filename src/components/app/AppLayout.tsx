@@ -129,14 +129,14 @@ export const AppLayout = () => {
       onClick={(e) => handleNavClick(e, item)}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 px-4 py-3 text-[12.5px] transition-colors font-sans",
+          "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] transition-colors font-sans",
           isActive
             ? isAdminSection
-              ? "bg-[hsl(var(--admin-accent))] text-white shadow-soft rounded-xl"
-              : "bg-[rgba(150,117,206,0.08)] text-primary-dark font-medium border-l-[3px] border-l-primary rounded-none"
+              ? "bg-[hsl(var(--admin-accent))] text-white shadow-soft"
+              : "bg-primary text-primary-foreground font-semibold shadow-soft"
             : isAdminSection
-            ? "text-[hsl(var(--admin-accent))]/80 hover:bg-[hsl(var(--admin-accent))]/10 hover:text-[hsl(var(--admin-accent))] rounded-xl"
-            : "text-muted-foreground hover:bg-[hsl(var(--sidebar-hover))] hover:text-primary-dark rounded-xl"
+            ? "text-[hsl(var(--admin-accent))]/80 hover:bg-[hsl(var(--admin-accent))]/15 hover:text-[hsl(var(--admin-accent))]"
+            : "text-[hsl(var(--nav-muted))] hover:bg-white/5 hover:text-[hsl(var(--nav-fg))]"
         )
       }
     >
@@ -145,6 +145,7 @@ export const AppLayout = () => {
       {item.premium && !isPremium && <Lock className="h-3 w-3 ml-auto opacity-50" />}
     </NavLink>
   );
+
 
   return (
     <div className="min-h-screen bg-background flex">
