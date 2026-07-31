@@ -2207,11 +2207,12 @@ const Agenda = () => {
           </span>
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Clínica</p>
-            <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Agenda</h1>
-            <p className="mt-1.5 text-sm md:text-base text-muted-foreground max-w-2xl">Visualize e organize seus atendimentos. Sessões marcadas aqui viram lembretes para o paciente, entradas no Google Calendar e linhas no Financeiro.</p>
+            <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Agenda</h1>
+            <p className="mt-1.5 hidden sm:block text-sm md:text-base text-muted-foreground max-w-2xl">Visualize e organize seus atendimentos. Sessões marcadas aqui viram lembretes para o paciente, entradas no Google Calendar e linhas no Financeiro.</p>
           </div>
         </div>
-        <div className="grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 sm:flex sm:w-auto sm:flex-wrap">
+        <div className="flex w-full min-w-0 items-center gap-2 overflow-x-auto no-scrollbar sm:w-auto sm:flex-wrap sm:overflow-visible">
+
           <RefreshButton />
           <Button
             type="button"
