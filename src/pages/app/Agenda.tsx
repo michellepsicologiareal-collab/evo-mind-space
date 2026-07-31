@@ -2608,9 +2608,9 @@ const Agenda = () => {
             return (
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
-                  <Item icon={CalendarCheck} label="Sessões de hoje" value={todayCount} tone="bg-primary/10 text-primary" />
+                  <Item icon={CalendarCheck} label="Sessões de hoje" value={todayCount} tone="bg-primary/10 text-primary" onClick={() => { goToDate(new Date()); setViewTab("day"); }} />
                   <Item icon={AlertCircle} label="Registros pendentes" value={pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
-                  <Item icon={Wallet} label="Pagamentos pendentes" value={pendingPayments} tone="bg-emerald-100 text-emerald-700" />
+                  <Item icon={Wallet} label="Pagamentos pendentes" value={pendingPayments} tone="bg-emerald-100 text-emerald-700" onClick={() => setPendingPaymentsOpen(true)} />
                   <Item icon={HeartPulse} label="Humor respondido hoje" value={moodCount} tone="bg-lilac/40 text-foreground" />
                 </div>
                 <Sheet open={pendingRecordsOpen} onOpenChange={setPendingRecordsOpen}>
