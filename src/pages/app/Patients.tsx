@@ -963,6 +963,19 @@ const Patients = () => {
       formulFilter === "all" ? true : formulFilter === "with" ? !!formulationFilled[p.id] : !formulationFilled[p.id]
     )
     .filter((p) => (onlyNoNext ? p.is_active && !sessionInfo[p.id]?.nextDate : true))
+    .filter((p) => {
+      if (attentionFilter === "none") return true;
+      if (!p.is_active) return false;
+      if (attentionFilter === "sem-formulacao") {
+        // Mesma regra do Painel: ativo, com ao menos uma sessão realizada e sem Formulação de Caso
+        return !!lastCompleted[p.id] && !formulationFilled[p.id];
+      }
+      // baixa-adesao: última sessão realizada há mais de 30 dias e sem próxima agendada
+      const last = lastCompleted[p.id];
+      if (!last) return false;
+      const THIRTY = 30 * 24 * 60 * 60 * 1000;
+      return Date.now() - new Date(last).getTime() > THIRTY && !sessionInfo[p.id]?.nextDate;
+    })
     .filter((p) =>
       p.full_name.toLowerCase().includes(search.toLowerCase()) ||
       (p.email ?? "").toLowerCase().includes(search.toLowerCase())
