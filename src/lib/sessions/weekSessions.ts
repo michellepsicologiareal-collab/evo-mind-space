@@ -29,7 +29,7 @@ export async function fetchWeekSessions(params: {
   const { data, error } = await supabase
     .from("sessions")
     .select(
-      "id, scheduled_at, status, modality, patient:patients!sessions_patient_id_fkey(full_name)",
+      "id, scheduled_at, status, modality, patient_id, patient:patients!sessions_patient_id_fkey(full_name)",
     )
     .eq("user_id", params.userId)
     .gte("scheduled_at", weekStart.toISOString())
@@ -42,6 +42,7 @@ export async function fetchWeekSessions(params: {
     scheduled_at: r.scheduled_at,
     status: r.status,
     modality: r.modality,
+    patient_id: r.patient_id ?? null,
     patient_name: r.patient?.full_name ?? "Paciente",
   }));
 
