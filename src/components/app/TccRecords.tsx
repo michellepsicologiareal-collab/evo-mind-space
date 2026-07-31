@@ -97,10 +97,24 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
     load();
   }, [patientId]);
 
+  const loadInvites = async () => {
+    setInvitesLoading(true);
+    const { data } = await (supabase as any)
+      .from("rpd_invites")
+      .select("id, token, password, expires_at, revoked_at, submissions_count, created_at")
+      .eq("patient_id", patientId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setInvites(data ?? []);
+    setInvitesLoading(false);
+  };
+
   const openLinkDialog = async () => {
     setLinkOpen(true);
     setPublicLink(null);
     setLinkPassword("");
+    setLinkDays("30");
+    loadInvites();
     const { data } = await (supabase as any)
       .from("patients")
       .select("full_name, phone")
@@ -112,12 +126,15 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const generateLink = async () => {
     if (!user) return;
     setLinkLoading(true);
+    const days = Number(linkDays) || 30;
+    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
     const { data, error } = await (supabase as any)
       .from("rpd_invites")
       .insert({
         user_id: user.id,
         patient_id: patientId,
         password: linkPassword.trim() || null,
+        expires_at: expiresAt,
       })
       .select("token")
       .single();
@@ -127,8 +144,23 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       return;
     }
     setPublicLink(`${window.location.origin}/rpd/${data.token}`);
-    toast.success("Link gerado");
+    toast.success(`Link gerado · válido por ${days} dias`);
+    loadInvites();
   };
+
+  const revokeInvite = async (id: string, token: string) => {
+    setRevoking(id);
+    const { error } = await (supabase as any)
+      .from("rpd_invites")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("id", id);
+    setRevoking(null);
+    if (error) return toast.error("Não foi possível revogar o link.");
+    toast.success("Acesso revogado");
+    if (publicLink?.endsWith(token)) setPublicLink(null);
+    loadInvites();
+  };
+
 
   const copyLink = async () => {
     if (!publicLink) return;
