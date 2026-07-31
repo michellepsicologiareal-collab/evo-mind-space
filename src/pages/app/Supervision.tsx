@@ -305,27 +305,65 @@ const Supervision = () => {
     );
   }
 
+  const activeShared = supervisees.reduce(
+    (s, r) => s + r.patients.filter((p) => p.is_active).length,
+    0,
+  );
+
+  const kpis = [
+    {
+      kicker: "Supervisionandos",
+      value: supervisees.length,
+      hint: "profissionais vinculados",
+      dot: "bg-primary",
+      blob: "bg-primary/10",
+    },
+    {
+      kicker: "Pacientes compartilhados",
+      value: totalShared,
+      hint: "visíveis somente leitura",
+      dot: "bg-accent",
+      blob: "bg-accent/10",
+    },
+    {
+      kicker: "Em acompanhamento",
+      value: activeShared,
+      hint: "pacientes ativos",
+      dot: "bg-moss",
+      blob: "bg-moss/10",
+    },
+  ];
+
   return (
-    <div className="space-y-8 animate-fade-up max-w-3xl">
+    <div className="space-y-8 animate-fade-up max-w-5xl">
       <PageHeader
         icon={Users}
         title="Supervisão"
         subtitle="Acompanhe os pacientes compartilhados pelos seus supervisionandos — somente leitura."
         intro="Como supervisor(a), você vê apenas o que cada supervisionando escolhe compartilhar — somente leitura, garantindo o sigilo do paciente e a autonomia do supervisionando."
-        meta={
-          !loading ? (
-            <>
-              <span className="inline-flex items-center rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-                {supervisees.length} {supervisees.length === 1 ? "supervisionando" : "supervisionandos"}
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-                <Eye className="h-3.5 w-3.5" />
-                {totalShared} {totalShared === 1 ? "paciente compartilhado" : "pacientes compartilhados"}
-              </span>
-            </>
-          ) : undefined
-        }
       />
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        {kpis.map((k) => (
+          <div
+            key={k.kicker}
+            className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-card"
+          >
+            <div className="relative z-10 space-y-2">
+              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className={`h-2 w-2 rounded-full ${k.dot}`} />
+                {k.kicker}
+              </p>
+              <p className="font-display text-3xl font-bold leading-none">{k.value}</p>
+              <p className="text-xs text-muted-foreground">{k.hint}</p>
+            </div>
+            <span
+              className={`pointer-events-none absolute -bottom-8 -right-8 h-24 w-24 rounded-full ${k.blob}`}
+            />
+          </div>
+        ))}
+      </div>
+
 
 
 
