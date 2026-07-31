@@ -596,6 +596,36 @@ const Profile = () => {
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="clinic_address" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-muted-foreground" /> Endereço da clínica
+          </Label>
+          <Input
+            id="clinic_address"
+            placeholder="Ex.: Rua das Flores, 123 — Sala 4, Bairro, Cidade/UF"
+            value={form.clinic_address}
+            onChange={(e) => setForm({ ...form, clinic_address: e.target.value })}
+          />
+          <p className="text-xs text-muted-foreground">
+            Usado nas mensagens de confirmação de sessões presenciais. Se vazio, o sistema usa o endereço do modelo de contrato.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="presencial_message">Texto complementar (sessão presencial)</Label>
+          <textarea
+            id="presencial_message"
+            rows={3}
+            maxLength={500}
+            placeholder="Ex.: Chegue com 10 minutos de antecedência. Interfone 12. Estacionamento na rua lateral."
+            value={form.presencial_message}
+            onChange={(e) => setForm({ ...form, presencial_message: e.target.value })}
+            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          />
+          <p className="text-xs text-muted-foreground">Enviado junto com o endereço na mensagem de confirmação presencial.</p>
+        </div>
+
+
+        <div className="space-y-2">
           <Label htmlFor="profile_type">Tipo de perfil</Label>
           <Select value={profileType} onValueChange={(v) => setProfileType(v as ProfileType)}>
             <SelectTrigger id="profile_type">
