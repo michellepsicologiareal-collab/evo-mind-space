@@ -226,7 +226,10 @@ const Agenda = () => {
   const [presencialMessage, setPresencialMessage] = useState("");
   const [confirmPreview, setConfirmPreview] = useState<{
     sessionId: string;
+    patientId: string | null;
     patientName: string;
+    contentType: "meeting_link" | "clinic_address" | "none";
+    contentValue: string;
     modality: "online" | "presencial";
     phone: string;
     message: string;
