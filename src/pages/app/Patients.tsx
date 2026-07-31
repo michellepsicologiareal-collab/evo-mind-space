@@ -1682,7 +1682,7 @@ const Patients = () => {
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCard(e); }
                   }}
-                  className="relative p-4 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--primary))] cursor-pointer"
+                  className="relative p-4 rounded-lg overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--primary))] cursor-pointer"
                   style={{ background: C.card, borderLeft: `3px solid ${rowAccent}` }}
                 >
                   {/* Sem Tooltip no mobile: em touch o tooltip do Radix intercepta o primeiro toque */}
@@ -1727,8 +1727,9 @@ const Patients = () => {
                             </p>
                             {nextLabel ? (
                               <button
+                                data-no-card-open
                                 onClick={(e) => { e.stopPropagation(); navigate(`/app/agenda?patient=${p.id}`); }}
-                                className="inline-flex items-center gap-1 mt-1"
+                                className="inline-flex items-center gap-1 mt-1 min-h-[32px] touch-manipulation"
                                 style={{ fontSize: 13, fontWeight: 600, color: C.ink, background: "transparent", border: "none", padding: 0, whiteSpace: "nowrap" }}
                               >
                                 <CalendarDays className="h-3.5 w-3.5" style={{ color: C.purple }} />
@@ -1802,7 +1803,7 @@ const Patients = () => {
                         sideOffset={6}
                         collisionPadding={12}
                         avoidCollisions
-                        className="z-50 w-[min(17rem,calc(100vw-24px))] max-h-[60vh] overflow-y-auto overscroll-contain"
+                        className="z-50 w-[min(17rem,calc(100vw-24px))] max-h-[60vh] overflow-y-auto overscroll-contain [&_[role=menuitem]]:min-h-[44px] [&_[role=menuitem]]:text-[14px]"
                         onClick={(e) => e.stopPropagation()}
                       >
 
