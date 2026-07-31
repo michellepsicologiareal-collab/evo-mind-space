@@ -46,6 +46,7 @@ const allNavItems: NavItem[] = [
   { to: "/app/contrato-modelo", label: "Termo de Consentimento", icon: FileText },
   { to: "/app/contratos", label: "Contratos", icon: FileCheck },
   { to: "/app/supervisao", label: "Supervisão", icon: GraduationCap, visibleTo: ["supervisor"] },
+  { to: "/app/plano-desenvolvimento", label: "Plano de Desenvolvimento", icon: Target, visibleTo: ["supervisor"] },
   { to: "/app/perfil", label: "Configurações", icon: Settings },
 
   // Itens que continuam roteáveis, mas ficam fora do menu principal.
@@ -152,7 +153,7 @@ export const AppLayout = () => {
   const sidebarSections: { label: string; routes: string[] }[] = [
     { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda"] },
     { label: "GESTÃO", routes: ["/app/financeiro", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
-    { label: "SUPERVISÃO", routes: ["/app/supervisao"] },
+    { label: "SUPERVISÃO", routes: ["/app/supervisao", "/app/plano-desenvolvimento"] },
     { label: "CONFIGURAÇÕES", routes: ["/app/perfil"] },
   ];
 
