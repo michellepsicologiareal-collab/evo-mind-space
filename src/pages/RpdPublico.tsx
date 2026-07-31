@@ -114,8 +114,9 @@ const RpdPublico = () => {
           <p className="mt-2 text-muted-foreground">Sua psicóloga já pode ver este registro. Obrigado por preencher.</p>
           <Button
             variant="outline"
-            className="mt-5"
+            className="mt-5 w-full sm:w-auto min-h-12"
             onClick={() => { setForm({}); setState("ready"); window.scrollTo({ top: 0 }); }}
+
           >
             Registrar outro
           </Button>
