@@ -91,6 +91,7 @@ const Supervision = () => {
   const [supervisees, setSupervisees] = useState<SuperviseeRow[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [tabFilter, setTabFilter] = useState<Record<string, "active" | "inactive" | "all">>({});
+  const [selectedSupervisee, setSelectedSupervisee] = useState<string>("all");
   const [selectedPatientItem, setSelectedPatientItem] = useState<PatientListItem | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<PatientDetail | null>(null);
   const [recentSessions, setRecentSessions] = useState<SessionSummary[]>([]);
