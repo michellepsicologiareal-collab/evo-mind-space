@@ -930,6 +930,7 @@ export default function Dashboard() {
                   item={s}
                   onOpen={() => navigate("/app/agenda")}
                   onConfirm={() => handleAction(`Sessão de ${s.name} confirmada`)}
+                  onMore={() => navigate("/app/agenda")}
                 />
               ))
             )}
@@ -1144,10 +1145,12 @@ function TodayRow({
   item,
   onOpen,
   onConfirm,
+  onMore,
 }: {
   item: TodayItem;
   onOpen: () => void;
   onConfirm: () => void;
+  onMore: () => void;
 }) {
   const ModeIcon = item.mode === "Online" ? Video : MapPin;
   return (
