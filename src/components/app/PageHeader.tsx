@@ -49,18 +49,19 @@ export const PageHeader = ({
         )}
         <div className="min-w-0">
           {eyebrow && (
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary">
               {eyebrow}
             </p>
           )}
-          <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
+          <h1 className="font-display text-3xl md:text-[2.6rem] md:leading-[1.05] font-bold tracking-[-0.03em] text-foreground">
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-1.5 text-sm md:text-base text-muted-foreground max-w-2xl">
+            <p className="mt-2 text-sm md:text-base text-muted-foreground max-w-2xl">
               {subtitle}
             </p>
           )}
+
           {meta && <div className="mt-3 flex flex-wrap items-center gap-2">{meta}</div>}
         </div>
       </div>
