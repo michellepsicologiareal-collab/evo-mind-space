@@ -143,6 +143,8 @@ const paymentStatusClass: Record<PaymentStatus, string> = {
   paid:    "bg-green-100 text-green-800 border-green-200",
 };
 const PILL_BASE = "inline-flex items-center text-[11px] font-display font-semibold px-2.5 py-0.5 rounded-[40px] border";
+const PILL_COMPACT = "inline-flex items-center text-[10px] font-display font-semibold px-1.5 py-0.5 rounded-[40px] border whitespace-nowrap";
+const ICON_TAG = "inline-flex items-center justify-center h-5 w-5 rounded-full shrink-0";
 
 type ClinicalRecordPresence = {
   hasContent: boolean;
@@ -2910,26 +2912,31 @@ const Agenda = () => {
                                       )}
                                     </div>
                                     {/* Status + Payment */}
-                                    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 flex-wrap justify-end max-w-[40%] sm:max-w-none">
-                                      <span className={cn(PILL_BASE, isSupervisionRow ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
+                                    <div className="flex items-center gap-1 shrink-0 justify-end">
+                                      <span className={cn(PILL_COMPACT, isSupervisionRow ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
                                         {isSupervisionRow ? "Supervisão" : statusLabel[s.status]}
                                       </span>
                                       {!isSupervisionRow && s.price != null && (
-                                        <span className={cn(PILL_BASE, paymentStatusClass[s.payment_status])}>
+                                        <span className={cn(PILL_COMPACT, paymentStatusClass[s.payment_status])}>
                                           {paymentStatusLabel[s.payment_status]}
                                         </span>
                                        )}
                                       {s.billing_sent_at && (
-                                        <span className="hidden sm:inline text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
-                                          💸 {format(new Date(s.billing_sent_at), "dd/MM")}
+                                        <span
+                                          className={cn(ICON_TAG, "bg-green-100 text-green-700 border border-green-200")}
+                                          title={`Cobrança enviada em ${format(new Date(s.billing_sent_at), "dd/MM")}`}
+                                          aria-label="Cobrança enviada"
+                                        >
+                                          <DollarSign className="h-3 w-3" />
                                         </span>
                                       )}
                                       {s.confirmation_sent_at && (
                                         <span
-                                          className="lilac-comm-badge inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border shadow-sm"
+                                          className={cn("lilac-comm-badge border shadow-sm", ICON_TAG)}
                                           title={`Lembrete enviado em ${format(new Date(s.confirmation_sent_at), "dd/MM 'às' HH:mm")}`}
+                                          aria-label="Lembrete enviado"
                                         >
-                                          <Bell className="h-3 w-3" /> Lembrete enviado
+                                          <Bell className="h-3 w-3" />
                                         </span>
                                       )}
                                     </div>
