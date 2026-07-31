@@ -251,6 +251,32 @@ const Finance = () => {
 
   useAutoRefresh(() => { if (user) load(); }, { routePath: "/app/financeiro" });
 
+  // ?filter=atrasados → abre a lista de pagamentos atrasados (todas as datas)
+  useEffect(() => {
+    if (searchParams.get("filter") === "atrasados") setOverdueOpen(true);
+  }, [searchParams]);
+
+  const loadOverdue = async () => {
+    if (!user) return;
+    setOverdueLoading(true);
+    const { data } = await supabase
+      .from("sessions")
+      .select("id, scheduled_at, price, patient:patients!sessions_patient_id_fkey(id, full_name)")
+      .eq("user_id", user.id)
+      .eq("payment_status", "pending")
+      .neq("status", "cancelled")
+      .lt("scheduled_at", new Date().toISOString())
+      .order("scheduled_at", { ascending: false });
+    setOverdueRows((data ?? []) as any);
+    setOverdueLoading(false);
+  };
+
+  useEffect(() => {
+    if (overdueOpen) loadOverdue();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [overdueOpen, user]);
+
+
   // Load reminder preferences from profile
   useEffect(() => {
     if (!user) return;
