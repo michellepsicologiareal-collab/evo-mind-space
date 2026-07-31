@@ -412,8 +412,9 @@ export const HomeworkPlanForm = ({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="space-y-5">
-        <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-1">
+      <div className="space-y-5 min-w-0">
+        <div className="space-y-5 min-w-0 sm:max-h-[60vh] sm:overflow-y-auto sm:pr-1">
+
 
           {showPicker && (
             <div className="space-y-1.5">
@@ -578,18 +579,18 @@ export const HomeworkPlanForm = ({
         </div>
 
         {shareable && (
-          <div className="space-y-2 rounded-xl border border-border bg-muted/40 p-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-background px-2.5 py-1.5">
+          <div className="space-y-2 rounded-xl border border-border bg-muted/40 p-3 min-w-0">
+            <div className="flex flex-col gap-2 min-w-0 sm:flex-row sm:flex-wrap sm:items-center">
+              <div className="flex min-w-0 items-center gap-2 rounded-lg bg-background px-2.5 py-1.5 sm:flex-1">
                 <Link2 className="h-3.5 w-3.5 shrink-0 text-primary" />
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
                   {publicUrl ?? "Link disponível após salvar"}
                 </span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="ml-auto h-7 w-7 shrink-0"
+                  className="h-7 w-7 shrink-0"
                   onClick={copyPublicLink}
                   disabled={copying || !canCopy}
                   title="Copiar link"
@@ -598,16 +599,17 @@ export const HomeworkPlanForm = ({
                 </Button>
               </div>
 
-              <div className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5">
+              <div className="flex min-w-0 items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5">
                 <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <Input
                   value={accessPassword}
                   onChange={(e) => setAccessPassword(e.target.value)}
                   onBlur={() => { void persistPassword(); }}
                   placeholder="Senha (opcional)"
-                  className="h-7 w-36 border-0 bg-transparent px-0 text-xs focus-visible:ring-0"
+                  className="h-7 min-w-0 flex-1 border-0 bg-transparent px-0 text-xs focus-visible:ring-0 sm:w-36 sm:flex-none"
                   maxLength={60}
                 />
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Info className="h-3.5 w-3.5 shrink-0 cursor-help text-muted-foreground" />
@@ -640,6 +642,7 @@ export const HomeworkPlanForm = ({
                 type="button"
                 size="sm"
                 variant="moss"
+                className="w-full sm:w-auto"
                 onClick={sendWhatsApp}
                 disabled={sending || !canSend}
                 title={canSend ? "Enviar por WhatsApp" : "Paciente sem WhatsApp cadastrado"}
