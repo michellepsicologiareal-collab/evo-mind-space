@@ -6,7 +6,7 @@ import { ptBR } from "date-fns/locale";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, CalendarDays, Smile, Baby, Sparkles, Maximize2, Minimize2, X, Printer, BookOpen, RefreshCw, ChevronDown } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, CalendarDays, Smile, Baby, Sparkles, Maximize2, Minimize2, X, Printer, BookOpen, RefreshCw, ChevronDown, FileText, UserMinus } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { IconPencil, IconUserOff, IconClipboardList, IconFileText, IconTarget, IconFlame, IconTrash } from "@tabler/icons-react";
 import { AbordagemBadge } from "@/components/app/AbordagemBadge";
@@ -364,6 +364,8 @@ const Patients = () => {
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
   const [formulFilter, setFormulFilter] = useState<"all" | "with" | "without">("all");
   const [onlyNoNext, setOnlyNoNext] = useState(false);
+  // Filtro vindo do Painel (Atenção necessária) via ?filter=
+  const [attentionFilter, setAttentionFilter] = useState<"none" | "sem-formulacao" | "baixa-adesao">("none");
   const [tccPatient, setTccPatient] = useState<Patient | null>(null);
   const [padeksyPatient, setPadeksyPatient] = useState<Patient | null>(null);
   const [historyPatient, setHistoryPatient] = useState<Patient | null>(null);
@@ -412,6 +414,36 @@ const Patients = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patients, searchParams]);
+
+  // ?filter= vindo do Painel (Atenção necessária) → aplica o recorte correspondente
+  useEffect(() => {
+    const f = searchParams.get("filter");
+    if (f === "sem-proxima") {
+      setOnlyNoNext(true);
+      setAttentionFilter("none");
+      setStatusFilter("active");
+      setFormulFilter("all");
+    } else if (f === "sem-formulacao") {
+      setAttentionFilter("sem-formulacao");
+      setOnlyNoNext(false);
+      setStatusFilter("active");
+      setFormulFilter("all");
+    } else if (f === "baixa-adesao") {
+      setAttentionFilter("baixa-adesao");
+      setOnlyNoNext(false);
+      setStatusFilter("active");
+      setFormulFilter("all");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const clearAttentionFilter = () => {
+    setAttentionFilter("none");
+    setOnlyNoNext(false);
+    const next = new URLSearchParams(searchParams);
+    next.delete("filter");
+    setSearchParams(next, { replace: true });
+  };
 
   // Estado → URL: reflete a ficha/aba abertas nos query params, para
   // preservar o contexto ao navegar para subtelas e retornar via "voltar".
@@ -472,6 +504,8 @@ const Patients = () => {
   const [lastDates, setLastDates] = useState<{ mood: Record<string, string>; tcc: Record<string, string>; records: Record<string, string>; history: Record<string, string> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [attendance, setAttendance] = useState<Record<string, { total: number; attended: number; pct: number }>>({});
   const [sessionInfo, setSessionInfo] = useState<Record<string, { lastDate?: string; lastStatus?: string; nextDate?: string; nextStatus?: string }>>({});
+  // Última sessão efetivamente realizada por paciente (usado nos recortes do Painel)
+  const [lastCompleted, setLastCompleted] = useState<Record<string, string>>({});
   const [packageInfo, setPackageInfo] = useState<Record<string, { total: number; current: number }>>({});
   const [paymentInfo, setPaymentInfo] = useState<Record<string, { pending: number; paid: number; total: number }>>({});
   const [receitaSaudePending, setReceitaSaudePending] = useState<Record<string, number>>({});
@@ -646,6 +680,15 @@ const Patients = () => {
       info[s.patient_id] = cur;
     });
     setSessionInfo(info);
+
+    // Última sessão realizada (completed) por paciente
+    const doneMap: Record<string, string> = {};
+    (historyRes.data ?? []).forEach((s: any) => {
+      if (!s.patient_id || !s.scheduled_at) return;
+      if (s.status !== "completed") return;
+      if (!doneMap[s.patient_id]) doneMap[s.patient_id] = s.scheduled_at;
+    });
+    setLastCompleted(doneMap);
 
     // Package progress (from notes pattern "Plano N sessões (i/N)"), payment counters and Receita Saúde pendings
     const pkg: Record<string, { total: number; current: number; latestTs: number }> = {};
@@ -920,6 +963,19 @@ const Patients = () => {
       formulFilter === "all" ? true : formulFilter === "with" ? !!formulationFilled[p.id] : !formulationFilled[p.id]
     )
     .filter((p) => (onlyNoNext ? p.is_active && !sessionInfo[p.id]?.nextDate : true))
+    .filter((p) => {
+      if (attentionFilter === "none") return true;
+      if (!p.is_active) return false;
+      if (attentionFilter === "sem-formulacao") {
+        // Mesma regra do Painel: ativo, com ao menos uma sessão realizada e sem Formulação de Caso
+        return !!lastCompleted[p.id] && !formulationFilled[p.id];
+      }
+      // baixa-adesao: última sessão realizada há mais de 30 dias e sem próxima agendada
+      const last = lastCompleted[p.id];
+      if (!last) return false;
+      const THIRTY = 30 * 24 * 60 * 60 * 1000;
+      return Date.now() - new Date(last).getTime() > THIRTY && !sessionInfo[p.id]?.nextDate;
+    })
     .filter((p) =>
       p.full_name.toLowerCase().includes(search.toLowerCase()) ||
       (p.email ?? "").toLowerCase().includes(search.toLowerCase())
@@ -1177,13 +1233,35 @@ const Patients = () => {
         {onlyNoNext && (
           <button
             type="button"
-            onClick={() => setOnlyNoNext(false)}
+            onClick={clearAttentionFilter}
             className="inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
             style={{ background: C.redSoft, color: C.red, border: `1px solid ${C.red}`, borderRadius: 40, fontSize: 12, fontWeight: 600, padding: "4px 10px" }}
             title="Remover filtro"
           >
             <CalendarDays className="h-3 w-3" />
             Sem próxima sessão
+            <X className="h-3 w-3" />
+          </button>
+        )}
+        {attentionFilter !== "none" && (
+          <button
+            type="button"
+            onClick={clearAttentionFilter}
+            className="inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
+            style={{ background: C.redSoft, color: C.red, border: `1px solid ${C.red}`, borderRadius: 40, fontSize: 12, fontWeight: 600, padding: "4px 10px" }}
+            title="Remover filtro"
+          >
+            {attentionFilter === "sem-formulacao" ? (
+              <>
+                <FileText className="h-3 w-3" />
+                Formulações de Caso pendentes
+              </>
+            ) : (
+              <>
+                <UserMinus className="h-3 w-3" />
+                Baixa adesão
+              </>
+            )}
             <X className="h-3 w-3" />
           </button>
         )}

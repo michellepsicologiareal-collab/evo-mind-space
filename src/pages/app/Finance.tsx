@@ -1,7 +1,7 @@
 import { RefreshButton } from "@/components/app/RefreshButton";
 import { HelpCard } from "@/components/app/HelpCard";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
@@ -146,6 +146,7 @@ type QuickAlert = "none" | "receita_saude" | "sem_pagamento" | "pix_sem_conf" | 
 const Finance = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [monthCursor, setMonthCursor] = useState<Date>(new Date());
   const [rawRows, setRawRows] = useState<Row[]>([]);
   const [patientFilter, setPatientFilter] = useState<string>("all");
@@ -165,6 +166,13 @@ const Finance = () => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
   const [financeHistory, setFinanceHistory] = useState<{ id: string; name: string } | null>(null);
+  // Pagamentos atrasados (vindo do Painel via ?filter=atrasados): sessões passadas,
+  // não canceladas, com pagamento pendente — mesma regra usada no indicador do Painel.
+  const [overdueOpen, setOverdueOpen] = useState(false);
+  const [overdueRows, setOverdueRows] = useState<
+    { id: string; scheduled_at: string; price: number | null; patient: { id: string; full_name: string } | null }[]
+  >([]);
+  const [overdueLoading, setOverdueLoading] = useState(false);
   const [fortnightFilter, setFortnightFilter] = useState<FortnightFilter>("all");
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderWindow, setReminderWindow] = useState(24);
@@ -243,6 +251,32 @@ const Finance = () => {
   }, [user, monthCursor]);
 
   useAutoRefresh(() => { if (user) load(); }, { routePath: "/app/financeiro" });
+
+  // ?filter=atrasados → abre a lista de pagamentos atrasados (todas as datas)
+  useEffect(() => {
+    if (searchParams.get("filter") === "atrasados") setOverdueOpen(true);
+  }, [searchParams]);
+
+  const loadOverdue = async () => {
+    if (!user) return;
+    setOverdueLoading(true);
+    const { data } = await supabase
+      .from("sessions")
+      .select("id, scheduled_at, price, patient:patients!sessions_patient_id_fkey(id, full_name)")
+      .eq("user_id", user.id)
+      .eq("payment_status", "pending")
+      .neq("status", "cancelled")
+      .lt("scheduled_at", new Date().toISOString())
+      .order("scheduled_at", { ascending: false });
+    setOverdueRows((data ?? []) as any);
+    setOverdueLoading(false);
+  };
+
+  useEffect(() => {
+    if (overdueOpen) loadOverdue();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [overdueOpen, user]);
+
 
   // Load reminder preferences from profile
   useEffect(() => {
@@ -1654,6 +1688,72 @@ const Finance = () => {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Pagamentos atrasados — mesma regra do indicador do Painel */}
+      <Sheet
+        open={overdueOpen}
+        onOpenChange={(open) => {
+          setOverdueOpen(open);
+          if (!open && searchParams.get("filter")) {
+            const next = new URLSearchParams(searchParams);
+            next.delete("filter");
+            setSearchParams(next, { replace: true });
+          }
+        }}
+      >
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle className="font-display">Pagamentos atrasados</SheetTitle>
+            <SheetDescription>
+              Sessões já realizadas (ou passadas) que continuam com pagamento pendente.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-4 space-y-2">
+            {overdueLoading ? (
+              <p className="text-sm text-muted-foreground">Carregando…</p>
+            ) : overdueRows.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nenhum pagamento atrasado por aqui. Tudo em dia! 🌿
+              </p>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  {overdueRows.length} {overdueRows.length === 1 ? "sessão" : "sessões"} ·{" "}
+                  {formatBRL(overdueRows.reduce((s, r) => s + Number(r.price ?? 0), 0))} em aberto
+                </p>
+                {overdueRows.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => {
+                      if (!r.patient) return;
+                      setOverdueOpen(false);
+                      setFinanceHistory({ id: r.patient.id, name: r.patient.full_name });
+                    }}
+                    className="w-full rounded-xl border border-border/60 bg-card px-4 py-3 text-left transition-colors hover:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className="flex items-center justify-between gap-3">
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium text-foreground">
+                          {r.patient?.full_name ?? "Paciente"}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                          {format(new Date(r.scheduled_at), "dd/MM/yyyy")}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-sm font-semibold text-foreground">
+                        {formatBRL(Number(r.price ?? 0))}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
     </div>
   );
 };
