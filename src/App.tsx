@@ -25,6 +25,7 @@ const Agenda = lazy(() => import("./pages/app/Agenda"));
 const Profile = lazy(() => import("./pages/app/Profile"));
 const Finance = lazy(() => import("./pages/app/Finance"));
 const Supervisees = lazy(() => import("./pages/app/Supervisees"));
+const Supervision = lazy(() => import("./pages/app/Supervision"));
 const Library = lazy(() => import("./pages/app/Library"));
 const Autocuidado = lazy(() => import("./pages/app/Autocuidado"));
 const ContratoModelo = lazy(() => import("./pages/app/ContratoModelo"));
@@ -156,6 +157,7 @@ const App = () => (
                  <Route path="pacientes/:id/formulacao-tcc" element={<FormulacaoTCC />} />
                   <Route path="financeiro" element={<Finance />} />
                   <Route path="supervisionandos" element={<Supervisees />} />
+                  <Route path="supervisao" element={<Supervision />} />
                   <Route path="biblioteca" element={<Library />} />
                   <Route path="autocuidado" element={<Autocuidado />} />
                   <Route path="contrato-modelo" element={<ContratoModelo />} />

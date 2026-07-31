@@ -45,6 +45,7 @@ const allNavItems: NavItem[] = [
   { to: "/app/anamneses", label: "Anamneses", icon: Baby },
   { to: "/app/contrato-modelo", label: "Termo de Consentimento", icon: FileText },
   { to: "/app/contratos", label: "Contratos", icon: FileCheck },
+  { to: "/app/supervisao", label: "Supervisão", icon: GraduationCap, visibleTo: ["supervisor"] },
   { to: "/app/perfil", label: "Configurações", icon: Settings },
 
   // Itens que continuam roteáveis, mas ficam fora do menu principal.
