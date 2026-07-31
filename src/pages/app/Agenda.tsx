@@ -2557,26 +2557,77 @@ const Agenda = () => {
             )).length;
             const moodCount = moodTodayPatients.size;
 
-            const Item = ({ icon: Icon, label, value, tone }: { icon: any; label: string; value: number; tone: string }) => (
-              <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 min-w-0">
-                <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", tone)}>
-                  <Icon className="h-4 w-4" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[11px] text-muted-foreground leading-none">{label}</p>
-                  <p className="mt-1 font-display text-lg font-semibold text-foreground leading-none">{value}</p>
-                </div>
-              </div>
-            );
+            const pendingRecordList = sessions.filter((s) => {
+              const key = s.patient_id ? `${s.patient_id}|${new Date(s.scheduled_at).toISOString().slice(0, 10)}` : "";
+              return (
+                s.session_type === "clinical" &&
+                !s.is_expense &&
+                !!s.patient_id &&
+                new Date(s.scheduled_at) < now &&
+                !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
+                !sessionRecordIds.has(s.id) &&
+                !(key && sessionRecordKeys.has(key))
+              );
+            }).sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at));
+
+            const Item = ({ icon: Icon, label, value, tone, onClick }: { icon: any; label: string; value: number; tone: string; onClick?: () => void }) => {
+              const Tag: any = onClick ? "button" : "div";
+              return (
+                <Tag
+                  onClick={onClick}
+                  type={onClick ? "button" : undefined}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 min-w-0 w-full text-left",
+                    onClick && "transition-colors hover:bg-muted/60 hover:border-primary/30 cursor-pointer"
+                  )}
+                >
+                  <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", tone)}>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-medium text-foreground/70 leading-none">{label}</p>
+                    <p className="mt-1 font-display text-lg font-semibold text-foreground leading-none">{value}</p>
+                  </div>
+                </Tag>
+              );
+            };
 
             return (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
-                <Item icon={CalendarCheck} label="Sessões de hoje" value={todayCount} tone="bg-primary/10 text-primary" />
-                <Item icon={AlertCircle} label="Registros pendentes" value={pendingRecords} tone="bg-amber-100 text-amber-700" />
-                <Item icon={Wallet} label="Pagamentos pendentes" value={pendingPayments} tone="bg-emerald-100 text-emerald-700" />
-                <Item icon={HeartPulse} label="Humor respondido hoje" value={moodCount} tone="bg-lilac/40 text-foreground" />
-              </div>
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
+                  <Item icon={CalendarCheck} label="Sessões de hoje" value={todayCount} tone="bg-primary/10 text-primary" />
+                  <Item icon={AlertCircle} label="Registros pendentes" value={pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
+                  <Item icon={Wallet} label="Pagamentos pendentes" value={pendingPayments} tone="bg-emerald-100 text-emerald-700" />
+                  <Item icon={HeartPulse} label="Humor respondido hoje" value={moodCount} tone="bg-lilac/40 text-foreground" />
+                </div>
+                <Sheet open={pendingRecordsOpen} onOpenChange={setPendingRecordsOpen}>
+                  <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+                    <SheetHeader className="mb-4">
+                      <SheetTitle className="font-display text-xl">Registros pendentes</SheetTitle>
+                      <SheetDescription>Sessões realizadas que ainda não têm registro clínico</SheetDescription>
+                    </SheetHeader>
+                    {pendingRecordList.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Tudo em dia por aqui ✨</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {pendingRecordList.map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => { setPendingRecordsOpen(false); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
+                            className="w-full text-left rounded-xl border border-border bg-card px-3 py-2.5 hover:bg-muted/60 hover:border-primary/30 transition-colors"
+                          >
+                            <p className="font-display text-sm font-semibold text-foreground">{s.patient_name || "Paciente"}</p>
+                            <p className="text-xs text-foreground/70">{format(new Date(s.scheduled_at), "dd/MM/yyyy 'às' HH:mm")}</p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </SheetContent>
+                </Sheet>
+              </>
             );
+
           })()}
 
           <Tabs value={viewTab} onValueChange={setViewTab}>
