@@ -424,6 +424,34 @@ const Supervision = () => {
           </div>
         </div>
 
+        {supervisees.length > 0 && (
+          <div className="mb-5 flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedSupervisee("all")}
+              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                selectedSupervisee === "all"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40"
+              }`}
+            >
+              Todas ({supervisees.length})
+            </button>
+            {supervisees.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setSelectedSupervisee(s.id)}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                  selectedSupervisee === s.id
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40"
+                }`}
+              >
+                {s.full_name || "Sem nome"} ({s.patients.length})
+              </button>
+            ))}
+          </div>
+        )}
+
         {loading ? (
           <div className="text-center py-10">
             <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
@@ -434,7 +462,7 @@ const Supervision = () => {
           </div>
         ) : (
           <ul className="space-y-3">
-            {supervisees.map((s) => {
+            {visibleSupervisees.map((s) => {
               const isOpen = !!expanded[s.id];
               const f = tabFilter[s.id] ?? "active";
               const activeCount = s.patients.filter((p) => p.is_active).length;
