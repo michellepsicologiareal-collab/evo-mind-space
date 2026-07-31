@@ -3,16 +3,18 @@ import { logClinicalAccess } from "@/utils/auditLog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight, Link2, Copy, MessageCircle, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -26,6 +28,7 @@ interface TccRecord {
   behavior: string | null;
   cognitive_distortion: string | null;
   rational_response: string | null;
+  filled_by?: string | null;
   created_at: string;
 }
 
@@ -33,6 +36,7 @@ interface Props {
   patientId: string;
   readOnly?: boolean;
 }
+
 
 const G = "#B8860B";
 const G_BG = "#FDF6E3";
