@@ -42,6 +42,7 @@ const ContratoPublico = lazy(() => import("./pages/ContratoPublico"));
 const AnamnesePublica = lazy(() => import("./pages/AnamnesePublica"));
 const AnamneseAdultoPublica = lazy(() => import("./pages/AnamneseAdultoPublica"));
 const Humor = lazy(() => import("./pages/app/Humor"));
+const RpdPublico = lazy(() => import("./pages/RpdPublico"));
 
 const queryClient = new QueryClient();
 
