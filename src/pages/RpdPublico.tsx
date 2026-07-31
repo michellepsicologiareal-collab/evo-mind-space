@@ -123,22 +123,33 @@ const RpdPublico = () => {
     );
   }
 
+  const filledCount = FIELDS.filter((f) => (form[f.key] || "").trim()).length;
+
   return (
     <div className="min-h-screen" style={{ background: "#F7F6F3" }}>
-      <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-4">
-        <div className="flex items-center gap-2 pt-2">
-          <img src={logoImg} alt="Psi Real" className="h-8 w-8 object-contain" />
-          <span className="font-display text-lg font-bold text-foreground">Psi Real</span>
+      {/* Header fixo (mobile-first) */}
+      <header
+        className="sticky top-0 z-30 backdrop-blur-md border-b"
+        style={{ background: "rgba(247,246,243,0.92)", borderColor: "rgba(0,0,0,0.06)" }}
+      >
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-2">
+          <img src={logoImg} alt="Psi Real" className="h-7 w-7 object-contain shrink-0" />
+          <span className="font-display text-base font-bold text-foreground">Psi Real</span>
+          <span className="ml-auto text-[11px] font-semibold tabular-nums" style={{ color: MUTED }}>
+            {filledCount}/{FIELDS.length} preenchidos
+          </span>
         </div>
+      </header>
 
-        <div className="bg-white rounded-[10px] p-5 sm:p-6 space-y-1" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}>
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-4 space-y-3 sm:space-y-4 pb-[calc(96px+env(safe-area-inset-bottom))] md:pb-10">
+        <div className="bg-white rounded-[10px] p-4 sm:p-6 space-y-1" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}>
           <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: G, textTransform: "uppercase" }}>
             TCC · Registro de Pensamentos Disfuncionais
           </p>
-          <h1 className="font-display flex items-center gap-2" style={{ fontSize: 20, fontWeight: 700, color: INK }}>
-            <ClipboardList className="h-5 w-5" style={{ color: G }} /> RPD
+          <h1 className="font-display flex items-center gap-2 text-[18px] sm:text-[20px]" style={{ fontWeight: 700, color: INK }}>
+            <ClipboardList className="h-5 w-5 shrink-0" style={{ color: G }} /> RPD
           </h1>
-          <p style={{ fontSize: 13, color: MUTED }}>
+          <p className="break-words" style={{ fontSize: 13, color: MUTED }}>
             {info?.patient_name} · Psicóloga: {info?.therapist_name}{info?.therapist_crp ? ` · CRP ${info.therapist_crp}` : ""}
           </p>
           <p style={{ fontSize: 13, color: MUTED }}>
@@ -150,27 +161,54 @@ const RpdPublico = () => {
           <section key={f.key} className="bg-white rounded-[10px] p-4 sm:p-5 space-y-2" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}>
             <header className="space-y-0.5">
               <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: G, textTransform: "uppercase" }}>Coluna {idx + 1}</p>
-              <h2 className="font-display" style={{ fontSize: 15, fontWeight: 700, color: INK }}>{f.label}</h2>
-              <p style={{ fontSize: 12, color: MUTED }}>{f.hint}</p>
+              <label htmlFor={`rpd-${f.key}`} className="font-display block" style={{ fontSize: 15, fontWeight: 700, color: INK }}>
+                {f.label}
+              </label>
+              <p id={`rpd-${f.key}-hint`} style={{ fontSize: 12, color: MUTED }}>{f.hint}</p>
             </header>
             <Textarea
+              id={`rpd-${f.key}`}
+              aria-describedby={`rpd-${f.key}-hint`}
               rows={3}
               value={form[f.key] ?? ""}
               onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
               placeholder="Escreva aqui..."
-              className="resize-y"
+              enterKeyHint="next"
+              autoCapitalize="sentences"
+              className="resize-y text-base leading-relaxed min-h-[96px]"
             />
           </section>
         ))}
 
-        <div className="pb-10">
-          <Button onClick={submit} disabled={saving} className="w-full" style={{ background: G, color: "#fff", fontWeight: 600 }}>
+        {/* Botão no fluxo (desktop) */}
+        <div className="hidden md:block pb-6">
+          <Button onClick={submit} disabled={saving} className="w-full min-h-11" style={{ background: G, color: "#fff", fontWeight: 600 }}>
             {saving && <Loader2 className="h-4 w-4 animate-spin" />} Enviar registro
           </Button>
         </div>
       </div>
+
+      {/* Barra fixa inferior (mobile) */}
+      <div
+        className="md:hidden fixed bottom-0 inset-x-0 z-30 border-t backdrop-blur-md px-4 pt-3"
+        style={{
+          background: "rgba(247,246,243,0.95)",
+          borderColor: "rgba(0,0,0,0.06)",
+          paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))",
+        }}
+      >
+        <Button
+          onClick={submit}
+          disabled={saving}
+          className="w-full min-h-12 text-base"
+          style={{ background: G, color: "#fff", fontWeight: 600 }}
+        >
+          {saving && <Loader2 className="h-4 w-4 animate-spin" />} Enviar registro
+        </Button>
+      </div>
     </div>
   );
 };
+
 
 export default RpdPublico;
