@@ -3002,11 +3002,10 @@ const Agenda = () => {
                 <div
                   key={group.key}
                   className="relative overflow-hidden transition-shadow"
-                  style={{ background: "hsl(var(--card))", border: "0.5px solid hsl(var(--border))", borderRadius: 12, padding: "14px 16px" }}
+                  style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 16, padding: "18px 20px", boxShadow: "var(--shadow-card)" }}
                   onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(150,117,206,0.08)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
                 >
-                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2.5, background: "linear-gradient(90deg, hsl(var(--gold)), hsl(var(--gold)), hsl(var(--gold)))" }} />
                   <div className="min-w-0" style={{ paddingTop: 4 }}>
                     {s.patient_id && s.patient_name ? (
                       <PatientNameLink patientId={s.patient_id} name={s.patient_name} />
