@@ -372,6 +372,8 @@ const Profile = () => {
       .update({
         full_name: parsed.data.full_name,
         clinic_name: parsed.data.clinic_name || null,
+        clinic_address: parsed.data.clinic_address || null,
+        presencial_message: parsed.data.presencial_message || null,
         crp: parsed.data.crp || null,
         phone: parsed.data.phone || null,
          specialty: parsed.data.specialty || null,
