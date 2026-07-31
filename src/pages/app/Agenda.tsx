@@ -2220,7 +2220,8 @@ const Agenda = () => {
             size="sm"
             onClick={gcalConnected ? disconnectGcal : connectGcal}
             disabled={gcalLoading}
-             className="min-w-0 rounded-[40px] font-display font-semibold sm:flex-none"
+             className="shrink-0 min-w-0 rounded-[40px] font-display font-semibold sm:flex-none"
+
             title={gcalConnected ? "Google Calendar conectado — clique para desconectar" : "Conectar Google Calendar"}
           >
             {gcalLoading ? (
