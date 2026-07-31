@@ -1018,7 +1018,7 @@ const Patients = () => {
 
   // ───────── Color palette (per spec) ─────────
   const C = {
-    pageBg: "#F8F6FC",
+    pageBg: "#F8F9FE",
     card: "#FFFFFF",
     ink: "#17152F",
     muted: "#6B7280",
