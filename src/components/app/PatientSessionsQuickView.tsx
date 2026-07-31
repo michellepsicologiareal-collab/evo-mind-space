@@ -31,6 +31,15 @@ interface UnifiedRecord {
   created_at: string;
 }
 
+const SESSION_STATUS_LABEL: Record<string, string> = {
+  scheduled: "Agendada",
+  confirmed: "Confirmada",
+  completed: "Realizada",
+  cancelled: "Cancelada",
+  no_show: "Falta",
+  rescheduled: "Remarcada",
+};
+
 const ATTENTION_LABEL: Record<string, string> = {
   watch: "Atenção",
   urgent: "Atenção urgente",
