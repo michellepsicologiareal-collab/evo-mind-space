@@ -69,6 +69,7 @@ type TodayItem = {
   id: string;
   time: string;
   name: string;
+  patientId: string | null;
   mode: "Online" | "Presencial";
   status: "scheduled" | "to-confirm" | "confirmed" | "completed" | "no_show";
 };
