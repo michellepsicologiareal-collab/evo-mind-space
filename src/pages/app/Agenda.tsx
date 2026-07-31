@@ -3476,12 +3476,12 @@ const Agenda = () => {
 
                   {/* ── Plano entre Sessões (inline, atrelado à sessão atual) ── */}
                   <section
-                    className="rounded-xl border p-4 space-y-3"
+                    className="rounded-xl border p-3 sm:p-4 space-y-3 min-w-0 overflow-hidden"
                     style={{ borderColor: "#E5E7EB", background: "#FFFFFF", borderLeft: "3px solid #3D5C35" }}
                   >
-                    <div className="flex items-center gap-2">
-                      <NotebookPen className="h-4 w-4" style={{ color: "#3D5C35" }} />
-                      <div>
+                    <div className="flex items-start gap-2 min-w-0">
+                      <NotebookPen className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#3D5C35" }} />
+                      <div className="min-w-0">
                         <h3 className="font-display text-sm font-semibold text-foreground">Plano entre Sessões</h3>
                         <p className="text-xs text-muted-foreground">Combinados e ações do paciente até a próxima sessão. Salva automaticamente.</p>
                       </div>
