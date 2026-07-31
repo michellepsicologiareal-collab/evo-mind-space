@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
   Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon,
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
-  MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
+  MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText, Rows3,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, ChevronDown, Bell,
   ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save,
 } from "lucide-react";
@@ -312,6 +312,15 @@ const Agenda = () => {
   // Pending
   const [pendingRecordsOpen, setPendingRecordsOpen] = useState(false);
   const [pendingPaymentsOpen, setPendingPaymentsOpen] = useState(false);
+  // Modo compacto (mais atendimentos por tela)
+  const [dense, setDense] = useState<boolean>(() => {
+    try { return localStorage.getItem("psireal_agenda_dense") === "1"; } catch { return false; }
+  });
+  const toggleDense = () => setDense((v) => {
+    const next = !v;
+    try { localStorage.setItem("psireal_agenda_dense", next ? "1" : "0"); } catch { /* noop */ }
+    return next;
+  });
   const [pendingSessions, setPendingSessions] = useState<Session[]>([]);
   const [pendingPackageSessions, setPendingPackageSessions] = useState<Session[]>([]);
   const [loadingPending, setLoadingPending] = useState(true);
@@ -1897,7 +1906,8 @@ const Agenda = () => {
         onClick={() => openEdit(s)}
         title={isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
         className={cn(
-          "relative overflow-hidden rounded-xl border border-border bg-card p-3 pl-4 group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/15",
+          "relative overflow-hidden rounded-xl border border-border bg-card group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/15",
+          compact ? "py-1.5 pr-2 pl-3" : "p-3 pl-4",
           "before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-['']",
           accentClass
         )}
@@ -1931,8 +1941,8 @@ const Agenda = () => {
           </div>
           {isMobile ? (
             <>
-              <Button variant="outline" size="sm" className="h-8 px-2.5 gap-1 text-xs font-medium shrink-0" aria-label="Ações da sessão" onClick={(e) => { e.stopPropagation(); setSheetOpen(true); }}>
-                <ChevronDown className="h-4 w-4" /> Ações
+              <Button variant="outline" size="sm" className={cn("gap-1 text-xs font-medium shrink-0", compact ? "h-7 w-7 p-0" : "h-8 px-2.5")} aria-label="Ações da sessão" onClick={(e) => { e.stopPropagation(); setSheetOpen(true); }}>
+                <ChevronDown className="h-4 w-4" /> {!compact && "Ações"}
               </Button>
               <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh] overflow-y-auto p-0" onClick={(e) => e.stopPropagation()}>
@@ -1949,8 +1959,8 @@ const Agenda = () => {
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 px-2.5 gap-1 text-xs font-medium shrink-0" aria-label="Ações da sessão" onClick={(e) => e.stopPropagation()}>
-                  <ChevronDown className="h-4 w-4" /> Ações
+                <Button variant="outline" size="sm" className={cn("gap-1 text-xs font-medium shrink-0", compact ? "h-7 w-7 p-0" : "h-8 px-2.5")} aria-label="Ações da sessão" onClick={(e) => e.stopPropagation()}>
+                  <ChevronDown className="h-4 w-4" /> {!compact && "Ações"}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
@@ -1982,7 +1992,7 @@ const Agenda = () => {
             </DropdownMenu>
           )}
         </div>
-        <div className="mt-1.5 min-w-0">
+        <div className={cn("min-w-0", compact ? "mt-0.5 flex items-center gap-2" : "mt-1.5")}>
           {isSupervisionCard ? (
             <p className={cn("text-foreground", compact ? "text-xs" : "text-sm font-medium")}>
               Supervisão
@@ -1990,21 +2000,57 @@ const Agenda = () => {
             </p>
           ) : s.patient_id && s.patient_name ? (
             <>
-              <p className={cn("text-left font-display font-semibold text-foreground hover:text-primary hover:underline transition-colors cursor-pointer", compact ? "text-xs leading-snug break-words" : "text-base truncate")}
+              <p className={cn("text-left font-display font-semibold text-foreground hover:text-primary hover:underline transition-colors cursor-pointer min-w-0", compact ? "text-xs leading-snug truncate" : "text-base truncate")}
                  onClick={(e) => { e.stopPropagation(); openPatientDrawer(s.patient_id!); }}>
                 {s.patient_name}
               </p>
               {(() => {
+                if (compact) return null;
                 const svcName = s.service_id
                   ? services.find(sv => sv.id === s.service_id)?.name
                   : "Atendimento clínico";
                 return svcName ? (
-                  <p className={cn("text-foreground/60", compact ? "text-[10px]" : "text-xs")}>{svcName}</p>
+                  <p className="text-xs text-foreground/60">{svcName}</p>
                 ) : null;
               })()}
             </>
           ) : (
             <p className={cn("text-foreground", compact ? "text-xs" : "text-sm font-medium")}>Paciente</p>
+          )}
+          {compact && (
+            <div className="ml-auto flex items-center gap-1.5 shrink-0">
+              {registroPendente && (
+                <span className="text-amber-600" title="Sessão realizada sem registro clínico" aria-label="Registro pendente">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                </span>
+              )}
+              {registroFeito && (
+                <span className="text-foreground/45" title="Registro clínico concluído" aria-label="Registro feito">
+                  <Check className="h-3.5 w-3.5" />
+                </span>
+              )}
+              {modalityOnline && (s as any).meeting_link && (
+                <a href={(s as any).meeting_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary" title="Entrar na sala online" aria-label="Entrar na sala online">
+                  <Link2 className="h-3.5 w-3.5" />
+                </a>
+              )}
+              {homeworkSentAt && (
+                <span className="text-emerald-600" title="Plano entre sessões enviado" aria-label="Plano entre sessões enviado">
+                  <ClipboardList className="h-3.5 w-3.5" />
+                </span>
+              )}
+              {!isSupervisionCard && s.patient_id && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-card text-foreground/70 hover:bg-muted transition-colors"
+                  title="Registrar sessão"
+                  aria-label="Registrar sessão"
+                >
+                  <Pencil className="h-3 w-3" />
+                </button>
+              )}
+            </div>
           )}
         </div>
         {!compact && sessionSummary && (
@@ -2713,6 +2759,21 @@ const Agenda = () => {
                     </Button>
                   </div>
 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-pressed={dense}
+                    title={dense ? "Modo compacto ativo — mostrar cards completos" : "Modo compacto — ver mais atendimentos por tela"}
+                    className={cn(
+                      "h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold shrink-0 gap-1.5",
+                      dense && "bg-primary/10 border-primary/30 text-primary hover:bg-primary/15 hover:text-primary"
+                    )}
+                    onClick={toggleDense}
+                  >
+                    <Rows3 className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Compacto</span>
+                  </Button>
+
                   <Button variant="accent" size="sm" className="h-8 rounded-[40px] font-display font-semibold shrink-0" onClick={() => openNew(selectedDate)}>
                     <Plus className="h-3.5 w-3.5" /> Nova sessão
                   </Button>
@@ -2800,7 +2861,7 @@ const Agenda = () => {
                         </div>
                       ) : (
                         <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                          {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} />)}
+                          {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                         </div>
                       )}
                     </div>
@@ -2822,7 +2883,7 @@ const Agenda = () => {
                           </p>
                         ) : (
                           <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                            {monthFilteredSessions.map((s) => <SessionCard key={s.id} s={s} />)}
+                            {monthFilteredSessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                           </div>
                         )}
                       </div>
@@ -2894,7 +2955,7 @@ const Agenda = () => {
                       </button>
                     ) : (
                       <div className="space-y-2">
-                        {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} />)}
+                        {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                       </div>
                     )}
                   </div>
@@ -3013,7 +3074,7 @@ const Agenda = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} />)}
+                    {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                   </div>
                 )}
               </div>
