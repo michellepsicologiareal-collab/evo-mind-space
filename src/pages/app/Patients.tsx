@@ -1881,8 +1881,8 @@ const Patients = () => {
 
 
                     {/* Visão geral */}
-                    <TabsContent value="overview" className="mt-4 space-y-4">
-                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                    <TabsContent value="overview" className="mt-6 space-y-5">
+                      <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-[var(--shadow-card)]">
                         <InfoRow label="Nome" value={p.full_name} />
                         <InfoRow label="Telefone" value={p.phone || null} />
                         <InfoRow label="E-mail" value={p.email || null} />
@@ -1898,7 +1898,7 @@ const Patients = () => {
                     </TabsContent>
 
                     {/* Formulações */}
-                    <TabsContent value="formulations" className="mt-4">
+                    <TabsContent value="formulations" className="mt-6">
                       {(() => {
                         const trunc = (t?: string, n = 180) => !t ? "" : (t.length > n ? t.slice(0, n).trimEnd() + "…" : t);
                         const tcc = formulationData[p.id];
@@ -1917,7 +1917,7 @@ const Patients = () => {
                           { key: "rpd", label: "RPD — Registros TCC", filled: cTcc > 0, summary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", fullSummary: cTcc > 0 ? `${cTcc} ${cTcc === 1 ? "registro" : "registros"} preenchido${cTcc === 1 ? "" : "s"}` : "", accent: "hsl(var(--moss))", onEdit: () => { setTccPatient(p); }, onView: () => { setTccPatient(p); } },
                         ];
                         return (
-                          <div className="grid gap-2 sm:grid-cols-2">
+                          <div className="grid gap-4 sm:grid-cols-2">
                             {items.map((it) => (<FormulationItemCard key={it.key} item={it} />))}
                           </div>
                         );
@@ -1925,7 +1925,7 @@ const Patients = () => {
                     </TabsContent>
 
                     {/* Sessões */}
-                    <TabsContent value="sessions" className="mt-4 space-y-4">
+                    <TabsContent value="sessions" className="mt-6 space-y-5">
                       <PatientSessionsQuickView
                         patientId={p.id}
                         nextDate={info?.nextDate}
@@ -1936,11 +1936,11 @@ const Patients = () => {
                     </TabsContent>
 
                     {/* Plano terapêutico */}
-                    <TabsContent value="plan" className="mt-4 space-y-3">
+                    <TabsContent value="plan" className="mt-6 space-y-5">
                       {(() => {
                         const tp = treatmentPlans[p.id];
                         return (
-                          <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                          <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-[var(--shadow-card)]">
                             <InfoRow label="Status" value={tp?.status || null} />
                             <InfoRow label="CID" value={tp?.cid || null} />
                             <InfoRow label="Abordagem" value={tp?.abordagem?.length ? tp.abordagem.join(", ") : null} />
@@ -1957,8 +1957,8 @@ const Patients = () => {
                     </TabsContent>
 
                     {/* Anamneses e instrumentos */}
-                    <TabsContent value="anamnesis" className="mt-4 space-y-3">
-                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                    <TabsContent value="anamnesis" className="mt-6 space-y-5">
+                      <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-[var(--shadow-card)]">
                         <InfoRow label="Anamnese" value={hasAnam ? `Preenchida em ${format(new Date(anamneseFilled[p.id]), "dd/MM/yyyy")}` : null} />
                       </div>
                       <div className="flex flex-wrap gap-1.5">
@@ -1996,8 +1996,8 @@ const Patients = () => {
                     </TabsContent>
 
                     {/* Documentos */}
-                    <TabsContent value="documents" className="mt-4 space-y-3">
-                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                    <TabsContent value="documents" className="mt-6 space-y-5">
+                      <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-[var(--shadow-card)]">
                         <InfoRow label="Contratos" value={null} />
                         <InfoRow label="Anexos" value={null} />
                       </div>
@@ -2007,8 +2007,8 @@ const Patients = () => {
                     </TabsContent>
 
                     {/* Financeiro */}
-                    <TabsContent value="finance" className="mt-4 space-y-3">
-                      <div className="rounded-xl p-3" style={{ background: "hsl(var(--background))", border: "0.5px solid hsl(var(--border))" }}>
+                    <TabsContent value="finance" className="mt-6 space-y-5">
+                      <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-[var(--shadow-card)]">
                         <InfoRow label="Valor da sessão" value={p.session_price != null ? `R$ ${Number(p.session_price).toFixed(2).replace(".", ",")}` : null} />
                         <InfoRow label="Pagas" value={pay?.paid ? pay.paid : null} />
                         <InfoRow label="Pendentes" value={pay?.pending ? pay.pending : null} />
