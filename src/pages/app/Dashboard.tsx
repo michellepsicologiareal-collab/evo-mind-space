@@ -74,6 +74,14 @@ type TodayItem = {
   status: "scheduled" | "to-confirm" | "confirmed" | "completed" | "no_show";
 };
 
+/** Abre a Agenda já filtrada pelo paciente da sessão (mês atual). */
+function goToAgendaForPatient(item: { patientId: string | null }) {
+  const month = format(new Date(), "yyyy-MM");
+  return item.patientId
+    ? `/app/agenda?patient=${item.patientId}&month=${month}`
+    : `/app/agenda?month=${month}`;
+}
+
 const WEEK_DAY_LABELS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
 /* ─── Chart typography tokens (padrão único para todos os gráficos) ─── */
