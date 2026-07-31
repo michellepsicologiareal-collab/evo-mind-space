@@ -6,6 +6,7 @@ export interface WeekSessionRow {
   scheduled_at: string;
   status: string;
   modality: string | null;
+  patient_id: string | null;
   patient_name: string;
 }
 
