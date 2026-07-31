@@ -4064,6 +4064,27 @@ const Agenda = () => {
               ? "O link da chamada está incluído na mensagem."
               : "O endereço de atendimento está incluído na mensagem."}
           </p>
+          {confirmHistory.length > 0 && (
+            <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-1.5 max-h-40 overflow-y-auto">
+              <p className="text-xs font-medium text-foreground">Envios anteriores</p>
+              {confirmHistory.map((ev) => (
+                <p key={ev.id} className="text-xs text-muted-foreground">
+                  {new Date(ev.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                  {" · "}
+                  {ev.modality === "online" ? "Online" : "Presencial"}
+                  {" · "}
+                  {ev.content_type === "meeting_link"
+                    ? "link da chamada"
+                    : ev.content_type === "clinic_address"
+                      ? "endereço da clínica"
+                      : "sem local"}
+                  {" · "}
+                  {ev.channel === "whatsapp" ? "WhatsApp" : "copiado"}
+                </p>
+              ))}
+            </div>
+          )}
+
           <DialogFooter className="gap-2 sm:gap-2">
             <Button
               variant="ghost"
