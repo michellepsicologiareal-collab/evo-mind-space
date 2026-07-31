@@ -27,6 +27,8 @@ const Profile = lazy(() => import("./pages/app/Profile"));
 const Finance = lazy(() => import("./pages/app/Finance"));
 const Supervisees = lazy(() => import("./pages/app/Supervisees"));
 const Supervision = lazy(() => import("./pages/app/Supervision"));
+const PlanoDesenvolvimento = lazy(() => import("./pages/app/PlanoDesenvolvimento"));
+const PlanoDesenvolvimentoPublico = lazy(() => import("./pages/PlanoDesenvolvimentoPublico"));
 const Library = lazy(() => import("./pages/app/Library"));
 const Autocuidado = lazy(() => import("./pages/app/Autocuidado"));
 const ContratoModelo = lazy(() => import("./pages/app/ContratoModelo"));
@@ -139,6 +141,8 @@ const App = () => (
 
                 <Route path="/rpd/:token" element={<RpdPublico />} />
 
+                <Route path="/plano-supervisao/:token" element={<PlanoDesenvolvimentoPublico />} />
+
                 <Route
                   path="/app"
                   element={
@@ -160,6 +164,7 @@ const App = () => (
                   <Route path="financeiro" element={<Finance />} />
                   <Route path="supervisionandos" element={<Supervisees />} />
                   <Route path="supervisao" element={<Supervision />} />
+                  <Route path="plano-desenvolvimento" element={<PlanoDesenvolvimento />} />
                   <Route path="biblioteca" element={<Library />} />
                   <Route path="autocuidado" element={<Autocuidado />} />
                   <Route path="contrato-modelo" element={<ContratoModelo />} />

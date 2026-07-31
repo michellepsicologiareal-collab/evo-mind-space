@@ -1815,34 +1815,73 @@ export type Database = {
       }
       supervisee_goals: {
         Row: {
+          activities: Json
           created_at: string
           description: string | null
           due_date: string | null
+          evidence: string | null
           id: string
+          materials: string | null
+          objective: string | null
+          share_expires_at: string | null
+          share_password: string | null
+          share_revoked_at: string | null
+          share_token: string | null
+          skill: string | null
           status: string
+          supervisee_feedback: string | null
           supervisee_id: string
+          supervisee_reflection: string | null
+          supervisee_updated_at: string | null
+          supervisor_feedback: string | null
           supervisor_id: string
           title: string
           updated_at: string
         }
         Insert: {
+          activities?: Json
           created_at?: string
           description?: string | null
           due_date?: string | null
+          evidence?: string | null
           id?: string
+          materials?: string | null
+          objective?: string | null
+          share_expires_at?: string | null
+          share_password?: string | null
+          share_revoked_at?: string | null
+          share_token?: string | null
+          skill?: string | null
           status?: string
+          supervisee_feedback?: string | null
           supervisee_id: string
+          supervisee_reflection?: string | null
+          supervisee_updated_at?: string | null
+          supervisor_feedback?: string | null
           supervisor_id: string
           title: string
           updated_at?: string
         }
         Update: {
+          activities?: Json
           created_at?: string
           description?: string | null
           due_date?: string | null
+          evidence?: string | null
           id?: string
+          materials?: string | null
+          objective?: string | null
+          share_expires_at?: string | null
+          share_password?: string | null
+          share_revoked_at?: string | null
+          share_token?: string | null
+          skill?: string | null
           status?: string
+          supervisee_feedback?: string | null
           supervisee_id?: string
+          supervisee_reflection?: string | null
+          supervisee_updated_at?: string | null
+          supervisor_feedback?: string | null
           supervisor_id?: string
           title?: string
           updated_at?: string
@@ -2209,6 +2248,33 @@ export type Database = {
           template_id: string
         }[]
       }
+      get_dev_plan_by_token: {
+        Args: { _password: string; _token: string }
+        Returns: {
+          activities: Json
+          due_date: string
+          evidence: string
+          id: string
+          materials: string
+          objective: string
+          skill: string
+          status: string
+          supervisee_feedback: string
+          supervisee_reflection: string
+          supervisor_feedback: string
+          supervisor_name: string
+          title: string
+          updated_at: string
+        }[]
+      }
+      get_dev_plan_link_info: {
+        Args: { _token: string }
+        Returns: {
+          exists_flag: boolean
+          password_required: boolean
+          supervisor_name: string
+        }[]
+      }
       get_homework_by_token:
         | {
             Args: { _token: string }
@@ -2356,6 +2422,16 @@ export type Database = {
       submit_child_anamnesis: {
         Args: { _ip: string; _payload: Json; _token: string; _ua: string }
         Returns: string
+      }
+      submit_dev_plan_response: {
+        Args: {
+          _activities: Json
+          _feedback: string
+          _password: string
+          _reflection: string
+          _token: string
+        }
+        Returns: undefined
       }
       submit_rpd_by_token: {
         Args: { _password: string; _payload: Json; _token: string }
