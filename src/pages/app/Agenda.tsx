@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
   Plus, ChevronLeft, ChevronRight, Loader2, Calendar as CalendarIcon,
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
-  MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText,
+  MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText, Rows3,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, ChevronDown, Bell,
   ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save,
 } from "lucide-react";
