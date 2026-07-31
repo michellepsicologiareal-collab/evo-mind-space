@@ -129,14 +129,14 @@ export const AppLayout = () => {
       onClick={(e) => handleNavClick(e, item)}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 px-4 py-3 text-[12.5px] transition-colors font-sans",
+          "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] transition-colors font-sans",
           isActive
             ? isAdminSection
-              ? "bg-[hsl(var(--admin-accent))] text-white shadow-soft rounded-xl"
-              : "bg-[rgba(150,117,206,0.08)] text-primary-dark font-medium border-l-[3px] border-l-primary rounded-none"
+              ? "bg-[hsl(var(--admin-accent))] text-white shadow-soft"
+              : "bg-primary text-primary-foreground font-semibold shadow-soft"
             : isAdminSection
-            ? "text-[hsl(var(--admin-accent))]/80 hover:bg-[hsl(var(--admin-accent))]/10 hover:text-[hsl(var(--admin-accent))] rounded-xl"
-            : "text-muted-foreground hover:bg-[hsl(var(--sidebar-hover))] hover:text-primary-dark rounded-xl"
+            ? "text-[hsl(var(--admin-accent))]/80 hover:bg-[hsl(var(--admin-accent))]/15 hover:text-[hsl(var(--admin-accent))]"
+            : "text-[hsl(var(--nav-muted))] hover:bg-white/5 hover:text-[hsl(var(--nav-fg))]"
         )
       }
     >
@@ -146,18 +146,19 @@ export const AppLayout = () => {
     </NavLink>
   );
 
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Linha dourada absoluta no topo da tela */}
       <div className="fixed top-0 inset-x-0 z-50 gold-bar pointer-events-none" />
 
       {/* ── Desktop sidebar (fixed) ── */}
-      <aside className="hidden md:flex md:w-[220px] fixed inset-y-0 left-0 z-30 bg-muted border-r border-border flex-col">
-        <div className="p-6 flex items-center justify-between border-b border-border">
-          <Link to="/app" className="flex items-center gap-2 min-w-0">
-            <img src={logoSrc} alt="Psicologia Real" className="h-9 w-9 rounded-full object-cover flex-shrink-0" />
-            <span className="font-display text-xl font-bold tracking-tight flex items-center gap-1.5 truncate">
-              <span className="text-foreground">Psi</span>
+      <aside className="hidden md:flex md:w-[248px] fixed inset-y-0 left-0 z-30 bg-[hsl(var(--nav-bg))] text-[hsl(var(--nav-fg))] border-r border-[hsl(var(--nav-border))] flex-col">
+        <div className="px-5 py-6 flex items-center justify-between">
+          <Link to="/app" className="flex items-center gap-2.5 min-w-0">
+            <img src={logoSrc} alt="Psicologia Real" className="h-10 w-10 rounded-xl object-cover flex-shrink-0" />
+            <span className="font-display text-lg font-bold tracking-tight leading-tight flex items-center gap-1.5 truncate">
+              <span className="text-[hsl(var(--nav-fg))]">Psi</span>
               <span className="text-primary">Real</span>
               <span className="inline-block h-2 w-2 rounded-full bg-gold flex-shrink-0" aria-hidden />
             </span>
@@ -165,7 +166,8 @@ export const AppLayout = () => {
           <NotificationBell />
         </div>
 
-        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
+
+        <nav className="flex-1 px-3 pb-4 space-y-1 overflow-y-auto">
           {(() => {
             const sections: { label: string; routes: string[] }[] = [
               { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda"] },
@@ -178,10 +180,11 @@ export const AppLayout = () => {
                 .filter(Boolean) as NavItem[];
               if (items.length === 0) return null;
               return (
-                <div key={sec.label} className="space-y-1.5">
-                  <div className="px-4 pt-5 pb-2.5 font-display font-semibold text-[9px] uppercase text-muted-foreground" style={{ letterSpacing: "0.16em" }}>
+                <div key={sec.label} className="space-y-1">
+                  <div className="px-3.5 pt-5 pb-2 font-display font-semibold text-[9px] uppercase text-[hsl(var(--nav-muted))]/70" style={{ letterSpacing: "0.16em" }}>
                     {sec.label}
                   </div>
+
                   {items.map((item) => renderNavLink(item))}
                 </div>
               );
@@ -212,28 +215,29 @@ export const AppLayout = () => {
           )}
         </nav>
 
-        <div className="p-4 border-t border-border">
+        <div className="p-3 border-t border-[hsl(var(--nav-border))]">
           <button
             onClick={() => setPlanOpen(true)}
-            className="flex items-center gap-3 px-4 py-3 rounded-[10px] font-display font-semibold text-sm transition-colors w-full"
-            style={{
-              background: "rgba(201,168,76,0.08)",
-              border: "0.5px solid rgba(201,168,76,0.25)",
-              color: "hsl(var(--brown))",
-            }}
+            className="flex items-center gap-3 px-3.5 py-3 rounded-xl font-display font-semibold text-sm transition-colors w-full bg-white/5 border border-gold/25 text-[hsl(var(--nav-fg))] hover:bg-white/10"
           >
             <Crown className="h-4 w-4" style={{ color: "hsl(var(--gold))" }} />
             Meu Plano
           </button>
-          <p className="text-xs text-muted-foreground truncate mb-3 mt-3">{user?.email}</p>
+          <p className="text-xs text-[hsl(var(--nav-muted))] truncate mb-3 mt-3 px-1">{user?.email}</p>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="flex-1" onClick={handleSignOut}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-1 justify-start text-[hsl(var(--nav-muted))] hover:bg-white/10 hover:text-[hsl(var(--nav-fg))]"
+              onClick={handleSignOut}
+            >
               <LogOut className="h-4 w-4" /> Sair
             </Button>
             <ThemeToggle />
           </div>
         </div>
       </aside>
+
 
       {/* ── Mobile top header ── */}
       <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-card border-b border-[hsl(var(--sidebar-border))]">
@@ -344,8 +348,21 @@ export const AppLayout = () => {
       </Sheet>
 
       {/* ── Main content ── */}
-      <main className="app-shell flex-1 md:ml-[220px] pt-16 pb-28 md:pt-0 md:pb-0 min-w-0 overflow-x-hidden">
+      <main className="app-shell flex-1 md:ml-[248px] pt-16 pb-28 md:pt-0 md:pb-0 min-w-0 overflow-x-hidden">
+        {/* Top bar desktop (pegada FinPilot) */}
+        <div className="hidden md:flex sticky top-0 z-20 items-center justify-between gap-4 border-b border-border bg-background/85 backdrop-blur-lg px-8 xl:px-10 py-3.5">
+          <span className="text-sm font-medium text-muted-foreground truncate">
+            {allNavItems.find((n) => (n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)))?.label ?? "PsiReal"}
+          </span>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button variant="accent" size="sm" onClick={() => setPlanOpen(true)}>
+              <Crown className="h-4 w-4" /> Meu Plano
+            </Button>
+          </div>
+        </div>
         <div className="p-4 sm:p-6 lg:p-8 xl:p-10 max-w-[1600px] mx-auto">
+
           {showGateOverlay ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-6">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-accent/10">
