@@ -1383,6 +1383,18 @@ const Agenda = () => {
       message,
       original: message,
     });
+
+    // Histórico de envios anteriores deste paciente
+    setConfirmHistory([]);
+    if (s.patient_id) {
+      const { data } = await supabase
+        .from("session_confirmation_events")
+        .select("id, modality, content_type, channel, created_at")
+        .eq("patient_id", s.patient_id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      setConfirmHistory(data || []);
+    }
   };
 
   const markConfirmationSent = async (sessionId: string) => {
