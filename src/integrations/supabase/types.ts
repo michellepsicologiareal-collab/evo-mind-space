@@ -2407,6 +2407,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      profile_privileged_fields_unchanged: {
+        Args: {
+          _id: string
+          _is_approved: boolean
+          _profile_type: Database["public"]["Enums"]["profile_type"]
+          _rejected_at: string
+          _subscription_ends_at: string
+          _subscription_status: Database["public"]["Enums"]["subscription_status"]
+          _supervisor_id: string
+          _trial_ends_at: string
+        }
+        Returns: boolean
+      }
       respond_to_confirmation: {
         Args: { _confirm: boolean; _token: string }
         Returns: string
