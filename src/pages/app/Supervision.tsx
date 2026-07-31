@@ -46,12 +46,9 @@ interface PatientListItem {
 
 interface PatientDetail {
   id: string;
-  full_name: string;
-  email: string | null;
-  phone: string | null;
+  code: string;
   notes: string | null;
   is_active: boolean;
-  session_price: number | null;
   user_id: string;
 }
 
@@ -106,10 +103,8 @@ const Supervision = () => {
     setLatestProgress(null);
 
     const [patRes, sRes, pRes] = await Promise.all([
-      supabase
-        .from("patients")
-        .select("id, full_name, email, phone, notes, is_active, session_price, user_id")
-        .eq("id", item.id)
+      (supabase as any)
+        .rpc("get_supervised_patient_overview", { _patient_id: item.id })
         .maybeSingle(),
       supabase
         .from("sessions")
@@ -165,23 +160,17 @@ const Supervision = () => {
     const ids = (profs ?? []).map((p) => p.id);
     const patientsByUser: Record<string, PatientListItem[]> = {};
     if (ids.length) {
-      const { data: pats } = await supabase
-        .from("patients")
-        .select("id, full_name, is_active, user_id")
-        .in("user_id", ids)
-        .order("full_name");
-      (pats ?? []).forEach((p: any) => {
-        const parts = (p.full_name || "").trim().split(/\s+/);
-        const initials = parts.length >= 2
-          ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-          : (parts[0]?.[0] ?? "?").toUpperCase();
-        (patientsByUser[p.user_id] ??= []).push({
-          id: p.id,
-          initials,
-          is_active: p.is_active,
-          user_id: p.user_id,
+      const { data: pats } = await (supabase as any).rpc("list_supervised_patients");
+      (pats ?? [])
+        .filter((p: any) => ids.includes(p.user_id))
+        .forEach((p: any) => {
+          (patientsByUser[p.user_id] ??= []).push({
+            id: p.id,
+            initials: p.code,
+            is_active: p.is_active,
+            user_id: p.user_id,
+          });
         });
-      });
     }
 
     setSupervisees(
@@ -580,7 +569,7 @@ const Supervision = () => {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">
-              {selectedPatient?.full_name ?? selectedPatientItem?.initials ?? ""}
+              {selectedPatientItem?.initials ?? selectedPatient?.code ?? ""}
             </DialogTitle>
             <DialogDescription>
               {(selectedPatient ?? selectedPatientItem)?.is_active ? "Paciente ativo" : "Paciente inativo"} · acesso somente leitura
@@ -595,30 +584,6 @@ const Supervision = () => {
 
           {selectedPatient && !detailLoading && (
             <div className="space-y-4">
-              <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                {selectedPatient.email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="truncate">{selectedPatient.email}</span>
-                  </div>
-                )}
-                {selectedPatient.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{selectedPatient.phone}</span>
-                  </div>
-                )}
-              </div>
-
-              {selectedPatient.session_price != null && (
-                <div className="rounded-lg bg-secondary/50 p-3 text-sm">
-                  <span className="text-muted-foreground">Valor da sessão: </span>
-                  <span className="font-medium">
-                    R$ {Number(selectedPatient.session_price).toFixed(2).replace(".", ",")}
-                  </span>
-                </div>
-              )}
-
               {selectedPatient.notes && (
                 <div>
                   <div className="flex items-center gap-2 text-sm font-medium mb-2">
@@ -630,6 +595,7 @@ const Supervision = () => {
                   </p>
                 </div>
               )}
+
 
               <div className="border-t border-border pt-4 space-y-4">
                 {/* Recent sessions */}
