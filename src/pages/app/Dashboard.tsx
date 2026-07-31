@@ -1215,12 +1215,12 @@ function TodayRow({
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={onMore}
               aria-label={`Abrir ${item.name} na agenda`}
-              className="h-8 w-8 rounded-full hidden md:inline-flex"
+              className="h-8 rounded-full px-3 text-xs hidden md:inline-flex"
             >
-              <MoreHorizontal className="h-4 w-4" />
+              Ações
             </Button>
           </TooltipTrigger>
           <TooltipContent>Ver na agenda</TooltipContent>

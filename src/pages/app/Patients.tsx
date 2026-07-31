@@ -1561,17 +1561,20 @@ const Patients = () => {
                               }}
                               className="flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--primary))]"
                               style={{
-                                width: 32,
+                                width: "auto",
                                 height: 32,
                                 borderRadius: 7,
                                 background: C.card,
                                 border: `1px solid ${C.border}`,
                                 color: C.muted,
+                                paddingLeft: 10,
+                                paddingRight: 10,
+                              
                               }}
                               aria-label="Ações do paciente"
                               title="Ações do paciente"
                             >
-                              <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+                              <span className="text-xs font-medium">Ações</span>
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
@@ -1791,10 +1794,10 @@ const Patients = () => {
                         onPointerDown={(e) => e.stopPropagation()}
                         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") e.stopPropagation(); }}
                         className="absolute top-4 right-4 z-10 flex items-center justify-center shrink-0 touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--primary))]"
-                        style={{ width: 44, height: 44, borderRadius: 8, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
+                        style={{ height: 36, paddingLeft: 12, paddingRight: 12, borderRadius: 8, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
                         aria-label="Ações do paciente"
                       >
-                        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                        <span className="text-xs font-medium">Ações</span>
                       </button>
                     </DropdownMenuTrigger>
                       <DropdownMenuContent
@@ -1879,13 +1882,13 @@ const Patients = () => {
                     <DropdownMenuTrigger asChild>
                       <button
                         className="flex items-center justify-center transition-colors"
-                        style={{ width: 28, height: 28, borderRadius: 6, color: "hsl(var(--muted-foreground))" }}
+                        style={{ height: 28, paddingLeft: 10, paddingRight: 10, borderRadius: 6, color: "hsl(var(--muted-foreground))" }}
                         onMouseEnter={(e) => { e.currentTarget.style.background = "hsl(var(--background))"; e.currentTarget.style.color = "hsl(var(--primary))"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "hsl(var(--muted-foreground))"; }}
                         aria-label="Ações do paciente"
                         title="Ações do paciente"
                       >
-                        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                        <span className="text-xs font-medium">Ações</span>
                       </button>
                     </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
