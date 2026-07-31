@@ -224,6 +224,14 @@ const Agenda = () => {
   const [clinicName, setClinicName] = useState("");
   const [clinicAddress, setClinicAddress] = useState("");
   const [presencialMessage, setPresencialMessage] = useState("");
+  const [confirmPreview, setConfirmPreview] = useState<{
+    sessionId: string;
+    patientName: string;
+    modality: "online" | "presencial";
+    phone: string;
+    message: string;
+    original: string;
+  } | null>(null);
   const [viewTab, setViewTab] = useState<string>("day");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
