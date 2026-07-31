@@ -2275,6 +2275,16 @@ export type Database = {
           therapist_name: string
         }[]
       }
+      get_supervised_patient_overview: {
+        Args: { _patient_id: string }
+        Returns: {
+          code: string
+          id: string
+          is_active: boolean
+          notes: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2294,6 +2304,15 @@ export type Database = {
           phone: string
           profile_type: Database["public"]["Enums"]["profile_type"]
           specialty: string
+        }[]
+      }
+      list_supervised_patients: {
+        Args: never
+        Returns: {
+          code: string
+          id: string
+          is_active: boolean
+          user_id: string
         }[]
       }
       log_clinical_access: {
