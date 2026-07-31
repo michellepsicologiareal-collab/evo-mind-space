@@ -1906,15 +1906,15 @@ const Agenda = () => {
         onClick={() => openEdit(s)}
         title={isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
         className={cn(
-          "relative overflow-hidden rounded-xl border border-border bg-card group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/15",
+          "relative min-w-0 overflow-hidden rounded-xl border border-border bg-card group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/15",
           compact ? "py-1.5 pr-2 pl-3" : "p-3 pl-4",
           "before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-['']",
           accentClass
         )}
       >
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-start justify-between gap-2">
           <div className="flex flex-1 items-center gap-x-2 gap-y-1 min-w-0 flex-wrap pr-1">
-            <p className="font-display text-sm font-semibold text-foreground">{format(new Date(s.scheduled_at), "HH:mm")}</p>
+            <p className="shrink-0 font-display text-sm font-semibold text-foreground">{format(new Date(s.scheduled_at), "HH:mm")}</p>
             <span className="text-[11px] font-medium text-foreground/70">
               {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
             </span>
@@ -1928,7 +1928,7 @@ const Agenda = () => {
                 <span className="text-border">·</span>
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1 text-[11px] font-medium",
+                    "inline-flex min-w-0 items-center gap-1 text-[11px] font-medium break-words",
                     s.payment_status === "paid" ? "text-emerald-700" : "text-amber-700"
                   )}
                   title={`Pagamento ${paymentStatusLabel[s.payment_status].toLowerCase()} · R$ ${Number(s.price).toFixed(2)}`}
@@ -2114,7 +2114,7 @@ const Agenda = () => {
             >
               <Pencil className="h-3.5 w-3.5" /> Registrar sessão
             </Button>
-            <div className="grid min-w-0 grid-cols-2 overflow-hidden rounded-lg border border-border divide-x divide-y divide-border sm:inline-flex sm:w-auto sm:divide-y-0">
+            <div className="grid w-full min-w-0 grid-cols-2 overflow-hidden rounded-lg border border-border divide-x divide-y divide-border sm:inline-flex sm:w-auto sm:divide-y-0">
               <button
                 onClick={(e) => { e.stopPropagation(); setHistoryOpen(true); }}
                 className="inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-[11px] font-medium text-foreground/75 bg-card hover:bg-muted transition-colors sm:h-8 sm:justify-start sm:px-2.5"
@@ -2179,7 +2179,7 @@ const Agenda = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-up">
+    <div className="min-w-0 space-y-6 overflow-x-clip animate-fade-up">
       <HelpCard
         id="agenda"
         title="Agenda"
@@ -2200,7 +2200,7 @@ const Agenda = () => {
         <span className="text-sm">Nova</span>
       </button>
 
-      <header className="flex flex-wrap items-end justify-between gap-3 sticky top-16 md:static z-30 -mx-4 px-4 sm:-mx-6 sm:px-6 -mt-4 pt-4 sm:-mt-6 sm:pt-6 md:m-0 md:p-0 bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none pb-3 md:pb-0">
+      <header className="flex min-w-0 flex-wrap items-end justify-between gap-3 sticky top-16 md:static z-30 -mx-4 px-4 sm:-mx-6 sm:px-6 -mt-4 pt-4 sm:-mt-6 sm:pt-6 md:m-0 md:p-0 bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none pb-3 md:pb-0">
         <div className="flex items-start gap-3 sm:gap-4 min-w-0">
           <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent">
             <CalendarIcon className="h-5 w-5" />
@@ -2211,7 +2211,7 @@ const Agenda = () => {
             <p className="mt-1.5 text-sm md:text-base text-muted-foreground max-w-2xl">Visualize e organize seus atendimentos. Sessões marcadas aqui viram lembretes para o paciente, entradas no Google Calendar e linhas no Financeiro.</p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        <div className="grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2 sm:flex sm:w-auto sm:flex-wrap">
           <RefreshButton />
           <Button
             type="button"
@@ -2219,7 +2219,7 @@ const Agenda = () => {
             size="sm"
             onClick={gcalConnected ? disconnectGcal : connectGcal}
             disabled={gcalLoading}
-            className="rounded-[40px] font-display font-semibold flex-1 sm:flex-none"
+             className="min-w-0 rounded-[40px] font-display font-semibold sm:flex-none"
             title={gcalConnected ? "Google Calendar conectado — clique para desconectar" : "Conectar Google Calendar"}
           >
             {gcalLoading ? (
@@ -2239,7 +2239,7 @@ const Agenda = () => {
               size="sm"
               onClick={syncAllExistingToGcal}
               disabled={bulkSyncing}
-              className="rounded-[40px] font-display font-semibold flex-1 sm:flex-none"
+              className="min-w-0 rounded-[40px] font-display font-semibold sm:flex-none"
               title="Cria eventos no Google Calendar para todas as sessões futuras ainda não sincronizadas"
             >
               {bulkSyncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
@@ -2255,7 +2255,7 @@ const Agenda = () => {
               <Plus className="h-4 w-4" /> Nova sessão
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+          <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[90dvh] overflow-x-hidden overflow-y-auto p-4 sm:p-6" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle className="font-display text-2xl">Nova sessão</DialogTitle>
             </DialogHeader>
@@ -2484,11 +2484,11 @@ const Agenda = () => {
           )}
 
           {/* Service filter */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+           <div className="flex min-w-0 flex-wrap items-center gap-2 pb-1 sm:flex-nowrap sm:overflow-x-auto sm:no-scrollbar">
             <button
               onClick={() => setServiceFilter("all")}
               className={cn(
-                "shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                 "max-w-full px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border break-words text-left sm:shrink-0 sm:whitespace-nowrap",
                 serviceFilter === "all"
                   ? "bg-accent text-accent-foreground border-accent"
                   : "bg-background text-muted-foreground border-border hover:bg-muted"
@@ -2501,7 +2501,7 @@ const Agenda = () => {
                 key={svc.id}
                 onClick={() => setServiceFilter(svc.id)}
                 className={cn(
-                  "shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                   "max-w-full px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border break-words text-left sm:shrink-0 sm:whitespace-nowrap",
                   serviceFilter === svc.id
                     ? "bg-accent text-accent-foreground border-accent"
                     : "bg-background text-muted-foreground border-border hover:bg-muted"
@@ -2538,7 +2538,7 @@ const Agenda = () => {
           )}
 
           {/* Month selector */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="grid grid-cols-[minmax(0,1fr)_6rem] items-center gap-2 sm:flex sm:flex-wrap">
             <Select
               value={String(currentMonth.getMonth() + 1)}
               onValueChange={(v) => {
@@ -2546,7 +2546,7 @@ const Agenda = () => {
                 goToMonth(newMonth);
               }}
             >
-                <SelectTrigger disabled={loading} className="h-9 w-40 rounded-full text-xs font-display font-semibold">
+                <SelectTrigger disabled={loading} className="h-9 w-full rounded-full text-xs font-display font-semibold sm:w-40">
                   <SelectValue placeholder="Mês" />
                 </SelectTrigger>
               <SelectContent>
@@ -2564,7 +2564,7 @@ const Agenda = () => {
                 goToMonth(newMonth);
               }}
             >
-                <SelectTrigger disabled={loading} className="h-9 w-24 rounded-full text-xs font-display font-semibold">
+                <SelectTrigger disabled={loading} className="h-9 w-full rounded-full text-xs font-display font-semibold sm:w-24">
                   <SelectValue placeholder="Ano" />
                 </SelectTrigger>
               <SelectContent>
@@ -2636,7 +2636,7 @@ const Agenda = () => {
                   onClick={onClick}
                   type={onClick ? "button" : undefined}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 min-w-0 w-full text-left",
+                    "flex min-h-16 min-w-0 w-full items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-2.5 text-left sm:gap-3 sm:px-3",
                     onClick && "transition-colors hover:bg-muted/60 hover:border-primary/30 cursor-pointer"
                   )}
                 >
@@ -2644,7 +2644,7 @@ const Agenda = () => {
                     <Icon className="h-4 w-4" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-foreground/70 leading-none">{label}</p>
+                    <p className="text-[11px] font-medium leading-tight text-foreground/70 break-words">{label}</p>
                     <p className="mt-1 font-display text-lg font-semibold text-foreground leading-none">{value}</p>
                   </div>
                 </Tag>
@@ -2653,7 +2653,7 @@ const Agenda = () => {
 
             return (
               <>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-4">
+                <div className="grid min-w-0 grid-cols-2 gap-2 mb-4 lg:grid-cols-4">
                   <Item icon={CalendarCheck} label="Sessões de hoje" value={todayCount} tone="bg-primary/10 text-primary" onClick={() => { goToDate(new Date()); setViewTab("day"); }} />
                   <Item icon={AlertCircle} label="Registros pendentes" value={pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
                   <Item icon={Wallet} label="Pagamentos pendentes" value={pendingPayments} tone="bg-emerald-100 text-emerald-700" onClick={() => setPendingPaymentsOpen(true)} />
@@ -2739,7 +2739,7 @@ const Agenda = () => {
                   : format(selectedDate, "EEE, dd 'de' MMM 'de' yyyy", { locale: ptBR });
 
               return (
-                <div className="mb-3 grid grid-cols-1 gap-2 rounded-2xl bg-card border border-border shadow-card px-2.5 py-2 sm:flex sm:flex-wrap sm:items-center">
+                <div className="mb-3 grid min-w-0 grid-cols-1 gap-2 overflow-hidden rounded-2xl bg-card border border-border shadow-card px-2.5 py-2 sm:flex sm:flex-wrap sm:items-center">
                   <TabsList className="grid w-full grid-cols-3 bg-muted/60 gap-0.5 p-0.5 h-8 rounded-[40px] sm:flex sm:w-auto sm:shrink-0">
                     <TabsTrigger value="day" className="h-7 min-w-0 px-1.5 rounded-[40px] text-xs font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:px-2.5"><CalendarCheck className="h-3.5 w-3.5 mr-1 inline shrink-0" /> Dia</TabsTrigger>
                     <TabsTrigger value="week" className="h-7 min-w-0 px-1.5 rounded-[40px] text-xs font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:px-2.5"><CalendarRange className="h-3.5 w-3.5 mr-1 inline shrink-0" /> Semana</TabsTrigger>
@@ -2750,7 +2750,7 @@ const Agenda = () => {
                     <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Anterior" onClick={goPrev}>
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <p className="flex-1 text-center font-display text-xs font-semibold capitalize truncate min-w-0 sm:text-left sm:text-sm">{label}</p>
+                    <p className="min-w-0 flex-1 truncate text-center font-display text-[11px] font-semibold capitalize sm:text-left sm:text-sm">{label}</p>
                     <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Próximo" onClick={goNext}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -2791,7 +2791,7 @@ const Agenda = () => {
                 ) : (
                   <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4">
                     {/* Calendar grid */}
-                    <div className="rounded-2xl bg-card border border-border shadow-card p-4">
+                     <div className="min-w-0 rounded-2xl bg-card border border-border shadow-card p-2.5 sm:p-4">
                       <div className="grid grid-cols-7 gap-1 mb-2">
                         {WEEKDAY_NAMES.map((d) => (
                           <div key={d} className="text-center text-[11px] uppercase tracking-wider text-muted-foreground font-medium py-1">{d}</div>
@@ -2806,11 +2806,11 @@ const Agenda = () => {
                           const isToday = isSameDay(cell, new Date());
                           const dayCount = sessionsByDay(cell).length;
                           return (
-                            <button
+                             <button
                               key={dateKey}
                               onClick={() => goToDate(cell)}
                               className={cn(
-                                "aspect-square rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all text-sm leading-none",
+                                 "aspect-square min-w-0 rounded-lg sm:rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all text-xs sm:text-sm leading-none",
                                 isSelected ? "bg-accent text-accent-foreground ring-2 ring-accent/40 font-bold"
                                   : isToday ? "bg-primary/10 text-primary font-semibold"
                                     : "hover:bg-muted/50 text-foreground"
@@ -2835,10 +2835,10 @@ const Agenda = () => {
                     </div>
 
                     {/* Day detail */}
-                    <div className="rounded-2xl bg-card border border-border shadow-card p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <p className="font-display text-lg font-semibold capitalize">
+                     <div className="min-w-0 rounded-2xl bg-card border border-border shadow-card p-3 sm:p-4">
+                       <div className="flex min-w-0 items-center justify-between gap-2 mb-4">
+                         <div className="min-w-0">
+                           <p className="truncate font-display text-lg font-semibold capitalize">
                             {format(selectedDate, "EEEE", { locale: ptBR })}
                           </p>
                           <p className="text-sm text-muted-foreground">{format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}</p>
@@ -3061,7 +3061,7 @@ const Agenda = () => {
                 {loading ? (
                   <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
                 ) : selectedDaySessions.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-border bg-card/50 p-14 text-center">
+                          <div className="rounded-2xl border border-dashed border-border bg-card/50 px-4 py-10 text-center sm:p-14">
                     <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/40" />
                     <p className="mt-4 font-display text-lg font-medium text-foreground/70">
                       {selectedPatientName ? "Sem sessões" : "Dia livre"}
@@ -3084,7 +3084,7 @@ const Agenda = () => {
       </div>
 
       {/* ── ZONA INFERIOR: Sessões do Mês (largura total) ── */}
-      <div className="-mx-4 sm:-mx-6 lg:-mx-10 px-4 sm:px-6 lg:px-10 py-5 sm:py-6" style={{ background: "hsl(var(--muted))" }}>
+      <div className="min-w-0 -mx-4 sm:-mx-6 lg:-mx-10 px-4 sm:px-6 lg:px-10 py-5 sm:py-6" style={{ background: "hsl(var(--muted))" }}>
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <h2 style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>Sessões do Mês</h2>
           <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
@@ -3157,7 +3157,7 @@ const Agenda = () => {
                 <div
                   key={group.key}
                   className="relative overflow-hidden transition-shadow"
-                  style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 16, padding: "18px 20px", boxShadow: "var(--shadow-card)" }}
+                  style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 16, padding: "16px", boxShadow: "var(--shadow-card)" }}
                   onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(150,117,206,0.08)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}
                 >
@@ -3223,7 +3223,7 @@ const Agenda = () => {
 
       {/* ── Edit Session Dialog ── */}
       <Dialog open={editOpen} onOpenChange={(v) => { if (!v) { editGuard.guardClose(() => setEditOpen(false), () => setEditOpen(false)); } else { setEditOpen(true); } }}>
-        <DialogContent className="w-[95vw] max-w-[1000px] max-h-[90vh] overflow-y-auto overflow-x-hidden" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[1000px] max-h-[90dvh] overflow-y-auto overflow-x-hidden p-4 sm:p-6" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">Editar sessão</DialogTitle>
           </DialogHeader>
