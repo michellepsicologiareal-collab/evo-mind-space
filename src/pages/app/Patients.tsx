@@ -1297,33 +1297,33 @@ const Patients = () => {
           style={{
             background: C.card,
             border: `1px solid ${C.border}`,
-            borderRadius: 12,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+            borderRadius: 16,
+            boxShadow: "0 1px 2px rgba(23,21,47,0.04)",
             overflow: "hidden",
           }}
         >
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full" style={{ borderCollapse: "collapse", fontSize: 13, minWidth: 1080 }}>
               <thead>
-                <tr style={{ background: C.neutralBg, borderBottom: `1px solid ${C.border}` }}>
+                <tr style={{ background: C.card, borderBottom: `1px solid ${C.border}` }}>
                   {[
-                    { k: "avatar", label: "", w: 52 },
+                    { k: "avatar", label: "", w: 68 },
                     { k: "nome", label: "Paciente" },
                     { k: "modalidade", label: "Modalidade" },
                     { k: "plano", label: "Plano" },
                     { k: "status", label: "Status" },
-                    { k: "acoes", label: "", w: 56 },
+                    { k: "acoes", label: "Ações", w: 72 },
                   ].map((h) => (
                     <th
                       key={h.k}
                       style={{
-                        textAlign: "left",
-                        padding: "10px 12px",
+                        textAlign: h.k === "acoes" ? "right" : "left",
+                        padding: "16px 18px",
                         fontSize: 11,
-                        fontWeight: 700,
-                        color: C.muted,
+                        fontWeight: 600,
+                        color: "#9CA3AF",
                         textTransform: "uppercase",
-                        letterSpacing: "0.06em",
+                        letterSpacing: "0.1em",
                         width: (h as any).w,
                         whiteSpace: "nowrap",
                       }}
@@ -1333,6 +1333,7 @@ const Patients = () => {
                   ))}
                 </tr>
               </thead>
+
               <tbody>
                 {filtered.map((p, idx) => {
                   const isCriticalAlert = p.notes ? /(crise|resist|abandon|suic|término)/i.test(p.notes) : false;
