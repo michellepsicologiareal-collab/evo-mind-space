@@ -595,30 +595,6 @@ const Supervision = () => {
 
           {selectedPatient && !detailLoading && (
             <div className="space-y-4">
-              <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                {selectedPatient.email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="truncate">{selectedPatient.email}</span>
-                  </div>
-                )}
-                {selectedPatient.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{selectedPatient.phone}</span>
-                  </div>
-                )}
-              </div>
-
-              {selectedPatient.session_price != null && (
-                <div className="rounded-lg bg-secondary/50 p-3 text-sm">
-                  <span className="text-muted-foreground">Valor da sessão: </span>
-                  <span className="font-medium">
-                    R$ {Number(selectedPatient.session_price).toFixed(2).replace(".", ",")}
-                  </span>
-                </div>
-              )}
-
               {selectedPatient.notes && (
                 <div>
                   <div className="flex items-center gap-2 text-sm font-medium mb-2">
@@ -630,6 +606,7 @@ const Supervision = () => {
                   </p>
                 </div>
               )}
+
 
               <div className="border-t border-border pt-4 space-y-4">
                 {/* Recent sessions */}
