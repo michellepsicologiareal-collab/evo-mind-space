@@ -137,9 +137,15 @@ export const PatientSessionsQuickView = ({
 }: Props) => {
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<UnifiedRecord[]>([]);
+  const [recordsBySession, setRecordsBySession] = useState<Record<string, UnifiedRecord>>({});
+  const [agenda, setAgenda] = useState<
+    { id: string; scheduled_at: string; status: string; modality: string | null; duration_minutes: number | null }[]
+  >([]);
+  const [expandedSession, setExpandedSession] = useState<Record<string, boolean>>({});
   const [detail, setDetail] = useState<UnifiedRecord | null>(null);
   const [expandedObs, setExpandedObs] = useState<Record<string, boolean>>({});
   const [startDate, setStartDate] = useState<Date | null>(null);
+
 
   useEffect(() => {
     (async () => {
