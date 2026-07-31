@@ -2210,6 +2210,20 @@ const Patients = () => {
                 <option value="online">Online</option>
               </select>
             </div>
+            {form.modality === "presencial" && (
+              <div className="space-y-2">
+                <Label htmlFor="patient_clinic_address">Endereço de atendimento (opcional)</Label>
+                <Input
+                  id="patient_clinic_address"
+                  placeholder="Deixe vazio para usar o endereço padrão da clínica"
+                  value={form.clinic_address}
+                  onChange={(e) => setForm({ ...form, clinic_address: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Quando preenchido, substitui o endereço da clínica na mensagem de confirmação deste paciente.
+                </p>
+              </div>
+            )}
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
