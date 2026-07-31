@@ -1735,14 +1735,15 @@ const Patients = () => {
       )}
 
 
-      {/* Side panel */}
-      <Sheet open={!!selectedPatient} onOpenChange={(o) => { if (!o) { setSelectedPatient(null); setSelectedTab("overview"); } }}>
-        <SheetContent side="right" className="w-full sm:max-w-[640px] p-0" style={{ background: "hsl(var(--card))", borderLeft: "0.5px solid hsl(var(--border))" }}>
-          <VisuallyHidden>
-            <SheetTitle>{selectedPatient?.full_name ?? "Ficha do paciente"}</SheetTitle>
-            <SheetDescription>Ficha clínica do paciente com abas de visão geral, formulações, sessões, plano, anamneses, documentos e financeiro.</SheetDescription>
-          </VisuallyHidden>
-          {selectedPatient && (() => {
+      {/* Página completa da ficha do paciente (mantém a sidebar principal) */}
+      {selectedPatient && (
+        <div
+          className="fixed inset-0 z-40 md:left-[248px] overflow-y-auto pt-16 md:pt-0"
+          style={{ background: "hsl(var(--background))" }}
+          role="dialog"
+          aria-label={`Ficha de ${selectedPatient.full_name}`}
+        >
+          {(() => {
             const p = selectedPatient;
             const cHist = counts.history[p.id] || 0;
             const cRec = counts.records[p.id] || 0;
