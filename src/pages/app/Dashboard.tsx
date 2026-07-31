@@ -621,7 +621,7 @@ export default function Dashboard() {
   );
 
   const PENDINGS = [
-    { icon: FileText, label: "Formulações de Caso pendentes", count: pendingFormulations, to: "/app/pacientes" },
+    { icon: FileText, label: "Formulações de Caso pendentes", count: pendingFormulations, to: "/app/pacientes?filter=sem-formulacao" },
     { icon: CalendarX, label: "Sem próxima sessão", count: semProxima, to: "/app/pacientes?filter=sem-proxima" },
     { icon: CircleDollarSign, label: "Pagamentos atrasados", count: pagamentosAtrasados, to: "/app/financeiro?filter=atrasados" },
     { icon: UserMinus, label: "Baixa adesão", count: baixaAdesao, to: "/app/pacientes?filter=baixa-adesao" },
