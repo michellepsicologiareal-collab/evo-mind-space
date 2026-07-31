@@ -342,19 +342,68 @@ export const PatientSessionsQuickView = ({
 
       {/* Sessões agendadas + conteúdo registrado */}
       <div>
-        <h3 className="text-sm font-display font-semibold text-foreground mb-3">Sessões agendadas</h3>
+        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <h3 className="text-sm font-display font-semibold text-foreground">Sessões agendadas</h3>
+          {(periodFilter !== "upcoming" || statusFilter !== "all" || modalityFilter !== "all") && (
+            <button
+              type="button"
+              onClick={() => { setPeriodFilter("upcoming"); setStatusFilter("all"); setModalityFilter("all"); }}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              Limpar filtros
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+          <Select value={periodFilter} onValueChange={setPeriodFilter}>
+            <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Período" /></SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="upcoming">Próximas sessões</SelectItem>
+              <SelectItem value="past">Sessões passadas</SelectItem>
+              <SelectItem value="30d">Últimos 30 dias</SelectItem>
+              <SelectItem value="all">Todas as datas</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="all">Todos os status</SelectItem>
+              {Object.entries(SESSION_STATUS_LABEL).map(([v, l]) => (
+                <SelectItem key={v} value={v}>{l}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={modalityFilter} onValueChange={setModalityFilter}>
+            <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Modalidade" /></SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="all">Todas as modalidades</SelectItem>
+              {modalityOptions.map((m) => (
+                <SelectItem key={m} value={m} className="capitalize">{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {loading ? (
           <div className="flex justify-center py-6">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
           </div>
-        ) : agenda.length === 0 ? (
+        ) : filteredAgenda.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-6 text-center">
             <Calendar className="h-6 w-6 mx-auto text-muted-foreground/40" />
-            <p className="mt-2 text-xs text-muted-foreground">Nenhuma sessão agendada para este paciente.</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {agenda.length === 0
+                ? "Nenhuma sessão agendada para este paciente."
+                : "Nenhuma sessão encontrada com esses filtros."}
+            </p>
           </div>
         ) : (
           <div className="space-y-2">
-            {agenda.map((s) => {
+            {filteredAgenda.map((s) => {
+
               const rec = recordsBySession[s.id] ?? null;
               const open = !!expandedSession[s.id];
               const dt = new Date(s.scheduled_at);
