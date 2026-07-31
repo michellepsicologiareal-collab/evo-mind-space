@@ -57,8 +57,8 @@ Repetir nas três visualizações: **Dia**, **Semana**, **Mês**.
 ## Como validar
 
 ```bash
-node scripts/responsive-audit.mjs            # audita /app/agenda
-node scripts/responsive-audit.mjs /app/pacientes
+python3 scripts/responsive_audit.py            # audita /app/agenda
+python3 scripts/responsive_audit.py /app/pacientes
 ```
 
 O script percorre todas as larguras da tabela, alterna Dia/Semana/Mês, reporta `PASS`/`FAIL` por combinação e salva screenshots em `/tmp/responsive-audit`. Sai com código 1 se houver falhas.
