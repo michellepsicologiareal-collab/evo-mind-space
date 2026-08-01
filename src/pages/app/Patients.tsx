@@ -6,7 +6,7 @@ import { ptBR } from "date-fns/locale";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, CalendarDays, Smile, Baby, Sparkles, Maximize2, Minimize2, X, Printer, BookOpen, RefreshCw, ChevronDown, FileText, UserMinus, Video, MapPin } from "lucide-react";
+import { Plus, Search, User, Phone, Mail, Loader2, MoreHorizontal, Trash2, Pencil, Eye, ClipboardList, MessageCircle, Stethoscope, CalendarDays, Smile, Baby, Sparkles, Maximize2, Minimize2, X, Printer, BookOpen, RefreshCw, ChevronDown, FileText, UserMinus, Video, MapPin, Share2 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { IconPencil, IconUserOff, IconClipboardList, IconFileText, IconTarget, IconFlame, IconTrash } from "@tabler/icons-react";
 import { AbordagemBadge } from "@/components/app/AbordagemBadge";
@@ -388,6 +388,9 @@ const Patients = () => {
   }, [homeworkPatient]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [selectedTab, setSelectedTab] = useState<string>("overview");
+  const [currentSupervisorId, setCurrentSupervisorId] = useState<string | null>(null);
+  const [currentProfileType, setCurrentProfileType] = useState<"standard" | "supervisee" | "supervisor">("standard");
+  const canShareWithSupervisor = currentProfileType === "supervisee" && !!currentSupervisorId;
   const [searchParams, setSearchParams] = useSearchParams();
 
   const VALID_TABS = ["overview", "formulations", "sessions", "plan", "anamnesis", "documents", "finance"];
@@ -550,7 +553,7 @@ const Patients = () => {
     setLoading(true);
     const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes, plansRes, goalsRes, techRes, revRes, teRes, actRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
-      supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
+      supabase.from("profiles").select("full_name, pix_key, crp, supervisor_id, profile_type").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
       supabase.from("child_anamneses").select("patient_id, updated_at").eq("user_id", user.id),
       supabase.from("patient_progress").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
@@ -580,6 +583,8 @@ const Patients = () => {
     setPixKey((profileRes.data as any)?.pix_key ?? "");
     setProfName(profileRes.data?.full_name ?? "");
     setProfCrp((profileRes.data as any)?.crp ?? "");
+    setCurrentSupervisorId((profileRes.data as any)?.supervisor_id ?? null);
+    setCurrentProfileType((profileRes.data as any)?.profile_type ?? "standard");
     const dateMap: Record<string, string> = {};
     (sessionsRes.data ?? []).forEach((s: any) => {
       if (s.patient_id && !dateMap[s.patient_id]) dateMap[s.patient_id] = s.scheduled_at;
@@ -916,11 +921,24 @@ const Patients = () => {
     await preserveScroll(() => load());
   };
 
-  const toggleSharing = async (_p: Patient) => {
-    // FASE 1 HOTFIX — Compartilhamento antigo desativado para revisão de privacidade.
-    // Nenhum valor de `shared_with_supervisor` é alterado. Um novo fluxo de casos
-    // de supervisão pseudonimizados será entregue na Fase 2.
-    toast.info("O compartilhamento de casos está temporariamente indisponível para revisão de privacidade.");
+  const toggleSharing = async (p: Patient) => {
+    if (!canShareWithSupervisor) {
+      toast.info("Você precisa ter uma supervisora vinculada para compartilhar casos.");
+      return;
+    }
+    const next = !p.shared_with_supervisor;
+    const actionLabel = next ? "compartilhar" : "deixar de compartilhar";
+    if (!confirm(`${next ? "Compartilhar" : "Remover"} o caso de ${p.full_name} ${next ? "com" : "com"} a supervisora?\n\n${next ? "A supervisora poderá visualizar os dados clínicos deste paciente." : "A supervisora não terá mais acesso aos dados clínicos deste paciente."}`)) return;
+    const loadingId = toast.loading(`${next ? "Compartilhando" : "Removendo compartilhamento"} caso...`);
+    const { error } = await supabase.from("patients").update({ shared_with_supervisor: next }).eq("id", p.id);
+    toast.dismiss(loadingId);
+    if (error) {
+      console.error("[toggleSharing] error:", error);
+      toast.error(`Erro ao ${actionLabel} o caso. Tente novamente.`);
+      return;
+    }
+    toast.success(next ? "Caso compartilhado com a supervisora" : "Compartilhamento com a supervisora removido");
+    await preserveScroll(() => load());
   };
 
   const activeCount = patients.filter((p) => p.is_active).length;
@@ -1086,6 +1104,18 @@ const Patients = () => {
         <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4" /> Formulação ACT</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => setHomeworkPatient(p)}><ClipboardList className="h-4 w-4" /> Plano entre Sessões</DropdownMenuItem>
+        {canShareWithSupervisor && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => toggleSharing(p)}
+              className={p.shared_with_supervisor ? "text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]" : "text-[#9B72D3] hover:bg-[#F3F0FA] focus:bg-[#F3F0FA]"}
+            >
+              <Share2 className="h-4 w-4" />
+              {p.shared_with_supervisor ? "Caso compartilhado" : "Compartilhar caso com supervisora"}
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]"><IconTrash className="h-4 w-4" /> Excluir</DropdownMenuItem>
       </DropdownMenuContent>
@@ -1545,8 +1575,22 @@ const Patients = () => {
                         >
                           {p.is_active ? "Ativo" : "Inativo"}
                         </span>
-                        {/* Badge "compartilhado com supervisor" removido no hotfix Fase 1:
-                            supervisoras não têm mais acesso via RLS, então o indicador seria enganoso. */}
+                        {p.shared_with_supervisor && (
+                          <span
+                            className="mt-1 inline-flex items-center gap-1"
+                            style={{
+                              background: "rgba(155,114,211,0.12)",
+                              color: "#9B72D3",
+                              fontSize: 10,
+                              fontWeight: 600,
+                              padding: "2px 8px",
+                              borderRadius: 40,
+                            }}
+                            title="Caso compartilhado com supervisora"
+                          >
+                            <Share2 className="h-3 w-3" /> Compartilhado
+                          </span>
+                        )}
                       </td>
 
                       {/* Ações */}
@@ -1707,6 +1751,15 @@ const Patients = () => {
                           >
                             {p.is_active ? "Ativo" : "Inativo"}
                           </span>
+                          {p.shared_with_supervisor && (
+                            <span
+                              className="inline-flex items-center gap-1"
+                              style={{ background: "rgba(155,114,211,0.12)", color: "#9B72D3", fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}
+                              title="Caso compartilhado com supervisora"
+                            >
+                              <Share2 className="h-3 w-3" /> Compartilhado
+                            </span>
+                          )}
                         </div>
                   </div>
 
