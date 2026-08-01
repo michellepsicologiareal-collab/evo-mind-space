@@ -120,6 +120,28 @@ function hasMeaningfulData(f: FormState): boolean {
   );
 }
 
+// Validação de pré-requisitos antes de salvar a sessão
+const sessionSchema = z.object({
+  patient_id: z.string().uuid({ message: "Selecione o paciente do atendimento." }),
+  session_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Informe uma data válida." }),
+  session_time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, { message: "Informe o horário no formato HH:mm." }),
+  attendance_status: z.enum(["completed", "no_show", "cancelled"], {
+    errorMap: () => ({ message: "Informe o status de presença." }),
+  }),
+  payment_status: z.enum(["pending", "paid"], {
+    errorMap: () => ({ message: "Informe o status de pagamento." }),
+  }),
+});
+
+const FieldError = ({ message }: { message: string }) => (
+  <p className="flex items-center gap-1" style={{ fontSize: 11, color: "hsl(var(--destructive))" }}>
+    <AlertTriangle className="h-3 w-3 shrink-0" />
+    {message}
+  </p>
+);
+
 const RegistroSessao = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -129,8 +151,10 @@ const RegistroSessao = () => {
   const [saving, setSaving] = useState(false);
   const [polishing, setPolishing] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [draftRestored, setDraftRestored] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+
 
   // Active treatment plan + next session planning for selected patient
   const [activePlan, setActivePlan] = useState<{
