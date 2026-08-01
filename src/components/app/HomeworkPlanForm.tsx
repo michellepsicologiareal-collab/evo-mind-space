@@ -746,15 +746,15 @@ export const HomeworkPlanForm = ({
 
 
         {!hideFooter && (
-          <div className="flex flex-col-reverse gap-2 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-[11px] text-muted-foreground">
+          <div className="flex flex-col-reverse gap-2 border-t border-border pt-3 pb-[env(safe-area-inset-bottom)] sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-[11px] leading-snug text-muted-foreground">
               {autoSavedAt
                 ? `Salvo automaticamente às ${format(autoSavedAt, "HH:mm:ss")}`
                 : hasAnyContent() ? "Salvando automaticamente..." : "Preencha qualquer campo para salvar automaticamente"}
             </span>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex">
               {onClose && (
-                <Button variant="outline" onClick={onClose}>Fechar</Button>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={onClose}>Fechar</Button>
               )}
               <Button variant="accent" onClick={save} disabled={saving}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {submitLabel}
