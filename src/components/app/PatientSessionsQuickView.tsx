@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { format, differenceInDays, differenceInMonths, differenceInYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { FileText, Loader2, ChevronRight, AlertTriangle, ChevronDown, ChevronUp, Calendar, Target, ClipboardList } from "lucide-react";
+import { FileText, Loader2, ChevronRight, AlertTriangle, ChevronDown, ChevronUp, Calendar, Target, ClipboardList, Pencil, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { SessionTimeline } from "@/components/app/SessionTimeline";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -158,6 +161,65 @@ export const PatientSessionsQuickView = ({
   const [periodFilter, setPeriodFilter] = useState<string>("upcoming");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [modalityFilter, setModalityFilter] = useState<string>("all");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [editDraft, setEditDraft] = useState({ chief_complaint: "", clinical_observations: "", next_session_plan: "" });
+
+  const startEdit = (rec: UnifiedRecord) => {
+    setEditingId(rec.id);
+    setEditDraft({
+      chief_complaint: rec.chief_complaint ?? "",
+      clinical_observations: rec.clinical_observations ?? "",
+      next_session_plan: rec.next_session_plan ?? "",
+    });
+  };
+
+  const saveEdit = async (rec: UnifiedRecord) => {
+    setSaving(true);
+    try {
+      const rawId = rec.id.split(":")[1];
+      const chief = editDraft.chief_complaint.trim() || null;
+      const obs = editDraft.clinical_observations.trim() || null;
+      const plan = editDraft.next_session_plan.trim() || null;
+
+      if (rec.source === "legacy") {
+        const { error } = await supabase
+          .from("session_records")
+          .update({ chief_complaint: chief, clinical_observations: obs, next_session_plan: plan })
+          .eq("id", rawId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("patient_progress")
+          .update({ patient_context: chief, clinical_observation: obs })
+          .eq("id", rawId);
+        if (error) throw error;
+      }
+
+      const patch = (r: UnifiedRecord): UnifiedRecord =>
+        r.id === rec.id
+          ? {
+              ...r,
+              chief_complaint: chief,
+              clinical_observations: obs,
+              next_session_plan: rec.source === "legacy" ? plan : r.next_session_plan,
+            }
+          : r;
+
+      setRecords((prev) => prev.map(patch));
+      setRecordsBySession((prev) => {
+        const next: Record<string, UnifiedRecord> = {};
+        for (const [k, v] of Object.entries(prev)) next[k] = patch(v);
+        return next;
+      });
+      setEditingId(null);
+      toast.success("Registro atualizado");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível salvar o registro");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const modalityOptions = Array.from(
     new Set(agenda.map((s) => (s.modality ?? "").trim()).filter(Boolean))
@@ -469,24 +531,77 @@ export const PatientSessionsQuickView = ({
 
                   {rec && open && (
                     <div className="px-3 pb-3 space-y-3 border-t border-border/60 pt-3">
-                      {rec.chief_complaint && (
-                        <Section title="Queixa / contexto">{rec.chief_complaint}</Section>
-                      )}
-                      {rec.clinical_observations && (
-                        <Section title="Observação clínica">{rec.clinical_observations}</Section>
-                      )}
-                      {rec.themes && rec.themes.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {rec.themes.filter(Boolean).map((t) => (
-                            <span key={t} className="text-[11px] px-2.5 py-0.5 rounded-full bg-lilac/40 text-foreground">
-                              {t}
-                            </span>
-                          ))}
+                      {editingId === rec.id ? (
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-[10px] uppercase text-muted-foreground mb-1">Queixa / contexto</p>
+                            <Textarea
+                              value={editDraft.chief_complaint}
+                              onChange={(e) => setEditDraft((d) => ({ ...d, chief_complaint: e.target.value }))}
+                              rows={3}
+                              className="text-sm"
+                            />
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase text-muted-foreground mb-1">Observação clínica</p>
+                            <Textarea
+                              value={editDraft.clinical_observations}
+                              onChange={(e) => setEditDraft((d) => ({ ...d, clinical_observations: e.target.value }))}
+                              rows={5}
+                              className="text-sm"
+                            />
+                          </div>
+                          {rec.source === "legacy" && (
+                            <div>
+                              <p className="text-[10px] uppercase text-muted-foreground mb-1">Combinado / tarefa</p>
+                              <Textarea
+                                value={editDraft.next_session_plan}
+                                onChange={(e) => setEditDraft((d) => ({ ...d, next_session_plan: e.target.value }))}
+                                rows={3}
+                                className="text-sm"
+                              />
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" onClick={() => saveEdit(rec)} disabled={saving}>
+                              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                              Salvar
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} disabled={saving}>
+                              Cancelar
+                            </Button>
+                          </div>
                         </div>
+                      ) : (
+                        <>
+                          {rec.chief_complaint && (
+                            <Section title="Queixa / contexto">{rec.chief_complaint}</Section>
+                          )}
+                          {rec.clinical_observations && (
+                            <Section title="Observação clínica">{rec.clinical_observations}</Section>
+                          )}
+                          {rec.themes && rec.themes.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {rec.themes.filter(Boolean).map((t) => (
+                                <span key={t} className="text-[11px] px-2.5 py-0.5 rounded-full bg-lilac/40 text-foreground">
+                                  {t}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {rec.next_session_plan && (
+                            <Section title="Combinado / tarefa">{rec.next_session_plan}</Section>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => startEdit(rec)}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                          >
+                            <Pencil className="h-3 w-3" /> Editar conteúdo
+                          </button>
+                        </>
                       )}
-                      {rec.next_session_plan && (
-                        <Section title="Combinado / tarefa">{rec.next_session_plan}</Section>
-                      )}
+
                       <button
                         type="button"
                         onClick={() => setDetail(rec)}
