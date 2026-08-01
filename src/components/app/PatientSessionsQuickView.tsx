@@ -164,6 +164,15 @@ export const PatientSessionsQuickView = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [editDraft, setEditDraft] = useState({ chief_complaint: "", clinical_observations: "", next_session_plan: "" });
+  const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const day = addDays(weekStart, i);
+    const sessions = agenda
+      .filter((s) => isSameDay(new Date(s.scheduled_at), day))
+      .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+    return { day, sessions };
+  });
 
   const startEdit = (rec: UnifiedRecord) => {
     setEditingId(rec.id);
