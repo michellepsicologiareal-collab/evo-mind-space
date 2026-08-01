@@ -1449,8 +1449,8 @@ const RegistroSessao = () => {
       {/* Draft restored banner */}
       {draftRestored && (
         <div
-          className="flex items-center justify-between px-4 py-3"
-          style={{ backgroundColor: "hsl(var(--secondary))", borderLeft: "3px solid hsl(var(--primary))", borderRadius: 10 }}
+          className="flex items-center justify-between px-4 py-3 rounded-2xl border border-border"
+          style={{ backgroundColor: "hsl(var(--secondary))" }}
         >
           <span style={{ color: "hsl(var(--primary))", fontWeight: 500, fontSize: 13 }}>
             Rascunho recuperado. Continue de onde parou.
