@@ -909,10 +909,30 @@ const RegistroSessao = () => {
 
   const handleSave = async () => {
     if (!user) return;
-    if (!form.patient_id) {
-      toast.error("Selecione um paciente.");
+
+    // Validação dos campos obrigatórios do atendimento
+    const parsed = sessionSchema.safeParse({
+      patient_id: form.patient_id,
+      session_date: form.session_date,
+      session_time: form.session_time,
+      attendance_status: form.attendance_status,
+      payment_status: form.payment_status,
+    });
+    if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const key = String(issue.path[0]);
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
+      toast.error("Revise os campos destacados antes de salvar.");
+      requestAnimationFrame(() => {
+        document.querySelector('[aria-invalid="true"]')?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
       return;
     }
+    setErrors({});
+
     // Bloqueia salvar quando há empate de horário em sessões futuras
     const hasPlanContentEarly =
       form.next_objetivo.trim() ||
