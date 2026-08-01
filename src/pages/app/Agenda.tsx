@@ -3639,20 +3639,21 @@ const Agenda = () => {
                 </>
               );
             })()}
-            <DialogFooter className="flex-col sm:flex-row gap-2 sticky bottom-0 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 py-3 bg-background border-t border-border">
+            <DialogFooter className="flex-row items-center gap-2 sticky bottom-0 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-background border-t border-border !max-w-none">
               <Button
-                type="button" variant="destructive" size="sm"
-                className="sm:mr-auto"
+                type="button" variant="ghost" size="icon"
+                className="text-destructive shrink-0 h-10 w-10 sm:mr-auto sm:w-auto sm:px-3"
+                aria-label="Excluir sessão"
                 onClick={() => { if (editSessionId) { promptDelete(editSessionId); } }}
               >
-                <Trash2 className="h-4 w-4" /> Excluir sessão
+                <Trash2 className="h-4 w-4" /> <span className="hidden sm:inline">Excluir sessão</span>
               </Button>
-              <Button type="button" variant="outline" onClick={() => editGuard.guardClose(() => setEditOpen(false))}>Cancelar</Button>
-              <Button type="submit" variant="accent" disabled={editSaving || loadingEditProgress}>
+              <Button type="button" variant="outline" className="flex-1 sm:flex-none h-10" onClick={() => editGuard.guardClose(() => setEditOpen(false))}>Cancelar</Button>
+              <Button type="submit" variant="accent" className="flex-1 sm:flex-none h-10" disabled={editSaving || loadingEditProgress}>
                 {(editSaving || loadingEditProgress) && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
               </Button>
             </DialogFooter>
-          </form>
+            <div className="h-2 shrink-0" />
         </DialogContent>
       </Dialog>
 
