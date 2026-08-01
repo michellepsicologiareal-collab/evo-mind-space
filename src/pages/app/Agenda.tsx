@@ -3877,98 +3877,32 @@ const Agenda = () => {
               </TabsTrigger>
             </TabsList>
 
-            {/* Sessions tab */}
+            {/* Sessions tab — mesmo formato da tela de Pacientes */}
             <TabsContent value="sessions" className="mt-4">
-              {drawerLoadingSessions ? (
-                <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" /></div>
-              ) : drawerSessions.length === 0 ? (
+              {!drawerPatientId ? (
                 <p className="text-sm text-muted-foreground text-center py-8">Nenhuma sessão encontrada.</p>
-              ) : (
-                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-                  {(() => {
-                    // Agrupa por pacote (groupId ou chunk legado por total) — sessões avulsas no fim
-                    type Bucket = { key: string; label: string; total: number | null; items: Session[] };
-                    const sorted = [...drawerSessions].sort(
-                      (a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
-                    );
-                    const buckets: Bucket[] = [];
-                    const legacyCount: Record<number, number> = {};
-                    const legacyBucket: Record<string, Bucket> = {};
-                    const groupBucket: Record<string, Bucket> = {};
-                    const single: Session[] = [];
-
-                    for (const s of sorted) {
-                      const info = getPackageInfo(s.notes);
-                      if (!info) { single.push(s); continue; }
-                      const gid = getGroupId(s.notes);
-                      if (gid) {
-                        let b = groupBucket[gid];
-                        if (!b) {
-                          b = { key: `g:${gid}`, label: "", total: info.total, items: [] };
-                          groupBucket[gid] = b;
-                          buckets.push(b);
-                        }
-                        b.items.push(s);
-                      } else {
-                        const used = legacyCount[info.total] ?? 0;
-                        const chunkIdx = Math.floor(used / info.total);
-                        const bKey = `l:${info.total}:${chunkIdx}`;
-                        let b = legacyBucket[bKey];
-                        if (!b) {
-                          b = { key: bKey, label: "", total: info.total, items: [] };
-                          legacyBucket[bKey] = b;
-                          buckets.push(b);
-                        }
-                        b.items.push(s);
-                        legacyCount[info.total] = used + 1;
-                      }
-                    }
-
-                    buckets.forEach((b, i) => { b.label = `Pacote ${i + 1} — ${b.total} sessões`; });
-                    if (single.length) buckets.push({ key: "single", label: "Sessões avulsas", total: null, items: single });
-
-                    const renderItem = (s: Session) => (
-                      <div key={s.id} className="rounded-xl border border-border bg-background p-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <div>
-                            <p className="text-sm font-medium">{format(new Date(s.scheduled_at), "dd/MM/yyyy 'às' HH:mm")}</p>
-                            <p className="text-xs text-muted-foreground">{s.duration_minutes} min</p>
-                          </div>
-                          <div className="text-right">
-                            <span className={cn(PILL_BASE, statusClass[s.status as Status])}>
-                              {statusLabel[s.status as Status]}
-                            </span>
-                            {s.price != null && (
-                              <p className="text-xs text-muted-foreground mt-1">R$ {Number(s.price).toFixed(2)}</p>
-                            )}
-                          </div>
-                        </div>
-                        {s.price != null && (
-                          <div className="mt-1.5">
-                            <span className={cn(PILL_BASE, paymentStatusClass[s.payment_status as PaymentStatus])}>
-                              {paymentStatusLabel[s.payment_status as PaymentStatus]}
-                              {s.payment_method && ` · ${s.payment_method === "pix" ? "PIX" : s.payment_method === "card" ? "Cartão" : s.payment_method === "cash" ? "Dinheiro" : ""}`}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    );
-
-                    return buckets.map((b) => (
-                      <div key={b.key} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{b.label}</p>
-                          <span className="text-[10px] text-muted-foreground">{b.items.length} sessões</span>
-                        </div>
-                        <div className="space-y-2 pl-2 border-l-2 border-accent/30">
-                          {b.items.map(renderItem)}
-                        </div>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              )}
+              ) : (() => {
+                const patientSessions = drawerSessions.filter((x) => x.session_type !== "supervision");
+                const now = new Date();
+                const past = patientSessions
+                  .filter((x) => new Date(x.scheduled_at) <= now)
+                  .sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at));
+                const future = patientSessions
+                  .filter((x) => new Date(x.scheduled_at) > now)
+                  .sort((a, b) => +new Date(a.scheduled_at) - +new Date(b.scheduled_at));
+                return (
+                  <PatientSessionsQuickView
+                    patientId={drawerPatientId}
+                    nextDate={future[0]?.scheduled_at ?? null}
+                    lastDate={past[0]?.scheduled_at ?? null}
+                    totalRecords={patientSessions.filter((x) => sessionRecordIds.has(x.id)).length}
+                    onOpenFullHistory={() => setDrawerOpen(false)}
+                    onNavigateAway={() => setDrawerOpen(false)}
+                  />
+                );
+              })()}
             </TabsContent>
+
 
 
             {/* Financial tab */}
