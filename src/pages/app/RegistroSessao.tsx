@@ -854,9 +854,7 @@ const RegistroSessao = () => {
       plan_id: form.plan_id,
     };
 
-    const { error } = editingId
-      ? await supabase.from("session_records").update(payload).eq("id", editingId)
-      : await supabase.from("session_records").insert(payload);
+    const { error } = await supabase.from("session_records").insert(payload);
 
     if (error) {
       setSaving(false);
