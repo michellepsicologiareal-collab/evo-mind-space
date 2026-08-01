@@ -106,6 +106,8 @@ function hasMeaningfulData(f: FormState): boolean {
     f.clinical_observations.trim() ||
     f.next_session_plan.trim() ||
     f.private_notes.trim() ||
+    f.quick_note.trim() ||
+    f.quick_mood ||
     f.themes.length > 0 ||
     f.next_objetivo.trim() ||
     f.next_retomar.trim() ||
