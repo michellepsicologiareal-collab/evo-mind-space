@@ -10,12 +10,12 @@ import { CaseFormulation } from "@/components/app/CaseFormulation";
 import { PageIntro } from "@/components/app/PageIntro";
 
 // Paleta TCC (mesma estrutura visual da Formulação ACT, cor da abordagem TCC)
-const G = "#534AB7";
-const G_BG = "#EEEDFE";
-const G_BORDER = "#C9C3F0";
-const INK = "#1A1A2E";
-const MUTED = "#6B7280";
-const BG = "#F7F6F3";
+const G = "hsl(var(--primary))";
+const G_BG = "hsl(var(--secondary))";
+const G_BORDER = "hsl(var(--primary) / 0.35)";
+const INK = "hsl(var(--foreground))";
+const MUTED = "hsl(var(--muted-foreground))";
+const BG = "hsl(var(--muted))";
 
 const FIVE_SYSTEMS: { key: "environment" | "thoughts" | "emotions" | "behaviors" | "physical_reactions"; label: string }[] = [
   { key: "environment", label: "Ambiente" },

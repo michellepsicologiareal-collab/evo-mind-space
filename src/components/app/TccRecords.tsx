@@ -49,11 +49,11 @@ interface Props {
 }
 
 
-const G = "#B8860B";
-const G_BG = "#FDF6E3";
-const G_BORDER = "#E8C97A";
-const INK = "#1A1A2E";
-const MUTED = "#6B7280";
+const G = "hsl(var(--gold))";
+const G_BG = "hsl(var(--gold) / 0.15)";
+const G_BORDER = "hsl(var(--gold) / 0.5)";
+const INK = "hsl(var(--foreground))";
+const MUTED = "hsl(var(--muted-foreground))";
 
 export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const { user } = useAuth();
@@ -286,7 +286,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
             const isOpen = expanded === r.id;
             const preview = r.situation || r.automatic_thought || "RPD";
             return (
-              <li key={r.id} className="rounded-lg border bg-background overflow-hidden" style={{ borderColor: "#EEE7D6" }}>
+              <li key={r.id} className="rounded-lg border bg-background overflow-hidden" style={{ borderColor: "hsl(var(--gold) / 0.15)" }}>
                 <button
                   onClick={() => setExpanded(isOpen ? null : r.id)}
                   className="w-full flex items-center justify-between gap-2 p-3 text-left text-sm hover:bg-secondary/30 transition-colors"
@@ -309,7 +309,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                   {isOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
                 </button>
                 {isOpen && (
-                  <div className="px-3 pb-3 space-y-2.5 border-t pt-3 text-sm" style={{ borderColor: "#F0E9D8" }}>
+                  <div className="px-3 pb-3 space-y-2.5 border-t pt-3 text-sm" style={{ borderColor: "hsl(var(--gold) / 0.15)" }}>
                     {fields.map(({ key, label }) => {
                       const val = r[key as keyof TccRecord];
                       if (!val) return null;
@@ -338,7 +338,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0"
-          style={{ background: "#F7F6F3" }}
+          style={{ background: "hsl(var(--muted))" }}
         >
           {/* Header padronizado (mesmo estilo das formulações TE/ACT) */}
           <div
@@ -469,7 +469,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                 <Button
                   onClick={sendWhatsApp}
                   className="w-full sm:flex-1"
-                  style={{ background: "#3D5C35", color: "#fff", fontWeight: 600 }}
+                  style={{ background: "hsl(var(--moss))", color: "#fff", fontWeight: 600 }}
                 >
                   <MessageCircle className="h-4 w-4" /> Enviar por WhatsApp
                 </Button>
@@ -481,7 +481,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
           )}
 
           {/* Links gerados */}
-          <div className="space-y-2 border-t pt-3" style={{ borderColor: "#F0E9D8" }}>
+          <div className="space-y-2 border-t pt-3" style={{ borderColor: "hsl(var(--gold) / 0.15)" }}>
             <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: G }}>Links gerados</p>
             {invitesLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" style={{ color: G }} />
@@ -494,7 +494,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                   const revoked = !!inv.revoked_at;
                   const active = !expired && !revoked;
                   return (
-                    <li key={inv.id} className="flex items-center justify-between gap-2 rounded-lg border p-2.5" style={{ borderColor: "#EEE7D6" }}>
+                    <li key={inv.id} className="flex items-center justify-between gap-2 rounded-lg border p-2.5" style={{ borderColor: "hsl(var(--gold) / 0.15)" }}>
                       <div className="min-w-0">
                         <p className="text-xs font-medium" style={{ color: INK }}>
                           {revoked ? "Revogado" : expired ? "Expirado" : `Válido até ${format(new Date(inv.expires_at), "dd/MM/yyyy", { locale: ptBR })}`}

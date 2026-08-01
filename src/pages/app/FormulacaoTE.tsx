@@ -18,14 +18,14 @@ import jsPDF from "jspdf";
 import { AbordagemBadge } from "@/components/app/AbordagemBadge";
 import { PageIntro } from "@/components/app/PageIntro";
 
-const G = "#B8860B";
-const G_BG = "#FDF6E3";
-const G_BORDER = "#E8C97A";
-const PURPLE = "#534AB7";
-const PURPLE_BG = "#EEEDFE";
-const INK = "#1A1A2E";
-const MUTED = "#6B7280";
-const BG = "#F7F6F3";
+const G = "hsl(var(--gold))";
+const G_BG = "hsl(var(--gold) / 0.15)";
+const G_BORDER = "hsl(var(--gold) / 0.5)";
+const PURPLE = "hsl(var(--primary))";
+const PURPLE_BG = "hsl(var(--secondary))";
+const INK = "hsl(var(--foreground))";
+const MUTED = "hsl(var(--muted-foreground))";
+const BG = "hsl(var(--muted))";
 
 const NECESSIDADES = [
   "Segurança e estabilidade",
@@ -354,7 +354,7 @@ export default function FormulacaoTE() {
                   TE · Terapia do Esquema
                 </span>
                 {savedAt && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md" style={{ background: "#EAF3DE", color: "#3D5C35", fontSize: 11, fontWeight: 500 }}>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md" style={{ background: "hsl(var(--moss) / 0.15)", color: "hsl(var(--moss))", fontSize: 11, fontWeight: 500 }}>
                     <Check className="h-3 w-3" /> Salvo {savedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 )}
@@ -395,8 +395,8 @@ export default function FormulacaoTE() {
                   onClick={() => toggleNecessidade(n)}
                   className="text-left transition-colors"
                   style={{
-                    background: on ? G_BG : "#F9FAFB",
-                    border: `1px solid ${on ? G_BORDER : "#E5E7EB"}`,
+                    background: on ? G_BG : "hsl(var(--muted))",
+                    border: `1px solid ${on ? G_BORDER : "hsl(var(--border))"}`,
                     color: on ? G : MUTED,
                     fontWeight: on ? 600 : 400,
                     fontSize: 13,
@@ -407,7 +407,7 @@ export default function FormulacaoTE() {
                     gap: 8,
                   }}
                 >
-                  <span style={{ width: 16, height: 16, borderRadius: 4, border: `1px solid ${on ? G : "#D1D5DB"}`, display: "inline-flex", alignItems: "center", justifyContent: "center", background: on ? G : "#fff" }}>
+                  <span style={{ width: 16, height: 16, borderRadius: 4, border: `1px solid ${on ? G : "hsl(var(--border))"}`, display: "inline-flex", alignItems: "center", justifyContent: "center", background: on ? G : "#fff" }}>
                     {on && <Check className="h-3 w-3" style={{ color: "#fff" }} />}
                   </span>
                   {n}
@@ -426,7 +426,7 @@ export default function FormulacaoTE() {
           <BlockHeader kicker="Bloco 3" title="Esquemas Iniciais Desadaptativos" subtitle="Selecione os EIDs presentes — organize por intensidade" />
           <Accordion type="multiple" defaultValue={["dom-0"]} className="w-full">
             {DOMINIOS.map((d, idx) => (
-              <AccordionItem key={d.titulo} value={`dom-${idx}`} className="border rounded-md mb-2" style={{ borderColor: "#E5E7EB" }}>
+              <AccordionItem key={d.titulo} value={`dom-${idx}`} className="border rounded-md mb-2" style={{ borderColor: "hsl(var(--border))" }}>
                 <AccordionTrigger className="px-3 py-2.5 hover:no-underline" style={{ fontSize: 13, fontWeight: 600, color: INK }}>{d.titulo}</AccordionTrigger>
                 <AccordionContent className="px-3 pb-3 space-y-2">
                   <div className="flex flex-wrap gap-2">
@@ -435,8 +435,8 @@ export default function FormulacaoTE() {
                       return (
                         <button key={nome} type="button" onClick={() => toggleEsquema(nome)}
                           style={{
-                            background: sel ? G_BG : "#F3F4F6",
-                            border: `1px solid ${sel ? G_BORDER : "#E5E7EB"}`,
+                            background: sel ? G_BG : "hsl(var(--muted))",
+                            border: `1px solid ${sel ? G_BORDER : "hsl(var(--border))"}`,
                             color: sel ? G : MUTED,
                             fontWeight: sel ? 600 : 400,
                             fontSize: 12, borderRadius: 6, padding: "5px 10px",
@@ -446,7 +446,7 @@ export default function FormulacaoTE() {
                     })}
                   </div>
                   {form.esquemas.filter((e) => d.eids.includes(e.nome)).map((e) => (
-                    <div key={e.nome} className="rounded-md p-3 space-y-2" style={{ background: "#FBFAF6", border: `1px solid ${G_BORDER}` }}>
+                    <div key={e.nome} className="rounded-md p-3 space-y-2" style={{ background: "hsl(var(--muted))", border: `1px solid ${G_BORDER}` }}>
                       <div className="flex items-center justify-between gap-2">
                         <span style={{ fontSize: 12, fontWeight: 600, color: G }}>{e.nome}</span>
                         <Select value={e.intensidade} onValueChange={(v: any) => updateEsquema(e.nome, { intensidade: v })}>
@@ -483,7 +483,7 @@ export default function FormulacaoTE() {
                   const v = form.modos[m];
                   const on = !!v?.ativo;
                   return (
-                    <div key={m} className="rounded-md p-3 space-y-2" style={{ background: on ? G_BG : "#F9FAFB", border: `1px solid ${on ? G_BORDER : "#E5E7EB"}` }}>
+                    <div key={m} className="rounded-md p-3 space-y-2" style={{ background: on ? G_BG : "hsl(var(--muted))", border: `1px solid ${on ? G_BORDER : "hsl(var(--border))"}` }}>
                       <label className="flex items-center justify-between gap-2 cursor-pointer">
                         <span style={{ fontSize: 13, fontWeight: on ? 600 : 500, color: on ? G : INK }}>{m}</span>
                         <input type="checkbox" checked={on} onChange={() => toggleModo(m)} className="h-4 w-4" style={{ accentColor: G }} />
@@ -512,7 +512,7 @@ export default function FormulacaoTE() {
               </div>
             </div>
           ))}
-          <div className="space-y-2 rounded-md p-3" style={{ background: PURPLE_BG, border: `1px solid #AFA9EC` }}>
+          <div className="space-y-2 rounded-md p-3" style={{ background: PURPLE_BG, border: `1px solid hsl(var(--primary))` }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: PURPLE, textTransform: "uppercase", letterSpacing: "0.06em" }}>Modo Adulto Saudável</p>
             <p style={{ fontSize: 12, color: MUTED }}>Quão presente está o Adulto Saudável neste paciente?</p>
             <div className="flex gap-2">
@@ -521,7 +521,7 @@ export default function FormulacaoTE() {
                 return (
                   <button key={n} type="button" onClick={() => update("adulto_saudavel_forca", n)}
                     className="flex-1 h-10 rounded-md text-sm font-bold transition-colors"
-                    style={{ background: on ? PURPLE : "#fff", color: on ? "#fff" : PURPLE, border: `1px solid ${on ? PURPLE : "#E5E7EB"}` }}>
+                    style={{ background: on ? PURPLE : "#fff", color: on ? "#fff" : PURPLE, border: `1px solid ${on ? PURPLE : "hsl(var(--border))"}` }}>
                     {n}
                   </button>
                 );

@@ -194,8 +194,8 @@ export const PlanoTratamentoHub = () => {
           const np = r.next_plan;
           const hasPlanning = !!(np && (np.objetivo?.trim() || np.retomar?.trim() || (np.tecnicas && np.tecnicas.length > 0)));
           const borderColor = !r.has_plan
-            ? "#E5E7EB"
-            : hasPlanning ? "#2D6A4F" : "#B8860B";
+            ? "hsl(var(--border))"
+            : hasPlanning ? "hsl(var(--moss))" : "hsl(var(--gold))";
           return (
             <div
               key={r.id}
@@ -232,16 +232,16 @@ export const PlanoTratamentoHub = () => {
                 {/* Line 2 or 3 */}
                 {hasPlanning ? (
                   <div className="mt-2 space-y-1">
-                    <p className="uppercase tracking-wide font-semibold" style={{ fontSize: 10, color: "#534AB7" }}>
+                    <p className="uppercase tracking-wide font-semibold" style={{ fontSize: 10, color: "hsl(var(--primary))" }}>
                       Próxima sessão:
                     </p>
                     {np?.objetivo?.trim() && (
-                      <p className="truncate" style={{ fontSize: 12, color: "#374151" }}>
+                      <p className="truncate" style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
                         {np.objetivo}
                       </p>
                     )}
                     {np?.retomar?.trim() && (
-                      <p className="truncate" style={{ fontSize: 12, color: "#6B7280" }}>
+                      <p className="truncate" style={{ fontSize: 12, color: "hsl(var(--muted-foreground))" }}>
                         Retomar: {np.retomar}
                       </p>
                     )}
@@ -251,7 +251,7 @@ export const PlanoTratamentoHub = () => {
                           <span
                             key={i}
                             className="px-2 py-0.5 rounded-full"
-                            style={{ background: "#EEEDFE", color: "#534AB7", fontSize: 11 }}
+                            style={{ background: "hsl(var(--secondary))", color: "hsl(var(--primary))", fontSize: 11 }}
                           >
                             {t}
                           </span>

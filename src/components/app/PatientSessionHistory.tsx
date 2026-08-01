@@ -135,27 +135,27 @@ const generatePDF = (sessions: SessionRow[], patientName: string) => {
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', Arial, sans-serif; padding: 40px; color: #333; font-size: 12px; }
-        h1 { font-size: 18px; margin-bottom: 4px; color: #A57164; }
-        h2 { font-size: 14px; margin: 20px 0 8px; color: #3D5C35; }
+        h1 { font-size: 18px; margin-bottom: 4px; color: hsl(var(--primary)); }
+        h2 { font-size: 14px; margin: 20px 0 8px; color: hsl(var(--moss)); }
         .meta { color: #888; margin-bottom: 20px; }
         .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-        .summary-card { border: 1px solid #e5e5e5; border-radius: 8px; padding: 12px; text-align: center; }
+        .summary-card { border: 1px solid hsl(var(--border)); border-radius: 8px; padding: 12px; text-align: center; }
         .summary-card .value { font-size: 20px; font-weight: 700; }
         .summary-card .label { font-size: 10px; text-transform: uppercase; color: #888; }
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; font-size: 10px; text-transform: uppercase; color: #888; border-bottom: 2px solid #e5e5e5; padding: 8px 6px; }
-        td { padding: 8px 6px; border-bottom: 1px solid #f0f0f0; font-size: 11px; }
-        tr:nth-child(even) { background: #fafafa; }
+        th { text-align: left; font-size: 10px; text-transform: uppercase; color: #888; border-bottom: 2px solid hsl(var(--border)); padding: 8px 6px; }
+        td { padding: 8px 6px; border-bottom: 1px solid hsl(var(--muted)); font-size: 11px; }
+        tr:nth-child(even) { background: hsl(var(--muted)); }
         .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
-        .badge-completed { background: #E8F5E9; color: #2E7D32; }
-        .badge-scheduled, .badge-confirmed { background: #F3F4F6; color: #4B5563; }
-        .badge-no_show { background: #FFEBEE; color: #C62828; }
-        .badge-cancelled { background: #F5F5F5; color: #9E9E9E; }
-        .badge-rescheduled { background: #FFF8E1; color: #F57F17; }
-        .badge-paid { background: #E8F5E9; color: #2E7D32; }
-        .badge-pending { background: #FFF8E1; color: #E65100; }
-        .badge-overdue { background: #FFEBEE; color: #C62828; }
-        .badge-waived { background: #F5F5F5; color: #9E9E9E; }
+        .badge-completed { background: hsl(var(--moss) / 0.15); color: hsl(var(--moss)); }
+        .badge-scheduled, .badge-confirmed { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+        .badge-no_show { background: hsl(var(--destructive) / 0.14); color: hsl(var(--destructive)); }
+        .badge-cancelled { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
+        .badge-rescheduled { background: hsl(var(--gold) / 0.15); color: hsl(var(--gold)); }
+        .badge-paid { background: hsl(var(--moss) / 0.15); color: hsl(var(--moss)); }
+        .badge-pending { background: hsl(var(--gold) / 0.15); color: hsl(var(--gold)); }
+        .badge-overdue { background: hsl(var(--destructive) / 0.14); color: hsl(var(--destructive)); }
+        .badge-waived { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
         .footer { margin-top: 30px; text-align: center; color: #bbb; font-size: 10px; }
         @media print { body { padding: 20px; } }
       </style>

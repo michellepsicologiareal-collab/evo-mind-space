@@ -481,10 +481,10 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
       {hasTE && !readOnly && (
         <div
           className="rounded-[10px] p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
-          style={{ background: "#FDF6E3", border: "1px solid #E8C97A" }}
+          style={{ background: "hsl(var(--gold) / 0.15)", border: "1px solid hsl(var(--gold) / 0.5)" }}
         >
           <div className="flex items-center gap-2 min-w-0">
-            <Sparkles className="h-4 w-4" style={{ color: "#B8860B" }} />
+            <Sparkles className="h-4 w-4" style={{ color: "hsl(var(--gold))" }} />
             <div className="min-w-0">
               <p style={{ fontSize: 13, fontWeight: 700, color: "#1A1A2E" }}>Este paciente tem abordagem TE no plano</p>
               <p style={{ fontSize: 12, color: "#6B7280" }}>A Formulação TCC abaixo permanece disponível. Você pode também abrir a Formulação de Esquema dedicada.</p>
@@ -493,7 +493,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
           <Link
             to={`/app/pacientes/${patientId}/formulacao-te`}
             className="inline-flex items-center gap-1.5 shrink-0"
-            style={{ background: "#B8860B", color: "#fff", padding: "8px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600 }}
+            style={{ background: "hsl(var(--gold))", color: "#fff", padding: "8px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600 }}
           >
             Abrir Formulação TE →
           </Link>
@@ -502,10 +502,10 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
       {hasACT && !readOnly && (
         <div
           className="rounded-[10px] p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
-          style={{ background: "#EAF3DE", border: "1px solid #74C69D" }}
+          style={{ background: "hsl(var(--moss) / 0.15)", border: "1px solid hsl(var(--moss) / 0.45)" }}
         >
           <div className="flex items-center gap-2 min-w-0">
-            <Sparkles className="h-4 w-4" style={{ color: "#2D6A4F" }} />
+            <Sparkles className="h-4 w-4" style={{ color: "hsl(var(--moss))" }} />
             <div className="min-w-0">
               <p style={{ fontSize: 13, fontWeight: 700, color: "#1A1A2E" }}>Este paciente tem abordagem ACT no plano</p>
               <p style={{ fontSize: 12, color: "#6B7280" }}>A Formulação TCC abaixo permanece disponível. Você pode também abrir a Formulação ACT dedicada (Hexaflex de Hayes).</p>
@@ -514,7 +514,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
           <Link
             to={`/app/pacientes/${patientId}/formulacao-act`}
             className="inline-flex items-center gap-1.5 shrink-0"
-            style={{ background: "#2D6A4F", color: "#fff", padding: "8px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600 }}
+            style={{ background: "hsl(var(--moss))", color: "#fff", padding: "8px 14px", borderRadius: 7, fontSize: 12, fontWeight: 600 }}
           >
             Abrir Formulação ACT →
           </Link>
@@ -522,10 +522,10 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
       )}
       {/* Layout sequencial (Blocos) — espelha ACT/TE. Fields e lógica inalterados. */}
       {(() => {
-        const TCC = "#534AB7";
-        const TCC_BORDER = "#C9C3F0";
-        const INK = "#1A1A2E";
-        const MUTED = "#6B7280";
+        const TCC = "hsl(var(--primary))";
+        const TCC_BORDER = "hsl(var(--primary) / 0.35)";
+        const INK = "hsl(var(--foreground))";
+        const MUTED = "hsl(var(--muted-foreground))";
         const cardStyle: React.CSSProperties = {
           boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
           borderLeft: `3px solid ${TCC}`,
@@ -814,7 +814,7 @@ export const CaseFormulation = ({ patientId, readOnly = false }: { patientId: st
 
         {/* AI Result */}
         {aiResult && (
-          <div className="rounded-xl border-2 p-5 space-y-3" style={{ borderColor: TCC_BORDER, background: "#EEEDFE" }}>
+          <div className="rounded-xl border-2 p-5 space-y-3" style={{ borderColor: TCC_BORDER, background: "hsl(var(--secondary))" }}>
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <h4 className="font-display font-bold text-sm text-foreground flex items-center gap-2">
                 <Sparkles className="h-4 w-4" style={{ color: TCC }} /> Notas Organizadas

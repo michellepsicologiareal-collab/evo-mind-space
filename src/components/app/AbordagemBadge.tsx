@@ -1,9 +1,9 @@
 import { Sparkles } from "lucide-react";
 
 const COLORS: Record<string, { bg: string; fg: string; border: string }> = {
-  TCC: { bg: "#EEEDFE", fg: "#534AB7", border: "#AFA9EC" },
-  TE:  { bg: "#EAF3DE", fg: "#3D5C35", border: "#A6C48A" },
-  ACT: { bg: "#FCEAD9", fg: "#A57164", border: "#E0B49C" },
+  TCC: { bg: "hsl(var(--secondary))", fg: "hsl(var(--primary))", border: "hsl(var(--primary))" },
+  TE:  { bg: "hsl(var(--moss) / 0.15)", fg: "hsl(var(--moss))", border: "#A6C48A" },
+  ACT: { bg: "#FCEAD9", fg: "hsl(var(--primary))", border: "#E0B49C" },
 };
 
 const CONTEXT_BLOCK: Record<string, string> = {
