@@ -1120,7 +1120,7 @@ const Patients = () => {
                     <span
                       key={p.id}
                       className="truncate"
-                      style={{ maxWidth: 140, background: "#F5F3FA", color: C.muted, border: `1px solid ${C.border}`, fontSize: 11.5, fontWeight: 500, padding: "3px 9px", borderRadius: 40 }}
+                      style={{ maxWidth: 140, background: "hsl(var(--muted))", color: C.muted, border: `1px solid ${C.border}`, fontSize: 11.5, fontWeight: 500, padding: "3px 9px", borderRadius: 40 }}
                     >
                       {p.full_name.split(" ").slice(0, 2).join(" ")}
                     </span>
@@ -1156,7 +1156,7 @@ const Patients = () => {
         >
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
             {/* Tabs: Ativos / Inativos */}
-            <div className="flex items-center gap-1 shrink-0" style={{ background: "#F5F3FA", borderRadius: 10, padding: 3 }}>
+            <div className="flex items-center gap-1 shrink-0" style={{ background: "hsl(var(--muted))", borderRadius: 10, padding: 3 }}>
               {([
                 { k: "active", label: "Ativos", n: activeCount },
                 { k: "inactive", label: "Inativos", n: inactiveCount },
@@ -1207,7 +1207,7 @@ const Patients = () => {
                     className="shrink-0 whitespace-nowrap transition-colors"
                     style={{
                       background: isActive ? C.purpleSoft : "transparent",
-                      border: `1px solid ${isActive ? "#D9C7F0" : C.border}`,
+                      border: `1px solid ${isActive ? "hsl(var(--primary) / 0.35)" : C.border}`,
                       color: isActive ? C.purpleInk : C.muted,
                       fontWeight: isActive ? 600 : 500,
                       fontSize: 12.5,
@@ -1230,7 +1230,7 @@ const Patients = () => {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar paciente por nome ou telefone..."
               className="pl-9 h-10 w-full border-0 focus-visible:ring-1 focus-visible:ring-[#9B72D3]"
-              style={{ background: "#F5F3FA", borderRadius: 10, fontSize: 13 }}
+              style={{ background: "hsl(var(--muted))", borderRadius: 10, fontSize: 13 }}
             />
           </div>
         </div>
@@ -1325,7 +1325,7 @@ const Patients = () => {
                         padding: "16px 18px",
                         fontSize: 11,
                         fontWeight: 600,
-                        color: "#9CA3AF",
+                        color: "hsl(var(--muted-foreground))",
                         textTransform: "uppercase",
                         letterSpacing: "0.1em",
                         width: (h as any).w,
@@ -1525,7 +1525,7 @@ const Patients = () => {
                             Supervisão
                           </span>
                         ) : (
-                          <span style={{ background: "#F3F4F6", color: C.muted, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
+                          <span style={{ background: "hsl(var(--muted))", color: C.muted, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
                             Sessão única
                           </span>
                         )}
@@ -1537,7 +1537,7 @@ const Patients = () => {
                       <td style={{ padding: "16px 18px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
                         <span
                           style={{
-                            background: p.is_active ? C.greenSoft : "#F3F4F6",
+                            background: p.is_active ? C.greenSoft : "hsl(var(--muted))",
                             color: p.is_active ? C.green : C.muted,
                             fontSize: 11,
                             fontWeight: 600,
@@ -1667,7 +1667,7 @@ const Patients = () => {
                 ? { label: "Plano de Atendimento", bg: C.purpleSoft, fg: C.purpleInk }
                 : isSupervision
                 ? { label: "Supervisão", bg: C.goldSoft, fg: C.gold }
-                : { label: "Sessão única", bg: "#F3F4F6", fg: C.muted };
+                : { label: "Sessão única", bg: "hsl(var(--muted))", fg: C.muted };
               const formBadge = formulationFilled[p.id]
                 ? { label: "Preenchida", bg: C.greenSoft, fg: C.green }
                 : { label: "Pendente", bg: C.goldSoft, fg: C.gold };
@@ -1727,7 +1727,7 @@ const Patients = () => {
                         <div className="grid grid-cols-2 gap-2 mt-3">
                           <div
                             className="rounded-lg p-2.5"
-                            style={{ background: nextLabel ? C.purpleSoft : "#F5F5F7", border: `1px solid ${nextLabel ? "rgba(83,74,183,0.25)" : C.border}` }}
+                            style={{ background: nextLabel ? C.purpleSoft : "hsl(var(--muted))", border: `1px solid ${nextLabel ? "rgba(83,74,183,0.25)" : C.border}` }}
                           >
                             <p style={{ fontSize: 10, fontWeight: 700, color: nextLabel ? C.purple : C.muted, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                               Próxima sessão
@@ -1776,7 +1776,7 @@ const Patients = () => {
                           </span>
                           <span
                             style={{
-                              background: p.is_active ? C.greenSoft : "#F3F4F6",
+                              background: p.is_active ? C.greenSoft : "hsl(var(--muted))",
                               color: p.is_active ? C.green : C.muted,
                               fontSize: 11,
                               fontWeight: 600,
