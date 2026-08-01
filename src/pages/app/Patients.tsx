@@ -583,6 +583,8 @@ const Patients = () => {
     setPixKey((profileRes.data as any)?.pix_key ?? "");
     setProfName(profileRes.data?.full_name ?? "");
     setProfCrp((profileRes.data as any)?.crp ?? "");
+    setCurrentSupervisorId((profileRes.data as any)?.supervisor_id ?? null);
+    setCurrentProfileType((profileRes.data as any)?.profile_type ?? "standard");
     const dateMap: Record<string, string> = {};
     (sessionsRes.data ?? []).forEach((s: any) => {
       if (s.patient_id && !dateMap[s.patient_id]) dateMap[s.patient_id] = s.scheduled_at;
