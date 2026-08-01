@@ -111,18 +111,8 @@ const RegistroSessao = () => {
   const [saving, setSaving] = useState(false);
   const [polishing, setPolishing] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [draftRestored, setDraftRestored] = useState(false);
-
-  // Saved records
-  const [records, setRecords] = useState<SavedRecord[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
-  const [historyFilter, setHistoryFilter] = useState("");
-  const [filterFrom, setFilterFrom] = useState("");
-  const [filterTo, setFilterTo] = useState("");
-  const [filterModality, setFilterModality] = useState("all");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-  const [expandedPatients, setExpandedPatients] = useState<Record<string, boolean>>({});
 
   // Active treatment plan + next session planning for selected patient
   const [activePlan, setActivePlan] = useState<{
