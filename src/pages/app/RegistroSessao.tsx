@@ -935,6 +935,30 @@ const RegistroSessao = () => {
       return;
     }
 
+    // 1b) Registro rápido: observações + humor da sessão → acompanhamento do paciente
+    if (form.quick_note.trim() || form.quick_mood) {
+      const progressRow = {
+        user_id: user.id,
+        patient_id: form.patient_id,
+        session_id: form.session_id,
+        recorded_at: new Date(`${form.session_date}T${form.session_time || "12:00"}:00`).toISOString(),
+        mood_score: form.quick_mood,
+        wellbeing_score: form.quick_mood,
+        wellbeing_source: "professional_estimate" as const,
+        clinical_observation: form.quick_note.trim() || null,
+        note: form.quick_note.trim() || null,
+        data_model: "v2_structured" as const,
+        themes: form.themes,
+        engagement: form.engagement,
+      };
+      const { error: progressError } = form.session_id
+        ? await supabase.from("patient_progress").upsert(progressRow, { onConflict: "user_id,session_id" })
+        : await supabase.from("patient_progress").insert(progressRow);
+      if (progressError) console.error(progressError);
+    }
+
+
+
     // 2) Resolver / atualizar a sessão-alvo da "próxima sessão"
     const uid = user.id;
     const pid = form.patient_id;
