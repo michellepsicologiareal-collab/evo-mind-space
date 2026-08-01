@@ -158,6 +158,65 @@ export const PatientSessionsQuickView = ({
   const [periodFilter, setPeriodFilter] = useState<string>("upcoming");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [modalityFilter, setModalityFilter] = useState<string>("all");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [editDraft, setEditDraft] = useState({ chief_complaint: "", clinical_observations: "", next_session_plan: "" });
+
+  const startEdit = (rec: UnifiedRecord) => {
+    setEditingId(rec.id);
+    setEditDraft({
+      chief_complaint: rec.chief_complaint ?? "",
+      clinical_observations: rec.clinical_observations ?? "",
+      next_session_plan: rec.next_session_plan ?? "",
+    });
+  };
+
+  const saveEdit = async (rec: UnifiedRecord) => {
+    setSaving(true);
+    try {
+      const rawId = rec.id.split(":")[1];
+      const chief = editDraft.chief_complaint.trim() || null;
+      const obs = editDraft.clinical_observations.trim() || null;
+      const plan = editDraft.next_session_plan.trim() || null;
+
+      if (rec.source === "legacy") {
+        const { error } = await supabase
+          .from("session_records")
+          .update({ chief_complaint: chief, clinical_observations: obs, next_session_plan: plan })
+          .eq("id", rawId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("patient_progress")
+          .update({ patient_context: chief, clinical_observation: obs })
+          .eq("id", rawId);
+        if (error) throw error;
+      }
+
+      const patch = (r: UnifiedRecord): UnifiedRecord =>
+        r.id === rec.id
+          ? {
+              ...r,
+              chief_complaint: chief,
+              clinical_observations: obs,
+              next_session_plan: rec.source === "legacy" ? plan : r.next_session_plan,
+            }
+          : r;
+
+      setRecords((prev) => prev.map(patch));
+      setRecordsBySession((prev) => {
+        const next: Record<string, UnifiedRecord> = {};
+        for (const [k, v] of Object.entries(prev)) next[k] = patch(v);
+        return next;
+      });
+      setEditingId(null);
+      toast.success("Registro atualizado");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível salvar o registro");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const modalityOptions = Array.from(
     new Set(agenda.map((s) => (s.modality ?? "").trim()).filter(Boolean))
