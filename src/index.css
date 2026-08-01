@@ -223,83 +223,150 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Dark mode rescue — telas com cores hardcoded
-   Reescreve dentro da app-shell (escopo: rotas /app/*) os
-   estilos inline e classes utilitárias que travavam o tema claro.
+   Dark mode rescue — global (inclui modais, drawers, sheets e
+   qualquer conteúdo em portal fora da app-shell, além do mobile).
+   Reescreve estilos inline e classes utilitárias hardcoded.
    ───────────────────────────────────────────────────────────── */
-.dark .app-shell .bg-white { background-color: hsl(var(--card)) !important; }
-.dark .app-shell .text-foreground { color: hsl(var(--foreground)); }
+.dark .bg-white { background-color: hsl(var(--card)) !important; }
+.dark .text-foreground { color: hsl(var(--foreground)); }
 
 /* Inline backgrounds (cards brancos, fundos bege claros) */
-.dark .app-shell [style*="background-color: #FFFFFF"],
-.dark .app-shell [style*="background-color:#FFFFFF"],
-.dark .app-shell [style*="background-color: #ffffff"],
-.dark .app-shell [style*="background-color: #FFF"],
-.dark .app-shell [style*="background-color:#FFF"],
-.dark .app-shell [style*="background-color: #fff"],
-.dark .app-shell [style*="background: #FFFFFF"],
-.dark .app-shell [style*="background:#FFFFFF"],
-.dark .app-shell [style*="background: #FFF"],
-.dark .app-shell [style*="background: #fff"],
-.dark .app-shell [style*="backgroundColor: \"#FFFFFF\""] {
+.dark [style*="background-color: #FFFFFF"],
+.dark [style*="background-color:#FFFFFF"],
+.dark [style*="background-color: #ffffff"],
+.dark [style*="background-color: #FFF"],
+.dark [style*="background-color:#FFF"],
+.dark [style*="background-color: #fff"],
+.dark [style*="background: #FFFFFF"],
+.dark [style*="background:#FFFFFF"],
+.dark [style*="background: #FFF"],
+.dark [style*="background: #fff"],
+.dark [style*="backgroundColor: \"#FFFFFF\""] {
   background-color: hsl(var(--card)) !important;
 }
 
 /* Fundo bege/cinza claro de containers */
-.dark .app-shell [style*="background-color: #F7F6F3"],
-.dark .app-shell [style*="background-color:#F7F6F3"],
-.dark .app-shell [style*="background-color: #F9FAFB"],
-.dark .app-shell [style*="background-color:#F9FAFB"],
-.dark .app-shell [style*="background-color: #F3F4F6"],
-.dark .app-shell [style*="background-color:#F3F4F6"] {
+.dark [style*="background-color: #F7F6F3"],
+.dark [style*="background-color:#F7F6F3"],
+.dark [style*="background-color: #F9FAFB"],
+.dark [style*="background-color:#F9FAFB"],
+.dark [style*="background-color: #F3F4F6"],
+.dark [style*="background-color:#F3F4F6"],
+.dark [style*="background-color: #FAFAFC"],
+.dark [style*="background-color: #F8F6FC"] {
   background-color: hsl(var(--muted)) !important;
 }
 
-/* Bordas cinza claras (#E5E7EB) */
-.dark .app-shell [style*="border: 1px solid #E5E7EB"],
-.dark .app-shell [style*="border:1px solid #E5E7EB"],
-.dark .app-shell [style*="1px solid #E5E7EB"] {
+/* Bordas cinza claras (#E5E7EB / #E5DFEE) */
+.dark [style*="border: 1px solid #E5E7EB"],
+.dark [style*="border:1px solid #E5E7EB"],
+.dark [style*="1px solid #E5E7EB"],
+.dark [style*="1px solid #E5DFEE"],
+.dark [style*="1px solid #EAE6F5"] {
   border-color: hsl(var(--border)) !important;
 }
 
 /* Textos dark hardcoded (#1A1A2E quase preto) → foreground */
-.dark .app-shell [style*="color: #1A1A2E"],
-.dark .app-shell [style*="color:#1A1A2E"],
-.dark .app-shell [style*="color: #1a1a2e"] {
+.dark [style*="color: #1A1A2E"],
+.dark [style*="color:#1A1A2E"],
+.dark [style*="color: #1a1a2e"],
+.dark [style*="color: #17152F"],
+.dark [style*="color: #2A2342"] {
   color: hsl(var(--foreground)) !important;
 }
 
 /* Textos muted hardcoded (#6B7280) → muted-foreground */
-.dark .app-shell [style*="color: #6B7280"],
-.dark .app-shell [style*="color:#6B7280"],
-.dark .app-shell [style*="color: #6b7280"] {
+.dark [style*="color: #6B7280"],
+.dark [style*="color:#6B7280"],
+.dark [style*="color: #6b7280"],
+.dark [style*="color: #9CA3AF"] {
   color: hsl(var(--muted-foreground)) !important;
 }
 
 /* Roxo escuro hardcoded (#534AB7, #3C3489) → primary do dark */
-.dark .app-shell [style*="color: #534AB7"],
-.dark .app-shell [style*="color:#534AB7"],
-.dark .app-shell [style*="color: #3C3489"] {
+.dark [style*="color: #534AB7"],
+.dark [style*="color:#534AB7"],
+.dark [style*="color: #3C3489"] {
   color: hsl(var(--primary)) !important;
 }
 
 /* Pílulas roxas claras (#EEEDFE) → secondary do dark */
-.dark .app-shell [style*="background-color: #EEEDFE"],
-.dark .app-shell [style*="background-color:#EEEDFE"] {
+.dark [style*="background-color: #EEEDFE"],
+.dark [style*="background-color:#EEEDFE"] {
   background-color: hsl(var(--secondary)) !important;
 }
 
 /* Pílula verde "Salvo" (#EAF3DE/#2D6A4F) → tokens moss */
-.dark .app-shell [style*="background-color: #EAF3DE"] {
+.dark [style*="background-color: #EAF3DE"] {
   background-color: hsl(var(--moss) / 0.18) !important;
 }
-.dark .app-shell [style*="color: #2D6A4F"] {
+.dark [style*="color: #2D6A4F"] {
   color: hsl(var(--moss)) !important;
 }
 
 /* bg-white em utilitárias residuais dentro de chips/badges */
-.dark .app-shell .hover\:bg-white\/60:hover { background-color: hsl(var(--muted) / 0.6) !important; }
-.dark .app-shell .bg-white\/60 { background-color: hsl(var(--card) / 0.6) !important; }
+.dark .hover\:bg-white\/60:hover { background-color: hsl(var(--muted) / 0.6) !important; }
+.dark .bg-white\/60 { background-color: hsl(var(--card) / 0.6) !important; }
+.dark .bg-white\/80 { background-color: hsl(var(--card) / 0.8) !important; }
+.dark .bg-white\/50 { background-color: hsl(var(--card) / 0.5) !important; }
+.dark .hover\:bg-white:hover { background-color: hsl(var(--muted)) !important; }
+
+/* Cinzas do Tailwind usados como superfície clara */
+.dark .bg-gray-50,
+.dark .bg-gray-100,
+.dark .bg-slate-50,
+.dark .bg-slate-100,
+.dark .bg-neutral-50,
+.dark .bg-neutral-100,
+.dark .bg-zinc-50,
+.dark .bg-zinc-100 { background-color: hsl(var(--muted)) !important; }
+.dark .text-gray-900,
+.dark .text-slate-900,
+.dark .text-neutral-900,
+.dark .text-black { color: hsl(var(--foreground)) !important; }
+.dark .text-gray-700,
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-slate-600,
+.dark .text-slate-500 { color: hsl(var(--muted-foreground)) !important; }
+.dark .border-gray-200,
+.dark .border-gray-100,
+.dark .border-slate-200 { border-color: hsl(var(--border)) !important; }
+
+/* Classes arbitrárias com hex claro (bg) → superfícies do dark */
+.dark .bg-\[\#FDF6E3\],
+.dark .bg-\[\#fdf3e3\],
+.dark .bg-\[\#FEF3C7\] { background-color: hsl(44 68% 62% / 0.16) !important; }
+.dark .bg-\[\#EAF3DE\],
+.dark .bg-\[\#e3f7ee\],
+.dark .bg-\[\#D1FAE5\] { background-color: hsl(var(--moss) / 0.18) !important; }
+.dark .bg-\[\#EEEDFE\],
+.dark .bg-\[\#f0ebf7\],
+.dark .bg-\[\#F8F6FC\],
+.dark .bg-\[\#FAFAFC\] { background-color: hsl(var(--secondary)) !important; }
+
+/* Classes arbitrárias com hex escuro (texto) → tons legíveis no dark */
+.dark .text-\[\#1A1A2E\],
+.dark .text-\[\#17152F\],
+.dark .text-\[\#2A2342\] { color: hsl(var(--foreground)) !important; }
+.dark .text-\[\#5b4a7a\],
+.dark .text-\[\#6B7280\] { color: hsl(var(--muted-foreground)) !important; }
+.dark .text-\[\#534AB7\],
+.dark .text-\[\#3C3489\] { color: hsl(var(--primary)) !important; }
+.dark .text-\[\#7a4a0a\],
+.dark .text-\[\#78350F\],
+.dark .text-\[\#B8860B\] { color: hsl(var(--gold-light)) !important; }
+.dark .text-\[\#2D6A4F\],
+.dark .text-\[\#1f5132\] { color: hsl(var(--moss)) !important; }
+.dark .text-\[\#C0392B\] { color: hsl(var(--destructive)) !important; }
+
+/* Bordas arbitrárias claras */
+.dark .border-\[\#E5E7EB\],
+.dark .border-\[\#e2d8f0\],
+.dark .border-\[\#FDE68A\],
+.dark .border-\[\#e8c98a\] { border-color: hsl(var(--border)) !important; }
+.dark .border-\[\#a7e1c1\] { border-color: hsl(var(--moss) / 0.4) !important; }
+
 
 
 
