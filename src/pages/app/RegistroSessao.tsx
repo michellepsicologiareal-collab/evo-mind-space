@@ -1390,7 +1390,7 @@ const RegistroSessao = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 space-y-5" style={{ backgroundColor: "hsl(var(--muted))", minHeight: "100%" }}>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-5" style={{ minHeight: "100%" }}>
       <HelpCard
         id="registro-sessao"
         title="Registro de Sessão"
@@ -1401,10 +1401,7 @@ const RegistroSessao = () => {
         ]}
       />
       {/* Topbar */}
-      <div
-        className="px-5 py-4"
-        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
-      >
+      <div className="rounded-2xl bg-card border border-border p-5 sm:p-7 shadow-[var(--shadow-card)]">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
             <button
@@ -1416,12 +1413,12 @@ const RegistroSessao = () => {
               <ArrowLeft className="h-3 w-3" /> {returnUrl?.startsWith("/app/agenda") ? "Voltar à Agenda" : "Voltar à lista"}
             </button>
             <h1
-              className="font-display leading-tight"
-              style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.3px", color: "hsl(var(--foreground))" }}
+              className="mt-0.5 break-words"
+              style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 26, lineHeight: 1.2, letterSpacing: "-0.3px", color: "hsl(var(--foreground))" }}
             >
               Registro de Sessão
             </h1>
-            <p className="mt-1" style={{ fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
+            <p className="mt-1.5" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
               Documente os dados clínicos da sessão realizada.
             </p>
           </div>
@@ -1438,8 +1435,8 @@ const RegistroSessao = () => {
             <button
               type="button"
               onClick={() => setCompactMode((v) => !v)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium hover:bg-muted/40 transition-colors"
-              style={{ border: "1px solid hsl(var(--border))", borderRadius: 8, color: "hsl(var(--muted-foreground))" }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium hover:bg-background transition-colors"
+              style={{ border: "1px solid hsl(var(--border))", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, color: "hsl(var(--muted-foreground))" }}
               aria-pressed={compactMode}
             >
               {compactMode ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
@@ -1452,8 +1449,8 @@ const RegistroSessao = () => {
       {/* Draft restored banner */}
       {draftRestored && (
         <div
-          className="flex items-center justify-between px-4 py-3"
-          style={{ backgroundColor: "hsl(var(--secondary))", borderLeft: "3px solid hsl(var(--primary))", borderRadius: 10 }}
+          className="flex items-center justify-between px-4 py-3 rounded-2xl border border-border"
+          style={{ backgroundColor: "hsl(var(--secondary))" }}
         >
           <span style={{ color: "hsl(var(--primary))", fontWeight: 500, fontSize: 13 }}>
             Rascunho recuperado. Continue de onde parou.
@@ -1476,32 +1473,25 @@ const RegistroSessao = () => {
       {/* ── Hero do paciente ── */}
       <section
         ref={heroFormRef}
-        className="p-5 scroll-mt-4"
-        style={{
-          backgroundColor: "hsl(var(--card))",
-          borderRadius: 10,
-          boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-          borderLeft: "3px solid hsl(var(--primary))",
-        }}
+        className="rounded-2xl bg-card border border-border p-5 sm:p-7 shadow-[var(--shadow-card)] scroll-mt-4"
       >
 
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-4 sm:gap-6">
           <div
-            className="flex h-14 w-14 shrink-0 items-center justify-center text-base font-display font-bold"
-            style={{ borderRadius: "50%", backgroundColor: "hsl(var(--secondary))", color: "hsl(var(--primary))", fontWeight: 700 }}
+            className="shrink-0 flex items-center justify-center rounded-full"
+            style={{ width: 60, height: 60, background: "rgba(155,114,211,0.10)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 20 }}
           >
-            <User className="h-6 w-6" />
+            {(() => {
+              const name = patients.find((x) => x.id === form.patient_id)?.full_name;
+              if (!name) return <User className="h-6 w-6" />;
+              return name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+            })()}
           </div>
 
-          <div className="min-w-0 flex-1 space-y-1.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span
-                className="uppercase"
-                style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: "hsl(var(--muted-foreground))" }}
-              >
-                Paciente
-              </span>
-            </div>
+          <div className="min-w-0 flex-1">
+            <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.10em", color: "hsl(var(--primary))" }}>
+              Paciente
+            </p>
 
             <Select
               value={form.patient_id}
@@ -1509,8 +1499,8 @@ const RegistroSessao = () => {
             >
               <SelectTrigger
                 aria-invalid={!!errors.patient_id}
-                className="h-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 font-display hover:opacity-80 transition-opacity [&>svg]:opacity-50"
-                style={{ fontSize: 16, fontWeight: 700, color: errors.patient_id ? "hsl(var(--destructive))" : "hsl(var(--foreground))" }}
+                className="mt-0.5 h-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 hover:opacity-80 transition-opacity [&>svg]:opacity-50"
+                style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: errors.patient_id ? "hsl(var(--destructive))" : "hsl(var(--foreground))" }}
               >
                 <SelectValue placeholder="Selecione o paciente" />
               </SelectTrigger>
@@ -1736,7 +1726,7 @@ const RegistroSessao = () => {
       {/* ── Seção 1: Estado do Paciente ── */}
       <section
         className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("estado") ? "p-3" : "p-5 space-y-4")}
-        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--primary))" }}
+        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 16, border: "1px solid hsl(var(--border))", boxShadow: "var(--shadow-card)", borderLeft: "3px solid hsl(var(--primary))" }}
       >
         <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" sectionKey="estado" color="hsl(var(--primary))" />
         {isOpen("estado") && (
@@ -1760,7 +1750,7 @@ const RegistroSessao = () => {
       {/* ── Seção 2: Conteúdo da Sessão ── */}
       <section
         className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("conteudo") ? "p-3" : "p-5 space-y-4")}
-        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--gold))" }}
+        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 16, border: "1px solid hsl(var(--border))", boxShadow: "var(--shadow-card)", borderLeft: "3px solid hsl(var(--gold))" }}
       >
         <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" sectionKey="conteudo" color="hsl(var(--gold))" />
         {isOpen("conteudo") && (
@@ -1814,7 +1804,7 @@ const RegistroSessao = () => {
       {/* ── Seção 3: Avaliação do Terapeuta ── */}
       <section
         className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("avaliacao") ? "p-3" : "p-5 space-y-4")}
-        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--moss))" }}
+        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 16, border: "1px solid hsl(var(--border))", boxShadow: "var(--shadow-card)", borderLeft: "3px solid hsl(var(--moss))" }}
       >
         <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" sectionKey="avaliacao" color="hsl(var(--moss))" />
         {isOpen("avaliacao") && (
@@ -2072,7 +2062,7 @@ const RegistroSessao = () => {
       {form.patient_id && (
         <section
           className="p-5 space-y-4"
-          style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--gold))" }}
+          style={{ backgroundColor: "hsl(var(--card))", borderRadius: 16, border: "1px solid hsl(var(--border))", boxShadow: "var(--shadow-card)", borderLeft: "3px solid hsl(var(--gold))" }}
         >
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4" style={{ color: "hsl(var(--gold))" }} />
@@ -2259,7 +2249,7 @@ const RegistroSessao = () => {
       {form.patient_id && form.session_id && (
         <section
           className="p-5 space-y-4"
-          style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--moss))" }}
+          style={{ backgroundColor: "hsl(var(--card))", borderRadius: 16, border: "1px solid hsl(var(--border))", boxShadow: "var(--shadow-card)", borderLeft: "3px solid hsl(var(--moss))" }}
         >
           <div className="flex items-center gap-2">
             <NotebookPen className="h-4 w-4" style={{ color: "hsl(var(--moss))" }} />
