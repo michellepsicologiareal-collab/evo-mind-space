@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Plus, Send, Trash2, Download, MessageCircle, FileText, ExternalLink, Pencil, CheckSquare, Square, X, NotebookPen, ListChecks, Eye } from "lucide-react";
+import { Loader2, Plus, Send, Trash2, Download, MessageCircle, FileText, ExternalLink, Pencil, CheckSquare, Square, X, NotebookPen, ListChecks, Eye, Minimize2, Maximize2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
