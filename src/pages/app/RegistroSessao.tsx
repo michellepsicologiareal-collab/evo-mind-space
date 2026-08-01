@@ -711,14 +711,16 @@ const RegistroSessao = () => {
     if (!user) return;
     const patientParam = searchParams.get("patient");
     const sessionParam = searchParams.get("session");
+    const dateParam = searchParams.get("date");
     if (!patientParam && !sessionParam) return;
-    const key = `${patientParam ?? ""}|${sessionParam ?? ""}`;
+    const key = `${patientParam ?? ""}|${sessionParam ?? ""}|${dateParam ?? ""}`;
     if (lastPrefillKeyRef.current === key && selectedPatientRef.current) return;
     lastPrefillKeyRef.current = key;
 
     (async () => {
       let prefill: Partial<FormState> = {};
       if (patientParam) prefill.patient_id = patientParam;
+      if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) prefill.session_date = dateParam;
       if (sessionParam) {
         const { data: sess } = await supabase
           .from("sessions")
