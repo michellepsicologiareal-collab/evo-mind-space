@@ -1183,8 +1183,8 @@ const RegistroSessao = () => {
   };
 
 
-  // Hub view: when no patient is selected and not editing, show the patient list
-  if (!form.patient_id && !editingId) {
+  // Hub view: when no patient is selected, show the patient list
+  if (!form.patient_id) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-5 animate-fade-up">
         <div className="flex items-center gap-3">
