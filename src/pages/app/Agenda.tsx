@@ -457,6 +457,7 @@ const Agenda = () => {
 
   // Homework plan (Plano entre Sessões) linked to the current edited session
   const [homeworkOpen, setHomeworkOpen] = useState(false);
+  const [homeworkFullscreen, setHomeworkFullscreen] = useState(true);
   const [homeworkLoading, setHomeworkLoading] = useState(false);
   const [homeworkTask, setHomeworkTask] = useState<HomeworkPlanFormTask | null>(null);
   const [homeworkExists, setHomeworkExists] = useState(false);
