@@ -921,11 +921,24 @@ const Patients = () => {
     await preserveScroll(() => load());
   };
 
-  const toggleSharing = async (_p: Patient) => {
-    // FASE 1 HOTFIX — Compartilhamento antigo desativado para revisão de privacidade.
-    // Nenhum valor de `shared_with_supervisor` é alterado. Um novo fluxo de casos
-    // de supervisão pseudonimizados será entregue na Fase 2.
-    toast.info("O compartilhamento de casos está temporariamente indisponível para revisão de privacidade.");
+  const toggleSharing = async (p: Patient) => {
+    if (!canShareWithSupervisor) {
+      toast.info("Você precisa ter uma supervisora vinculada para compartilhar casos.");
+      return;
+    }
+    const next = !p.shared_with_supervisor;
+    const actionLabel = next ? "compartilhar" : "deixar de compartilhar";
+    if (!confirm(`${next ? "Compartilhar" : "Remover"} o caso de ${p.full_name} ${next ? "com" : "com"} a supervisora?\n\n${next ? "A supervisora poderá visualizar os dados clínicos deste paciente." : "A supervisora não terá mais acesso aos dados clínicos deste paciente."}`)) return;
+    const loadingId = toast.loading(`${next ? "Compartilhando" : "Removendo compartilhamento"} caso...`);
+    const { error } = await supabase.from("patients").update({ shared_with_supervisor: next }).eq("id", p.id);
+    toast.dismiss(loadingId);
+    if (error) {
+      console.error("[toggleSharing] error:", error);
+      toast.error(`Erro ao ${actionLabel} o caso. Tente novamente.`);
+      return;
+    }
+    toast.success(next ? "Caso compartilhado com a supervisora" : "Compartilhamento com a supervisora removido");
+    await preserveScroll(() => load());
   };
 
   const activeCount = patients.filter((p) => p.is_active).length;
