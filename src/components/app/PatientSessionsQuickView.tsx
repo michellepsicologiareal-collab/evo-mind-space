@@ -429,6 +429,82 @@ export const PatientSessionsQuickView = ({
       {/* Linha do tempo */}
       <SessionTimeline patientId={patientId} onNavigate={onNavigateAway} />
 
+      {/* Visão semanal */}
+      <div>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <h3 className="text-sm font-display font-semibold text-foreground">Semana</h3>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekStart((d) => addDays(d, -7))}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-[11px] text-muted-foreground min-w-[110px] text-center">
+              {format(weekStart, "dd/MM", { locale: ptBR })} – {format(addDays(weekStart, 6), "dd/MM", { locale: ptBR })}
+            </span>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekStart((d) => addDays(d, 7))}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-[11px]"
+              onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}
+            >
+              Hoje
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+          {weekDays.map(({ day, sessions }) => {
+            const isToday = isSameDay(day, new Date());
+            return (
+              <div
+                key={day.toISOString()}
+                className="rounded-xl p-2 min-h-[86px]"
+                style={{
+                  background: isToday ? "hsl(var(--primary) / 0.06)" : "hsl(var(--background))",
+                  border: `0.5px solid hsl(var(--border))`,
+                }}
+              >
+                <p className="text-[10px] uppercase text-muted-foreground mb-1.5">
+                  {format(day, "EEE dd/MM", { locale: ptBR })}
+                </p>
+                {sessions.length === 0 ? (
+                  <p className="text-[11px] text-muted-foreground/60">—</p>
+                ) : (
+                  <div className="space-y-1">
+                    {sessions.map((s) => {
+                      const rec = recordsBySession[s.id] ?? null;
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => {
+                            if (rec) setDetail(rec);
+                            else toast.info("Esta sessão ainda não tem registro escrito.");
+                          }}
+                          className="w-full text-left rounded-lg px-2 py-1 transition-colors hover:bg-primary/10"
+                          style={{ background: rec ? "hsl(var(--primary) / 0.08)" : "hsl(var(--muted))" }}
+                          title={rec ? "Ver registro escrito" : "Sem registro"}
+                        >
+                          <span className="block text-[11px] font-medium text-foreground">
+                            {format(new Date(s.scheduled_at), "HH:mm")}
+                          </span>
+                          <span className="block text-[10px] text-muted-foreground truncate">
+                            {SESSION_STATUS_LABEL[s.status] ?? s.status}
+                            {rec ? " · registro" : ""}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Sessões agendadas + conteúdo registrado */}
       <div>
         <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
