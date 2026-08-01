@@ -1047,6 +1047,53 @@ const Patients = () => {
   };
   const avatarPalette = [C.avatarA, C.avatarB, C.avatarC];
 
+  // Menu de ações do paciente — mesma lista, ícones, textos e espaçamentos no desktop e no mobile
+  const PatientActionsMenu = ({ p, mobile = false }: { p: Patient; mobile?: boolean }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          data-no-card-open
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") e.stopPropagation(); }}
+          className={`inline-flex items-center justify-center shrink-0 touch-manipulation rounded-md transition-colors hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--primary))] focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))] ${mobile ? "absolute top-4 right-4 z-10" : ""}`}
+          style={{ height: mobile ? 36 : 32, paddingLeft: 12, paddingRight: 12, background: "transparent", border: "none", color: C.muted }}
+          aria-label="Ações do paciente"
+          title="Ações do paciente"
+        >
+          <span className="text-xs font-medium">Ações</span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        side="bottom"
+        sideOffset={6}
+        collisionPadding={12}
+        avoidCollisions
+        className="z-50 w-[min(17rem,calc(100vw-24px))] max-h-[60vh] overflow-y-auto overscroll-contain [&_[role=menuitem]]:min-h-[40px] [&_[role=menuitem]]:text-[14px] [&_[role=menuitem]]:gap-2"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <DropdownMenuItem onClick={() => setSelectedPatient(p)}><Eye className="h-4 w-4" /> Ver ficha</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => openEdit(p)}><IconPencil className="h-4 w-4" /> Editar</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate(`/app/registro-sessao?patient=${p.id}`)}><IconFileText className="h-4 w-4" /> Registrar sessão</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => navigate(`/app/agenda?patient=${p.id}`)}><CalendarDays className="h-4 w-4" /> Agendar sessão</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => toggleActive(p)}><IconUserOff className="h-4 w-4" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => setTccPatient(p)}><IconClipboardList className="h-4 w-4" /> Registros TCC</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-tcc`)}><IconFileText className="h-4 w-4" /> Formulação de caso TCC</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-te`)} className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"><IconTarget className="h-4 w-4" /> Formulação TE</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4" /> Formulação ACT</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => setHomeworkPatient(p)}><ClipboardList className="h-4 w-4" /> Plano entre Sessões</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]"><IconTrash className="h-4 w-4" /> Excluir</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+
+
   return (
     <div
       className="animate-fade-up -mx-3 sm:-mx-6 -mt-3 sm:-mt-6 px-3 sm:px-6 pt-4 sm:pt-6 pb-10 min-h-screen"
