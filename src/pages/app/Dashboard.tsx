@@ -1005,13 +1005,14 @@ export default function Dashboard() {
                 {totalWeek} {totalWeek === 1 ? "sessão" : "sessões"} de segunda a sexta · <span className="capitalize">{selectedLabel}</span> selecionada
               </p>
             </div>
-            <Card className="rounded-2xl border-border/60 p-5 space-y-5">
+            <Card className="rounded-2xl border-border/60 p-3.5 sm:p-5 space-y-4 sm:space-y-5">
               <div
                 ref={tabsRef}
                 role="tablist"
                 aria-label="Dias da semana"
                 onKeyDown={onTabsKeyDown}
-                className="flex items-end justify-between gap-3 h-44"
+                className="flex items-end justify-between gap-1.5 sm:gap-3 h-36 sm:h-44"
+
               >
                 {weekDays.map((d, i) => {
                   const active = isSameDay(d, selectedDate);
