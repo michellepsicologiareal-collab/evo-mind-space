@@ -677,34 +677,34 @@ export const HomeworkPlanForm = ({
                   onChange={(e) => setAccessPassword(e.target.value)}
                   onBlur={() => { void persistPassword(); }}
                   placeholder="Senha salva deste paciente (opcional)"
-                  className="h-7 min-w-0 flex-1 border-0 bg-transparent px-0 text-xs focus-visible:ring-0"
+                  className="h-9 min-w-0 flex-1 border-0 bg-transparent px-0 text-sm sm:text-xs focus-visible:ring-0"
                   maxLength={60}
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 shrink-0"
+                  className="h-9 w-9 shrink-0"
                   onClick={copyPassword}
                   disabled={!accessPassword.trim()}
                   title="Copiar senha"
                 >
-                  <Copy className="h-3.5 w-3.5" />
+                  <Copy className="h-4 w-4" />
                 </Button>
               </div>
               <Button
                 type="button"
                 size="sm"
                 variant="moss"
-                className="w-full sm:w-auto"
+                className="h-10 w-full whitespace-normal text-center leading-tight sm:h-9 sm:w-auto"
                 onClick={sendPasswordWhatsApp}
                 disabled={!canSend || !accessPassword.trim()}
                 title="Enviar senha por WhatsApp"
               >
-                <MessageCircle className="h-3.5 w-3.5" />
+                <MessageCircle className="h-3.5 w-3.5 shrink-0" />
                 Enviar senha por WhatsApp
               </Button>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] leading-snug text-muted-foreground">
                 A senha fica salva neste paciente e vale para todos os planos dele.
               </p>
             </div>
