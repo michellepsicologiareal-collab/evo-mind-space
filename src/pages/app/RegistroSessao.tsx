@@ -154,6 +154,20 @@ const RegistroSessao = () => {
   const [form, setForm] = useState({ ...emptyForm });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [draftRestored, setDraftRestored] = useState(false);
+
+  // Limpa os erros de validação assim que o campo correspondente é corrigido
+  useEffect(() => {
+    setErrors((prev) => {
+      if (!Object.keys(prev).length) return prev;
+      const next = { ...prev };
+      if (next.patient_id && form.patient_id) delete next.patient_id;
+      if (next.session_date && form.session_date) delete next.session_date;
+      if (next.session_time && form.session_time) delete next.session_time;
+      if (next.attendance_status && form.attendance_status) delete next.attendance_status;
+      if (next.payment_status && form.payment_status) delete next.payment_status;
+      return Object.keys(next).length === Object.keys(prev).length ? prev : next;
+    });
+  }, [form.patient_id, form.session_date, form.session_time, form.attendance_status, form.payment_status]);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
 
