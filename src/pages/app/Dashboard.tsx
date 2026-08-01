@@ -1040,11 +1040,11 @@ export default function Dashboard() {
                       >
                         {value}
                       </span>
-                      <div className="flex h-32 w-full items-end justify-center">
+                      <div className="flex h-24 sm:h-32 w-full items-end justify-center">
                         <div
                           style={{ height: value === 0 ? "4px" : `${pct}%` }}
                           className={cn(
-                            "w-6 md:w-8 rounded-t-md transition-colors",
+                            "w-5 sm:w-6 md:w-8 rounded-t-md transition-colors",
                             active
                               ? "bg-primary"
                               : value === 0
@@ -1127,7 +1127,7 @@ export default function Dashboard() {
         <section aria-labelledby="finance-heading">
           <Card className="rounded-2xl border-border/60 bg-muted/30 p-5 md:p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="grid flex-1 gap-4 sm:grid-cols-3">
+              <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
                 <div>
                   <p className="text-xs text-muted-foreground">Recebido · {selectedMonthLabel}</p>
                   <p className="mt-1 text-lg font-semibold text-emerald-700 dark:text-emerald-400">
