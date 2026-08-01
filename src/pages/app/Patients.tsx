@@ -1341,8 +1341,6 @@ const Patients = () => {
             <table className="w-full" style={{ borderCollapse: "collapse", fontSize: 13, minWidth: 880 }}>
               <tbody>
 
-
-              <tbody>
                 {filtered.map((p, idx) => {
                   const isCriticalAlert = p.notes ? /(crise|resist|abandon|suic|término)/i.test(p.notes) : false;
                   const isAttention = attentionPatients.some((x) => x.id === p.id);
