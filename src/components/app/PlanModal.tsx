@@ -9,7 +9,7 @@ interface PlanModalProps {
 
 const essentialPlan = {
   name: "Essencial PsiReal",
-  price: "R$ 39,90",
+  price: "R$ 15,90",
   period: "/mês",
   description: "Tudo que você precisa para organizar seu consultório",
   features: [
