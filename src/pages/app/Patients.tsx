@@ -1147,6 +1147,35 @@ const Patients = () => {
         ))}
       </div>
 
+      {/* ─────────── PLANO DE TRATAMENTO (painel) ─────────── */}
+      <div className="mb-8" style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, boxShadow: "0 1px 2px rgba(23,21,47,0.04)" }}>
+        <button
+          type="button"
+          onClick={() => setPlanHubOpen((v) => !v)}
+          className="w-full flex items-center justify-between gap-3 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9B72D3]"
+          style={{ padding: "18px 22px", borderRadius: 16 }}
+          aria-expanded={planHubOpen}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="shrink-0 flex items-center justify-center" style={{ width: 38, height: 38, borderRadius: 12, background: C.purpleSoft, color: C.purple }}>
+              <ClipboardList className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>Plano de Tratamento</p>
+              <p style={{ fontSize: 12.5, color: C.muted }}>Status do plano terapêutico de cada paciente.</p>
+            </div>
+          </div>
+          <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-300" style={{ color: C.muted, transform: planHubOpen ? "rotate(180deg)" : "none" }} />
+        </button>
+        {planHubOpen && (
+          <div style={{ padding: "0 22px 22px" }}>
+            <PlanoTratamentoHub />
+          </div>
+        )}
+      </div>
+
+
+
       {/* ─────────── FILTER BAR ─────────── */}
       <div
         className="mb-6 sticky top-16 md:top-0 z-10 -mx-3 px-3 sm:-mx-6 sm:px-6 py-2"
