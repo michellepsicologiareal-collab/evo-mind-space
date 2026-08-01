@@ -943,7 +943,7 @@ const RegistroSessao = () => {
     }
 
     setSaving(false);
-    toast.success(editingId ? "Registro atualizado." : "Registro salvo com sucesso.");
+    toast.success("Registro salvo com sucesso.");
     clearDraft();
     const keepPatient = form.patient_id;
 
@@ -956,7 +956,7 @@ const RegistroSessao = () => {
       .eq("status", "ativo")
       .maybeSingle();
 
-    if (!editingId && !activePlanRow) {
+    if (!activePlanRow) {
       const metaDesc = form.next_meta_id
         ? planGoals.find((g) => g.id === form.next_meta_id)?.descricao ?? null
         : null;
@@ -974,7 +974,7 @@ const RegistroSessao = () => {
 
     // 5) Fluxo padrão: voltar para a ficha se veio de lá
     const cameFromPatient = !!searchParams.get("patient");
-    if (cameFromPatient && !editingId && keepPatient) {
+    if (cameFromPatient && keepPatient) {
       navigate(`/app/pacientes?patientId=${keepPatient}&tab=sessions`, { replace: true });
       return;
     }
@@ -982,8 +982,6 @@ const RegistroSessao = () => {
     // Mantém o paciente selecionado — reset apenas dos campos do registro,
     // conforme fluxo integrado com o Plano de Tratamento.
     setForm({ ...emptyForm, patient_id: keepPatient });
-    setEditingId(null);
-    await preserveScroll(() => loadRecords());
     if (keepPatient && user) {
       loadActivePlan(keepPatient, user.id);
     }
