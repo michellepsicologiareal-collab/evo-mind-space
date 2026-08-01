@@ -1265,7 +1265,7 @@ const RegistroSessao = () => {
       </div>
 
       {/* Draft restored banner */}
-      {draftRestored && !editingId && (
+      {draftRestored && (
         <div
           className="flex items-center justify-between px-4 py-3"
           style={{ backgroundColor: "#EEEDFE", borderLeft: "3px solid #534AB7", borderRadius: 10 }}
