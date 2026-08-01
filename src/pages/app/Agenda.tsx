@@ -282,7 +282,7 @@ const Agenda = () => {
     return () => clearTimeout(t);
   }, [isNavigating]);
 
-  // Seed patient/month from URL ONCE on mount. Subsequent URL writes are one-way
+  // Seed patient/month/date/view from URL ONCE on mount. Subsequent URL writes are one-way
   // (state → URL) to avoid ping-pong loops between effects that watch searchParams.
   const urlSeededRef = useRef(false);
   useEffect(() => {
@@ -290,6 +290,16 @@ const Agenda = () => {
     urlSeededRef.current = true;
     const qp = searchParams.get("patient");
     if (qp) setPatientFilter(qp);
+    const v = searchParams.get("view");
+    if (v === "day" || v === "week" || v === "month") setViewTab(v);
+    const d = searchParams.get("date");
+    if (d) {
+      const parsedDate = parse(d, "yyyy-MM-dd", new Date());
+      if (!isNaN(parsedDate.getTime())) {
+        goToDate(parsedDate);
+        return;
+      }
+    }
     const m = searchParams.get("month");
     if (m) {
       const parsed = parse(m, "yyyy-MM", new Date());
@@ -300,13 +310,14 @@ const Agenda = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Keep ?patient= and ?month= in sync with state (one-way write).
+  // Keep ?patient=, ?month=, ?date= e ?view= em sincronia com o estado (escrita one-way).
   // Uses window.history directly to avoid re-triggering useSearchParams subscribers
   // and to keep this effect free of `searchParams` in its dependency array.
   useEffect(() => {
     if (!urlSeededRef.current) return;
     const params = new URLSearchParams(window.location.search);
     const monthStr = format(currentMonth, "yyyy-MM");
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
     let changed = false;
     if ((params.get("patient") ?? "all") !== patientFilter) {
       if (patientFilter === "all") params.delete("patient");
@@ -317,6 +328,14 @@ const Agenda = () => {
       params.set("month", monthStr);
       changed = true;
     }
+    if (params.get("date") !== dateStr) {
+      params.set("date", dateStr);
+      changed = true;
+    }
+    if (params.get("view") !== viewTab) {
+      params.set("view", viewTab);
+      changed = true;
+    }
     if (changed) {
       const qs = params.toString();
       window.history.replaceState(
@@ -325,7 +344,7 @@ const Agenda = () => {
         window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash
       );
     }
-  }, [patientFilter, currentMonth]);
+  }, [patientFilter, currentMonth, selectedDate, viewTab]);
 
   // Pending
   const [pendingRecordsOpen, setPendingRecordsOpen] = useState(false);
