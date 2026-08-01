@@ -43,6 +43,10 @@ import { PageIntro } from "@/components/app/PageIntro";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { carryOverHomeworkPlan } from "@/lib/homework/carryOver";
 
+// Retorno exato para a Agenda (data/visão/filtros atuais) ao fechar o Registro de Sessão.
+const agendaReturnParam = () =>
+  `&from=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
 type PaymentStatus = "pending" | "paid";
@@ -2171,7 +2175,7 @@ const Agenda = () => {
               {!isSupervisionCard && s.patient_id && (
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}${agendaReturnParam()}`); }}
                   className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-card text-foreground/70 hover:bg-muted transition-colors"
                   title="Registrar sessão"
                   aria-label="Registrar sessão"
@@ -2239,7 +2243,7 @@ const Agenda = () => {
             <Button
               size="sm"
               className="h-8 w-full rounded-lg px-3 text-xs font-semibold gap-1.5 sm:w-auto"
-              onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}${agendaReturnParam()}`); }}
             >
               <Pencil className="h-3.5 w-3.5" /> Registrar sessão
             </Button>
@@ -2805,7 +2809,7 @@ const Agenda = () => {
                           <button
                             key={s.id}
                             type="button"
-                            onClick={() => { setPendingRecordsOpen(false); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
+                            onClick={() => { setPendingRecordsOpen(false); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}${agendaReturnParam()}`); }}
                             className="w-full text-left rounded-xl border border-border bg-card px-3 py-2.5 hover:bg-muted/60 hover:border-primary/30 transition-colors"
                           >
                             <p className="font-display text-sm font-semibold text-foreground">{s.patient_name || "Paciente"}</p>
