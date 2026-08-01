@@ -871,13 +871,13 @@ export default function Dashboard() {
               );
             })()}
             {loadingTrend ? (
-              <div className="h-72 rounded-lg bg-muted/40 animate-pulse" />
+              <div className="h-56 md:h-72 rounded-lg bg-muted/40 animate-pulse" />
             ) : trendData.every((d) => d.sessions === 0 && d.revenue === 0 && d.revenuePending === 0) ? (
-              <div className="h-72 flex items-center justify-center text-sm text-muted-foreground">
+              <div className="h-56 md:h-72 flex items-center justify-center text-sm text-muted-foreground">
                 Sem dados nos últimos {trendRange} meses.
               </div>
             ) : (
-              <div className="h-72 w-full" style={{ fontFamily: CHART_FONT_FAMILY }}>
+              <div className="h-56 md:h-72 w-full" style={{ fontFamily: CHART_FONT_FAMILY }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={trendData} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
