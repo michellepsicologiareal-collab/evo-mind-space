@@ -701,16 +701,20 @@ const RegistroSessao = () => {
   }, []);
 
   // Prefill from URL (?patient=…&session=…) — reativo a searchParams (KeepAliveOutlet mantém o componente vivo).
-  // Guard por ref evita reaplicar o mesmo par (patient|session) em loop.
+  // Guard por ref evita reaplicar o mesmo par (patient|session) em loop, mas nunca bloqueia
+  // quando nenhum paciente está selecionado (senão a tela cai na lista "Selecione um paciente").
   const lastPrefillKeyRef = useRef<string | null>(null);
+  const selectedPatientRef = useRef<string>("");
+  selectedPatientRef.current = form.patient_id;
   useEffect(() => {
     if (!user) return;
     const patientParam = searchParams.get("patient");
     const sessionParam = searchParams.get("session");
     if (!patientParam && !sessionParam) return;
     const key = `${patientParam ?? ""}|${sessionParam ?? ""}`;
-    if (lastPrefillKeyRef.current === key) return;
+    if (lastPrefillKeyRef.current === key && selectedPatientRef.current) return;
     lastPrefillKeyRef.current = key;
+
     (async () => {
       let prefill: Partial<FormState> = {};
       if (patientParam) prefill.patient_id = patientParam;
@@ -792,7 +796,14 @@ const RegistroSessao = () => {
   const handleClear = () => {
     clearDraft();
     setForm({ ...emptyForm });
+    // Limpa o contexto da URL para que um novo clique em "Registrar sessão"
+    // (mesmo paciente/sessão) volte a abrir direto o formulário.
+    lastPrefillKeyRef.current = null;
+    if (searchParams.get("patient") || searchParams.get("session")) {
+      navigate("/app/registro-sessao", { replace: true });
+    }
   };
+
 
   // Gera o texto sintético para next_session_plan (compatibilidade com Agenda/ficha)
   const buildNextSessionSynthetic = (f: FormState): string => {
@@ -1183,8 +1194,11 @@ const RegistroSessao = () => {
   };
 
 
-  // Hub view: when no patient is selected, show the patient list
-  if (!form.patient_id) {
+  // Hub view: só quando não há paciente selecionado E a URL não traz contexto
+  // de paciente/sessão (evita cair na lista ao clicar em "Registrar sessão").
+  const hasUrlContext = !!(searchParams.get("patient") || searchParams.get("session"));
+  if (!form.patient_id && !hasUrlContext) {
+
     return (
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-5 animate-fade-up">
         <div className="flex items-center gap-3">
