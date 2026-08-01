@@ -1494,8 +1494,9 @@ const RegistroSessao = () => {
               onValueChange={(v) => setForm({ ...form, patient_id: v })}
             >
               <SelectTrigger
+                aria-invalid={!!errors.patient_id}
                 className="h-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 font-display hover:opacity-80 transition-opacity [&>svg]:opacity-50"
-                style={{ fontSize: 16, fontWeight: 700, color: "hsl(var(--foreground))" }}
+                style={{ fontSize: 16, fontWeight: 700, color: errors.patient_id ? "hsl(var(--destructive))" : "hsl(var(--foreground))" }}
               >
                 <SelectValue placeholder="Selecione o paciente" />
               </SelectTrigger>
@@ -1507,6 +1508,8 @@ const RegistroSessao = () => {
                 ))}
               </SelectContent>
             </Select>
+            {errors.patient_id && <FieldError message={errors.patient_id} />}
+
           </div>
         </div>
 
