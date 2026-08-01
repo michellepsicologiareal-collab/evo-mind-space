@@ -618,16 +618,16 @@ export const HomeworkPlanForm = ({
         </div>
 
         {shareable && (
-          <div className="space-y-3 rounded-xl border border-border bg-muted/40 p-3 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="space-y-3 rounded-xl border border-border bg-muted/40 p-2.5 sm:p-3 min-w-0">
+            <div className="flex items-start gap-2">
+              <p className="min-w-0 text-[11px] font-semibold uppercase leading-snug tracking-wider text-muted-foreground">
                 Envio para o paciente — em duas mensagens
               </p>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="h-3.5 w-3.5 shrink-0 cursor-help text-muted-foreground" />
+                  <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-help text-muted-foreground" />
                 </TooltipTrigger>
-                <TooltipContent className="max-w-[260px] text-xs">
+                <TooltipContent className="max-w-[240px] text-xs">
                   Por privacidade, a senha nunca vai na mensagem do plano — envie primeiro o link e depois a senha.
                 </TooltipContent>
               </Tooltip>
@@ -636,33 +636,33 @@ export const HomeworkPlanForm = ({
             {/* Passo 1 — link do plano */}
             <div className="space-y-2 rounded-lg border border-border bg-background p-2.5 min-w-0">
               <p className="text-xs font-medium text-foreground">1. Enviar o plano (link)</p>
-              <div className="flex min-w-0 items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5">
+              <div className="flex min-w-0 items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-2">
                 <Link2 className="h-3.5 w-3.5 shrink-0 text-primary" />
-                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                <span className="min-w-0 flex-1 truncate text-[11px] sm:text-xs text-muted-foreground">
                   {publicUrl ?? "Link disponível após salvar"}
                 </span>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 shrink-0"
+                  className="h-9 w-9 shrink-0"
                   onClick={copyPublicLink}
                   disabled={copying || !canCopy}
                   title="Copiar link"
                 >
-                  {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
               <Button
                 type="button"
                 size="sm"
                 variant="moss"
-                className="w-full sm:w-auto"
+                className="h-10 w-full whitespace-normal text-center leading-tight sm:h-9 sm:w-auto"
                 onClick={sendWhatsApp}
                 disabled={sending || !canSend}
                 title={canSend ? "Enviar plano por WhatsApp" : "Paciente sem WhatsApp cadastrado"}
               >
-                {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
+                {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5 shrink-0" />}
                 {editing?.sent_at ? "Reenviar plano por WhatsApp" : "Enviar plano por WhatsApp"}
               </Button>
             </div>
@@ -677,34 +677,34 @@ export const HomeworkPlanForm = ({
                   onChange={(e) => setAccessPassword(e.target.value)}
                   onBlur={() => { void persistPassword(); }}
                   placeholder="Senha salva deste paciente (opcional)"
-                  className="h-7 min-w-0 flex-1 border-0 bg-transparent px-0 text-xs focus-visible:ring-0"
+                  className="h-9 min-w-0 flex-1 border-0 bg-transparent px-0 text-sm sm:text-xs focus-visible:ring-0"
                   maxLength={60}
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 shrink-0"
+                  className="h-9 w-9 shrink-0"
                   onClick={copyPassword}
                   disabled={!accessPassword.trim()}
                   title="Copiar senha"
                 >
-                  <Copy className="h-3.5 w-3.5" />
+                  <Copy className="h-4 w-4" />
                 </Button>
               </div>
               <Button
                 type="button"
                 size="sm"
                 variant="moss"
-                className="w-full sm:w-auto"
+                className="h-10 w-full whitespace-normal text-center leading-tight sm:h-9 sm:w-auto"
                 onClick={sendPasswordWhatsApp}
                 disabled={!canSend || !accessPassword.trim()}
                 title="Enviar senha por WhatsApp"
               >
-                <MessageCircle className="h-3.5 w-3.5" />
+                <MessageCircle className="h-3.5 w-3.5 shrink-0" />
                 Enviar senha por WhatsApp
               </Button>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] leading-snug text-muted-foreground">
                 A senha fica salva neste paciente e vale para todos os planos dele.
               </p>
             </div>
@@ -728,10 +728,10 @@ export const HomeworkPlanForm = ({
                     const item = map[ev.event_type] ?? { label: ev.event_type, Icon: Link2 };
                     const Icon = item.Icon;
                     return (
-                      <li key={ev.id} className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <li key={ev.id} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] leading-snug text-muted-foreground">
                         <Icon className="h-3 w-3 shrink-0 text-primary" />
-                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                        <span className="shrink-0">
+                        <span className="min-w-0 flex-1 break-words">{item.label}</span>
+                        <span className="shrink-0 tabular-nums">
                           {format(new Date(ev.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
                         </span>
                       </li>
@@ -746,17 +746,17 @@ export const HomeworkPlanForm = ({
 
 
         {!hideFooter && (
-          <div className="flex flex-col-reverse gap-2 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-[11px] text-muted-foreground">
+          <div className="flex flex-col-reverse gap-2 border-t border-border pt-3 pb-[env(safe-area-inset-bottom)] sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-[11px] leading-snug text-muted-foreground">
               {autoSavedAt
                 ? `Salvo automaticamente às ${format(autoSavedAt, "HH:mm:ss")}`
                 : hasAnyContent() ? "Salvando automaticamente..." : "Preencha qualquer campo para salvar automaticamente"}
             </span>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex">
               {onClose && (
-                <Button variant="outline" onClick={onClose}>Fechar</Button>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={onClose}>Fechar</Button>
               )}
-              <Button variant="accent" onClick={save} disabled={saving}>
+              <Button variant="accent" className="w-full sm:w-auto" onClick={save} disabled={saving}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {submitLabel}
               </Button>
             </div>

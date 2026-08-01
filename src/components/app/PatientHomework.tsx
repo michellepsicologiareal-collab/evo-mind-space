@@ -395,7 +395,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
         <DialogContent
           className={
             planFullscreen
-              ? "w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 left-0 top-0 overflow-y-auto overflow-x-hidden p-4 sm:p-8"
+              ? "w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 left-0 top-0 overflow-y-auto overflow-x-hidden p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-8"
               : "max-w-2xl max-h-[90vh] overflow-y-auto"
           }
         >
