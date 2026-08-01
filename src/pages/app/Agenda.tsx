@@ -3336,7 +3336,7 @@ const Agenda = () => {
 
       {/* ── Edit Session Dialog ── */}
       <Dialog open={editOpen} onOpenChange={(v) => { if (!v) { editGuard.guardClose(() => setEditOpen(false), () => setEditOpen(false)); } else { setEditOpen(true); } }}>
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-[1000px] max-h-[90dvh] overflow-y-auto overflow-x-hidden p-4 sm:p-6" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent className="w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 left-0 top-0 overflow-y-auto overflow-x-hidden p-4 sm:p-8" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">Editar sessão</DialogTitle>
           </DialogHeader>
@@ -3353,7 +3353,7 @@ const Agenda = () => {
               </>
             );
           })()}
-          <form onSubmit={handleEditSave} className="space-y-4">
+          <form onSubmit={handleEditSave} className="space-y-4 w-full max-w-[1100px] mx-auto pb-20">
             {/* Tipo de compromisso / Serviço */}
             <div className="space-y-2">
               <Label>Tipo de compromisso</Label>
@@ -3619,7 +3619,7 @@ const Agenda = () => {
                 </>
               );
             })()}
-            <DialogFooter className="flex-col sm:flex-row gap-2">
+            <DialogFooter className="flex-col sm:flex-row gap-2 sticky bottom-0 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 py-3 bg-background border-t border-border">
               <Button
                 type="button" variant="destructive" size="sm"
                 className="sm:mr-auto"
