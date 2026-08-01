@@ -767,17 +767,6 @@ const RegistroSessao = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, editingId, searchParams]);
 
-  const loadRecords = useCallback(async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("session_records")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("session_date", { ascending: false })
-      .limit(50);
-    setRecords((data as SavedRecord[]) ?? []);
-  }, [user]);
-
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -787,10 +776,9 @@ const RegistroSessao = () => {
         .eq("is_active", true)
         .order("full_name");
       setPatients(data ?? []);
-      await loadRecords();
       setLoading(false);
     })();
-  }, [user, loadRecords]);
+  }, [user]);
 
   const toggleTheme = useCallback((theme: string) => {
     setForm((prev) => ({
