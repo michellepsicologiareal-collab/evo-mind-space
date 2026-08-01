@@ -701,16 +701,20 @@ const RegistroSessao = () => {
   }, []);
 
   // Prefill from URL (?patient=…&session=…) — reativo a searchParams (KeepAliveOutlet mantém o componente vivo).
-  // Guard por ref evita reaplicar o mesmo par (patient|session) em loop.
+  // Guard por ref evita reaplicar o mesmo par (patient|session) em loop, mas nunca bloqueia
+  // quando nenhum paciente está selecionado (senão a tela cai na lista "Selecione um paciente").
   const lastPrefillKeyRef = useRef<string | null>(null);
+  const selectedPatientRef = useRef<string>("");
+  selectedPatientRef.current = form.patient_id;
   useEffect(() => {
     if (!user) return;
     const patientParam = searchParams.get("patient");
     const sessionParam = searchParams.get("session");
     if (!patientParam && !sessionParam) return;
     const key = `${patientParam ?? ""}|${sessionParam ?? ""}`;
-    if (lastPrefillKeyRef.current === key) return;
+    if (lastPrefillKeyRef.current === key && selectedPatientRef.current) return;
     lastPrefillKeyRef.current = key;
+
     (async () => {
       let prefill: Partial<FormState> = {};
       if (patientParam) prefill.patient_id = patientParam;
