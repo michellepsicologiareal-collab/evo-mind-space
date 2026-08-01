@@ -3661,7 +3661,7 @@ const Agenda = () => {
 
       {/* ── Plano entre Sessões (vinculado à sessão atual) ── */}
       <Dialog open={homeworkOpen} onOpenChange={setHomeworkOpen}>
-        <DialogContent className="w-[95vw] max-w-[900px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+        <DialogContent className="w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 left-0 top-0 overflow-y-auto overflow-x-hidden p-4 sm:p-8">
           <DialogHeader>
             <DialogTitle className="font-display text-xl sm:text-2xl flex items-center gap-2">
               <NotebookPen className="h-5 w-5 shrink-0 text-primary" />

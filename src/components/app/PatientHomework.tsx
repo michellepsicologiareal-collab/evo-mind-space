@@ -391,7 +391,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
       )}
 
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 left-0 top-0 overflow-y-auto overflow-x-hidden p-4 sm:p-8">
           <DialogHeader>
             <DialogTitle className="font-display">{editing ? "Editar plano" : "Novo Plano entre Sessões"}</DialogTitle>
             <DialogDescription>Para {patientName}</DialogDescription>
