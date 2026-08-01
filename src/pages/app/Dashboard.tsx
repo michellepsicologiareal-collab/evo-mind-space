@@ -708,8 +708,8 @@ export default function Dashboard() {
 
 
         {/* ─ Filtro de mês ─ */}
-        <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="dash-month" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <label htmlFor="dash-month" className="text-[11px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Mês de referência
           </label>
           <input
@@ -722,10 +722,11 @@ export default function Dashboard() {
               const [y, m] = v.split("-").map(Number);
               setSelectedMonth(startOfMonth(new Date(y, (m ?? 1) - 1, 1)));
             }}
-            className="h-9 rounded-full border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="h-9 max-w-[10.5rem] rounded-full border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Selecionar mês de referência"
           />
-          <span className="text-sm text-muted-foreground">{selectedMonthLabel}</span>
+          <span className="hidden sm:inline text-sm text-muted-foreground">{selectedMonthLabel}</span>
+
           {!isCurrentMonth && (
             <Button
               variant="ghost"
