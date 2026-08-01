@@ -60,22 +60,6 @@ interface Patient {
   homework_token?: string | null;
 }
 
-interface SavedRecord {
-  id: string;
-  patient_id: string;
-  session_date: string;
-  session_number: number | null;
-  modality: string;
-  duration_minutes: number;
-  chief_complaint: string;
-  themes: string[];
-  clinical_observations: string;
-  next_session_plan: string;
-  engagement: number | null;
-  risk_indicator: string;
-  private_notes: string;
-  created_at: string;
-}
 
 const emptyForm = {
   patient_id: "",
