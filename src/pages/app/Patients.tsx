@@ -1514,17 +1514,14 @@ const Patients = () => {
                                   e.stopPropagation();
                                 }
                               }}
-                              className="flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--primary))]"
+                              className="inline-flex items-center justify-center transition-colors rounded-md hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--primary))] focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
                               style={{
-                                width: "auto",
                                 height: 32,
-                                borderRadius: 7,
-                                background: C.card,
-                                border: `1px solid ${C.border}`,
-                                color: C.muted,
                                 paddingLeft: 10,
                                 paddingRight: 10,
-                              
+                                background: "transparent",
+                                border: "none",
+                                color: C.muted,
                               }}
                               aria-label="Ações do paciente"
                               title="Ações do paciente"
@@ -1534,18 +1531,22 @@ const Patients = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                             <DropdownMenuItem onClick={() => setSelectedPatient(p)}>
-                              <Eye className="h-4 w-4 mr-2" /> Abrir ficha do paciente
+                              <Eye className="h-4 w-4 mr-2" /> Ver ficha
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate(`/app/agenda?patient=${p.id}`)}>
-                              <CalendarDays className="h-4 w-4 mr-2" /> Agendar sessão
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => openEdit(p)}>
                               <IconPencil className="h-4 w-4 mr-2" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/app/registro-sessao?patient=${p.id}`)}>
+                              <IconFileText className="h-4 w-4 mr-2" /> Registrar sessão
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => navigate(`/app/agenda?patient=${p.id}`)}>
+                              <CalendarDays className="h-4 w-4 mr-2" /> Agendar sessão
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => toggleActive(p)}>
                               <IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}
                             </DropdownMenuItem>
+
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => setTccPatient(p)}>
                               <IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC
@@ -1748,8 +1749,8 @@ const Patients = () => {
                         onClick={(e) => e.stopPropagation()}
                         onPointerDown={(e) => e.stopPropagation()}
                         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") e.stopPropagation(); }}
-                        className="absolute top-4 right-4 z-10 flex items-center justify-center shrink-0 touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--primary))]"
-                        style={{ height: 36, paddingLeft: 12, paddingRight: 12, borderRadius: 8, background: C.card, border: `1px solid ${C.border}`, color: C.muted }}
+                        className="absolute top-4 right-4 z-10 inline-flex items-center justify-center shrink-0 touch-manipulation rounded-md transition-colors hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--primary))] focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
+                        style={{ height: 36, paddingLeft: 12, paddingRight: 12, background: "transparent", border: "none", color: C.muted }}
                         aria-label="Ações do paciente"
                       >
                         <span className="text-xs font-medium">Ações</span>
@@ -1765,11 +1766,13 @@ const Patients = () => {
                         onClick={(e) => e.stopPropagation()}
                       >
 
-                        <DropdownMenuItem onClick={() => setSelectedPatient(p)}><Eye className="h-4 w-4 mr-2" /> Abrir ficha do paciente</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`/app/agenda?patient=${p.id}`)}><CalendarDays className="h-4 w-4 mr-2" /> Agendar sessão</DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setSelectedPatient(p)}><Eye className="h-4 w-4 mr-2" /> Ver ficha</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => openEdit(p)}><IconPencil className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/app/registro-sessao?patient=${p.id}`)}><IconFileText className="h-4 w-4 mr-2" /> Registrar sessão</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => navigate(`/app/agenda?patient=${p.id}`)}><CalendarDays className="h-4 w-4 mr-2" /> Agendar sessão</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => toggleActive(p)}><IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}</DropdownMenuItem>
+
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => setTccPatient(p)}><IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-tcc`)}><IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC</DropdownMenuItem>
