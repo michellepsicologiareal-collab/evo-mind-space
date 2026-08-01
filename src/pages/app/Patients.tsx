@@ -358,6 +358,7 @@ const Patients = () => {
     });
   };
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [planHubOpen, setPlanHubOpen] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
