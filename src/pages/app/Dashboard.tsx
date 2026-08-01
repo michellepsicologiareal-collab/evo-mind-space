@@ -782,14 +782,15 @@ export default function Dashboard() {
         {/* ─ Tendência: Sessões x Faturamento ─ */}
         <section aria-labelledby="trend-heading" className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 id="trend-heading" className="font-display text-xl font-semibold tracking-tight">
+            <div className="min-w-0">
+              <h2 id="trend-heading" className="font-display text-lg sm:text-xl font-semibold tracking-tight">
                 Tendência dos últimos {trendRange} meses
               </h2>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">
                 Sessões totais e faturamento realizado até {selectedMonthLabel}
               </p>
             </div>
+
             <div
               role="tablist"
               aria-label="Janela da tendência"
