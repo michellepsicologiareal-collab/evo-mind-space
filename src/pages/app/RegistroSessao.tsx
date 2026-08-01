@@ -1687,6 +1687,125 @@ const RegistroSessao = () => {
 
       {/* Plano de Tratamento Ativo — movido para depois do Registro Clínico */}
 
+      {/* ── Painel de resumo da sessão ── */}
+      <section
+        className="rounded-2xl bg-card border border-border p-4 sm:p-5 shadow-[var(--shadow-card)]"
+        aria-label="Resumo da sessão"
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* Data */}
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-muted/50">
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+              style={{ backgroundColor: "hsl(var(--primary) / 0.12)", color: "hsl(var(--primary))" }}
+            >
+              <CalendarDays className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase font-bold tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+                Data
+              </p>
+              <p className="font-display font-semibold text-sm truncate" style={{ color: "hsl(var(--foreground))" }}>
+                {form.session_date
+                  ? format(new Date(form.session_date), "dd/MM/yyyy", { locale: ptBR })
+                  : "—"}
+              </p>
+              {form.session_time && (
+                <p className="text-[11px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                  {form.session_time}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Paciente */}
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-muted/50">
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+              style={{ backgroundColor: "hsl(var(--primary) / 0.12)", color: "hsl(var(--primary))" }}
+            >
+              <User className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase font-bold tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+                Paciente
+              </p>
+              <p className="font-display font-semibold text-sm truncate" style={{ color: "hsl(var(--foreground))" }}>
+                {patients.find((x) => x.id === form.patient_id)?.full_name || "—"}
+              </p>
+            </div>
+          </div>
+
+          {/* Duração */}
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-muted/50">
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+              style={{ backgroundColor: "hsl(var(--primary) / 0.12)", color: "hsl(var(--primary))" }}
+            >
+              <Clock className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase font-bold tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+                Duração
+              </p>
+              <p className="font-display font-semibold text-sm truncate" style={{ color: "hsl(var(--foreground))" }}>
+                {form.duration_minutes ? `${form.duration_minutes} min` : "—"}
+              </p>
+              <p className="text-[11px] truncate" style={{ color: "hsl(var(--muted-foreground))" }}>
+                {form.modality === "online" ? "Online" : "Presencial"}
+              </p>
+            </div>
+          </div>
+
+          {/* Status */}
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-muted/50">
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+              style={{
+                backgroundColor:
+                  form.attendance_status === "completed"
+                    ? "hsl(var(--moss) / 0.15)"
+                    : form.attendance_status === "no_show" || form.attendance_status === "cancelled"
+                    ? "hsl(var(--destructive) / 0.12)"
+                    : "hsl(var(--warning) / 0.15)",
+                color:
+                  form.attendance_status === "completed"
+                    ? "hsl(var(--moss))"
+                    : form.attendance_status === "no_show" || form.attendance_status === "cancelled"
+                    ? "hsl(var(--destructive))"
+                    : "hsl(var(--warning))",
+              }}
+            >
+              {form.attendance_status === "completed" ? (
+                <CheckCircle2 className="h-4 w-4" />
+              ) : form.attendance_status === "no_show" || form.attendance_status === "cancelled" ? (
+                <XCircle className="h-4 w-4" />
+              ) : (
+                <AlertCircle className="h-4 w-4" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase font-bold tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+                Status
+              </p>
+              <p className="font-display font-semibold text-sm truncate" style={{ color: "hsl(var(--foreground))" }}>
+                {form.attendance_status === "completed"
+                  ? "Compareceu"
+                  : form.attendance_status === "no_show"
+                  ? "Falta"
+                  : form.attendance_status === "cancelled"
+                  ? "Cancelada"
+                  : "Pendente"}
+              </p>
+              <p className="text-[11px] truncate flex items-center gap-1" style={{ color: "hsl(var(--muted-foreground))" }}>
+                <CreditCard className="h-3 w-3" />
+                {form.payment_status === "paid" ? "Pago" : form.payment_status === "pending" ? "Pendente" : "—"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Drawer com o Plano de Tratamento — atualizar sem sair da tela */}
       <Sheet
         open={planDrawerOpen}
