@@ -3,6 +3,7 @@ import { HelpCard } from "@/components/app/HelpCard";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, Minimize2, Maximize2, Target, ExternalLink, ArrowLeft, CheckSquare, RefreshCw, NotebookPen, Pencil as PencilIcon } from "lucide-react";
 import { RegistroSessaoHub } from "@/components/app/RegistroSessaoHub";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -85,9 +86,13 @@ const emptyForm = {
   risk_indicator: "none",
   private_notes: "",
   plan_id: null as string | null,
+  // Status operacionais da sessão
+  attendance_status: "" as string, // completed | no_show | cancelled
+  payment_status: "" as string, // pending | paid
   // Registro rápido do atendimento
   quick_note: "",
   quick_mood: null as number | null,
+
   // Bloco "Próxima sessão" — fonte única do planejamento
   next_scheduled_at: "" as string, // datetime-local (yyyy-MM-ddTHH:mm) — vazio = não agendar
   next_objetivo: "",
@@ -116,6 +121,28 @@ function hasMeaningfulData(f: FormState): boolean {
   );
 }
 
+// Validação de pré-requisitos antes de salvar a sessão
+const sessionSchema = z.object({
+  patient_id: z.string().uuid({ message: "Selecione o paciente do atendimento." }),
+  session_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Informe uma data válida." }),
+  session_time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, { message: "Informe o horário no formato HH:mm." }),
+  attendance_status: z.enum(["completed", "no_show", "cancelled"], {
+    errorMap: () => ({ message: "Informe o status de presença." }),
+  }),
+  payment_status: z.enum(["pending", "paid"], {
+    errorMap: () => ({ message: "Informe o status de pagamento." }),
+  }),
+});
+
+const FieldError = ({ message }: { message: string }) => (
+  <p className="flex items-center gap-1" style={{ fontSize: 11, color: "hsl(var(--destructive))" }}>
+    <AlertTriangle className="h-3 w-3 shrink-0" />
+    {message}
+  </p>
+);
+
 const RegistroSessao = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -125,8 +152,24 @@ const RegistroSessao = () => {
   const [saving, setSaving] = useState(false);
   const [polishing, setPolishing] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [draftRestored, setDraftRestored] = useState(false);
+
+  // Limpa os erros de validação assim que o campo correspondente é corrigido
+  useEffect(() => {
+    setErrors((prev) => {
+      if (!Object.keys(prev).length) return prev;
+      const next = { ...prev };
+      if (next.patient_id && form.patient_id) delete next.patient_id;
+      if (next.session_date && form.session_date) delete next.session_date;
+      if (next.session_time && form.session_time) delete next.session_time;
+      if (next.attendance_status && form.attendance_status) delete next.attendance_status;
+      if (next.payment_status && form.payment_status) delete next.payment_status;
+      return Object.keys(next).length === Object.keys(prev).length ? prev : next;
+    });
+  }, [form.patient_id, form.session_date, form.session_time, form.attendance_status, form.payment_status]);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+
 
   // Active treatment plan + next session planning for selected patient
   const [activePlan, setActivePlan] = useState<{
@@ -737,7 +780,7 @@ const RegistroSessao = () => {
       if (sessionParam) {
         const { data: sess } = await supabase
           .from("sessions")
-          .select("id, patient_id, scheduled_at, duration_minutes, modality")
+          .select("id, patient_id, scheduled_at, duration_minutes, modality, status, payment_status")
           .eq("id", sessionParam)
           .maybeSingle();
         if (sess) {
@@ -747,13 +790,15 @@ const RegistroSessao = () => {
           prefill.session_time = format(new Date(sess.scheduled_at), "HH:mm");
           if (sess.duration_minutes) prefill.duration_minutes = sess.duration_minutes;
           if (sess.modality) prefill.modality = sess.modality;
+          if (["completed", "no_show", "cancelled"].includes(sess.status)) prefill.attendance_status = sess.status;
+          if (["pending", "paid"].includes(sess.payment_status)) prefill.payment_status = sess.payment_status;
         }
       } else if (patientParam) {
         // Sem sessão explícita: busca a sessão agendada mais próxima (dia informado ou hoje/futuro).
         const base = prefill.session_date ?? format(new Date(), "yyyy-MM-dd");
         const { data: near } = await supabase
           .from("sessions")
-          .select("id, scheduled_at, duration_minutes, modality")
+          .select("id, scheduled_at, duration_minutes, modality, status, payment_status")
           .eq("patient_id", patientParam)
           .gte("scheduled_at", `${base}T00:00:00`)
           .lte("scheduled_at", `${base}T23:59:59`)
@@ -766,6 +811,8 @@ const RegistroSessao = () => {
           prefill.session_time = format(new Date(sess.scheduled_at), "HH:mm");
           if (sess.duration_minutes) prefill.duration_minutes = sess.duration_minutes;
           if (sess.modality) prefill.modality = sess.modality;
+          if (["completed", "no_show", "cancelled"].includes(sess.status)) prefill.attendance_status = sess.status;
+          if (["pending", "paid"].includes(sess.payment_status)) prefill.payment_status = sess.payment_status;
         }
       }
       setForm((prev) => {
@@ -783,6 +830,8 @@ const RegistroSessao = () => {
             session_time: prefill.session_time ?? "",
             duration_minutes: prefill.duration_minutes ?? emptyForm.duration_minutes,
             modality: prefill.modality ?? emptyForm.modality,
+            attendance_status: prefill.attendance_status ?? "",
+            payment_status: prefill.payment_status ?? "",
             patient_id: urlPatient ?? "",
             session_id: prefill.session_id ?? null,
           };
@@ -880,10 +929,30 @@ const RegistroSessao = () => {
 
   const handleSave = async () => {
     if (!user) return;
-    if (!form.patient_id) {
-      toast.error("Selecione um paciente.");
+
+    // Validação dos campos obrigatórios do atendimento
+    const parsed = sessionSchema.safeParse({
+      patient_id: form.patient_id,
+      session_date: form.session_date,
+      session_time: form.session_time,
+      attendance_status: form.attendance_status,
+      payment_status: form.payment_status,
+    });
+    if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const key = String(issue.path[0]);
+        if (!fieldErrors[key]) fieldErrors[key] = issue.message;
+      }
+      setErrors(fieldErrors);
+      toast.error("Revise os campos destacados antes de salvar.");
+      requestAnimationFrame(() => {
+        document.querySelector('[aria-invalid="true"]')?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
       return;
     }
+    setErrors({});
+
     // Bloqueia salvar quando há empate de horário em sessões futuras
     const hasPlanContentEarly =
       form.next_objetivo.trim() ||
@@ -937,7 +1006,22 @@ const RegistroSessao = () => {
       return;
     }
 
+    // 1a) Sincroniza presença e pagamento na sessão agendada correspondente
+    if (form.session_id) {
+      const { error: statusError } = await supabase
+        .from("sessions")
+        .update({
+          status: form.attendance_status as "completed" | "no_show" | "cancelled",
+          payment_status: form.payment_status as "pending" | "paid",
+          paid_at: form.payment_status === "paid" ? new Date().toISOString() : null,
+        })
+        .eq("id", form.session_id)
+        .eq("user_id", user.id);
+      if (statusError) console.error(statusError);
+    }
+
     // 1b) Registro rápido: observações + humor da sessão → acompanhamento do paciente
+
     if (form.quick_note.trim() || form.quick_mood) {
       const progressRow = {
         user_id: user.id,
@@ -1424,8 +1508,9 @@ const RegistroSessao = () => {
               onValueChange={(v) => setForm({ ...form, patient_id: v })}
             >
               <SelectTrigger
+                aria-invalid={!!errors.patient_id}
                 className="h-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 font-display hover:opacity-80 transition-opacity [&>svg]:opacity-50"
-                style={{ fontSize: 16, fontWeight: 700, color: "hsl(var(--foreground))" }}
+                style={{ fontSize: 16, fontWeight: 700, color: errors.patient_id ? "hsl(var(--destructive))" : "hsl(var(--foreground))" }}
               >
                 <SelectValue placeholder="Selecione o paciente" />
               </SelectTrigger>
@@ -1437,6 +1522,8 @@ const RegistroSessao = () => {
                 ))}
               </SelectContent>
             </Select>
+            {errors.patient_id && <FieldError message={errors.patient_id} />}
+
           </div>
         </div>
 
@@ -1452,8 +1539,10 @@ const RegistroSessao = () => {
               value={form.session_date}
               onChange={(e) => setForm({ ...form, session_date: e.target.value })}
               className="h-9"
-              style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
+              aria-invalid={!!errors.session_date}
+              style={{ border: `1px solid ${errors.session_date ? "hsl(var(--destructive))" : "hsl(var(--border))"}`, borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
             />
+            {errors.session_date && <FieldError message={errors.session_date} />}
           </div>
           <div className="space-y-1">
             <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
@@ -1465,9 +1554,51 @@ const RegistroSessao = () => {
               onChange={(e) => setForm({ ...form, session_time: e.target.value })}
               className="h-9"
               placeholder="--:--"
-              style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
+              aria-invalid={!!errors.session_time}
+              style={{ border: `1px solid ${errors.session_time ? "hsl(var(--destructive))" : "hsl(var(--border))"}`, borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
             />
+            {errors.session_time && <FieldError message={errors.session_time} />}
           </div>
+
+          <div className="space-y-1">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
+              <CheckSquare className="h-3 w-3" /> Presença
+            </Label>
+            <Select
+              value={form.attendance_status}
+              onValueChange={(v) => setForm({ ...form, attendance_status: v })}
+            >
+              <SelectTrigger className="h-9" aria-invalid={!!errors.attendance_status} style={{ border: `1px solid ${errors.attendance_status ? "hsl(var(--destructive))" : "hsl(var(--border))"}`, borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="completed">Compareceu</SelectItem>
+                <SelectItem value="no_show">Falta</SelectItem>
+                <SelectItem value="cancelled">Cancelada</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.attendance_status && <FieldError message={errors.attendance_status} />}
+          </div>
+
+          <div className="space-y-1">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
+              Pagamento
+            </Label>
+            <Select
+              value={form.payment_status}
+              onValueChange={(v) => setForm({ ...form, payment_status: v })}
+            >
+              <SelectTrigger className="h-9" aria-invalid={!!errors.payment_status} style={{ border: `1px solid ${errors.payment_status ? "hsl(var(--destructive))" : "hsl(var(--border))"}`, borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="paid">Pago</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.payment_status && <FieldError message={errors.payment_status} />}
+          </div>
+
 
           <div className="space-y-1">
             <Label className="uppercase" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
