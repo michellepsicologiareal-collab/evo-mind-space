@@ -729,6 +729,7 @@ const RegistroSessao = () => {
           prefill.session_id = sess.id;
           prefill.patient_id = sess.patient_id ?? prefill.patient_id ?? "";
           prefill.session_date = format(new Date(sess.scheduled_at), "yyyy-MM-dd");
+          prefill.session_time = format(new Date(sess.scheduled_at), "HH:mm");
           if (sess.duration_minutes) prefill.duration_minutes = sess.duration_minutes;
           if (sess.modality) prefill.modality = sess.modality;
         }
