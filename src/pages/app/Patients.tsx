@@ -1104,6 +1104,18 @@ const Patients = () => {
         <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)} className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"><IconFlame className="h-4 w-4" /> Formulação ACT</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => setHomeworkPatient(p)}><ClipboardList className="h-4 w-4" /> Plano entre Sessões</DropdownMenuItem>
+        {canShareWithSupervisor && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => toggleSharing(p)}
+              className={p.shared_with_supervisor ? "text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]" : "text-[#9B72D3] hover:bg-[#F3F0FA] focus:bg-[#F3F0FA]"}
+            >
+              <Share2 className="h-4 w-4" />
+              {p.shared_with_supervisor ? "Caso compartilhado" : "Compartilhar caso com supervisora"}
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]"><IconTrash className="h-4 w-4" /> Excluir</DropdownMenuItem>
       </DropdownMenuContent>
