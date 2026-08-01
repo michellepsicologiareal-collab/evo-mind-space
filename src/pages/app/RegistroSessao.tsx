@@ -1139,7 +1139,7 @@ const RegistroSessao = () => {
     title,
     subtitle,
     sectionKey,
-    color = "#534AB7",
+    color = "hsl(var(--primary))",
   }: {
     n?: number;
     icon: React.ComponentType<{ className?: string }>;
@@ -1163,7 +1163,7 @@ const RegistroSessao = () => {
           )}
         </div>
         <div className="min-w-0 pt-0 flex-1 text-left">
-          <h2 className="font-display font-bold leading-tight" style={{ fontSize: 15, color: "#1A1A2E" }}>
+          <h2 className="font-display font-bold leading-tight" style={{ fontSize: 15, color: "hsl(var(--foreground))" }}>
             {title}
           </h2>
           {subtitle && <p className="mt-0.5" style={{ fontSize: 12, color: "#6B7280" }}>{subtitle}</p>}
@@ -1219,7 +1219,7 @@ const RegistroSessao = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 space-y-5" style={{ backgroundColor: "#F7F6F3", minHeight: "100%" }}>
+    <div className="max-w-3xl mx-auto px-4 py-6 space-y-5" style={{ backgroundColor: "hsl(var(--muted))", minHeight: "100%" }}>
       <HelpCard
         id="registro-sessao"
         title="Registro de Sessão"
@@ -1232,7 +1232,7 @@ const RegistroSessao = () => {
       {/* Topbar */}
       <div
         className="px-5 py-4"
-        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
       >
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
@@ -1240,17 +1240,17 @@ const RegistroSessao = () => {
               type="button"
               onClick={() => { handleClear(); }}
               className="inline-flex items-center gap-1 text-[11px] font-medium hover:underline mb-1"
-              style={{ color: "#534AB7" }}
+              style={{ color: "hsl(var(--primary))" }}
             >
               <ArrowLeft className="h-3 w-3" /> Voltar à lista
             </button>
             <h1
               className="font-display leading-tight"
-              style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.3px", color: "#1A1A2E" }}
+              style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.3px", color: "hsl(var(--foreground))" }}
             >
               Registro de Sessão
             </h1>
-            <p className="mt-1" style={{ fontSize: 13, color: "#6B7280" }}>
+            <p className="mt-1" style={{ fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
               Documente os dados clínicos da sessão realizada.
             </p>
           </div>
@@ -1258,9 +1258,9 @@ const RegistroSessao = () => {
             {lastSavedAt && (
               <span
                 className="inline-flex items-center gap-1.5 px-3 py-1"
-                style={{ backgroundColor: "#EAF3DE", color: "#2D6A4F", borderRadius: 20, fontSize: 11, fontWeight: 600 }}
+                style={{ backgroundColor: "hsl(var(--moss) / 0.15)", color: "hsl(var(--moss))", borderRadius: 20, fontSize: 11, fontWeight: 600 }}
               >
-                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#2D6A4F" }} />
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "hsl(var(--moss))" }} />
                 Salvo {format(lastSavedAt, "HH:mm")}
               </span>
             )}
@@ -1268,7 +1268,7 @@ const RegistroSessao = () => {
               type="button"
               onClick={() => setCompactMode((v) => !v)}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium hover:bg-muted/40 transition-colors"
-              style={{ border: "1px solid #E5E7EB", borderRadius: 8, color: "#6B7280" }}
+              style={{ border: "1px solid hsl(var(--border))", borderRadius: 8, color: "hsl(var(--muted-foreground))" }}
               aria-pressed={compactMode}
             >
               {compactMode ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
@@ -1282,9 +1282,9 @@ const RegistroSessao = () => {
       {draftRestored && (
         <div
           className="flex items-center justify-between px-4 py-3"
-          style={{ backgroundColor: "#EEEDFE", borderLeft: "3px solid #534AB7", borderRadius: 10 }}
+          style={{ backgroundColor: "hsl(var(--secondary))", borderLeft: "3px solid hsl(var(--primary))", borderRadius: 10 }}
         >
-          <span style={{ color: "#3C3489", fontWeight: 500, fontSize: 13 }}>
+          <span style={{ color: "hsl(var(--primary))", fontWeight: 500, fontSize: 13 }}>
             Rascunho recuperado. Continue de onde parou.
           </span>
           <button
@@ -1294,7 +1294,7 @@ const RegistroSessao = () => {
               setForm({ ...emptyForm });
             }}
             className="ml-3 flex items-center gap-1 px-2 py-1 text-xs font-medium hover:bg-white/60 rounded-md transition-colors"
-            style={{ color: "#534AB7" }}
+            style={{ color: "hsl(var(--primary))" }}
           >
             <X className="h-3 w-3" />
             Descartar
@@ -1307,17 +1307,17 @@ const RegistroSessao = () => {
         ref={heroFormRef}
         className="p-5 scroll-mt-4"
         style={{
-          backgroundColor: "#FFFFFF",
+          backgroundColor: "hsl(var(--card))",
           borderRadius: 10,
           boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-          borderLeft: "3px solid #534AB7",
+          borderLeft: "3px solid hsl(var(--primary))",
         }}
       >
 
         <div className="flex items-start gap-4">
           <div
             className="flex h-14 w-14 shrink-0 items-center justify-center text-base font-display font-bold"
-            style={{ borderRadius: "50%", backgroundColor: "#EEEDFE", color: "#534AB7", fontWeight: 700 }}
+            style={{ borderRadius: "50%", backgroundColor: "hsl(var(--secondary))", color: "hsl(var(--primary))", fontWeight: 700 }}
           >
             <User className="h-6 w-6" />
           </div>
@@ -1326,7 +1326,7 @@ const RegistroSessao = () => {
             <div className="flex items-center gap-2 flex-wrap">
               <span
                 className="uppercase"
-                style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: "#6B7280" }}
+                style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: "hsl(var(--muted-foreground))" }}
               >
                 Paciente
               </span>
@@ -1338,7 +1338,7 @@ const RegistroSessao = () => {
             >
               <SelectTrigger
                 className="h-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 font-display hover:opacity-80 transition-opacity [&>svg]:opacity-50"
-                style={{ fontSize: 16, fontWeight: 700, color: "#1A1A2E" }}
+                style={{ fontSize: 16, fontWeight: 700, color: "hsl(var(--foreground))" }}
               >
                 <SelectValue placeholder="Selecione o paciente" />
               </SelectTrigger>
@@ -1355,9 +1355,9 @@ const RegistroSessao = () => {
 
 
         {/* Linha rápida: data / nº / modalidade / duração */}
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4" style={{ borderTop: "1px solid #E5E7EB" }}>
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
           <div className="space-y-1">
-            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#6B7280" }}>
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
               <CalendarDays className="h-3 w-3" /> Data
             </Label>
             <Input
@@ -1365,11 +1365,11 @@ const RegistroSessao = () => {
               value={form.session_date}
               onChange={(e) => setForm({ ...form, session_date: e.target.value })}
               className="h-9"
-              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB" }}
+              style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
             />
           </div>
           <div className="space-y-1">
-            <Label className="uppercase" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#6B7280" }}>
+            <Label className="uppercase" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
               Sessão nº
             </Label>
             <Input
@@ -1379,11 +1379,11 @@ const RegistroSessao = () => {
               value={form.session_number}
               onChange={(e) => setForm({ ...form, session_number: e.target.value })}
               className="h-9"
-              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB" }}
+              style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
             />
           </div>
           <div className="space-y-1">
-            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#6B7280" }}>
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
               {form.modality === "online" ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
               Modalidade
             </Label>
@@ -1391,7 +1391,7 @@ const RegistroSessao = () => {
               value={form.modality}
               onValueChange={(v) => setForm({ ...form, modality: v })}
             >
-              <SelectTrigger className="h-9" style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB" }}>
+              <SelectTrigger className="h-9" style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1401,7 +1401,7 @@ const RegistroSessao = () => {
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "#6B7280" }}>
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
               <Clock className="h-3 w-3" /> Duração (min)
             </Label>
             <Input
@@ -1411,7 +1411,7 @@ const RegistroSessao = () => {
               value={form.duration_minutes}
               onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) })}
               className="h-9"
-              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB" }}
+              style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
             />
           </div>
         </div>
@@ -1433,7 +1433,7 @@ const RegistroSessao = () => {
         <SheetContent side="right" className="w-full sm:max-w-4xl p-0 flex flex-col">
           <SheetHeader className="px-5 py-3 border-b shrink-0">
             <SheetTitle className="flex items-center gap-2">
-              <Target className="h-4 w-4" style={{ color: "#534AB7" }} />
+              <Target className="h-4 w-4" style={{ color: "hsl(var(--primary))" }} />
               Plano de Tratamento
             </SheetTitle>
             <SheetDescription className="text-xs">
@@ -1459,9 +1459,9 @@ const RegistroSessao = () => {
       {/* ── Seção 1: Estado do Paciente ── */}
       <section
         className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("estado") ? "p-3" : "p-5 space-y-4")}
-        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #534AB7" }}
+        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--primary))" }}
       >
-        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" sectionKey="estado" color="#534AB7" />
+        <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" sectionKey="estado" color="hsl(var(--primary))" />
         {isOpen("estado") && (
           <div className="space-y-2">
             <Label>Queixa principal / Tema trazido</Label>
@@ -1473,7 +1473,7 @@ const RegistroSessao = () => {
               onChange={(e) =>
                 setForm({ ...form, chief_complaint: e.target.value })
               }
-              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+              style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))", fontSize: 13, color: "hsl(var(--foreground))" }}
             />
           </div>
         )}
@@ -1483,9 +1483,9 @@ const RegistroSessao = () => {
       {/* ── Seção 2: Conteúdo da Sessão ── */}
       <section
         className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("conteudo") ? "p-3" : "p-5 space-y-4")}
-        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #B8860B" }}
+        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--gold))" }}
       >
-        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" sectionKey="conteudo" color="#B8860B" />
+        <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" sectionKey="conteudo" color="hsl(var(--gold))" />
         {isOpen("conteudo") && (
           <>
             <div className="space-y-2">
@@ -1501,8 +1501,8 @@ const RegistroSessao = () => {
                       className="px-3 py-1 transition-colors"
                       style={
                         selected
-                          ? { backgroundColor: "#EEEDFE", color: "#534AB7", border: "1px solid #AFA9EC", borderRadius: 6, fontSize: 13, fontWeight: 600 }
-                          : { backgroundColor: "#F3F4F6", color: "#6B7280", border: "1px solid #E5E7EB", borderRadius: 6, fontSize: 13, fontWeight: 500 }
+                          ? { backgroundColor: "hsl(var(--secondary))", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary))", borderRadius: 6, fontSize: 13, fontWeight: 600 }
+                          : { backgroundColor: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))", borderRadius: 6, fontSize: 13, fontWeight: 500 }
                       }
                     >
                       {theme}
@@ -1521,7 +1521,7 @@ const RegistroSessao = () => {
                 onChange={(e) =>
                   setForm({ ...form, clinical_observations: e.target.value })
                 }
-                style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+                style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))", fontSize: 13, color: "hsl(var(--foreground))" }}
               />
             </div>
 
@@ -1537,15 +1537,15 @@ const RegistroSessao = () => {
       {/* ── Seção 3: Avaliação do Terapeuta ── */}
       <section
         className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("avaliacao") ? "p-3" : "p-5 space-y-4")}
-        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #2D6A4F" }}
+        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--moss))" }}
       >
-        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" sectionKey="avaliacao" color="#2D6A4F" />
+        <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" sectionKey="avaliacao" color="hsl(var(--moss))" />
         {isOpen("avaliacao") && (
           <>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Engajamento do paciente</Label>
-                <span className="font-display font-semibold" style={{ fontSize: 12, color: "#534AB7", fontWeight: 700 }}>
+                <span className="font-display font-semibold" style={{ fontSize: 12, color: "hsl(var(--primary))", fontWeight: 700 }}>
                   {ENGAGEMENT_LABELS[form.engagement - 1]}
                 </span>
               </div>
@@ -1560,8 +1560,8 @@ const RegistroSessao = () => {
                       className="flex-1 h-10 transition-colors"
                       style={
                         isCurrent
-                          ? { backgroundColor: "#534AB7", color: "#FFFFFF", border: "1px solid #534AB7", borderRadius: 8, fontSize: 14, fontWeight: 700 }
-                          : { backgroundColor: "#FFFFFF", color: "#6B7280", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 14, fontWeight: 600 }
+                          ? { backgroundColor: "hsl(var(--primary))", color: "#FFFFFF", border: "1px solid hsl(var(--primary))", borderRadius: 8, fontSize: 14, fontWeight: 700 }
+                          : { backgroundColor: "hsl(var(--card))", color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 14, fontWeight: 600 }
                       }
                       aria-label={`Engajamento nível ${level}`}
                     >
@@ -1622,19 +1622,19 @@ const RegistroSessao = () => {
         <section
           className="p-4 sm:p-5"
           style={{
-            backgroundColor: "#EEEDFE",
-            borderLeft: "3px solid #534AB7",
+            backgroundColor: "hsl(var(--secondary))",
+            borderLeft: "3px solid hsl(var(--primary))",
             borderRadius: "10px",
           }}
         >
           {!activePlan.plan_id ? (
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2">
-                <Target className="h-4 w-4" style={{ color: "#534AB7" }} />
+                <Target className="h-4 w-4" style={{ color: "hsl(var(--primary))" }} />
                 <div>
                   <div
                     className="uppercase"
-                    style={{ color: "#534AB7", fontWeight: 700, fontSize: 11, letterSpacing: "0.08em" }}
+                    style={{ color: "hsl(var(--primary))", fontWeight: 700, fontSize: 11, letterSpacing: "0.08em" }}
                   >
                     Sem plano
                   </div>
@@ -1647,7 +1647,7 @@ const RegistroSessao = () => {
                 type="button"
                 onClick={() => setPlanDrawerOpen(true)}
                 className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white"
-                style={{ backgroundColor: "#534AB7" }}
+                style={{ backgroundColor: "hsl(var(--primary))" }}
               >
                 Criar plano <PencilIcon className="h-3.5 w-3.5" />
               </button>
@@ -1656,10 +1656,10 @@ const RegistroSessao = () => {
             <>
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2 min-w-0">
-                  <Target className="h-4 w-4" style={{ color: "#534AB7" }} />
+                  <Target className="h-4 w-4" style={{ color: "hsl(var(--primary))" }} />
                   <div
                     className="uppercase"
-                    style={{ color: "#534AB7", fontWeight: 700, fontSize: 11, letterSpacing: "0.08em" }}
+                    style={{ color: "hsl(var(--primary))", fontWeight: 700, fontSize: 11, letterSpacing: "0.08em" }}
                   >
                     Plano Terapêutico Ativo
                   </div>
@@ -1675,7 +1675,7 @@ const RegistroSessao = () => {
                     onClick={() => setPlanPanelCollapsed((v) => !v)}
                     className="inline-flex items-center justify-center h-8 w-8 rounded-full hover:bg-white/60 transition-colors"
                     aria-label={planPanelCollapsed ? "Expandir" : "Recolher"}
-                    style={{ color: "#534AB7" }}
+                    style={{ color: "hsl(var(--primary))" }}
                   >
                     <ChevronDown className={cn("h-4 w-4 transition-transform", !planPanelCollapsed && "rotate-180")} />
                   </button>
@@ -1687,7 +1687,7 @@ const RegistroSessao = () => {
                   <div className="grid gap-3 sm:grid-cols-2 text-sm mt-3">
                     {activePlan.objetivo && (
                       <div>
-                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "hsl(var(--primary))" }}>
                           Objetivo terapêutico atual
                         </span>
                         <p className="whitespace-pre-wrap text-foreground mt-0.5">{activePlan.objetivo}</p>
@@ -1695,7 +1695,7 @@ const RegistroSessao = () => {
                     )}
                     {activePlan.meta_descricao && (
                       <div>
-                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "hsl(var(--primary))" }}>
                           Meta vinculada à próxima sessão
                         </span>
                         <p className="whitespace-pre-wrap text-foreground mt-0.5">{activePlan.meta_descricao}</p>
@@ -1703,7 +1703,7 @@ const RegistroSessao = () => {
                     )}
                     {activePlan.tecnicas.length > 0 && (
                       <div className="sm:col-span-2">
-                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "hsl(var(--primary))" }}>
                           Técnicas planejadas
                         </span>
                         <div className="flex flex-wrap gap-1.5 mt-1">
@@ -1711,7 +1711,7 @@ const RegistroSessao = () => {
                             <span
                               key={t}
                               className="text-[11px] px-2 py-0.5 rounded-full bg-white font-medium"
-                              style={{ border: "1px solid #534AB7", color: "#534AB7" }}
+                              style={{ border: "1px solid hsl(var(--primary))", color: "hsl(var(--primary))" }}
                             >
                               {t}
                             </span>
@@ -1721,7 +1721,7 @@ const RegistroSessao = () => {
                     )}
                     {activePlan.retomar && (
                       <div className="sm:col-span-2">
-                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "hsl(var(--primary))" }}>
                           Retomar da sessão anterior
                         </span>
                         <p className="whitespace-pre-wrap text-foreground mt-0.5">{activePlan.retomar}</p>
@@ -1729,7 +1729,7 @@ const RegistroSessao = () => {
                     )}
                     {activePlan.goals.length > 0 && (
                       <div className="sm:col-span-2">
-                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "hsl(var(--primary))" }}>
                           Objetivos terapêuticos ativos
                         </span>
                         <ul className="mt-1 space-y-0.5 text-sm text-foreground list-disc list-inside">
@@ -1741,7 +1741,7 @@ const RegistroSessao = () => {
                     )}
                     {activePlan.pending_tasks.length > 0 && (
                       <div className="sm:col-span-2">
-                        <span className="text-[10px] uppercase font-semibold flex items-center gap-1" style={{ color: "#534AB7" }}>
+                        <span className="text-[10px] uppercase font-semibold flex items-center gap-1" style={{ color: "hsl(var(--primary))" }}>
                           <CheckSquare className="h-3 w-3" /> Tarefas pendentes ({activePlan.pending_tasks.length})
                         </span>
                         <ul className="mt-1 space-y-0.5 text-sm text-foreground list-disc list-inside">
@@ -1753,7 +1753,7 @@ const RegistroSessao = () => {
                     )}
                     {activePlan.next_revision && (
                       <div className="sm:col-span-2">
-                        <span className="text-[10px] uppercase font-semibold" style={{ color: "#534AB7" }}>
+                        <span className="text-[10px] uppercase font-semibold" style={{ color: "hsl(var(--primary))" }}>
                           Próxima revisão · {format(new Date(activePlan.next_revision.data), "dd/MM/yyyy")}
                         </span>
                         <p className="whitespace-pre-wrap text-foreground mt-0.5 line-clamp-2">{activePlan.next_revision.descricao}</p>
@@ -1771,7 +1771,7 @@ const RegistroSessao = () => {
                       type="button"
                       onClick={applyPlanningToForm}
                       className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm text-white hover:opacity-90 transition-opacity"
-                      style={{ backgroundColor: "#534AB7", fontWeight: 600 }}
+                      style={{ backgroundColor: "hsl(var(--primary))", fontWeight: 600 }}
                     >
                       Carregar no registro
                     </button>
@@ -1779,7 +1779,7 @@ const RegistroSessao = () => {
                       type="button"
                       onClick={() => setPlanDrawerOpen(true)}
                       className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm bg-white hover:bg-white/80 transition-colors"
-                      style={{ border: "1px solid #534AB7", color: "#534AB7", fontWeight: 600 }}
+                      style={{ border: "1px solid hsl(var(--primary))", color: "hsl(var(--primary))", fontWeight: 600 }}
                     >
                       <PencilIcon className="h-3.5 w-3.5" /> Abrir Plano Terapêutico
                     </button>
@@ -1795,10 +1795,10 @@ const RegistroSessao = () => {
       {form.patient_id && (
         <section
           className="p-5 space-y-4"
-          style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #B8860B" }}
+          style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--gold))" }}
         >
           <div className="flex items-center gap-2">
-            <Target className="h-4 w-4" style={{ color: "#B8860B" }} />
+            <Target className="h-4 w-4" style={{ color: "hsl(var(--gold))" }} />
             <div>
               <h3 className="font-display text-sm font-semibold text-foreground">Planejamento da Próxima Sessão</h3>
               <p className="text-xs text-muted-foreground">Combine agora o objetivo e as técnicas da próxima sessão do paciente.</p>
@@ -1809,9 +1809,9 @@ const RegistroSessao = () => {
           {broughtPlanning && (
             <section
               className="rounded-lg border p-4 space-y-3"
-              style={{ borderColor: "#E5E7EB", background: "#F5F3FF" }}
+              style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--secondary))" }}
             >
-              <h3 className="font-display text-sm font-semibold" style={{ color: "#1A1A2E" }}>
+              <h3 className="font-display text-sm font-semibold" style={{ color: "hsl(var(--foreground))" }}>
                 Planejamento trazido da sessão anterior
               </h3>
               <p className="text-[11px] text-muted-foreground -mt-2">
@@ -1840,7 +1840,7 @@ const RegistroSessao = () => {
                   <p className="text-[10px] uppercase text-muted-foreground mb-1">Técnicas previstas</p>
                   <div className="flex flex-wrap gap-1.5">
                     {broughtPlanning.tecnicas.map((t) => (
-                      <span key={t} className="text-xs px-2.5 py-0.5 rounded-full border" style={{ background: "#fff", borderColor: "#E5E7EB", color: "#1A1A2E" }}>{t}</span>
+                      <span key={t} className="text-xs px-2.5 py-0.5 rounded-full border" style={{ background: "hsl(var(--card))", borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" }}>{t}</span>
                     ))}
                   </div>
                 </div>
@@ -1862,13 +1862,13 @@ const RegistroSessao = () => {
                 "rounded-lg border-2 p-4 space-y-4 transition-all scroll-mt-24",
                 ambiguousHighlight && "ring-4 ring-amber-400/60 animate-pulse"
               )}
-              style={{ borderColor: "#F59E0B", background: "#FFFBEB" }}
+              style={{ borderColor: "hsl(var(--gold))", background: "hsl(var(--gold) / 0.15)" }}
               aria-label="Seleção obrigatória de sessão-alvo"
             >
               <div className="flex items-start gap-2">
-                <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" style={{ color: "#B45309" }} />
+                <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" style={{ color: "hsl(var(--gold))" }} />
                 <div className="flex-1">
-                  <h3 className="font-display text-base font-semibold" style={{ color: "#78350F" }}>
+                  <h3 className="font-display text-base font-semibold" style={{ color: "hsl(var(--gold))" }}>
                     Escolha a qual sessão vincular este planejamento
                   </h3>
                   <p className="text-xs text-[#78350F]/90 mt-1">
@@ -1931,7 +1931,7 @@ const RegistroSessao = () => {
                     "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white transition-opacity",
                     ambiguousPick ? "hover:opacity-90" : "opacity-50 cursor-not-allowed"
                   )}
-                  style={{ backgroundColor: "#B45309" }}
+                  style={{ backgroundColor: "hsl(var(--gold))" }}
                 >
                   Vincular sessão selecionada
                 </button>
@@ -1982,10 +1982,10 @@ const RegistroSessao = () => {
       {form.patient_id && form.session_id && (
         <section
           className="p-5 space-y-4"
-          style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid #3D5C35" }}
+          style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--moss))" }}
         >
           <div className="flex items-center gap-2">
-            <NotebookPen className="h-4 w-4" style={{ color: "#3D5C35" }} />
+            <NotebookPen className="h-4 w-4" style={{ color: "hsl(var(--moss))" }} />
             <div>
               <h3 className="font-display text-sm font-semibold text-foreground">Plano entre Sessões</h3>
               <p className="text-xs text-muted-foreground">Combinados e ações do paciente até a próxima sessão. Opcional.</p>

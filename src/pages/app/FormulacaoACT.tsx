@@ -18,17 +18,17 @@ import ReactMarkdown from "react-markdown";
 import { PageIntro } from "@/components/app/PageIntro";
 
 // Palette ACT
-const GREEN = "#2D6A4F";
-const GREEN_BG = "#EAF3DE";
-const GREEN_BORDER = "#74C69D";
-const RED_BG = "#FDECEA";
-const YELLOW_BG = "#FDF6E3";
-const PURPLE = "#534AB7";
-const PURPLE_BG = "#EEEDFE";
-const LILAC_BORDER = "#AFA9EC";
-const INK = "#1A1A2E";
-const MUTED = "#6B7280";
-const BG = "#F7F6F3";
+const GREEN = "hsl(var(--moss))";
+const GREEN_BG = "hsl(var(--moss) / 0.15)";
+const GREEN_BORDER = "hsl(var(--moss) / 0.45)";
+const RED_BG = "hsl(var(--destructive) / 0.14)";
+const YELLOW_BG = "hsl(var(--gold) / 0.15)";
+const PURPLE = "hsl(var(--primary))";
+const PURPLE_BG = "hsl(var(--secondary))";
+const LILAC_BORDER = "hsl(var(--primary))";
+const INK = "hsl(var(--foreground))";
+const MUTED = "hsl(var(--muted-foreground))";
+const BG = "hsl(var(--muted))";
 
 const PROCESSOS: { key: string; inflex: string; inflexDesc: string; flex: string; flexDesc: string }[] = [
   { key: "fusao_desfusao", inflex: "Fusão Cognitiva", inflexDesc: "Pensamentos tratados como fatos absolutos", flex: "Desfusão Cognitiva", flexDesc: "Observar pensamentos sem ser controlado por eles" },
@@ -103,7 +103,7 @@ const ScoreCircles = ({
           aria-label={`Score ${n}`}
           style={{
             width: 26, height: 26, borderRadius: "50%",
-            border: `1.5px solid ${on ? color : "#D1D5DB"}`,
+            border: `1.5px solid ${on ? color : "hsl(var(--border))"}`,
             background: on ? color : "#fff",
             color: on ? "#fff" : MUTED,
             fontSize: 11, fontWeight: 700,
@@ -345,7 +345,7 @@ export default function FormulacaoACT() {
                   ACT · Hexaflex de Hayes
                 </span>
                 {savedAt && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md" style={{ background: "#EAF3DE", color: "#3D5C35", fontSize: 11, fontWeight: 500 }}>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md" style={{ background: "hsl(var(--moss) / 0.15)", color: "hsl(var(--moss))", fontSize: 11, fontWeight: 500 }}>
                     <Check className="h-3 w-3" /> Salvo {savedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 )}
@@ -403,11 +403,11 @@ export default function FormulacaoACT() {
             {PROCESSOS.map((p, idx) => {
               const h = form.hexaflex[p.key];
               const isInflex = h?.lado === "inflexibilidade";
-              const color = isInflex ? "#C0392B" : GREEN;
+              const color = isInflex ? "hsl(var(--destructive))" : GREEN;
               const bg = isInflex ? RED_BG : GREEN_BG;
               return (
-                <div key={p.key} className="rounded-md border" style={{ borderColor: "#E5E7EB" }}>
-                  <div className="px-3 py-2 flex items-center justify-between border-b" style={{ borderColor: "#E5E7EB", background: "#FAFAF7" }}>
+                <div key={p.key} className="rounded-md border" style={{ borderColor: "hsl(var(--border))" }}>
+                  <div className="px-3 py-2 flex items-center justify-between border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted))" }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: MUTED }}>Par {idx + 1}</span>
                     <div className="flex items-center gap-1 text-[11px]">
                       <button
@@ -415,9 +415,9 @@ export default function FormulacaoACT() {
                         onClick={() => updateHex(p.key, { lado: "inflexibilidade" })}
                         style={{
                           padding: "4px 10px", borderRadius: 6, fontWeight: isInflex ? 700 : 500,
-                          background: isInflex ? "#C0392B" : "#fff",
+                          background: isInflex ? "hsl(var(--destructive))" : "#fff",
                           color: isInflex ? "#fff" : MUTED,
-                          border: `1px solid ${isInflex ? "#C0392B" : "#E5E7EB"}`,
+                          border: `1px solid ${isInflex ? "hsl(var(--destructive))" : "hsl(var(--border))"}`,
                         }}
                       >Inflexibilidade</button>
                       <button
@@ -427,13 +427,13 @@ export default function FormulacaoACT() {
                           padding: "4px 10px", borderRadius: 6, fontWeight: !isInflex ? 700 : 500,
                           background: !isInflex ? GREEN : "#fff",
                           color: !isInflex ? "#fff" : MUTED,
-                          border: `1px solid ${!isInflex ? GREEN : "#E5E7EB"}`,
+                          border: `1px solid ${!isInflex ? GREEN : "hsl(var(--border))"}`,
                         }}
                       >Flexibilidade</button>
                     </div>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-0">
-                    <div className="p-3 sm:border-r" style={{ background: RED_BG, borderColor: "#F3D6D2" }}>
+                    <div className="p-3 sm:border-r" style={{ background: RED_BG, borderColor: "hsl(var(--destructive) / 0.2)" }}>
                       <p style={{ fontSize: 13, fontWeight: 700, color: "#C0392B" }}>{p.inflex}</p>
                       <p style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>{p.inflexDesc}</p>
                     </div>
@@ -467,12 +467,12 @@ export default function FormulacaoACT() {
           <BlockHeader kicker="Bloco 3" title="Clarificação de Valores" subtitle="Por domínio de vida — o que importa e o que bloqueia" />
           <Accordion type="multiple" defaultValue={["v-0"]} className="w-full">
             {form.valores.map((v, idx) => (
-              <AccordionItem key={v.dominio} value={`v-${idx}`} className="border rounded-md mb-2" style={{ borderColor: "#E5E7EB" }}>
+              <AccordionItem key={v.dominio} value={`v-${idx}`} className="border rounded-md mb-2" style={{ borderColor: "hsl(var(--border))" }}>
                 <AccordionTrigger className="px-3 py-2.5 hover:no-underline" style={{ fontSize: 13, fontWeight: 600, color: INK }}>
                   {v.dominio}
                   {v.alinhamento && (
                     <span className="ml-auto mr-3 text-[10px] uppercase font-bold" style={{
-                      color: v.alinhamento === "alto" ? GREEN : v.alinhamento === "medio" ? "#B8860B" : "#C0392B",
+                      color: v.alinhamento === "alto" ? GREEN : v.alinhamento === "medio" ? "hsl(var(--gold))" : "hsl(var(--destructive))",
                     }}>{v.alinhamento}</span>
                   )}
                 </AccordionTrigger>
@@ -492,8 +492,8 @@ export default function FormulacaoACT() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>Alinhamento valor/ação:</span>
                     {([
-                      { k: "baixo", label: "Baixo", color: "#C0392B", bg: RED_BG },
-                      { k: "medio", label: "Médio", color: "#B8860B", bg: YELLOW_BG },
+                      { k: "baixo", label: "Baixo", color: "hsl(var(--destructive))", bg: RED_BG },
+                      { k: "medio", label: "Médio", color: "hsl(var(--gold))", bg: YELLOW_BG },
                       { k: "alto", label: "Alto", color: GREEN, bg: GREEN_BG },
                     ] as const).map((opt) => {
                       const on = v.alinhamento === opt.k;
@@ -526,7 +526,7 @@ export default function FormulacaoACT() {
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             {/* Q1 */}
-            <div className="rounded-md p-3 space-y-2" style={{ background: RED_BG, border: "1px solid #F3D6D2" }}>
+            <div className="rounded-md p-3 space-y-2" style={{ background: RED_BG, border: "1px solid hsl(var(--destructive) / 0.2)" }}>
               <p style={{ fontSize: 12, fontWeight: 700, color: "#C0392B", textTransform: "uppercase", letterSpacing: "0.05em" }}>Q1 · O que aparece dentro e dificulta</p>
               <p style={{ fontSize: 11, color: MUTED }}>Pensamentos, emoções, memórias, sensações que surgem e atrapalham</p>
               <Textarea
@@ -548,7 +548,7 @@ export default function FormulacaoACT() {
               />
             </div>
             {/* Q2 */}
-            <div className="rounded-md p-3 space-y-2" style={{ background: YELLOW_BG, border: "1px solid #E8C97A" }}>
+            <div className="rounded-md p-3 space-y-2" style={{ background: YELLOW_BG, border: "1px solid hsl(var(--gold) / 0.5)" }}>
               <p style={{ fontSize: 12, fontWeight: 700, color: "#B8860B", textTransform: "uppercase", letterSpacing: "0.05em" }}>Q2 · O que faz para se afastar</p>
               <p style={{ fontSize: 11, color: MUTED }}>Comportamentos de esquiva e controle</p>
               <Textarea

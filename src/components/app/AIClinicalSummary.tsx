@@ -105,7 +105,7 @@ const StatusPill = ({ status }: { status: StoredSummary["status"] }) => {
     ? { bg: "rgba(61,92,53,0.14)", fg: "hsl(var(--moss))", label: "✓ Aprovado" }
     : status === "discarded"
       ? { bg: "rgba(120,120,120,0.15)", fg: "hsl(var(--muted-foreground))", label: "Descartado" }
-      : { bg: "rgba(184,134,11,0.14)", fg: "#B8860B", label: "Rascunho" };
+      : { bg: "rgba(184,134,11,0.14)", fg: "hsl(var(--gold))", label: "Rascunho" };
   return (
     <span style={{ background: cfg.bg, color: cfg.fg, fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em" }}>
       {cfg.label}
@@ -470,7 +470,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
           <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em" }}>
             Resumo Clínico com IA
           </p>
-          <span style={{ background: "rgba(192,57,43,0.1)", color: "#C0392B", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <span style={{ background: "rgba(192,57,43,0.1)", color: "hsl(var(--destructive))", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em" }}>
             ⚠ Gerado por IA — revise antes de usar
           </span>
           {summary && <StatusPill status={summary.status} />}
@@ -480,7 +480,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
             </span>
           )}
           {stale && !hasPending && (
-            <span style={{ background: "rgba(184,134,11,0.14)", color: "#B8860B", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            <span style={{ background: "rgba(184,134,11,0.14)", color: "hsl(var(--gold))", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 40, textTransform: "uppercase", letterSpacing: "0.04em" }}>
               Desatualizado ({newCount} novos)
             </span>
           )}
@@ -523,7 +523,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
 
       {error && (
         <div className="flex items-start gap-2 rounded-xl p-3 mb-3" style={{ background: "rgba(192,57,43,0.08)", border: "0.5px solid rgba(192,57,43,0.25)" }}>
-          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#C0392B" }} />
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "hsl(var(--destructive))" }} />
           <p className="text-xs" style={{ fontFamily: "Instrument Sans, sans-serif", color: "#C0392B" }}>{error}</p>
         </div>
       )}
@@ -592,7 +592,7 @@ export const AIClinicalSummary = ({ patientId }: { patientId: string }) => {
                         <div key={i} className="px-2 py-0.5 whitespace-pre-wrap break-words"
                           style={{
                             background: ln.type === "add" ? "rgba(61,92,53,0.10)" : ln.type === "del" ? "rgba(192,57,43,0.10)" : "transparent",
-                            color: ln.type === "add" ? "hsl(var(--moss))" : ln.type === "del" ? "#C0392B" : "hsl(var(--brown))",
+                            color: ln.type === "add" ? "hsl(var(--moss))" : ln.type === "del" ? "hsl(var(--destructive))" : "hsl(var(--brown))",
                             textDecoration: ln.type === "del" ? "line-through" : "none",
                           }}>
                           <span style={{ opacity: 0.5, marginRight: 6 }}>{ln.type === "add" ? "+" : ln.type === "del" ? "−" : " "}</span>

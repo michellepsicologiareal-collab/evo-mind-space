@@ -138,11 +138,11 @@ export function SessionPlanningForm({
   return (
     <section
       className={cn("rounded-lg border p-4 space-y-4", className)}
-      style={{ borderColor: "#E5E7EB", background: "#FAF8FF" }}
+      style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted))" }}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <Target className="h-4 w-4" style={{ color: "#534AB7" }} />
-        <h3 className="font-display text-sm font-semibold" style={{ color: "#1A1A2E" }}>
+        <Target className="h-4 w-4" style={{ color: "hsl(var(--primary))" }} />
+        <h3 className="font-display text-sm font-semibold" style={{ color: "hsl(var(--foreground))" }}>
           Próxima sessão — planejamento
         </h3>
         <span
@@ -185,7 +185,7 @@ export function SessionPlanningForm({
               disabled={scheduledAtLocked}
               readOnly={scheduledAtLocked}
               onChange={(e) => onChange({ next_scheduled_at: e.target.value })}
-              style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: scheduledAtLocked ? "#F3F4F6" : "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+              style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: scheduledAtLocked ? "hsl(var(--muted))" : "hsl(var(--muted))", fontSize: 13, color: "hsl(var(--foreground))" }}
             />
             <p className="text-[11px] text-muted-foreground">
               {scheduledAtHint ?? (scheduledAtLocked
@@ -200,7 +200,7 @@ export function SessionPlanningForm({
             value={value.next_meta_id ?? "none"}
             onValueChange={(v) => onChange({ next_meta_id: v === "none" ? null : v })}
           >
-            <SelectTrigger style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13 }}>
+            <SelectTrigger style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))", fontSize: 13 }}>
               <SelectValue placeholder="Sem meta vinculada" />
             </SelectTrigger>
             <SelectContent>
@@ -220,7 +220,7 @@ export function SessionPlanningForm({
           placeholder="O que se pretende trabalhar no próximo encontro..."
           value={value.next_objetivo}
           onChange={(e) => onChange({ next_objetivo: e.target.value })}
-          style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+          style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))", fontSize: 13, color: "hsl(var(--foreground))" }}
         />
       </div>
 
@@ -231,7 +231,7 @@ export function SessionPlanningForm({
           placeholder="Assuntos, tarefas ou combinados a serem retomados..."
           value={value.next_retomar}
           onChange={(e) => onChange({ next_retomar: e.target.value })}
-          style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+          style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))", fontSize: 13, color: "hsl(var(--foreground))" }}
         />
       </div>
 
@@ -293,7 +293,7 @@ export function SessionPlanningForm({
               (e.target as HTMLInputElement).value = "";
             }
           }}
-          style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+          style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))", fontSize: 13, color: "hsl(var(--foreground))" }}
         />
       </div>
 
@@ -304,7 +304,7 @@ export function SessionPlanningForm({
           placeholder="Notas adicionais sobre a próxima sessão..."
           value={value.next_observacoes}
           onChange={(e) => onChange({ next_observacoes: e.target.value })}
-          style={{ border: "1px solid #E5E7EB", borderRadius: 7, backgroundColor: "#F9FAFB", fontSize: 13, color: "#1A1A2E" }}
+          style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))", fontSize: 13, color: "hsl(var(--foreground))" }}
         />
       </div>
 

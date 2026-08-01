@@ -77,7 +77,7 @@ export default function FormulacaoLivre() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "#F7F6F3" }}>
+    <div className="min-h-screen" style={{ background: "hsl(var(--muted))" }}>
       <div className="max-w-4xl mx-auto px-4 py-6 sm:py-8 space-y-5">
         <header className="space-y-1">
           <h1 className="font-display" style={{ fontWeight: 700, fontSize: 24, letterSpacing: "-0.3px", color: "hsl(var(--foreground))" }}>

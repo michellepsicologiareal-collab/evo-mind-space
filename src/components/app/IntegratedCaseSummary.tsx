@@ -133,7 +133,7 @@ export const IntegratedCaseSummary = ({ patientId }: { patientId: string }) => {
           className="flex items-start gap-2 rounded-xl p-3"
           style={{ background: "rgba(192,57,43,0.08)", border: "0.5px solid rgba(192,57,43,0.25)" }}
         >
-          <AlertCircle className="h-4 w-4 mt-0.5" style={{ color: "#C0392B" }} />
+          <AlertCircle className="h-4 w-4 mt-0.5" style={{ color: "hsl(var(--destructive))" }} />
           <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#C0392B" }}>{error}</p>
         </div>
       )}
@@ -173,7 +173,7 @@ export const IntegratedCaseSummary = ({ patientId }: { patientId: string }) => {
             <p>{summary.direcionamento_terapeutico}</p>
           </Section>
 
-          <Section icon={<Activity className="h-4 w-4" />} title="Plano de Intervenção" color="#B8860B">
+          <Section icon={<Activity className="h-4 w-4" />} title="Plano de Intervenção" color="hsl(var(--gold))">
             <p>{summary.plano_intervencao}</p>
           </Section>
 
@@ -182,8 +182,8 @@ export const IntegratedCaseSummary = ({ patientId }: { patientId: string }) => {
               className="rounded-xl p-3 flex items-start gap-2"
               style={{ background: "rgba(192,57,43,0.08)", border: "0.5px solid rgba(192,57,43,0.25)" }}
             >
-              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#C0392B" }} />
-              <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "#C0392B" }}>
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "hsl(var(--destructive))" }} />
+              <p style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 12, color: "hsl(var(--destructive))" }}>
                 <strong>Sinais de alerta:</strong> {summary.sinais_alerta}
               </p>
             </div>

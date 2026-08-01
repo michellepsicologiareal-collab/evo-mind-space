@@ -435,7 +435,7 @@ const Autocuidado = () => {
 
   const activeCard = regulationCards.find((c) => c.key === openCard);
 
-  const sageShades = ["#3D5C35", "#4A6B40", "#5A7D4E", "#6B8E5A", "#7DA068", "#8FB278", "#A0C488"];
+  const sageShades = ["hsl(var(--moss))", "#4A6B40", "#5A7D4E", "#6B8E5A", "#7DA068", "#8FB278", "#A0C488"];
 
   return (
     <div className="space-y-8 animate-fade-up">
@@ -738,7 +738,7 @@ const Autocuidado = () => {
                       contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }}
                       formatter={(value: number) => [["", "😫", "😔", "😐", "🙂", "🤩"][value] || value, "Humor"]}
                     />
-                    <Line type="monotone" dataKey="humor" stroke="#3D5C35" strokeWidth={2.5} dot={{ r: 5, fill: "#3D5C35" }} name="Humor" />
+                    <Line type="monotone" dataKey="humor" stroke="hsl(var(--moss))" strokeWidth={2.5} dot={{ r: 5, fill: "hsl(var(--moss))" }} name="Humor" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -818,8 +818,8 @@ const Autocuidado = () => {
                   <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                   <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }} />
-                  <Line type="monotone" dataKey="estresse" stroke="#A57164" strokeWidth={2} dot={{ r: 4 }} name="Estresse" />
-                  <Line type="monotone" dataKey="atendimentos" stroke="#3D5C35" strokeWidth={2} dot={{ r: 4 }} name="Atendimentos" />
+                  <Line type="monotone" dataKey="estresse" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} name="Estresse" />
+                  <Line type="monotone" dataKey="atendimentos" stroke="hsl(var(--moss))" strokeWidth={2} dot={{ r: 4 }} name="Atendimentos" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
