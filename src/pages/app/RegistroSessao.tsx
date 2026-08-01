@@ -65,6 +65,7 @@ const emptyForm = {
   patient_id: "",
   session_id: null as string | null,
   session_date: format(new Date(), "yyyy-MM-dd"),
+  session_time: "" as string, // HH:mm vindo da Agenda (informativo)
   session_number: "",
   modality: "presencial",
   duration_minutes: 50,
