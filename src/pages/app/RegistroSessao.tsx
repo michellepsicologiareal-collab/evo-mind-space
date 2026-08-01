@@ -61,6 +61,14 @@ interface Patient {
 }
 
 
+const MOOD_OPTIONS = [
+  { value: 1, emoji: "😔", label: "Muito baixo" },
+  { value: 2, emoji: "🙁", label: "Baixo" },
+  { value: 3, emoji: "😐", label: "Neutro" },
+  { value: 4, emoji: "🙂", label: "Bom" },
+  { value: 5, emoji: "😄", label: "Muito bom" },
+] as const;
+
 const emptyForm = {
   patient_id: "",
   session_id: null as string | null,
