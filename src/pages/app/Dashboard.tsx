@@ -888,10 +888,18 @@ export default function Dashboard() {
                       orientation="right"
                       tickLine={false}
                       axisLine={false}
-                      tickMargin={8}
+                      tickMargin={isMobile ? 4 : 8}
+                      width={isMobile ? 44 : 70}
                       tick={CHART_TICK_STYLE}
-                      tickFormatter={(v: number) => fmtBRL(v)}
+                      tickFormatter={(v: number) =>
+                        isMobile
+                          ? v >= 1000
+                            ? `${Math.round(v / 1000)}k`
+                            : String(v)
+                          : fmtBRL(v)
+                      }
                     />
+
                     <RTooltip
                       contentStyle={CHART_TOOLTIP_CONTENT_STYLE}
                       labelStyle={CHART_TOOLTIP_LABEL_STYLE}
