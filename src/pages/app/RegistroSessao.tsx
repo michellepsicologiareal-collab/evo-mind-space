@@ -812,14 +812,22 @@ const RegistroSessao = () => {
     // Limpa o contexto da URL para que um novo clique em "Registrar sessão"
     // (mesmo paciente/sessão) volte a abrir direto o formulário.
     lastPrefillKeyRef.current = null;
-    // Veio da Agenda (ou de outra tela com contexto): volta exatamente para lá.
+    if (searchParams.get("patient") || searchParams.get("session")) {
+      navigate("/app/registro-sessao", { replace: true });
+    }
+  };
+
+  // Fechar/cancelar: volta exatamente para a tela de origem (ex.: Agenda no
+  // mesmo dia/visão/horário) quando houver contexto de retorno.
+  const handleBack = () => {
+    clearDraft();
+    setForm({ ...emptyForm });
+    lastPrefillKeyRef.current = null;
     if (returnUrl) {
       navigate(returnUrl, { replace: true });
       return;
     }
-    if (searchParams.get("patient") || searchParams.get("session")) {
-      navigate("/app/registro-sessao", { replace: true });
-    }
+    handleClear();
   };
 
 
@@ -1002,10 +1010,6 @@ const RegistroSessao = () => {
     }
 
     // 5) Fluxo padrão: voltar para a ficha se veio de lá
-    if (returnUrl) {
-      navigate(returnUrl, { replace: true });
-      return;
-    }
     const cameFromPatient = !!searchParams.get("patient");
     if (cameFromPatient && keepPatient) {
       navigate(`/app/pacientes?patientId=${keepPatient}&tab=sessions`, { replace: true });
@@ -1085,10 +1089,6 @@ const RegistroSessao = () => {
     const keepPatient = noPlanContext?.patientId ?? form.patient_id;
     setNoPlanContext(null);
 
-    if (returnUrl) {
-      navigate(returnUrl, { replace: true });
-      return;
-    }
     const cameFromPatient = !!searchParams.get("patient");
     if (cameFromPatient && keepPatient) {
       navigate(`/app/pacientes?patientId=${keepPatient}&tab=sessions`, { replace: true });
@@ -1264,11 +1264,11 @@ const RegistroSessao = () => {
           <div className="min-w-0">
             <button
               type="button"
-              onClick={() => { handleClear(); }}
+              onClick={() => { handleBack(); }}
               className="inline-flex items-center gap-1 text-[11px] font-medium hover:underline mb-1"
               style={{ color: "hsl(var(--primary))" }}
             >
-              <ArrowLeft className="h-3 w-3" /> Voltar à lista
+              <ArrowLeft className="h-3 w-3" /> {returnUrl?.startsWith("/app/agenda") ? "Voltar à Agenda" : "Voltar à lista"}
             </button>
             <h1
               className="font-display leading-tight"
