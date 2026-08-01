@@ -986,7 +986,22 @@ const RegistroSessao = () => {
       return;
     }
 
+    // 1a) Sincroniza presença e pagamento na sessão agendada correspondente
+    if (form.session_id) {
+      const { error: statusError } = await supabase
+        .from("sessions")
+        .update({
+          status: form.attendance_status as "completed" | "no_show" | "cancelled",
+          payment_status: form.payment_status as "pending" | "paid",
+          paid_at: form.payment_status === "paid" ? new Date().toISOString() : null,
+        })
+        .eq("id", form.session_id)
+        .eq("user_id", user.id);
+      if (statusError) console.error(statusError);
+    }
+
     // 1b) Registro rápido: observações + humor da sessão → acompanhamento do paciente
+
     if (form.quick_note.trim() || form.quick_mood) {
       const progressRow = {
         user_id: user.id,
