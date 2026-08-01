@@ -637,11 +637,11 @@ const RegistroSessao = () => {
   useEffect(() => {
     if (hasMeaningfulData(form)) {
       try {
-        localStorage.setItem(draftKeyFor(editingId), JSON.stringify(form));
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
         setLastSavedAt(new Date());
       } catch {}
     }
-  }, [form, editingId, draftKeyFor]);
+  }, [form]);
 
   // Save when the tab is hidden/minimized, window blurs, app is being closed,
   // network drops, or page navigation occurs.
