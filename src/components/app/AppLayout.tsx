@@ -411,7 +411,7 @@ export const AppLayout = () => {
                 </p>
               </div>
               <p className="text-3xl font-extrabold">
-                R$ 39,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
+                R$ 15,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
               </p>
               <Button variant="accent" size="lg" onClick={() => window.open("https://pay.kiwify.com.br/SEU_LINK_AQUI", "_blank")}>
                 <Crown className="h-4 w-4" /> Assinar Agora
