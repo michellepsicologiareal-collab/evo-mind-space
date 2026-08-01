@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format, differenceInDays, differenceInMonths, differenceInYears, addDays, startOfWeek, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { FileText, Loader2, ChevronRight, ChevronLeft, AlertTriangle, ChevronDown, ChevronUp, Calendar, Target, ClipboardList, Pencil, Save, Download } from "lucide-react";
+import { FileText, Loader2, ChevronRight, ChevronLeft, AlertTriangle, ChevronDown, ChevronUp, Calendar, Target, ClipboardList, Pencil, Save, Download, Maximize2, Minimize2 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { SessionTimeline } from "@/components/app/SessionTimeline";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { cn } from "@/lib/utils";
 
 type RecordSource = "legacy" | "v2";
 
@@ -167,6 +168,8 @@ export const PatientSessionsQuickView = ({
   const [editDraft, setEditDraft] = useState({ chief_complaint: "", clinical_observations: "", next_session_plan: "" });
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [exporting, setExporting] = useState(false);
+  const [detailFullscreen, setDetailFullscreen] = useState(false);
+
 
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const day = addDays(weekStart, i);
@@ -984,10 +987,13 @@ export const PatientSessionsQuickView = ({
       )}
 
       {/* Drawer com registro completo */}
-      <Sheet open={!!detail} onOpenChange={(o) => { if (!o) setDetail(null); }}>
+      <Sheet open={!!detail} onOpenChange={(o) => { if (!o) { setDetail(null); setDetailFullscreen(false); } }}>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-[560px] p-0"
+          className={cn(
+            "w-full p-0 transition-all duration-300 ease-in-out",
+            detailFullscreen ? "sm:max-w-full max-w-full" : "sm:max-w-[560px]"
+          )}
           style={{ background: "hsl(var(--card))", borderLeft: "0.5px solid hsl(var(--border))" }}
         >
           <VisuallyHidden>
@@ -995,24 +1001,36 @@ export const PatientSessionsQuickView = ({
             <SheetDescription>Detalhes completos do registro selecionado.</SheetDescription>
           </VisuallyHidden>
           {detail && (
-            <div className="h-full overflow-y-auto p-5 space-y-4">
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-[10px] uppercase text-muted-foreground">Registro de sessão</p>
-                  <SourceBadge source={detail.source} />
+            <div className={cn("h-full overflow-y-auto p-5 space-y-4", detailFullscreen && "md:p-8")}>
+              <div className="flex items-start justify-between gap-3 pr-10">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-[10px] uppercase text-muted-foreground">Registro de sessão</p>
+                    <SourceBadge source={detail.source} />
+                  </div>
+                  <h2 className="text-lg font-display font-semibold text-foreground">
+                    {format(parseSessionDate(detail.session_date) ?? new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                    {detail.session_number != null && (
+                      <span className="ml-2 text-xs text-muted-foreground">Sessão #{detail.session_number}</span>
+                    )}
+                  </h2>
+                  <p className="text-xs text-muted-foreground capitalize">
+                    {detail.modality ?? "—"}
+                    {detail.duration_minutes != null && ` · ${detail.duration_minutes} min`}
+                    {detail.engagement != null && ` · Engajamento ${detail.engagement}/5`}
+                    {detail.source === "v2" && detail.wellbeing_score != null && ` · Bem-estar ${detail.wellbeing_score}/10`}
+                  </p>
                 </div>
-                <h2 className="text-lg font-display font-semibold text-foreground">
-                  {format(parseSessionDate(detail.session_date) ?? new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
-                  {detail.session_number != null && (
-                    <span className="ml-2 text-xs text-muted-foreground">Sessão #{detail.session_number}</span>
-                  )}
-                </h2>
-                <p className="text-xs text-muted-foreground capitalize">
-                  {detail.modality ?? "—"}
-                  {detail.duration_minutes != null && ` · ${detail.duration_minutes} min`}
-                  {detail.engagement != null && ` · Engajamento ${detail.engagement}/5`}
-                  {detail.source === "v2" && detail.wellbeing_score != null && ` · Bem-estar ${detail.wellbeing_score}/10`}
-                </p>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 h-8 w-8"
+                  onClick={() => setDetailFullscreen((f) => !f)}
+                  aria-label={detailFullscreen ? "Sair da tela cheia" : "Ver em tela cheia"}
+                  title={detailFullscreen ? "Sair da tela cheia" : "Ver em tela cheia"}
+                >
+                  {detailFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                </Button>
               </div>
 
               {detail.themes && detail.themes.length > 0 && (
@@ -1041,12 +1059,14 @@ export const PatientSessionsQuickView = ({
                 </div>
               )}
 
-              {detail.chief_complaint && (
-                <Section title="Queixa / contexto trazido">{detail.chief_complaint}</Section>
-              )}
-              {detail.clinical_observations && (
-                <Section title="Observação clínica">{detail.clinical_observations}</Section>
-              )}
+              <div className={cn("space-y-4", detailFullscreen && "md:grid md:grid-cols-2 md:gap-6 md:space-y-0")}>
+                {detail.chief_complaint && (
+                  <Section title="Queixa / contexto trazido">{detail.chief_complaint}</Section>
+                )}
+                {detail.clinical_observations && (
+                  <Section title="Observação clínica">{detail.clinical_observations}</Section>
+                )}
+              </div>
 
               {detail.attention_flag && ATTENTION_LABEL[detail.attention_flag] && (
                 <div className="rounded-lg bg-destructive/10 p-3 border border-destructive/20">
@@ -1068,6 +1088,7 @@ export const PatientSessionsQuickView = ({
           )}
         </SheetContent>
       </Sheet>
+
     </div>
   );
 };
