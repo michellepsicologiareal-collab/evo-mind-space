@@ -85,6 +85,9 @@ const emptyForm = {
   risk_indicator: "none",
   private_notes: "",
   plan_id: null as string | null,
+  // Registro rápido do atendimento
+  quick_note: "",
+  quick_mood: null as number | null,
   // Bloco "Próxima sessão" — fonte única do planejamento
   next_scheduled_at: "" as string, // datetime-local (yyyy-MM-ddTHH:mm) — vazio = não agendar
   next_objetivo: "",
