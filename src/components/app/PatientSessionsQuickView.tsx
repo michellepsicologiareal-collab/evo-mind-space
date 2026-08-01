@@ -5,6 +5,7 @@ import { FileText, Loader2, ChevronRight, AlertTriangle, ChevronDown, ChevronUp,
 import { supabase } from "@/integrations/supabase/client";
 import { SessionTimeline } from "@/components/app/SessionTimeline";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 type RecordSource = "legacy" | "v2";
