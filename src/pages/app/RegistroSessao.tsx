@@ -735,6 +735,25 @@ const RegistroSessao = () => {
           if (sess.duration_minutes) prefill.duration_minutes = sess.duration_minutes;
           if (sess.modality) prefill.modality = sess.modality;
         }
+      } else if (patientParam) {
+        // Sem sessão explícita: busca a sessão agendada mais próxima (dia informado ou hoje/futuro).
+        const base = prefill.session_date ?? format(new Date(), "yyyy-MM-dd");
+        const { data: near } = await supabase
+          .from("sessions")
+          .select("id, scheduled_at, duration_minutes, modality")
+          .eq("patient_id", patientParam)
+          .gte("scheduled_at", `${base}T00:00:00`)
+          .lte("scheduled_at", `${base}T23:59:59`)
+          .order("scheduled_at", { ascending: true })
+          .limit(1);
+        const sess = near?.[0];
+        if (sess) {
+          prefill.session_id = sess.id;
+          prefill.session_date = format(new Date(sess.scheduled_at), "yyyy-MM-dd");
+          prefill.session_time = format(new Date(sess.scheduled_at), "HH:mm");
+          if (sess.duration_minutes) prefill.duration_minutes = sess.duration_minutes;
+          if (sess.modality) prefill.modality = sess.modality;
+        }
       }
       setForm((prev) => {
         const urlPatient = prefill.patient_id;
