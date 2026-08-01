@@ -3165,7 +3165,7 @@ const Agenda = () => {
                                        )}
                                       {s.billing_sent_at && (
                                         <span
-                                          className={cn(ICON_TAG, "bg-green-100 text-green-700 border border-green-200")}
+                                          className={cn("lilac-comm-badge border shadow-sm", ICON_TAG)}
                                           title={`Cobrança enviada em ${format(new Date(s.billing_sent_at), "dd/MM")}`}
                                           aria-label="Cobrança enviada"
                                         >
