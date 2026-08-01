@@ -756,7 +756,7 @@ export const HomeworkPlanForm = ({
               {onClose && (
                 <Button variant="outline" className="w-full sm:w-auto" onClick={onClose}>Fechar</Button>
               )}
-              <Button variant="accent" onClick={save} disabled={saving}>
+              <Button variant="accent" className="w-full sm:w-auto" onClick={save} disabled={saving}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {submitLabel}
               </Button>
             </div>
