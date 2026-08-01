@@ -1125,28 +1125,29 @@ export default function Dashboard() {
 
         {/* ─ Financeiro compacto ─ */}
         <section aria-labelledby="finance-heading">
-          <Card className="rounded-2xl border-border/60 bg-muted/30 p-5 md:p-6">
+          <Card className="rounded-2xl border-border/60 bg-muted/30 p-4 sm:p-5 md:p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Recebido · {selectedMonthLabel}</p>
-                  <p className="mt-1 text-lg font-semibold text-emerald-700 dark:text-emerald-400">
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Recebido · {selectedMonthLabel}</p>
+                  <p className="mt-1 text-base sm:text-lg font-semibold text-emerald-700 dark:text-emerald-400 break-words">
                     {fmtBRL(finRecebido)}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">A receber</p>
-                  <p className="mt-1 text-lg font-semibold text-foreground">
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">A receber</p>
+                  <p className="mt-1 text-base sm:text-lg font-semibold text-foreground break-words">
                     {fmtBRL(finAReceber)}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Em atraso</p>
-                  <p className="mt-1 text-lg font-semibold text-amber-700 dark:text-amber-400">
-                    {finAtrasoCount} {finAtrasoCount === 1 ? "pagamento" : "pagamentos"}
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Em atraso</p>
+                  <p className="mt-1 text-base sm:text-lg font-semibold text-amber-700 dark:text-amber-400 break-words">
+                    {finAtrasoCount} {finAtrasoCount === 1 ? "pgto." : "pgtos."}
                   </p>
                 </div>
               </div>
+
               <Button
                 variant="outline"
                 size="sm"
