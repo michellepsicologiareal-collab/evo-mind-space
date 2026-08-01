@@ -792,7 +792,6 @@ const RegistroSessao = () => {
   const handleClear = () => {
     clearDraft();
     setForm({ ...emptyForm });
-    setEditingId(null);
   };
 
   // Gera o texto sintético para next_session_plan (compatibilidade com Agenda/ficha)
