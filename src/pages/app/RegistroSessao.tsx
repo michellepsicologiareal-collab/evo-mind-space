@@ -793,12 +793,30 @@ const RegistroSessao = () => {
     }));
   }, []);
 
+  // URL de retorno (ex.: Agenda com data/visão/filtros exatos de onde veio).
+  const returnUrl = (() => {
+    const raw = searchParams.get("from");
+    if (!raw) return null;
+    try {
+      const decoded = decodeURIComponent(raw);
+      // Aceita apenas caminhos internos.
+      return decoded.startsWith("/") && !decoded.startsWith("//") ? decoded : null;
+    } catch {
+      return null;
+    }
+  })();
+
   const handleClear = () => {
     clearDraft();
     setForm({ ...emptyForm });
     // Limpa o contexto da URL para que um novo clique em "Registrar sessão"
     // (mesmo paciente/sessão) volte a abrir direto o formulário.
     lastPrefillKeyRef.current = null;
+    // Veio da Agenda (ou de outra tela com contexto): volta exatamente para lá.
+    if (returnUrl) {
+      navigate(returnUrl, { replace: true });
+      return;
+    }
     if (searchParams.get("patient") || searchParams.get("session")) {
       navigate("/app/registro-sessao", { replace: true });
     }
@@ -984,6 +1002,10 @@ const RegistroSessao = () => {
     }
 
     // 5) Fluxo padrão: voltar para a ficha se veio de lá
+    if (returnUrl) {
+      navigate(returnUrl, { replace: true });
+      return;
+    }
     const cameFromPatient = !!searchParams.get("patient");
     if (cameFromPatient && keepPatient) {
       navigate(`/app/pacientes?patientId=${keepPatient}&tab=sessions`, { replace: true });
@@ -1063,6 +1085,10 @@ const RegistroSessao = () => {
     const keepPatient = noPlanContext?.patientId ?? form.patient_id;
     setNoPlanContext(null);
 
+    if (returnUrl) {
+      navigate(returnUrl, { replace: true });
+      return;
+    }
     const cameFromPatient = !!searchParams.get("patient");
     if (cameFromPatient && keepPatient) {
       navigate(`/app/pacientes?patientId=${keepPatient}&tab=sessions`, { replace: true });
