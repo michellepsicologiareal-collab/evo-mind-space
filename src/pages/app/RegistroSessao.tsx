@@ -765,7 +765,7 @@ const RegistroSessao = () => {
       });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, editingId, searchParams]);
+  }, [user, searchParams]);
 
   useEffect(() => {
     if (!user) return;
