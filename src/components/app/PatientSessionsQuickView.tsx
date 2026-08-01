@@ -518,16 +518,23 @@ export const PatientSessionsQuickView = ({
       <div>
         <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
           <h3 className="text-sm font-display font-semibold text-foreground">Sessões agendadas</h3>
-          {(periodFilter !== "upcoming" || statusFilter !== "all" || modalityFilter !== "all") && (
-            <button
-              type="button"
-              onClick={() => { setPeriodFilter("upcoming"); setStatusFilter("all"); setModalityFilter("all"); }}
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              Limpar filtros
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {(periodFilter !== "upcoming" || statusFilter !== "all" || modalityFilter !== "all") && (
+              <button
+                type="button"
+                onClick={() => { setPeriodFilter("upcoming"); setStatusFilter("all"); setModalityFilter("all"); }}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Limpar filtros
+              </button>
+            )}
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={exportPdf} disabled={exporting || agenda.length === 0}>
+              {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              Exportar PDF
+            </Button>
+          </div>
         </div>
+
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
           <Select value={periodFilter} onValueChange={setPeriodFilter}>
