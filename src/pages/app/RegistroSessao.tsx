@@ -3,7 +3,7 @@ import { HelpCard } from "@/components/app/HelpCard";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, ChevronUp, Pencil, Trash2, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, History, Minimize2, Maximize2, Target, ExternalLink, ArrowLeft, CheckSquare, RefreshCw, NotebookPen, Pencil as PencilIcon } from "lucide-react";
+import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, Minimize2, Maximize2, Target, ExternalLink, ArrowLeft, CheckSquare, RefreshCw, NotebookPen, Pencil as PencilIcon } from "lucide-react";
 import { RegistroSessaoHub } from "@/components/app/RegistroSessaoHub";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -60,22 +60,6 @@ interface Patient {
   homework_token?: string | null;
 }
 
-interface SavedRecord {
-  id: string;
-  patient_id: string;
-  session_date: string;
-  session_number: number | null;
-  modality: string;
-  duration_minutes: number;
-  chief_complaint: string;
-  themes: string[];
-  clinical_observations: string;
-  next_session_plan: string;
-  engagement: number | null;
-  risk_indicator: string;
-  private_notes: string;
-  created_at: string;
-}
 
 const emptyForm = {
   patient_id: "",
@@ -127,18 +111,8 @@ const RegistroSessao = () => {
   const [saving, setSaving] = useState(false);
   const [polishing, setPolishing] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [draftRestored, setDraftRestored] = useState(false);
-
-  // Saved records
-  const [records, setRecords] = useState<SavedRecord[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
-  const [historyFilter, setHistoryFilter] = useState("");
-  const [filterFrom, setFilterFrom] = useState("");
-  const [filterTo, setFilterTo] = useState("");
-  const [filterModality, setFilterModality] = useState("all");
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-  const [expandedPatients, setExpandedPatients] = useState<Record<string, boolean>>({});
 
   // Active treatment plan + next session planning for selected patient
   const [activePlan, setActivePlan] = useState<{
@@ -646,35 +620,28 @@ const RegistroSessao = () => {
   // --- Draft auto-save ---
   // Keep a ref with the latest form so event listeners always read fresh data
   const formRef = useRef(form);
-  const editingIdRef = useRef(editingId);
   useEffect(() => { formRef.current = form; }, [form]);
-  useEffect(() => { editingIdRef.current = editingId; }, [editingId]);
-
-  const draftKeyFor = useCallback(
-    (id: string | null) => (id ? `${DRAFT_KEY}::${id}` : DRAFT_KEY),
-    []
-  );
 
   const flushDraft = useCallback(() => {
     try {
       const f = formRef.current;
       if (hasMeaningfulData(f)) {
-        localStorage.setItem(draftKeyFor(editingIdRef.current), JSON.stringify(f));
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(f));
       }
     } catch {
       /* storage may be full or unavailable — ignore */
     }
-  }, [draftKeyFor]);
+  }, []);
 
   // Save draft on every meaningful change (covers typing pauses)
   useEffect(() => {
     if (hasMeaningfulData(form)) {
       try {
-        localStorage.setItem(draftKeyFor(editingId), JSON.stringify(form));
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
         setLastSavedAt(new Date());
       } catch {}
     }
-  }, [form, editingId, draftKeyFor]);
+  }, [form]);
 
   // Save when the tab is hidden/minimized, window blurs, app is being closed,
   // network drops, or page navigation occurs.
@@ -710,17 +677,15 @@ const RegistroSessao = () => {
 
   const clearDraft = useCallback(() => {
     try {
-      localStorage.removeItem(draftKeyFor(editingIdRef.current));
       localStorage.removeItem(DRAFT_KEY);
     } catch {}
     setDraftRestored(false);
-  }, [draftKeyFor]);
+  }, []);
 
-  // Restore draft on mount (new records or when editing resumes)
+  // Restore draft on mount
   useEffect(() => {
     try {
-      const key = draftKeyFor(editingId);
-      const raw = localStorage.getItem(key);
+      const raw = localStorage.getItem(DRAFT_KEY);
       if (raw) {
         const saved = JSON.parse(raw) as FormState;
         if (hasMeaningfulData(saved)) {
@@ -730,7 +695,7 @@ const RegistroSessao = () => {
         }
       }
     } catch {
-      try { localStorage.removeItem(draftKeyFor(editingId)); } catch {}
+      try { localStorage.removeItem(DRAFT_KEY); } catch {}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -739,7 +704,7 @@ const RegistroSessao = () => {
   // Guard por ref evita reaplicar o mesmo par (patient|session) em loop.
   const lastPrefillKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!user || editingId) return;
+    if (!user) return;
     const patientParam = searchParams.get("patient");
     const sessionParam = searchParams.get("session");
     if (!patientParam && !sessionParam) return;
@@ -769,7 +734,7 @@ const RegistroSessao = () => {
         const switchingSession = !!prefill.session_id && prev.session_id !== prefill.session_id;
         // URL prevalece sobre rascunho quando muda o paciente OU a sessão-alvo.
         if (switchingPatient || switchingSession) {
-          try { localStorage.removeItem(draftKeyFor(editingId)); } catch {}
+          try { localStorage.removeItem(DRAFT_KEY); } catch {}
           setDraftRestored(false);
           return {
             ...emptyForm,
@@ -800,18 +765,7 @@ const RegistroSessao = () => {
       });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, editingId, searchParams]);
-
-  const loadRecords = useCallback(async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("session_records")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("session_date", { ascending: false })
-      .limit(50);
-    setRecords((data as SavedRecord[]) ?? []);
-  }, [user]);
+  }, [user, searchParams]);
 
   useEffect(() => {
     if (!user) return;
@@ -822,10 +776,9 @@ const RegistroSessao = () => {
         .eq("is_active", true)
         .order("full_name");
       setPatients(data ?? []);
-      await loadRecords();
       setLoading(false);
     })();
-  }, [user, loadRecords]);
+  }, [user]);
 
   const toggleTheme = useCallback((theme: string) => {
     setForm((prev) => ({
@@ -839,7 +792,6 @@ const RegistroSessao = () => {
   const handleClear = () => {
     clearDraft();
     setForm({ ...emptyForm });
-    setEditingId(null);
   };
 
   // Gera o texto sintético para next_session_plan (compatibilidade com Agenda/ficha)
@@ -902,9 +854,7 @@ const RegistroSessao = () => {
       plan_id: form.plan_id,
     };
 
-    const { error } = editingId
-      ? await supabase.from("session_records").update(payload).eq("id", editingId)
-      : await supabase.from("session_records").insert(payload);
+    const { error } = await supabase.from("session_records").insert(payload);
 
     if (error) {
       setSaving(false);
@@ -993,7 +943,7 @@ const RegistroSessao = () => {
     }
 
     setSaving(false);
-    toast.success(editingId ? "Registro atualizado." : "Registro salvo com sucesso.");
+    toast.success("Registro salvo com sucesso.");
     clearDraft();
     const keepPatient = form.patient_id;
 
@@ -1006,7 +956,7 @@ const RegistroSessao = () => {
       .eq("status", "ativo")
       .maybeSingle();
 
-    if (!editingId && !activePlanRow) {
+    if (!activePlanRow) {
       const metaDesc = form.next_meta_id
         ? planGoals.find((g) => g.id === form.next_meta_id)?.descricao ?? null
         : null;
@@ -1024,7 +974,7 @@ const RegistroSessao = () => {
 
     // 5) Fluxo padrão: voltar para a ficha se veio de lá
     const cameFromPatient = !!searchParams.get("patient");
-    if (cameFromPatient && !editingId && keepPatient) {
+    if (cameFromPatient && keepPatient) {
       navigate(`/app/pacientes?patientId=${keepPatient}&tab=sessions`, { replace: true });
       return;
     }
@@ -1032,8 +982,6 @@ const RegistroSessao = () => {
     // Mantém o paciente selecionado — reset apenas dos campos do registro,
     // conforme fluxo integrado com o Plano de Tratamento.
     setForm({ ...emptyForm, patient_id: keepPatient });
-    setEditingId(null);
-    await preserveScroll(() => loadRecords());
     if (keepPatient && user) {
       loadActivePlan(keepPatient, user.id);
     }
@@ -1111,8 +1059,6 @@ const RegistroSessao = () => {
     }
 
     setForm({ ...emptyForm, patient_id: keepPatient });
-    setEditingId(null);
-    await preserveScroll(() => loadRecords());
     if (keepPatient && user) {
       loadActivePlan(keepPatient, user.id);
     }
@@ -1166,83 +1112,7 @@ const RegistroSessao = () => {
   const chiefComplaintRef = useRef<HTMLTextAreaElement | null>(null);
   const heroFormRef = useRef<HTMLElement | null>(null);
 
-  const openEdit = (r: SavedRecord) => {
-    setEditingId(r.id);
-    setDraftRestored(false);
-    setForm({
-      ...emptyForm,
-      patient_id: r.patient_id,
-      session_id: (r as any).session_id ?? null,
-      session_date: r.session_date,
-      session_number: r.session_number?.toString() ?? "",
-      modality: r.modality,
-      duration_minutes: r.duration_minutes,
-      chief_complaint: r.chief_complaint ?? "",
-      themes: r.themes ?? [],
-      clinical_observations: r.clinical_observations ?? "",
-      next_session_plan: r.next_session_plan ?? "",
-      engagement: r.engagement ?? 3,
-      risk_indicator: r.risk_indicator ?? "none",
-      private_notes: r.private_notes ?? "",
-      plan_id: (r as any).plan_id ?? null,
-    });
-    // Make sure the patient group is expanded so the highlight stays visible
-    setExpandedPatients((prev) => ({ ...prev, [r.patient_id]: true }));
-    // Scroll the form into view and focus the first editable field
-    requestAnimationFrame(() => {
-      heroFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      setTimeout(() => chiefComplaintRef.current?.focus({ preventScroll: true }), 350);
-    });
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Excluir este registro de sessão?")) return;
-    const { error } = await supabase.from("session_records").delete().eq("id", id);
-    if (error) {
-      toast.error("Erro ao excluir.");
-      return;
-    }
-    toast.success("Registro excluído.");
-    if (editingId === id) handleClear();
-    await preserveScroll(() => loadRecords());
-  };
-
-  const getPatientName = (id: string) => patients.find((p) => p.id === id)?.full_name ?? "—";
-
-  const getInitials = (name: string) =>
-    name
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((s) => s[0]?.toUpperCase())
-      .join("") || "?";
-
   const selectedPatient = patients.find((p) => p.id === form.patient_id);
-  const patientRecords = form.patient_id
-    ? records.filter((r) => r.patient_id === form.patient_id)
-    : [];
-  const lastSessionDate = patientRecords[0]?.session_date;
-
-  const filteredRecords = records.filter((r) => {
-    if (historyFilter && historyFilter !== "all" && r.patient_id !== historyFilter) return false;
-    if (filterModality !== "all" && r.modality !== filterModality) return false;
-    if (filterFrom && r.session_date < filterFrom) return false;
-    if (filterTo && r.session_date > filterTo) return false;
-    return true;
-  });
-
-  const hasActiveFilters =
-    (historyFilter && historyFilter !== "all") ||
-    filterModality !== "all" ||
-    !!filterFrom ||
-    !!filterTo;
-
-  const clearFilters = () => {
-    setHistoryFilter("");
-    setFilterFrom("");
-    setFilterTo("");
-    setFilterModality("all");
-  };
 
   if (loading) {
     return (
@@ -1313,8 +1183,8 @@ const RegistroSessao = () => {
   };
 
 
-  // Hub view: when no patient is selected and not editing, show the patient list
-  if (!form.patient_id && !editingId) {
+  // Hub view: when no patient is selected, show the patient list
+  if (!form.patient_id) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-5 animate-fade-up">
         <div className="flex items-center gap-3">
@@ -1367,7 +1237,7 @@ const RegistroSessao = () => {
               Registro de Sessão
             </h1>
             <p className="mt-1" style={{ fontSize: 13, color: "#6B7280" }}>
-              {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
+              Documente os dados clínicos da sessão realizada.
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -1395,7 +1265,7 @@ const RegistroSessao = () => {
       </div>
 
       {/* Draft restored banner */}
-      {draftRestored && !editingId && (
+      {draftRestored && (
         <div
           className="flex items-center justify-between px-4 py-3"
           style={{ backgroundColor: "#EEEDFE", borderLeft: "3px solid #534AB7", borderRadius: 10 }}
@@ -1435,7 +1305,7 @@ const RegistroSessao = () => {
             className="flex h-14 w-14 shrink-0 items-center justify-center text-base font-display font-bold"
             style={{ borderRadius: "50%", backgroundColor: "#EEEDFE", color: "#534AB7", fontWeight: 700 }}
           >
-            {selectedPatient ? getInitials(selectedPatient.full_name) : <User className="h-6 w-6" />}
+            <User className="h-6 w-6" />
           </div>
 
           <div className="min-w-0 flex-1 space-y-1.5">
@@ -1446,11 +1316,6 @@ const RegistroSessao = () => {
               >
                 Paciente
               </span>
-              {editingId && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-lilac/40 text-foreground font-medium">
-                  editando
-                </span>
-              )}
             </div>
 
             <Select
@@ -1471,21 +1336,6 @@ const RegistroSessao = () => {
                 ))}
               </SelectContent>
             </Select>
-
-            {selectedPatient && (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1" style={{ fontSize: 12, color: "#6B7280" }}>
-                <span className="inline-flex items-center gap-1">
-                  <History className="h-3.5 w-3.5" />
-                  {patientRecords.length} {patientRecords.length === 1 ? "sessão registrada" : "sessões registradas"}
-                </span>
-                {lastSessionDate && (
-                  <span className="inline-flex items-center gap-1">
-                    <CalendarDays className="h-3.5 w-3.5" />
-                    Última em {format(new Date(lastSessionDate), "dd/MM/yyyy")}
-                  </span>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
@@ -2307,7 +2157,7 @@ const RegistroSessao = () => {
           onClick={handleClear}
         >
           <RotateCcw className="h-4 w-4 mr-2" />
-          {editingId ? "Cancelar edição" : "Limpar"}
+          Limpar
         </Button>
         <Button
           variant="accent"
@@ -2320,240 +2170,9 @@ const RegistroSessao = () => {
           ) : (
             <Save className="h-4 w-4 mr-2" />
           )}
-          {editingId ? "Atualizar registro" : "Salvar registro"}
+          Salvar registro
         </Button>
       </div>
-
-      {/* ── Histórico de registros ── */}
-      <section className="rounded-2xl border border-border bg-card overflow-hidden">
-        <button
-          type="button"
-          onClick={() => setShowHistory(!showHistory)}
-          className="w-full flex items-center justify-between p-5 hover:bg-muted/30 transition-colors"
-        >
-          <h2 className="font-display text-base font-semibold text-foreground">
-            Registros salvos{" "}
-            <span className="text-muted-foreground font-normal">
-              ({filteredRecords.length}
-              {hasActiveFilters && filteredRecords.length !== records.length && ` de ${records.length}`})
-            </span>
-          </h2>
-          {showHistory ? (
-            <ChevronUp className="h-5 w-5 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-muted-foreground" />
-          )}
-        </button>
-
-        {showHistory && (
-          <div className="border-t border-border">
-            {records.length > 0 && (
-              <div className="p-4 pb-0 space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                  <Select value={historyFilter || "all"} onValueChange={(v) => setHistoryFilter(v === "all" ? "" : v)}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Paciente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os pacientes</SelectItem>
-                      {patients.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.full_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={filterModality} onValueChange={setFilterModality}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Modalidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas modalidades</SelectItem>
-                      <SelectItem value="presencial">Presencial</SelectItem>
-                      <SelectItem value="online">Online</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    type="date"
-                    value={filterFrom}
-                    onChange={(e) => setFilterFrom(e.target.value)}
-                    className="h-9"
-                    placeholder="De"
-                    aria-label="Data inicial"
-                  />
-                  <Input
-                    type="date"
-                    value={filterTo}
-                    onChange={(e) => setFilterTo(e.target.value)}
-                    className="h-9"
-                    placeholder="Até"
-                    aria-label="Data final"
-                  />
-                </div>
-                {hasActiveFilters && (
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      {filteredRecords.length} {filteredRecords.length === 1 ? "resultado" : "resultados"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
-                    >
-                      <X className="h-3 w-3" /> Limpar filtros
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {filteredRecords.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">
-                Nenhum registro salvo ainda. Preencha o formulário acima e clique em "Salvar registro".
-              </div>
-            ) : (
-              <ul className="divide-y divide-border">
-                {(() => {
-                  // Group filtered records by patient
-                  const groups = new Map<string, SavedRecord[]>();
-                  filteredRecords.forEach((r) => {
-                    if (!groups.has(r.patient_id)) groups.set(r.patient_id, []);
-                    groups.get(r.patient_id)!.push(r);
-                  });
-                  const ordered = Array.from(groups.entries()).sort((a, b) =>
-                    getPatientName(a[0]).localeCompare(getPatientName(b[0]))
-                  );
-                  return ordered.map(([patientId, items]) => {
-                    const isOpen = !!expandedPatients[patientId];
-                    const lastDate = items[0]?.session_date;
-                    return (
-                      <li key={patientId}>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setExpandedPatients((prev) => ({ ...prev, [patientId]: !prev[patientId] }))
-                          }
-                          className={cn(
-                            "w-full flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors text-left group",
-                            isOpen && "bg-muted/20",
-                          )}
-                        >
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent/15 to-lilac/15 text-accent font-display text-sm font-bold ring-1 ring-accent/15 group-hover:ring-accent/30 transition-all">
-                            {getInitials(getPatientName(patientId))}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-display font-semibold text-sm text-foreground truncate">
-                              {getPatientName(patientId)}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {items.length} {items.length === 1 ? "registro" : "registros"}
-                              {lastDate && ` · último em ${format(new Date(lastDate), "dd/MM/yyyy")}`}
-                            </p>
-                          </div>
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/12 text-accent shrink-0 ring-1 ring-accent/20">
-                            {items.length}
-                          </span>
-                          {isOpen ? (
-                            <ChevronUp className="h-4 w-4 text-accent shrink-0" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 group-hover:text-accent transition-colors" />
-                          )}
-                        </button>
-
-                        {isOpen && (
-                          <ul className="bg-muted/10 divide-y divide-border/60 border-t border-border">
-                            {items.map((r) => (
-                              <li key={r.id}>
-                                <div
-                                  role="button"
-                                  tabIndex={0}
-                                  onClick={() => openEdit(r)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                      e.preventDefault();
-                                      openEdit(r);
-                                    }
-                                  }}
-                                  className={cn(
-                                    "p-4 pl-6 transition-colors cursor-pointer focus:outline-none border-l-2",
-                                    editingId === r.id
-                                      ? "bg-accent/10 border-accent shadow-[inset_0_0_0_1px_hsl(var(--accent)/0.25)]"
-                                      : "border-transparent hover:bg-muted/30 focus:bg-muted/30",
-                                  )}
-                                >
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0 flex-1">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="text-xs text-muted-foreground">
-                                          {format(new Date(r.session_date), "dd/MM/yyyy")}
-                                        </span>
-                                        {r.session_number && (
-                                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                                            Sessão {r.session_number}
-                                          </span>
-                                        )}
-                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
-                                          {r.modality}
-                                        </span>
-                                        {editingId === r.id && (
-                                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-lilac/50 text-foreground font-medium">
-                                            editando
-                                          </span>
-                                        )}
-                                      </div>
-                                      {r.chief_complaint && (
-                                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                                          {r.chief_complaint}
-                                        </p>
-                                      )}
-                                      {r.themes.length > 0 && (
-                                        <div className="flex flex-wrap gap-1 mt-1.5">
-                                          {r.themes.map((t) => (
-                                            <span
-                                              key={t}
-                                              className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary"
-                                            >
-                                              {t}
-                                            </span>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </div>
-                                    <div className="flex gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => openEdit(r)}
-                                        title="Editar"
-                                      >
-                                        <Pencil className="h-3.5 w-3.5" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-destructive hover:text-destructive"
-                                        onClick={() => handleDelete(r.id)}
-                                        title="Excluir"
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </li>
-                    );
-                  });
-                })()}
-              </ul>
-            )}
-          </div>
-        )}
-      </section>
 
       <div className="pb-8" />
 
