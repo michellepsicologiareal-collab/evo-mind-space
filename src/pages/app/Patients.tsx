@@ -553,7 +553,7 @@ const Patients = () => {
     setLoading(true);
     const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes, plansRes, goalsRes, techRes, revRes, teRes, actRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
-      supabase.from("profiles").select("full_name, pix_key, crp").eq("id", user.id).maybeSingle(),
+      supabase.from("profiles").select("full_name, pix_key, crp, supervisor_id, profile_type").eq("id", user.id).maybeSingle(),
       supabase.from("sessions").select("patient_id, scheduled_at").eq("user_id", user.id).eq("payment_status", "pending").order("scheduled_at", { ascending: false }),
       supabase.from("child_anamneses").select("patient_id, updated_at").eq("user_id", user.id),
       supabase.from("patient_progress").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
