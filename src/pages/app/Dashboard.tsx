@@ -766,7 +766,7 @@ export default function Dashboard() {
                     <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: `hsl(var(${tone}))` }} aria-hidden />
                     <span className="min-w-0 break-words">{k.label}</span>
                   </p>
-                  <p className="relative mt-2 sm:mt-3 font-display text-2xl sm:text-3xl md:text-[2rem] font-bold tracking-[-0.02em] text-foreground break-words">
+                  <p className="relative mt-2 sm:mt-3 font-display text-xl sm:text-3xl md:text-[2rem] font-bold tracking-[-0.02em] text-foreground break-words">
                     {k.value}
                   </p>
                   <p className="relative mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-muted-foreground">{k.hint}</p>
