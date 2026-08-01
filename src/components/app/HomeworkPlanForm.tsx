@@ -618,16 +618,16 @@ export const HomeworkPlanForm = ({
         </div>
 
         {shareable && (
-          <div className="space-y-3 rounded-xl border border-border bg-muted/40 p-3 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="space-y-3 rounded-xl border border-border bg-muted/40 p-2.5 sm:p-3 min-w-0">
+            <div className="flex items-start gap-2">
+              <p className="min-w-0 text-[11px] font-semibold uppercase leading-snug tracking-wider text-muted-foreground">
                 Envio para o paciente — em duas mensagens
               </p>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="h-3.5 w-3.5 shrink-0 cursor-help text-muted-foreground" />
+                  <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-help text-muted-foreground" />
                 </TooltipTrigger>
-                <TooltipContent className="max-w-[260px] text-xs">
+                <TooltipContent className="max-w-[240px] text-xs">
                   Por privacidade, a senha nunca vai na mensagem do plano — envie primeiro o link e depois a senha.
                 </TooltipContent>
               </Tooltip>
@@ -636,9 +636,9 @@ export const HomeworkPlanForm = ({
             {/* Passo 1 — link do plano */}
             <div className="space-y-2 rounded-lg border border-border bg-background p-2.5 min-w-0">
               <p className="text-xs font-medium text-foreground">1. Enviar o plano (link)</p>
-              <div className="flex min-w-0 items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-1.5">
+              <div className="flex min-w-0 items-center gap-2 rounded-lg bg-muted/50 px-2.5 py-2">
                 <Link2 className="h-3.5 w-3.5 shrink-0 text-primary" />
-                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                <span className="min-w-0 flex-1 truncate text-[11px] sm:text-xs text-muted-foreground">
                   {publicUrl ?? "Link disponível após salvar"}
                 </span>
                 <Button
