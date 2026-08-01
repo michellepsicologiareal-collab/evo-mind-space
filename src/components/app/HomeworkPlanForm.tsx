@@ -728,10 +728,10 @@ export const HomeworkPlanForm = ({
                     const item = map[ev.event_type] ?? { label: ev.event_type, Icon: Link2 };
                     const Icon = item.Icon;
                     return (
-                      <li key={ev.id} className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <li key={ev.id} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] leading-snug text-muted-foreground">
                         <Icon className="h-3 w-3 shrink-0 text-primary" />
-                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                        <span className="shrink-0">
+                        <span className="min-w-0 flex-1 break-words">{item.label}</span>
+                        <span className="shrink-0 tabular-nums">
                           {format(new Date(ev.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
                         </span>
                       </li>
