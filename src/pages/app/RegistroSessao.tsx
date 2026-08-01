@@ -796,7 +796,14 @@ const RegistroSessao = () => {
   const handleClear = () => {
     clearDraft();
     setForm({ ...emptyForm });
+    // Limpa o contexto da URL para que um novo clique em "Registrar sessão"
+    // (mesmo paciente/sessão) volte a abrir direto o formulário.
+    lastPrefillKeyRef.current = null;
+    if (searchParams.get("patient") || searchParams.get("session")) {
+      navigate("/app/registro-sessao", { replace: true });
+    }
   };
+
 
   // Gera o texto sintético para next_session_plan (compatibilidade com Agenda/ficha)
   const buildNextSessionSynthetic = (f: FormState): string => {
