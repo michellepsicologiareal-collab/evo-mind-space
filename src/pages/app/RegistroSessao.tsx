@@ -1059,8 +1059,6 @@ const RegistroSessao = () => {
     }
 
     setForm({ ...emptyForm, patient_id: keepPatient });
-    setEditingId(null);
-    await preserveScroll(() => loadRecords());
     if (keepPatient && user) {
       loadActivePlan(keepPatient, user.id);
     }
