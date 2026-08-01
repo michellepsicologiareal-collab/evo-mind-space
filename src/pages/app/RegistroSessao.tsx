@@ -677,17 +677,15 @@ const RegistroSessao = () => {
 
   const clearDraft = useCallback(() => {
     try {
-      localStorage.removeItem(draftKeyFor(editingIdRef.current));
       localStorage.removeItem(DRAFT_KEY);
     } catch {}
     setDraftRestored(false);
-  }, [draftKeyFor]);
+  }, []);
 
-  // Restore draft on mount (new records or when editing resumes)
+  // Restore draft on mount
   useEffect(() => {
     try {
-      const key = draftKeyFor(editingId);
-      const raw = localStorage.getItem(key);
+      const raw = localStorage.getItem(DRAFT_KEY);
       if (raw) {
         const saved = JSON.parse(raw) as FormState;
         if (hasMeaningfulData(saved)) {
@@ -697,7 +695,7 @@ const RegistroSessao = () => {
         }
       }
     } catch {
-      try { localStorage.removeItem(draftKeyFor(editingId)); } catch {}
+      try { localStorage.removeItem(DRAFT_KEY); } catch {}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
