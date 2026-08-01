@@ -111,14 +111,14 @@
   }
 
   .dark {
-    /* Surfaces — dark roxo suave (tom mais claro, confortável em mobile/notebook) */
-    --background: 258 22% 13%;              /* fundo mais claro */
+    /* Surfaces — dark roxo suave (tom claro e confortável em mobile/notebook) */
+    --background: 258 18% 17%;              /* fundo mais claro */
     --foreground: 258 22% 97%;
 
-    --card: 258 18% 18%;                    /* cards levemente acima do fundo */
+    --card: 258 16% 22%;                    /* cards levemente acima do fundo */
     --card-foreground: 258 22% 97%;
 
-    --popover: 258 18% 19%;
+    --popover: 258 16% 23%;
     --popover-foreground: 258 22% 97%;
 
     /* Brand — Roxo (mais luminoso no dark) */
@@ -127,11 +127,12 @@
     --primary-glow: 265 60% 84%;
     --primary-dark: 262 52% 66%;
 
-    --secondary: 258 18% 23%;
+    --secondary: 258 16% 27%;
     --secondary-foreground: 258 22% 96%;
 
-    --muted: 258 16% 21%;
-    --muted-foreground: 258 14% 76%;
+    --muted: 258 15% 26%;
+    --muted-foreground: 258 14% 78%;
+
 
 
     --accent: 262 65% 74%;
