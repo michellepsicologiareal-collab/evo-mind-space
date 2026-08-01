@@ -56,6 +56,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { fetchWeekSessions } from "@/lib/sessions/weekSessions";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /* ─── Real data types ─── */
 interface WeekSession {
@@ -212,6 +213,7 @@ export default function Dashboard() {
   const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
   const [trendRange, setTrendRange] = useState<6 | 12>(6);
+  const isMobile = useIsMobile();
   const [trendRevenueView, setTrendRevenueView] = useState<"total" | "split">("total");
   const [trendData, setTrendData] = useState<Array<{ key: string; label: string; sessions: number; revenue: number; revenuePaid: number; revenuePending: number }>>([]);
   const [loadingTrend, setLoadingTrend] = useState(false);
