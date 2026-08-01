@@ -1338,7 +1338,7 @@ const Patients = () => {
           }}
         >
           <div className="hidden md:block overflow-x-auto">
-            <table className="w-full" style={{ borderCollapse: "collapse", fontSize: 13, minWidth: 880 }}>
+            <table className="w-full" style={{ borderCollapse: "collapse", fontSize: 13, minWidth: 640 }}>
               <tbody>
 
                 {filtered.map((p, idx) => {
