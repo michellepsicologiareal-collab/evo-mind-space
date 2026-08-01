@@ -1413,12 +1413,12 @@ const RegistroSessao = () => {
               <ArrowLeft className="h-3 w-3" /> {returnUrl?.startsWith("/app/agenda") ? "Voltar à Agenda" : "Voltar à lista"}
             </button>
             <h1
-              className="font-display leading-tight"
-              style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.3px", color: "hsl(var(--foreground))" }}
+              className="mt-0.5 break-words"
+              style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 26, lineHeight: 1.2, letterSpacing: "-0.3px", color: "hsl(var(--foreground))" }}
             >
               Registro de Sessão
             </h1>
-            <p className="mt-1" style={{ fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
+            <p className="mt-1.5" style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 13, color: "hsl(var(--muted-foreground))" }}>
               Documente os dados clínicos da sessão realizada.
             </p>
           </div>
