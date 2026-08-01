@@ -333,7 +333,7 @@ export default function FormulacaoACT() {
         <header className="bg-white rounded-[10px] p-5 sm:p-6 flex flex-col gap-3" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${GREEN}` }}>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild className="h-8 -ml-2">
-              <Link to="/app/pacientes"><ArrowLeft className="h-4 w-4" /> Pacientes</Link>
+              <Link to={patientId ? `/app/pacientes?patient=${patientId}&tab=formulations` : "/app/pacientes"}><ArrowLeft className="h-4 w-4" /> Voltar ao paciente</Link>
             </Button>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
