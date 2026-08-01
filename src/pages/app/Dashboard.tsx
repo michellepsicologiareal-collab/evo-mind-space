@@ -742,7 +742,7 @@ export default function Dashboard() {
         {/* ─ KPIs ─ */}
         <section
           aria-label="Indicadores principais"
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+          className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 xl:grid-cols-5"
         >
           {KPI.map((k, i) => {
             const tones = ["--primary", "--primary", "--lilac", "--primary", "--lilac"] as const;
@@ -753,24 +753,25 @@ export default function Dashboard() {
                 to={k.to}
                 className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
               >
-                <Card className="relative overflow-hidden rounded-2xl border-border/60 bg-card p-5 shadow-none transition-all hover:border-border hover:shadow-soft h-full">
+                <Card className="relative overflow-hidden rounded-2xl border-border/60 bg-card p-3.5 sm:p-5 shadow-none transition-all hover:border-border hover:shadow-soft h-full">
                   {/* Bolha pastel decorativa (pegada do modelo) */}
                   <span
                     aria-hidden
                     className="pointer-events-none absolute -bottom-10 -right-8 h-28 w-28 rounded-full opacity-[0.14] transition-opacity group-hover:opacity-25"
                     style={{ background: `hsl(var(${tone}))` }}
                   />
-                  <p className="relative flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: `hsl(var(${tone}))` }}>
-                    <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: `hsl(var(${tone}))` }} aria-hidden />
-                    <span className="truncate">{k.label}</span>
+                  <p className="relative flex items-start gap-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.06em] sm:tracking-[0.1em] leading-tight" style={{ color: `hsl(var(${tone}))` }}>
+                    <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: `hsl(var(${tone}))` }} aria-hidden />
+                    <span className="min-w-0 break-words">{k.label}</span>
                   </p>
-                  <p className="relative mt-3 font-display text-3xl md:text-[2rem] font-bold tracking-[-0.02em] text-foreground">
+                  <p className="relative mt-2 sm:mt-3 font-display text-2xl sm:text-3xl md:text-[2rem] font-bold tracking-[-0.02em] text-foreground break-words">
                     {k.value}
                   </p>
-                  <p className="relative mt-2 text-xs text-muted-foreground">{k.hint}</p>
+                  <p className="relative mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-muted-foreground">{k.hint}</p>
                   {("sub" in k) && k.sub ? (
-                    <p className="relative mt-1 text-xs text-muted-foreground/90">{k.sub}</p>
+                    <p className="relative mt-1 text-[11px] sm:text-xs text-muted-foreground/90">{k.sub}</p>
                   ) : null}
+
                 </Card>
               </Link>
             );
