@@ -1480,7 +1480,52 @@ const RegistroSessao = () => {
           </div>
         </div>
 
+        {/* Registro rápido: observações do atendimento + humor da sessão */}
+        <div className="mt-4 pt-4 space-y-2" style={{ borderTop: "1px solid hsl(var(--border))" }}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
+              <NotebookPen className="h-3 w-3" /> Observações rápidas
+            </Label>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+                Humor
+              </span>
+              {MOOD_OPTIONS.map((m) => {
+                const active = form.quick_mood === m.value;
+                return (
+                  <button
+                    key={m.value}
+                    type="button"
+                    title={m.label}
+                    aria-label={m.label}
+                    aria-pressed={active}
+                    onClick={() => setForm({ ...form, quick_mood: active ? null : m.value })}
+                    className="h-8 w-8 rounded-lg text-base leading-none transition-all"
+                    style={{
+                      border: `1px solid ${active ? "hsl(var(--primary))" : "hsl(var(--border))"}`,
+                      backgroundColor: active ? "hsl(var(--primary) / 0.12)" : "hsl(var(--muted))",
+                    }}
+                  >
+                    {m.emoji}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <Textarea
+            value={form.quick_note}
+            onChange={(e) => setForm({ ...form, quick_note: e.target.value })}
+            placeholder="Anote algo do atendimento sem sair da tela (ex.: chegou ansiosa, relatou melhora no sono)…"
+            className="min-h-[70px] text-sm"
+            style={{ border: "1px solid hsl(var(--border))", borderRadius: 8, backgroundColor: "hsl(var(--muted))" }}
+          />
+          <p className="text-[11px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+            Salvo junto com o registro e enviado para o acompanhamento de humor do paciente.
+          </p>
+        </div>
+
       </section>
+
 
       {/* Plano de Tratamento Ativo — movido para depois do Registro Clínico */}
 
