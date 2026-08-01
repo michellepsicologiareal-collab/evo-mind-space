@@ -3653,7 +3653,7 @@ const Agenda = () => {
                 {(editSaving || loadingEditProgress) && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
               </Button>
             </DialogFooter>
-            <div className="h-2 shrink-0" />
+            </form>
         </DialogContent>
       </Dialog>
 
