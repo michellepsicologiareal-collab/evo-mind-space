@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format, differenceInDays, differenceInMonths, differenceInYears, addDays, startOfWeek, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { FileText, Loader2, ChevronRight, ChevronLeft, AlertTriangle, ChevronDown, ChevronUp, Calendar, Target, ClipboardList, Pencil, Save, Download } from "lucide-react";
+import { FileText, Loader2, ChevronRight, ChevronLeft, AlertTriangle, ChevronDown, ChevronUp, Calendar, Target, ClipboardList, Pencil, Save, Download, Maximize2, Minimize2 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
