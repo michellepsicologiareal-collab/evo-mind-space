@@ -1390,7 +1390,7 @@ const RegistroSessao = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 space-y-5" style={{ backgroundColor: "hsl(var(--muted))", minHeight: "100%" }}>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-5" style={{ minHeight: "100%" }}>
       <HelpCard
         id="registro-sessao"
         title="Registro de Sessão"
