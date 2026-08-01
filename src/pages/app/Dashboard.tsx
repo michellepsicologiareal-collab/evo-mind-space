@@ -922,7 +922,7 @@ export default function Dashboard() {
         {/* ─ Hoje ─ */}
         <section aria-labelledby="today-heading" className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 id="today-heading" className="font-display text-xl font-semibold tracking-tight">
+            <h2 id="today-heading" className="font-display text-lg sm:text-xl font-semibold tracking-tight">
               Hoje
             </h2>
             <Button
@@ -958,7 +958,7 @@ export default function Dashboard() {
         <section className="grid gap-6 lg:grid-cols-[1fr_1.15fr]">
           {/* Atenção */}
           <div className="space-y-3">
-            <h2 className="font-display text-xl font-semibold tracking-tight">
+            <h2 className="font-display text-lg sm:text-xl font-semibold tracking-tight">
               Atenção necessária
             </h2>
             <Card className="rounded-2xl border-border/60 divide-y divide-border/60 overflow-hidden">
@@ -998,7 +998,7 @@ export default function Dashboard() {
           {/* Semana */}
           <div className="space-y-3">
             <div>
-              <h2 className="font-display text-xl font-semibold tracking-tight">
+              <h2 className="font-display text-lg sm:text-xl font-semibold tracking-tight">
                 Agenda da semana
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
