@@ -1473,32 +1473,25 @@ const RegistroSessao = () => {
       {/* ── Hero do paciente ── */}
       <section
         ref={heroFormRef}
-        className="p-5 scroll-mt-4"
-        style={{
-          backgroundColor: "hsl(var(--card))",
-          borderRadius: 10,
-          boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-          borderLeft: "3px solid hsl(var(--primary))",
-        }}
+        className="rounded-2xl bg-card border border-border p-5 sm:p-7 shadow-[var(--shadow-card)] scroll-mt-4"
       >
 
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-4 sm:gap-6">
           <div
-            className="flex h-14 w-14 shrink-0 items-center justify-center text-base font-display font-bold"
-            style={{ borderRadius: "50%", backgroundColor: "hsl(var(--secondary))", color: "hsl(var(--primary))", fontWeight: 700 }}
+            className="shrink-0 flex items-center justify-center rounded-full"
+            style={{ width: 60, height: 60, background: "rgba(155,114,211,0.10)", color: "hsl(var(--primary))", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 20 }}
           >
-            <User className="h-6 w-6" />
+            {(() => {
+              const name = patients.find((x) => x.id === form.patient_id)?.full_name;
+              if (!name) return <User className="h-6 w-6" />;
+              return name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+            })()}
           </div>
 
-          <div className="min-w-0 flex-1 space-y-1.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span
-                className="uppercase"
-                style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: "hsl(var(--muted-foreground))" }}
-              >
-                Paciente
-              </span>
-            </div>
+          <div className="min-w-0 flex-1">
+            <p className="uppercase" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 10, letterSpacing: "0.10em", color: "hsl(var(--primary))" }}>
+              Paciente
+            </p>
 
             <Select
               value={form.patient_id}
@@ -1506,8 +1499,8 @@ const RegistroSessao = () => {
             >
               <SelectTrigger
                 aria-invalid={!!errors.patient_id}
-                className="h-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 font-display hover:opacity-80 transition-opacity [&>svg]:opacity-50"
-                style={{ fontSize: 16, fontWeight: 700, color: errors.patient_id ? "hsl(var(--destructive))" : "hsl(var(--foreground))" }}
+                className="mt-0.5 h-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 hover:opacity-80 transition-opacity [&>svg]:opacity-50"
+                style={{ fontFamily: "Syne, sans-serif", fontSize: 22, fontWeight: 700, lineHeight: 1.2, color: errors.patient_id ? "hsl(var(--destructive))" : "hsl(var(--foreground))" }}
               >
                 <SelectValue placeholder="Selecione o paciente" />
               </SelectTrigger>
