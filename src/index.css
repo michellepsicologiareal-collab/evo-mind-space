@@ -11,19 +11,20 @@
 @layer base {
   :root {
     /* Surfaces */
-    --background: 260 50% 98%;              /* #FAFAFC fundo */
-    --foreground: 245 38% 13%;              /* #2A2342 texto principal */
+    --background: 265 43% 97%;              /* #F8F6FC fundo lavanda claro */
+    --foreground: 245 37% 13%;              /* #17152F texto principal */
 
 
     --card: 0 0% 100%;                      /* #FFFFFF cards */
-    --card-foreground: 245 38% 13%;
+    --card-foreground: 245 37% 13%;
+
 
 
     --popover: 0 0% 100%;
     --popover-foreground: 245 38% 13%;
 
     /* Brand — Roxo */
-    --primary: 265 53% 64%;                 /* #9675CE roxo principal */
+    --primary: 267 54% 64%;                 /* #9B72D3 roxo principal */
     --primary-foreground: 0 0% 100%;
     --primary-glow: 265 60% 80%;            /* roxo claro */
     --primary-dark: 269 40% 24%;            /* #4B356F roxo escuro */
@@ -67,9 +68,9 @@
     --destructive: 0 65% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 264 31% 90%;                  /* #EAE6F5 bordas */
-    --input: 264 31% 90%;
-    --ring: 265 53% 64%;
+    --border: 267 33% 90%;                  /* #E5DFEE bordas */
+    --input: 267 33% 90%;
+    --ring: 267 54% 64%;
 
     /* Sidebar tokens */
     --sidebar-hover: 264 40% 96%;
@@ -206,6 +207,9 @@
   html { scroll-behavior: smooth; }
   body {
     @apply bg-background text-foreground antialiased;
+    background-image: radial-gradient(1200px 600px at 100% -10%, hsl(267 54% 64% / 0.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 0%, hsl(267 54% 64% / 0.06), transparent 55%);
+    background-attachment: fixed;
     font-family: var(--font-body);
     font-size: 15px;
     line-height: 1.6;
