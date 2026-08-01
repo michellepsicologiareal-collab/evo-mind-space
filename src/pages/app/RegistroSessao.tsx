@@ -1404,8 +1404,8 @@ const RegistroSessao = () => {
         </div>
 
 
-        {/* Linha rápida: data / nº / modalidade / duração */}
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
+        {/* Linha rápida: data / horário / nº / modalidade / duração */}
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2 pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
           <div className="space-y-1">
             <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
               <CalendarDays className="h-3 w-3" /> Data
@@ -1418,6 +1418,20 @@ const RegistroSessao = () => {
               style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
             />
           </div>
+          <div className="space-y-1">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
+              <Clock className="h-3 w-3" /> Horário
+            </Label>
+            <Input
+              type="time"
+              value={form.session_time}
+              onChange={(e) => setForm({ ...form, session_time: e.target.value })}
+              className="h-9"
+              placeholder="--:--"
+              style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
+            />
+          </div>
+
           <div className="space-y-1">
             <Label className="uppercase" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
               Sessão nº
