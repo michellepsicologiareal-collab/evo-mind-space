@@ -3,6 +3,7 @@ import { HelpCard } from "@/components/app/HelpCard";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Save, RotateCcw, Loader2, AlertTriangle, Sparkles, ChevronDown, X, User, CalendarDays, Clock, Video, MapPin, FileText, ClipboardList, Stethoscope, Minimize2, Maximize2, Target, ExternalLink, ArrowLeft, CheckSquare, RefreshCw, NotebookPen, Pencil as PencilIcon } from "lucide-react";
 import { RegistroSessaoHub } from "@/components/app/RegistroSessaoHub";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
