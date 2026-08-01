@@ -659,50 +659,53 @@ export default function Dashboard() {
           ]}
         />
         {/* ─ Cabeçalho ─ */}
-        <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <header className="flex flex-col gap-3 md:gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
-            <h1 className="font-display text-2xl md:text-[28px] leading-tight font-semibold tracking-tight text-foreground">
+            <h1 className="font-display text-xl sm:text-2xl md:text-[28px] leading-tight font-semibold tracking-tight text-foreground break-words">
               {greeting()}{displayName ? `, ${displayName}` : ""}
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
               {capDate} · Próxima sessão às{" "}
               <span className="text-foreground font-medium">{nextTime}</span>
             </p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <RefreshButton />
+          <div className="flex w-full items-center gap-2 md:w-auto">
             <Button
               variant="outline"
               size="sm"
-              className="h-10 rounded-full gap-2"
+              className="h-10 flex-1 md:flex-none rounded-full gap-2"
               onClick={() => navigate("/app/pacientes")}
             >
               <Search className="h-4 w-4" />
-              Buscar paciente
+              Buscar
             </Button>
             <Button
               size="sm"
-              className="h-10 rounded-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              className="h-10 flex-1 md:flex-none rounded-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() => navigate("/app/agenda")}
             >
               <Plus className="h-4 w-4" />
               Nova sessão
             </Button>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Notificações"
-                  className="h-10 w-10 rounded-full"
-                >
-                  <Bell className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Notificações</TooltipContent>
-            </Tooltip>
+            <div className="hidden md:flex items-center gap-2">
+              <RefreshButton />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Notificações"
+                    className="h-10 w-10 rounded-full"
+                  >
+                    <Bell className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Notificações</TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         </header>
+
 
         {/* ─ Filtro de mês ─ */}
         <div className="flex flex-wrap items-center gap-2">
