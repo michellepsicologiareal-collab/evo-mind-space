@@ -1920,6 +1920,7 @@ const Agenda = () => {
 
   // ── Session card component ──
   const isMobile = useIsMobile();
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Default to compact "week" view the first time we detect mobile
   const mobileDefaultedRef = useRef(false);
