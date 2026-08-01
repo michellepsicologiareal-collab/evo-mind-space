@@ -11,12 +11,13 @@
 @layer base {
   :root {
     /* Surfaces */
-    --background: 260 50% 98%;              /* #FAFAFC fundo */
-    --foreground: 245 38% 13%;              /* #2A2342 texto principal */
+    --background: 265 43% 97%;              /* #F8F6FC fundo lavanda claro */
+    --foreground: 245 37% 13%;              /* #17152F texto principal */
 
 
     --card: 0 0% 100%;                      /* #FFFFFF cards */
-    --card-foreground: 245 38% 13%;
+    --card-foreground: 245 37% 13%;
+
 
 
     --popover: 0 0% 100%;
