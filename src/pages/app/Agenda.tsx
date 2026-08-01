@@ -2623,6 +2623,27 @@ const Agenda = () => {
             </div>
           )}
 
+          {/* Toggle de filtros — apenas mobile */}
+          {isMobile && (
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-full border border-border bg-card px-4 py-2 text-xs font-display font-semibold text-muted-foreground"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Filter className="h-3.5 w-3.5" />
+                Filtros
+                {(serviceFilter !== "all" || patientFilter !== "all") && (
+                  <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] text-accent-foreground">
+                    {(serviceFilter !== "all" ? 1 : 0) + (patientFilter !== "all" ? 1 : 0)}
+                  </span>
+                )}
+              </span>
+              <ChevronDown className={cn("h-4 w-4 transition-transform", filtersOpen && "rotate-180")} />
+            </button>
+          )}
+
+          <div className={cn("space-y-4", isMobile && !filtersOpen && "hidden")}>
           {/* Service filter — rolagem horizontal em uma linha */}
           <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
             <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar pb-1">
