@@ -84,6 +84,7 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
   const [records, setRecords] = useState<SessionRecordOpt[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [planFullscreen, setPlanFullscreen] = useState(true);
   const [editing, setEditing] = useState<Task | null>(null);
   const [title, setTitle] = useState("");
   const [sessionPoints, setSessionPoints] = useState("");
