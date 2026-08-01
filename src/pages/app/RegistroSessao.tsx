@@ -1194,8 +1194,11 @@ const RegistroSessao = () => {
   };
 
 
-  // Hub view: when no patient is selected, show the patient list
-  if (!form.patient_id) {
+  // Hub view: só quando não há paciente selecionado E a URL não traz contexto
+  // de paciente/sessão (evita cair na lista ao clicar em "Registrar sessão").
+  const hasUrlContext = !!(searchParams.get("patient") || searchParams.get("session"));
+  if (!form.patient_id && !hasUrlContext) {
+
     return (
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-5 animate-fade-up">
         <div className="flex items-center gap-3">
