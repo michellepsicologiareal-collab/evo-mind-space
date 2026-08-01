@@ -2281,7 +2281,7 @@ const Agenda = () => {
 
         {!isSupervisionCard && s.patient_id && (
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
-            <SheetContent side="right" className="w-screen max-w-none sm:max-w-none h-[100dvh] border-0 rounded-none overflow-y-auto overflow-x-hidden p-4 sm:p-8" onClick={(e) => e.stopPropagation()}>
+            <SheetContent side="right" className="w-screen max-w-none sm:max-w-none h-[100dvh] border-0 rounded-none overflow-y-auto overflow-x-hidden p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-8" onClick={(e) => e.stopPropagation()}>
               <SheetHeader className="mb-4">
                 <SheetTitle className="font-display text-xl">Sessões</SheetTitle>
                 <SheetDescription>{s.patient_name}</SheetDescription>
