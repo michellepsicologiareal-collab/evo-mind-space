@@ -1232,7 +1232,7 @@ const RegistroSessao = () => {
       {/* Topbar */}
       <div
         className="px-5 py-4"
-        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
       >
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
@@ -1307,7 +1307,7 @@ const RegistroSessao = () => {
         ref={heroFormRef}
         className="p-5 scroll-mt-4"
         style={{
-          backgroundColor: "#FFFFFF",
+          backgroundColor: "hsl(var(--card))",
           borderRadius: 10,
           boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
           borderLeft: "3px solid hsl(var(--primary))",
@@ -1459,7 +1459,7 @@ const RegistroSessao = () => {
       {/* ── Seção 1: Estado do Paciente ── */}
       <section
         className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("estado") ? "p-3" : "p-5 space-y-4")}
-        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--primary))" }}
+        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--primary))" }}
       >
         <SectionHeader n={1} icon={Stethoscope} title="Estado do paciente" subtitle="O que trouxe hoje" sectionKey="estado" color="hsl(var(--primary))" />
         {isOpen("estado") && (
@@ -1483,7 +1483,7 @@ const RegistroSessao = () => {
       {/* ── Seção 2: Conteúdo da Sessão ── */}
       <section
         className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("conteudo") ? "p-3" : "p-5 space-y-4")}
-        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--gold))" }}
+        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--gold))" }}
       >
         <SectionHeader n={2} icon={FileText} title="Conteúdo da sessão" subtitle="Temas, observações e combinados" sectionKey="conteudo" color="hsl(var(--gold))" />
         {isOpen("conteudo") && (
@@ -1537,7 +1537,7 @@ const RegistroSessao = () => {
       {/* ── Seção 3: Avaliação do Terapeuta ── */}
       <section
         className={cn("transition-shadow hover:shadow-md", compactMode && !isOpen("avaliacao") ? "p-3" : "p-5 space-y-4")}
-        style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--moss))" }}
+        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--moss))" }}
       >
         <SectionHeader n={3} icon={ClipboardList} title="Avaliação do terapeuta" subtitle="Engajamento, risco e notas privadas" sectionKey="avaliacao" color="hsl(var(--moss))" />
         {isOpen("avaliacao") && (
@@ -1561,7 +1561,7 @@ const RegistroSessao = () => {
                       style={
                         isCurrent
                           ? { backgroundColor: "hsl(var(--primary))", color: "#FFFFFF", border: "1px solid hsl(var(--primary))", borderRadius: 8, fontSize: 14, fontWeight: 700 }
-                          : { backgroundColor: "#FFFFFF", color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 14, fontWeight: 600 }
+                          : { backgroundColor: "hsl(var(--card))", color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 14, fontWeight: 600 }
                       }
                       aria-label={`Engajamento nível ${level}`}
                     >
@@ -1795,7 +1795,7 @@ const RegistroSessao = () => {
       {form.patient_id && (
         <section
           className="p-5 space-y-4"
-          style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--gold))" }}
+          style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--gold))" }}
         >
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4" style={{ color: "hsl(var(--gold))" }} />
@@ -1840,7 +1840,7 @@ const RegistroSessao = () => {
                   <p className="text-[10px] uppercase text-muted-foreground mb-1">Técnicas previstas</p>
                   <div className="flex flex-wrap gap-1.5">
                     {broughtPlanning.tecnicas.map((t) => (
-                      <span key={t} className="text-xs px-2.5 py-0.5 rounded-full border" style={{ background: "#fff", borderColor: "#E5E7EB", color: "#1A1A2E" }}>{t}</span>
+                      <span key={t} className="text-xs px-2.5 py-0.5 rounded-full border" style={{ background: "hsl(var(--card))", borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" }}>{t}</span>
                     ))}
                   </div>
                 </div>
@@ -1982,7 +1982,7 @@ const RegistroSessao = () => {
       {form.patient_id && form.session_id && (
         <section
           className="p-5 space-y-4"
-          style={{ backgroundColor: "#FFFFFF", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--moss))" }}
+          style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: "3px solid hsl(var(--moss))" }}
         >
           <div className="flex items-center gap-2">
             <NotebookPen className="h-4 w-4" style={{ color: "hsl(var(--moss))" }} />

@@ -3551,7 +3551,7 @@ const Agenda = () => {
                   {/* ── Planejamento da Próxima Sessão (inline) ── */}
                   <section
                     className="rounded-xl border p-4 space-y-3"
-                    style={{ borderColor: "hsl(var(--border))", background: "#FFFFFF", borderLeft: "3px solid hsl(var(--gold))" }}
+                    style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--card))", borderLeft: "3px solid hsl(var(--gold))" }}
                   >
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="flex items-center gap-2">
@@ -3590,7 +3590,7 @@ const Agenda = () => {
                   {/* ── Plano entre Sessões (inline, atrelado à sessão atual) ── */}
                   <section
                     className="rounded-xl border p-3 sm:p-4 space-y-3 min-w-0 overflow-hidden"
-                    style={{ borderColor: "hsl(var(--border))", background: "#FFFFFF", borderLeft: "3px solid hsl(var(--moss))" }}
+                    style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--card))", borderLeft: "3px solid hsl(var(--moss))" }}
                   >
                     <div className="flex items-start gap-2 min-w-0">
                       <NotebookPen className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "hsl(var(--moss))" }} />
