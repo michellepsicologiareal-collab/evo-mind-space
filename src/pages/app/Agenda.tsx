@@ -2067,8 +2067,12 @@ const Agenda = () => {
                   )}
                   title={`Pagamento ${paymentStatusLabel[s.payment_status].toLowerCase()} · R$ ${Number(s.price).toFixed(2)}`}
                 >
+                  <Bell className="h-3 w-3" />
                   <span className={cn("h-1.5 w-1.5 rounded-full", s.payment_status === "paid" ? "bg-emerald-500" : "bg-amber-500")} />
-                  {paymentStatusLabel[s.payment_status]} · R$ {Number(s.price).toFixed(2)}
+                  {paymentStatusLabel[s.payment_status]}
+                  <span className="text-border">·</span>
+                  <DollarSign className="h-3 w-3" />
+                  R$ {Number(s.price).toFixed(2)}
                 </span>
               </>
             )}
