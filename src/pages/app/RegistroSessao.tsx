@@ -1305,7 +1305,7 @@ const RegistroSessao = () => {
             className="flex h-14 w-14 shrink-0 items-center justify-center text-base font-display font-bold"
             style={{ borderRadius: "50%", backgroundColor: "#EEEDFE", color: "#534AB7", fontWeight: 700 }}
           >
-            {selectedPatient ? getInitials(selectedPatient.full_name) : <User className="h-6 w-6" />}
+            <User className="h-6 w-6" />
           </div>
 
           <div className="min-w-0 flex-1 space-y-1.5">
@@ -1316,11 +1316,6 @@ const RegistroSessao = () => {
               >
                 Paciente
               </span>
-              {editingId && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-lilac/40 text-foreground font-medium">
-                  editando
-                </span>
-              )}
             </div>
 
             <Select
@@ -1341,21 +1336,6 @@ const RegistroSessao = () => {
                 ))}
               </SelectContent>
             </Select>
-
-            {selectedPatient && (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1" style={{ fontSize: 12, color: "#6B7280" }}>
-                <span className="inline-flex items-center gap-1">
-                  <History className="h-3.5 w-3.5" />
-                  {patientRecords.length} {patientRecords.length === 1 ? "sessão registrada" : "sessões registradas"}
-                </span>
-                {lastSessionDate && (
-                  <span className="inline-flex items-center gap-1">
-                    <CalendarDays className="h-3.5 w-3.5" />
-                    Última em {format(new Date(lastSessionDate), "dd/MM/yyyy")}
-                  </span>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
