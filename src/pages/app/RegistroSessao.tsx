@@ -65,6 +65,7 @@ const emptyForm = {
   patient_id: "",
   session_id: null as string | null,
   session_date: format(new Date(), "yyyy-MM-dd"),
+  session_time: "" as string, // HH:mm vindo da Agenda (informativo)
   session_number: "",
   modality: "presencial",
   duration_minutes: 50,
@@ -710,14 +711,16 @@ const RegistroSessao = () => {
     if (!user) return;
     const patientParam = searchParams.get("patient");
     const sessionParam = searchParams.get("session");
+    const dateParam = searchParams.get("date");
     if (!patientParam && !sessionParam) return;
-    const key = `${patientParam ?? ""}|${sessionParam ?? ""}`;
+    const key = `${patientParam ?? ""}|${sessionParam ?? ""}|${dateParam ?? ""}`;
     if (lastPrefillKeyRef.current === key && selectedPatientRef.current) return;
     lastPrefillKeyRef.current = key;
 
     (async () => {
       let prefill: Partial<FormState> = {};
       if (patientParam) prefill.patient_id = patientParam;
+      if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) prefill.session_date = dateParam;
       if (sessionParam) {
         const { data: sess } = await supabase
           .from("sessions")
@@ -728,6 +731,26 @@ const RegistroSessao = () => {
           prefill.session_id = sess.id;
           prefill.patient_id = sess.patient_id ?? prefill.patient_id ?? "";
           prefill.session_date = format(new Date(sess.scheduled_at), "yyyy-MM-dd");
+          prefill.session_time = format(new Date(sess.scheduled_at), "HH:mm");
+          if (sess.duration_minutes) prefill.duration_minutes = sess.duration_minutes;
+          if (sess.modality) prefill.modality = sess.modality;
+        }
+      } else if (patientParam) {
+        // Sem sessão explícita: busca a sessão agendada mais próxima (dia informado ou hoje/futuro).
+        const base = prefill.session_date ?? format(new Date(), "yyyy-MM-dd");
+        const { data: near } = await supabase
+          .from("sessions")
+          .select("id, scheduled_at, duration_minutes, modality")
+          .eq("patient_id", patientParam)
+          .gte("scheduled_at", `${base}T00:00:00`)
+          .lte("scheduled_at", `${base}T23:59:59`)
+          .order("scheduled_at", { ascending: true })
+          .limit(1);
+        const sess = near?.[0];
+        if (sess) {
+          prefill.session_id = sess.id;
+          prefill.session_date = format(new Date(sess.scheduled_at), "yyyy-MM-dd");
+          prefill.session_time = format(new Date(sess.scheduled_at), "HH:mm");
           if (sess.duration_minutes) prefill.duration_minutes = sess.duration_minutes;
           if (sess.modality) prefill.modality = sess.modality;
         }
@@ -744,6 +767,7 @@ const RegistroSessao = () => {
             ...emptyForm,
             // preserva preferências de layout
             session_date: prefill.session_date ?? format(new Date(), "yyyy-MM-dd"),
+            session_time: prefill.session_time ?? "",
             duration_minutes: prefill.duration_minutes ?? emptyForm.duration_minutes,
             modality: prefill.modality ?? emptyForm.modality,
             patient_id: urlPatient ?? "",
@@ -1380,8 +1404,8 @@ const RegistroSessao = () => {
         </div>
 
 
-        {/* Linha rápida: data / nº / modalidade / duração */}
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
+        {/* Linha rápida: data / horário / nº / modalidade / duração */}
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-5 gap-2 pt-4" style={{ borderTop: "1px solid hsl(var(--border))" }}>
           <div className="space-y-1">
             <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
               <CalendarDays className="h-3 w-3" /> Data
@@ -1394,6 +1418,20 @@ const RegistroSessao = () => {
               style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
             />
           </div>
+          <div className="space-y-1">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
+              <Clock className="h-3 w-3" /> Horário
+            </Label>
+            <Input
+              type="time"
+              value={form.session_time}
+              onChange={(e) => setForm({ ...form, session_time: e.target.value })}
+              className="h-9"
+              placeholder="--:--"
+              style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
+            />
+          </div>
+
           <div className="space-y-1">
             <Label className="uppercase" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
               Sessão nº
