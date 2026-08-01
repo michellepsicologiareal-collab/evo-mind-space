@@ -1237,7 +1237,7 @@ const RegistroSessao = () => {
               Registro de Sessão
             </h1>
             <p className="mt-1" style={{ fontSize: 13, color: "#6B7280" }}>
-              {editingId ? "Editando registro existente." : "Documente os dados clínicos da sessão realizada."}
+              Documente os dados clínicos da sessão realizada.
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
