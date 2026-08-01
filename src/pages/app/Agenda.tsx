@@ -3364,24 +3364,16 @@ const Agenda = () => {
 
       {/* ── Edit Session Dialog ── */}
       <Dialog open={editOpen} onOpenChange={(v) => { if (!v) { editGuard.guardClose(() => setEditOpen(false), () => setEditOpen(false)); } else { setEditOpen(true); } }}>
-        <DialogContent className="w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 left-0 top-0 overflow-y-auto overflow-x-hidden p-4 sm:p-8" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
-          <DialogHeader>
-            <DialogTitle className="font-display text-2xl">Editar sessão</DialogTitle>
+        <DialogContent className="inset-0 w-auto max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 p-0 gap-0 grid grid-rows-[auto_minmax(0,1fr)] overflow-hidden" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader className="px-4 sm:px-8 pt-4 pb-3 pr-12 border-b border-border bg-background text-left">
+            <DialogTitle className="font-display text-lg sm:text-2xl leading-tight">Editar sessão</DialogTitle>
+            {(() => {
+              const session = sessions.find((s) => s.id === editSessionId);
+              if (!session?.patient_name) return null;
+              return <p className="text-sm text-muted-foreground truncate">{session.patient_name}</p>;
+            })()}
           </DialogHeader>
-          {(() => {
-            const session = sessions.find((s) => s.id === editSessionId);
-            return (
-              <>
-                {session?.patient_name && (
-                  <div className="rounded-xl bg-muted/50 border border-border p-3 mb-2">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Paciente</p>
-                    <p className="font-display font-semibold text-foreground">{session.patient_name}</p>
-                  </div>
-                )}
-              </>
-            );
-          })()}
-          <form onSubmit={handleEditSave} className="space-y-4 w-full max-w-[1100px] mx-auto pb-20">
+          <form onSubmit={handleEditSave} className="flex flex-col min-h-0 overflow-y-auto overflow-x-hidden [&>*]:w-full [&>*]:max-w-[1100px] [&>*]:mx-auto px-4 sm:px-8 pt-4 space-y-4">
             {/* Tipo de compromisso / Serviço */}
             <div className="space-y-2">
               <Label>Tipo de compromisso</Label>
