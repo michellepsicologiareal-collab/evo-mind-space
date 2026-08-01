@@ -1751,6 +1751,15 @@ const Patients = () => {
                           >
                             {p.is_active ? "Ativo" : "Inativo"}
                           </span>
+                          {p.shared_with_supervisor && (
+                            <span
+                              className="inline-flex items-center gap-1"
+                              style={{ background: "rgba(155,114,211,0.12)", color: "#9B72D3", fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}
+                              title="Caso compartilhado com supervisora"
+                            >
+                              <Share2 className="h-3 w-3" /> Compartilhado
+                            </span>
+                          )}
                         </div>
                   </div>
 
