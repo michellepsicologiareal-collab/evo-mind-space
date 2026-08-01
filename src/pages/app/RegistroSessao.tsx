@@ -620,25 +620,18 @@ const RegistroSessao = () => {
   // --- Draft auto-save ---
   // Keep a ref with the latest form so event listeners always read fresh data
   const formRef = useRef(form);
-  const editingIdRef = useRef(editingId);
   useEffect(() => { formRef.current = form; }, [form]);
-  useEffect(() => { editingIdRef.current = editingId; }, [editingId]);
-
-  const draftKeyFor = useCallback(
-    (id: string | null) => (id ? `${DRAFT_KEY}::${id}` : DRAFT_KEY),
-    []
-  );
 
   const flushDraft = useCallback(() => {
     try {
       const f = formRef.current;
       if (hasMeaningfulData(f)) {
-        localStorage.setItem(draftKeyFor(editingIdRef.current), JSON.stringify(f));
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(f));
       }
     } catch {
       /* storage may be full or unavailable — ignore */
     }
-  }, [draftKeyFor]);
+  }, []);
 
   // Save draft on every meaningful change (covers typing pauses)
   useEffect(() => {
