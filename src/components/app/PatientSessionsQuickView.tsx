@@ -987,10 +987,13 @@ export const PatientSessionsQuickView = ({
       )}
 
       {/* Drawer com registro completo */}
-      <Sheet open={!!detail} onOpenChange={(o) => { if (!o) setDetail(null); }}>
+      <Sheet open={!!detail} onOpenChange={(o) => { if (!o) { setDetail(null); setDetailFullscreen(false); } }}>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-[560px] p-0"
+          className={cn(
+            "w-full p-0 transition-all duration-300 ease-in-out",
+            detailFullscreen ? "sm:max-w-full max-w-full" : "sm:max-w-[560px]"
+          )}
           style={{ background: "hsl(var(--card))", borderLeft: "0.5px solid hsl(var(--border))" }}
         >
           <VisuallyHidden>
@@ -998,24 +1001,36 @@ export const PatientSessionsQuickView = ({
             <SheetDescription>Detalhes completos do registro selecionado.</SheetDescription>
           </VisuallyHidden>
           {detail && (
-            <div className="h-full overflow-y-auto p-5 space-y-4">
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-[10px] uppercase text-muted-foreground">Registro de sessão</p>
-                  <SourceBadge source={detail.source} />
+            <div className={cn("h-full overflow-y-auto p-5 space-y-4", detailFullscreen && "md:p-8")}>
+              <div className="flex items-start justify-between gap-3 pr-10">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-[10px] uppercase text-muted-foreground">Registro de sessão</p>
+                    <SourceBadge source={detail.source} />
+                  </div>
+                  <h2 className="text-lg font-display font-semibold text-foreground">
+                    {format(parseSessionDate(detail.session_date) ?? new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                    {detail.session_number != null && (
+                      <span className="ml-2 text-xs text-muted-foreground">Sessão #{detail.session_number}</span>
+                    )}
+                  </h2>
+                  <p className="text-xs text-muted-foreground capitalize">
+                    {detail.modality ?? "—"}
+                    {detail.duration_minutes != null && ` · ${detail.duration_minutes} min`}
+                    {detail.engagement != null && ` · Engajamento ${detail.engagement}/5`}
+                    {detail.source === "v2" && detail.wellbeing_score != null && ` · Bem-estar ${detail.wellbeing_score}/10`}
+                  </p>
                 </div>
-                <h2 className="text-lg font-display font-semibold text-foreground">
-                  {format(parseSessionDate(detail.session_date) ?? new Date(), "dd 'de' MMMM, yyyy", { locale: ptBR })}
-                  {detail.session_number != null && (
-                    <span className="ml-2 text-xs text-muted-foreground">Sessão #{detail.session_number}</span>
-                  )}
-                </h2>
-                <p className="text-xs text-muted-foreground capitalize">
-                  {detail.modality ?? "—"}
-                  {detail.duration_minutes != null && ` · ${detail.duration_minutes} min`}
-                  {detail.engagement != null && ` · Engajamento ${detail.engagement}/5`}
-                  {detail.source === "v2" && detail.wellbeing_score != null && ` · Bem-estar ${detail.wellbeing_score}/10`}
-                </p>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 h-8 w-8"
+                  onClick={() => setDetailFullscreen((f) => !f)}
+                  aria-label={detailFullscreen ? "Sair da tela cheia" : "Ver em tela cheia"}
+                  title={detailFullscreen ? "Sair da tela cheia" : "Ver em tela cheia"}
+                >
+                  {detailFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                </Button>
               </div>
 
               {detail.themes && detail.themes.length > 0 && (
@@ -1044,12 +1059,14 @@ export const PatientSessionsQuickView = ({
                 </div>
               )}
 
-              {detail.chief_complaint && (
-                <Section title="Queixa / contexto trazido">{detail.chief_complaint}</Section>
-              )}
-              {detail.clinical_observations && (
-                <Section title="Observação clínica">{detail.clinical_observations}</Section>
-              )}
+              <div className={cn("space-y-4", detailFullscreen && "md:grid md:grid-cols-2 md:gap-6 md:space-y-0")}>
+                {detail.chief_complaint && (
+                  <Section title="Queixa / contexto trazido">{detail.chief_complaint}</Section>
+                )}
+                {detail.clinical_observations && (
+                  <Section title="Observação clínica">{detail.clinical_observations}</Section>
+                )}
+              </div>
 
               {detail.attention_flag && ATTENTION_LABEL[detail.attention_flag] && (
                 <div className="rounded-lg bg-destructive/10 p-3 border border-destructive/20">
@@ -1071,6 +1088,7 @@ export const PatientSessionsQuickView = ({
           )}
         </SheetContent>
       </Sheet>
+
     </div>
   );
 };
