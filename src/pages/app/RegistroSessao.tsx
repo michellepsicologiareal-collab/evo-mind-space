@@ -1435,8 +1435,8 @@ const RegistroSessao = () => {
             <button
               type="button"
               onClick={() => setCompactMode((v) => !v)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium hover:bg-muted/40 transition-colors"
-              style={{ border: "1px solid hsl(var(--border))", borderRadius: 8, color: "hsl(var(--muted-foreground))" }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium hover:bg-background transition-colors"
+              style={{ border: "1px solid hsl(var(--border))", borderRadius: 40, fontFamily: "Syne, sans-serif", fontWeight: 600, color: "hsl(var(--muted-foreground))" }}
               aria-pressed={compactMode}
             >
               {compactMode ? <Maximize2 className="h-3 w-3" /> : <Minimize2 className="h-3 w-3" />}
