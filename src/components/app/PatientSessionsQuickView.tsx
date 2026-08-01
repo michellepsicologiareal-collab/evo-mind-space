@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { format, differenceInDays, differenceInMonths, differenceInYears, addDays, startOfWeek, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { FileText, Loader2, ChevronRight, ChevronLeft, AlertTriangle, ChevronDown, ChevronUp, Calendar, Target, ClipboardList, Pencil, Save } from "lucide-react";
+import { FileText, Loader2, ChevronRight, ChevronLeft, AlertTriangle, ChevronDown, ChevronUp, Calendar, Target, ClipboardList, Pencil, Save, Download } from "lucide-react";
+import { jsPDF } from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -165,6 +166,7 @@ export const PatientSessionsQuickView = ({
   const [saving, setSaving] = useState(false);
   const [editDraft, setEditDraft] = useState({ chief_complaint: "", clinical_observations: "", next_session_plan: "" });
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+  const [exporting, setExporting] = useState(false);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const day = addDays(weekStart, i);
@@ -173,6 +175,121 @@ export const PatientSessionsQuickView = ({
       .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
     return { day, sessions };
   });
+
+  const exportPdf = async () => {
+    setExporting(true);
+    try {
+      const { data: patient } = await supabase
+        .from("patients")
+        .select("full_name")
+        .eq("id", patientId)
+        .maybeSingle();
+      const patientName = patient?.full_name ?? "Paciente";
+
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentWidth = pageW - margin * 2;
+      let y = margin;
+
+      const ensureSpace = (needed: number) => {
+        if (y + needed > pageH - margin) {
+          doc.addPage();
+          y = margin;
+        }
+      };
+
+      const writeBlock = (label: string, value: string) => {
+        const lines = doc.splitTextToSize(value, contentWidth - 2) as string[];
+        ensureSpace(6 + lines.length * 4.6);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(110);
+        doc.text(label, margin + 1, y);
+        y += 4.4;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(30);
+        doc.text(lines, margin + 1, y);
+        y += lines.length * 4.6 + 2;
+      };
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(20);
+      doc.text("Histórico de sessões", margin, y);
+      y += 7;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.text(patientName, margin, y);
+      y += 5;
+      doc.setFontSize(9);
+      doc.setTextColor(120);
+      doc.text(`Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, margin, y);
+      y += 8;
+
+      const ordered = [...agenda].sort(
+        (a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime()
+      );
+
+      ordered.forEach((s) => {
+        const rec = recordsBySession[s.id] ?? null;
+        const dt = new Date(s.scheduled_at);
+        ensureSpace(18);
+        doc.setDrawColor(220);
+        doc.line(margin, y, pageW - margin, y);
+        y += 5;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(20);
+        doc.text(format(dt, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }), margin, y);
+        y += 4.6;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(110);
+        const meta = [
+          SESSION_STATUS_LABEL[s.status] ?? s.status,
+          s.modality ? `Modalidade: ${s.modality}` : "Modalidade: não informada",
+          s.duration_minutes != null ? `${s.duration_minutes} min` : null,
+        ].filter(Boolean) as string[];
+        doc.text(meta.join("  ·  "), margin, y);
+        y += 5.5;
+
+        if (!rec) {
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(10);
+          doc.setTextColor(140);
+          doc.text("Sem registro escrito.", margin + 1, y);
+          y += 7;
+          return;
+        }
+
+        if (rec.chief_complaint) writeBlock("Queixa / contexto", rec.chief_complaint);
+        if (rec.clinical_observations) writeBlock("Observação clínica", rec.clinical_observations);
+        if (rec.themes && rec.themes.length > 0) writeBlock("Temas", rec.themes.filter(Boolean).join(", "));
+        if (rec.next_session_plan) writeBlock("Combinado / tarefa", rec.next_session_plan);
+        y += 2;
+      });
+
+      const total = doc.getNumberOfPages();
+      for (let i = 1; i <= total; i++) {
+        doc.setPage(i);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`${i} / ${total}`, pageW - margin, pageH - 8, { align: "right" });
+      }
+
+      const safe = patientName.normalize("NFD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").toLowerCase();
+      doc.save(`historico-sessoes-${safe || "paciente"}.pdf`);
+      toast.success("PDF gerado");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível gerar o PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const startEdit = (rec: UnifiedRecord) => {
     setEditingId(rec.id);
@@ -518,16 +635,23 @@ export const PatientSessionsQuickView = ({
       <div>
         <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
           <h3 className="text-sm font-display font-semibold text-foreground">Sessões agendadas</h3>
-          {(periodFilter !== "upcoming" || statusFilter !== "all" || modalityFilter !== "all") && (
-            <button
-              type="button"
-              onClick={() => { setPeriodFilter("upcoming"); setStatusFilter("all"); setModalityFilter("all"); }}
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              Limpar filtros
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {(periodFilter !== "upcoming" || statusFilter !== "all" || modalityFilter !== "all") && (
+              <button
+                type="button"
+                onClick={() => { setPeriodFilter("upcoming"); setStatusFilter("all"); setModalityFilter("all"); }}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Limpar filtros
+              </button>
+            )}
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={exportPdf} disabled={exporting || agenda.length === 0}>
+              {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              Exportar PDF
+            </Button>
+          </div>
         </div>
+
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
           <Select value={periodFilter} onValueChange={setPeriodFilter}>
