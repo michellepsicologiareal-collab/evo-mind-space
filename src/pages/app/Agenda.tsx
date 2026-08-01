@@ -2736,6 +2736,8 @@ const Agenda = () => {
               </SelectContent>
             </Select>
           </div>
+          </div>
+
 
 
           {/* ── Resumo do dia ── */}
