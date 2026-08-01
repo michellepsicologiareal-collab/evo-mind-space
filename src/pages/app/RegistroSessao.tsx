@@ -1452,8 +1452,10 @@ const RegistroSessao = () => {
               value={form.session_date}
               onChange={(e) => setForm({ ...form, session_date: e.target.value })}
               className="h-9"
-              style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
+              aria-invalid={!!errors.session_date}
+              style={{ border: `1px solid ${errors.session_date ? "hsl(var(--destructive))" : "hsl(var(--border))"}`, borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
             />
+            {errors.session_date && <FieldError message={errors.session_date} />}
           </div>
           <div className="space-y-1">
             <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
@@ -1465,9 +1467,51 @@ const RegistroSessao = () => {
               onChange={(e) => setForm({ ...form, session_time: e.target.value })}
               className="h-9"
               placeholder="--:--"
-              style={{ border: "1px solid hsl(var(--border))", borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
+              aria-invalid={!!errors.session_time}
+              style={{ border: `1px solid ${errors.session_time ? "hsl(var(--destructive))" : "hsl(var(--border))"}`, borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}
             />
+            {errors.session_time && <FieldError message={errors.session_time} />}
           </div>
+
+          <div className="space-y-1">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
+              <CheckSquare className="h-3 w-3" /> Presença
+            </Label>
+            <Select
+              value={form.attendance_status}
+              onValueChange={(v) => setForm({ ...form, attendance_status: v })}
+            >
+              <SelectTrigger className="h-9" aria-invalid={!!errors.attendance_status} style={{ border: `1px solid ${errors.attendance_status ? "hsl(var(--destructive))" : "hsl(var(--border))"}`, borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="completed">Compareceu</SelectItem>
+                <SelectItem value="no_show">Falta</SelectItem>
+                <SelectItem value="cancelled">Cancelada</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.attendance_status && <FieldError message={errors.attendance_status} />}
+          </div>
+
+          <div className="space-y-1">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
+              Pagamento
+            </Label>
+            <Select
+              value={form.payment_status}
+              onValueChange={(v) => setForm({ ...form, payment_status: v })}
+            >
+              <SelectTrigger className="h-9" aria-invalid={!!errors.payment_status} style={{ border: `1px solid ${errors.payment_status ? "hsl(var(--destructive))" : "hsl(var(--border))"}`, borderRadius: 7, backgroundColor: "hsl(var(--muted))" }}>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="paid">Pago</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.payment_status && <FieldError message={errors.payment_status} />}
+          </div>
+
 
           <div className="space-y-1">
             <Label className="uppercase" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
