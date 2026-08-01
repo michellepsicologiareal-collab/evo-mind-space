@@ -3619,7 +3619,7 @@ const Agenda = () => {
                 </>
               );
             })()}
-            <DialogFooter className="flex-col sm:flex-row gap-2">
+            <DialogFooter className="flex-col sm:flex-row gap-2 sticky bottom-0 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 py-3 bg-background border-t border-border">
               <Button
                 type="button" variant="destructive" size="sm"
                 className="sm:mr-auto"
