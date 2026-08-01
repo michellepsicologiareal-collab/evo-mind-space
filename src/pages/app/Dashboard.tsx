@@ -56,6 +56,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { fetchWeekSessions } from "@/lib/sessions/weekSessions";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /* ─── Real data types ─── */
 interface WeekSession {
@@ -212,6 +213,7 @@ export default function Dashboard() {
   const [todayItems, setTodayItems] = useState<TodayItem[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => startOfMonth(new Date()));
   const [trendRange, setTrendRange] = useState<6 | 12>(6);
+  const isMobile = useIsMobile();
   const [trendRevenueView, setTrendRevenueView] = useState<"total" | "split">("total");
   const [trendData, setTrendData] = useState<Array<{ key: string; label: string; sessions: number; revenue: number; revenuePaid: number; revenuePending: number }>>([]);
   const [loadingTrend, setLoadingTrend] = useState(false);
@@ -648,7 +650,7 @@ export default function Dashboard() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-6 md:py-8 space-y-8">
+      <div className="mx-auto w-full max-w-[1200px] px-3 sm:px-4 md:px-6 py-4 md:py-8 space-y-6 md:space-y-8">
         <HelpCard
           id="painel"
           title="Painel"
@@ -659,54 +661,57 @@ export default function Dashboard() {
           ]}
         />
         {/* ─ Cabeçalho ─ */}
-        <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <header className="flex flex-col gap-3 md:gap-4 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
-            <h1 className="font-display text-2xl md:text-[28px] leading-tight font-semibold tracking-tight text-foreground">
+            <h1 className="font-display text-xl sm:text-2xl md:text-[28px] leading-tight font-semibold tracking-tight text-foreground break-words">
               {greeting()}{displayName ? `, ${displayName}` : ""}
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
               {capDate} · Próxima sessão às{" "}
               <span className="text-foreground font-medium">{nextTime}</span>
             </p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <RefreshButton />
+          <div className="flex w-full items-center gap-2 md:w-auto">
             <Button
               variant="outline"
               size="sm"
-              className="h-10 rounded-full gap-2"
+              className="h-10 flex-1 md:flex-none rounded-full gap-2"
               onClick={() => navigate("/app/pacientes")}
             >
               <Search className="h-4 w-4" />
-              Buscar paciente
+              Buscar
             </Button>
             <Button
               size="sm"
-              className="h-10 rounded-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              className="h-10 flex-1 md:flex-none rounded-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
               onClick={() => navigate("/app/agenda")}
             >
               <Plus className="h-4 w-4" />
               Nova sessão
             </Button>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Notificações"
-                  className="h-10 w-10 rounded-full"
-                >
-                  <Bell className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Notificações</TooltipContent>
-            </Tooltip>
+            <div className="hidden md:flex items-center gap-2">
+              <RefreshButton />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Notificações"
+                    className="h-10 w-10 rounded-full"
+                  >
+                    <Bell className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Notificações</TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         </header>
 
+
         {/* ─ Filtro de mês ─ */}
-        <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="dash-month" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <label htmlFor="dash-month" className="text-[11px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Mês de referência
           </label>
           <input
@@ -719,10 +724,11 @@ export default function Dashboard() {
               const [y, m] = v.split("-").map(Number);
               setSelectedMonth(startOfMonth(new Date(y, (m ?? 1) - 1, 1)));
             }}
-            className="h-9 rounded-full border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="h-9 max-w-[10.5rem] rounded-full border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Selecionar mês de referência"
           />
-          <span className="text-sm text-muted-foreground">{selectedMonthLabel}</span>
+          <span className="hidden sm:inline text-sm text-muted-foreground">{selectedMonthLabel}</span>
+
           {!isCurrentMonth && (
             <Button
               variant="ghost"
@@ -738,7 +744,7 @@ export default function Dashboard() {
         {/* ─ KPIs ─ */}
         <section
           aria-label="Indicadores principais"
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+          className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 xl:grid-cols-5"
         >
           {KPI.map((k, i) => {
             const tones = ["--primary", "--primary", "--lilac", "--primary", "--lilac"] as const;
@@ -749,24 +755,25 @@ export default function Dashboard() {
                 to={k.to}
                 className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-2xl"
               >
-                <Card className="relative overflow-hidden rounded-2xl border-border/60 bg-card p-5 shadow-none transition-all hover:border-border hover:shadow-soft h-full">
+                <Card className="relative overflow-hidden rounded-2xl border-border/60 bg-card p-3.5 sm:p-5 shadow-none transition-all hover:border-border hover:shadow-soft h-full">
                   {/* Bolha pastel decorativa (pegada do modelo) */}
                   <span
                     aria-hidden
                     className="pointer-events-none absolute -bottom-10 -right-8 h-28 w-28 rounded-full opacity-[0.14] transition-opacity group-hover:opacity-25"
                     style={{ background: `hsl(var(${tone}))` }}
                   />
-                  <p className="relative flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: `hsl(var(${tone}))` }}>
-                    <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: `hsl(var(${tone}))` }} aria-hidden />
-                    <span className="truncate">{k.label}</span>
+                  <p className="relative flex items-start gap-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.06em] sm:tracking-[0.1em] leading-tight" style={{ color: `hsl(var(${tone}))` }}>
+                    <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: `hsl(var(${tone}))` }} aria-hidden />
+                    <span className="min-w-0 break-words">{k.label}</span>
                   </p>
-                  <p className="relative mt-3 font-display text-3xl md:text-[2rem] font-bold tracking-[-0.02em] text-foreground">
+                  <p className="relative mt-2 sm:mt-3 font-display text-xl sm:text-3xl md:text-[2rem] font-bold tracking-[-0.02em] text-foreground break-words">
                     {k.value}
                   </p>
-                  <p className="relative mt-2 text-xs text-muted-foreground">{k.hint}</p>
+                  <p className="relative mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-muted-foreground">{k.hint}</p>
                   {("sub" in k) && k.sub ? (
-                    <p className="relative mt-1 text-xs text-muted-foreground/90">{k.sub}</p>
+                    <p className="relative mt-1 text-[11px] sm:text-xs text-muted-foreground/90">{k.sub}</p>
                   ) : null}
+
                 </Card>
               </Link>
             );
@@ -777,14 +784,15 @@ export default function Dashboard() {
         {/* ─ Tendência: Sessões x Faturamento ─ */}
         <section aria-labelledby="trend-heading" className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 id="trend-heading" className="font-display text-xl font-semibold tracking-tight">
+            <div className="min-w-0">
+              <h2 id="trend-heading" className="font-display text-lg sm:text-xl font-semibold tracking-tight">
                 Tendência dos últimos {trendRange} meses
               </h2>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">
                 Sessões totais e faturamento realizado até {selectedMonthLabel}
               </p>
             </div>
+
             <div
               role="tablist"
               aria-label="Janela da tendência"
@@ -865,13 +873,13 @@ export default function Dashboard() {
               );
             })()}
             {loadingTrend ? (
-              <div className="h-72 rounded-lg bg-muted/40 animate-pulse" />
+              <div className="h-56 md:h-72 rounded-lg bg-muted/40 animate-pulse" />
             ) : trendData.every((d) => d.sessions === 0 && d.revenue === 0 && d.revenuePending === 0) ? (
-              <div className="h-72 flex items-center justify-center text-sm text-muted-foreground">
+              <div className="h-56 md:h-72 flex items-center justify-center text-sm text-muted-foreground">
                 Sem dados nos últimos {trendRange} meses.
               </div>
             ) : (
-              <div className="h-72 w-full" style={{ fontFamily: CHART_FONT_FAMILY }}>
+              <div className="h-56 md:h-72 w-full" style={{ fontFamily: CHART_FONT_FAMILY }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={trendData} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
@@ -882,10 +890,18 @@ export default function Dashboard() {
                       orientation="right"
                       tickLine={false}
                       axisLine={false}
-                      tickMargin={8}
+                      tickMargin={isMobile ? 4 : 8}
+                      width={isMobile ? 44 : 70}
                       tick={CHART_TICK_STYLE}
-                      tickFormatter={(v: number) => fmtBRL(v)}
+                      tickFormatter={(v: number) =>
+                        isMobile
+                          ? v >= 1000
+                            ? `${Math.round(v / 1000)}k`
+                            : String(v)
+                          : fmtBRL(v)
+                      }
                     />
+
                     <RTooltip
                       contentStyle={CHART_TOOLTIP_CONTENT_STYLE}
                       labelStyle={CHART_TOOLTIP_LABEL_STYLE}
@@ -916,7 +932,7 @@ export default function Dashboard() {
         {/* ─ Hoje ─ */}
         <section aria-labelledby="today-heading" className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 id="today-heading" className="font-display text-xl font-semibold tracking-tight">
+            <h2 id="today-heading" className="font-display text-lg sm:text-xl font-semibold tracking-tight">
               Hoje
             </h2>
             <Button
@@ -952,7 +968,7 @@ export default function Dashboard() {
         <section className="grid gap-6 lg:grid-cols-[1fr_1.15fr]">
           {/* Atenção */}
           <div className="space-y-3">
-            <h2 className="font-display text-xl font-semibold tracking-tight">
+            <h2 className="font-display text-lg sm:text-xl font-semibold tracking-tight">
               Atenção necessária
             </h2>
             <Card className="rounded-2xl border-border/60 divide-y divide-border/60 overflow-hidden">
@@ -992,20 +1008,21 @@ export default function Dashboard() {
           {/* Semana */}
           <div className="space-y-3">
             <div>
-              <h2 className="font-display text-xl font-semibold tracking-tight">
+              <h2 className="font-display text-lg sm:text-xl font-semibold tracking-tight">
                 Agenda da semana
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
                 {totalWeek} {totalWeek === 1 ? "sessão" : "sessões"} de segunda a sexta · <span className="capitalize">{selectedLabel}</span> selecionada
               </p>
             </div>
-            <Card className="rounded-2xl border-border/60 p-5 space-y-5">
+            <Card className="rounded-2xl border-border/60 p-3.5 sm:p-5 space-y-4 sm:space-y-5">
               <div
                 ref={tabsRef}
                 role="tablist"
                 aria-label="Dias da semana"
                 onKeyDown={onTabsKeyDown}
-                className="flex items-end justify-between gap-3 h-44"
+                className="flex items-end justify-between gap-1.5 sm:gap-3 h-36 sm:h-44"
+
               >
                 {weekDays.map((d, i) => {
                   const active = isSameDay(d, selectedDate);
@@ -1033,11 +1050,11 @@ export default function Dashboard() {
                       >
                         {value}
                       </span>
-                      <div className="flex h-32 w-full items-end justify-center">
+                      <div className="flex h-24 sm:h-32 w-full items-end justify-center">
                         <div
                           style={{ height: value === 0 ? "4px" : `${pct}%` }}
                           className={cn(
-                            "w-6 md:w-8 rounded-t-md transition-colors",
+                            "w-5 sm:w-6 md:w-8 rounded-t-md transition-colors",
                             active
                               ? "bg-primary"
                               : value === 0
@@ -1118,28 +1135,29 @@ export default function Dashboard() {
 
         {/* ─ Financeiro compacto ─ */}
         <section aria-labelledby="finance-heading">
-          <Card className="rounded-2xl border-border/60 bg-muted/30 p-5 md:p-6">
+          <Card className="rounded-2xl border-border/60 bg-muted/30 p-4 sm:p-5 md:p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="grid flex-1 gap-4 sm:grid-cols-3">
-                <div>
-                  <p className="text-xs text-muted-foreground">Recebido · {selectedMonthLabel}</p>
-                  <p className="mt-1 text-lg font-semibold text-emerald-700 dark:text-emerald-400">
+              <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Recebido · {selectedMonthLabel}</p>
+                  <p className="mt-1 text-base sm:text-lg font-semibold text-emerald-700 dark:text-emerald-400 break-words">
                     {fmtBRL(finRecebido)}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">A receber</p>
-                  <p className="mt-1 text-lg font-semibold text-foreground">
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">A receber</p>
+                  <p className="mt-1 text-base sm:text-lg font-semibold text-foreground break-words">
                     {fmtBRL(finAReceber)}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Em atraso</p>
-                  <p className="mt-1 text-lg font-semibold text-amber-700 dark:text-amber-400">
-                    {finAtrasoCount} {finAtrasoCount === 1 ? "pagamento" : "pagamentos"}
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Em atraso</p>
+                  <p className="mt-1 text-base sm:text-lg font-semibold text-amber-700 dark:text-amber-400 break-words">
+                    {finAtrasoCount} {finAtrasoCount === 1 ? "pgto." : "pgtos."}
                   </p>
                 </div>
               </div>
+
               <Button
                 variant="outline"
                 size="sm"
