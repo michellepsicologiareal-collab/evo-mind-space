@@ -167,6 +167,8 @@ export const PatientSessionsQuickView = ({
   const [editDraft, setEditDraft] = useState({ chief_complaint: "", clinical_observations: "", next_session_plan: "" });
   const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [exporting, setExporting] = useState(false);
+  const [detailFullscreen, setDetailFullscreen] = useState(false);
+
 
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const day = addDays(weekStart, i);
