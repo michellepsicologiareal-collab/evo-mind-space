@@ -1339,35 +1339,8 @@ const Patients = () => {
         >
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full" style={{ borderCollapse: "collapse", fontSize: 13, minWidth: 880 }}>
-              <thead>
-                <tr style={{ background: C.card, borderBottom: `1px solid ${C.border}` }}>
-                  {[
-                    { k: "avatar", label: "", w: 68 },
-                    { k: "nome", label: "Paciente" },
-                    { k: "modalidade", label: "Modalidade" },
-                    { k: "plano", label: "Plano" },
-                    { k: "status", label: "Status" },
-                    { k: "acoes", label: "Ações", w: 72 },
-                  ].map((h) => (
-                    <th
-                      key={h.k}
-                      style={{
-                        textAlign: h.k === "acoes" ? "right" : "left",
-                        padding: "16px 18px",
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: "hsl(var(--muted-foreground))",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.1em",
-                        width: (h as any).w,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {h.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
+              <tbody>
+
 
               <tbody>
                 {filtered.map((p, idx) => {
@@ -1446,121 +1419,70 @@ const Patients = () => {
                         </div>
                       </td>
 
-                      {/* Nome */}
-                      <td style={{ padding: "16px 18px", verticalAlign: "middle", minWidth: 220 }}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="min-w-0 cursor-pointer">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <p className="truncate" style={{ fontWeight: 600, fontSize: 14, color: C.ink, maxWidth: 200 }}>
-                                  {p.full_name}
-                                </p>
-                                {!formulationFilled[p.id] && (
-                                  <span
-                                    className="inline-flex items-center gap-0.5"
-                                    title="Sem formulação"
-                                    aria-label="Sem formulação"
-                                    style={{ background: C.goldSoft, color: C.gold, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 40, whiteSpace: "nowrap" }}
-                                  >
-                                    <ClipboardList className="h-2.5 w-2.5" />
-                                    sem formulação
-                                  </span>
-                                )}
-                                {p.is_active && !si?.nextDate && (
-                                  <span
-                                    className="inline-flex items-center gap-0.5"
-                                    title="Sem próxima sessão agendada"
-                                    aria-label="Sem próxima sessão"
-                                    style={{ background: C.redSoft, color: C.red, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 40, whiteSpace: "nowrap" }}
-                                  >
-                                    <CalendarDays className="h-2.5 w-2.5" />
-                                    sem próxima
-                                  </span>
-                                )}
-                              </div>
-                              {p.phone && (
-                                <span className="inline-flex items-center gap-1 mt-0.5" style={{ fontSize: 11, color: C.muted }}>
-                                  <Phone className="h-3 w-3" />
-                                  <span className="truncate max-w-[160px]">{p.phone}</span>
-                                </span>
-                              )}
-                              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5" style={{ fontSize: 11, color: C.muted }}>
+                      {/* Nome + meta */}
+                      <td style={{ padding: "14px 18px", verticalAlign: "middle", minWidth: 320 }}>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="truncate" style={{ fontWeight: 600, fontSize: 14, color: C.ink, maxWidth: 280 }}>
+                              {p.full_name}
+                            </p>
+                            {!formulationFilled[p.id] && (
+                              <span
+                                className="inline-flex items-center justify-center"
+                                title="Sem formulação"
+                                aria-label="Sem formulação"
+                                style={{ color: C.gold }}
+                              >
+                                <ClipboardList className="h-3.5 w-3.5" />
+                              </span>
+                            )}
+                            {p.is_active && !si?.nextDate && (
+                              <span
+                                className="inline-flex items-center justify-center"
+                                title="Sem próxima sessão agendada"
+                                aria-label="Sem próxima sessão"
+                                style={{ color: C.red }}
+                              >
+                                <CalendarDays className="h-3.5 w-3.5" />
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5" style={{ fontSize: 11.5, color: C.muted }}>
+                            {(() => {
+                              const m = (p.modality ?? "").toString().toLowerCase();
+                              const label =
+                                m === "online" ? "Online"
+                                : m === "presencial" ? "Presencial"
+                                : m === "hibrido" || m === "híbrido" ? "Híbrido"
+                                : null;
+                              return label ? (
                                 <span className="inline-flex items-center gap-1">
-                                  <CalendarDays className="h-3 w-3" style={{ color: C.muted }} />
-                                  Última: {si?.lastDate ? format(new Date(si.lastDate), "dd/MM", { locale: ptBR }) : "—"}
+                                  {m === "online" ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
+                                  {label}
                                 </span>
-                                {si?.nextDate ? (
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); navigate(`/app/agenda?patient=${p.id}`); }}
-                                    className="inline-flex items-center gap-1"
-                                    style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", color: C.ink, fontWeight: 600 }}
-                                    title="Ver na agenda"
-                                  >
-                                    <CalendarDays className="h-3 w-3" style={{ color: C.purple }} />
-                                    Próxima: {nextLabel}
-                                  </button>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1">
-                                    <CalendarDays className="h-3 w-3" />
-                                    Próxima: —
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="top">
-                            <span className="flex items-center gap-1.5">
-                              <Eye className="h-3.5 w-3.5" />
-                              Abrir ficha
-                            </span>
-                          </TooltipContent>
-                        </Tooltip>
+                              ) : null;
+                            })()}
+                            {p.phone && (
+                              <span className="inline-flex items-center gap-1">
+                                <Phone className="h-3 w-3" />
+                                <span className="truncate max-w-[150px]">{p.phone}</span>
+                              </span>
+                            )}
+                            {si?.nextDate ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); navigate(`/app/agenda?patient=${p.id}`); }}
+                                className="inline-flex items-center gap-1"
+                                style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", color: C.ink, fontWeight: 600 }}
+                                title="Ver na agenda"
+                              >
+                                <CalendarDays className="h-3 w-3" style={{ color: C.purple }} />
+                                {nextLabel}
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
                       </td>
 
-
-                      {/* Modalidade */}
-                      <td style={{ padding: "16px 18px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                        {(() => {
-                          const m = (p.modality ?? "").toString().toLowerCase();
-                          if (m === "online") {
-                            return <span style={{ background: C.purpleSoft, color: C.purpleInk, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>Online</span>;
-                          }
-                          if (m === "presencial") {
-                            return <span style={{ background: C.greenSoft, color: C.green, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>Presencial</span>;
-                          }
-                          if (m === "hibrido" || m === "híbrido") {
-                            return <span style={{ background: C.goldSoft, color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>Híbrido</span>;
-                          }
-                          return <span style={{ fontSize: 12, color: C.muted }}>—</span>;
-                        })()}
-                      </td>
-
-                      {/* Plano */}
-                      <td style={{ padding: "16px 18px", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-                        {pkg ? (
-                          <span
-                            style={{
-                              background: C.purpleSoft,
-                              color: C.purpleInk,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              padding: "3px 9px",
-                              borderRadius: 40,
-                            }}
-                            title="Plano de Atendimento"
-                          >
-                            Plano de Atendimento
-                          </span>
-                        ) : isSupervision ? (
-                          <span style={{ background: C.goldSoft, color: C.gold, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
-                            Supervisão
-                          </span>
-                        ) : (
-                          <span style={{ background: "hsl(var(--muted))", color: C.muted, fontSize: 11, fontWeight: 600, padding: "3px 9px", borderRadius: 40 }}>
-                            Sessão única
-                          </span>
-                        )}
-                      </td>
 
 
 
