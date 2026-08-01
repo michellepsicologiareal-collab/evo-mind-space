@@ -4023,7 +4023,7 @@ const Agenda = () => {
 
       {/* Revisão da mensagem antes de enviar no WhatsApp */}
       <Dialog open={!!confirmPreview} onOpenChange={(o) => !o && setConfirmPreview(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="w-[95vw] max-w-5xl min-h-[90vh] flex flex-col p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Revisar mensagem</DialogTitle>
             <DialogDescription>
@@ -4032,39 +4032,40 @@ const Agenda = () => {
                 : ""}
             </DialogDescription>
           </DialogHeader>
-          <Textarea
-            value={confirmPreview?.message ?? ""}
-            onChange={(e) => setConfirmPreview((p) => (p ? { ...p, message: e.target.value } : p))}
-            rows={12}
-            className="text-sm font-sans resize-y"
-          />
-          <p className="text-xs text-muted-foreground">
-            {confirmPreview?.modality === "online"
-              ? "O link da chamada está incluído na mensagem."
-              : "O endereço de atendimento está incluído na mensagem."}
-          </p>
-          {confirmHistory.length > 0 && (
-            <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-1.5 max-h-40 overflow-y-auto">
-              <p className="text-xs font-medium text-foreground">Envios anteriores</p>
-              {confirmHistory.map((ev) => (
-                <p key={ev.id} className="text-xs text-muted-foreground">
-                  {new Date(ev.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                  {" · "}
-                  {ev.modality === "online" ? "Online" : "Presencial"}
-                  {" · "}
-                  {ev.content_type === "meeting_link"
-                    ? "link da chamada"
-                    : ev.content_type === "clinic_address"
-                      ? "endereço da clínica"
-                      : "sem local"}
-                  {" · "}
-                  {ev.channel === "whatsapp" ? "WhatsApp" : "copiado"}
-                </p>
-              ))}
-            </div>
-          )}
+          <div className="flex-1 flex flex-col gap-3 min-h-0">
+            <Textarea
+              value={confirmPreview?.message ?? ""}
+              onChange={(e) => setConfirmPreview((p) => (p ? { ...p, message: e.target.value } : p))}
+              className="flex-1 min-h-[12rem] text-sm font-sans resize-y"
+            />
+            <p className="text-xs text-muted-foreground">
+              {confirmPreview?.modality === "online"
+                ? "O link da chamada está incluído na mensagem."
+                : "O endereço de atendimento está incluído na mensagem."}
+            </p>
+            {confirmHistory.length > 0 && (
+              <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-1.5 max-h-48 overflow-y-auto">
+                <p className="text-xs font-medium text-foreground">Envios anteriores</p>
+                {confirmHistory.map((ev) => (
+                  <p key={ev.id} className="text-xs text-muted-foreground">
+                    {new Date(ev.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    {" · "}
+                    {ev.modality === "online" ? "Online" : "Presencial"}
+                    {" · "}
+                    {ev.content_type === "meeting_link"
+                      ? "link da chamada"
+                      : ev.content_type === "clinic_address"
+                        ? "endereço da clínica"
+                        : "sem local"}
+                    {" · "}
+                    {ev.channel === "whatsapp" ? "WhatsApp" : "copiado"}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
 
-          <DialogFooter className="gap-2 sm:gap-2">
+          <DialogFooter className="gap-2 sm:gap-2 mt-4">
             <Button
               variant="ghost"
               onClick={() => setConfirmPreview((p) => (p ? { ...p, message: p.original } : p))}
