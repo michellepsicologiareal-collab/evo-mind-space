@@ -645,24 +645,24 @@ export const HomeworkPlanForm = ({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 shrink-0"
+                  className="h-9 w-9 shrink-0"
                   onClick={copyPublicLink}
                   disabled={copying || !canCopy}
                   title="Copiar link"
                 >
-                  {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
               <Button
                 type="button"
                 size="sm"
                 variant="moss"
-                className="w-full sm:w-auto"
+                className="h-10 w-full whitespace-normal text-center leading-tight sm:h-9 sm:w-auto"
                 onClick={sendWhatsApp}
                 disabled={sending || !canSend}
                 title={canSend ? "Enviar plano por WhatsApp" : "Paciente sem WhatsApp cadastrado"}
               >
-                {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
+                {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5 shrink-0" />}
                 {editing?.sent_at ? "Reenviar plano por WhatsApp" : "Enviar plano por WhatsApp"}
               </Button>
             </div>
