@@ -793,6 +793,19 @@ const RegistroSessao = () => {
     }));
   }, []);
 
+  // URL de retorno (ex.: Agenda com data/visão/filtros exatos de onde veio).
+  const returnUrl = (() => {
+    const raw = searchParams.get("from");
+    if (!raw) return null;
+    try {
+      const decoded = decodeURIComponent(raw);
+      // Aceita apenas caminhos internos.
+      return decoded.startsWith("/") && !decoded.startsWith("//") ? decoded : null;
+    } catch {
+      return null;
+    }
+  })();
+
   const handleClear = () => {
     clearDraft();
     setForm({ ...emptyForm });
@@ -802,6 +815,19 @@ const RegistroSessao = () => {
     if (searchParams.get("patient") || searchParams.get("session")) {
       navigate("/app/registro-sessao", { replace: true });
     }
+  };
+
+  // Fechar/cancelar: volta exatamente para a tela de origem (ex.: Agenda no
+  // mesmo dia/visão/horário) quando houver contexto de retorno.
+  const handleBack = () => {
+    clearDraft();
+    setForm({ ...emptyForm });
+    lastPrefillKeyRef.current = null;
+    if (returnUrl) {
+      navigate(returnUrl, { replace: true });
+      return;
+    }
+    handleClear();
   };
 
 
@@ -1238,11 +1264,11 @@ const RegistroSessao = () => {
           <div className="min-w-0">
             <button
               type="button"
-              onClick={() => { handleClear(); }}
+              onClick={() => { handleBack(); }}
               className="inline-flex items-center gap-1 text-[11px] font-medium hover:underline mb-1"
               style={{ color: "hsl(var(--primary))" }}
             >
-              <ArrowLeft className="h-3 w-3" /> Voltar à lista
+              <ArrowLeft className="h-3 w-3" /> {returnUrl?.startsWith("/app/agenda") ? "Voltar à Agenda" : "Voltar à lista"}
             </button>
             <h1
               className="font-display leading-tight"

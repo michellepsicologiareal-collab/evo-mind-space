@@ -43,6 +43,10 @@ import { PageIntro } from "@/components/app/PageIntro";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { carryOverHomeworkPlan } from "@/lib/homework/carryOver";
 
+// Retorno exato para a Agenda (data/visão/filtros atuais) ao fechar o Registro de Sessão.
+const agendaReturnParam = () =>
+  `&from=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+
 
 type Status = "scheduled" | "completed" | "no_show" | "rescheduled" | "cancelled" | "confirmed";
 type PaymentStatus = "pending" | "paid";
@@ -282,7 +286,7 @@ const Agenda = () => {
     return () => clearTimeout(t);
   }, [isNavigating]);
 
-  // Seed patient/month from URL ONCE on mount. Subsequent URL writes are one-way
+  // Seed patient/month/date/view from URL ONCE on mount. Subsequent URL writes are one-way
   // (state → URL) to avoid ping-pong loops between effects that watch searchParams.
   const urlSeededRef = useRef(false);
   useEffect(() => {
@@ -290,6 +294,16 @@ const Agenda = () => {
     urlSeededRef.current = true;
     const qp = searchParams.get("patient");
     if (qp) setPatientFilter(qp);
+    const v = searchParams.get("view");
+    if (v === "day" || v === "week" || v === "month") setViewTab(v);
+    const d = searchParams.get("date");
+    if (d) {
+      const parsedDate = parse(d, "yyyy-MM-dd", new Date());
+      if (!isNaN(parsedDate.getTime())) {
+        goToDate(parsedDate);
+        return;
+      }
+    }
     const m = searchParams.get("month");
     if (m) {
       const parsed = parse(m, "yyyy-MM", new Date());
@@ -300,13 +314,14 @@ const Agenda = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Keep ?patient= and ?month= in sync with state (one-way write).
+  // Keep ?patient=, ?month=, ?date= e ?view= em sincronia com o estado (escrita one-way).
   // Uses window.history directly to avoid re-triggering useSearchParams subscribers
   // and to keep this effect free of `searchParams` in its dependency array.
   useEffect(() => {
     if (!urlSeededRef.current) return;
     const params = new URLSearchParams(window.location.search);
     const monthStr = format(currentMonth, "yyyy-MM");
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
     let changed = false;
     if ((params.get("patient") ?? "all") !== patientFilter) {
       if (patientFilter === "all") params.delete("patient");
@@ -317,6 +332,14 @@ const Agenda = () => {
       params.set("month", monthStr);
       changed = true;
     }
+    if (params.get("date") !== dateStr) {
+      params.set("date", dateStr);
+      changed = true;
+    }
+    if (params.get("view") !== viewTab) {
+      params.set("view", viewTab);
+      changed = true;
+    }
     if (changed) {
       const qs = params.toString();
       window.history.replaceState(
@@ -325,7 +348,7 @@ const Agenda = () => {
         window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash
       );
     }
-  }, [patientFilter, currentMonth]);
+  }, [patientFilter, currentMonth, selectedDate, viewTab]);
 
   // Pending
   const [pendingRecordsOpen, setPendingRecordsOpen] = useState(false);
@@ -2152,7 +2175,7 @@ const Agenda = () => {
               {!isSupervisionCard && s.patient_id && (
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}${agendaReturnParam()}`); }}
                   className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-card text-foreground/70 hover:bg-muted transition-colors"
                   title="Registrar sessão"
                   aria-label="Registrar sessão"
@@ -2220,7 +2243,7 @@ const Agenda = () => {
             <Button
               size="sm"
               className="h-8 w-full rounded-lg px-3 text-xs font-semibold gap-1.5 sm:w-auto"
-              onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}${agendaReturnParam()}`); }}
             >
               <Pencil className="h-3.5 w-3.5" /> Registrar sessão
             </Button>
@@ -2786,7 +2809,7 @@ const Agenda = () => {
                           <button
                             key={s.id}
                             type="button"
-                            onClick={() => { setPendingRecordsOpen(false); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}`); }}
+                            onClick={() => { setPendingRecordsOpen(false); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}${agendaReturnParam()}`); }}
                             className="w-full text-left rounded-xl border border-border bg-card px-3 py-2.5 hover:bg-muted/60 hover:border-primary/30 transition-colors"
                           >
                             <p className="font-display text-sm font-semibold text-foreground">{s.patient_name || "Paciente"}</p>
