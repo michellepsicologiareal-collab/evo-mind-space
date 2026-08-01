@@ -391,11 +391,28 @@ export const PatientHomework = ({ patientId, patientName, patientPhone, homework
       )}
 
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm(); }}>
-        <DialogContent className="w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 left-0 top-0 overflow-y-auto overflow-x-hidden p-4 sm:p-8">
+        <DialogContent
+          className={
+            planFullscreen
+              ? "w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 left-0 top-0 overflow-y-auto overflow-x-hidden p-4 sm:p-8"
+              : "max-w-2xl max-h-[90vh] overflow-y-auto"
+          }
+        >
           <DialogHeader>
-            <DialogTitle className="font-display">{editing ? "Editar plano" : "Novo Plano entre Sessões"}</DialogTitle>
+            <DialogTitle className="font-display pr-20">{editing ? "Editar plano" : "Novo Plano entre Sessões"}</DialogTitle>
             <DialogDescription>Para {patientName}</DialogDescription>
           </DialogHeader>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setPlanFullscreen((v) => !v)}
+            className="absolute right-12 top-3 h-9 gap-1.5 px-2 text-muted-foreground hover:text-foreground"
+            aria-label={planFullscreen ? "Sair da tela cheia" : "Tela cheia"}
+          >
+            {planFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            <span className="hidden sm:inline text-xs">{planFullscreen ? "Sair da tela cheia" : "Tela cheia"}</span>
+          </Button>
           <HomeworkPlanForm
             patientId={patientId}
             initialTask={editing}
