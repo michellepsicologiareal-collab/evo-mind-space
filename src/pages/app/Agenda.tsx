@@ -9,7 +9,7 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText, Rows3,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, ChevronDown, Bell,
-  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save,
+  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save, Minimize2, Maximize2,
 } from "lucide-react";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
 import { PatientSessionsQuickView } from "@/components/app/PatientSessionsQuickView";
@@ -457,6 +457,7 @@ const Agenda = () => {
 
   // Homework plan (Plano entre Sessões) linked to the current edited session
   const [homeworkOpen, setHomeworkOpen] = useState(false);
+  const [homeworkFullscreen, setHomeworkFullscreen] = useState(true);
   const [homeworkLoading, setHomeworkLoading] = useState(false);
   const [homeworkTask, setHomeworkTask] = useState<HomeworkPlanFormTask | null>(null);
   const [homeworkExists, setHomeworkExists] = useState(false);
@@ -3661,13 +3662,30 @@ const Agenda = () => {
 
       {/* ── Plano entre Sessões (vinculado à sessão atual) ── */}
       <Dialog open={homeworkOpen} onOpenChange={setHomeworkOpen}>
-        <DialogContent className="w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 left-0 top-0 overflow-y-auto overflow-x-hidden p-4 sm:p-8">
+        <DialogContent
+          className={
+            homeworkFullscreen
+              ? "w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 left-0 top-0 overflow-y-auto overflow-x-hidden p-4 sm:p-8"
+              : "w-[95vw] max-w-[900px] max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6"
+          }
+        >
           <DialogHeader>
-            <DialogTitle className="font-display text-xl sm:text-2xl flex items-center gap-2">
+            <DialogTitle className="font-display text-xl sm:text-2xl flex items-center gap-2 pr-20">
               <NotebookPen className="h-5 w-5 shrink-0 text-primary" />
               <span className="min-w-0">{homeworkTask ? "Editar Plano entre Sessões" : "Novo Plano entre Sessões"}</span>
             </DialogTitle>
           </DialogHeader>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setHomeworkFullscreen((v) => !v)}
+            className="absolute right-12 top-3 h-9 gap-1.5 px-2 text-muted-foreground hover:text-foreground"
+            aria-label={homeworkFullscreen ? "Sair da tela cheia" : "Tela cheia"}
+          >
+            {homeworkFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            <span className="hidden sm:inline text-xs">{homeworkFullscreen ? "Sair da tela cheia" : "Tela cheia"}</span>
+          </Button>
           {(() => {
             const fromEdit = sessions.find((s) => s.id === editSessionId);
             const patientId = homeworkPatientId ?? fromEdit?.patient_id ?? null;
