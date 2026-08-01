@@ -61,6 +61,14 @@ interface Patient {
 }
 
 
+const MOOD_OPTIONS = [
+  { value: 1, emoji: "😔", label: "Muito baixo" },
+  { value: 2, emoji: "🙁", label: "Baixo" },
+  { value: 3, emoji: "😐", label: "Neutro" },
+  { value: 4, emoji: "🙂", label: "Bom" },
+  { value: 5, emoji: "😄", label: "Muito bom" },
+] as const;
+
 const emptyForm = {
   patient_id: "",
   session_id: null as string | null,
@@ -77,6 +85,9 @@ const emptyForm = {
   risk_indicator: "none",
   private_notes: "",
   plan_id: null as string | null,
+  // Registro rápido do atendimento
+  quick_note: "",
+  quick_mood: null as number | null,
   // Bloco "Próxima sessão" — fonte única do planejamento
   next_scheduled_at: "" as string, // datetime-local (yyyy-MM-ddTHH:mm) — vazio = não agendar
   next_objetivo: "",
@@ -95,6 +106,8 @@ function hasMeaningfulData(f: FormState): boolean {
     f.clinical_observations.trim() ||
     f.next_session_plan.trim() ||
     f.private_notes.trim() ||
+    f.quick_note.trim() ||
+    f.quick_mood ||
     f.themes.length > 0 ||
     f.next_objetivo.trim() ||
     f.next_retomar.trim() ||
@@ -924,6 +937,30 @@ const RegistroSessao = () => {
       return;
     }
 
+    // 1b) Registro rápido: observações + humor da sessão → acompanhamento do paciente
+    if (form.quick_note.trim() || form.quick_mood) {
+      const progressRow = {
+        user_id: user.id,
+        patient_id: form.patient_id,
+        session_id: form.session_id,
+        recorded_at: new Date(`${form.session_date}T${form.session_time || "12:00"}:00`).toISOString(),
+        mood_score: form.quick_mood,
+        wellbeing_score: form.quick_mood,
+        wellbeing_source: "professional_estimate" as const,
+        clinical_observation: form.quick_note.trim() || null,
+        note: form.quick_note.trim() || null,
+        data_model: "v2_structured" as const,
+        themes: form.themes,
+        engagement: form.engagement,
+      };
+      const { error: progressError } = form.session_id
+        ? await supabase.from("patient_progress").upsert(progressRow, { onConflict: "user_id,session_id" })
+        : await supabase.from("patient_progress").insert(progressRow);
+      if (progressError) console.error(progressError);
+    }
+
+
+
     // 2) Resolver / atualizar a sessão-alvo da "próxima sessão"
     const uid = user.id;
     const pid = form.patient_id;
@@ -1480,7 +1517,52 @@ const RegistroSessao = () => {
           </div>
         </div>
 
+        {/* Registro rápido: observações do atendimento + humor da sessão */}
+        <div className="mt-4 pt-4 space-y-2" style={{ borderTop: "1px solid hsl(var(--border))" }}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Label className="uppercase flex items-center gap-1" style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: "hsl(var(--muted-foreground))" }}>
+              <NotebookPen className="h-3 w-3" /> Observações rápidas
+            </Label>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+                Humor
+              </span>
+              {MOOD_OPTIONS.map((m) => {
+                const active = form.quick_mood === m.value;
+                return (
+                  <button
+                    key={m.value}
+                    type="button"
+                    title={m.label}
+                    aria-label={m.label}
+                    aria-pressed={active}
+                    onClick={() => setForm({ ...form, quick_mood: active ? null : m.value })}
+                    className="h-8 w-8 rounded-lg text-base leading-none transition-all"
+                    style={{
+                      border: `1px solid ${active ? "hsl(var(--primary))" : "hsl(var(--border))"}`,
+                      backgroundColor: active ? "hsl(var(--primary) / 0.12)" : "hsl(var(--muted))",
+                    }}
+                  >
+                    {m.emoji}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <Textarea
+            value={form.quick_note}
+            onChange={(e) => setForm({ ...form, quick_note: e.target.value })}
+            placeholder="Anote algo do atendimento sem sair da tela (ex.: chegou ansiosa, relatou melhora no sono)…"
+            className="min-h-[70px] text-sm"
+            style={{ border: "1px solid hsl(var(--border))", borderRadius: 8, backgroundColor: "hsl(var(--muted))" }}
+          />
+          <p className="text-[11px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+            Salvo junto com o registro e enviado para o acompanhamento de humor do paciente.
+          </p>
+        </div>
+
       </section>
+
 
       {/* Plano de Tratamento Ativo — movido para depois do Registro Clínico */}
 
