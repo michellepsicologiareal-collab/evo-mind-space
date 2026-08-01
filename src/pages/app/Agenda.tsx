@@ -3353,7 +3353,7 @@ const Agenda = () => {
               </>
             );
           })()}
-          <form onSubmit={handleEditSave} className="space-y-4">
+          <form onSubmit={handleEditSave} className="space-y-4 w-full max-w-[1100px] mx-auto pb-20">
             {/* Tipo de compromisso / Serviço */}
             <div className="space-y-2">
               <Label>Tipo de compromisso</Label>
