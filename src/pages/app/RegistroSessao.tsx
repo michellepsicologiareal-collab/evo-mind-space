@@ -767,6 +767,7 @@ const RegistroSessao = () => {
             ...emptyForm,
             // preserva preferências de layout
             session_date: prefill.session_date ?? format(new Date(), "yyyy-MM-dd"),
+            session_time: prefill.session_time ?? "",
             duration_minutes: prefill.duration_minutes ?? emptyForm.duration_minutes,
             modality: prefill.modality ?? emptyForm.modality,
             patient_id: urlPatient ?? "",
