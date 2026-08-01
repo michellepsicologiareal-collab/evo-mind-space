@@ -2067,11 +2067,11 @@ const Agenda = () => {
                   )}
                   title={`Pagamento ${paymentStatusLabel[s.payment_status].toLowerCase()} · R$ ${Number(s.price).toFixed(2)}`}
                 >
-                  <Bell className="h-3 w-3" />
+                  <Bell className="h-3 w-3 text-current" />
                   <span className={cn("h-1.5 w-1.5 rounded-full", s.payment_status === "paid" ? "bg-emerald-500" : "bg-amber-500")} />
                   {paymentStatusLabel[s.payment_status]}
                   <span className="text-border">·</span>
-                  <DollarSign className="h-3 w-3" />
+                  <DollarSign className="h-3 w-3 text-current" />
                   R$ {Number(s.price).toFixed(2)}
                 </span>
               </>
@@ -2215,12 +2215,12 @@ const Agenda = () => {
               </a>
             )}
             {s.confirmation_sent_at && (
-              <span className="text-foreground/50" title={`Lembrete enviado em ${format(new Date(s.confirmation_sent_at), "dd/MM 'às' HH:mm")}`} aria-label="Lembrete enviado">
+              <span className="text-primary" title={`Lembrete enviado em ${format(new Date(s.confirmation_sent_at), "dd/MM 'às' HH:mm")}`} aria-label="Lembrete enviado">
                 <Bell className="h-3.5 w-3.5" />
               </span>
             )}
             {s.billing_sent_at && (
-              <span className="text-green-600" title={`Cobrança enviada em ${format(new Date(s.billing_sent_at), "dd/MM 'às' HH:mm")}`} aria-label="Cobrança enviada">
+              <span className="text-primary" title={`Cobrança enviada em ${format(new Date(s.billing_sent_at), "dd/MM 'às' HH:mm")}`} aria-label="Cobrança enviada">
                 <DollarSign className="h-3.5 w-3.5" />
               </span>
             )}
