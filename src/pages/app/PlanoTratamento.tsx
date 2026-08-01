@@ -574,8 +574,8 @@ const PlanoTratamento = () => {
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           {patientId && (
-            <Button variant="ghost" size="sm" onClick={() => { setPatientId(""); setSearchParams({}, { replace: true }); }}>
-              <ArrowLeft className="h-4 w-4" /> Voltar à lista
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/app/pacientes?patient=${patientId}&tab=plan`)}>
+              <ArrowLeft className="h-4 w-4" /> Voltar ao paciente
             </Button>
           )}
           <div className="h-10 w-10 rounded-2xl flex items-center justify-center" style={{ background: `${PURPLE}15`, color: PURPLE }}>
