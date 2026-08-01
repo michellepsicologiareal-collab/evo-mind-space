@@ -388,6 +388,9 @@ const Patients = () => {
   }, [homeworkPatient]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [selectedTab, setSelectedTab] = useState<string>("overview");
+  const [currentSupervisorId, setCurrentSupervisorId] = useState<string | null>(null);
+  const [currentProfileType, setCurrentProfileType] = useState<"standard" | "supervisee" | "supervisor">("standard");
+  const canShareWithSupervisor = currentProfileType === "supervisee" && !!currentSupervisorId;
   const [searchParams, setSearchParams] = useSearchParams();
 
   const VALID_TABS = ["overview", "formulations", "sessions", "plan", "anamnesis", "documents", "finance"];
