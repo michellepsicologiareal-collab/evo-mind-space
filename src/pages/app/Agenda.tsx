@@ -3516,7 +3516,7 @@ const Agenda = () => {
                 </Select>
               </div>
               {editForm.modality === "online" && (
-                <div className="space-y-2">
+                <div className="space-y-2 col-span-2 sm:col-span-1">
                   <Label>Link da sessão</Label>
                   <Input type="url" placeholder="https://meet.google.com/..." value={editForm.meeting_link} onChange={(e) => setEditForm({ ...editForm, meeting_link: e.target.value })} />
                 </div>
