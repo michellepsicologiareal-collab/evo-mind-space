@@ -111,14 +111,14 @@
   }
 
   .dark {
-    /* Surfaces — dark roxo suave (tom mais claro, confortável em mobile/notebook) */
-    --background: 258 22% 13%;              /* fundo mais claro */
+    /* Surfaces — dark roxo suave (tom claro e confortável em mobile/notebook) */
+    --background: 258 18% 17%;              /* fundo mais claro */
     --foreground: 258 22% 97%;
 
-    --card: 258 18% 18%;                    /* cards levemente acima do fundo */
+    --card: 258 16% 22%;                    /* cards levemente acima do fundo */
     --card-foreground: 258 22% 97%;
 
-    --popover: 258 18% 19%;
+    --popover: 258 16% 23%;
     --popover-foreground: 258 22% 97%;
 
     /* Brand — Roxo (mais luminoso no dark) */
@@ -127,11 +127,12 @@
     --primary-glow: 265 60% 84%;
     --primary-dark: 262 52% 66%;
 
-    --secondary: 258 18% 23%;
+    --secondary: 258 16% 27%;
     --secondary-foreground: 258 22% 96%;
 
-    --muted: 258 16% 21%;
-    --muted-foreground: 258 14% 76%;
+    --muted: 258 15% 26%;
+    --muted-foreground: 258 14% 78%;
+
 
 
     --accent: 262 65% 74%;
@@ -143,8 +144,9 @@
     --moss: 96 40% 58%;
     --moss-foreground: 258 32% 6%;
 
-    --sand: 258 16% 21%;
+    --sand: 258 15% 26%;
     --sand-foreground: 258 22% 96%;
+
 
     --brown: 262 50% 74%;
     --brown-foreground: 258 30% 12%;
@@ -164,26 +166,27 @@
     --destructive: 0 62% 60%;
     --destructive-foreground: 258 30% 12%;
 
-    --border: 258 14% 28%;
-    --input: 258 14% 28%;
+    --border: 258 13% 33%;
+    --input: 258 13% 33%;
     --ring: 262 62% 76%;
 
-    --sidebar-hover: 258 18% 24%;
+    --sidebar-hover: 258 16% 28%;
     --sidebar-active: 262 62% 76% / 0.20;
-    --sidebar-border: 258 14% 28%;
-    --nav-bg: 258 24% 16%;
-    --nav-fg: 258 26% 93%;
-    --nav-muted: 258 14% 72%;
-    --nav-border: 258 14% 28%;
+    --sidebar-border: 258 13% 33%;
+    --nav-bg: 258 20% 20%;
+    --nav-fg: 258 26% 94%;
+    --nav-muted: 258 14% 74%;
+    --nav-border: 258 13% 33%;
 
-    --text-secondary: 258 22% 85%;
-    --text-muted: 258 14% 76%;
-    --text-nav: 258 22% 88%;
+    --text-secondary: 258 22% 86%;
+    --text-muted: 258 14% 78%;
+    --text-nav: 258 22% 90%;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(262 62% 76%) 0%, hsl(265 55% 64%) 60%, hsl(258 20% 18%) 130%);
-    --gradient-soft: linear-gradient(180deg, hsl(258 18% 19%) 0%, hsl(258 20% 14%) 100%);
-    --gradient-card: linear-gradient(160deg, hsl(258 18% 20%) 0%, hsl(258 20% 16%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(262 62% 76%) 0%, hsl(265 55% 64%) 60%, hsl(258 18% 22%) 130%);
+    --gradient-soft: linear-gradient(180deg, hsl(258 16% 23%) 0%, hsl(258 18% 18%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(258 16% 24%) 0%, hsl(258 17% 20%) 100%);
+
 
     /* Shadows suaves no dark claro */
     --shadow-elegant: 0 30px 60px -30px hsl(258 40% 3% / 0.6);
@@ -220,83 +223,150 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Dark mode rescue — telas com cores hardcoded
-   Reescreve dentro da app-shell (escopo: rotas /app/*) os
-   estilos inline e classes utilitárias que travavam o tema claro.
+   Dark mode rescue — global (inclui modais, drawers, sheets e
+   qualquer conteúdo em portal fora da app-shell, além do mobile).
+   Reescreve estilos inline e classes utilitárias hardcoded.
    ───────────────────────────────────────────────────────────── */
-.dark .app-shell .bg-white { background-color: hsl(var(--card)) !important; }
-.dark .app-shell .text-foreground { color: hsl(var(--foreground)); }
+.dark .bg-white { background-color: hsl(var(--card)) !important; }
+.dark .text-foreground { color: hsl(var(--foreground)); }
 
 /* Inline backgrounds (cards brancos, fundos bege claros) */
-.dark .app-shell [style*="background-color: #FFFFFF"],
-.dark .app-shell [style*="background-color:#FFFFFF"],
-.dark .app-shell [style*="background-color: #ffffff"],
-.dark .app-shell [style*="background-color: #FFF"],
-.dark .app-shell [style*="background-color:#FFF"],
-.dark .app-shell [style*="background-color: #fff"],
-.dark .app-shell [style*="background: #FFFFFF"],
-.dark .app-shell [style*="background:#FFFFFF"],
-.dark .app-shell [style*="background: #FFF"],
-.dark .app-shell [style*="background: #fff"],
-.dark .app-shell [style*="backgroundColor: \"#FFFFFF\""] {
+.dark [style*="background-color: #FFFFFF"],
+.dark [style*="background-color:#FFFFFF"],
+.dark [style*="background-color: #ffffff"],
+.dark [style*="background-color: #FFF"],
+.dark [style*="background-color:#FFF"],
+.dark [style*="background-color: #fff"],
+.dark [style*="background: #FFFFFF"],
+.dark [style*="background:#FFFFFF"],
+.dark [style*="background: #FFF"],
+.dark [style*="background: #fff"],
+.dark [style*="backgroundColor: \"#FFFFFF\""] {
   background-color: hsl(var(--card)) !important;
 }
 
 /* Fundo bege/cinza claro de containers */
-.dark .app-shell [style*="background-color: #F7F6F3"],
-.dark .app-shell [style*="background-color:#F7F6F3"],
-.dark .app-shell [style*="background-color: #F9FAFB"],
-.dark .app-shell [style*="background-color:#F9FAFB"],
-.dark .app-shell [style*="background-color: #F3F4F6"],
-.dark .app-shell [style*="background-color:#F3F4F6"] {
+.dark [style*="background-color: #F7F6F3"],
+.dark [style*="background-color:#F7F6F3"],
+.dark [style*="background-color: #F9FAFB"],
+.dark [style*="background-color:#F9FAFB"],
+.dark [style*="background-color: #F3F4F6"],
+.dark [style*="background-color:#F3F4F6"],
+.dark [style*="background-color: #FAFAFC"],
+.dark [style*="background-color: #F8F6FC"] {
   background-color: hsl(var(--muted)) !important;
 }
 
-/* Bordas cinza claras (#E5E7EB) */
-.dark .app-shell [style*="border: 1px solid #E5E7EB"],
-.dark .app-shell [style*="border:1px solid #E5E7EB"],
-.dark .app-shell [style*="1px solid #E5E7EB"] {
+/* Bordas cinza claras (#E5E7EB / #E5DFEE) */
+.dark [style*="border: 1px solid #E5E7EB"],
+.dark [style*="border:1px solid #E5E7EB"],
+.dark [style*="1px solid #E5E7EB"],
+.dark [style*="1px solid #E5DFEE"],
+.dark [style*="1px solid #EAE6F5"] {
   border-color: hsl(var(--border)) !important;
 }
 
 /* Textos dark hardcoded (#1A1A2E quase preto) → foreground */
-.dark .app-shell [style*="color: #1A1A2E"],
-.dark .app-shell [style*="color:#1A1A2E"],
-.dark .app-shell [style*="color: #1a1a2e"] {
+.dark [style*="color: #1A1A2E"],
+.dark [style*="color:#1A1A2E"],
+.dark [style*="color: #1a1a2e"],
+.dark [style*="color: #17152F"],
+.dark [style*="color: #2A2342"] {
   color: hsl(var(--foreground)) !important;
 }
 
 /* Textos muted hardcoded (#6B7280) → muted-foreground */
-.dark .app-shell [style*="color: #6B7280"],
-.dark .app-shell [style*="color:#6B7280"],
-.dark .app-shell [style*="color: #6b7280"] {
+.dark [style*="color: #6B7280"],
+.dark [style*="color:#6B7280"],
+.dark [style*="color: #6b7280"],
+.dark [style*="color: #9CA3AF"] {
   color: hsl(var(--muted-foreground)) !important;
 }
 
 /* Roxo escuro hardcoded (#534AB7, #3C3489) → primary do dark */
-.dark .app-shell [style*="color: #534AB7"],
-.dark .app-shell [style*="color:#534AB7"],
-.dark .app-shell [style*="color: #3C3489"] {
+.dark [style*="color: #534AB7"],
+.dark [style*="color:#534AB7"],
+.dark [style*="color: #3C3489"] {
   color: hsl(var(--primary)) !important;
 }
 
 /* Pílulas roxas claras (#EEEDFE) → secondary do dark */
-.dark .app-shell [style*="background-color: #EEEDFE"],
-.dark .app-shell [style*="background-color:#EEEDFE"] {
+.dark [style*="background-color: #EEEDFE"],
+.dark [style*="background-color:#EEEDFE"] {
   background-color: hsl(var(--secondary)) !important;
 }
 
 /* Pílula verde "Salvo" (#EAF3DE/#2D6A4F) → tokens moss */
-.dark .app-shell [style*="background-color: #EAF3DE"] {
+.dark [style*="background-color: #EAF3DE"] {
   background-color: hsl(var(--moss) / 0.18) !important;
 }
-.dark .app-shell [style*="color: #2D6A4F"] {
+.dark [style*="color: #2D6A4F"] {
   color: hsl(var(--moss)) !important;
 }
 
 /* bg-white em utilitárias residuais dentro de chips/badges */
-.dark .app-shell .hover\:bg-white\/60:hover { background-color: hsl(var(--muted) / 0.6) !important; }
-.dark .app-shell .bg-white\/60 { background-color: hsl(var(--card) / 0.6) !important; }
+.dark .hover\:bg-white\/60:hover { background-color: hsl(var(--muted) / 0.6) !important; }
+.dark .bg-white\/60 { background-color: hsl(var(--card) / 0.6) !important; }
+.dark .bg-white\/80 { background-color: hsl(var(--card) / 0.8) !important; }
+.dark .bg-white\/50 { background-color: hsl(var(--card) / 0.5) !important; }
+.dark .hover\:bg-white:hover { background-color: hsl(var(--muted)) !important; }
+
+/* Cinzas do Tailwind usados como superfície clara */
+.dark .bg-gray-50,
+.dark .bg-gray-100,
+.dark .bg-slate-50,
+.dark .bg-slate-100,
+.dark .bg-neutral-50,
+.dark .bg-neutral-100,
+.dark .bg-zinc-50,
+.dark .bg-zinc-100 { background-color: hsl(var(--muted)) !important; }
+.dark .text-gray-900,
+.dark .text-slate-900,
+.dark .text-neutral-900,
+.dark .text-black { color: hsl(var(--foreground)) !important; }
+.dark .text-gray-700,
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-slate-600,
+.dark .text-slate-500 { color: hsl(var(--muted-foreground)) !important; }
+.dark .border-gray-200,
+.dark .border-gray-100,
+.dark .border-slate-200 { border-color: hsl(var(--border)) !important; }
+
+/* Classes arbitrárias com hex claro (bg) → superfícies do dark */
+.dark .bg-\[\#FDF6E3\],
+.dark .bg-\[\#fdf3e3\],
+.dark .bg-\[\#FEF3C7\] { background-color: hsl(44 68% 62% / 0.16) !important; }
+.dark .bg-\[\#EAF3DE\],
+.dark .bg-\[\#e3f7ee\],
+.dark .bg-\[\#D1FAE5\] { background-color: hsl(var(--moss) / 0.18) !important; }
+.dark .bg-\[\#EEEDFE\],
+.dark .bg-\[\#f0ebf7\],
+.dark .bg-\[\#F8F6FC\],
+.dark .bg-\[\#FAFAFC\] { background-color: hsl(var(--secondary)) !important; }
+
+/* Classes arbitrárias com hex escuro (texto) → tons legíveis no dark */
+.dark .text-\[\#1A1A2E\],
+.dark .text-\[\#17152F\],
+.dark .text-\[\#2A2342\] { color: hsl(var(--foreground)) !important; }
+.dark .text-\[\#5b4a7a\],
+.dark .text-\[\#6B7280\] { color: hsl(var(--muted-foreground)) !important; }
+.dark .text-\[\#534AB7\],
+.dark .text-\[\#3C3489\] { color: hsl(var(--primary)) !important; }
+.dark .text-\[\#7a4a0a\],
+.dark .text-\[\#78350F\],
+.dark .text-\[\#B8860B\] { color: hsl(var(--gold-light)) !important; }
+.dark .text-\[\#2D6A4F\],
+.dark .text-\[\#1f5132\] { color: hsl(var(--moss)) !important; }
+.dark .text-\[\#C0392B\] { color: hsl(var(--destructive)) !important; }
+
+/* Bordas arbitrárias claras */
+.dark .border-\[\#E5E7EB\],
+.dark .border-\[\#e2d8f0\],
+.dark .border-\[\#FDE68A\],
+.dark .border-\[\#e8c98a\] { border-color: hsl(var(--border)) !important; }
+.dark .border-\[\#a7e1c1\] { border-color: hsl(var(--moss) / 0.4) !important; }
+
 
 
 
