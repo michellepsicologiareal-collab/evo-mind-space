@@ -704,7 +704,7 @@ const RegistroSessao = () => {
   // Guard por ref evita reaplicar o mesmo par (patient|session) em loop.
   const lastPrefillKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!user || editingId) return;
+    if (!user) return;
     const patientParam = searchParams.get("patient");
     const sessionParam = searchParams.get("session");
     if (!patientParam && !sessionParam) return;
@@ -734,7 +734,7 @@ const RegistroSessao = () => {
         const switchingSession = !!prefill.session_id && prev.session_id !== prefill.session_id;
         // URL prevalece sobre rascunho quando muda o paciente OU a sessão-alvo.
         if (switchingPatient || switchingSession) {
-          try { localStorage.removeItem(draftKeyFor(editingId)); } catch {}
+          try { localStorage.removeItem(DRAFT_KEY); } catch {}
           setDraftRestored(false);
           return {
             ...emptyForm,
