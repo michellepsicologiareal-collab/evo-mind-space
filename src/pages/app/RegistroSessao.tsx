@@ -766,7 +766,7 @@ const RegistroSessao = () => {
       if (sessionParam) {
         const { data: sess } = await supabase
           .from("sessions")
-          .select("id, patient_id, scheduled_at, duration_minutes, modality")
+          .select("id, patient_id, scheduled_at, duration_minutes, modality, status, payment_status")
           .eq("id", sessionParam)
           .maybeSingle();
         if (sess) {
@@ -776,13 +776,15 @@ const RegistroSessao = () => {
           prefill.session_time = format(new Date(sess.scheduled_at), "HH:mm");
           if (sess.duration_minutes) prefill.duration_minutes = sess.duration_minutes;
           if (sess.modality) prefill.modality = sess.modality;
+          if (["completed", "no_show", "cancelled"].includes(sess.status)) prefill.attendance_status = sess.status;
+          if (["pending", "paid"].includes(sess.payment_status)) prefill.payment_status = sess.payment_status;
         }
       } else if (patientParam) {
         // Sem sessão explícita: busca a sessão agendada mais próxima (dia informado ou hoje/futuro).
         const base = prefill.session_date ?? format(new Date(), "yyyy-MM-dd");
         const { data: near } = await supabase
           .from("sessions")
-          .select("id, scheduled_at, duration_minutes, modality")
+          .select("id, scheduled_at, duration_minutes, modality, status, payment_status")
           .eq("patient_id", patientParam)
           .gte("scheduled_at", `${base}T00:00:00`)
           .lte("scheduled_at", `${base}T23:59:59`)
@@ -795,6 +797,8 @@ const RegistroSessao = () => {
           prefill.session_time = format(new Date(sess.scheduled_at), "HH:mm");
           if (sess.duration_minutes) prefill.duration_minutes = sess.duration_minutes;
           if (sess.modality) prefill.modality = sess.modality;
+          if (["completed", "no_show", "cancelled"].includes(sess.status)) prefill.attendance_status = sess.status;
+          if (["pending", "paid"].includes(sess.payment_status)) prefill.payment_status = sess.payment_status;
         }
       }
       setForm((prev) => {
@@ -812,6 +816,8 @@ const RegistroSessao = () => {
             session_time: prefill.session_time ?? "",
             duration_minutes: prefill.duration_minutes ?? emptyForm.duration_minutes,
             modality: prefill.modality ?? emptyForm.modality,
+            attendance_status: prefill.attendance_status ?? "",
+            payment_status: prefill.payment_status ?? "",
             patient_id: urlPatient ?? "",
             session_id: prefill.session_id ?? null,
           };
