@@ -1920,6 +1920,7 @@ const Agenda = () => {
 
   // ── Session card component ──
   const isMobile = useIsMobile();
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Default to compact "week" view the first time we detect mobile
   const mobileDefaultedRef = useRef(false);
@@ -2623,6 +2624,27 @@ const Agenda = () => {
             </div>
           )}
 
+          {/* Toggle de filtros — apenas mobile */}
+          {isMobile && (
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-full border border-border bg-card px-4 py-2 text-xs font-display font-semibold text-muted-foreground"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Filter className="h-3.5 w-3.5" />
+                Filtros
+                {(serviceFilter !== "all" || patientFilter !== "all") && (
+                  <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] text-accent-foreground">
+                    {(serviceFilter !== "all" ? 1 : 0) + (patientFilter !== "all" ? 1 : 0)}
+                  </span>
+                )}
+              </span>
+              <ChevronDown className={cn("h-4 w-4 transition-transform", filtersOpen && "rotate-180")} />
+            </button>
+          )}
+
+          <div className={cn("space-y-4", isMobile && !filtersOpen && "hidden")}>
           {/* Service filter — rolagem horizontal em uma linha */}
           <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
             <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar pb-1">
@@ -2715,6 +2737,8 @@ const Agenda = () => {
               </SelectContent>
             </Select>
           </div>
+          </div>
+
 
 
           {/* ── Resumo do dia ── */}
@@ -3364,24 +3388,16 @@ const Agenda = () => {
 
       {/* ── Edit Session Dialog ── */}
       <Dialog open={editOpen} onOpenChange={(v) => { if (!v) { editGuard.guardClose(() => setEditOpen(false), () => setEditOpen(false)); } else { setEditOpen(true); } }}>
-        <DialogContent className="w-screen max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 left-0 top-0 overflow-y-auto overflow-x-hidden p-4 sm:p-8" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
-          <DialogHeader>
-            <DialogTitle className="font-display text-2xl">Editar sessão</DialogTitle>
+        <DialogContent className="inset-0 w-auto max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 p-0 gap-0 grid grid-rows-[auto_minmax(0,1fr)] overflow-hidden" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader className="px-4 sm:px-8 pt-4 pb-3 pr-12 border-b border-border bg-background text-left">
+            <DialogTitle className="font-display text-lg sm:text-2xl leading-tight">Editar sessão</DialogTitle>
+            {(() => {
+              const session = sessions.find((s) => s.id === editSessionId);
+              if (!session?.patient_name) return null;
+              return <p className="text-sm text-muted-foreground truncate">{session.patient_name}</p>;
+            })()}
           </DialogHeader>
-          {(() => {
-            const session = sessions.find((s) => s.id === editSessionId);
-            return (
-              <>
-                {session?.patient_name && (
-                  <div className="rounded-xl bg-muted/50 border border-border p-3 mb-2">
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Paciente</p>
-                    <p className="font-display font-semibold text-foreground">{session.patient_name}</p>
-                  </div>
-                )}
-              </>
-            );
-          })()}
-          <form onSubmit={handleEditSave} className="space-y-4 w-full max-w-[1100px] mx-auto pb-20">
+          <form onSubmit={handleEditSave} className="flex flex-col min-h-0 overflow-y-auto overflow-x-hidden [&>*]:w-full [&>*]:max-w-[1100px] [&>*]:mx-auto px-4 sm:px-8 pt-4 space-y-4">
             {/* Tipo de compromisso / Serviço */}
             <div className="space-y-2">
               <Label>Tipo de compromisso</Label>
@@ -3414,7 +3430,7 @@ const Agenda = () => {
               </Select>
             </div>
             {/* Data e horário */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Data</Label>
                 <Input type="date" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} />
@@ -3437,7 +3453,7 @@ const Agenda = () => {
             </div>
             {editForm.recurrence === "recurring" && (
               <div className="rounded-xl bg-muted/50 border border-border p-3 space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label>Quantidade</Label>
                     <Input type="number" min="2" max="52" value={editForm.recurrence_count} onChange={(e) => setEditForm({ ...editForm, recurrence_count: Math.max(2, Number(e.target.value)) })} />
@@ -3465,7 +3481,7 @@ const Agenda = () => {
                 </div>
               </div>
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Status</Label>
                 <Select value={editForm.status} onValueChange={(v) => setEditForm({ ...editForm, status: v as Status })}>
@@ -3488,7 +3504,7 @@ const Agenda = () => {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Modalidade</Label>
                 <Select value={editForm.modality} onValueChange={(v) => setEditForm({ ...editForm, modality: v as "presencial" | "online" })}>
@@ -3500,13 +3516,13 @@ const Agenda = () => {
                 </Select>
               </div>
               {editForm.modality === "online" && (
-                <div className="space-y-2">
+                <div className="space-y-2 col-span-2 sm:col-span-1">
                   <Label>Link da sessão</Label>
                   <Input type="url" placeholder="https://meet.google.com/..." value={editForm.meeting_link} onChange={(e) => setEditForm({ ...editForm, meeting_link: e.target.value })} />
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Duração (min)</Label>
                 <Input type="number" min="10" max="480" value={editForm.duration_minutes} onChange={(e) => setEditForm({ ...editForm, duration_minutes: Number(e.target.value) })} />
@@ -3647,20 +3663,21 @@ const Agenda = () => {
                 </>
               );
             })()}
-            <DialogFooter className="flex-col sm:flex-row gap-2 sticky bottom-0 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 py-3 bg-background border-t border-border">
+            <DialogFooter className="flex-row items-center gap-2 sticky bottom-0 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-background border-t border-border !max-w-none">
               <Button
-                type="button" variant="destructive" size="sm"
-                className="sm:mr-auto"
+                type="button" variant="ghost" size="icon"
+                className="text-destructive shrink-0 h-10 w-10 sm:mr-auto sm:w-auto sm:px-3"
+                aria-label="Excluir sessão"
                 onClick={() => { if (editSessionId) { promptDelete(editSessionId); } }}
               >
-                <Trash2 className="h-4 w-4" /> Excluir sessão
+                <Trash2 className="h-4 w-4" /> <span className="hidden sm:inline">Excluir sessão</span>
               </Button>
-              <Button type="button" variant="outline" onClick={() => editGuard.guardClose(() => setEditOpen(false))}>Cancelar</Button>
-              <Button type="submit" variant="accent" disabled={editSaving || loadingEditProgress}>
+              <Button type="button" variant="outline" className="flex-1 sm:flex-none h-10" onClick={() => editGuard.guardClose(() => setEditOpen(false))}>Cancelar</Button>
+              <Button type="submit" variant="accent" className="flex-1 sm:flex-none h-10" disabled={editSaving || loadingEditProgress}>
                 {(editSaving || loadingEditProgress) && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
               </Button>
             </DialogFooter>
-          </form>
+            </form>
         </DialogContent>
       </Dialog>
 
