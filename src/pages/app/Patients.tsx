@@ -1552,86 +1552,8 @@ const Patients = () => {
                       {/* Ações */}
                       <td style={{ padding: "16px 18px", verticalAlign: "middle", textAlign: "right" }}>
 
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              onClick={(e) => e.stopPropagation()}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" || e.key === " ") {
-                                  e.stopPropagation();
-                                }
-                              }}
-                              className="inline-flex items-center justify-center transition-colors rounded-md hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--primary))] focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))]"
-                              style={{
-                                height: 32,
-                                paddingLeft: 10,
-                                paddingRight: 10,
-                                background: "transparent",
-                                border: "none",
-                                color: C.muted,
-                              }}
-                              aria-label="Ações do paciente"
-                              title="Ações do paciente"
-                            >
-                              <span className="text-xs font-medium">Ações</span>
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                            <DropdownMenuItem onClick={() => setSelectedPatient(p)}>
-                              <Eye className="h-4 w-4 mr-2" /> Ver ficha
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openEdit(p)}>
-                              <IconPencil className="h-4 w-4 mr-2" /> Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate(`/app/registro-sessao?patient=${p.id}`)}>
-                              <IconFileText className="h-4 w-4 mr-2" /> Registrar sessão
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => navigate(`/app/agenda?patient=${p.id}`)}>
-                              <CalendarDays className="h-4 w-4 mr-2" /> Agendar sessão
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toggleActive(p)}>
-                              <IconUserOff className="h-4 w-4 mr-2" /> {p.is_active ? "Marcar inativo" : "Reativar"}
-                            </DropdownMenuItem>
+                        <PatientActionsMenu p={p} />
 
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setTccPatient(p)}>
-                              <IconClipboardList className="h-4 w-4 mr-2" /> Registros TCC
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-tcc`)}>
-                              <IconFileText className="h-4 w-4 mr-2" /> Formulação de caso TCC
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-te`)}
-                              className="text-[#B8860B] hover:bg-[#FDF6E3] focus:bg-[#FDF6E3]"
-                            >
-                              <IconTarget className="h-4 w-4 mr-2" /> Formulação TE
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => navigate(`/app/pacientes/${p.id}/formulacao-act`)}
-                              className="text-[#2D6A4F] hover:bg-[#EAF3DE] focus:bg-[#EAF3DE]"
-                            >
-                              <IconFlame className="h-4 w-4 mr-2" /> Formulação ACT
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setHomeworkPatient(p)}>
-                              <ClipboardList className="h-4 w-4 mr-2" /> Plano entre Sessões
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              disabled
-                              aria-disabled="true"
-                              title="Compartilhamento indisponível para revisão de privacidade"
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              Compartilhamento indisponível
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleDelete(p)} className="text-[#C0392B]">
-                              <IconTrash className="h-4 w-4 mr-2" /> Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
                       </td>
                     </tr>
                   );
