@@ -155,6 +155,32 @@ export const PatientSessionsQuickView = ({
   const [detail, setDetail] = useState<UnifiedRecord | null>(null);
   const [expandedObs, setExpandedObs] = useState<Record<string, boolean>>({});
   const [startDate, setStartDate] = useState<Date | null>(null);
+  const [periodFilter, setPeriodFilter] = useState<string>("upcoming");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [modalityFilter, setModalityFilter] = useState<string>("all");
+
+  const modalityOptions = Array.from(
+    new Set(agenda.map((s) => (s.modality ?? "").trim()).filter(Boolean))
+  ).sort();
+
+  const now = Date.now();
+  const filteredAgenda = agenda.filter((s) => {
+    const t = new Date(s.scheduled_at).getTime();
+    if (periodFilter === "upcoming" && t < now) return false;
+    if (periodFilter === "past" && t >= now) return false;
+    if (periodFilter === "30d" && (t < now - 30 * 86400000 || t > now)) return false;
+    if (statusFilter !== "all" && s.status !== statusFilter) return false;
+    if (modalityFilter !== "all" && (s.modality ?? "").trim() !== modalityFilter) return false;
+    return true;
+  });
+  // Próximas sessões em ordem crescente; demais recortes, mais recentes primeiro
+  if (periodFilter === "upcoming") {
+    filteredAgenda.sort(
+      (a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
+    );
+  }
+
+
 
 
   useEffect(() => {
