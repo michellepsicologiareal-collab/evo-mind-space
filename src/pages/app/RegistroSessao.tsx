@@ -1401,10 +1401,7 @@ const RegistroSessao = () => {
         ]}
       />
       {/* Topbar */}
-      <div
-        className="px-5 py-4"
-        style={{ backgroundColor: "hsl(var(--card))", borderRadius: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
-      >
+      <div className="rounded-2xl bg-card border border-border p-5 sm:p-7 shadow-[var(--shadow-card)]">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div className="min-w-0">
             <button
