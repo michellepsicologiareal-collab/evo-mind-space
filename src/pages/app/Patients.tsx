@@ -1908,16 +1908,17 @@ const Patients = () => {
 
                 <div className="pt-6 pb-10 min-w-0">
                   <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-                    <TabsList className="w-full flex flex-wrap justify-start gap-1.5 h-auto p-1.5 bg-transparent border-b border-border rounded-none">
-                      <TabsTrigger value="overview" className="text-xs sm:text-[13px] whitespace-nowrap">Visão geral</TabsTrigger>
-                      <TabsTrigger value="mood" className="text-xs sm:text-[13px] whitespace-nowrap">Humor</TabsTrigger>
-                      <TabsTrigger value="formulations" className="text-xs sm:text-[13px] whitespace-nowrap">Formulações</TabsTrigger>
-                      <TabsTrigger value="sessions" className="text-xs sm:text-[13px] whitespace-nowrap">Sessões</TabsTrigger>
-                      <TabsTrigger value="plan" className="text-xs sm:text-[13px] whitespace-nowrap">Plano Terapêutico</TabsTrigger>
-                      <TabsTrigger value="anamnesis" className="text-xs sm:text-[13px] whitespace-nowrap">Anamneses</TabsTrigger>
-                      <TabsTrigger value="documents" className="text-xs sm:text-[13px] whitespace-nowrap">Documentos</TabsTrigger>
-                      <TabsTrigger value="finance" className="text-xs sm:text-[13px] whitespace-nowrap">Financeiro</TabsTrigger>
+                    <TabsList className="w-full flex sm:flex-wrap justify-start gap-1.5 h-auto p-1.5 bg-transparent border-b border-border rounded-none overflow-x-auto no-scrollbar [-webkit-overflow-scrolling:touch] snap-x">
+                      <TabsTrigger value="overview" className="shrink-0 snap-start text-xs sm:text-[13px] whitespace-nowrap">Visão geral</TabsTrigger>
+                      <TabsTrigger value="mood" className="shrink-0 snap-start text-xs sm:text-[13px] whitespace-nowrap">Humor</TabsTrigger>
+                      <TabsTrigger value="formulations" className="shrink-0 snap-start text-xs sm:text-[13px] whitespace-nowrap">Formulações</TabsTrigger>
+                      <TabsTrigger value="sessions" className="shrink-0 snap-start text-xs sm:text-[13px] whitespace-nowrap">Sessões</TabsTrigger>
+                      <TabsTrigger value="plan" className="shrink-0 snap-start text-xs sm:text-[13px] whitespace-nowrap">Plano Terapêutico</TabsTrigger>
+                      <TabsTrigger value="anamnesis" className="shrink-0 snap-start text-xs sm:text-[13px] whitespace-nowrap">Anamneses</TabsTrigger>
+                      <TabsTrigger value="documents" className="shrink-0 snap-start text-xs sm:text-[13px] whitespace-nowrap">Documentos</TabsTrigger>
+                      <TabsTrigger value="finance" className="shrink-0 snap-start text-xs sm:text-[13px] whitespace-nowrap">Financeiro</TabsTrigger>
                     </TabsList>
+
 
 
                     {/* Visão geral */}
