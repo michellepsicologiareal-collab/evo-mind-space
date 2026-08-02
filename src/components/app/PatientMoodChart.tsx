@@ -206,15 +206,20 @@ export const PatientMoodChart = ({ patientId }: Props) => {
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-border p-8 text-center">
-        <Smile className="h-8 w-8 mx-auto text-muted-foreground/40" />
-        <p className="mt-2 text-sm text-muted-foreground">Nenhum registro clínico ainda.</p>
-        <p className="text-xs text-muted-foreground/70 mt-1">
-          Registre bem-estar, contexto e observação clínica ao editar uma sessão.
-        </p>
-      </div>
+      <>
+        <div className="rounded-xl border border-dashed border-border p-8 text-center">
+          <Smile className="h-8 w-8 mx-auto text-muted-foreground/40" />
+          <p className="mt-2 text-sm text-muted-foreground">Nenhum registro clínico ainda.</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">
+            Registre bem-estar, contexto e observação clínica aqui ou ao editar uma sessão.
+          </p>
+          <div className="mt-4 flex justify-center">{AddButton}</div>
+        </div>
+        {AddDialog}
+      </>
     );
   }
+
 
   const chartData = v2Rows.map((r) => ({
     name: format(new Date(r.recorded_at), "dd/MM"),
