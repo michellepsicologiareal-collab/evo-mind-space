@@ -393,7 +393,7 @@ const Patients = () => {
   const canShareWithSupervisor = currentProfileType === "supervisee" && !!currentSupervisorId;
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const VALID_TABS = ["overview", "formulations", "sessions", "plan", "anamnesis", "documents", "finance"];
+  const VALID_TABS = ["overview", "mood", "formulations", "sessions", "plan", "anamnesis", "documents", "finance"];
 
   // Abrir Sheet automaticamente quando a URL trouxer ?patient=<id>&tab=<value>
   // (utilizado pela tela Financeiro para reutilizar o mesmo Sheet).
