@@ -1937,7 +1937,14 @@ const Patients = () => {
                       <IntegratedCaseSummary patientId={p.id} />
                     </TabsContent>
 
-                    {/* Formulações */}
+                    {/* Humor */}
+                    <TabsContent value="mood" className="mt-6 space-y-5">
+                      <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-[var(--shadow-card)]">
+                        <PatientMoodChart patientId={p.id} patientName={p.full_name} />
+                      </div>
+                    </TabsContent>
+
+
                     <TabsContent value="formulations" className="mt-6">
                       {(() => {
                         const trunc = (t?: string, n = 180) => !t ? "" : (t.length > n ? t.slice(0, n).trimEnd() + "…" : t);
