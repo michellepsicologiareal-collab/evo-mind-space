@@ -1910,6 +1910,7 @@ const Patients = () => {
                   <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
                     <TabsList className="w-full flex flex-wrap justify-start gap-1.5 h-auto p-1.5 bg-transparent border-b border-border rounded-none">
                       <TabsTrigger value="overview" className="text-xs sm:text-[13px] whitespace-nowrap">Visão geral</TabsTrigger>
+                      <TabsTrigger value="mood" className="text-xs sm:text-[13px] whitespace-nowrap">Humor</TabsTrigger>
                       <TabsTrigger value="formulations" className="text-xs sm:text-[13px] whitespace-nowrap">Formulações</TabsTrigger>
                       <TabsTrigger value="sessions" className="text-xs sm:text-[13px] whitespace-nowrap">Sessões</TabsTrigger>
                       <TabsTrigger value="plan" className="text-xs sm:text-[13px] whitespace-nowrap">Plano Terapêutico</TabsTrigger>
