@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Smile, TrendingUp, TrendingDown, Minus, AlertTriangle, RotateCcw } from "lucide-react";
+import { Loader2, Smile, TrendingUp, TrendingDown, Minus, AlertTriangle, RotateCcw, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis, CartesianGrid, Line } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
+
 
 interface Props {
   patientId: string;
