@@ -125,6 +125,15 @@ export const PatientMoodChart = ({ patientId }: Props) => {
   const trendColor =
     trend > 0.5 ? "text-emerald-600" : trend < -0.5 ? "text-destructive" : "text-muted-foreground";
 
+  const lastRecord = rows.length ? rows[rows.length - 1] : null;
+  const lastIsV2 = lastRecord?.data_model === "v2_structured";
+  const lastScore = lastIsV2 ? lastRecord?.wellbeing_score : lastRecord?.mood_score;
+  const lastDisplayText = lastRecord
+    ? lastIsV2
+      ? [lastRecord.patient_context, lastRecord.clinical_observation].filter(Boolean).join(" · ")
+      : (lastRecord.note ?? "")
+    : "";
+
   return (
     <div className="space-y-4">
       {v2Rows.length === 0 && legacyRows.length > 0 && (
@@ -133,6 +142,44 @@ export const PatientMoodChart = ({ patientId }: Props) => {
           <p className="text-amber-900/80 text-xs mt-1">
             {legacyRows.length} registro(s) legado(s) abaixo, mantidos apenas para consulta.
           </p>
+        </div>
+      )}
+
+      {/* Último registro */}
+      {lastRecord && (
+        <div className="rounded-xl border border-border bg-card p-4 flex items-center gap-4 shadow-[var(--shadow-card)]">
+          <div className="text-3xl shrink-0">{lastScore != null ? moodEmoji(Number(lastScore)) : "🗒️"}</div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs uppercase text-muted-foreground">Último registro</p>
+            <div className="flex items-center gap-2 flex-wrap mt-0.5">
+              {lastScore != null && (
+                <span className="text-lg font-display font-bold text-foreground">
+                  {Number(lastScore)}/10 {lastIsV2 ? "· bem-estar" : "· humor legado"}
+                </span>
+              )}
+              {lastIsV2 && sourceLabel(lastRecord.wellbeing_source) && (
+                <span className="text-[10px] rounded-full px-2 py-0.5 bg-lilac/40 text-primary-dark font-semibold">
+                  {sourceLabel(lastRecord.wellbeing_source)}
+                </span>
+              )}
+              {!lastIsV2 && (
+                <span className="text-[10px] rounded-full px-2 py-0.5 bg-amber-200/60 text-amber-900 font-semibold uppercase tracking-wider">
+                  Legado
+                </span>
+              )}
+            </div>
+            {lastDisplayText && (
+              <p className="text-xs text-muted-foreground mt-1 truncate">{lastDisplayText}</p>
+            )}
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="text-sm font-medium text-foreground">
+              {format(new Date(lastRecord.recorded_at), "dd/MM/yyyy", { locale: ptBR })}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {format(new Date(lastRecord.recorded_at), "HH:mm", { locale: ptBR })}
+            </p>
+          </div>
         </div>
       )}
 
