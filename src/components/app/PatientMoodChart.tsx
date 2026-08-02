@@ -47,6 +47,107 @@ export const PatientMoodChart = ({ patientId }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
+  // Novo registro de humor
+  const [addOpen, setAddOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [fDate, setFDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [fScore, setFScore] = useState<number[]>([5]);
+  const [fSource, setFSource] = useState<"patient_self_report" | "professional_estimate">("patient_self_report");
+  const [fContext, setFContext] = useState("");
+  const [fObs, setFObs] = useState("");
+
+  const resetForm = () => {
+    setFDate(format(new Date(), "yyyy-MM-dd"));
+    setFScore([5]);
+    setFSource("patient_self_report");
+    setFContext("");
+    setFObs("");
+  };
+
+  const saveMood = async () => {
+    setSaving(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) throw new Error("Sessão expirada. Faça login novamente.");
+      const now = new Date();
+      const recordedAt = new Date(`${fDate}T${format(now, "HH:mm:ss")}`);
+      const { error: err } = await (supabase as any).from("patient_progress").insert({
+        user_id: uid,
+        patient_id: patientId,
+        recorded_at: recordedAt.toISOString(),
+        wellbeing_score: fScore[0],
+        wellbeing_source: fSource,
+        patient_context: fContext.trim() || null,
+        clinical_observation: fObs.trim() || null,
+        data_model: "v2_structured",
+      });
+      if (err) throw err;
+      toast.success("Registro de humor salvo");
+      setAddOpen(false);
+      resetForm();
+      setReloadKey((k) => k + 1);
+    } catch (e: any) {
+      console.error("[PatientMoodChart] save failed:", e);
+      toast.error(e?.message || "Não foi possível salvar o registro.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const AddButton = (
+    <Button size="sm" variant="accent" className="rounded-full" onClick={() => setAddOpen(true)}>
+      <Plus className="h-4 w-4 mr-1.5" /> Novo registro
+    </Button>
+  );
+
+  const AddDialog = (
+    <Dialog open={addOpen} onOpenChange={(o) => { setAddOpen(o); if (!o) resetForm(); }}>
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-display">Novo registro de humor</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="mood-date">Data</Label>
+              <Input id="mood-date" type="date" value={fDate} onChange={(e) => setFDate(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Origem</Label>
+              <Select value={fSource} onValueChange={(v) => setFSource(v as typeof fSource)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="patient_self_report">Autorrelato do paciente</SelectItem>
+                  <SelectItem value="professional_estimate">Estimativa profissional</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Bem-estar: <span className="font-semibold">{fScore[0]}/10 {moodEmoji(fScore[0])}</span></Label>
+            <Slider min={0} max={10} step={1} value={fScore} onValueChange={setFScore} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="mood-ctx">Contexto do paciente</Label>
+            <Textarea id="mood-ctx" rows={2} value={fContext} onChange={(e) => setFContext(e.target.value)} placeholder="O que o paciente relatou..." />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="mood-obs">Observação clínica</Label>
+            <Textarea id="mood-obs" rows={2} value={fObs} onChange={(e) => setFObs(e.target.value)} placeholder="Sua leitura clínica..." />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => setAddOpen(false)} disabled={saving}>Cancelar</Button>
+          <Button variant="accent" onClick={saveMood} disabled={saving}>
+            {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Salvar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
