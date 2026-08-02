@@ -250,6 +250,12 @@ export const PatientMoodChart = ({ patientId }: Props) => {
 
   return (
     <div className="space-y-4">
+      {AddDialog}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <p className="text-sm font-semibold text-foreground font-display">Histórico de humor</p>
+        {AddButton}
+      </div>
+
       {v2Rows.length === 0 && legacyRows.length > 0 && (
         <div className="rounded-xl border border-amber-300/40 bg-amber-50/60 p-3 text-sm">
           <p className="font-semibold text-amber-900">Sem série de bem-estar (v2) ainda.</p>
