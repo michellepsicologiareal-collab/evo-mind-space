@@ -393,7 +393,7 @@ const Patients = () => {
   const canShareWithSupervisor = currentProfileType === "supervisee" && !!currentSupervisorId;
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const VALID_TABS = ["overview", "formulations", "sessions", "plan", "anamnesis", "documents", "finance"];
+  const VALID_TABS = ["overview", "mood", "formulations", "sessions", "plan", "anamnesis", "documents", "finance"];
 
   // Abrir Sheet automaticamente quando a URL trouxer ?patient=<id>&tab=<value>
   // (utilizado pela tela Financeiro para reutilizar o mesmo Sheet).
@@ -1910,6 +1910,7 @@ const Patients = () => {
                   <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
                     <TabsList className="w-full flex flex-wrap justify-start gap-1.5 h-auto p-1.5 bg-transparent border-b border-border rounded-none">
                       <TabsTrigger value="overview" className="text-xs sm:text-[13px] whitespace-nowrap">Visão geral</TabsTrigger>
+                      <TabsTrigger value="mood" className="text-xs sm:text-[13px] whitespace-nowrap">Humor</TabsTrigger>
                       <TabsTrigger value="formulations" className="text-xs sm:text-[13px] whitespace-nowrap">Formulações</TabsTrigger>
                       <TabsTrigger value="sessions" className="text-xs sm:text-[13px] whitespace-nowrap">Sessões</TabsTrigger>
                       <TabsTrigger value="plan" className="text-xs sm:text-[13px] whitespace-nowrap">Plano Terapêutico</TabsTrigger>
@@ -1936,7 +1937,14 @@ const Patients = () => {
                       <IntegratedCaseSummary patientId={p.id} />
                     </TabsContent>
 
-                    {/* Formulações */}
+                    {/* Humor */}
+                    <TabsContent value="mood" className="mt-6 space-y-5">
+                      <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-[var(--shadow-card)]">
+                        <PatientMoodChart patientId={p.id} patientName={p.full_name} />
+                      </div>
+                    </TabsContent>
+
+
                     <TabsContent value="formulations" className="mt-6">
                       {(() => {
                         const trunc = (t?: string, n = 180) => !t ? "" : (t.length > n ? t.slice(0, n).trimEnd() + "…" : t);
