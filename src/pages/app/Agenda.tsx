@@ -2644,9 +2644,9 @@ const Agenda = () => {
               <span className="inline-flex items-center gap-2">
                 <Filter className="h-3.5 w-3.5" />
                 Filtros
-                {(serviceFilter !== "all" || patientFilter !== "all") && (
+                {(serviceFilter !== "all" || patientFilter !== "all" || reminderFilter || billingFilter) && (
                   <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] text-accent-foreground">
-                    {(serviceFilter !== "all" ? 1 : 0) + (patientFilter !== "all" ? 1 : 0)}
+                    {(serviceFilter !== "all" ? 1 : 0) + (patientFilter !== "all" ? 1 : 0) + (reminderFilter ? 1 : 0) + (billingFilter ? 1 : 0)}
                   </span>
                 )}
               </span>
