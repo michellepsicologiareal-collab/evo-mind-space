@@ -1818,11 +1818,13 @@ const Agenda = () => {
     return sessions.filter((s) => {
       if (serviceFilter !== "all" && s.service_id !== serviceFilter) return false;
       if (patientFilter !== "all" && s.patient_id !== patientFilter) return false;
+      if (reminderFilter && !s.confirmation_sent_at) return false;
+      if (billingFilter && !s.billing_sent_at) return false;
       const d = new Date(s.scheduled_at);
       if (d < monthStart || d > monthEnd) return false;
       return true;
     });
-  }, [sessions, serviceFilter, patientFilter, currentMonth]);
+  }, [sessions, serviceFilter, patientFilter, reminderFilter, billingFilter, currentMonth]);
 
   const selectedPatientName = useMemo(() => {
     if (patientFilter === "all") return null;
