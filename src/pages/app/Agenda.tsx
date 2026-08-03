@@ -245,6 +245,8 @@ const Agenda = () => {
   const [viewTab, setViewTab] = useState<string>("day");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
+  const [reminderFilter, setReminderFilter] = useState<boolean>(false);
+  const [billingFilter, setBillingFilter] = useState<boolean>(false);
   const [searchParams] = useSearchParams();
   const [isNavigating, setIsNavigating] = useState(false);
   const skipDateMonthSyncRef = useRef(false);
@@ -1816,11 +1818,13 @@ const Agenda = () => {
     return sessions.filter((s) => {
       if (serviceFilter !== "all" && s.service_id !== serviceFilter) return false;
       if (patientFilter !== "all" && s.patient_id !== patientFilter) return false;
+      if (reminderFilter && !s.confirmation_sent_at) return false;
+      if (billingFilter && !s.billing_sent_at) return false;
       const d = new Date(s.scheduled_at);
       if (d < monthStart || d > monthEnd) return false;
       return true;
     });
-  }, [sessions, serviceFilter, patientFilter, currentMonth]);
+  }, [sessions, serviceFilter, patientFilter, reminderFilter, billingFilter, currentMonth]);
 
   const selectedPatientName = useMemo(() => {
     if (patientFilter === "all") return null;
@@ -2640,9 +2644,9 @@ const Agenda = () => {
               <span className="inline-flex items-center gap-2">
                 <Filter className="h-3.5 w-3.5" />
                 Filtros
-                {(serviceFilter !== "all" || patientFilter !== "all") && (
+                {(serviceFilter !== "all" || patientFilter !== "all" || reminderFilter || billingFilter) && (
                   <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] text-accent-foreground">
-                    {(serviceFilter !== "all" ? 1 : 0) + (patientFilter !== "all" ? 1 : 0)}
+                    {(serviceFilter !== "all" ? 1 : 0) + (patientFilter !== "all" ? 1 : 0) + (reminderFilter ? 1 : 0) + (billingFilter ? 1 : 0)}
                   </span>
                 )}
               </span>
@@ -2679,6 +2683,44 @@ const Agenda = () => {
                   {svc.name}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Filtros de comunicação: lembrete / cobrança */}
+          <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+              <button
+                onClick={() => setReminderFilter((v) => !v)}
+                className={cn(
+                  "shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                  reminderFilter
+                    ? "bg-sky-100 text-sky-800 border-sky-300"
+                    : "bg-background text-muted-foreground border-border hover:bg-muted"
+                )}
+              >
+                <Bell className="h-3.5 w-3.5" />
+                Lembrete enviado
+              </button>
+              <button
+                onClick={() => setBillingFilter((v) => !v)}
+                className={cn(
+                  "shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                  billingFilter
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                    : "bg-background text-muted-foreground border-border hover:bg-muted"
+                )}
+              >
+                <DollarSign className="h-3.5 w-3.5" />
+                Cobrança enviada
+              </button>
+              {(reminderFilter || billingFilter) && (
+                <button
+                  onClick={() => { setReminderFilter(false); setBillingFilter(false); }}
+                  className="shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold border border-border text-muted-foreground hover:bg-muted"
+                >
+                  Limpar
+                </button>
+              )}
             </div>
           </div>
 
