@@ -2686,6 +2686,44 @@ const Agenda = () => {
             </div>
           </div>
 
+          {/* Filtros de comunicação: lembrete / cobrança */}
+          <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+              <button
+                onClick={() => setReminderFilter((v) => !v)}
+                className={cn(
+                  "shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                  reminderFilter
+                    ? "bg-sky-100 text-sky-800 border-sky-300"
+                    : "bg-background text-muted-foreground border-border hover:bg-muted"
+                )}
+              >
+                <Bell className="h-3.5 w-3.5" />
+                Lembrete enviado
+              </button>
+              <button
+                onClick={() => setBillingFilter((v) => !v)}
+                className={cn(
+                  "shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                  billingFilter
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                    : "bg-background text-muted-foreground border-border hover:bg-muted"
+                )}
+              >
+                <DollarSign className="h-3.5 w-3.5" />
+                Cobrança enviada
+              </button>
+              {(reminderFilter || billingFilter) && (
+                <button
+                  onClick={() => { setReminderFilter(false); setBillingFilter(false); }}
+                  className="shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold border border-border text-muted-foreground hover:bg-muted"
+                >
+                  Limpar
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Filtros: paciente + mês/ano */}
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
             {patients.length > 0 && (
