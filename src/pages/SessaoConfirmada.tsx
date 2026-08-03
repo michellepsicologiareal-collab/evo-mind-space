@@ -16,6 +16,8 @@ interface SessionData {
   patient_name: string;
   modality: string | null;
   therapist_name: string | null;
+  meeting_link?: string | null;
+  clinic_address?: string | null;
 }
 
 function buildICS(session: SessionData): string {
