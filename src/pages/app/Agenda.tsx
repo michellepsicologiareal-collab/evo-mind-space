@@ -2216,13 +2216,19 @@ const Agenda = () => {
               </a>
             )}
             {s.confirmation_sent_at && (
-              <span className="text-primary" title={`Lembrete enviado em ${format(new Date(s.confirmation_sent_at), "dd/MM 'às' HH:mm")}`} aria-label="Lembrete enviado">
-                <Bell className="h-3.5 w-3.5" />
+              <span
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-sky-700 bg-sky-50 border border-sky-200 rounded-full px-2 py-0.5"
+                title={`Lembrete enviado em ${format(new Date(s.confirmation_sent_at), "dd/MM 'às' HH:mm")}`}
+              >
+                <Bell className="h-3 w-3" /> Lembrete enviado
               </span>
             )}
             {s.billing_sent_at && (
-              <span className="text-primary" title={`Cobrança enviada em ${format(new Date(s.billing_sent_at), "dd/MM 'às' HH:mm")}`} aria-label="Cobrança enviada">
-                <DollarSign className="h-3.5 w-3.5" />
+              <span
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5"
+                title={`Cobrança enviada em ${format(new Date(s.billing_sent_at), "dd/MM 'às' HH:mm")}`}
+              >
+                <DollarSign className="h-3 w-3" /> Cobrança enviada
               </span>
             )}
             {homeworkSentAt && (
@@ -3187,22 +3193,20 @@ const Agenda = () => {
                                           {paymentStatusLabel[s.payment_status]}
                                         </span>
                                        )}
-                                      {s.billing_sent_at && (
-                                        <span
-                                          className={cn("lilac-comm-badge border shadow-sm", ICON_TAG)}
-                                          title={`Cobrança enviada em ${format(new Date(s.billing_sent_at), "dd/MM")}`}
-                                          aria-label="Cobrança enviada"
-                                        >
-                                          <DollarSign className="h-3 w-3" />
-                                        </span>
-                                      )}
                                       {s.confirmation_sent_at && (
                                         <span
-                                          className={cn("lilac-comm-badge border shadow-sm", ICON_TAG)}
+                                          className="inline-flex items-center gap-1 text-[10px] font-medium text-sky-700 bg-sky-50 border border-sky-200 rounded-full px-1.5 py-0.5"
                                           title={`Lembrete enviado em ${format(new Date(s.confirmation_sent_at), "dd/MM 'às' HH:mm")}`}
-                                          aria-label="Lembrete enviado"
                                         >
-                                          <Bell className="h-3 w-3" />
+                                          <Bell className="h-3 w-3" /> Lembrete
+                                        </span>
+                                      )}
+                                      {s.billing_sent_at && (
+                                        <span
+                                          className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5"
+                                          title={`Cobrança enviada em ${format(new Date(s.billing_sent_at), "dd/MM")}`}
+                                        >
+                                          <DollarSign className="h-3 w-3" /> Cobrança
                                         </span>
                                       )}
                                     </div>
