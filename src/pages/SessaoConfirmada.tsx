@@ -144,6 +144,25 @@ const SessaoConfirmada = () => {
                   {session.modality}
                 </p>
               )}
+              {session.meeting_link && (
+                <p className="text-sm text-muted-foreground break-all">
+                  <span className="font-medium text-foreground">💻 Link da videochamada:</span>{" "}
+                  <a
+                    href={session.meeting_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent underline font-medium"
+                  >
+                    {session.meeting_link}
+                  </a>
+                </p>
+              )}
+              {!session.meeting_link && session.clinic_address && (
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">🏠 Endereço:</span>{" "}
+                  {session.clinic_address}
+                </p>
+              )}
             </div>
 
             <div className="mt-5 flex flex-col gap-2">
