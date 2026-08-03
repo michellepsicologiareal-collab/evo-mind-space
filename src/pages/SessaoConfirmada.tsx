@@ -16,6 +16,8 @@ interface SessionData {
   patient_name: string;
   modality: string | null;
   therapist_name: string | null;
+  meeting_link?: string | null;
+  clinic_address?: string | null;
 }
 
 function buildICS(session: SessionData): string {
@@ -25,6 +27,7 @@ function buildICS(session: SessionData): string {
     d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const therapist = session.therapist_name || "Psicóloga";
   const mod = session.modality ? ` (${session.modality})` : "";
+  const place = session.meeting_link || session.clinic_address || "";
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -33,7 +36,8 @@ function buildICS(session: SessionData): string {
     `DTSTART:${fmt(start)}`,
     `DTEND:${fmt(end)}`,
     `SUMMARY:Sessão com ${therapist}${mod}`,
-    `DESCRIPTION:Sessão de psicologia com ${therapist}`,
+    ...(place ? [`LOCATION:${place}`] : []),
+    `DESCRIPTION:Sessão de psicologia com ${therapist}${place ? ` — ${place}` : ""}`,
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");
@@ -46,11 +50,13 @@ function googleCalUrl(session: SessionData): string {
     d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const therapist = session.therapist_name || "Psicóloga";
   const mod = session.modality ? ` (${session.modality})` : "";
+  const place = session.meeting_link || session.clinic_address || "";
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: `Sessão com ${therapist}${mod}`,
     dates: `${fmt(start)}/${fmt(end)}`,
-    details: `Sessão de psicologia com ${therapist}`,
+    details: `Sessão de psicologia com ${therapist}${place ? ` — ${place}` : ""}`,
+    ...(place ? { location: place } : {}),
   });
   return `https://calendar.google.com/calendar/render?${params}`;
 }
@@ -140,6 +146,25 @@ const SessaoConfirmada = () => {
                 <p className="text-sm text-muted-foreground">
                   <span className="font-medium text-foreground">📍 Modalidade:</span>{" "}
                   {session.modality}
+                </p>
+              )}
+              {session.meeting_link && (
+                <p className="text-sm text-muted-foreground break-all">
+                  <span className="font-medium text-foreground">💻 Link da videochamada:</span>{" "}
+                  <a
+                    href={session.meeting_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent underline font-medium"
+                  >
+                    {session.meeting_link}
+                  </a>
+                </p>
+              )}
+              {!session.meeting_link && session.clinic_address && (
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">🏠 Endereço:</span>{" "}
+                  {session.clinic_address}
                 </p>
               )}
             </div>
