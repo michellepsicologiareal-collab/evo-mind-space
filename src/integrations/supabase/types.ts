@@ -2437,8 +2437,10 @@ export type Database = {
       get_session_by_token: {
         Args: { _token: string }
         Returns: {
+          clinic_address: string
           duration_minutes: number
           id: string
+          meeting_link: string
           modality: string
           patient_name: string
           scheduled_at: string
