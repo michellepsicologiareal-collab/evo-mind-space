@@ -230,7 +230,7 @@ export const AppLayout = () => {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Linha dourada absoluta no topo da tela */}
-      <div className="fixed top-0 inset-x-0 z-50 gold-bar pointer-events-none" />
+      <div className="fixed top-0 inset-x-0 z-[45] gold-bar pointer-events-none" />
 
       {/* ── Desktop sidebar (fixed) ── */}
       <aside className="hidden md:flex md:w-[248px] fixed inset-y-0 left-0 z-30 bg-[hsl(var(--nav-bg))] text-[hsl(var(--nav-fg))] border-r border-[hsl(var(--nav-border))] flex-col">
