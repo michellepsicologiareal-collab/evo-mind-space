@@ -2260,10 +2260,11 @@ const Agenda = () => {
             <Button
               size="sm"
               className="h-8 w-full rounded-lg px-3 text-xs font-semibold gap-1.5 sm:w-auto"
-              onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}${agendaReturnParam()}`); }}
+              onClick={(e) => { e.stopPropagation(); void openEdit(s); }}
             >
-              <Pencil className="h-3.5 w-3.5" /> Registrar sessão
+              <Pencil className="h-3.5 w-3.5" /> Registro da sessão
             </Button>
+
             <div className="grid w-full min-w-0 grid-cols-2 overflow-hidden rounded-lg border border-border divide-x divide-y divide-border sm:inline-flex sm:w-auto sm:divide-y-0">
               <button
                 onClick={(e) => { e.stopPropagation(); setHistoryOpen(true); }}
