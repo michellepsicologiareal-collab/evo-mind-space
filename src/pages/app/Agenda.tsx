@@ -3445,7 +3445,18 @@ const Agenda = () => {
               return <p className="text-sm text-muted-foreground truncate">{session.patient_name}</p>;
             })()}
           </DialogHeader>
-          <form onSubmit={handleEditSave} className="flex flex-col min-h-0 overflow-y-auto overflow-x-hidden [&>*]:w-full [&>*]:max-w-[1100px] [&>*]:mx-auto px-4 sm:px-8 pt-4 space-y-4">
+          <form onSubmit={handleEditSave} className="flex flex-col min-h-0 overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] [&>*]:w-full [&>*]:max-w-[1100px] [&>*]:mx-auto px-4 sm:px-8 pt-4 pb-6 space-y-4">
+            <div className="flex sm:hidden gap-2 overflow-x-auto pb-1">
+              <button
+                type="button"
+                onClick={() => document.getElementById("edit-plano-entre-sessoes")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-foreground/75"
+              >
+                Ir para Plano entre Sessões
+              </button>
+            </div>
+
             {/* Tipo de compromisso / Serviço */}
             <div className="space-y-2">
               <Label>Tipo de compromisso</Label>
