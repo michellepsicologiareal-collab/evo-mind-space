@@ -2185,13 +2185,14 @@ const Agenda = () => {
               {!isSupervisionCard && s.patient_id && (
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}${agendaReturnParam()}`); }}
+                  onClick={(e) => { e.stopPropagation(); void openEdit(s); }}
                   className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-card text-foreground/70 hover:bg-muted transition-colors"
-                  title="Registrar sessão"
-                  aria-label="Registrar sessão"
+                  title="Registro da sessão"
+                  aria-label="Registro da sessão"
                 >
                   <Pencil className="h-3 w-3" />
                 </button>
+
               )}
             </div>
           )}
@@ -2259,10 +2260,11 @@ const Agenda = () => {
             <Button
               size="sm"
               className="h-8 w-full rounded-lg px-3 text-xs font-semibold gap-1.5 sm:w-auto"
-              onClick={(e) => { e.stopPropagation(); navigate(`/app/registro-sessao?patient=${s.patient_id}&session=${s.id}${agendaReturnParam()}`); }}
+              onClick={(e) => { e.stopPropagation(); void openEdit(s); }}
             >
-              <Pencil className="h-3.5 w-3.5" /> Registrar sessão
+              <Pencil className="h-3.5 w-3.5" /> Registro da sessão
             </Button>
+
             <div className="grid w-full min-w-0 grid-cols-2 overflow-hidden rounded-lg border border-border divide-x divide-y divide-border sm:inline-flex sm:w-auto sm:divide-y-0">
               <button
                 onClick={(e) => { e.stopPropagation(); setHistoryOpen(true); }}
@@ -3443,7 +3445,18 @@ const Agenda = () => {
               return <p className="text-sm text-muted-foreground truncate">{session.patient_name}</p>;
             })()}
           </DialogHeader>
-          <form onSubmit={handleEditSave} className="flex flex-col min-h-0 overflow-y-auto overflow-x-hidden [&>*]:w-full [&>*]:max-w-[1100px] [&>*]:mx-auto px-4 sm:px-8 pt-4 space-y-4">
+          <form onSubmit={handleEditSave} className="flex flex-col min-h-0 overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] [&>*]:w-full [&>*]:max-w-[1100px] [&>*]:mx-auto px-4 sm:px-8 pt-4 pb-6 space-y-4">
+            <div className="flex sm:hidden gap-2 overflow-x-auto pb-1">
+              <button
+                type="button"
+                onClick={() => document.getElementById("edit-plano-entre-sessoes")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                className="shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-foreground/75"
+              >
+                Ir para Plano entre Sessões
+              </button>
+            </div>
+
             {/* Tipo de compromisso / Serviço */}
             <div className="space-y-2">
               <Label>Tipo de compromisso</Label>
@@ -3679,9 +3692,11 @@ const Agenda = () => {
 
                   {/* ── Plano entre Sessões (inline, atrelado à sessão atual) ── */}
                   <section
-                    className="rounded-xl border p-3 sm:p-4 space-y-3 min-w-0 overflow-hidden"
+                    id="edit-plano-entre-sessoes"
+                    className="rounded-xl border p-3 sm:p-4 space-y-3 min-w-0 overflow-hidden scroll-mt-4"
                     style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--card))", borderLeft: "3px solid hsl(var(--moss))" }}
                   >
+
                     <div className="flex items-start gap-2 min-w-0">
                       <NotebookPen className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "hsl(var(--moss))" }} />
                       <div className="min-w-0">
@@ -3709,7 +3724,9 @@ const Agenda = () => {
                 </>
               );
             })()}
-            <DialogFooter className="flex-row items-center gap-2 sticky bottom-0 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-background border-t border-border !max-w-none">
+            </div>
+            <DialogFooter className="flex-row items-center gap-2 shrink-0 z-20 px-4 sm:px-8 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-background border-t border-border !max-w-none">
+
               <Button
                 type="button" variant="ghost" size="icon"
                 className="text-destructive shrink-0 h-10 w-10 sm:mr-auto sm:w-auto sm:px-3"
