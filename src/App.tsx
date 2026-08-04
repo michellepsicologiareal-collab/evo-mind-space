@@ -8,7 +8,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/app/AppLayout";
 import { SplashScreen } from "@/components/SplashScreen";
-import { SessionStatusBadge } from "@/components/app/SessionStatusBadge";
 import { AutoUpdater } from "@/components/AutoUpdater";
 
 /* ── Lazy-loaded pages ── */
@@ -115,7 +114,6 @@ const App = () => (
         <AuthProvider>
           <AutoUpdater />
           <RecoveryLinkRedirect />
-          <SessionStatusBadge />
 
           <Suspense fallback={<SplashScreen />}>
             <AppErrorBoundary>
