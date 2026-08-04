@@ -3692,9 +3692,11 @@ const Agenda = () => {
 
                   {/* ── Plano entre Sessões (inline, atrelado à sessão atual) ── */}
                   <section
-                    className="rounded-xl border p-3 sm:p-4 space-y-3 min-w-0 overflow-hidden"
+                    id="edit-plano-entre-sessoes"
+                    className="rounded-xl border p-3 sm:p-4 space-y-3 min-w-0 overflow-hidden scroll-mt-4"
                     style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--card))", borderLeft: "3px solid hsl(var(--moss))" }}
                   >
+
                     <div className="flex items-start gap-2 min-w-0">
                       <NotebookPen className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "hsl(var(--moss))" }} />
                       <div className="min-w-0">
