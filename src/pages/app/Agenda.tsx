@@ -3724,7 +3724,9 @@ const Agenda = () => {
                 </>
               );
             })()}
-            <DialogFooter className="flex-row items-center gap-2 sticky bottom-0 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-background border-t border-border !max-w-none">
+            </div>
+            <DialogFooter className="flex-row items-center gap-2 shrink-0 z-20 px-4 sm:px-8 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-background border-t border-border !max-w-none">
+
               <Button
                 type="button" variant="ghost" size="icon"
                 className="text-destructive shrink-0 h-10 w-10 sm:mr-auto sm:w-auto sm:px-3"
