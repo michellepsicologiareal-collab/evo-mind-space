@@ -135,13 +135,22 @@ const statusLabel: Record<Status, string> = {
   no_show: "Falta", rescheduled: "Remarcada", cancelled: "Cancelada",
 };
 const statusClass: Record<Status, string> = {
-  scheduled:   "bg-gray-100 text-gray-600 border-gray-200",
-  confirmed:   "bg-green-100 text-green-800 border-green-200",
-  completed:   "bg-gray-50 text-gray-400 border-gray-200",
+  scheduled:   "bg-blue-50 text-blue-700 border-blue-200",
+  confirmed:   "bg-emerald-50 text-emerald-700 border-emerald-200",
+  completed:   "bg-teal-50 text-teal-700 border-teal-200",
   no_show:     "bg-destructive/15 text-destructive border-destructive/30",
   rescheduled: "bg-amber-100 text-amber-800 border-amber-200",
   cancelled:   "bg-muted text-muted-foreground border-muted line-through",
 };
+const statusTextClass: Record<Status, string> = {
+  scheduled:   "text-blue-700",
+  confirmed:   "text-emerald-700",
+  completed:   "text-teal-700",
+  no_show:     "text-destructive",
+  rescheduled: "text-amber-700",
+  cancelled:   "text-muted-foreground line-through",
+};
+
 const paymentStatusLabel: Record<PaymentStatus, string> = { pending: "Pendente", paid: "Pago" };
 const paymentStatusClass: Record<PaymentStatus, string> = {
   pending: "bg-amber-50 text-amber-800 border-amber-200",
