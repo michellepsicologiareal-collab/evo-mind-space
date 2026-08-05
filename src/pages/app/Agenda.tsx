@@ -2042,10 +2042,12 @@ const Agenda = () => {
       ? "before:bg-serene"
       : s.status === "cancelled" ? "before:bg-destructive/70"
         : s.status === "no_show" ? "before:bg-amber-500"
-          : s.status === "rescheduled" ? "before:bg-sky-500"
-            : s.status === "completed" ? "before:bg-primary"
+          : s.status === "rescheduled" ? "before:bg-orange-500"
+            : s.status === "completed" ? "before:bg-teal-500"
               : s.status === "confirmed" ? "before:bg-emerald-500"
-                : "before:bg-border";
+                : s.status === "scheduled" ? "before:bg-blue-500"
+                  : "before:bg-border";
+
 
     const modalityOnline = (s as any).modality === "online";
 
