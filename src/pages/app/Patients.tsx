@@ -1970,7 +1970,9 @@ const Patients = () => {
                         </div>
                       )}
 
+                      <AIClinicalSummary patientId={p.id} />
                       <IntegratedCaseSummary patientId={p.id} />
+
                     </TabsContent>
 
                     {/* Humor */}
