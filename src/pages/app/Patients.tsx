@@ -1934,7 +1934,42 @@ const Patients = () => {
                         <InfoRow label="Próxima sessão" value={fmtDate(info?.nextDate)} />
                         <InfoRow label="Última sessão" value={fmtDate(info?.lastDate)} />
                       </div>
-                      <AIClinicalSummary patientId={p.id} />
+
+                      {(p.chief_complaint || p.medications || p.treatment_plan || p.anamnesis || p.notes || p.has_psychiatrist || p.has_financial_responsible) && (
+                        <div className="rounded-2xl bg-card border border-border p-5 sm:p-6 shadow-[var(--shadow-card)] space-y-4">
+                          {([
+                            { label: "Queixa principal", value: p.chief_complaint },
+                            { label: "Medicamentos em uso", value: p.medications },
+                            { label: "Plano de tratamento", value: p.treatment_plan },
+                            { label: "Histórico / Anamnese", value: p.anamnesis },
+                            { label: "Observações", value: p.notes },
+                          ] as Array<{ label: string; value: string | null | undefined }>)
+                            .filter((f) => f.value && String(f.value).trim())
+                            .map((f) => (
+                              <div key={f.label} className="min-w-0">
+                                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{f.label}</p>
+                                <p className="mt-1 text-sm text-foreground whitespace-pre-line break-words">{f.value}</p>
+                              </div>
+                            ))}
+                          {p.has_psychiatrist && (
+                            <div className="min-w-0">
+                              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Acompanhamento psiquiátrico</p>
+                              <p className="mt-1 text-sm text-foreground break-words">
+                                {[p.psychiatrist_name, p.psychiatrist_phone].filter(Boolean).join(" · ") || "Sim"}
+                              </p>
+                            </div>
+                          )}
+                          {p.has_financial_responsible && (
+                            <div className="min-w-0">
+                              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Responsável financeiro</p>
+                              <p className="mt-1 text-sm text-foreground break-words">
+                                {[p.financial_responsible_name, p.financial_responsible_phone].filter(Boolean).join(" · ") || "Sim"}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <IntegratedCaseSummary patientId={p.id} />
                     </TabsContent>
 
