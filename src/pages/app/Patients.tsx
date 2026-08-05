@@ -510,7 +510,7 @@ const Patients = () => {
   const [counts, setCounts] = useState<{ mood: Record<string, number>; tcc: Record<string, number>; records: Record<string, number>; history: Record<string, number> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [lastDates, setLastDates] = useState<{ mood: Record<string, string>; tcc: Record<string, string>; records: Record<string, string>; history: Record<string, string> }>({ mood: {}, tcc: {}, records: {}, history: {} });
   const [attendance, setAttendance] = useState<Record<string, { total: number; attended: number; pct: number }>>({});
-  const [sessionInfo, setSessionInfo] = useState<Record<string, { lastDate?: string; lastStatus?: string; nextDate?: string; nextStatus?: string }>>({});
+  const [sessionInfo, setSessionInfo] = useState<Record<string, { lastDate?: string; lastStatus?: string; nextDate?: string; nextStatus?: string; nextId?: string }>>({});
   // Última sessão efetivamente realizada por paciente (usado nos recortes do Painel)
   const [lastCompleted, setLastCompleted] = useState<Record<string, string>>({});
   const [packageInfo, setPackageInfo] = useState<Record<string, { total: number; current: number }>>({});
@@ -559,7 +559,7 @@ const Patients = () => {
       supabase.from("patient_progress").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("tcc_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("session_records").select("patient_id, created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
-      supabase.from("sessions").select("patient_id, scheduled_at, status, notes, payment_status, payment_reference, price").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
+      supabase.from("sessions").select("id, patient_id, scheduled_at, status, notes, payment_status, payment_reference, price").eq("user_id", user.id).order("scheduled_at", { ascending: false }),
       supabase.from("case_formulations").select("patient_id, updated_at, ai_summary, environment, thoughts, emotions, behaviors, physical_reactions, core_beliefs, treatment_goals").eq("user_id", user.id),
       supabase.from("treatment_plans").select("patient_id, status, cid, abordagem, conceitualizacao").eq("user_id", user.id),
       supabase.from("treatment_goals").select("patient_id").eq("user_id", user.id),
@@ -675,7 +675,7 @@ const Patients = () => {
     setAttendance(att);
 
     // last past / next future session per patient (historyRes is desc by scheduled_at)
-    const info: Record<string, { lastDate?: string; lastStatus?: string; nextDate?: string; nextStatus?: string }> = {};
+    const info: Record<string, { lastDate?: string; lastStatus?: string; nextDate?: string; nextStatus?: string; nextId?: string }> = {};
     (historyRes.data ?? []).forEach((s: any) => {
       if (!s.patient_id || !s.scheduled_at) return;
       const ts = new Date(s.scheduled_at).getTime();
@@ -684,7 +684,7 @@ const Patients = () => {
         if (!cur.lastDate) { cur.lastDate = s.scheduled_at; cur.lastStatus = s.status; }
       } else {
         // upcoming: keep earliest future (list is desc, so last seen future = earliest)
-        cur.nextDate = s.scheduled_at; cur.nextStatus = s.status;
+        cur.nextDate = s.scheduled_at; cur.nextStatus = s.status; cur.nextId = s.id;
       }
       info[s.patient_id] = cur;
     });
@@ -1881,7 +1881,10 @@ const Patients = () => {
                     </div>
                     <div className="shrink-0">
                       <button
-                        onClick={() => { navigate(`/app/registro-sessao?patient=${p.id}`); }}
+                        onClick={() => {
+                          const nid = info?.nextId;
+                          navigate(nid ? `/app/agenda?patient=${p.id}&edit=${nid}` : `/app/agenda?patient=${p.id}&novo=1`);
+                        }}
                         className="inline-flex items-center gap-2 transition-opacity hover:opacity-90 w-full sm:w-auto justify-center"
                         style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", borderRadius: 40, padding: "12px 20px", fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 13 }}
                       >

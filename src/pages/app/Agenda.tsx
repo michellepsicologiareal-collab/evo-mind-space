@@ -1638,6 +1638,25 @@ const Agenda = () => {
     }
   };
 
+  // Abrir automaticamente a ficha de edição (?edit=<sessionId>) ou nova sessão (?novo=1)
+  const autoOpenRef = useRef(false);
+  useEffect(() => {
+    if (autoOpenRef.current) return;
+    const editId = searchParams.get("edit");
+    const novo = searchParams.get("novo");
+    if (editId) {
+      const s = sessions.find((x) => x.id === editId);
+      if (!s) return;
+      autoOpenRef.current = true;
+      goToDate(new Date(s.scheduled_at));
+      void openEdit(s);
+    } else if (novo === "1") {
+      autoOpenRef.current = true;
+      openNew();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessions, searchParams]);
+
   // Detect if session is part of a recurring package from notes
   const isPackageSession = (notes: string | null): boolean => {
     if (!notes) return false;
