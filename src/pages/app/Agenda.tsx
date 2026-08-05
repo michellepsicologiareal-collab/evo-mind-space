@@ -135,13 +135,22 @@ const statusLabel: Record<Status, string> = {
   no_show: "Falta", rescheduled: "Remarcada", cancelled: "Cancelada",
 };
 const statusClass: Record<Status, string> = {
-  scheduled:   "bg-gray-100 text-gray-600 border-gray-200",
-  confirmed:   "bg-green-100 text-green-800 border-green-200",
-  completed:   "bg-gray-50 text-gray-400 border-gray-200",
+  scheduled:   "bg-blue-50 text-blue-700 border-blue-200",
+  confirmed:   "bg-emerald-50 text-emerald-700 border-emerald-200",
+  completed:   "bg-teal-50 text-teal-700 border-teal-200",
   no_show:     "bg-destructive/15 text-destructive border-destructive/30",
   rescheduled: "bg-amber-100 text-amber-800 border-amber-200",
   cancelled:   "bg-muted text-muted-foreground border-muted line-through",
 };
+const statusTextClass: Record<Status, string> = {
+  scheduled:   "text-blue-700",
+  confirmed:   "text-emerald-700",
+  completed:   "text-teal-700",
+  no_show:     "text-destructive",
+  rescheduled: "text-amber-700",
+  cancelled:   "text-muted-foreground line-through",
+};
+
 const paymentStatusLabel: Record<PaymentStatus, string> = { pending: "Pendente", paid: "Pago" };
 const paymentStatusClass: Record<PaymentStatus, string> = {
   pending: "bg-amber-50 text-amber-800 border-amber-200",
@@ -2033,10 +2042,12 @@ const Agenda = () => {
       ? "before:bg-serene"
       : s.status === "cancelled" ? "before:bg-destructive/70"
         : s.status === "no_show" ? "before:bg-amber-500"
-          : s.status === "rescheduled" ? "before:bg-sky-500"
-            : s.status === "completed" ? "before:bg-primary"
+          : s.status === "rescheduled" ? "before:bg-orange-500"
+            : s.status === "completed" ? "before:bg-teal-500"
               : s.status === "confirmed" ? "before:bg-emerald-500"
-                : "before:bg-border";
+                : s.status === "scheduled" ? "before:bg-blue-500"
+                  : "before:bg-border";
+
 
     const modalityOnline = (s as any).modality === "online";
 
@@ -2054,9 +2065,10 @@ const Agenda = () => {
         <div className="flex min-w-0 items-start justify-between gap-2">
           <div className="flex flex-1 items-center gap-x-2 gap-y-1 min-w-0 flex-wrap pr-1">
             <p className="shrink-0 font-display text-sm font-semibold text-foreground">{format(new Date(s.scheduled_at), "HH:mm")}</p>
-            <span className="text-[11px] font-medium text-foreground/70">
+            <span className={cn("text-[11px] font-semibold", isSupervisionCard ? "text-foreground/70" : statusTextClass[s.status])}>
               {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
             </span>
+
             <span className="text-border">·</span>
             <span className="inline-flex items-center gap-1 text-[11px] text-foreground/70" title={modalityOnline ? "Atendimento online" : "Atendimento presencial"}>
               {modalityOnline ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
