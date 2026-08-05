@@ -2065,9 +2065,10 @@ const Agenda = () => {
         <div className="flex min-w-0 items-start justify-between gap-2">
           <div className="flex flex-1 items-center gap-x-2 gap-y-1 min-w-0 flex-wrap pr-1">
             <p className="shrink-0 font-display text-sm font-semibold text-foreground">{format(new Date(s.scheduled_at), "HH:mm")}</p>
-            <span className="text-[11px] font-medium text-foreground/70">
+            <span className={cn("text-[11px] font-semibold", isSupervisionCard ? "text-foreground/70" : statusTextClass[s.status])}>
               {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
             </span>
+
             <span className="text-border">·</span>
             <span className="inline-flex items-center gap-1 text-[11px] text-foreground/70" title={modalityOnline ? "Atendimento online" : "Atendimento presencial"}>
               {modalityOnline ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}
