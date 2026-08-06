@@ -41,7 +41,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
-import { carryOverHomeworkPlan } from "@/lib/homework/carryOver";
 
 // Retorno exato para a Agenda (data/visão/filtros atuais) ao fechar o Registro de Sessão.
 const agendaReturnParam = () =>
@@ -406,6 +405,7 @@ const Agenda = () => {
     recurrence: "single" as "single" | "recurring",
     recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
     payment_plan: "per_session" as "per_session" | "single_payment",
+    payment_due_date: "" as string,
     service_id: "" as string,
     modality: "presencial" as "presencial" | "online",
     meeting_link: "",
@@ -673,8 +673,6 @@ const Agenda = () => {
           if (created?.id) {
             targetSessionId = created.id;
             setPlanningTargetSessionId(created.id);
-            const copied = await carryOverHomeworkPlan(user.id, planningPatientId, created.id);
-            if (copied) toast.success("Plano entre sessões copiado para a próxima sessão");
           }
         }
       }
@@ -1169,6 +1167,9 @@ const Agenda = () => {
         service_id: form.service_id || null,
         modality: form.modality,
         meeting_link: form.modality === "online" && form.meeting_link.trim() ? form.meeting_link.trim() : null,
+        payment_due_date: isRecurring
+          ? (form.payment_due_date || format(scheduledAt, "yyyy-MM-dd"))
+          : format(scheduledAt, "yyyy-MM-dd"),
       } as any);
     }
 
@@ -1177,14 +1178,8 @@ const Agenda = () => {
     if (gcalConnected && created) {
       Promise.all(created.map((row: any) => syncSessionToGcal(row.id))).catch(() => {});
     }
+    // O Plano entre Sessões NÃO é copiado: cada nova sessão começa em branco.
 
-    // Copia o Plano entre sessões mais recente para a(s) sessão(ões) recém-agendada(s)
-    if (!isSupervision && parsed.data.patient_id && created?.length) {
-      for (const row of created as any[]) {
-        const copied = await carryOverHomeworkPlan(user.id, parsed.data.patient_id, row.id);
-        if (copied) toast.success("Plano entre sessões copiado para a próxima sessão");
-      }
-    }
 
 
     // v2 clinical registration — only when patient session and something was filled
@@ -2532,8 +2527,28 @@ const Agenda = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                {form.recurrence === "single" ? (
+                  <div className="rounded-xl border border-border bg-muted/40 px-3 py-2.5">
+                    <p className="text-xs font-medium text-foreground">Data prevista de pagamento</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      No dia da sessão{form.date ? ` — ${format(parse(form.date, "yyyy-MM-dd", new Date()), "dd/MM/yyyy")}` : ""}
+                    </p>
+                  </div>
+                ) : null}
                 {form.recurrence === "recurring" && (
                   <div className="rounded-xl bg-muted/50 border border-border p-3 space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="payment_due_date">Data prevista de pagamento</Label>
+                      <Input
+                        id="payment_due_date"
+                        type="date"
+                        value={form.payment_due_date}
+                        onChange={(e) => setForm({ ...form, payment_due_date: e.target.value })}
+                      />
+                      <p className="text-[11px] text-muted-foreground">
+                        Se deixar em branco, cada sessão usa a própria data.
+                      </p>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="rec_count">Quantidade</Label>
@@ -4074,18 +4089,70 @@ const Agenda = () => {
                     <p className="font-display text-xl font-bold text-accent">R$ {drawerFinancials.totalPending.toFixed(2)}</p>
                   </div>
                 </div>
-                <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                  {drawerSessions.filter(s => s.price != null).map((s) => (
-                    <div key={s.id} className="rounded-xl border border-border bg-background p-3 flex items-center justify-between">
-                      <div>
-                        <p className="text-sm">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
-                        <span className={cn(PILL_BASE, "mt-1", paymentStatusClass[s.payment_status as PaymentStatus])}>
-                          {paymentStatusLabel[s.payment_status as PaymentStatus]}
-                        </span>
-                      </div>
-                      <p className="font-display font-bold text-sm">R$ {Number(s.price).toFixed(2)}</p>
-                    </div>
-                  ))}
+                <div className="space-y-4 max-h-[50vh] overflow-y-auto">
+                  {(() => {
+                    const paid = drawerSessions.filter((s) => s.price != null);
+                    const groups = new Map<string, any[]>();
+                    for (const s of paid) {
+                      const notes: string = s.notes ?? "";
+                      const m = notes.match(/Plano\s+(\d+)\s+sess[õo]es/i);
+                      const idm = notes.match(/\[([a-z0-9]{6,8})\]/i);
+                      const key = m ? `plan:${m[1]}:${idm?.[1] ?? ""}` : "avulsas";
+                      if (!groups.has(key)) groups.set(key, []);
+                      groups.get(key)!.push(s);
+                    }
+                    const entries = [...groups.entries()].map(([key, list]) => ({
+                      key,
+                      list: [...list].sort((a, b) => +new Date(a.scheduled_at) - +new Date(b.scheduled_at)),
+                    }));
+                    const plans = entries
+                      .filter((e) => e.key !== "avulsas")
+                      .sort((a, b) => +new Date(a.list[0].scheduled_at) - +new Date(b.list[0].scheduled_at));
+                    const avulsas = entries.find((e) => e.key === "avulsas");
+                    const blocks = [
+                      ...plans.map((p, i) => ({ title: `Plano de Atendimento ${i + 1}`, list: p.list })),
+                      ...(avulsas ? [{ title: "Sessões avulsas", list: avulsas.list }] : []),
+                    ];
+                    if (blocks.length === 0) {
+                      return <p className="text-sm text-muted-foreground text-center py-6">Nenhum lançamento financeiro.</p>;
+                    }
+                    return blocks.map((b) => {
+                      const total = b.list.reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+                      const pending = b.list.filter((s) => s.payment_status === "pending").length;
+                      return (
+                        <div key={b.title} className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">{b.title}</p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {b.list.length} sessõe{b.list.length === 1 ? "" : "s"}
+                                {pending > 0 ? ` · ${pending} pendente${pending === 1 ? "" : "s"}` : " · quitado"}
+                              </p>
+                            </div>
+                            <p className="font-display font-bold text-sm">R$ {total.toFixed(2)}</p>
+                          </div>
+                          <div className="space-y-2">
+                            {b.list.map((s) => (
+                              <div key={s.id} className="rounded-lg border border-border bg-background p-3 flex items-center justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="text-sm">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
+                                  {s.payment_due_date && (
+                                    <p className="text-[11px] text-muted-foreground">
+                                      Pgto previsto: {format(parse(s.payment_due_date, "yyyy-MM-dd", new Date()), "dd/MM/yyyy")}
+                                    </p>
+                                  )}
+                                  <span className={cn(PILL_BASE, "mt-1", paymentStatusClass[s.payment_status as PaymentStatus])}>
+                                    {paymentStatusLabel[s.payment_status as PaymentStatus]}
+                                  </span>
+                                </div>
+                                <p className="font-display font-bold text-sm">R$ {Number(s.price).toFixed(2)}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             </TabsContent>

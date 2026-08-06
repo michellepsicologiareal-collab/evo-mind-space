@@ -1752,6 +1752,7 @@ export type Database = {
           notes: string | null
           paid_at: string | null
           patient_id: string | null
+          payment_due_date: string | null
           payment_method: Database["public"]["Enums"]["payment_method"] | null
           payment_reference: string | null
           payment_status: Database["public"]["Enums"]["payment_status"]
@@ -1778,6 +1779,7 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           patient_id?: string | null
+          payment_due_date?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_reference?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
@@ -1804,6 +1806,7 @@ export type Database = {
           notes?: string | null
           paid_at?: string | null
           patient_id?: string | null
+          payment_due_date?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_reference?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
