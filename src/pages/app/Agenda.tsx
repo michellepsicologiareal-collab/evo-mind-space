@@ -405,6 +405,7 @@ const Agenda = () => {
     recurrence: "single" as "single" | "recurring",
     recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
     payment_plan: "per_session" as "per_session" | "single_payment",
+    payment_due_date: "" as string,
     service_id: "" as string,
     modality: "presencial" as "presencial" | "online",
     meeting_link: "",
@@ -1166,6 +1167,9 @@ const Agenda = () => {
         service_id: form.service_id || null,
         modality: form.modality,
         meeting_link: form.modality === "online" && form.meeting_link.trim() ? form.meeting_link.trim() : null,
+        payment_due_date: isRecurring
+          ? (form.payment_due_date || format(scheduledAt, "yyyy-MM-dd"))
+          : format(scheduledAt, "yyyy-MM-dd"),
       } as any);
     }
 
@@ -2523,8 +2527,28 @@ const Agenda = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                {form.recurrence === "single" ? (
+                  <div className="rounded-xl border border-border bg-muted/40 px-3 py-2.5">
+                    <p className="text-xs font-medium text-foreground">Data prevista de pagamento</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      No dia da sessão{form.date ? ` — ${format(parse(form.date, "yyyy-MM-dd", new Date()), "dd/MM/yyyy")}` : ""}
+                    </p>
+                  </div>
+                ) : null}
                 {form.recurrence === "recurring" && (
                   <div className="rounded-xl bg-muted/50 border border-border p-3 space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="payment_due_date">Data prevista de pagamento</Label>
+                      <Input
+                        id="payment_due_date"
+                        type="date"
+                        value={form.payment_due_date}
+                        onChange={(e) => setForm({ ...form, payment_due_date: e.target.value })}
+                      />
+                      <p className="text-[11px] text-muted-foreground">
+                        Se deixar em branco, cada sessão usa a própria data.
+                      </p>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="rec_count">Quantidade</Label>
