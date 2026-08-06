@@ -4089,18 +4089,70 @@ const Agenda = () => {
                     <p className="font-display text-xl font-bold text-accent">R$ {drawerFinancials.totalPending.toFixed(2)}</p>
                   </div>
                 </div>
-                <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                  {drawerSessions.filter(s => s.price != null).map((s) => (
-                    <div key={s.id} className="rounded-xl border border-border bg-background p-3 flex items-center justify-between">
-                      <div>
-                        <p className="text-sm">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
-                        <span className={cn(PILL_BASE, "mt-1", paymentStatusClass[s.payment_status as PaymentStatus])}>
-                          {paymentStatusLabel[s.payment_status as PaymentStatus]}
-                        </span>
-                      </div>
-                      <p className="font-display font-bold text-sm">R$ {Number(s.price).toFixed(2)}</p>
-                    </div>
-                  ))}
+                <div className="space-y-4 max-h-[50vh] overflow-y-auto">
+                  {(() => {
+                    const paid = drawerSessions.filter((s) => s.price != null);
+                    const groups = new Map<string, any[]>();
+                    for (const s of paid) {
+                      const notes: string = s.notes ?? "";
+                      const m = notes.match(/Plano\s+(\d+)\s+sess[õo]es/i);
+                      const idm = notes.match(/\[([a-z0-9]{6,8})\]/i);
+                      const key = m ? `plan:${m[1]}:${idm?.[1] ?? ""}` : "avulsas";
+                      if (!groups.has(key)) groups.set(key, []);
+                      groups.get(key)!.push(s);
+                    }
+                    const entries = [...groups.entries()].map(([key, list]) => ({
+                      key,
+                      list: [...list].sort((a, b) => +new Date(a.scheduled_at) - +new Date(b.scheduled_at)),
+                    }));
+                    const plans = entries
+                      .filter((e) => e.key !== "avulsas")
+                      .sort((a, b) => +new Date(a.list[0].scheduled_at) - +new Date(b.list[0].scheduled_at));
+                    const avulsas = entries.find((e) => e.key === "avulsas");
+                    const blocks = [
+                      ...plans.map((p, i) => ({ title: `Plano de Atendimento ${i + 1}`, list: p.list })),
+                      ...(avulsas ? [{ title: "Sessões avulsas", list: avulsas.list }] : []),
+                    ];
+                    if (blocks.length === 0) {
+                      return <p className="text-sm text-muted-foreground text-center py-6">Nenhum lançamento financeiro.</p>;
+                    }
+                    return blocks.map((b) => {
+                      const total = b.list.reduce((sum, s) => sum + Number(s.price ?? 0), 0);
+                      const pending = b.list.filter((s) => s.payment_status === "pending").length;
+                      return (
+                        <div key={b.title} className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">{b.title}</p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {b.list.length} sessõe{b.list.length === 1 ? "" : "s"}
+                                {pending > 0 ? ` · ${pending} pendente${pending === 1 ? "" : "s"}` : " · quitado"}
+                              </p>
+                            </div>
+                            <p className="font-display font-bold text-sm">R$ {total.toFixed(2)}</p>
+                          </div>
+                          <div className="space-y-2">
+                            {b.list.map((s) => (
+                              <div key={s.id} className="rounded-lg border border-border bg-background p-3 flex items-center justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="text-sm">{format(new Date(s.scheduled_at), "dd/MM/yyyy")}</p>
+                                  {s.payment_due_date && (
+                                    <p className="text-[11px] text-muted-foreground">
+                                      Pgto previsto: {format(parse(s.payment_due_date, "yyyy-MM-dd", new Date()), "dd/MM/yyyy")}
+                                    </p>
+                                  )}
+                                  <span className={cn(PILL_BASE, "mt-1", paymentStatusClass[s.payment_status as PaymentStatus])}>
+                                    {paymentStatusLabel[s.payment_status as PaymentStatus]}
+                                  </span>
+                                </div>
+                                <p className="font-display font-bold text-sm">R$ {Number(s.price).toFixed(2)}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             </TabsContent>
