@@ -1175,14 +1175,8 @@ const Agenda = () => {
     if (gcalConnected && created) {
       Promise.all(created.map((row: any) => syncSessionToGcal(row.id))).catch(() => {});
     }
+    // O Plano entre Sessões NÃO é copiado: cada nova sessão começa em branco.
 
-    // Copia o Plano entre sessões mais recente para a(s) sessão(ões) recém-agendada(s)
-    if (!isSupervision && parsed.data.patient_id && created?.length) {
-      for (const row of created as any[]) {
-        const copied = await carryOverHomeworkPlan(user.id, parsed.data.patient_id, row.id);
-        if (copied) toast.success("Plano entre sessões copiado para a próxima sessão");
-      }
-    }
 
 
     // v2 clinical registration — only when patient session and something was filled
