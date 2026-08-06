@@ -673,8 +673,6 @@ const Agenda = () => {
           if (created?.id) {
             targetSessionId = created.id;
             setPlanningTargetSessionId(created.id);
-            const copied = await carryOverHomeworkPlan(user.id, planningPatientId, created.id);
-            if (copied) toast.success("Plano entre sessões copiado para a próxima sessão");
           }
         }
       }
