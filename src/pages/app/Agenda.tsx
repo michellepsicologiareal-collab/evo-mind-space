@@ -2345,7 +2345,28 @@ const Agenda = () => {
         )}
 
         {!isSupervisionCard && s.patient_id && (
+          <div onClick={(e) => e.stopPropagation()}>
+            <SessionReadView
+              open={readOpen}
+              onOpenChange={setReadOpen}
+              sessionId={s.id}
+              patientId={s.patient_id}
+              patientName={s.patient_name}
+              scheduledAt={s.scheduled_at}
+              durationMinutes={s.duration_minutes}
+              status={s.status}
+              modality={(s as any).modality}
+              price={s.price}
+              paymentStatus={s.payment_status}
+              notes={s.notes}
+              serviceName={s.service_id ? services.find((sv) => sv.id === s.service_id)?.name : "Atendimento clínico"}
+            />
+          </div>
+        )}
+
+        {!isSupervisionCard && s.patient_id && (
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+
             <SheetContent side="right" className="w-screen max-w-none sm:max-w-none h-[100dvh] border-0 rounded-none overflow-y-auto overflow-x-hidden p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-8" onClick={(e) => e.stopPropagation()}>
               <SheetHeader className="mb-4">
                 <SheetTitle className="font-display text-xl">Sessões</SheetTitle>
