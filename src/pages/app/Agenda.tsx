@@ -2211,16 +2211,26 @@ const Agenda = () => {
                 </span>
               )}
               {!isSupervisionCard && s.patient_id && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); void openEdit(s); }}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-card text-foreground/70 hover:bg-muted transition-colors"
-                  title="Registro da sessão"
-                  aria-label="Registro da sessão"
-                >
-                  <Pencil className="h-3 w-3" />
-                </button>
-
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setReadOpen(true); }}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-card text-foreground/70 hover:bg-muted transition-colors"
+                    title="Visualizar sessão"
+                    aria-label="Visualizar sessão"
+                  >
+                    <Eye className="h-3 w-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); void openEdit(s); }}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-card text-foreground/70 hover:bg-muted transition-colors"
+                    title="Registro da sessão"
+                    aria-label="Registro da sessão"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                </>
               )}
             </div>
           )}
