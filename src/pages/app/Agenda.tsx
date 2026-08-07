@@ -2303,6 +2303,16 @@ const Agenda = () => {
               <Pencil className="h-3.5 w-3.5" /> Registro da sessão
             </Button>
 
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 w-full rounded-lg px-3 text-xs font-semibold gap-1.5 sm:w-auto"
+              onClick={(e) => { e.stopPropagation(); setReadOpen(true); }}
+              aria-label="Visualizar sessão"
+            >
+              <Eye className="h-3.5 w-3.5" /> Visualizar
+            </Button>
+
             <div className="grid w-full min-w-0 grid-cols-2 overflow-hidden rounded-lg border border-border divide-x divide-y divide-border sm:inline-flex sm:w-auto sm:divide-y-0">
               <button
                 onClick={(e) => { e.stopPropagation(); setHistoryOpen(true); }}
