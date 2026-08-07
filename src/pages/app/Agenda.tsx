@@ -2140,6 +2140,9 @@ const Agenda = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                {!isSupervisionCard && s.patient_id && (
+                  <DropdownMenuItem onClick={() => setReadOpen(true)}><Eye className="h-4 w-4" /> Visualizar sessão</DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /> Editar sessão</DropdownMenuItem>
                 {!isSupervisionCard && (
                   <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar confirmação no WhatsApp</DropdownMenuItem>
