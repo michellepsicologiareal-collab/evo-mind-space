@@ -2015,6 +2015,11 @@ const Agenda = () => {
 
     const actions = (
       <>
+        {!isSupervisionCard && s.patient_id && (
+          <button onClick={() => { setSheetOpen(false); setReadOpen(true); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
+            <Eye className="h-4 w-4 text-primary" /> Visualizar sessão
+          </button>
+        )}
         <button onClick={() => { setSheetOpen(false); openEdit(s); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
           <Pencil className="h-4 w-4 text-primary" /> Editar sessão
         </button>
