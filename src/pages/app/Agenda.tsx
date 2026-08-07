@@ -9,8 +9,9 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText, Rows3,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, ChevronDown, Bell,
-  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save, Minimize2, Maximize2,
+  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save, Minimize2, Maximize2, Eye,
 } from "lucide-react";
+import { SessionReadView } from "@/components/app/SessionReadView";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
 import { PatientSessionsQuickView } from "@/components/app/PatientSessionsQuickView";
 import { SessionPlanningForm, type SessionPlanningValue, planningValueFromDb } from "@/components/app/SessionPlanningForm";
@@ -1996,6 +1997,7 @@ const Agenda = () => {
     const isSupervisionCard = s.session_type === "supervision";
     const [sheetOpen, setSheetOpen] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
+    const [readOpen, setReadOpen] = useState(false);
     const nowMs = Date.now();
     const scheduledMs = new Date(s.scheduled_at).getTime();
     const isPast = scheduledMs < nowMs;
@@ -2013,6 +2015,11 @@ const Agenda = () => {
 
     const actions = (
       <>
+        {!isSupervisionCard && s.patient_id && (
+          <button onClick={() => { setSheetOpen(false); setReadOpen(true); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
+            <Eye className="h-4 w-4 text-primary" /> Visualizar sessão
+          </button>
+        )}
         <button onClick={() => { setSheetOpen(false); openEdit(s); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
           <Pencil className="h-4 w-4 text-primary" /> Editar sessão
         </button>
@@ -2133,6 +2140,9 @@ const Agenda = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                {!isSupervisionCard && s.patient_id && (
+                  <DropdownMenuItem onClick={() => setReadOpen(true)}><Eye className="h-4 w-4" /> Visualizar sessão</DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /> Editar sessão</DropdownMenuItem>
                 {!isSupervisionCard && (
                   <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar confirmação no WhatsApp</DropdownMenuItem>
@@ -2209,16 +2219,26 @@ const Agenda = () => {
                 </span>
               )}
               {!isSupervisionCard && s.patient_id && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); void openEdit(s); }}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-card text-foreground/70 hover:bg-muted transition-colors"
-                  title="Registro da sessão"
-                  aria-label="Registro da sessão"
-                >
-                  <Pencil className="h-3 w-3" />
-                </button>
-
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setReadOpen(true); }}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-card text-foreground/70 hover:bg-muted transition-colors"
+                    title="Visualizar sessão"
+                    aria-label="Visualizar sessão"
+                  >
+                    <Eye className="h-3 w-3" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); void openEdit(s); }}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-card text-foreground/70 hover:bg-muted transition-colors"
+                    title="Registro da sessão"
+                    aria-label="Registro da sessão"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                </>
               )}
             </div>
           )}
@@ -2291,6 +2311,16 @@ const Agenda = () => {
               <Pencil className="h-3.5 w-3.5" /> Registro da sessão
             </Button>
 
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 w-full rounded-lg px-3 text-xs font-semibold gap-1.5 sm:w-auto"
+              onClick={(e) => { e.stopPropagation(); setReadOpen(true); }}
+              aria-label="Visualizar sessão"
+            >
+              <Eye className="h-3.5 w-3.5" /> Visualizar
+            </Button>
+
             <div className="grid w-full min-w-0 grid-cols-2 overflow-hidden rounded-lg border border-border divide-x divide-y divide-border sm:inline-flex sm:w-auto sm:divide-y-0">
               <button
                 onClick={(e) => { e.stopPropagation(); setHistoryOpen(true); }}
@@ -2323,7 +2353,28 @@ const Agenda = () => {
         )}
 
         {!isSupervisionCard && s.patient_id && (
+          <div onClick={(e) => e.stopPropagation()}>
+            <SessionReadView
+              open={readOpen}
+              onOpenChange={setReadOpen}
+              sessionId={s.id}
+              patientId={s.patient_id}
+              patientName={s.patient_name}
+              scheduledAt={s.scheduled_at}
+              durationMinutes={s.duration_minutes}
+              status={s.status}
+              modality={(s as any).modality}
+              price={s.price}
+              paymentStatus={s.payment_status}
+              notes={s.notes}
+              serviceName={s.service_id ? services.find((sv) => sv.id === s.service_id)?.name : "Atendimento clínico"}
+            />
+          </div>
+        )}
+
+        {!isSupervisionCard && s.patient_id && (
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+
             <SheetContent side="right" className="w-screen max-w-none sm:max-w-none h-[100dvh] border-0 rounded-none overflow-y-auto overflow-x-hidden p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-8" onClick={(e) => e.stopPropagation()}>
               <SheetHeader className="mb-4">
                 <SheetTitle className="font-display text-xl">Sessões</SheetTitle>
