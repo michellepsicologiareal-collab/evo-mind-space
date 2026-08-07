@@ -1997,6 +1997,7 @@ const Agenda = () => {
     const isSupervisionCard = s.session_type === "supervision";
     const [sheetOpen, setSheetOpen] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
+    const [readOpen, setReadOpen] = useState(false);
     const nowMs = Date.now();
     const scheduledMs = new Date(s.scheduled_at).getTime();
     const isPast = scheduledMs < nowMs;
