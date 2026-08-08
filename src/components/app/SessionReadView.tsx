@@ -38,12 +38,35 @@ const PAYMENT_LABEL: Record<string, string> = {
   exempt: "Isento",
 };
 
+function hasText(v?: string | null) {
+  return !!v && !!String(v).trim();
+}
+
 function Field({ label, value }: { label: string; value?: string | null }) {
-  if (!value || !String(value).trim()) return null;
+  if (!hasText(value)) return null;
   return (
-    <div className="break-inside-avoid">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-foreground">{value}</p>
+    <div className="doc-field">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
+      <p className="mt-1.5 whitespace-pre-wrap text-[15px] leading-7 text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="doc-section">
+      <h2 className="font-display text-[13px] font-semibold uppercase tracking-[0.1em] text-foreground/70">{title}</h2>
+      <div className="mt-3 border-t border-border pt-4 space-y-5">{children}</div>
+    </section>
+  );
+}
+
+function MetaItem({ label, value }: { label: string; value?: string | null }) {
+  if (!hasText(value)) return null;
+  return (
+    <div className="doc-field">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
+      <p className="mt-0.5 text-sm font-medium text-foreground">{value}</p>
     </div>
   );
 }
@@ -84,6 +107,15 @@ export function SessionReadView(props: SessionReadViewProps) {
     : [];
   const themes: string[] = Array.isArray(progress?.themes) ? progress.themes.filter((t: any) => typeof t === "string") : [];
 
+  const hasIndicators =
+    progress?.wellbeing_score != null || emotions.length > 0 || themes.length > 0 || typeof progress?.engagement === "number";
+  const hasRecord =
+    hasText(progress?.patient_context) || hasText(progress?.clinical_observation) ||
+    hasText(progress?.note) || hasText(props.notes);
+  const hasHomework =
+    homework && (hasText(homework.title) || hasText(homework.session_points) || hasText(homework.weekly_goal) ||
+      hasText(homework.weekly_observations) || hasText(homework.coping_card_content) || hasText(homework.content));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[96vw] max-w-3xl h-[92dvh] p-0 gap-0 overflow-hidden">
@@ -102,70 +134,96 @@ export function SessionReadView(props: SessionReadViewProps) {
           </div>
         </DialogHeader>
 
-        <div className="overflow-y-auto px-4 py-5 sm:px-10 sm:py-8 bg-muted/30 print:bg-white">
+        <div className="overflow-y-auto px-3 py-5 sm:px-10 sm:py-8 bg-muted/30">
           {loading ? (
             <div className="flex items-center justify-center py-16 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
           ) : (
-            <article className="mx-auto max-w-[42rem] rounded-xl border border-border bg-card p-6 shadow-sm sm:p-10 print:border-0 print:shadow-none">
-              <header className="border-b border-border pb-4">
-                <h1 className="font-display text-xl font-semibold text-foreground">{patientName || "Paciente"}</h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {date ? format(date, "EEEE, dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR }) : "Data não informada"}
+            <article
+              id="session-doc"
+              className="mx-auto max-w-[44rem] rounded-xl border border-border bg-card p-6 shadow-sm sm:p-12"
+            >
+              <header className="pb-6">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  Registro de sessão
                 </p>
-                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted-foreground">
-                  {props.serviceName && <span>{props.serviceName}</span>}
-                  {props.durationMinutes ? <span>{props.durationMinutes} min</span> : null}
-                  {props.modality && <span>{props.modality === "online" ? "Online" : "Presencial"}</span>}
-                  {props.status && <span>{STATUS_LABEL[props.status] ?? props.status}</span>}
-                  {props.price != null && (
-                    <span>
-                      R$ {Number(props.price).toFixed(2).replace(".", ",")}
-                      {props.paymentStatus ? ` · ${PAYMENT_LABEL[props.paymentStatus] ?? props.paymentStatus}` : ""}
-                    </span>
-                  )}
+                <h1 className="mt-2 font-display text-2xl font-semibold leading-tight text-foreground">
+                  {patientName || "Paciente"}
+                </h1>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {date
+                    ? format(date, "EEEE, dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })
+                    : "Data não informada"}
+                </p>
+
+                <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-border pt-4 sm:grid-cols-4">
+                  <MetaItem label="Serviço" value={props.serviceName} />
+                  <MetaItem label="Duração" value={props.durationMinutes ? `${props.durationMinutes} min` : null} />
+                  <MetaItem label="Modalidade" value={props.modality ? (props.modality === "online" ? "Online" : "Presencial") : null} />
+                  <MetaItem label="Status" value={props.status ? STATUS_LABEL[props.status] ?? props.status : null} />
+                  <MetaItem
+                    label="Valor"
+                    value={props.price != null ? `R$ ${Number(props.price).toFixed(2).replace(".", ",")}` : null}
+                  />
+                  <MetaItem
+                    label="Pagamento"
+                    value={props.paymentStatus ? PAYMENT_LABEL[props.paymentStatus] ?? props.paymentStatus : null}
+                  />
                 </div>
               </header>
 
-              <div className="mt-6 space-y-6">
-                {progress?.wellbeing_score != null && (
-                  <Field
-                    label="Bem-estar"
-                    value={`${progress.wellbeing_score}/10${progress.wellbeing_source ? ` (${progress.wellbeing_source === "patient" ? "relato do paciente" : "observação clínica"})` : ""}`}
-                  />
-                )}
-                {emotions.length > 0 && <Field label="Emoções" value={emotions.join(" · ")} />}
-                {themes.length > 0 && <Field label="Temas" value={themes.join(" · ")} />}
-                {typeof progress?.engagement === "number" && <Field label="Engajamento" value={`${progress.engagement}/5`} />}
-                <Field label="Contexto do paciente" value={progress?.patient_context} />
-                <Field label="Observação clínica" value={progress?.clinical_observation} />
-                <Field label="Registro (legado)" value={progress?.note} />
-                <Field label="Notas privadas" value={progress?.private_notes} />
-                <Field label="Observações da sessão" value={props.notes} />
-
-                {homework && (
-                  <section className="rounded-lg border border-border bg-muted/40 p-4 print:bg-white">
-                    <p className="font-display text-sm font-semibold text-foreground">
-                      Plano entre sessões{homework.sent_at ? " · enviado" : ""}
-                    </p>
-                    <div className="mt-3 space-y-4">
-                      <Field label="Título" value={homework.title} />
-                      <Field label="Pontos da sessão" value={homework.session_points} />
-                      <Field label="Meta da semana" value={homework.weekly_goal} />
-                      <Field label="Observações" value={homework.weekly_observations} />
-                      <Field label={homework.coping_card_title || "Cartão de enfrentamento"} value={homework.coping_card_content} />
-                      <Field label="Conteúdo" value={homework.content} />
-                    </div>
-                  </section>
+              <div className="space-y-9">
+                {hasIndicators && (
+                  <Section title="Indicadores">
+                    {progress?.wellbeing_score != null && (
+                      <Field
+                        label="Bem-estar"
+                        value={`${progress.wellbeing_score}/10${progress.wellbeing_source ? ` (${progress.wellbeing_source === "patient" ? "relato do paciente" : "observação clínica"})` : ""}`}
+                      />
+                    )}
+                    {typeof progress?.engagement === "number" && <Field label="Engajamento" value={`${progress.engagement}/5`} />}
+                    {emotions.length > 0 && <Field label="Emoções" value={emotions.join(" · ")} />}
+                    {themes.length > 0 && <Field label="Temas" value={themes.join(" · ")} />}
+                  </Section>
                 )}
 
-                {!progress && !homework && !props.notes && (
-                  <p className="py-8 text-center text-sm text-muted-foreground">
+                {hasRecord && (
+                  <Section title="Registro clínico">
+                    <Field label="Contexto do paciente" value={progress?.patient_context} />
+                    <Field label="Observação clínica" value={progress?.clinical_observation} />
+                    <Field label="Registro (legado)" value={progress?.note} />
+                    <Field label="Observações da sessão" value={props.notes} />
+                  </Section>
+                )}
+
+                {hasText(progress?.private_notes) && (
+                  <Section title="Notas privadas">
+                    <Field label="Uso interno" value={progress?.private_notes} />
+                  </Section>
+                )}
+
+                {hasHomework && (
+                  <Section title={`Plano entre sessões${homework.sent_at ? " · enviado" : ""}`}>
+                    <Field label="Título" value={homework.title} />
+                    <Field label="Pontos da sessão" value={homework.session_points} />
+                    <Field label="Meta da semana" value={homework.weekly_goal} />
+                    <Field label="Observações" value={homework.weekly_observations} />
+                    <Field label={homework.coping_card_title || "Cartão de enfrentamento"} value={homework.coping_card_content} />
+                    <Field label="Conteúdo" value={homework.content} />
+                  </Section>
+                )}
+
+                {!hasIndicators && !hasRecord && !hasHomework && !hasText(progress?.private_notes) && (
+                  <p className="py-10 text-center text-sm text-muted-foreground">
                     Ainda não há registro clínico para esta sessão.
                   </p>
                 )}
               </div>
+
+              <footer className="mt-10 border-t border-border pt-4 text-[11px] leading-relaxed text-muted-foreground">
+                Documento gerado pelo Psi Real — uso clínico exclusivo e confidencial.
+              </footer>
             </article>
           )}
         </div>
