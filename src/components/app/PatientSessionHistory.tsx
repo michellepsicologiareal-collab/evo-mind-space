@@ -43,11 +43,11 @@ const statusIcon: Record<string, React.ReactNode> = {
 };
 
 const statusColor: Record<string, string> = {
-  scheduled: "bg-secondary text-secondary-foreground",
-  confirmed: "bg-emerald-100 text-emerald-700",
-  completed: "bg-lilac text-lilac-foreground",
+  scheduled: "bg-sky-50 text-sky-700",
+  confirmed: "bg-emerald-50 text-emerald-700",
+  completed: "bg-teal-50 text-teal-700",
   no_show: "bg-destructive/15 text-destructive",
-  rescheduled: "bg-sand text-sand-foreground",
+  rescheduled: "bg-amber-100 text-amber-800",
   cancelled: "bg-muted text-muted-foreground",
 };
 
