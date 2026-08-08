@@ -2067,7 +2067,7 @@ const Agenda = () => {
           : s.status === "rescheduled" ? "before:bg-orange-500"
             : s.status === "completed" ? "before:bg-teal-500"
               : s.status === "confirmed" ? "before:bg-emerald-500"
-                : s.status === "scheduled" ? "before:bg-blue-500"
+                : s.status === "scheduled" ? "before:bg-sky-500"
                   : "before:bg-border";
 
 
