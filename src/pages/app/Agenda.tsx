@@ -135,7 +135,7 @@ const statusLabel: Record<Status, string> = {
   no_show: "Falta", rescheduled: "Remarcada", cancelled: "Cancelada",
 };
 const statusClass: Record<Status, string> = {
-  scheduled:   "bg-blue-50 text-blue-700 border-blue-200",
+  scheduled:   "bg-sky-50 text-sky-700 border-sky-200",
   confirmed:   "bg-emerald-50 text-emerald-700 border-emerald-200",
   completed:   "bg-teal-50 text-teal-700 border-teal-200",
   no_show:     "bg-destructive/15 text-destructive border-destructive/30",
@@ -143,7 +143,7 @@ const statusClass: Record<Status, string> = {
   cancelled:   "bg-muted text-muted-foreground border-muted line-through",
 };
 const statusTextClass: Record<Status, string> = {
-  scheduled:   "text-blue-700",
+  scheduled:   "text-sky-700",
   confirmed:   "text-emerald-700",
   completed:   "text-teal-700",
   no_show:     "text-destructive",
