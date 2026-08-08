@@ -443,3 +443,30 @@
 }
 .dark .lilac-comm-badge svg { color: hsl(265 80% 85%); }
 .dark .lilac-comm-badge:hover { background: hsl(265 35% 28%); }
+
+/* ---- Documento de sessão: impressão / PDF ---- */
+@media print {
+  @page { size: A4; margin: 16mm 14mm; }
+  html, body { background: #fff !important; }
+  body * { visibility: hidden !important; }
+  #session-doc, #session-doc * { visibility: visible !important; }
+  #session-doc {
+    position: absolute !important;
+    inset: 0 auto auto 0;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+  }
+  #session-doc .doc-section { break-inside: avoid; page-break-inside: avoid; }
+  #session-doc .doc-field { break-inside: avoid; page-break-inside: avoid; }
+  #session-doc h2 { break-after: avoid; page-break-after: avoid; }
+  #session-doc header { break-after: avoid; }
+  [data-radix-popper-content-wrapper] { display: none !important; }
+}
