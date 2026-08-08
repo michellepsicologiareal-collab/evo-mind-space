@@ -432,6 +432,7 @@ const Agenda = () => {
   // Edit session
   const [editOpen, setEditOpen] = useState(false);
   const [editSessionId, setEditSessionId] = useState<string | null>(null);
+  const [editReadOpen, setEditReadOpen] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const editGuard = useUnsavedGuard();
   const [editForm, setEditFormRaw] = useState({
