@@ -432,6 +432,7 @@ const Agenda = () => {
   // Edit session
   const [editOpen, setEditOpen] = useState(false);
   const [editSessionId, setEditSessionId] = useState<string | null>(null);
+  const [editReadOpen, setEditReadOpen] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const editGuard = useUnsavedGuard();
   const [editForm, setEditFormRaw] = useState({
@@ -3535,13 +3536,49 @@ const Agenda = () => {
       <Dialog open={editOpen} onOpenChange={(v) => { if (!v) { editGuard.guardClose(() => setEditOpen(false), () => setEditOpen(false)); } else { setEditOpen(true); } }}>
         <DialogContent className="inset-0 w-auto max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 p-0 gap-0 grid grid-rows-[auto_minmax(0,1fr)] overflow-hidden" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader className="px-4 sm:px-8 pt-4 pb-3 pr-12 border-b border-border bg-background text-left">
-            <DialogTitle className="font-display text-lg sm:text-2xl leading-tight">Editar sessão</DialogTitle>
-            {(() => {
-              const session = sessions.find((s) => s.id === editSessionId);
-              if (!session?.patient_name) return null;
-              return <p className="text-sm text-muted-foreground truncate">{session.patient_name}</p>;
-            })()}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <DialogTitle className="font-display text-lg sm:text-2xl leading-tight">Editar sessão</DialogTitle>
+                {(() => {
+                  const session = sessions.find((s) => s.id === editSessionId);
+                  if (!session?.patient_name) return null;
+                  return <p className="text-sm text-muted-foreground truncate">{session.patient_name}</p>;
+                })()}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-1.5 mr-6"
+                title="Visualizar registro da sessão (formato documento)"
+                onClick={() => setEditReadOpen(true)}
+                disabled={!editSessionId}
+              >
+                <Eye className="h-4 w-4" />
+                <span className="hidden sm:inline">Visualizar</span>
+              </Button>
+            </div>
           </DialogHeader>
+          {(() => {
+            const session = sessions.find((s) => s.id === editSessionId);
+            return (
+              <SessionReadView
+                open={editReadOpen}
+                onOpenChange={setEditReadOpen}
+                sessionId={editSessionId}
+                patientId={session?.patient_id ?? null}
+                patientName={session?.patient_name ?? null}
+                scheduledAt={session?.scheduled_at ?? null}
+                durationMinutes={session?.duration_minutes ?? null}
+                status={session?.status ?? null}
+                modality={session?.modality ?? null}
+                price={session?.price ?? null}
+                paymentStatus={session?.payment_status ?? null}
+                notes={session?.notes ?? null}
+              />
+            );
+          })()}
+
           <form onSubmit={handleEditSave} className="flex flex-col min-h-0 overflow-hidden">
             <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] [&>*]:w-full [&>*]:max-w-[1100px] [&>*]:mx-auto px-4 sm:px-8 pt-4 pb-6 space-y-4">
             <div className="flex sm:hidden gap-2 overflow-x-auto pb-1">
