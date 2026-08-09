@@ -45,18 +45,18 @@ function hasText(v?: string | null) {
 function Field({ label, value }: { label: string; value?: string | null }) {
   if (!hasText(value)) return null;
   return (
-    <div className="doc-field">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
-      <p className="mt-1.5 whitespace-pre-wrap text-[15px] leading-7 text-foreground">{value}</p>
+    <div className="doc-field min-w-0">
+      <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.06em] sm:tracking-[0.08em] text-muted-foreground break-words">{label}</p>
+      <p className="mt-1.5 whitespace-pre-wrap break-words [overflow-wrap:anywhere] hyphens-auto text-[13.5px] leading-6 sm:text-[15px] sm:leading-7 text-foreground">{value}</p>
     </div>
   );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="doc-section">
-      <h2 className="font-display text-[13px] font-semibold uppercase tracking-[0.1em] text-foreground/70">{title}</h2>
-      <div className="mt-3 border-t border-border pt-4 space-y-5">{children}</div>
+    <section className="doc-section min-w-0">
+      <h2 className="font-display text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.06em] sm:tracking-[0.1em] text-foreground/70 break-words">{title}</h2>
+      <div className="mt-3 border-t border-border pt-4 space-y-4 sm:space-y-5">{children}</div>
     </section>
   );
 }
@@ -64,12 +64,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function MetaItem({ label, value }: { label: string; value?: string | null }) {
   if (!hasText(value)) return null;
   return (
-    <div className="doc-field">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm font-medium text-foreground">{value}</p>
+    <div className="doc-field min-w-0">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground break-words">{label}</p>
+      <p className="mt-0.5 text-[13px] sm:text-sm font-medium text-foreground break-words [overflow-wrap:anywhere]">{value}</p>
     </div>
   );
 }
+
 
 export function SessionReadView(props: SessionReadViewProps) {
   const { open, onOpenChange, sessionId, patientName, scheduledAt } = props;
@@ -145,20 +146,21 @@ export function SessionReadView(props: SessionReadViewProps) {
               className="mx-auto w-full max-w-[44rem] break-words rounded-xl border border-border bg-card p-4 shadow-sm sm:p-12"
             >
 
-              <header className="pb-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <header className="pb-5 sm:pb-6">
+                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.1em] sm:tracking-[0.14em] text-muted-foreground">
                   Registro de sessão
                 </p>
-                <h1 className="mt-2 font-display text-2xl font-semibold leading-tight text-foreground">
+                <h1 className="mt-2 font-display text-xl sm:text-2xl font-semibold leading-tight text-foreground break-words [overflow-wrap:anywhere]">
                   {patientName || "Paciente"}
                 </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-[13px] sm:text-sm text-muted-foreground break-words">
                   {date
                     ? format(date, "EEEE, dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })
                     : "Data não informada"}
                 </p>
 
-                <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-border pt-4 sm:grid-cols-4">
+                <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4 sm:mt-5 sm:gap-x-6 sm:gap-y-4 sm:grid-cols-4">
+
                   <MetaItem label="Serviço" value={props.serviceName} />
                   <MetaItem label="Duração" value={props.durationMinutes ? `${props.durationMinutes} min` : null} />
                   <MetaItem label="Modalidade" value={props.modality ? (props.modality === "online" ? "Online" : "Presencial") : null} />
@@ -174,7 +176,7 @@ export function SessionReadView(props: SessionReadViewProps) {
                 </div>
               </header>
 
-              <div className="space-y-9">
+              <div className="space-y-7 sm:space-y-9">
                 {hasIndicators && (
                   <Section title="Indicadores">
                     {progress?.wellbeing_score != null && (
