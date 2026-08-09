@@ -3350,14 +3350,32 @@ const Agenda = () => {
                                     </div>
                                     {/* Status + Payment */}
                                     <div className="flex items-center gap-1 shrink-0 justify-end">
-                                      <span className={cn(PILL_COMPACT, isSupervisionRow ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
-                                        {isSupervisionRow ? "Supervisão" : statusLabel[s.status]}
-                                      </span>
-                                      {!isSupervisionRow && s.price != null && (
-                                        <span className={cn(PILL_COMPACT, paymentStatusClass[s.payment_status])}>
-                                          {paymentStatusLabel[s.payment_status]}
-                                        </span>
-                                       )}
+                                      {(() => {
+                                        const StatusIcon = isSupervisionRow ? GraduationCap : statusIcon[s.status];
+                                        const label = isSupervisionRow ? "Supervisão" : statusLabel[s.status];
+                                        return (
+                                          <span
+                                            role="status"
+                                            aria-label={`Status: ${label}`}
+                                            className={cn(PILL_COMPACT, "gap-1", isSupervisionRow ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}
+                                          >
+                                            <StatusIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
+                                            {label}
+                                          </span>
+                                        );
+                                      })()}
+                                      {!isSupervisionRow && s.price != null && (() => {
+                                        const PayIcon = paymentStatusIcon[s.payment_status];
+                                        return (
+                                          <span
+                                            aria-label={`Pagamento: ${paymentStatusLabel[s.payment_status]}`}
+                                            className={cn(PILL_COMPACT, "gap-1", paymentStatusClass[s.payment_status])}
+                                          >
+                                            <PayIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
+                                            {paymentStatusLabel[s.payment_status]}
+                                          </span>
+                                        );
+                                      })()}
                                       {s.confirmation_sent_at && (
                                         <span
                                           className="inline-flex items-center gap-1 text-[10px] font-medium text-sky-700 bg-sky-50 border border-sky-200 rounded-full px-1.5 py-0.5"
