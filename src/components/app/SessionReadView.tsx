@@ -146,20 +146,21 @@ export function SessionReadView(props: SessionReadViewProps) {
               className="mx-auto w-full max-w-[44rem] break-words rounded-xl border border-border bg-card p-4 shadow-sm sm:p-12"
             >
 
-              <header className="pb-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <header className="pb-5 sm:pb-6">
+                <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.1em] sm:tracking-[0.14em] text-muted-foreground">
                   Registro de sessão
                 </p>
-                <h1 className="mt-2 font-display text-2xl font-semibold leading-tight text-foreground">
+                <h1 className="mt-2 font-display text-xl sm:text-2xl font-semibold leading-tight text-foreground break-words [overflow-wrap:anywhere]">
                   {patientName || "Paciente"}
                 </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-[13px] sm:text-sm text-muted-foreground break-words">
                   {date
                     ? format(date, "EEEE, dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })
                     : "Data não informada"}
                 </p>
 
-                <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-border pt-4 sm:grid-cols-4">
+                <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-4 sm:mt-5 sm:gap-x-6 sm:gap-y-4 sm:grid-cols-4">
+
                   <MetaItem label="Serviço" value={props.serviceName} />
                   <MetaItem label="Duração" value={props.durationMinutes ? `${props.durationMinutes} min` : null} />
                   <MetaItem label="Modalidade" value={props.modality ? (props.modality === "online" ? "Online" : "Presencial") : null} />
