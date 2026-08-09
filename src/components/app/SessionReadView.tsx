@@ -118,7 +118,7 @@ export function SessionReadView(props: SessionReadViewProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="inset-0 w-auto max-w-none h-[100dvh] max-h-[100dvh] translate-x-0 translate-y-0 rounded-none border-0 p-0 gap-0 grid grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:inset-auto sm:left-1/2 sm:top-1/2 sm:h-[92dvh] sm:w-[96vw] sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-lg sm:border">
+      <DialogContent className="left-0 top-0 w-screen max-w-[100vw] h-[100dvh] max-h-[100dvh] translate-x-0 translate-y-0 rounded-none border-0 p-0 gap-0 grid grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:left-1/2 sm:top-1/2 sm:h-[92dvh] sm:w-[96vw] sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-lg sm:border">
         <DialogHeader className="border-b border-border px-4 py-3 sm:px-6 print:hidden">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -134,7 +134,7 @@ export function SessionReadView(props: SessionReadViewProps) {
           </div>
         </DialogHeader>
 
-        <div className="overflow-y-auto px-3 py-5 sm:px-10 sm:py-8 bg-muted/30">
+        <div className="overflow-y-auto overflow-x-hidden px-3 py-5 sm:px-10 sm:py-8 bg-muted/30">
           {loading ? (
             <div className="flex items-center justify-center py-16 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -142,8 +142,9 @@ export function SessionReadView(props: SessionReadViewProps) {
           ) : (
             <article
               id="session-doc"
-              className="mx-auto max-w-[44rem] rounded-xl border border-border bg-card p-6 shadow-sm sm:p-12"
+              className="mx-auto w-full max-w-[44rem] break-words rounded-xl border border-border bg-card p-4 shadow-sm sm:p-12"
             >
+
               <header className="pb-6">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                   Registro de sessão
