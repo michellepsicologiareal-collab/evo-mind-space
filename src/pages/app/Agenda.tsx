@@ -150,11 +150,23 @@ const statusTextClass: Record<Status, string> = {
   rescheduled: "text-amber-700",
   cancelled:   "text-muted-foreground line-through",
 };
+const statusIcon: Record<Status, typeof Check> = {
+  scheduled:   CalendarDays,
+  confirmed:   CheckCircle2,
+  completed:   Check,
+  no_show:     AlertCircle,
+  rescheduled: RotateCcw,
+  cancelled:   X,
+};
 
 const paymentStatusLabel: Record<PaymentStatus, string> = { pending: "Pendente", paid: "Pago" };
 const paymentStatusClass: Record<PaymentStatus, string> = {
   pending: "bg-amber-50 text-amber-800 border-amber-200",
   paid:    "bg-green-100 text-green-800 border-green-200",
+};
+const paymentStatusIcon: Record<PaymentStatus, typeof Check> = {
+  pending: Wallet,
+  paid:    CheckCircle2,
 };
 const PILL_BASE = "inline-flex items-center text-[11px] font-display font-semibold px-2.5 py-0.5 rounded-[40px] border";
 const PILL_COMPACT = "inline-flex items-center text-[10px] font-display font-semibold px-1.5 py-0.5 rounded-[40px] border whitespace-nowrap";
@@ -2087,9 +2099,20 @@ const Agenda = () => {
         <div className="flex min-w-0 items-start justify-between gap-2">
           <div className="flex flex-1 items-center gap-x-2 gap-y-1 min-w-0 flex-wrap pr-1">
             <p className="shrink-0 font-display text-sm font-semibold text-foreground">{format(new Date(s.scheduled_at), "HH:mm")}</p>
-            <span className={cn("text-[11px] font-semibold", isSupervisionCard ? "text-foreground/70" : statusTextClass[s.status])}>
-              {isSupervisionCard ? "Supervisão" : statusLabel[s.status]}
-            </span>
+            {(() => {
+              const StatusIcon = isSupervisionCard ? GraduationCap : statusIcon[s.status];
+              const label = isSupervisionCard ? "Supervisão" : statusLabel[s.status];
+              return (
+                <span
+                  role="status"
+                  aria-label={`Status: ${label}`}
+                  className={cn("inline-flex items-center gap-1 text-[11px] font-semibold", isSupervisionCard ? "text-foreground/70" : statusTextClass[s.status])}
+                >
+                  <StatusIcon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  {label}
+                </span>
+              );
+            })()}
 
             <span className="text-border">·</span>
             <span className="inline-flex items-center gap-1 text-[11px] text-foreground/70" title={modalityOnline ? "Atendimento online" : "Atendimento presencial"}>
@@ -3327,14 +3350,32 @@ const Agenda = () => {
                                     </div>
                                     {/* Status + Payment */}
                                     <div className="flex items-center gap-1 shrink-0 justify-end">
-                                      <span className={cn(PILL_COMPACT, isSupervisionRow ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}>
-                                        {isSupervisionRow ? "Supervisão" : statusLabel[s.status]}
-                                      </span>
-                                      {!isSupervisionRow && s.price != null && (
-                                        <span className={cn(PILL_COMPACT, paymentStatusClass[s.payment_status])}>
-                                          {paymentStatusLabel[s.payment_status]}
-                                        </span>
-                                       )}
+                                      {(() => {
+                                        const StatusIcon = isSupervisionRow ? GraduationCap : statusIcon[s.status];
+                                        const label = isSupervisionRow ? "Supervisão" : statusLabel[s.status];
+                                        return (
+                                          <span
+                                            role="status"
+                                            aria-label={`Status: ${label}`}
+                                            className={cn(PILL_COMPACT, "gap-1", isSupervisionRow ? "bg-serene/20 text-serene border-serene/30" : statusClass[s.status])}
+                                          >
+                                            <StatusIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
+                                            {label}
+                                          </span>
+                                        );
+                                      })()}
+                                      {!isSupervisionRow && s.price != null && (() => {
+                                        const PayIcon = paymentStatusIcon[s.payment_status];
+                                        return (
+                                          <span
+                                            aria-label={`Pagamento: ${paymentStatusLabel[s.payment_status]}`}
+                                            className={cn(PILL_COMPACT, "gap-1", paymentStatusClass[s.payment_status])}
+                                          >
+                                            <PayIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
+                                            {paymentStatusLabel[s.payment_status]}
+                                          </span>
+                                        );
+                                      })()}
                                       {s.confirmation_sent_at && (
                                         <span
                                           className="inline-flex items-center gap-1 text-[10px] font-medium text-sky-700 bg-sky-50 border border-sky-200 rounded-full px-1.5 py-0.5"
