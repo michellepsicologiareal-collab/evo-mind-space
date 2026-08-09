@@ -150,11 +150,23 @@ const statusTextClass: Record<Status, string> = {
   rescheduled: "text-amber-700",
   cancelled:   "text-muted-foreground line-through",
 };
+const statusIcon: Record<Status, typeof Check> = {
+  scheduled:   CalendarDays,
+  confirmed:   CheckCircle2,
+  completed:   Check,
+  no_show:     AlertCircle,
+  rescheduled: RotateCcw,
+  cancelled:   X,
+};
 
 const paymentStatusLabel: Record<PaymentStatus, string> = { pending: "Pendente", paid: "Pago" };
 const paymentStatusClass: Record<PaymentStatus, string> = {
   pending: "bg-amber-50 text-amber-800 border-amber-200",
   paid:    "bg-green-100 text-green-800 border-green-200",
+};
+const paymentStatusIcon: Record<PaymentStatus, typeof Check> = {
+  pending: Wallet,
+  paid:    CheckCircle2,
 };
 const PILL_BASE = "inline-flex items-center text-[11px] font-display font-semibold px-2.5 py-0.5 rounded-[40px] border";
 const PILL_COMPACT = "inline-flex items-center text-[10px] font-display font-semibold px-1.5 py-0.5 rounded-[40px] border whitespace-nowrap";
