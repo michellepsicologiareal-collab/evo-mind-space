@@ -176,7 +176,7 @@ export function SessionReadView(props: SessionReadViewProps) {
                 </div>
               </header>
 
-              <div className="space-y-9">
+              <div className="space-y-7 sm:space-y-9">
                 {hasIndicators && (
                   <Section title="Indicadores">
                     {progress?.wellbeing_score != null && (
