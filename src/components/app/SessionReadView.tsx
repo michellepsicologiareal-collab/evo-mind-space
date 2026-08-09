@@ -45,18 +45,18 @@ function hasText(v?: string | null) {
 function Field({ label, value }: { label: string; value?: string | null }) {
   if (!hasText(value)) return null;
   return (
-    <div className="doc-field">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
-      <p className="mt-1.5 whitespace-pre-wrap text-[15px] leading-7 text-foreground">{value}</p>
+    <div className="doc-field min-w-0">
+      <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.06em] sm:tracking-[0.08em] text-muted-foreground break-words">{label}</p>
+      <p className="mt-1.5 whitespace-pre-wrap break-words [overflow-wrap:anywhere] hyphens-auto text-[13.5px] leading-6 sm:text-[15px] sm:leading-7 text-foreground">{value}</p>
     </div>
   );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="doc-section">
-      <h2 className="font-display text-[13px] font-semibold uppercase tracking-[0.1em] text-foreground/70">{title}</h2>
-      <div className="mt-3 border-t border-border pt-4 space-y-5">{children}</div>
+    <section className="doc-section min-w-0">
+      <h2 className="font-display text-[12px] sm:text-[13px] font-semibold uppercase tracking-[0.06em] sm:tracking-[0.1em] text-foreground/70 break-words">{title}</h2>
+      <div className="mt-3 border-t border-border pt-4 space-y-4 sm:space-y-5">{children}</div>
     </section>
   );
 }
@@ -64,12 +64,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function MetaItem({ label, value }: { label: string; value?: string | null }) {
   if (!hasText(value)) return null;
   return (
-    <div className="doc-field">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm font-medium text-foreground">{value}</p>
+    <div className="doc-field min-w-0">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground break-words">{label}</p>
+      <p className="mt-0.5 text-[13px] sm:text-sm font-medium text-foreground break-words [overflow-wrap:anywhere]">{value}</p>
     </div>
   );
 }
+
 
 export function SessionReadView(props: SessionReadViewProps) {
   const { open, onOpenChange, sessionId, patientName, scheduledAt } = props;
