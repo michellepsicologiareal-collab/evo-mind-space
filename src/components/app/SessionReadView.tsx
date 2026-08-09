@@ -118,7 +118,7 @@ export function SessionReadView(props: SessionReadViewProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[96vw] max-w-3xl h-[92dvh] p-0 gap-0 overflow-hidden">
+      <DialogContent className="inset-0 w-auto max-w-none h-[100dvh] max-h-[100dvh] translate-x-0 translate-y-0 rounded-none border-0 p-0 gap-0 grid grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:inset-auto sm:left-1/2 sm:top-1/2 sm:h-[92dvh] sm:w-[96vw] sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-lg sm:border">
         <DialogHeader className="border-b border-border px-4 py-3 sm:px-6 print:hidden">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">

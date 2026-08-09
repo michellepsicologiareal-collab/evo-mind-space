@@ -3549,7 +3549,8 @@ const Agenda = () => {
                 type="button"
                 variant="outline"
                 size="sm"
-                className="shrink-0 gap-1.5 mr-6"
+                aria-label="Visualizar registro da sessão"
+                className="shrink-0 gap-1.5 mr-8 h-9 w-9 p-0 sm:h-9 sm:w-auto sm:px-3"
                 title="Visualizar registro da sessão (formato documento)"
                 onClick={() => setEditReadOpen(true)}
                 disabled={!editSessionId}
