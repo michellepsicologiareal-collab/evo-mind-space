@@ -650,7 +650,7 @@ export default function Dashboard() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="mx-auto w-full max-w-[1200px] px-3 sm:px-4 md:px-6 py-4 md:py-8 space-y-6 md:space-y-8">
+      <div className="mx-auto w-full min-w-0 max-w-[1200px] overflow-x-hidden px-3 sm:px-4 md:px-6 py-4 md:py-8 space-y-6 md:space-y-8">
         <HelpCard
           id="painel"
           title="Painel"
@@ -724,7 +724,7 @@ export default function Dashboard() {
               const [y, m] = v.split("-").map(Number);
               setSelectedMonth(startOfMonth(new Date(y, (m ?? 1) - 1, 1)));
             }}
-            className="h-9 max-w-[10.5rem] rounded-full border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="h-9 w-full min-w-0 max-w-[10.5rem] flex-1 sm:flex-none rounded-full border border-border bg-card px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             aria-label="Selecionar mês de referência"
           />
           <span className="hidden sm:inline text-sm text-muted-foreground">{selectedMonthLabel}</span>
@@ -783,7 +783,7 @@ export default function Dashboard() {
 
         {/* ─ Tendência: Sessões x Faturamento ─ */}
         <section aria-labelledby="trend-heading" className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between">
             <div className="min-w-0">
               <h2 id="trend-heading" className="font-display text-lg sm:text-xl font-semibold tracking-tight">
                 Tendência dos últimos {trendRange} meses
@@ -796,7 +796,7 @@ export default function Dashboard() {
             <div
               role="tablist"
               aria-label="Janela da tendência"
-              className="inline-flex rounded-full border border-border bg-card p-1 text-xs"
+              className="flex w-full min-w-0 rounded-full border border-border bg-card p-1 text-xs md:inline-flex md:w-auto"
             >
               {([6, 12] as const).map((n) => (
                 <button
@@ -805,7 +805,7 @@ export default function Dashboard() {
                   aria-selected={trendRange === n}
                   onClick={() => setTrendRange(n)}
                   className={cn(
-                    "h-7 rounded-full px-3 font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    "h-7 flex-1 truncate rounded-full px-3 font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary md:flex-none",
                     trendRange === n ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -816,7 +816,7 @@ export default function Dashboard() {
             <div
               role="tablist"
               aria-label="Visualização do faturamento"
-              className="inline-flex rounded-full border border-border bg-card p-1 text-xs"
+              className="flex w-full min-w-0 rounded-full border border-border bg-card p-1 text-xs md:inline-flex md:w-auto"
             >
               {([
                 { id: "total", label: "Total" },
@@ -828,7 +828,7 @@ export default function Dashboard() {
                   aria-selected={trendRevenueView === opt.id}
                   onClick={() => setTrendRevenueView(opt.id)}
                   className={cn(
-                    "h-7 rounded-full px-3 font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                    "h-7 flex-1 truncate rounded-full px-3 font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary md:flex-none",
                     trendRevenueView === opt.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -879,7 +879,7 @@ export default function Dashboard() {
                 Sem dados nos últimos {trendRange} meses.
               </div>
             ) : (
-              <div className="h-56 md:h-72 w-full" style={{ fontFamily: CHART_FONT_FAMILY }}>
+              <div className="h-56 md:h-72 w-full min-w-0 overflow-hidden" style={{ fontFamily: CHART_FONT_FAMILY }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={trendData} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
@@ -965,7 +965,7 @@ export default function Dashboard() {
         </section>
 
         {/* ─ 2 colunas: Atenção + Agenda semana ─ */}
-        <section className="grid gap-6 lg:grid-cols-[1fr_1.15fr]">
+        <section className="grid min-w-0 gap-6 lg:grid-cols-[1fr_1.15fr] [&>*]:min-w-0">
           {/* Atenção */}
           <div className="space-y-3">
             <h2 className="font-display text-lg sm:text-xl font-semibold tracking-tight">
@@ -1021,7 +1021,7 @@ export default function Dashboard() {
                 role="tablist"
                 aria-label="Dias da semana"
                 onKeyDown={onTabsKeyDown}
-                className="flex items-end justify-between gap-1.5 sm:gap-3 h-36 sm:h-44"
+                className="flex w-full min-w-0 items-end justify-between gap-1 sm:gap-3 h-36 sm:h-44"
 
               >
                 {weekDays.map((d, i) => {
@@ -1137,7 +1137,7 @@ export default function Dashboard() {
         <section aria-labelledby="finance-heading">
           <Card className="rounded-2xl border-border/60 bg-muted/30 p-4 sm:p-5 md:p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="grid flex-1 grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
                 <div className="min-w-0">
                   <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Recebido · {selectedMonthLabel}</p>
                   <p className="mt-1 text-base sm:text-lg font-semibold text-emerald-700 dark:text-emerald-400 break-words">
