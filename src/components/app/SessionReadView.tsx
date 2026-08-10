@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Printer, Loader2 } from "lucide-react";
+import { Printer, Loader2, Minus, Plus, RotateCcw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,6 +77,7 @@ export function SessionReadView(props: SessionReadViewProps) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<any>(null);
   const [homework, setHomework] = useState<any>(null);
+  const [scale, setScale] = useState(1);
 
   useEffect(() => {
     if (!open || !sessionId) return;
@@ -133,6 +134,39 @@ export function SessionReadView(props: SessionReadViewProps) {
               <Printer className="h-4 w-4" /> <span className="hidden sm:inline">Imprimir / PDF</span>
             </Button>
           </div>
+          <div className="mt-2 flex items-center gap-1.5 sm:hidden">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Tamanho</span>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              aria-label="Diminuir tamanho do texto"
+              onClick={() => setScale((s) => Math.max(0.7, +(s - 0.1).toFixed(2)))}
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </Button>
+            <span className="min-w-[3rem] text-center text-xs tabular-nums text-muted-foreground">
+              {Math.round(scale * 100)}%
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              aria-label="Aumentar tamanho do texto"
+              onClick={() => setScale((s) => Math.min(1.5, +(s + 0.1).toFixed(2)))}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              aria-label="Restaurar tamanho padrão"
+              onClick={() => setScale(1)}
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="overflow-y-auto overflow-x-hidden px-3 py-5 sm:px-10 sm:py-8 bg-muted/30">
@@ -143,8 +177,10 @@ export function SessionReadView(props: SessionReadViewProps) {
           ) : (
             <article
               id="session-doc"
-              className="mx-auto w-full max-w-[44rem] break-words rounded-xl border border-border bg-card p-4 shadow-sm sm:p-12"
+              style={{ transform: `scale(${scale})`, transformOrigin: "top left", width: `${100 / scale}%` }}
+              className="mx-auto w-full max-w-[44rem] break-words rounded-xl border border-border bg-card p-4 shadow-sm sm:p-12 print:!transform-none print:!w-full"
             >
+
 
               <header className="pb-5 sm:pb-6">
                 <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.1em] sm:tracking-[0.14em] text-muted-foreground">
