@@ -205,6 +205,10 @@
 @layer base {
   * { @apply border-border; }
   html { scroll-behavior: smooth; }
+  html, body, #root {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
   body {
     @apply bg-background text-foreground antialiased;
     background-image: radial-gradient(1200px 600px at 100% -10%, hsl(267 54% 64% / 0.10), transparent 60%),
