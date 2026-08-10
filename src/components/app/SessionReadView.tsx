@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Printer, Loader2 } from "lucide-react";
+import { Printer, Loader2, Minus, Plus, RotateCcw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,6 +77,7 @@ export function SessionReadView(props: SessionReadViewProps) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<any>(null);
   const [homework, setHomework] = useState<any>(null);
+  const [scale, setScale] = useState(1);
 
   useEffect(() => {
     if (!open || !sessionId) return;
