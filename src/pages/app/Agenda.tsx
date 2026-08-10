@@ -2452,7 +2452,7 @@ const Agenda = () => {
         <span className="text-sm">Nova</span>
       </button>
 
-      <header className="flex min-w-0 flex-wrap items-end justify-between gap-3 sticky top-16 md:static z-30 -mx-4 px-4 sm:-mx-6 sm:px-6 -mt-4 pt-4 sm:-mt-6 sm:pt-6 md:m-0 md:p-0 bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none pb-3 md:pb-0">
+      <header className="flex min-w-0 max-w-full flex-wrap items-end justify-between gap-3 sticky top-16 md:static z-30 -mx-4 px-4 sm:-mx-6 sm:px-6 -mt-4 pt-4 sm:-mt-6 sm:pt-6 md:m-0 md:p-0 bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none pb-3 md:pb-0">
         <div className="flex items-start gap-3 sm:gap-4 min-w-0">
           <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent">
             <CalendarIcon className="h-5 w-5" />
@@ -3125,7 +3125,7 @@ const Agenda = () => {
                 {loading ? (
                   <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
                 ) : (
-                  <div className="grid grid-cols-1 xl:grid-cols-[1fr_1fr] gap-4">
+                  <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr] [&>*]:min-w-0">
                     {/* Calendar grid */}
                      <div className="min-w-0 rounded-2xl bg-card border border-border shadow-card p-2.5 sm:p-4">
                       <div className="grid grid-cols-7 gap-1 mb-2">
@@ -3239,7 +3239,7 @@ const Agenda = () => {
                   /* ── COMPACT MOBILE WEEK ── */
                   <div className="space-y-3">
                     {/* Weekday strip */}
-                    <div className="grid grid-cols-7 gap-1 rounded-2xl bg-card border border-border shadow-card p-2">
+                    <div className="grid w-full min-w-0 grid-cols-7 gap-0.5 rounded-2xl bg-card border border-border shadow-card p-1.5 sm:gap-1 sm:p-2">
                       {weekDays.map((day) => {
                         const items = sessionsByDay(day);
                         const isToday = isSameDay(day, new Date());
@@ -3349,7 +3349,7 @@ const Agenda = () => {
                                       )}
                                     </div>
                                     {/* Status + Payment */}
-                                    <div className="flex items-center gap-1 shrink-0 justify-end">
+                                    <div className="flex min-w-0 flex-wrap items-center justify-end gap-1">
                                       {(() => {
                                         const StatusIcon = isSupervisionRow ? GraduationCap : statusIcon[s.status];
                                         const label = isSupervisionRow ? "Supervisão" : statusLabel[s.status];
@@ -3436,7 +3436,7 @@ const Agenda = () => {
       </div>
 
       {/* ── ZONA INFERIOR: Sessões do Mês (largura total) ── */}
-      <div className="min-w-0 -mx-4 sm:-mx-6 lg:-mx-10 px-4 sm:px-6 lg:px-10 py-5 sm:py-6" style={{ background: "hsl(var(--muted))" }}>
+      <div className="min-w-0 overflow-x-clip -mx-4 sm:-mx-6 lg:-mx-10 px-4 sm:px-6 lg:px-10 py-5 sm:py-6" style={{ background: "hsl(var(--muted))" }}>
         <div className="flex flex-wrap items-center gap-3 mb-3">
           <h2 style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 12, color: "hsl(var(--foreground))" }}>Sessões do Mês</h2>
           <span style={{ fontFamily: "Instrument Sans, sans-serif", fontSize: 11, color: "hsl(var(--muted-foreground))" }}>
@@ -3450,7 +3450,7 @@ const Agenda = () => {
           </span>
         </div>
 
-        <div className="flex items-center gap-5 mb-3" style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mb-3" style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
           {([["pending", "Pendentes"], ["paid", "Pagos"], ["all", "Todos"]] as const).map(([val, label]) => (
             <button
               key={val}
@@ -3469,7 +3469,7 @@ const Agenda = () => {
           ))}
         </div>
 
-        <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 mb-4">
           <Select value={filterPatientId} onValueChange={setFilterPatientId}>
             <SelectTrigger
               className="h-9 text-xs w-full sm:w-auto"
@@ -3502,7 +3502,7 @@ const Agenda = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+          <div className="grid min-w-0 grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
             {groupedPending.map((group) => {
               const s = group.session;
               return (
