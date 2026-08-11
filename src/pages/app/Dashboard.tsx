@@ -933,14 +933,19 @@ export default function Dashboard() {
                     />
 
                     <RTooltip
-                      contentStyle={CHART_TOOLTIP_CONTENT_STYLE}
+                      wrapperStyle={{ maxWidth: isMobile ? 200 : undefined, zIndex: 20 }}
+                      contentStyle={{ ...CHART_TOOLTIP_CONTENT_STYLE, ...(isMobile ? { fontSize: 11, padding: "6px 8px" } : {}) }}
                       labelStyle={CHART_TOOLTIP_LABEL_STYLE}
                       itemStyle={CHART_TOOLTIP_ITEM_STYLE}
                       formatter={(value: any, name: string) =>
                         name === "Sessões" ? [String(value), name] : [fmtBRL2(Number(value)), name]
                       }
                     />
-                    <Legend wrapperStyle={CHART_LEGEND_STYLE} iconType="circle" iconSize={8} />
+                    <Legend
+                      wrapperStyle={isMobile ? CHART_LEGEND_STYLE_MOBILE : CHART_LEGEND_STYLE}
+                      iconType="circle"
+                      iconSize={isMobile ? 6 : 8}
+                    />
 
                     <Bar yAxisId="left" dataKey="sessions" name="Sessões" fill="hsl(var(--primary) / 0.35)" radius={[6, 6, 0, 0]} />
                     {trendRevenueView === "total" ? (
