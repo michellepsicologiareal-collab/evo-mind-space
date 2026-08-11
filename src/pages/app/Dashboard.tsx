@@ -881,18 +881,37 @@ export default function Dashboard() {
             ) : (
               <div className="h-56 md:h-72 w-full min-w-0 overflow-hidden" style={{ fontFamily: CHART_FONT_FAMILY }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={trendData} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
+                  <ComposedChart data={trendData} margin={{ top: 8, right: isMobile ? 2 : 12, left: isMobile ? -8 : 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={CHART_TICK_STYLE} />
-                    <YAxis yAxisId="left" tickLine={false} axisLine={false} tickMargin={8} tick={CHART_TICK_STYLE} allowDecimals={false} />
+                    <XAxis
+                      dataKey="label"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={isMobile ? 4 : 8}
+                      height={isMobile ? 20 : 30}
+                      interval="preserveStartEnd"
+                      minTickGap={isMobile ? 8 : 5}
+                      tick={isMobile ? CHART_TICK_STYLE_MOBILE : CHART_TICK_STYLE}
+                    />
+                    <YAxis
+                      yAxisId="left"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={isMobile ? 2 : 8}
+                      width={isMobile ? 24 : 40}
+                      tickCount={isMobile ? 4 : 6}
+                      tick={isMobile ? CHART_TICK_STYLE_MOBILE : CHART_TICK_STYLE}
+                      allowDecimals={false}
+                    />
                     <YAxis
                       yAxisId="right"
                       orientation="right"
                       tickLine={false}
                       axisLine={false}
-                      tickMargin={isMobile ? 4 : 8}
-                      width={isMobile ? 44 : 70}
-                      tick={CHART_TICK_STYLE}
+                      tickMargin={isMobile ? 2 : 8}
+                      width={isMobile ? 32 : 70}
+                      tickCount={isMobile ? 4 : 6}
+                      tick={isMobile ? CHART_TICK_STYLE_MOBILE : CHART_TICK_STYLE}
                       tickFormatter={(v: number) =>
                         isMobile
                           ? v >= 1000
