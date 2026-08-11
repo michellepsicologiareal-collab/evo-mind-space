@@ -95,6 +95,17 @@ const CHART_TICK_STYLE = {
   letterSpacing: 0.2,
   fill: "hsl(var(--muted-foreground))",
 } as const;
+const CHART_TICK_STYLE_MOBILE = {
+  ...CHART_TICK_STYLE,
+  fontSize: 9,
+  letterSpacing: 0,
+} as const;
+const CHART_LEGEND_STYLE_MOBILE = {
+  fontSize: 10,
+  fontFamily: CHART_FONT_FAMILY,
+  fontWeight: 500,
+  paddingTop: 4,
+} as const;
 const CHART_LEGEND_STYLE = {
   fontSize: 12,
   fontFamily: CHART_FONT_FAMILY,
