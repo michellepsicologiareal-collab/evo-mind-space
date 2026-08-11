@@ -95,6 +95,17 @@ const CHART_TICK_STYLE = {
   letterSpacing: 0.2,
   fill: "hsl(var(--muted-foreground))",
 } as const;
+const CHART_TICK_STYLE_MOBILE = {
+  ...CHART_TICK_STYLE,
+  fontSize: 9,
+  letterSpacing: 0,
+} as const;
+const CHART_LEGEND_STYLE_MOBILE = {
+  fontSize: 10,
+  fontFamily: CHART_FONT_FAMILY,
+  fontWeight: 500,
+  paddingTop: 4,
+} as const;
 const CHART_LEGEND_STYLE = {
   fontSize: 12,
   fontFamily: CHART_FONT_FAMILY,
@@ -881,18 +892,37 @@ export default function Dashboard() {
             ) : (
               <div className="h-56 md:h-72 w-full min-w-0 overflow-hidden" style={{ fontFamily: CHART_FONT_FAMILY }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={trendData} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
+                  <ComposedChart data={trendData} margin={{ top: 8, right: isMobile ? 2 : 12, left: isMobile ? -8 : 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={CHART_TICK_STYLE} />
-                    <YAxis yAxisId="left" tickLine={false} axisLine={false} tickMargin={8} tick={CHART_TICK_STYLE} allowDecimals={false} />
+                    <XAxis
+                      dataKey="label"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={isMobile ? 4 : 8}
+                      height={isMobile ? 20 : 30}
+                      interval="preserveStartEnd"
+                      minTickGap={isMobile ? 8 : 5}
+                      tick={isMobile ? CHART_TICK_STYLE_MOBILE : CHART_TICK_STYLE}
+                    />
+                    <YAxis
+                      yAxisId="left"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={isMobile ? 2 : 8}
+                      width={isMobile ? 24 : 40}
+                      tickCount={isMobile ? 4 : 6}
+                      tick={isMobile ? CHART_TICK_STYLE_MOBILE : CHART_TICK_STYLE}
+                      allowDecimals={false}
+                    />
                     <YAxis
                       yAxisId="right"
                       orientation="right"
                       tickLine={false}
                       axisLine={false}
-                      tickMargin={isMobile ? 4 : 8}
-                      width={isMobile ? 44 : 70}
-                      tick={CHART_TICK_STYLE}
+                      tickMargin={isMobile ? 2 : 8}
+                      width={isMobile ? 32 : 70}
+                      tickCount={isMobile ? 4 : 6}
+                      tick={isMobile ? CHART_TICK_STYLE_MOBILE : CHART_TICK_STYLE}
                       tickFormatter={(v: number) =>
                         isMobile
                           ? v >= 1000
@@ -903,14 +933,19 @@ export default function Dashboard() {
                     />
 
                     <RTooltip
-                      contentStyle={CHART_TOOLTIP_CONTENT_STYLE}
+                      wrapperStyle={{ maxWidth: isMobile ? 200 : undefined, zIndex: 20 }}
+                      contentStyle={{ ...CHART_TOOLTIP_CONTENT_STYLE, ...(isMobile ? { fontSize: 11, padding: "6px 8px" } : {}) }}
                       labelStyle={CHART_TOOLTIP_LABEL_STYLE}
                       itemStyle={CHART_TOOLTIP_ITEM_STYLE}
                       formatter={(value: any, name: string) =>
                         name === "Sessões" ? [String(value), name] : [fmtBRL2(Number(value)), name]
                       }
                     />
-                    <Legend wrapperStyle={CHART_LEGEND_STYLE} iconType="circle" iconSize={8} />
+                    <Legend
+                      wrapperStyle={isMobile ? CHART_LEGEND_STYLE_MOBILE : CHART_LEGEND_STYLE}
+                      iconType="circle"
+                      iconSize={isMobile ? 6 : 8}
+                    />
 
                     <Bar yAxisId="left" dataKey="sessions" name="Sessões" fill="hsl(var(--primary) / 0.35)" radius={[6, 6, 0, 0]} />
                     {trendRevenueView === "total" ? (
