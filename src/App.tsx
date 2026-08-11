@@ -14,7 +14,6 @@ import { AutoUpdater } from "@/components/AutoUpdater";
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const DevSessionDoc = lazy(() => import("./pages/DevSessionDoc"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Admin = lazy(() => import("./pages/Admin"));
 const ConfirmarSessao = lazy(() => import("./pages/ConfirmarSessao"));
@@ -174,7 +173,6 @@ const App = () => (
                   <Route path="perfil" element={<Profile />} />
                 </Route>
 
-                <Route path="/__dev/session-doc" element={<DevSessionDoc />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AppErrorBoundary>
