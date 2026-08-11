@@ -120,8 +120,8 @@ export function SessionReadView(props: SessionReadViewProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="left-0 top-0 w-screen max-w-[100vw] h-[100dvh] max-h-[100dvh] translate-x-0 translate-y-0 rounded-none border-0 p-0 gap-0 grid grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:left-1/2 sm:top-1/2 sm:h-[92dvh] sm:w-[96vw] sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-lg sm:border">
-        <DialogHeader className="border-b border-border px-4 py-3 sm:px-6 print:hidden">
+      <DialogContent className="left-0 top-0 w-screen max-w-[100vw] h-[100dvh] max-h-[100dvh] translate-x-0 translate-y-0 rounded-none border-0 p-0 gap-0 grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] overflow-hidden sm:left-1/2 sm:top-1/2 sm:h-[92dvh] sm:w-[96vw] sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-lg sm:border">
+        <DialogHeader className="min-w-0 border-b border-border px-4 py-3 sm:px-6 print:hidden">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <DialogTitle className="font-display text-base sm:text-lg truncate">Resumo da sessão</DialogTitle>
@@ -169,7 +169,7 @@ export function SessionReadView(props: SessionReadViewProps) {
           </div>
         </DialogHeader>
 
-        <div className="overflow-y-auto overflow-x-hidden px-3 py-5 sm:px-10 sm:py-8 bg-muted/30">
+        <div className="min-w-0 w-full overflow-y-auto overflow-x-hidden px-3 py-5 sm:px-10 sm:py-8 bg-muted/30">
           {loading ? (
             <div className="flex items-center justify-center py-16 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
