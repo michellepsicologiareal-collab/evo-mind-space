@@ -178,7 +178,7 @@ export function SessionReadView(props: SessionReadViewProps) {
             <article
               id="session-doc"
               style={{ zoom: scale }}
-              className="mx-auto w-full max-w-[44rem] min-w-0 break-words rounded-xl border border-border bg-card p-4 shadow-sm sm:p-12 print:!zoom-normal print:!w-full"
+              className="mx-auto w-full max-w-[44rem] min-w-0 break-words rounded-xl border border-border bg-card p-4 shadow-sm sm:p-12"
             >
 
 
