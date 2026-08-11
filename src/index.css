@@ -455,6 +455,8 @@
   body * { visibility: hidden !important; }
   #session-doc, #session-doc * { visibility: visible !important; }
   #session-doc {
+    zoom: 1 !important;
+
     position: absolute !important;
     inset: 0 auto auto 0;
     width: 100% !important;
