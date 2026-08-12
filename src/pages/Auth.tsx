@@ -305,9 +305,9 @@ const Auth = () => {
           </p>
 
           <Tabs defaultValue="signin" className="mt-8">
-            <TabsList className="grid grid-cols-2 w-full bg-secondary">
-              <TabsTrigger value="signin">Entrar</TabsTrigger>
-              <TabsTrigger value="signup">Criar conta</TabsTrigger>
+            <TabsList className="grid grid-cols-2 w-full h-auto bg-secondary">
+              <TabsTrigger value="signin" className="min-h-11">Entrar</TabsTrigger>
+              <TabsTrigger value="signup" className="min-h-11">Criar conta</TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin" className="mt-6">
@@ -353,7 +353,7 @@ const Auth = () => {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="si-password">Senha</Label>
-                      <button type="button" onClick={() => setForgotMode(true)} className="text-xs text-accent hover:underline">
+                      <button type="button" onClick={() => setForgotMode(true)} className="-mr-2 inline-flex min-h-11 items-center px-2 text-xs text-accent hover:underline">
                         Esqueci minha senha
                       </button>
                     </div>
