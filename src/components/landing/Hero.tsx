@@ -10,7 +10,7 @@ export const Hero = () => {
       <div className="absolute -bottom-32 -left-32 h-[380px] w-[380px] rounded-full bg-accent/15 blur-3xl animate-float-slow" aria-hidden />
 
       <div className="container relative grid lg:grid-cols-12 gap-10 lg:gap-8 items-center py-14 sm:py-20 lg:py-28">
-        <div className="lg:col-span-6 animate-fade-up">
+        <div className="lg:col-span-6 min-w-0 animate-fade-up">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-card/60 backdrop-blur px-3 py-1.5 text-[11px] sm:text-xs text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5 text-accent shrink-0" />
             <span className="leading-snug">Gestão clínica orientada a dados — para psicólogos</span>
@@ -29,12 +29,12 @@ export const Hero = () => {
           </p>
 
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
-            <Button variant="hero" size="xl" asChild className="w-full sm:w-auto">
+            <Button variant="hero" size="xl" asChild className="w-full sm:w-auto whitespace-normal text-center">
               <a href="/auth?tab=signup">
-                Começar meus 14 dias grátis <ArrowRight className="ml-1" />
+                Começar meus 14 dias grátis <ArrowRight className="ml-1 shrink-0" />
               </a>
             </Button>
-            <Button variant="outline" size="xl" asChild className="w-full sm:w-auto">
+            <Button variant="outline" size="xl" asChild className="w-full sm:w-auto whitespace-normal text-center">
               <a href="#funcionalidades">Ver funcionalidades</a>
             </Button>
           </div>
@@ -64,7 +64,7 @@ export const Hero = () => {
         </div>
 
         {/* Hero mockup image */}
-        <div className="lg:col-span-6 animate-fade-up" style={{ animationDelay: "0.15s" }}>
+        <div className="lg:col-span-6 min-w-0 animate-fade-up" style={{ animationDelay: "0.15s" }}>
           <div className="relative">
             <div className="absolute -inset-4 bg-gradient-to-br from-accent/10 via-primary/5 to-transparent rounded-[2rem] blur-2xl" aria-hidden />
             <img
