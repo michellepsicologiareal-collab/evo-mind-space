@@ -57,6 +57,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { fetchWeekSessions } from "@/lib/sessions/weekSessions";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { BirthdaysCard } from "@/components/app/BirthdaysCard";
 
 /* ─── Real data types ─── */
 interface WeekSession {
@@ -751,6 +752,9 @@ export default function Dashboard() {
             </Button>
           )}
         </div>
+
+        {/* ─ Aniversariantes ─ */}
+        <BirthdaysCard />
 
         {/* ─ KPIs ─ */}
         <section
