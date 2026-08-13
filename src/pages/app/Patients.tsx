@@ -223,6 +223,7 @@ const patientSchema = z.object({
   category: z.enum(["adolescente", "avaliacao", "casal", "crianca", "grupo", "individual", "sessao_breve", "supervisao"]).optional(),
   modality: z.enum(["presencial", "online"]).optional(),
   clinic_address: z.string().trim().max(300).optional().or(z.literal("")),
+  birth_date: z.string().optional().or(z.literal("")),
 });
 
 interface Patient {
@@ -230,6 +231,7 @@ interface Patient {
   full_name: string;
   email: string | null;
   phone: string | null;
+  birth_date: string | null;
   notes: string | null;
   is_active: boolean;
   session_price: number | null;
