@@ -32,8 +32,8 @@ export const Footer = () => {
           </a>
         </div>
 
-        <div className="flex flex-col items-center md:items-end gap-2">
-          <nav className="flex gap-6 text-sm text-muted-foreground">
+        <div className="flex min-w-0 max-w-full flex-col items-center md:items-end gap-2">
+          <nav className="flex max-w-full flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground md:justify-end md:gap-6">
             <a href="#funcionalidades" className="hover:text-foreground">
               Funcionalidades
             </a>

@@ -41,7 +41,7 @@ export const Trust = () => {
           <p className="text-xs uppercase tracking-[0.2em] text-accent font-medium mb-3">
             Segurança & Ética
           </p>
-          <h2 className="font-display text-4xl md:text-5xl font-medium text-foreground text-balance">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium text-foreground text-balance break-words hyphens-auto">
             Construído com <span className="font-bold text-accent">responsabilidade</span>.
           </h2>
           <p className="mt-5 text-lg text-muted-foreground max-w-xl mx-auto text-pretty">
