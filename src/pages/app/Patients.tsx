@@ -530,8 +530,8 @@ const Patients = () => {
   );
 
   const DRAFT_KEY = "rascunho_novo_paciente";
-  type FormState = { full_name: string; email: string; phone: string; phone_ddi: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "adolescente" | "avaliacao" | "casal" | "crianca" | "grupo" | "individual" | "sessao_breve" | "supervisao"; modality: "presencial" | "online"; clinic_address: string; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string };
-  const emptyForm: FormState = { full_name: "", email: "", phone: "", phone_ddi: "+55", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", modality: "presencial", clinic_address: "", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55", treatment_start_date: "", treatment_end_date: "", has_psychiatrist: false, psychiatrist_name: "", psychiatrist_phone: "", psychiatrist_phone_ddi: "+55", medications: "" };
+  type FormState = { full_name: string; email: string; phone: string; phone_ddi: string; birth_date: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "adolescente" | "avaliacao" | "casal" | "crianca" | "grupo" | "individual" | "sessao_breve" | "supervisao"; modality: "presencial" | "online"; clinic_address: string; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string };
+  const emptyForm: FormState = { full_name: "", email: "", phone: "", phone_ddi: "+55", birth_date: "", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", modality: "presencial", clinic_address: "", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55", treatment_start_date: "", treatment_end_date: "", has_psychiatrist: false, psychiatrist_name: "", psychiatrist_phone: "", psychiatrist_phone_ddi: "+55", medications: "" };
   const [form, setFormRaw] = useState<FormState>(emptyForm);
   const [draftRestored, setDraftRestored] = useState(false);
   const setForm = useCallback((v: typeof emptyForm | ((prev: typeof emptyForm) => typeof emptyForm)) => { patientGuard.markDirty(); setFormRaw(v); }, [patientGuard.markDirty]);
@@ -829,6 +829,7 @@ const Patients = () => {
       email: p.email ?? "",
       phone: localPhone,
       phone_ddi: ddi,
+      birth_date: p.birth_date ?? "",
       notes: p.notes ?? "",
       session_price: p.session_price?.toString() ?? "",
       chief_complaint: p.chief_complaint ?? "",
@@ -867,6 +868,7 @@ const Patients = () => {
       full_name: parsed.data.full_name,
       email: parsed.data.email || null,
       phone: parsed.data.phone ? `${parsed.data.phone_ddi || "+55"} ${parsed.data.phone}`.trim() : null,
+      birth_date: form.birth_date || null,
       notes: parsed.data.notes || null,
       session_price: parsed.data.session_price ? Number(parsed.data.session_price) : null,
       chief_complaint: parsed.data.chief_complaint || null,
@@ -1932,6 +1934,7 @@ const Patients = () => {
                         <InfoRow label="Nome" value={p.full_name} />
                         <InfoRow label="Telefone" value={p.phone || null} />
                         <InfoRow label="E-mail" value={p.email || null} />
+                        <InfoRow label="Data de nascimento" value={p.birth_date ? format(new Date(p.birth_date + "T12:00:00"), "dd/MM/yyyy") : null} />
                         <InfoRow label="Categoria" value={type} />
                         <InfoRow label="Modalidade" value={p.modality ? (p.modality === "online" ? "Online" : "Presencial") : null} />
                         <InfoRow label="Status" value={p.is_active ? "Ativo" : "Inativo"} />
@@ -2234,6 +2237,11 @@ const Patients = () => {
                   <Input id="phone" className="flex-1" placeholder="11 99988-7766" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                 </div>
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="birth_date">Data de nascimento</Label>
+              <Input id="birth_date" type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
+              <p className="text-xs text-muted-foreground">Usada para lembrar você dos aniversários no Painel.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="price">Valor da sessão (R$)</Label>
