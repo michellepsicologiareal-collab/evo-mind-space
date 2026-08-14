@@ -6,7 +6,7 @@ import {
   TrendingDown, TrendingUp, Download, AlertTriangle,
   SmilePlus,
 } from "lucide-react";
-import { format, startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, addMonths, subMonths, subDays, eachDayOfInterval, isSameMonth, isToday, isFuture } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
