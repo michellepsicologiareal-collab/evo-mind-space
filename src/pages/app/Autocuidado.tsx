@@ -741,22 +741,27 @@ const Autocuidado = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ── Emotional Climate Charts ── */}
-      <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8 space-y-6">
+      {/* ── Painel de Humor ── */}
+      <section className="rounded-2xl bg-card border border-border shadow-card p-5 md:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="font-display text-xl font-bold text-foreground">📊 Clima Emocional</h2>
-            <p className="text-sm text-muted-foreground">Seus padrões de humor e gatilhos ao longo do mês.</p>
+          <div className="min-w-0">
+            <h2 className="font-display text-xl font-bold text-foreground">Painel de humor</h2>
+            <p className="text-sm text-muted-foreground">Seus padrões emocionais, gatilhos e carga de trabalho no mês.</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1 bg-muted rounded-full p-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthCursor(subMonths(monthCursor, 1))}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setMonthCursor(subMonths(monthCursor, 1))} aria-label="Mês anterior">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-sm font-medium px-2 capitalize min-w-[120px] text-center">
+              <span className="text-sm font-medium px-2 capitalize min-w-[110px] text-center">
                 {format(monthCursor, "MMMM yyyy", { locale: ptBR })}
               </span>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthCursor(addMonths(monthCursor, 1))}>
+              <Button
+                variant="ghost" size="icon" className="h-8 w-8 rounded-full"
+                disabled={isSameMonth(monthCursor, new Date())}
+                onClick={() => setMonthCursor(addMonths(monthCursor, 1))}
+                aria-label="Próximo mês"
+              >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -773,69 +778,144 @@ const Autocuidado = () => {
           </div>
         </div>
 
-        {/* Stats */}
-        {(history.length > 0 || triggerHistory.length > 0) && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="rounded-xl bg-sage/5 border border-sage/15 p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{history.length}</p>
-              <p className="text-xs text-muted-foreground">Check-ins</p>
-            </div>
-            <div className="rounded-xl bg-sage/5 border border-sage/15 p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{avgStress ?? "—"}</p>
-              <p className="text-xs text-muted-foreground">Estresse médio</p>
-            </div>
-            <div className="rounded-xl bg-sage/5 border border-sage/15 p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">
-                {history.reduce((s, h) => s + h.sessions_count, 0)}
-              </p>
-              <p className="text-xs text-muted-foreground">Atendimentos</p>
-            </div>
-            <div className="rounded-xl bg-sage/5 border border-sage/15 p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{triggerHistory.length}</p>
-              <p className="text-xs text-muted-foreground">Registros emocionais</p>
-            </div>
-          </div>
-        )}
+        {/* Indicadores */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <StatTile
+            label="Humor médio"
+            value={avgMood ? ["", "😫", "😔", "😐", "🙂", "🤩"][Math.round(avgMood)] || "—" : "—"}
+            hint={avgMood ? `${avgMood.toFixed(1)} de 5` : "sem registros"}
+          />
+          <StatTile
+            label="Sequência"
+            value={moodStreak > 0 ? `${moodStreak}d` : "—"}
+            hint={moodStreak > 0 ? "dias seguidos" : "comece hoje"}
+          />
+          <StatTile
+            label="Registros"
+            value={triggerHistory.length}
+            hint={`${activatingSessions} com gatilho`}
+          />
+          <StatTile
+            label="Estresse médio"
+            value={avgStress ?? "—"}
+            hint={avgStress ? `${history.length} check-in(s)` : "sem check-ins"}
+            tone={avgStress ? (Number(avgStress) >= 7 ? "alert" : Number(avgStress) >= 5 ? "warn" : "calm") : "calm"}
+          />
+          <StatTile
+            label="Atendimentos"
+            value={history.reduce((s, h) => s + h.sessions_count, 0)}
+            hint={`${history.reduce((s, h) => s + h.pauses_count, 0)} pausa(s)`}
+          />
+        </div>
 
-        {/* Two-column chart layout */}
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Mood line chart */}
-          <div className="rounded-2xl border border-sage/15 bg-sage/5 p-5">
-            <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-sage" />
-              Variação do Humor
-            </h3>
-            {moodChartData.length >= 2 ? (
-              <div className="h-52">
+        {/* Mapa do mês */}
+        <div className="rounded-2xl border border-border bg-muted/20 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-display text-sm font-semibold text-foreground">Mapa do mês</h3>
+            <span className="text-[11px] text-muted-foreground">emoji = humor · borda = estresse</span>
+          </div>
+          <div className="grid grid-cols-7 sm:grid-cols-10 lg:grid-cols-[repeat(16,minmax(0,1fr))] gap-1.5">
+            {monthDays.map((d) => {
+              const key = format(d, "yyyy-MM-dd");
+              const mood = moodByDay.get(key);
+              const stressLvl = stressByDay.get(key);
+              const future = isFuture(d) && !isToday(d);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={future}
+                  onClick={() => { setMoodDate(d); setMoodEmoji(mood?.mood_emoji ?? "😐"); setMoodOpen(true); }}
+                  title={`${format(d, "dd/MM")}${mood ? ` · ${mood.mood_emoji}` : ""}${stressLvl != null ? ` · estresse ${stressLvl}/10` : ""}`}
+                  className={cn(
+                    "aspect-square rounded-lg border-2 flex flex-col items-center justify-center transition-all",
+                    future ? "opacity-30 border-dashed border-border" : "hover:scale-105",
+                    stressLvl == null ? "border-border" :
+                      stressLvl >= 8 ? "border-destructive/60" :
+                      stressLvl >= 5 ? "border-amber-400/70" : "border-sage/60",
+                    mood ? "bg-card" : "bg-background",
+                    isToday(d) && "ring-2 ring-sage ring-offset-1 ring-offset-background"
+                  )}
+                >
+                  <span className="text-[9px] leading-none text-muted-foreground">{format(d, "dd")}</span>
+                  <span className="text-sm leading-none">{mood?.mood_emoji ?? ""}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Gráficos em abas */}
+        <div>
+          <div className="inline-flex rounded-xl border border-border bg-muted/40 p-1 mb-4 overflow-x-auto no-scrollbar max-w-full">
+            {([
+              ["humor", "Variação do humor"],
+              ["gatilhos", "Gatilhos"],
+              ["pacientes", "Pacientes ativadores"],
+              ["estresse", "Estresse & carga"],
+            ] as const).map(([k, l]) => (
+              <button
+                key={k}
+                onClick={() => setChartTab(k)}
+                className={cn(
+                  "whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+                  chartTab === k ? "bg-card text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+
+          {chartTab === "humor" && (
+            moodChartData.length >= 2 ? (
+              <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={moodChartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <LineChart data={moodChartData} margin={{ left: -18, right: 8, top: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                     <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                    <YAxis domain={[1, 5]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))"
+                    <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 13 }} stroke="hsl(var(--muted-foreground))"
                       tickFormatter={(v) => ["", "😫", "😔", "😐", "🙂", "🤩"][v] || ""} />
                     <Tooltip
                       contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }}
                       formatter={(value: number) => [["", "😫", "😔", "😐", "🙂", "🤩"][value] || value, "Humor"]}
+                      labelFormatter={(l) => `Dia ${l}`}
                     />
-                    <Line type="monotone" dataKey="humor" stroke="hsl(var(--moss))" strokeWidth={2.5} dot={{ r: 5, fill: "hsl(var(--moss))" }} name="Humor" />
+                    <Line type="monotone" dataKey="humor" stroke="hsl(var(--moss))" strokeWidth={2.5} dot={{ r: 4, fill: "hsl(var(--moss))" }} activeDot={{ r: 6 }} name="Humor" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-10">
-                Registre ao menos 2 dias de humor para ver o gráfico. 🌿
-              </p>
-            )}
-          </div>
+              <EmptyChart text="Registre ao menos 2 dias de humor para ver a variação." />
+            )
+          )}
 
-          {/* Patient / trigger bar chart */}
-          <div className="rounded-2xl border border-sage/15 bg-sage/5 p-5">
-            <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-sage" />
-              Pacientes que mais ativaram
-            </h3>
-            {patientTriggerFrequency.length > 0 ? (
-              <div className="h-52">
+          {chartTab === "gatilhos" && (
+            triggerFrequency.length > 0 ? (
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={triggerFrequency} layout="vertical" margin={{ left: 10, right: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={100} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }}
+                      formatter={(value: number) => [`${value}x`, "Ocorrências"]}
+                    />
+                    <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={18}>
+                      {triggerFrequency.map((_, i) => (<Cell key={i} fill={sageShades[i % sageShades.length]} />))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <EmptyChart text="Nenhum gatilho registrado neste mês." />
+            )
+          )}
+
+          {chartTab === "pacientes" && (
+            patientTriggerFrequency.length > 0 ? (
+              <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={patientTriggerFrequency} layout="vertical" margin={{ left: 10, right: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
@@ -845,63 +925,73 @@ const Autocuidado = () => {
                       contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }}
                       formatter={(value: number) => [`${value}x`, "Ativações"]}
                     />
-                    <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={20}>
-                      {patientTriggerFrequency.map((_, i) => (
-                        <Cell key={i} fill={sageShades[i % sageShades.length]} />
-                      ))}
+                    <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={18}>
+                      {patientTriggerFrequency.map((_, i) => (<Cell key={i} fill={sageShades[i % sageShades.length]} />))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-10">
-                Associe pacientes aos registros para ver o gráfico. 🌱
-              </p>
-            )}
-          </div>
+              <EmptyChart text="Associe pacientes aos registros para ver quem mais te ativa." />
+            )
+          )}
+
+          {chartTab === "estresse" && (
+            chartData.length >= 2 ? (
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ left: -18, right: 8, top: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }} />
+                    <Line type="monotone" dataKey="estresse" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} name="Estresse" />
+                    <Line type="monotone" dataKey="atendimentos" stroke="hsl(var(--moss))" strokeWidth={2} dot={{ r: 3 }} name="Atendimentos" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <EmptyChart text="Registre ao menos 2 check-ins para comparar estresse e carga." />
+            )
+          )}
         </div>
 
-        {/* Trigger frequency bar chart */}
-        {triggerFrequency.length > 0 && (
-          <div className="rounded-2xl border border-sage/15 bg-sage/5 p-5">
-            <h3 className="font-display font-semibold text-foreground mb-4">Gatilhos mais frequentes</h3>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={triggerFrequency} layout="vertical" margin={{ left: 10, right: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={110} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }}
-                    formatter={(value: number) => [`${value}x`, "Ocorrências"]}
-                  />
-                  <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={20}>
-                    {triggerFrequency.map((_, i) => (
-                      <Cell key={i} fill={sageShades[i % sageShades.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-
-        {/* Stress line chart */}
-        {chartData.length >= 2 && (
-          <div className="rounded-2xl border border-sage/15 bg-sage/5 p-5">
-            <h3 className="font-display font-semibold text-foreground mb-4">Estresse & Atendimentos</h3>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={{ borderRadius: "12px", border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: "13px" }} />
-                  <Line type="monotone" dataKey="estresse" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} name="Estresse" />
-                  <Line type="monotone" dataKey="atendimentos" stroke="hsl(var(--moss))" strokeWidth={2} dot={{ r: 4 }} name="Atendimentos" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+        {/* Registros recentes */}
+        {recentMoodRecords.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="font-display text-sm font-semibold text-foreground">Registros recentes</h3>
+            <ul className="space-y-2">
+              {recentMoodRecords.map((t) => {
+                const patient = t.patient_id ? patients.find((p) => p.id === t.patient_id) : null;
+                return (
+                  <li key={t.id} className="rounded-xl border border-border bg-muted/20 p-3">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl leading-none">{t.mood_emoji}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span className="font-medium text-foreground">
+                            {format(new Date(t.checked_at + "T12:00:00"), "dd 'de' MMM", { locale: ptBR })}
+                          </span>
+                          {patient && <span>· {patient.full_name}</span>}
+                        </div>
+                        {t.triggers.length > 0 && (
+                          <div className="mt-1.5 flex flex-wrap gap-1">
+                            {t.triggers.map((tr) => (
+                              <span key={tr} className="rounded-full bg-sage/10 text-sage px-2 py-0.5 text-[11px] font-medium">
+                                {tr}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {t.reflective_note && (
+                          <p className="mt-1.5 text-sm text-foreground/80 break-words">{t.reflective_note}</p>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         )}
 
@@ -914,6 +1004,7 @@ const Autocuidado = () => {
           </p>
         ) : null}
       </section>
+
 
       {/* ── PLEASE Check-in ── */}
       <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8">
