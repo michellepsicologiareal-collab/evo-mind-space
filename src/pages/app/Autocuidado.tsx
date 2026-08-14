@@ -449,18 +449,41 @@ const Autocuidado = () => {
         <p className="mt-4 text-lg text-foreground/80 font-medium">Como você está hoje?</p>
       </header>
 
-      {/* ── Big "Registrar Meu Humor" Button ── */}
-      <section className="flex justify-center">
-        <Button
-          variant="accent"
-          size="lg"
-          onClick={() => { setMoodOpen(true); setMoodDate(new Date()); }}
-          className="gap-3 text-lg px-10 py-7 rounded-2xl shadow-elegant hover:scale-[1.02] transition-all"
-        >
-          <SmilePlus className="h-6 w-6" />
-          Registrar Meu Humor Agora
-        </Button>
+      {/* ── Quick mood strip ── */}
+      <section className="rounded-2xl border border-sage/20 bg-card shadow-card p-5 md:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="font-display text-lg font-bold text-foreground flex items-center gap-2">
+              <SmilePlus className="h-5 w-5 text-sage" />
+              Registrar meu humor
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {todayMood
+                ? `Hoje você registrou ${todayMood.mood_emoji}. Toque para registrar de novo.`
+                : "Um toque no rosto que traduz o seu dia."}
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar">
+            {moodEmojis.map((m) => (
+              <button
+                key={m.emoji}
+                onClick={() => { setMoodEmoji(m.emoji); setMoodDate(new Date()); setMoodOpen(true); }}
+                aria-label={`Registrar humor: ${m.label}`}
+                className={cn(
+                  "flex min-w-[62px] flex-col items-center gap-1 rounded-2xl border-2 px-3 py-2 transition-all",
+                  todayMood?.mood_emoji === m.emoji
+                    ? "border-sage bg-sage/10"
+                    : "border-transparent bg-muted/40 hover:border-sage/40 hover:bg-sage/5"
+                )}
+              >
+                <span className="text-2xl leading-none">{m.emoji}</span>
+                <span className="text-[10px] font-medium text-muted-foreground">{m.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
+
 
       {/* ── Mood Registration Dialog ── */}
       <Dialog open={moodOpen} onOpenChange={setMoodOpen}>
