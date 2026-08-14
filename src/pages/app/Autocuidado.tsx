@@ -320,6 +320,62 @@ const Autocuidado = () => {
     return (history.reduce((s, h) => s + h.stress_level, 0) / history.length).toFixed(1);
   }, [history]);
 
+  const todayKey = format(new Date(), "yyyy-MM-dd");
+
+  const todayMood = useMemo(
+    () => [...triggerHistory].reverse().find((t) => t.checked_at === todayKey) ?? null,
+    [triggerHistory, todayKey]
+  );
+
+  /** Último registro emocional de cada dia do mês */
+  const moodByDay = useMemo(() => {
+    const map = new Map<string, TriggerRow>();
+    triggerHistory.forEach((t) => map.set(t.checked_at, t));
+    return map;
+  }, [triggerHistory]);
+
+  const stressByDay = useMemo(() => {
+    const map = new Map<string, number>();
+    history.forEach((h) => map.set(h.checked_at, h.stress_level));
+    return map;
+  }, [history]);
+
+  const monthDays = useMemo(
+    () => eachDayOfInterval({ start: startOfMonth(monthCursor), end: endOfMonth(monthCursor) }),
+    [monthCursor]
+  );
+
+  const avgMood = useMemo(() => {
+    if (moodChartData.length === 0) return null;
+    return moodChartData.reduce((s, m) => s + m.humor, 0) / moodChartData.length;
+  }, [moodChartData]);
+
+  /** Dias seguidos com registro emocional, contando de hoje/ontem para trás */
+  const moodStreak = useMemo(() => {
+    if (triggerHistory.length === 0) return 0;
+    const days = new Set(triggerHistory.map((t) => t.checked_at));
+    let cursor = new Date();
+    if (!days.has(format(cursor, "yyyy-MM-dd"))) cursor = subDays(cursor, 1);
+    let count = 0;
+    while (days.has(format(cursor, "yyyy-MM-dd"))) {
+      count += 1;
+      cursor = subDays(cursor, 1);
+    }
+    return count;
+  }, [triggerHistory]);
+
+  const recentMoodRecords = useMemo(
+    () => [...triggerHistory].reverse().slice(0, 6),
+    [triggerHistory]
+  );
+
+  const activatingSessions = useMemo(
+    () => triggerHistory.filter((t) => t.triggers.length > 0).length,
+    [triggerHistory]
+  );
+
+
+
   /* ── Handlers ── */
   const saveCheckin = async () => {
     if (!user) return;
