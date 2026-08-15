@@ -2503,7 +2503,16 @@ const Agenda = () => {
               <span className="sm:hidden">{bulkSyncing ? "..." : "Sincronizar"}</span>
             </Button>
           )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => { setEditingPersonalEvent(null); setPersonalEventOpen(true); }}
+          className="hidden rounded-[40px] font-display font-semibold border-amber-300 text-amber-800 hover:bg-amber-50 hover:text-amber-900 sm:inline-flex"
+        >
+          <Plus className="h-4 w-4" /> Compromisso pessoal
+        </Button>
         <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
+
           <DialogTrigger asChild>
             <Button variant="accent" size="sm" onClick={() => openNew()} className="hidden rounded-[40px] font-display font-semibold w-full sm:inline-flex sm:w-auto sm:size-default">
               <Plus className="h-4 w-4" /> Nova sessão
