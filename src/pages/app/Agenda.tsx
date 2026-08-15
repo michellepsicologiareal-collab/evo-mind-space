@@ -4417,6 +4417,16 @@ const Agenda = () => {
       <UnsavedGuardDialog open={newGuard.confirmOpen} onConfirm={newGuard.confirmLeave} onCancel={newGuard.cancelLeave} onSaveDraft={newGuard.saveDraftAndLeave} />
       <UnsavedGuardDialog open={editGuard.confirmOpen} onConfirm={editGuard.confirmLeave} onCancel={editGuard.cancelLeave} onSaveDraft={editGuard.saveDraftAndLeave} />
 
+      <PersonalEventDialog
+        open={personalEventOpen}
+        onOpenChange={setPersonalEventOpen}
+        userId={user?.id}
+        defaultDate={selectedDate}
+        event={editingPersonalEvent}
+        onSaved={reloadPersonalEvents}
+      />
+
+
       {/* Revisão da mensagem antes de enviar no WhatsApp */}
       <Dialog open={!!confirmPreview} onOpenChange={(o) => !o && setConfirmPreview(null)}>
         <DialogContent className="w-[95vw] max-w-5xl min-h-[90vh] flex flex-col p-4 sm:p-6">
