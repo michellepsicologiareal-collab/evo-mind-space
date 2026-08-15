@@ -184,6 +184,8 @@ const Autocuidado = () => {
   const [history, setHistory] = useState<CheckinRow[]>([]);
   const [triggerHistory, setTriggerHistory] = useState<TriggerRow[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [chartTab, setChartTab] = useState<"humor" | "gatilhos" | "pacientes" | "estresse">("humor");
+
 
   // Load patients for dropdown
   useEffect(() => {
