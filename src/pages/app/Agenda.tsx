@@ -248,6 +248,12 @@ const Agenda = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  // Compromissos pessoais (não vinculados a pacientes)
+  const { events: personalEvents, reload: reloadPersonalEvents } = usePersonalEvents(user?.id);
+  const [personalEventOpen, setPersonalEventOpen] = useState(false);
+  const [editingPersonalEvent, setEditingPersonalEvent] = useState<PersonalEvent | null>(null);
+  const openPersonalEvent = (ev: PersonalEvent | null) => { setEditingPersonalEvent(ev); setPersonalEventOpen(true); };
+
   const [pixKey, setPixKey] = useState("");
   const [psiName, setPsiName] = useState("");
   const [psiCrp, setPsiCrp] = useState("");
