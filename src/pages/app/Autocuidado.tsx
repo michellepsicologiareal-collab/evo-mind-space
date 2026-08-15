@@ -151,6 +151,31 @@ interface DaySession {
   status: string;
 }
 
+/* ── UI helpers ── */
+const StatTile = ({
+  label, value, hint, tone = "calm",
+}: { label: string; value: string | number; hint?: string; tone?: "calm" | "warn" | "alert" }) => (
+  <div
+    className={cn(
+      "rounded-xl border p-3 text-center",
+      tone === "alert" ? "border-destructive/30 bg-destructive/5"
+        : tone === "warn" ? "border-amber-300/40 bg-amber-50/40"
+        : "border-sage/20 bg-sage/5"
+    )}
+  >
+    <p className="font-display text-2xl font-bold text-foreground leading-none">{value}</p>
+    <p className="mt-1.5 text-xs font-medium text-foreground/80">{label}</p>
+    {hint && <p className="text-[10px] text-muted-foreground mt-0.5">{hint}</p>}
+  </div>
+);
+
+const EmptyChart = ({ text }: { text: string }) => (
+  <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+    {text} 🌿
+  </div>
+);
+
+
 /* ── Component ── */
 const Autocuidado = () => {
   const { user } = useAuth();
