@@ -14,6 +14,11 @@ import {
 import { SessionReadView } from "@/components/app/SessionReadView";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
 import { PatientSessionsQuickView } from "@/components/app/PatientSessionsQuickView";
+import {
+  PersonalEventDialog, PersonalEventCard, usePersonalEvents, eventsForDay,
+  type PersonalEvent,
+} from "@/components/app/PersonalEvents";
+
 import { SessionPlanningForm, type SessionPlanningValue, planningValueFromDb } from "@/components/app/SessionPlanningForm";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
