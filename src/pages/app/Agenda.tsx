@@ -14,6 +14,11 @@ import {
 import { SessionReadView } from "@/components/app/SessionReadView";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
 import { PatientSessionsQuickView } from "@/components/app/PatientSessionsQuickView";
+import {
+  PersonalEventDialog, PersonalEventCard, usePersonalEvents, eventsForDay,
+  type PersonalEvent,
+} from "@/components/app/PersonalEvents";
+
 import { SessionPlanningForm, type SessionPlanningValue, planningValueFromDb } from "@/components/app/SessionPlanningForm";
 import {
   addDays, addWeeks, addMonths, format, isSameDay, isSameMonth,
@@ -243,6 +248,12 @@ const Agenda = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  // Compromissos pessoais (não vinculados a pacientes)
+  const { events: personalEvents, reload: reloadPersonalEvents } = usePersonalEvents(user?.id);
+  const [personalEventOpen, setPersonalEventOpen] = useState(false);
+  const [editingPersonalEvent, setEditingPersonalEvent] = useState<PersonalEvent | null>(null);
+  const openPersonalEvent = (ev: PersonalEvent | null) => { setEditingPersonalEvent(ev); setPersonalEventOpen(true); };
+
   const [pixKey, setPixKey] = useState("");
   const [psiName, setPsiName] = useState("");
   const [psiCrp, setPsiCrp] = useState("");
@@ -2503,7 +2514,16 @@ const Agenda = () => {
               <span className="sm:hidden">{bulkSyncing ? "..." : "Sincronizar"}</span>
             </Button>
           )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => { setEditingPersonalEvent(null); setPersonalEventOpen(true); }}
+          className="hidden rounded-[40px] font-display font-semibold border-amber-300 text-amber-800 hover:bg-amber-50 hover:text-amber-900 sm:inline-flex"
+        >
+          <Plus className="h-4 w-4" /> Compromisso pessoal
+        </Button>
         <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
+
           <DialogTrigger asChild>
             <Button variant="accent" size="sm" onClick={() => openNew()} className="hidden rounded-[40px] font-display font-semibold w-full sm:inline-flex sm:w-auto sm:size-default">
               <Plus className="h-4 w-4" /> Nova sessão
@@ -3141,6 +3161,7 @@ const Agenda = () => {
                           const isSelected = isSameDay(cell, selectedDate);
                           const isToday = isSameDay(cell, new Date());
                           const dayCount = sessionsByDay(cell).length;
+                          const hasPersonal = eventsForDay(personalEvents, cell).length > 0;
                           return (
                              <button
                               key={dateKey}
@@ -3153,17 +3174,21 @@ const Agenda = () => {
                               )}
                             >
                               <span>{format(cell, "d")}</span>
-                              {hasSessions ? (
+                              {hasSessions || hasPersonal ? (
                                 <span className="flex items-center gap-0.5 h-3">
-                                  <span className={cn(
-                                    "w-1.5 h-1.5 rounded-full shrink-0",
-                                    isSelected ? "bg-accent-foreground" : "bg-primary"
-                                  )} />
+                                  {hasSessions && (
+                                    <span className={cn(
+                                      "w-1.5 h-1.5 rounded-full shrink-0",
+                                      isSelected ? "bg-accent-foreground" : "bg-primary"
+                                    )} />
+                                  )}
+                                  {hasPersonal && <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-amber-500" />}
                                   {dayCount > 1 && <span className={cn("text-[8px] leading-none", isSelected ? "text-accent-foreground" : "text-primary")}>{dayCount}</span>}
                                 </span>
                               ) : (
                                 <span className="h-3" />
                               )}
+
                             </button>
                           );
                         })}
@@ -3200,7 +3225,22 @@ const Agenda = () => {
                           {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                         </div>
                       )}
+                      {/* Compromissos pessoais do dia */}
+                      <div className="mt-3 space-y-1.5 border-t border-border pt-3">
+                        {eventsForDay(personalEvents, selectedDate).map((ev) => (
+                          <PersonalEventCard key={ev.id} event={ev} compact onClick={() => openPersonalEvent(ev)} />
+                        ))}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full text-xs text-amber-800 hover:bg-amber-50"
+                          onClick={() => openPersonalEvent(null)}
+                        >
+                          <Plus className="h-3.5 w-3.5" /> Compromisso pessoal
+                        </Button>
+                      </div>
                     </div>
+
 
                     {/* Lista do mês para o paciente filtrado */}
                     {selectedPatientName && (
@@ -3294,7 +3334,23 @@ const Agenda = () => {
                         {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                       </div>
                     )}
+
+                    {/* Compromissos pessoais do dia (mobile) */}
+                    <div className="space-y-2">
+                      {eventsForDay(personalEvents, selectedDate).map((ev) => (
+                        <PersonalEventCard key={ev.id} event={ev} compact onClick={() => openPersonalEvent(ev)} />
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full rounded-[40px] border-amber-300 text-amber-800 hover:bg-amber-50 text-xs"
+                        onClick={() => openPersonalEvent(null)}
+                      >
+                        <Plus className="h-3.5 w-3.5" /> Compromisso pessoal
+                      </Button>
+                    </div>
                   </div>
+
                 ) : (
                   <div className="space-y-2">
                     {weekDays.map((day) => {
@@ -3398,7 +3454,16 @@ const Agenda = () => {
                               })}
                             </div>
                           )}
+                          {/* Compromissos pessoais do dia */}
+                          {eventsForDay(personalEvents, day).length > 0 && (
+                            <div className="space-y-1.5 border-t border-amber-200/60 bg-amber-50/20 p-2">
+                              {eventsForDay(personalEvents, day).map((ev) => (
+                                <PersonalEventCard key={ev.id} event={ev} compact onClick={() => openPersonalEvent(ev)} />
+                              ))}
+                            </div>
+                          )}
                         </div>
+
                       );
                     })}
                   </div>
@@ -3429,8 +3494,36 @@ const Agenda = () => {
                     {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                   </div>
                 )}
+
+                {/* Compromissos pessoais do dia */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-display text-sm font-semibold text-foreground">Compromissos pessoais</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-xs text-amber-800 hover:bg-amber-50"
+                      onClick={() => openPersonalEvent(null)}
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Adicionar
+                    </Button>
+                  </div>
+                  {eventsForDay(personalEvents, selectedDate).length === 0 ? (
+                    <button
+                      onClick={() => openPersonalEvent(null)}
+                      className="w-full rounded-2xl border border-dashed border-amber-200 bg-amber-50/30 py-4 text-xs text-muted-foreground hover:text-amber-800 transition-colors"
+                    >
+                      Nenhum compromisso pessoal neste dia — toque para escrever
+                    </button>
+                  ) : (
+                    eventsForDay(personalEvents, selectedDate).map((ev) => (
+                      <PersonalEventCard key={ev.id} event={ev} onClick={() => openPersonalEvent(ev)} />
+                    ))
+                  )}
+                </div>
               </div>
             </TabsContent>
+
           </Tabs>
         </div>
       </div>
@@ -4328,6 +4421,16 @@ const Agenda = () => {
       </Sheet>
       <UnsavedGuardDialog open={newGuard.confirmOpen} onConfirm={newGuard.confirmLeave} onCancel={newGuard.cancelLeave} onSaveDraft={newGuard.saveDraftAndLeave} />
       <UnsavedGuardDialog open={editGuard.confirmOpen} onConfirm={editGuard.confirmLeave} onCancel={editGuard.cancelLeave} onSaveDraft={editGuard.saveDraftAndLeave} />
+
+      <PersonalEventDialog
+        open={personalEventOpen}
+        onOpenChange={setPersonalEventOpen}
+        userId={user?.id}
+        defaultDate={selectedDate}
+        event={editingPersonalEvent}
+        onSaved={reloadPersonalEvents}
+      />
+
 
       {/* Revisão da mensagem antes de enviar no WhatsApp */}
       <Dialog open={!!confirmPreview} onOpenChange={(o) => !o && setConfirmPreview(null)}>
