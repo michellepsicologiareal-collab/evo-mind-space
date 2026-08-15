@@ -3434,7 +3434,16 @@ const Agenda = () => {
                               })}
                             </div>
                           )}
+                          {/* Compromissos pessoais do dia */}
+                          {eventsForDay(personalEvents, day).length > 0 && (
+                            <div className="space-y-1.5 border-t border-amber-200/60 bg-amber-50/20 p-2">
+                              {eventsForDay(personalEvents, day).map((ev) => (
+                                <PersonalEventCard key={ev.id} event={ev} compact onClick={() => openPersonalEvent(ev)} />
+                              ))}
+                            </div>
+                          )}
                         </div>
+
                       );
                     })}
                   </div>
