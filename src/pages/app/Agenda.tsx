@@ -3449,8 +3449,36 @@ const Agenda = () => {
                     {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                   </div>
                 )}
+
+                {/* Compromissos pessoais do dia */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-display text-sm font-semibold text-foreground">Compromissos pessoais</p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-xs text-amber-800 hover:bg-amber-50"
+                      onClick={() => openPersonalEvent(null)}
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Adicionar
+                    </Button>
+                  </div>
+                  {eventsForDay(personalEvents, selectedDate).length === 0 ? (
+                    <button
+                      onClick={() => openPersonalEvent(null)}
+                      className="w-full rounded-2xl border border-dashed border-amber-200 bg-amber-50/30 py-4 text-xs text-muted-foreground hover:text-amber-800 transition-colors"
+                    >
+                      Nenhum compromisso pessoal neste dia — toque para escrever
+                    </button>
+                  ) : (
+                    eventsForDay(personalEvents, selectedDate).map((ev) => (
+                      <PersonalEventCard key={ev.id} event={ev} onClick={() => openPersonalEvent(ev)} />
+                    ))
+                  )}
+                </div>
               </div>
             </TabsContent>
+
           </Tabs>
         </div>
       </div>
