@@ -3161,6 +3161,7 @@ const Agenda = () => {
                           const isSelected = isSameDay(cell, selectedDate);
                           const isToday = isSameDay(cell, new Date());
                           const dayCount = sessionsByDay(cell).length;
+                          const hasPersonal = eventsForDay(personalEvents, cell).length > 0;
                           return (
                              <button
                               key={dateKey}
@@ -3173,17 +3174,21 @@ const Agenda = () => {
                               )}
                             >
                               <span>{format(cell, "d")}</span>
-                              {hasSessions ? (
+                              {hasSessions || hasPersonal ? (
                                 <span className="flex items-center gap-0.5 h-3">
-                                  <span className={cn(
-                                    "w-1.5 h-1.5 rounded-full shrink-0",
-                                    isSelected ? "bg-accent-foreground" : "bg-primary"
-                                  )} />
+                                  {hasSessions && (
+                                    <span className={cn(
+                                      "w-1.5 h-1.5 rounded-full shrink-0",
+                                      isSelected ? "bg-accent-foreground" : "bg-primary"
+                                    )} />
+                                  )}
+                                  {hasPersonal && <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-amber-500" />}
                                   {dayCount > 1 && <span className={cn("text-[8px] leading-none", isSelected ? "text-accent-foreground" : "text-primary")}>{dayCount}</span>}
                                 </span>
                               ) : (
                                 <span className="h-3" />
                               )}
+
                             </button>
                           );
                         })}
