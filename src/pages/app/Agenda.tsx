@@ -3314,7 +3314,23 @@ const Agenda = () => {
                         {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                       </div>
                     )}
+
+                    {/* Compromissos pessoais do dia (mobile) */}
+                    <div className="space-y-2">
+                      {eventsForDay(personalEvents, selectedDate).map((ev) => (
+                        <PersonalEventCard key={ev.id} event={ev} compact onClick={() => openPersonalEvent(ev)} />
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full rounded-[40px] border-amber-300 text-amber-800 hover:bg-amber-50 text-xs"
+                        onClick={() => openPersonalEvent(null)}
+                      >
+                        <Plus className="h-3.5 w-3.5" /> Compromisso pessoal
+                      </Button>
+                    </div>
                   </div>
+
                 ) : (
                   <div className="space-y-2">
                     {weekDays.map((day) => {
