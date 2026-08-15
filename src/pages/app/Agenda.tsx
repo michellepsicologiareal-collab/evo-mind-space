@@ -3220,7 +3220,22 @@ const Agenda = () => {
                           {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
                         </div>
                       )}
+                      {/* Compromissos pessoais do dia */}
+                      <div className="mt-3 space-y-1.5 border-t border-border pt-3">
+                        {eventsForDay(personalEvents, selectedDate).map((ev) => (
+                          <PersonalEventCard key={ev.id} event={ev} compact onClick={() => openPersonalEvent(ev)} />
+                        ))}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full text-xs text-amber-800 hover:bg-amber-50"
+                          onClick={() => openPersonalEvent(null)}
+                        >
+                          <Plus className="h-3.5 w-3.5" /> Compromisso pessoal
+                        </Button>
+                      </div>
                     </div>
+
 
                     {/* Lista do mês para o paciente filtrado */}
                     {selectedPatientName && (
