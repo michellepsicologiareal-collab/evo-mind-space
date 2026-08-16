@@ -364,6 +364,49 @@ export const PersonalEventDialog = ({ open, onOpenChange, userId, defaultDate, e
             </div>
           )}
 
+          <div className="space-y-3 rounded-xl border border-border p-3">
+            <div className="space-y-1.5">
+              <Label>Repetir</Label>
+              <Select value={form.recurrence} onValueChange={(v) => setForm((f) => ({ ...f, recurrence: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {RECURRENCE_OPTIONS.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {form.recurrence !== "none" && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="pe-interval">
+                    A cada ({form.recurrence === "daily" ? "dias" : form.recurrence === "weekly" ? "semanas" : "meses"})
+                  </Label>
+                  <Input
+                    id="pe-interval"
+                    type="number"
+                    min={1}
+                    max={52}
+                    value={form.interval}
+                    onChange={(e) => setForm((f) => ({ ...f, interval: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pe-until">Repetir até (opcional)</Label>
+                  <Input
+                    id="pe-until"
+                    type="date"
+                    min={form.date}
+                    value={form.until}
+                    onChange={(e) => setForm((f) => ({ ...f, until: e.target.value }))}
+                  />
+                  <p className="text-[11px] text-muted-foreground">Deixe vazio para repetir sem data de término.</p>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="pe-desc">Anotações (texto livre)</Label>
             <Textarea
