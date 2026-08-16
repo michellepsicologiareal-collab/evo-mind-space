@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, differenceInCalendarDays, differenceInCalendarMonths, startOfDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Trash2, Briefcase, Heart, GraduationCap, Wallet, Sparkles, Plane, Clock } from "lucide-react";
+import { Loader2, Trash2, Briefcase, Heart, GraduationCap, Wallet, Sparkles, Plane, Clock, Repeat } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,31 @@ export interface PersonalEvent {
   starts_at: string;
   duration_minutes: number;
   all_day: boolean;
+  recurrence?: string | null;
+  recurrence_interval?: number | null;
+  recurrence_until?: string | null;
+  /** Preenchido quando o item é uma ocorrência gerada por recorrência. */
+  occurrence_date?: string;
+  /** Data/hora original da série (quando o item é uma ocorrência). */
+  original_starts_at?: string;
 }
+
+export const RECURRENCE_OPTIONS = [
+  { value: "none", label: "Não se repete" },
+  { value: "daily", label: "Diariamente" },
+  { value: "weekly", label: "Semanalmente" },
+  { value: "monthly", label: "Mensalmente" },
+] as const;
+
+export const recurrenceLabel = (ev: PersonalEvent) => {
+  const r = ev.recurrence ?? "none";
+  if (r === "none") return null;
+  const n = ev.recurrence_interval ?? 1;
+  if (r === "daily") return n === 1 ? "Todo dia" : `A cada ${n} dias`;
+  if (r === "weekly") return n === 1 ? "Toda semana" : `A cada ${n} semanas`;
+  return n === 1 ? "Todo mês" : `A cada ${n} meses`;
+};
+
 
 export const PERSONAL_CATEGORIES = [
   { value: "pessoal", label: "Pessoal", icon: Sparkles, chip: "bg-amber-50 text-amber-800 border-amber-200", dot: "bg-amber-500" },
@@ -45,7 +69,7 @@ export const usePersonalEvents = (userId: string | undefined) => {
     setLoading(true);
     const { data, error } = await supabase
       .from("personal_events")
-      .select("id, title, description, category, starts_at, duration_minutes, all_day")
+      .select("id, title, description, category, starts_at, duration_minutes, all_day, recurrence, recurrence_interval, recurrence_until")
       .eq("user_id", userId)
       .order("starts_at", { ascending: true });
     if (error) toast.error("Não foi possível carregar os compromissos pessoais");
@@ -58,8 +82,52 @@ export const usePersonalEvents = (userId: string | undefined) => {
   return { events, loading, reload };
 };
 
-export const eventsForDay = (events: PersonalEvent[], date: Date) =>
-  events.filter((e) => isSameDay(new Date(e.starts_at), date));
+/** Indica se um compromisso (com ou sem recorrência) acontece na data informada. */
+export const occursOn = (event: PersonalEvent, date: Date) => {
+  const start = new Date(event.starts_at);
+  if (isSameDay(start, date)) return true;
+
+  const rule = event.recurrence ?? "none";
+  if (rule === "none") return false;
+
+  const day = startOfDay(date);
+  if (day < startOfDay(start)) return false;
+  if (event.recurrence_until) {
+    const until = startOfDay(parseISO(event.recurrence_until));
+    if (day > until) return false;
+  }
+
+  const step = Math.max(1, event.recurrence_interval ?? 1);
+  if (rule === "daily") return differenceInCalendarDays(day, startOfDay(start)) % step === 0;
+  if (rule === "weekly") {
+    const diff = differenceInCalendarDays(day, startOfDay(start));
+    return diff % 7 === 0 && (diff / 7) % step === 0;
+  }
+  // mensal: mesmo dia do mês (ou último dia, quando o mês é mais curto)
+  const months = differenceInCalendarMonths(day, start);
+  if (months <= 0 || months % step !== 0) return false;
+  const lastDayOfMonth = new Date(day.getFullYear(), day.getMonth() + 1, 0).getDate();
+  const targetDay = Math.min(start.getDate(), lastDayOfMonth);
+  return day.getDate() === targetDay;
+};
+
+export const eventsForDay = (events: PersonalEvent[], date: Date): PersonalEvent[] =>
+  events
+    .filter((e) => occursOn(e, date))
+    .map((e) => {
+      if (isSameDay(new Date(e.starts_at), date)) return e;
+      const start = new Date(e.starts_at);
+      const occ = new Date(date);
+      occ.setHours(start.getHours(), start.getMinutes(), 0, 0);
+      return {
+        ...e,
+        starts_at: occ.toISOString(),
+        occurrence_date: format(date, "yyyy-MM-dd"),
+        original_starts_at: e.starts_at,
+      };
+    })
+    .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+
 
 /** Cartão compacto de compromisso pessoal — cor distinta das sessões de pacientes. */
 export const PersonalEventCard = ({
@@ -96,6 +164,11 @@ export const PersonalEventCard = ({
             <span className={cn("rounded-full border px-1.5 py-0.5 text-[10px] font-medium", meta.chip)}>
               {meta.label}
             </span>
+            {recurrenceLabel(event) && (
+              <span className="flex items-center gap-1 rounded-full border border-amber-200 bg-white/70 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+                <Repeat className="h-2.5 w-2.5" /> {recurrenceLabel(event)}
+              </span>
+            )}
           </div>
           {event.description && !compact && (
             <p className="mt-1 text-xs text-muted-foreground whitespace-pre-wrap break-words">{event.description}</p>
@@ -131,12 +204,15 @@ export const PersonalEventDialog = ({ open, onOpenChange, userId, defaultDate, e
     time: "09:00",
     duration: "60",
     allDay: false,
+    recurrence: "none",
+    interval: "1",
+    until: "",
   });
 
   useEffect(() => {
     if (!open) return;
     if (event) {
-      const dt = new Date(event.starts_at);
+      const dt = new Date(event.original_starts_at ?? event.starts_at);
       setForm({
         title: event.title,
         description: event.description ?? "",
@@ -145,6 +221,9 @@ export const PersonalEventDialog = ({ open, onOpenChange, userId, defaultDate, e
         time: format(dt, "HH:mm"),
         duration: String(event.duration_minutes),
         allDay: event.all_day,
+        recurrence: event.recurrence ?? "none",
+        interval: String(event.recurrence_interval ?? 1),
+        until: event.recurrence_until ?? "",
       });
     } else {
       setForm({
@@ -155,6 +234,9 @@ export const PersonalEventDialog = ({ open, onOpenChange, userId, defaultDate, e
         time: "09:00",
         duration: "60",
         allDay: false,
+        recurrence: "none",
+        interval: "1",
+        until: "",
       });
     }
   }, [open, event, defaultDate]);
@@ -175,6 +257,9 @@ export const PersonalEventDialog = ({ open, onOpenChange, userId, defaultDate, e
       starts_at: startsAt.toISOString(),
       duration_minutes: form.allDay ? 0 : Number(form.duration) || 60,
       all_day: form.allDay,
+      recurrence: form.recurrence,
+      recurrence_interval: form.recurrence === "none" ? 1 : Math.min(52, Math.max(1, Number(form.interval) || 1)),
+      recurrence_until: form.recurrence === "none" || !form.until ? null : form.until,
     };
     const { error } = event
       ? await supabase.from("personal_events").update(payload).eq("id", event.id)
@@ -278,6 +363,49 @@ export const PersonalEventDialog = ({ open, onOpenChange, userId, defaultDate, e
               />
             </div>
           )}
+
+          <div className="space-y-3 rounded-xl border border-border p-3">
+            <div className="space-y-1.5">
+              <Label>Repetir</Label>
+              <Select value={form.recurrence} onValueChange={(v) => setForm((f) => ({ ...f, recurrence: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {RECURRENCE_OPTIONS.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {form.recurrence !== "none" && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="pe-interval">
+                    A cada ({form.recurrence === "daily" ? "dias" : form.recurrence === "weekly" ? "semanas" : "meses"})
+                  </Label>
+                  <Input
+                    id="pe-interval"
+                    type="number"
+                    min={1}
+                    max={52}
+                    value={form.interval}
+                    onChange={(e) => setForm((f) => ({ ...f, interval: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pe-until">Repetir até (opcional)</Label>
+                  <Input
+                    id="pe-until"
+                    type="date"
+                    min={form.date}
+                    value={form.until}
+                    onChange={(e) => setForm((f) => ({ ...f, until: e.target.value }))}
+                  />
+                  <p className="text-[11px] text-muted-foreground">Deixe vazio para repetir sem data de término.</p>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="pe-desc">Anotações (texto livre)</Label>
