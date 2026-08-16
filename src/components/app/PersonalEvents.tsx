@@ -67,7 +67,7 @@ export const usePersonalEvents = (userId: string | undefined) => {
     setLoading(true);
     const { data, error } = await supabase
       .from("personal_events")
-      .select("id, title, description, category, starts_at, duration_minutes, all_day")
+      .select("id, title, description, category, starts_at, duration_minutes, all_day, recurrence, recurrence_interval, recurrence_until")
       .eq("user_id", userId)
       .order("starts_at", { ascending: true });
     if (error) toast.error("Não foi possível carregar os compromissos pessoais");
@@ -80,8 +80,47 @@ export const usePersonalEvents = (userId: string | undefined) => {
   return { events, loading, reload };
 };
 
-export const eventsForDay = (events: PersonalEvent[], date: Date) =>
-  events.filter((e) => isSameDay(new Date(e.starts_at), date));
+/** Indica se um compromisso (com ou sem recorrência) acontece na data informada. */
+export const occursOn = (event: PersonalEvent, date: Date) => {
+  const start = new Date(event.starts_at);
+  if (isSameDay(start, date)) return true;
+
+  const rule = event.recurrence ?? "none";
+  if (rule === "none") return false;
+
+  const day = startOfDay(date);
+  if (day < startOfDay(start)) return false;
+  if (event.recurrence_until) {
+    const until = startOfDay(parseISO(event.recurrence_until));
+    if (day > until) return false;
+  }
+
+  const step = Math.max(1, event.recurrence_interval ?? 1);
+  if (rule === "daily") return differenceInCalendarDays(day, startOfDay(start)) % step === 0;
+  if (rule === "weekly") {
+    const diff = differenceInCalendarDays(day, startOfDay(start));
+    return diff % 7 === 0 && (diff / 7) % step === 0;
+  }
+  // mensal: mesmo dia do mês (ou último dia, quando o mês é mais curto)
+  const months = differenceInCalendarMonths(day, start);
+  if (months <= 0 || months % step !== 0) return false;
+  const lastDayOfMonth = new Date(day.getFullYear(), day.getMonth() + 1, 0).getDate();
+  const targetDay = Math.min(start.getDate(), lastDayOfMonth);
+  return day.getDate() === targetDay;
+};
+
+export const eventsForDay = (events: PersonalEvent[], date: Date): PersonalEvent[] =>
+  events
+    .filter((e) => occursOn(e, date))
+    .map((e) => {
+      if (isSameDay(new Date(e.starts_at), date)) return e;
+      const start = new Date(e.starts_at);
+      const occ = new Date(date);
+      occ.setHours(start.getHours(), start.getMinutes(), 0, 0);
+      return { ...e, starts_at: occ.toISOString(), occurrence_date: format(date, "yyyy-MM-dd") };
+    })
+    .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+
 
 /** Cartão compacto de compromisso pessoal — cor distinta das sessões de pacientes. */
 export const PersonalEventCard = ({
