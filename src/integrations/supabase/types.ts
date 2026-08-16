@@ -1230,6 +1230,9 @@ export type Database = {
           description: string | null
           duration_minutes: number
           id: string
+          recurrence: string
+          recurrence_interval: number
+          recurrence_until: string | null
           starts_at: string
           title: string
           updated_at: string
@@ -1242,6 +1245,9 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           id?: string
+          recurrence?: string
+          recurrence_interval?: number
+          recurrence_until?: string | null
           starts_at: string
           title: string
           updated_at?: string
@@ -1254,6 +1260,9 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           id?: string
+          recurrence?: string
+          recurrence_interval?: number
+          recurrence_until?: string | null
           starts_at?: string
           title?: string
           updated_at?: string
