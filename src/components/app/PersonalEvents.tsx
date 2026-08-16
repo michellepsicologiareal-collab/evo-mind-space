@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, differenceInCalendarDays, differenceInCalendarMonths, startOfDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Loader2, Trash2, Briefcase, Heart, GraduationCap, Wallet, Sparkles, Plane, Clock } from "lucide-react";
+import { Loader2, Trash2, Briefcase, Heart, GraduationCap, Wallet, Sparkles, Plane, Clock, Repeat } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
