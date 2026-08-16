@@ -26,6 +26,8 @@ export interface PersonalEvent {
   recurrence_until?: string | null;
   /** Preenchido quando o item é uma ocorrência gerada por recorrência. */
   occurrence_date?: string;
+  /** Data/hora original da série (quando o item é uma ocorrência). */
+  original_starts_at?: string;
 }
 
 export const RECURRENCE_OPTIONS = [
@@ -117,7 +119,12 @@ export const eventsForDay = (events: PersonalEvent[], date: Date): PersonalEvent
       const start = new Date(e.starts_at);
       const occ = new Date(date);
       occ.setHours(start.getHours(), start.getMinutes(), 0, 0);
-      return { ...e, starts_at: occ.toISOString(), occurrence_date: format(date, "yyyy-MM-dd") };
+      return {
+        ...e,
+        starts_at: occ.toISOString(),
+        occurrence_date: format(date, "yyyy-MM-dd"),
+        original_starts_at: e.starts_at,
+      };
     })
     .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 
@@ -157,6 +164,11 @@ export const PersonalEventCard = ({
             <span className={cn("rounded-full border px-1.5 py-0.5 text-[10px] font-medium", meta.chip)}>
               {meta.label}
             </span>
+            {recurrenceLabel(event) && (
+              <span className="flex items-center gap-1 rounded-full border border-amber-200 bg-white/70 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+                <Repeat className="h-2.5 w-2.5" /> {recurrenceLabel(event)}
+              </span>
+            )}
           </div>
           {event.description && !compact && (
             <p className="mt-1 text-xs text-muted-foreground whitespace-pre-wrap break-words">{event.description}</p>
@@ -192,12 +204,15 @@ export const PersonalEventDialog = ({ open, onOpenChange, userId, defaultDate, e
     time: "09:00",
     duration: "60",
     allDay: false,
+    recurrence: "none",
+    interval: "1",
+    until: "",
   });
 
   useEffect(() => {
     if (!open) return;
     if (event) {
-      const dt = new Date(event.starts_at);
+      const dt = new Date(event.original_starts_at ?? event.starts_at);
       setForm({
         title: event.title,
         description: event.description ?? "",
@@ -206,6 +221,9 @@ export const PersonalEventDialog = ({ open, onOpenChange, userId, defaultDate, e
         time: format(dt, "HH:mm"),
         duration: String(event.duration_minutes),
         allDay: event.all_day,
+        recurrence: event.recurrence ?? "none",
+        interval: String(event.recurrence_interval ?? 1),
+        until: event.recurrence_until ?? "",
       });
     } else {
       setForm({
@@ -216,6 +234,9 @@ export const PersonalEventDialog = ({ open, onOpenChange, userId, defaultDate, e
         time: "09:00",
         duration: "60",
         allDay: false,
+        recurrence: "none",
+        interval: "1",
+        until: "",
       });
     }
   }, [open, event, defaultDate]);
@@ -236,6 +257,9 @@ export const PersonalEventDialog = ({ open, onOpenChange, userId, defaultDate, e
       starts_at: startsAt.toISOString(),
       duration_minutes: form.allDay ? 0 : Number(form.duration) || 60,
       all_day: form.allDay,
+      recurrence: form.recurrence,
+      recurrence_interval: form.recurrence === "none" ? 1 : Math.min(52, Math.max(1, Number(form.interval) || 1)),
+      recurrence_until: form.recurrence === "none" || !form.until ? null : form.until,
     };
     const { error } = event
       ? await supabase.from("personal_events").update(payload).eq("id", event.id)
