@@ -1889,6 +1889,31 @@ const Agenda = () => {
 
   const selectedDaySessions = useMemo(() => sessionsByDay(selectedDate), [filteredSessions, selectedDate]);
 
+  /**
+   * Linha do tempo do dia: sessões e compromissos pessoais juntos,
+   * ordenados pelo horário real (itens "dia todo" primeiro).
+   */
+  const dayTimeline = (date: Date) => {
+    const sess = sessionsByDay(date).map((s) => ({
+      kind: "session" as const,
+      at: new Date(s.scheduled_at).getTime(),
+      allDay: false,
+      session: s,
+      event: null as PersonalEvent | null,
+    }));
+    const evs = eventsForDay(personalEvents, date).map((e) => ({
+      kind: "event" as const,
+      at: new Date(e.starts_at).getTime(),
+      allDay: e.all_day,
+      session: null as (typeof sess)[number]["session"] | null,
+      event: e,
+    }));
+    return [...sess, ...evs].sort((a, b) => {
+      if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
+      return a.at - b.at;
+    });
+  };
+
   // All filtered sessions in current visible month, sorted by date (used when a patient filter is active)
   const monthFilteredSessions = useMemo(
     () => [...filteredSessions].sort(
@@ -3208,7 +3233,7 @@ const Agenda = () => {
                           <Plus className="h-3.5 w-3.5" /> Nova
                         </Button>
                       </div>
-                      {selectedDaySessions.length === 0 ? (
+                      {dayTimeline(selectedDate).length === 0 ? (
                         <div className="py-8 text-center text-muted-foreground">
                           <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-30" />
                           <p className="text-sm">
@@ -3222,14 +3247,14 @@ const Agenda = () => {
                         </div>
                       ) : (
                         <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                          {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
+                          {dayTimeline(selectedDate).map((item) =>
+                            item.kind === "session"
+                              ? <SessionCard key={item.session!.id} s={item.session!} compact={dense} />
+                              : <PersonalEventCard key={`pe-${item.event!.id}-${item.at}`} event={item.event!} compact onClick={() => openPersonalEvent(item.event!)} />
+                          )}
                         </div>
                       )}
-                      {/* Compromissos pessoais do dia */}
-                      <div className="mt-3 space-y-1.5 border-t border-border pt-3">
-                        {eventsForDay(personalEvents, selectedDate).map((ev) => (
-                          <PersonalEventCard key={ev.id} event={ev} compact onClick={() => openPersonalEvent(ev)} />
-                        ))}
+                      <div className="mt-3 border-t border-border pt-3">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -3321,8 +3346,8 @@ const Agenda = () => {
                       </Button>
                     </div>
 
-                    {/* Clickable time slots for selected day */}
-                    {selectedDaySessions.length === 0 ? (
+                    {/* Linha do tempo do dia (sessões + compromissos pessoais) */}
+                    {dayTimeline(selectedDate).length === 0 ? (
                       <button
                         onClick={() => openNew(selectedDate)}
                         className="w-full rounded-2xl border border-dashed border-border bg-card/50 py-8 text-sm text-muted-foreground hover:text-accent hover:border-accent/40 transition-colors text-center"
@@ -3331,15 +3356,15 @@ const Agenda = () => {
                       </button>
                     ) : (
                       <div className="space-y-2">
-                        {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
+                        {dayTimeline(selectedDate).map((item) =>
+                          item.kind === "session"
+                            ? <SessionCard key={item.session!.id} s={item.session!} compact={dense} />
+                            : <PersonalEventCard key={`pe-${item.event!.id}-${item.at}`} event={item.event!} compact onClick={() => openPersonalEvent(item.event!)} />
+                        )}
                       </div>
                     )}
 
-                    {/* Compromissos pessoais do dia (mobile) */}
                     <div className="space-y-2">
-                      {eventsForDay(personalEvents, selectedDate).map((ev) => (
-                        <PersonalEventCard key={ev.id} event={ev} compact onClick={() => openPersonalEvent(ev)} />
-                      ))}
                       <Button
                         variant="outline"
                         size="sm"
@@ -3477,7 +3502,7 @@ const Agenda = () => {
 
                 {loading ? (
                   <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
-                ) : selectedDaySessions.length === 0 ? (
+                ) : dayTimeline(selectedDate).length === 0 ? (
                           <div className="rounded-2xl border border-dashed border-border bg-card/50 px-4 py-10 text-center sm:p-14">
                     <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/40" />
                     <p className="mt-4 font-display text-lg font-medium text-foreground/70">
@@ -3491,36 +3516,22 @@ const Agenda = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {selectedDaySessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
+                    {dayTimeline(selectedDate).map((item) =>
+                      item.kind === "session"
+                        ? <SessionCard key={item.session!.id} s={item.session!} compact={dense} />
+                        : <PersonalEventCard key={`pe-${item.event!.id}-${item.at}`} event={item.event!} onClick={() => openPersonalEvent(item.event!)} />
+                    )}
                   </div>
                 )}
 
-                {/* Compromissos pessoais do dia */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-display text-sm font-semibold text-foreground">Compromissos pessoais</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2 text-xs text-amber-800 hover:bg-amber-50"
-                      onClick={() => openPersonalEvent(null)}
-                    >
-                      <Plus className="h-3.5 w-3.5" /> Adicionar
-                    </Button>
-                  </div>
-                  {eventsForDay(personalEvents, selectedDate).length === 0 ? (
-                    <button
-                      onClick={() => openPersonalEvent(null)}
-                      className="w-full rounded-2xl border border-dashed border-amber-200 bg-amber-50/30 py-4 text-xs text-muted-foreground hover:text-amber-800 transition-colors"
-                    >
-                      Nenhum compromisso pessoal neste dia — toque para escrever
-                    </button>
-                  ) : (
-                    eventsForDay(personalEvents, selectedDate).map((ev) => (
-                      <PersonalEventCard key={ev.id} event={ev} onClick={() => openPersonalEvent(ev)} />
-                    ))
-                  )}
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full rounded-[40px] border-amber-300 text-amber-800 hover:bg-amber-50 text-xs"
+                  onClick={() => openPersonalEvent(null)}
+                >
+                  <Plus className="h-3.5 w-3.5" /> Compromisso pessoal
+                </Button>
               </div>
             </TabsContent>
 
