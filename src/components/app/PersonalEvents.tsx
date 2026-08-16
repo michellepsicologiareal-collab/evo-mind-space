@@ -21,7 +21,29 @@ export interface PersonalEvent {
   starts_at: string;
   duration_minutes: number;
   all_day: boolean;
+  recurrence?: string | null;
+  recurrence_interval?: number | null;
+  recurrence_until?: string | null;
+  /** Preenchido quando o item é uma ocorrência gerada por recorrência. */
+  occurrence_date?: string;
 }
+
+export const RECURRENCE_OPTIONS = [
+  { value: "none", label: "Não se repete" },
+  { value: "daily", label: "Diariamente" },
+  { value: "weekly", label: "Semanalmente" },
+  { value: "monthly", label: "Mensalmente" },
+] as const;
+
+export const recurrenceLabel = (ev: PersonalEvent) => {
+  const r = ev.recurrence ?? "none";
+  if (r === "none") return null;
+  const n = ev.recurrence_interval ?? 1;
+  if (r === "daily") return n === 1 ? "Todo dia" : `A cada ${n} dias`;
+  if (r === "weekly") return n === 1 ? "Toda semana" : `A cada ${n} semanas`;
+  return n === 1 ? "Todo mês" : `A cada ${n} meses`;
+};
+
 
 export const PERSONAL_CATEGORIES = [
   { value: "pessoal", label: "Pessoal", icon: Sparkles, chip: "bg-amber-50 text-amber-800 border-amber-200", dot: "bg-amber-500" },
