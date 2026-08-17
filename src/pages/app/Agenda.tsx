@@ -245,6 +245,9 @@ const Agenda = () => {
   // Chaves compostas "patient_id|yyyy-MM-dd" para registros salvos sem session_id
   const [sessionRecordKeys, setSessionRecordKeys] = useState<Set<string>>(new Set());
   const [moodTodayPatients, setMoodTodayPatients] = useState<Set<string>>(new Set());
+  // Humor do paciente por sessão (preenchido no registro/progresso)
+  type SessionMood = { score: number; source: string | null; recordedAt: string };
+  const [moodBySession, setMoodBySession] = useState<Map<string, SessionMood>>(new Map());
   const [patients, setPatients] = useState<Patient[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1037,7 +1040,7 @@ const Agenda = () => {
           : Promise.resolve({ data: [] as any[] }),
         sessionIds.length
           ? supabase.from("patient_progress")
-              .select("session_id, clinical_observation, patient_context, recorded_at, updated_at, created_at")
+              .select("session_id, clinical_observation, patient_context, wellbeing_score, mood_score, wellbeing_source, recorded_at, updated_at, created_at")
               .eq("user_id", user.id)
               .in("session_id", sessionIds)
               .order("recorded_at", { ascending: false })
@@ -1069,10 +1072,22 @@ const Agenda = () => {
         }
       });
       const progPlan = new Map<string, string>();
+      const moodMap = new Map<string, SessionMood>();
       (progressPlans.data ?? []).forEach((p: any) => {
         if (!p.session_id) return;
         setLatestPresence(latestProgressRecords, p.session_id, progressRecordPresence(p));
+        const raw = p.wellbeing_score != null
+          ? Number(p.wellbeing_score)
+          : (p.mood_score != null ? Number(p.mood_score) * 2 : null);
+        if (raw != null && !Number.isNaN(raw) && !moodMap.has(p.session_id)) {
+          moodMap.set(p.session_id, {
+            score: raw,
+            source: p.wellbeing_score != null ? (p.wellbeing_source ?? null) : "legacy",
+            recordedAt: p.recorded_at,
+          });
+        }
       });
+      setMoodBySession(moodMap);
       latestSessionRecords.forEach((presence, sessionId) => {
         if (!presence.hasContent) return;
         recIds.add(sessionId);
@@ -2060,6 +2075,19 @@ const Agenda = () => {
     const sessionSummary = !isSupervisionCard ? summaryBySession.get(s.id) : undefined;
     const registroFeito = !isSupervisionCard && isPast && isActiveStatus && hasRecord && !!s.patient_id;
     const homeworkSentAt = !isSupervisionCard ? homeworkSentBySession.get(s.id) : undefined;
+    const sessionMood = !isSupervisionCard ? moodBySession.get(s.id) : undefined;
+    const moodEmoji = sessionMood
+      ? (sessionMood.score >= 8 ? "😄" : sessionMood.score >= 6 ? "🙂" : sessionMood.score >= 4 ? "😐" : sessionMood.score >= 2 ? "🙁" : "😔")
+      : null;
+    const moodTone = sessionMood
+      ? (sessionMood.score >= 7 ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+        : sessionMood.score >= 4 ? "text-amber-700 bg-amber-50 border-amber-200"
+          : "text-rose-700 bg-rose-50 border-rose-200")
+      : "";
+    const moodTitle = sessionMood
+      ? `Humor do paciente: ${sessionMood.score.toFixed(0)}/10${sessionMood.source === "patient_self_report" ? " (autorrelato)" : sessionMood.source === "professional_estimate" ? " (estimativa profissional)" : ""}`
+      : "";
+
 
 
     const actions = (
@@ -2258,6 +2286,11 @@ const Agenda = () => {
           )}
           {compact && (
             <div className="ml-auto flex items-center gap-1.5 shrink-0">
+              {sessionMood && (
+                <span className={cn("inline-flex items-center gap-0.5 rounded-full border px-1.5 text-[10px] font-semibold", moodTone)} title={moodTitle} aria-label={moodTitle}>
+                  <span aria-hidden="true">{moodEmoji}</span>{sessionMood.score.toFixed(0)}
+                </span>
+              )}
               {registroPendente && (
                 <span className="text-amber-600" title="Sessão realizada sem registro clínico" aria-label="Registro pendente">
                   <AlertCircle className="h-3.5 w-3.5" />
@@ -2311,6 +2344,11 @@ const Agenda = () => {
         {/* Sinalizadores discretos (ícones com tooltip) */}
         {!compact && (
           <div className="flex items-center gap-2 mt-2 flex-wrap">
+            {sessionMood && (
+              <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold", moodTone)} title={moodTitle}>
+                <span aria-hidden="true">{moodEmoji}</span> Humor {sessionMood.score.toFixed(0)}/10
+              </span>
+            )}
             {registroPendente && (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700" title="Sessão realizada sem registro clínico">
                 <AlertCircle className="h-3.5 w-3.5" /> Registro pendente
