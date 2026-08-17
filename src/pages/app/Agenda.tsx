@@ -245,6 +245,9 @@ const Agenda = () => {
   // Chaves compostas "patient_id|yyyy-MM-dd" para registros salvos sem session_id
   const [sessionRecordKeys, setSessionRecordKeys] = useState<Set<string>>(new Set());
   const [moodTodayPatients, setMoodTodayPatients] = useState<Set<string>>(new Set());
+  // Humor do paciente por sessão (preenchido no registro/progresso)
+  type SessionMood = { score: number; source: string | null; recordedAt: string };
+  const [moodBySession, setMoodBySession] = useState<Map<string, SessionMood>>(new Map());
   const [patients, setPatients] = useState<Patient[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
