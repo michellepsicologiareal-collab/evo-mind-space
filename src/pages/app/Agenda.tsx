@@ -2075,6 +2075,19 @@ const Agenda = () => {
     const sessionSummary = !isSupervisionCard ? summaryBySession.get(s.id) : undefined;
     const registroFeito = !isSupervisionCard && isPast && isActiveStatus && hasRecord && !!s.patient_id;
     const homeworkSentAt = !isSupervisionCard ? homeworkSentBySession.get(s.id) : undefined;
+    const sessionMood = !isSupervisionCard ? moodBySession.get(s.id) : undefined;
+    const moodEmoji = sessionMood
+      ? (sessionMood.score >= 8 ? "😄" : sessionMood.score >= 6 ? "🙂" : sessionMood.score >= 4 ? "😐" : sessionMood.score >= 2 ? "🙁" : "😔")
+      : null;
+    const moodTone = sessionMood
+      ? (sessionMood.score >= 7 ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+        : sessionMood.score >= 4 ? "text-amber-700 bg-amber-50 border-amber-200"
+          : "text-rose-700 bg-rose-50 border-rose-200")
+      : "";
+    const moodTitle = sessionMood
+      ? `Humor do paciente: ${sessionMood.score.toFixed(0)}/10${sessionMood.source === "patient_self_report" ? " (autorrelato)" : sessionMood.source === "professional_estimate" ? " (estimativa profissional)" : ""}`
+      : "";
+
 
 
     const actions = (
