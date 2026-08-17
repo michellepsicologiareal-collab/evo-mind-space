@@ -1072,10 +1072,22 @@ const Agenda = () => {
         }
       });
       const progPlan = new Map<string, string>();
+      const moodMap = new Map<string, SessionMood>();
       (progressPlans.data ?? []).forEach((p: any) => {
         if (!p.session_id) return;
         setLatestPresence(latestProgressRecords, p.session_id, progressRecordPresence(p));
+        const raw = p.wellbeing_score != null
+          ? Number(p.wellbeing_score)
+          : (p.mood_score != null ? Number(p.mood_score) * 2 : null);
+        if (raw != null && !Number.isNaN(raw) && !moodMap.has(p.session_id)) {
+          moodMap.set(p.session_id, {
+            score: raw,
+            source: p.wellbeing_score != null ? (p.wellbeing_source ?? null) : "legacy",
+            recordedAt: p.recorded_at,
+          });
+        }
       });
+      setMoodBySession(moodMap);
       latestSessionRecords.forEach((presence, sessionId) => {
         if (!presence.hasContent) return;
         recIds.add(sessionId);
