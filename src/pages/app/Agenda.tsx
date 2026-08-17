@@ -2286,6 +2286,11 @@ const Agenda = () => {
           )}
           {compact && (
             <div className="ml-auto flex items-center gap-1.5 shrink-0">
+              {sessionMood && (
+                <span className={cn("inline-flex items-center gap-0.5 rounded-full border px-1.5 text-[10px] font-semibold", moodTone)} title={moodTitle} aria-label={moodTitle}>
+                  <span aria-hidden="true">{moodEmoji}</span>{sessionMood.score.toFixed(0)}
+                </span>
+              )}
               {registroPendente && (
                 <span className="text-amber-600" title="Sessão realizada sem registro clínico" aria-label="Registro pendente">
                   <AlertCircle className="h-3.5 w-3.5" />
