@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
+import { TherapistActivation } from "@/components/app/TherapistActivation";
 import { SessionPlanningForm } from "@/components/app/SessionPlanningForm";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
 import { preserveScroll } from "@/lib/preserveScroll";
@@ -1999,6 +2000,9 @@ const RegistroSessao = () => {
           </>
         )}
       </section>
+
+      {/* ── Ativação do terapeuta (alimenta o Autocuidado) ── */}
+      <TherapistActivation patientId={form.patient_id || null} sessionDate={form.session_date} />
 
       {/* ── Plano de Tratamento Ativo (consulta) — após o Registro Clínico ── */}
       {form.patient_id && activePlan.loaded && (

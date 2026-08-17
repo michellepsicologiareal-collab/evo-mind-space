@@ -47,6 +47,7 @@ const allNavItems: NavItem[] = [
   { to: "/app/contratos", label: "Contratos", icon: FileCheck },
   { to: "/app/supervisao", label: "Supervisão", icon: GraduationCap, visibleTo: ["supervisor"] },
   { to: "/app/plano-desenvolvimento", label: "Plano de Desenvolvimento", icon: Target, visibleTo: ["supervisor"] },
+  { to: "/app/autocuidado", label: "Autocuidado", icon: Flower2 },
   { to: "/app/perfil", label: "Configurações", icon: Settings },
 
   // Itens que continuam roteáveis, mas ficam fora do menu principal.
@@ -58,7 +59,7 @@ const allNavItems: NavItem[] = [
   { to: "/app/formulacao-livre", label: "Supervisão IA", icon: GraduationCap, hideFromNav: true },
   { to: "/app/supervisionandos", label: "Supervisionandos", icon: GraduationCap, premium: true, visibleTo: ["supervisor"], hideFromNav: true },
   { to: "/app/biblioteca", label: "Biblioteca", icon: BookOpen, hideFromNav: true },
-  { to: "/app/autocuidado", label: "Autocuidado", icon: Flower2, hideFromNav: true },
+
   
 ];
 
@@ -95,6 +96,7 @@ export const AppLayout = () => {
     "/app/anamneses",
     "/app/contrato-modelo",
     "/app/contratos",
+    "/app/autocuidado",
     "/app/perfil",
   ];
   const mobileSecondary = useMemo(
