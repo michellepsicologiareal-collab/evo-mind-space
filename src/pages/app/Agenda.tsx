@@ -1040,7 +1040,7 @@ const Agenda = () => {
           : Promise.resolve({ data: [] as any[] }),
         sessionIds.length
           ? supabase.from("patient_progress")
-              .select("session_id, clinical_observation, patient_context, recorded_at, updated_at, created_at")
+              .select("session_id, clinical_observation, patient_context, wellbeing_score, mood_score, wellbeing_source, recorded_at, updated_at, created_at")
               .eq("user_id", user.id)
               .in("session_id", sessionIds)
               .order("recorded_at", { ascending: false })
