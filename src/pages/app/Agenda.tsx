@@ -2344,6 +2344,11 @@ const Agenda = () => {
         {/* Sinalizadores discretos (ícones com tooltip) */}
         {!compact && (
           <div className="flex items-center gap-2 mt-2 flex-wrap">
+            {sessionMood && (
+              <span className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold", moodTone)} title={moodTitle}>
+                <span aria-hidden="true">{moodEmoji}</span> Humor {sessionMood.score.toFixed(0)}/10
+              </span>
+            )}
             {registroPendente && (
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700" title="Sessão realizada sem registro clínico">
                 <AlertCircle className="h-3.5 w-3.5" /> Registro pendente
