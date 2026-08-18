@@ -3956,6 +3956,10 @@ const Agenda = () => {
                     legacyDate={session?.scheduled_at ?? null}
                     dataModel={editForm.data_model}
                   />
+                  <TherapistActivation
+                    patientId={session?.patient_id ?? null}
+                    sessionDate={editForm.date || format(new Date(), "yyyy-MM-dd")}
+                  />
                 </div>
               );
             })()}
