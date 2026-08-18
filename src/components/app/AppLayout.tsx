@@ -52,7 +52,7 @@ const allNavItems: NavItem[] = [
 
   // Itens que continuam roteáveis, mas ficam fora do menu principal.
   { to: "/app/comece-por-aqui", label: "Comece por Aqui", icon: Sparkles, hideFromNav: true },
-  { to: "/app/humor", label: "Humor", icon: HeartPulse, hideFromNav: true },
+  { to: "/app/humor", label: "Humor dos Pacientes", icon: HeartPulse },
   { to: "/app/registro-sessao", label: "Registro Sessão", icon: ClipboardList, hideFromNav: true },
   { to: "/app/plano-tratamento", label: "Plano de Tratamento", icon: Target, hideFromNav: true },
   { to: "/app/formulacao-ia", label: "Formulação IA", icon: Sparkles, hideFromNav: true },
@@ -93,10 +93,11 @@ export const AppLayout = () => {
     return keys.map((k) => navItems.find((n) => n.to === k)).filter(Boolean) as NavItem[];
   }, [navItems]);
   const mobileSecondaryOrder = [
+    "/app/humor",
+    "/app/autocuidado",
     "/app/anamneses",
     "/app/contrato-modelo",
     "/app/contratos",
-    "/app/autocuidado",
     "/app/perfil",
   ];
   const mobileSecondary = useMemo(
@@ -153,7 +154,7 @@ export const AppLayout = () => {
   );
 
   const sidebarSections: { label: string; routes: string[] }[] = [
-    { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda"] },
+    { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda", "/app/humor", "/app/autocuidado"] },
     { label: "GESTÃO", routes: ["/app/financeiro", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
     { label: "SUPERVISÃO", routes: ["/app/supervisao", "/app/plano-desenvolvimento"] },
     { label: "CONFIGURAÇÕES", routes: ["/app/perfil"] },
