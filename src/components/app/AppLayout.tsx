@@ -93,10 +93,11 @@ export const AppLayout = () => {
     return keys.map((k) => navItems.find((n) => n.to === k)).filter(Boolean) as NavItem[];
   }, [navItems]);
   const mobileSecondaryOrder = [
+    "/app/humor",
+    "/app/autocuidado",
     "/app/anamneses",
     "/app/contrato-modelo",
     "/app/contratos",
-    "/app/autocuidado",
     "/app/perfil",
   ];
   const mobileSecondary = useMemo(
