@@ -42,6 +42,7 @@ import { Badge } from "@/components/ui/badge";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 import { EmotionChips } from "@/components/app/EmotionChips";
+import { TherapistActivation } from "@/components/app/TherapistActivation";
 import { ClinicalV2Block, EMOTIONS_V2 } from "@/components/app/ClinicalV2Block";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
@@ -3955,6 +3956,10 @@ const Agenda = () => {
                     legacyNote={editForm.legacy_note}
                     legacyDate={session?.scheduled_at ?? null}
                     dataModel={editForm.data_model}
+                  />
+                  <TherapistActivation
+                    patientId={session?.patient_id ?? null}
+                    sessionDate={editForm.date || format(new Date(), "yyyy-MM-dd")}
                   />
                 </div>
               );
