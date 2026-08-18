@@ -52,7 +52,7 @@ const allNavItems: NavItem[] = [
 
   // Itens que continuam roteáveis, mas ficam fora do menu principal.
   { to: "/app/comece-por-aqui", label: "Comece por Aqui", icon: Sparkles, hideFromNav: true },
-  { to: "/app/humor", label: "Humor", icon: HeartPulse, hideFromNav: true },
+  { to: "/app/humor", label: "Humor dos Pacientes", icon: HeartPulse },
   { to: "/app/registro-sessao", label: "Registro Sessão", icon: ClipboardList, hideFromNav: true },
   { to: "/app/plano-tratamento", label: "Plano de Tratamento", icon: Target, hideFromNav: true },
   { to: "/app/formulacao-ia", label: "Formulação IA", icon: Sparkles, hideFromNav: true },
