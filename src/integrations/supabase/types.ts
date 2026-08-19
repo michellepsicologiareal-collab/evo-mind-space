@@ -2044,6 +2044,74 @@ export type Database = {
         }
         Relationships: []
       }
+      supervision_feedbacks: {
+        Row: {
+          case_synthesis: string
+          clinical_hypotheses: string
+          conceptualization: string
+          created_at: string
+          id: string
+          maintenance_cycle: string
+          next_session_points: string[]
+          next_supervision_attention: string
+          patient_id: string
+          reflection_questions: string[]
+          shared_with_supervisee: boolean
+          suggested_interventions: string[]
+          supervisee_id: string
+          supervision_date: string
+          supervisor_id: string
+          therapeutic_direction: string
+          updated_at: string
+        }
+        Insert: {
+          case_synthesis?: string
+          clinical_hypotheses?: string
+          conceptualization?: string
+          created_at?: string
+          id?: string
+          maintenance_cycle?: string
+          next_session_points?: string[]
+          next_supervision_attention?: string
+          patient_id: string
+          reflection_questions?: string[]
+          shared_with_supervisee?: boolean
+          suggested_interventions?: string[]
+          supervisee_id: string
+          supervision_date?: string
+          supervisor_id: string
+          therapeutic_direction?: string
+          updated_at?: string
+        }
+        Update: {
+          case_synthesis?: string
+          clinical_hypotheses?: string
+          conceptualization?: string
+          created_at?: string
+          id?: string
+          maintenance_cycle?: string
+          next_session_points?: string[]
+          next_supervision_attention?: string
+          patient_id?: string
+          reflection_questions?: string[]
+          shared_with_supervisee?: boolean
+          suggested_interventions?: string[]
+          supervisee_id?: string
+          supervision_date?: string
+          supervisor_id?: string
+          therapeutic_direction?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supervision_feedbacks_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supervision_records: {
         Row: {
           chief_complaint: string
