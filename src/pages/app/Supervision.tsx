@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/app/PageHeader";
+import { SupervisionFeedbacks } from "@/components/app/SupervisionFeedbacks";
 
 interface PatientListItem {
   id: string;
@@ -733,6 +734,15 @@ const Supervision = () => {
                   </ul>
                 )}
               </section>
+
+              {/* Devolutivas da Supervisão */}
+              {selectedPatientItem && (
+                <SupervisionFeedbacks
+                  patientId={selectedPatientItem.id}
+                  superviseeId={selectedPatientItem.user_id}
+                  patientLabel={selectedPatientItem.initials}
+                />
+              )}
 
               {/* Evolução e humor */}
               <section>
