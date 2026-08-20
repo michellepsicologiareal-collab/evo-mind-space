@@ -38,6 +38,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/app/PageHeader";
 import { SupervisionFeedbacks } from "@/components/app/SupervisionFeedbacks";
+import { SupervisionPanel } from "@/components/app/SupervisionPanel";
 
 interface PatientListItem {
   id: string;
@@ -372,6 +373,8 @@ const Supervision = () => {
 
 
 
+
+      <SupervisionPanel supervisees={supervisees} onOpenPatient={openPatientDetail} />
 
       {/* Invite section */}
       <section className="rounded-3xl bg-card border border-border shadow-card p-6 sm:p-8 space-y-4">
