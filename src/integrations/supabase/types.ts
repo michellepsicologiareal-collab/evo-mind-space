@@ -2055,6 +2055,7 @@ export type Database = {
           next_session_points: string[]
           next_supervision_attention: string
           patient_id: string
+          read_at: string | null
           reflection_questions: string[]
           shared_with_supervisee: boolean
           suggested_interventions: string[]
@@ -2074,6 +2075,7 @@ export type Database = {
           next_session_points?: string[]
           next_supervision_attention?: string
           patient_id: string
+          read_at?: string | null
           reflection_questions?: string[]
           shared_with_supervisee?: boolean
           suggested_interventions?: string[]
@@ -2093,6 +2095,7 @@ export type Database = {
           next_session_points?: string[]
           next_supervision_attention?: string
           patient_id?: string
+          read_at?: string | null
           reflection_questions?: string[]
           shared_with_supervisee?: boolean
           suggested_interventions?: string[]
@@ -2633,6 +2636,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      mark_supervision_feedback_read: { Args: { _id: string }; Returns: string }
       profile_privileged_fields_unchanged: {
         Args: {
           _id: string
