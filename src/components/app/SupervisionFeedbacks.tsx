@@ -249,6 +249,9 @@ export function SupervisionFeedbacks({
     setSaving(true);
     const payload = { ...form };
     let error;
+    const wasShared = editingId
+      ? (items.find((i) => i.id === editingId)?.shared_with_supervisee ?? false)
+      : false;
     if (editingId) {
       ({ error } = await (supabase as any)
         .from("supervision_feedbacks")
@@ -267,11 +270,32 @@ export function SupervisionFeedbacks({
       toast.error(error.message || "Erro ao salvar devolutiva");
       return;
     }
+
+    // Notify the supervisee the first time the feedback becomes shared
+    if (form.shared_with_supervisee && !wasShared && superviseeId && superviseeId !== user.id) {
+      const dateLabel = format(
+        new Date(form.supervision_date + "T12:00:00"),
+        "dd/MM/yyyy",
+      );
+      const { error: notifError } = await supabase.from("notifications").insert({
+        user_id: superviseeId,
+        title: "Nova devolutiva de supervisão",
+        message: `Seu supervisor compartilhou uma devolutiva sobre ${patientLabel} (supervisão de ${dateLabel}).`,
+        type: "general",
+      } as any);
+      if (notifError) {
+        toast.warning("Devolutiva salva, mas não foi possível notificar o supervisionando");
+      } else {
+        toast.success("Supervisionando notificado da devolutiva");
+      }
+    }
+
     toast.success(editingId ? "Devolutiva atualizada" : "Devolutiva registrada");
     setFormOpen(false);
     setEditingId(null);
     load();
   };
+
 
   const remove = async (id: string) => {
     const { error } = await (supabase as any).from("supervision_feedbacks").delete().eq("id", id);
