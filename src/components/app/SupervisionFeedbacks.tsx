@@ -13,6 +13,8 @@ import {
   MessageSquareQuote,
   X,
   GraduationCap,
+  CheckCheck,
+  Clock,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,6 +47,7 @@ export interface SupervisionFeedback {
   reflection_questions: string[];
   next_supervision_attention: string;
   shared_with_supervisee: boolean;
+  read_at: string | null;
   created_at: string;
 }
 
@@ -137,6 +140,18 @@ function VisibilityBadge({ shared }: { shared: boolean }) {
   );
 }
 
+function ReadStatusBadge({ readAt }: { readAt: string | null }) {
+  return readAt ? (
+    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+      <CheckCheck className="h-3 w-3" /> Lida em {format(new Date(readAt), "dd/MM/yyyy HH:mm")}
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+      <Clock className="h-3 w-3" /> Não lida
+    </span>
+  );
+}
+
 function ReadBlock({ title, value }: { title: string; value: string }) {
   if (!value?.trim()) return null;
   return (
@@ -218,6 +233,25 @@ export function SupervisionFeedbacks({
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
+
+  const openView = async (f: SupervisionFeedback) => {
+    setViewing(f);
+    // supervisee reading a shared feedback marks it as read
+    if (
+      user &&
+      f.shared_with_supervisee &&
+      !f.read_at &&
+      f.supervisee_id === user.id &&
+      f.supervisor_id !== user.id
+    ) {
+      const { data } = await (supabase as any).rpc("mark_supervision_feedback_read", { _id: f.id });
+      if (data) {
+        const readAt = data as string;
+        setViewing((prev) => (prev && prev.id === f.id ? { ...prev, read_at: readAt } : prev));
+        setItems((prev) => prev.map((it) => (it.id === f.id ? { ...it, read_at: readAt } : it)));
+      }
+    }
+  };
 
   const openNew = () => {
     setEditingId(null);
@@ -326,6 +360,7 @@ export function SupervisionFeedbacks({
                   })}
                 </span>
                 <VisibilityBadge shared={f.shared_with_supervisee} />
+                {f.shared_with_supervisee && <ReadStatusBadge readAt={f.read_at} />}
                 <span className="text-xs text-muted-foreground">
                   {names[f.supervisor_id] ?? "Supervisor(a)"}
                 </span>
@@ -334,7 +369,7 @@ export function SupervisionFeedbacks({
                 <p className="line-clamp-2 text-sm text-muted-foreground">{summaryOf(f)}</p>
               )}
               <div className="flex flex-wrap items-center gap-2">
-                <Button variant="secondary" size="sm" onClick={() => setViewing(f)}>
+                <Button variant="secondary" size="sm" onClick={() => openView(f)}>
                   <Eye className="h-3.5 w-3.5 mr-1" /> Ver devolutiva completa
                 </Button>
                 {canManage && f.supervisor_id === user?.id && (
@@ -531,7 +566,10 @@ export function SupervisionFeedbacks({
               </DialogHeader>
 
               <div className="space-y-4">
-                <VisibilityBadge shared={viewing.shared_with_supervisee} />
+                <div className="flex flex-wrap items-center gap-2">
+                  <VisibilityBadge shared={viewing.shared_with_supervisee} />
+                  {viewing.shared_with_supervisee && <ReadStatusBadge readAt={viewing.read_at} />}
+                </div>
                 <ReadBlock title="Síntese do caso" value={viewing.case_synthesis} />
                 <ReadBlock title="Leitura e conceitualização clínica" value={viewing.conceptualization} />
                 <ReadBlock title="Ciclo de manutenção" value={viewing.maintenance_cycle} />
