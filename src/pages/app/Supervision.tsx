@@ -432,7 +432,7 @@ const Supervision = () => {
 
             <button
               onClick={() => setSelectedSupervisee("all")}
-              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+              className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-2 text-xs font-medium transition-colors ${
                 selectedSupervisee === "all"
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40"
@@ -444,7 +444,7 @@ const Supervision = () => {
               <button
                 key={s.id}
                 onClick={() => setSelectedSupervisee(s.id)}
-                className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                className={`shrink-0 max-w-[65vw] truncate whitespace-nowrap rounded-full border px-3.5 py-2 text-xs font-medium transition-colors sm:max-w-none ${
                   selectedSupervisee === s.id
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40"
@@ -453,6 +453,7 @@ const Supervision = () => {
                 {s.full_name || "Sem nome"} ({s.patients.length})
               </button>
             ))}
+
           </div>
         )}
 
