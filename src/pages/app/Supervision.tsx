@@ -341,7 +341,7 @@ const Supervision = () => {
 
 
   return (
-    <div className="space-y-8 animate-fade-up max-w-5xl">
+    <div className="space-y-6 sm:space-y-8 animate-fade-up max-w-5xl">
       <PageHeader
         icon={Users}
         title="Supervisão"
@@ -349,19 +349,19 @@ const Supervision = () => {
         intro="Como supervisor(a), você vê apenas o que cada supervisionando escolhe compartilhar — somente leitura, garantindo o sigilo do paciente e a autonomia do supervisionando."
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         {kpis.map((k) => (
           <div
             key={k.kicker}
-            className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-card"
+            className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-card sm:p-5"
           >
-            <div className="relative z-10 space-y-2">
-              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                <span className={`h-2 w-2 rounded-full ${k.dot}`} />
-                {k.kicker}
+            <div className="relative z-10 space-y-1.5 sm:space-y-2">
+              <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
+                <span className={`h-2 w-2 shrink-0 rounded-full ${k.dot}`} />
+                <span className="min-w-0 break-words">{k.kicker}</span>
               </p>
-              <p className="font-display text-3xl font-bold leading-none">{k.value}</p>
-              <p className="text-xs text-muted-foreground">{k.hint}</p>
+              <p className="font-display text-2xl font-bold leading-none sm:text-3xl">{k.value}</p>
+              <p className="text-[11px] text-muted-foreground sm:text-xs">{k.hint}</p>
             </div>
             <span
               className={`pointer-events-none absolute -bottom-8 -right-8 h-24 w-24 rounded-full ${k.blob}`}
@@ -374,16 +374,17 @@ const Supervision = () => {
 
 
 
+
       <SupervisionPanel supervisees={supervisees} onOpenPatient={openPatientDetail} />
 
       {/* Invite section */}
-      <section className="rounded-3xl bg-card border border-border shadow-card p-6 sm:p-8 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
+      <section className="rounded-2xl sm:rounded-3xl bg-card border border-border shadow-card p-4 sm:p-8 space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
             <UserPlus className="h-4 w-4" />
           </div>
-          <div>
-            <h2 className="font-display text-xl font-semibold">Convidar supervisionando</h2>
+          <div className="min-w-0">
+            <h2 className="font-display text-lg sm:text-xl font-semibold">Convidar supervisionando</h2>
             <p className="text-xs text-muted-foreground">
               O profissional já deve ter conta criada e perfil definido como "Membro Parceiro".
             </p>
@@ -391,16 +392,17 @@ const Supervision = () => {
         </div>
         <div className="space-y-2">
           <Label htmlFor="invite_email">Email</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Input
               id="invite_email"
               type="email"
+              inputMode="email"
               placeholder="supervisionando@exemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleInvite()}
             />
-            <Button onClick={handleInvite} disabled={linking || !email}>
+            <Button onClick={handleInvite} disabled={linking || !email} className="w-full sm:w-auto">
               {linking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
               Vincular
             </Button>
@@ -409,14 +411,15 @@ const Supervision = () => {
       </section>
 
       {/* Supervisees list */}
-      <section className="rounded-3xl bg-card border border-border shadow-card p-6 sm:p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
+      <section className="rounded-2xl sm:rounded-3xl bg-card border border-border shadow-card p-4 sm:p-8">
+
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
               <Users className="h-4 w-4" />
             </div>
-            <div>
-              <h2 className="font-display text-xl font-semibold">Supervisionandos & pacientes</h2>
+            <div className="min-w-0">
+              <h2 className="font-display text-lg sm:text-xl font-semibold">Supervisionandos & pacientes</h2>
               <p className="text-xs text-muted-foreground">
                 Apenas pacientes que o supervisionando compartilhou com você aparecem aqui.
               </p>
@@ -425,10 +428,11 @@ const Supervision = () => {
         </div>
 
         {supervisees.length > 0 && (
-          <div className="mb-5 flex flex-wrap gap-2">
+          <div className="mb-5 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+
             <button
               onClick={() => setSelectedSupervisee("all")}
-              className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+              className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-2 text-xs font-medium transition-colors ${
                 selectedSupervisee === "all"
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40"
@@ -440,7 +444,7 @@ const Supervision = () => {
               <button
                 key={s.id}
                 onClick={() => setSelectedSupervisee(s.id)}
-                className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
+                className={`shrink-0 max-w-[65vw] truncate whitespace-nowrap rounded-full border px-3.5 py-2 text-xs font-medium transition-colors sm:max-w-none ${
                   selectedSupervisee === s.id
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40"
@@ -449,6 +453,7 @@ const Supervision = () => {
                 {s.full_name || "Sem nome"} ({s.patients.length})
               </button>
             ))}
+
           </div>
         )}
 
