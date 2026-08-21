@@ -378,13 +378,13 @@ const Supervision = () => {
       <SupervisionPanel supervisees={supervisees} onOpenPatient={openPatientDetail} />
 
       {/* Invite section */}
-      <section className="rounded-3xl bg-card border border-border shadow-card p-6 sm:p-8 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
+      <section className="rounded-2xl sm:rounded-3xl bg-card border border-border shadow-card p-4 sm:p-8 space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
             <UserPlus className="h-4 w-4" />
           </div>
-          <div>
-            <h2 className="font-display text-xl font-semibold">Convidar supervisionando</h2>
+          <div className="min-w-0">
+            <h2 className="font-display text-lg sm:text-xl font-semibold">Convidar supervisionando</h2>
             <p className="text-xs text-muted-foreground">
               O profissional já deve ter conta criada e perfil definido como "Membro Parceiro".
             </p>
@@ -392,16 +392,17 @@ const Supervision = () => {
         </div>
         <div className="space-y-2">
           <Label htmlFor="invite_email">Email</Label>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Input
               id="invite_email"
               type="email"
+              inputMode="email"
               placeholder="supervisionando@exemplo.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleInvite()}
             />
-            <Button onClick={handleInvite} disabled={linking || !email}>
+            <Button onClick={handleInvite} disabled={linking || !email} className="w-full sm:w-auto">
               {linking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
               Vincular
             </Button>
@@ -410,7 +411,8 @@ const Supervision = () => {
       </section>
 
       {/* Supervisees list */}
-      <section className="rounded-3xl bg-card border border-border shadow-card p-6 sm:p-8">
+      <section className="rounded-2xl sm:rounded-3xl bg-card border border-border shadow-card p-4 sm:p-8">
+
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
