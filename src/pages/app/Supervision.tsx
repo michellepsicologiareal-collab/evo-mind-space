@@ -341,7 +341,7 @@ const Supervision = () => {
 
 
   return (
-    <div className="space-y-8 animate-fade-up max-w-5xl">
+    <div className="space-y-6 sm:space-y-8 animate-fade-up max-w-5xl">
       <PageHeader
         icon={Users}
         title="Supervisão"
@@ -349,19 +349,19 @@ const Supervision = () => {
         intro="Como supervisor(a), você vê apenas o que cada supervisionando escolhe compartilhar — somente leitura, garantindo o sigilo do paciente e a autonomia do supervisionando."
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         {kpis.map((k) => (
           <div
             key={k.kicker}
-            className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-card"
+            className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-card sm:p-5"
           >
-            <div className="relative z-10 space-y-2">
-              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                <span className={`h-2 w-2 rounded-full ${k.dot}`} />
-                {k.kicker}
+            <div className="relative z-10 space-y-1.5 sm:space-y-2">
+              <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
+                <span className={`h-2 w-2 shrink-0 rounded-full ${k.dot}`} />
+                <span className="min-w-0 break-words">{k.kicker}</span>
               </p>
-              <p className="font-display text-3xl font-bold leading-none">{k.value}</p>
-              <p className="text-xs text-muted-foreground">{k.hint}</p>
+              <p className="font-display text-2xl font-bold leading-none sm:text-3xl">{k.value}</p>
+              <p className="text-[11px] text-muted-foreground sm:text-xs">{k.hint}</p>
             </div>
             <span
               className={`pointer-events-none absolute -bottom-8 -right-8 h-24 w-24 rounded-full ${k.blob}`}
@@ -369,6 +369,7 @@ const Supervision = () => {
           </div>
         ))}
       </div>
+
 
 
 
