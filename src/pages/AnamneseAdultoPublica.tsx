@@ -75,14 +75,16 @@ const Section = ({
   </section>
 );
 
-const Field = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
+const Field = ({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) => (
   <div className="space-y-1.5">
     <Label className="text-sm text-foreground/80">
       {label}{required && <span className="text-destructive"> *</span>}
     </Label>
     {children}
+    {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
   </div>
 );
+
 
 const ScaleRow = ({
   label, value, onChange,
@@ -322,14 +324,14 @@ export default function AnamneseAdultoPublica() {
             </Field>
             <div className="grid sm:grid-cols-2 gap-3">
               <Field label="Data de nascimento"><Input type="date" value={form.birth_date} onChange={(e) => set("birth_date", e.target.value)} /></Field>
-              <Field label="Telefone"><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} /></Field>
+              <Field label="Telefone" hint="Fora do Brasil? Digite com o código do país, ex.: +351 912 345 678"><Input type="tel" inputMode="tel" autoComplete="tel" placeholder="(11) 99999-9999 ou +351 912 345 678" value={form.phone} onChange={(e) => set("phone", e.target.value)} /></Field>
               <Field label="E-mail"><Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} /></Field>
               <Field label="Profissão"><Input value={form.profession} onChange={(e) => set("profession", e.target.value)} /></Field>
               <Field label="Estado civil"><Input value={form.marital_status} onChange={(e) => set("marital_status", e.target.value)} /></Field>
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <Field label="Contato de emergência"><Input value={form.emergency_contact_name} onChange={(e) => set("emergency_contact_name", e.target.value)} /></Field>
-              <Field label="Telefone do contato"><Input value={form.emergency_contact_phone} onChange={(e) => set("emergency_contact_phone", e.target.value)} /></Field>
+              <Field label="Telefone do contato"><Input type="tel" inputMode="tel" autoComplete="tel" placeholder="(11) 99999-9999 ou +351 912 345 678" value={form.emergency_contact_phone} onChange={(e) => set("emergency_contact_phone", e.target.value)} /></Field>
             </div>
             <div className="flex justify-end">
               <Button type="button" variant="ghost" size="sm" onClick={() => scrollTo("s2")}>Continuar</Button>
