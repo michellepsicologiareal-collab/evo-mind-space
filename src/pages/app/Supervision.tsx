@@ -413,13 +413,13 @@ const Supervision = () => {
       {/* Supervisees list */}
       <section className="rounded-2xl sm:rounded-3xl bg-card border border-border shadow-card p-4 sm:p-8">
 
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
               <Users className="h-4 w-4" />
             </div>
-            <div>
-              <h2 className="font-display text-xl font-semibold">Supervisionandos & pacientes</h2>
+            <div className="min-w-0">
+              <h2 className="font-display text-lg sm:text-xl font-semibold">Supervisionandos & pacientes</h2>
               <p className="text-xs text-muted-foreground">
                 Apenas pacientes que o supervisionando compartilhou com você aparecem aqui.
               </p>
@@ -428,7 +428,8 @@ const Supervision = () => {
         </div>
 
         {supervisees.length > 0 && (
-          <div className="mb-5 flex flex-wrap gap-2">
+          <div className="mb-5 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+
             <button
               onClick={() => setSelectedSupervisee("all")}
               className={`rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${
