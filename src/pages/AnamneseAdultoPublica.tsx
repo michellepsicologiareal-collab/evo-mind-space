@@ -75,14 +75,16 @@ const Section = ({
   </section>
 );
 
-const Field = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
+const Field = ({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) => (
   <div className="space-y-1.5">
     <Label className="text-sm text-foreground/80">
       {label}{required && <span className="text-destructive"> *</span>}
     </Label>
     {children}
+    {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
   </div>
 );
+
 
 const ScaleRow = ({
   label, value, onChange,
