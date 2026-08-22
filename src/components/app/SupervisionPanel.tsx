@@ -119,13 +119,13 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
   const totalShared = feedbacks.filter((f) => f.shared_with_supervisee).length;
 
   return (
-    <section className="rounded-3xl border border-border bg-card p-5 shadow-card sm:p-7 space-y-6">
+    <section className="rounded-2xl border border-border bg-card p-4 shadow-card sm:rounded-3xl sm:p-7 space-y-5 sm:space-y-6">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-lilac/15 text-lilac">
           <LayoutDashboard className="h-4 w-4" />
         </div>
         <div className="min-w-0">
-          <h2 className="font-display text-xl font-semibold">Painel de supervisão</h2>
+          <h2 className="font-display text-lg font-semibold sm:text-xl">Painel de supervisão</h2>
           <p className="text-xs text-muted-foreground">
             Pacientes compartilhados, devolutivas por data e acesso ao prontuário do supervisionando
             (somente leitura).
@@ -133,14 +133,19 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {[
           { label: "Pacientes compartilhados", value: patients.length },
           { label: "Devolutivas registradas", value: feedbacks.length },
           { label: "Compartilhadas", value: totalShared },
-        ].map((k) => (
-          <div key={k.label} className="rounded-2xl border border-border bg-secondary/40 p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        ].map((k, i) => (
+          <div
+            key={k.label}
+            className={`rounded-2xl border border-border bg-secondary/40 p-3 sm:p-4 ${
+              i === 2 ? "col-span-2 sm:col-span-1" : ""
+            }`}
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
               {k.label}
             </p>
             <p className="font-display text-2xl font-bold leading-none mt-1">{k.value}</p>
@@ -148,7 +153,8 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
+
         {/* Shared patients list */}
         <div className="space-y-2">
           <h3 className="flex items-center gap-2 text-sm font-semibold">
