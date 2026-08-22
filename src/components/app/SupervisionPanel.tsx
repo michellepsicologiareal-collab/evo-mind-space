@@ -119,7 +119,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
   const totalShared = feedbacks.filter((f) => f.shared_with_supervisee).length;
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 shadow-card sm:rounded-3xl sm:p-7 space-y-5 sm:space-y-6">
+    <section className="w-full min-w-0 overflow-hidden break-words rounded-2xl border border-border bg-card p-4 shadow-card sm:rounded-3xl sm:p-7 space-y-5 sm:space-y-6">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-lilac/15 text-lilac">
           <LayoutDashboard className="h-4 w-4" />
@@ -153,10 +153,11 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
 
         {/* Shared patients list */}
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
+
           <h3 className="flex items-center gap-2 text-sm font-semibold">
             <UserRound className="h-4 w-4 text-muted-foreground" /> Pacientes compartilhados
           </h3>
@@ -219,7 +220,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
         </div>
 
         {/* Feedback timeline */}
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="flex items-center gap-2 text-sm font-semibold">
               <CalendarDays className="h-4 w-4 text-muted-foreground" /> Devolutivas por data
@@ -241,7 +242,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
               Abra o prontuário do paciente para criar a primeira.
             </p>
           ) : (
-            <ol className="space-y-4">
+            <ol className="min-w-0 space-y-4">
               {grouped.map(([date, list]) => (
                 <li key={date} className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -253,10 +254,10 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                       const resume =
                         (f.case_synthesis || f.conceptualization || f.therapeutic_direction || "").trim();
                       return (
-                        <li key={f.id} className="rounded-xl border border-border bg-card p-3 space-y-2">
+                        <li key={f.id} className="min-w-0 rounded-xl border border-border bg-card p-3 space-y-2">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <GraduationCap className="h-3.5 w-3.5 shrink-0 text-lilac" />
-                            <span className="text-sm font-medium">{p?.initials}</span>
+                            <span className="truncate text-sm font-medium">{p?.initials}</span>
                             <span className="max-w-full truncate text-xs text-muted-foreground">{p?.superviseeName}</span>
                             {f.shared_with_supervisee ? (
                               <span className="inline-flex items-center gap-1 rounded-full bg-moss/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-moss">
