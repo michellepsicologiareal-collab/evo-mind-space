@@ -119,13 +119,13 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
   const totalShared = feedbacks.filter((f) => f.shared_with_supervisee).length;
 
   return (
-    <section className="rounded-3xl border border-border bg-card p-5 shadow-card sm:p-7 space-y-6">
+    <section className="rounded-2xl border border-border bg-card p-4 shadow-card sm:rounded-3xl sm:p-7 space-y-5 sm:space-y-6">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-lilac/15 text-lilac">
           <LayoutDashboard className="h-4 w-4" />
         </div>
         <div className="min-w-0">
-          <h2 className="font-display text-xl font-semibold">Painel de supervisão</h2>
+          <h2 className="font-display text-lg font-semibold sm:text-xl">Painel de supervisão</h2>
           <p className="text-xs text-muted-foreground">
             Pacientes compartilhados, devolutivas por data e acesso ao prontuário do supervisionando
             (somente leitura).
@@ -133,14 +133,19 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {[
           { label: "Pacientes compartilhados", value: patients.length },
           { label: "Devolutivas registradas", value: feedbacks.length },
           { label: "Compartilhadas", value: totalShared },
-        ].map((k) => (
-          <div key={k.label} className="rounded-2xl border border-border bg-secondary/40 p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        ].map((k, i) => (
+          <div
+            key={k.label}
+            className={`rounded-2xl border border-border bg-secondary/40 p-3 sm:p-4 ${
+              i === 2 ? "col-span-2 sm:col-span-1" : ""
+            }`}
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
               {k.label}
             </p>
             <p className="font-display text-2xl font-bold leading-none mt-1">{k.value}</p>
@@ -148,7 +153,8 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
+
         {/* Shared patients list */}
         <div className="space-y-2">
           <h3 className="flex items-center gap-2 text-sm font-semibold">
@@ -159,7 +165,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
               Nenhum paciente compartilhado ainda.
             </p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-2 lg:max-h-[420px] lg:overflow-y-auto lg:pr-1">
               {patients.map((p) => {
                 const st = statsByPatient[p.id];
                 const selected = patientFilter === p.id;
@@ -185,7 +191,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                           </span>
                         </span>
                       </button>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5">
                         <span className="rounded-full bg-lilac/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-lilac">
                           {st?.count ?? 0} devolutiva{(st?.count ?? 0) !== 1 && "s"}
                         </span>
@@ -197,7 +203,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="ml-auto h-7 px-2 text-xs"
+                          className="ml-auto h-8 px-2 text-xs"
                           onClick={() => onOpenPatient(p)}
                         >
                           <FileText className="mr-1 h-3.5 w-3.5" /> Prontuário
@@ -208,6 +214,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                 );
               })}
             </ul>
+
           )}
         </div>
 
@@ -240,17 +247,17 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {format(parseISO(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                   </p>
-                  <ul className="space-y-2 border-l-2 border-lilac/30 pl-3">
+                  <ul className="space-y-2 border-l-2 border-lilac/30 pl-2.5 sm:pl-3">
                     {list.map((f) => {
                       const p = patientById[f.patient_id];
                       const resume =
                         (f.case_synthesis || f.conceptualization || f.therapeutic_direction || "").trim();
                       return (
                         <li key={f.id} className="rounded-xl border border-border bg-card p-3 space-y-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <GraduationCap className="h-3.5 w-3.5 text-lilac" />
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <GraduationCap className="h-3.5 w-3.5 shrink-0 text-lilac" />
                             <span className="text-sm font-medium">{p?.initials}</span>
-                            <span className="text-xs text-muted-foreground">{p?.superviseeName}</span>
+                            <span className="max-w-full truncate text-xs text-muted-foreground">{p?.superviseeName}</span>
                             {f.shared_with_supervisee ? (
                               <span className="inline-flex items-center gap-1 rounded-full bg-moss/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-moss">
                                 <Eye className="h-3 w-3" /> Compartilhada
@@ -265,8 +272,14 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                             <p className="line-clamp-2 text-sm text-muted-foreground">{resume}</p>
                           )}
                           {p && (
-                            <Button variant="secondary" size="sm" onClick={() => onOpenPatient(p)}>
-                              <FileText className="mr-1 h-3.5 w-3.5" /> Abrir prontuário e devolutivas
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="w-full justify-center sm:w-auto"
+                              onClick={() => onOpenPatient(p)}
+                            >
+                              <FileText className="mr-1 h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">Abrir prontuário</span>
                             </Button>
                           )}
                         </li>
