@@ -476,7 +476,7 @@ const Supervision = () => {
 
               return (
                 <li key={s.id} className="rounded-xl bg-secondary/40 overflow-hidden">
-                  <div className="flex items-center justify-between gap-3 p-4">
+                  <div className="flex items-center gap-2 p-3 sm:gap-3 sm:p-4">
                     <button
                       onClick={() => toggleExpand(s.id)}
                       className="flex items-center gap-3 min-w-0 flex-1 text-left group"
@@ -488,7 +488,7 @@ const Supervision = () => {
                         <p className="font-medium truncate group-hover:text-primary transition-colors">
                           {s.full_name || "Sem nome"}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground truncate">
                           <Eye className="inline h-3 w-3 mr-1 -mt-0.5" />
                           {s.patients.length} compartilhado{s.patients.length !== 1 && "s"} · {activeCount} ativo{activeCount !== 1 && "s"}
                         </p>
@@ -502,7 +502,9 @@ const Supervision = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="shrink-0"
+                      aria-label="Remover supervisionando"
+                      title="Remover supervisionando"
+                      className="shrink-0 h-9 w-9 p-0 sm:h-9 sm:w-auto sm:px-3"
                       onClick={() => handleRemove(s.id)}
                       disabled={removingId === s.id}
                     >
@@ -511,12 +513,12 @@ const Supervision = () => {
                       ) : (
                         <X className="h-4 w-4" />
                       )}
-                      Remover
+                      <span className="hidden sm:inline sm:ml-1">Remover</span>
                     </Button>
                   </div>
 
                   {isOpen && (
-                    <div className="px-4 pb-4 space-y-3 border-t border-border/60 pt-4 bg-background/40">
+                    <div className="px-3 pb-4 space-y-3 border-t border-border/60 pt-4 bg-background/40 sm:px-4">
                       {s.patients.length === 0 ? (
                         <p className="text-sm text-muted-foreground py-4 text-center">
                           Nenhum paciente foi compartilhado com você por este supervisionando.
@@ -529,12 +531,13 @@ const Supervision = () => {
                               setTabFilter((prev) => ({ ...prev, [s.id]: v as typeof f }))
                             }
                           >
-                            <TabsList>
-                              <TabsTrigger value="active">Ativos ({activeCount})</TabsTrigger>
-                              <TabsTrigger value="inactive">Inativos ({inactiveCount})</TabsTrigger>
-                              <TabsTrigger value="all">Todos ({s.patients.length})</TabsTrigger>
+                            <TabsList className="grid w-full grid-cols-3 sm:inline-flex sm:w-auto">
+                              <TabsTrigger value="active" className="text-xs sm:text-sm">Ativos ({activeCount})</TabsTrigger>
+                              <TabsTrigger value="inactive" className="text-xs sm:text-sm">Inativos ({inactiveCount})</TabsTrigger>
+                              <TabsTrigger value="all" className="text-xs sm:text-sm">Todos ({s.patients.length})</TabsTrigger>
                             </TabsList>
                           </Tabs>
+
 
                           {visible.length === 0 ? (
                             <p className="text-sm text-muted-foreground py-4 text-center">
