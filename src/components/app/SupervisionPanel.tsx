@@ -247,17 +247,17 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {format(parseISO(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                   </p>
-                  <ul className="space-y-2 border-l-2 border-lilac/30 pl-3">
+                  <ul className="space-y-2 border-l-2 border-lilac/30 pl-2.5 sm:pl-3">
                     {list.map((f) => {
                       const p = patientById[f.patient_id];
                       const resume =
                         (f.case_synthesis || f.conceptualization || f.therapeutic_direction || "").trim();
                       return (
                         <li key={f.id} className="rounded-xl border border-border bg-card p-3 space-y-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <GraduationCap className="h-3.5 w-3.5 text-lilac" />
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <GraduationCap className="h-3.5 w-3.5 shrink-0 text-lilac" />
                             <span className="text-sm font-medium">{p?.initials}</span>
-                            <span className="text-xs text-muted-foreground">{p?.superviseeName}</span>
+                            <span className="max-w-full truncate text-xs text-muted-foreground">{p?.superviseeName}</span>
                             {f.shared_with_supervisee ? (
                               <span className="inline-flex items-center gap-1 rounded-full bg-moss/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-moss">
                                 <Eye className="h-3 w-3" /> Compartilhada
@@ -272,10 +272,21 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                             <p className="line-clamp-2 text-sm text-muted-foreground">{resume}</p>
                           )}
                           {p && (
-                            <Button variant="secondary" size="sm" onClick={() => onOpenPatient(p)}>
-                              <FileText className="mr-1 h-3.5 w-3.5" /> Abrir prontuário e devolutivas
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="w-full justify-center sm:w-auto"
+                              onClick={() => onOpenPatient(p)}
+                            >
+                              <FileText className="mr-1 h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">Abrir prontuário</span>
                             </Button>
                           )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+
                         </li>
                       );
                     })}
