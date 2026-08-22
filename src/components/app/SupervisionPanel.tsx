@@ -119,7 +119,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
   const totalShared = feedbacks.filter((f) => f.shared_with_supervisee).length;
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 shadow-card sm:rounded-3xl sm:p-7 space-y-5 sm:space-y-6">
+    <section className="w-full min-w-0 overflow-hidden break-words rounded-2xl border border-border bg-card p-4 shadow-card sm:rounded-3xl sm:p-7 space-y-5 sm:space-y-6">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-lilac/15 text-lilac">
           <LayoutDashboard className="h-4 w-4" />
