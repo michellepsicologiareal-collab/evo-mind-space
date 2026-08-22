@@ -165,7 +165,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
               Nenhum paciente compartilhado ainda.
             </p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-2 lg:max-h-[420px] lg:overflow-y-auto lg:pr-1">
               {patients.map((p) => {
                 const st = statsByPatient[p.id];
                 const selected = patientFilter === p.id;
@@ -191,7 +191,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                           </span>
                         </span>
                       </button>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5">
                         <span className="rounded-full bg-lilac/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-lilac">
                           {st?.count ?? 0} devolutiva{(st?.count ?? 0) !== 1 && "s"}
                         </span>
@@ -203,7 +203,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="ml-auto h-7 px-2 text-xs"
+                          className="ml-auto h-8 px-2 text-xs"
                           onClick={() => onOpenPatient(p)}
                         >
                           <FileText className="mr-1 h-3.5 w-3.5" /> Prontuário
@@ -214,6 +214,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                 );
               })}
             </ul>
+
           )}
         </div>
 
