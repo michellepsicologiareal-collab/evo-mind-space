@@ -585,7 +585,7 @@ const Supervision = () => {
 
       {/* Patient detail dialog — clinical only, no financial or personal data */}
       <Dialog open={!!selectedPatientItem} onOpenChange={(o) => { if (!o) { setSelectedPatientItem(null); setClinical(null); } }}>
-        <DialogContent className="w-[calc(100vw-1.5rem)] max-w-2xl max-h-[88vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+        <DialogContent className="w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] sm:max-w-2xl lg:max-w-3xl max-h-[88vh] overflow-y-auto overflow-x-hidden break-words p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">
               {selectedPatientItem?.initials ?? clinical?.code ?? ""}
