@@ -341,7 +341,7 @@ const Supervision = () => {
 
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fade-up max-w-5xl">
+    <div className="w-full min-w-0 max-w-5xl space-y-6 overflow-x-hidden break-words animate-fade-up sm:space-y-8 xl:max-w-6xl">
       <PageHeader
         icon={Users}
         title="Supervisão"
