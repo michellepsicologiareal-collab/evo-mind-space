@@ -153,10 +153,11 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)] xl:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
 
         {/* Shared patients list */}
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
+
           <h3 className="flex items-center gap-2 text-sm font-semibold">
             <UserRound className="h-4 w-4 text-muted-foreground" /> Pacientes compartilhados
           </h3>
