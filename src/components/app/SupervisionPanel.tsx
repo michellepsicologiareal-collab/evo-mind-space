@@ -286,11 +286,6 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                       );
                     })}
                   </ul>
-
-                        </li>
-                      );
-                    })}
-                  </ul>
                 </li>
               ))}
             </ol>
