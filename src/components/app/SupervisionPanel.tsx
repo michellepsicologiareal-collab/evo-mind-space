@@ -237,8 +237,11 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                       <button
                         type="button"
                         onClick={() => setPatientFilter(selected ? "all" : p.id)}
-                        className="flex w-full min-w-0 items-center gap-2.5 text-left"
+                        aria-pressed={selected}
+                        aria-label={`${selected ? "Remover filtro de" : "Filtrar devolutivas por"} ${p.initials}`}
+                        className="flex w-full min-w-0 items-center gap-2.5 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                       >
+
                         <span
                           className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary font-display text-xs font-bold uppercase leading-none text-primary ${
                             compact ? "h-7 w-7" : "h-9 w-9"
