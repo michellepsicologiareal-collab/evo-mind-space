@@ -139,10 +139,12 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
 
   return (
     <section
+      aria-labelledby="supervision-panel-title"
       className={`w-full min-w-0 overflow-hidden break-words rounded-2xl border border-border bg-card shadow-card sm:rounded-3xl ${
         compact ? "p-3 sm:p-4 space-y-3" : "p-4 sm:p-7 space-y-5 sm:space-y-6"
       }`}
     >
+
       <div className="flex items-start gap-3">
         <div
           className={`flex shrink-0 items-center justify-center rounded-xl bg-lilac/15 text-lilac ${
@@ -152,7 +154,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
           <LayoutDashboard className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className={`font-display font-semibold ${compact ? "text-base" : "text-lg sm:text-xl"}`}>
+          <h2 id="supervision-panel-title" className={`font-display font-semibold ${compact ? "text-base" : "text-lg sm:text-xl"}`}>
             Painel de supervisão
           </h2>
           {!compact && (
@@ -219,6 +221,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
             </p>
           ) : (
             <ul
+              aria-label="Pacientes compartilhados"
               className={`lg:overflow-y-auto lg:pr-1 ${
                 compact ? "space-y-1.5 lg:max-h-[340px]" : "space-y-2 lg:max-h-[420px]"
               }`}
@@ -237,8 +240,11 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                       <button
                         type="button"
                         onClick={() => setPatientFilter(selected ? "all" : p.id)}
-                        className="flex w-full min-w-0 items-center gap-2.5 text-left"
+                        aria-pressed={selected}
+                        aria-label={`${selected ? "Remover filtro de" : "Filtrar devolutivas por"} ${p.initials}`}
+                        className="flex w-full min-w-0 items-center gap-2.5 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                       >
+
                         <span
                           className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary font-display text-xs font-bold uppercase leading-none text-primary ${
                             compact ? "h-7 w-7" : "h-9 w-9"
