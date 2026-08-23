@@ -221,6 +221,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
             </p>
           ) : (
             <ul
+              aria-label="Pacientes compartilhados"
               className={`lg:overflow-y-auto lg:pr-1 ${
                 compact ? "space-y-1.5 lg:max-h-[340px]" : "space-y-2 lg:max-h-[420px]"
               }`}

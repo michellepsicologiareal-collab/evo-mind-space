@@ -428,11 +428,12 @@ const Supervision = () => {
         </div>
 
         {supervisees.length > 0 && (
-          <div className="mb-5 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div role="group" aria-label="Filtrar por supervisionando" className="mb-5 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 
             <button
               onClick={() => setSelectedSupervisee("all")}
-              className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-2 text-xs font-medium transition-colors ${
+              aria-pressed={selectedSupervisee === "all"}
+              className={`shrink-0 min-h-11 whitespace-nowrap rounded-full border px-3.5 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                 selectedSupervisee === "all"
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40"
@@ -444,7 +445,8 @@ const Supervision = () => {
               <button
                 key={s.id}
                 onClick={() => setSelectedSupervisee(s.id)}
-                className={`shrink-0 max-w-[65vw] truncate whitespace-nowrap rounded-full border px-3.5 py-2 text-xs font-medium transition-colors sm:max-w-none ${
+                aria-pressed={selectedSupervisee === s.id}
+                className={`shrink-0 min-h-11 max-w-[65vw] truncate whitespace-nowrap rounded-full border px-3.5 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:max-w-none ${
                   selectedSupervisee === s.id
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40"
@@ -479,7 +481,9 @@ const Supervision = () => {
                   <div className="flex items-center gap-2 p-3 sm:gap-3 sm:p-4">
                     <button
                       onClick={() => toggleExpand(s.id)}
-                      className="flex items-center gap-3 min-w-0 flex-1 text-left group"
+                      aria-expanded={isOpen}
+                      aria-controls={`supervisee-panel-${s.id}`}
+                      className="flex min-h-11 items-center gap-3 min-w-0 flex-1 rounded-lg text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground shrink-0">
                         <UserRound className="h-4 w-4" />
@@ -518,7 +522,7 @@ const Supervision = () => {
                   </div>
 
                   {isOpen && (
-                    <div className="px-3 pb-4 space-y-3 border-t border-border/60 pt-4 bg-background/40 sm:px-4">
+                    <div id={`supervisee-panel-${s.id}`} className="px-3 pb-4 space-y-3 border-t border-border/60 pt-4 bg-background/40 sm:px-4">
                       {s.patients.length === 0 ? (
                         <p className="text-sm text-muted-foreground py-4 text-center">
                           Nenhum paciente foi compartilhado com você por este supervisionando.
@@ -549,7 +553,8 @@ const Supervision = () => {
                                 <li key={p.id}>
                                   <button
                                     onClick={() => openPatientDetail(p)}
-                                    className="w-full flex items-center justify-between gap-3 rounded-lg bg-card border border-border p-3 hover:border-primary hover:shadow-soft transition-all text-left"
+                                    aria-label={`Abrir prontuário de ${p.initials}`}
+                                    className="w-full min-h-11 flex items-center justify-between gap-3 rounded-lg bg-card border border-border p-3 hover:border-primary hover:shadow-soft transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                                   >
                                     <div className="flex items-center gap-3 min-w-0">
                                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-primary font-display font-bold shrink-0">
