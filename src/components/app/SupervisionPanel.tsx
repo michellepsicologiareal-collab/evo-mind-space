@@ -139,10 +139,12 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
 
   return (
     <section
+      aria-labelledby="supervision-panel-title"
       className={`w-full min-w-0 overflow-hidden break-words rounded-2xl border border-border bg-card shadow-card sm:rounded-3xl ${
         compact ? "p-3 sm:p-4 space-y-3" : "p-4 sm:p-7 space-y-5 sm:space-y-6"
       }`}
     >
+
       <div className="flex items-start gap-3">
         <div
           className={`flex shrink-0 items-center justify-center rounded-xl bg-lilac/15 text-lilac ${
