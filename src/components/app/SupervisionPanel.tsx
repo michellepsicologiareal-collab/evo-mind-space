@@ -50,6 +50,15 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
   const [feedbacks, setFeedbacks] = useState<FeedbackRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [patientFilter, setPatientFilter] = useState<string>("all");
+  const [compact, setCompact] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("supervision-panel-compact") === "1";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("supervision-panel-compact", compact ? "1" : "0");
+  }, [compact]);
+
 
   useEffect(() => {
     let cancelled = false;
