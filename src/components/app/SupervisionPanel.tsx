@@ -9,6 +9,8 @@ import {
   GraduationCap,
   LayoutDashboard,
   Loader2,
+  Maximize2,
+  Minimize2,
   UserRound,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
