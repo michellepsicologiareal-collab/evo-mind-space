@@ -308,19 +308,28 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
               Abra o prontuário do paciente para criar a primeira.
             </p>
           ) : (
-            <ol className="min-w-0 space-y-4">
+            <ol className={`min-w-0 ${compact ? "space-y-2.5 lg:max-h-[340px] lg:overflow-y-auto lg:pr-1" : "space-y-4"}`}>
               {grouped.map(([date, list]) => (
-                <li key={date} className="space-y-2">
+                <li key={date} className={compact ? "space-y-1.5" : "space-y-2"}>
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {format(parseISO(date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                   </p>
-                  <ul className="space-y-2 border-l-2 border-lilac/30 pl-2.5 sm:pl-3">
+                  <ul
+                    className={`border-l-2 border-lilac/30 pl-2.5 sm:pl-3 ${
+                      compact ? "space-y-1.5" : "space-y-2"
+                    }`}
+                  >
                     {list.map((f) => {
                       const p = patientById[f.patient_id];
                       const resume =
                         (f.case_synthesis || f.conceptualization || f.therapeutic_direction || "").trim();
                       return (
-                        <li key={f.id} className="min-w-0 rounded-xl border border-border bg-card p-3 space-y-2">
+                        <li
+                          key={f.id}
+                          className={`min-w-0 rounded-xl border border-border bg-card ${
+                            compact ? "p-2 space-y-1" : "p-3 space-y-2"
+                          }`}
+                        >
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <GraduationCap className="h-3.5 w-3.5 shrink-0 text-lilac" />
                             <span className="truncate text-sm font-medium">{p?.initials}</span>
@@ -336,13 +345,19 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                             )}
                           </div>
                           {resume && (
-                            <p className="line-clamp-2 text-sm text-muted-foreground">{resume}</p>
+                            <p
+                              className={`text-muted-foreground ${
+                                compact ? "line-clamp-1 text-xs" : "line-clamp-2 text-sm"
+                              }`}
+                            >
+                              {resume}
+                            </p>
                           )}
                           {p && (
                             <Button
                               variant="secondary"
                               size="sm"
-                              className="w-full justify-center sm:w-auto"
+                              className={`w-full justify-center sm:w-auto ${compact ? "h-7 text-xs" : ""}`}
                               onClick={() => onOpenPatient(p)}
                             >
                               <FileText className="mr-1 h-3.5 w-3.5 shrink-0" />
@@ -356,6 +371,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                 </li>
               ))}
             </ol>
+
           )}
         </div>
       </div>
