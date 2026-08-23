@@ -47,6 +47,14 @@ interface Props {
   onOpenPatient: (p: PanelPatient) => void;
 }
 
+function initialsOf(label: string) {
+  const parts = (label || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2);
+  return (parts[0][0] + parts[parts.length - 1][0]).slice(0, 2);
+}
+
+
 export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
   const { user } = useAuth();
   const [feedbacks, setFeedbacks] = useState<FeedbackRow[]>([]);
