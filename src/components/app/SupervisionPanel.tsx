@@ -154,7 +154,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
           <LayoutDashboard className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className={`font-display font-semibold ${compact ? "text-base" : "text-lg sm:text-xl"}`}>
+          <h2 id="supervision-panel-title" className={`font-display font-semibold ${compact ? "text-base" : "text-lg sm:text-xl"}`}>
             Painel de supervisão
           </h2>
           {!compact && (
