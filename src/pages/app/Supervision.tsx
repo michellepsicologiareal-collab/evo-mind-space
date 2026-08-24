@@ -296,7 +296,7 @@ const Supervision = () => {
           </p>
           <Button
             variant="accent"
-            className="mt-2"
+            className="mt-2 focus-strong"
             onClick={() => {
               const msg = encodeURIComponent(
                 `Olá! Sou ${user?.email ?? "usuário(a)"} e gostaria de solicitar a liberação do perfil de Supervisor(a) no Psi Real. Poderia me ajudar?`
@@ -409,8 +409,9 @@ const Supervision = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleInvite()}
+              className="focus-strong"
             />
-            <Button onClick={handleInvite} disabled={linking || !email} className="w-full sm:w-auto">
+            <Button onClick={handleInvite} disabled={linking || !email} className="w-full sm:w-auto focus-strong">
               {linking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
               Vincular
             </Button>
@@ -544,9 +545,9 @@ const Supervision = () => {
                             }
                           >
                             <TabsList className="grid w-full grid-cols-3 sm:inline-flex sm:w-auto">
-                              <TabsTrigger value="active" className="text-xs sm:text-sm">Ativos ({activeCount})</TabsTrigger>
-                              <TabsTrigger value="inactive" className="text-xs sm:text-sm">Inativos ({inactiveCount})</TabsTrigger>
-                              <TabsTrigger value="all" className="text-xs sm:text-sm">Todos ({s.patients.length})</TabsTrigger>
+                              <TabsTrigger value="active" className="text-xs sm:text-sm focus-strong">Ativos ({activeCount})</TabsTrigger>
+                              <TabsTrigger value="inactive" className="text-xs sm:text-sm focus-strong">Inativos ({inactiveCount})</TabsTrigger>
+                              <TabsTrigger value="all" className="text-xs sm:text-sm focus-strong">Todos ({s.patients.length})</TabsTrigger>
                             </TabsList>
                           </Tabs>
 
