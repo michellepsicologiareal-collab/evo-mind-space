@@ -556,13 +556,13 @@ const Supervision = () => {
                                     aria-label={`Abrir prontuário de ${p.initials}`}
                                     className="w-full min-h-11 flex items-center justify-between gap-3 rounded-lg bg-card border border-border p-3 hover:border-primary hover:shadow-soft transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                                   >
-                                    <div className="flex items-center gap-3 min-w-0">
-                                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-primary font-display font-bold shrink-0">
-                                        {p.initials}
-                                      </div>
-                                      <div className="min-w-0">
-                                        <p className="font-medium">{p.initials}</p>
-                                        <p className="text-xs text-muted-foreground">
+                                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                                      <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-primary font-display text-xs font-bold uppercase leading-none">
+                                        {avatarInitials(p.initials)}
+                                      </span>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate font-medium">{p.initials}</p>
+                                        <p className="truncate text-xs text-muted-foreground">
                                           {p.is_active ? (
                                             <span className="text-primary-glow">● Ativo</span>
                                           ) : (
@@ -571,6 +571,7 @@ const Supervision = () => {
                                         </p>
                                       </div>
                                     </div>
+
                                     <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                                   </button>
                                 </li>
