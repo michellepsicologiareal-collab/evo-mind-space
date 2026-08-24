@@ -103,7 +103,15 @@ interface ClinicalOverview {
   progress: ProgressEntry[];
 }
 
+function avatarInitials(label: string) {
+  const parts = (label || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2);
+  return (parts[0][0] + parts[parts.length - 1][0]).slice(0, 2);
+}
+
 const Supervision = () => {
+
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profileType, setProfileType] = useState<string | null>(null);
