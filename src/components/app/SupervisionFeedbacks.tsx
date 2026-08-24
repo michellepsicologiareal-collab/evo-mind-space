@@ -437,6 +437,7 @@ export function SupervisionFeedbacks({
                 type="date"
                 value={form.supervision_date}
                 onChange={(e) => setForm((p) => ({ ...p, supervision_date: e.target.value }))}
+                className="focus-strong"
               />
             </div>
 
@@ -447,6 +448,7 @@ export function SupervisionFeedbacks({
                 rows={3}
                 value={form.case_synthesis}
                 onChange={(e) => setForm((p) => ({ ...p, case_synthesis: e.target.value }))}
+                className="focus-strong"
               />
             </div>
 
@@ -457,6 +459,7 @@ export function SupervisionFeedbacks({
                 rows={5}
                 value={form.conceptualization}
                 onChange={(e) => setForm((p) => ({ ...p, conceptualization: e.target.value }))}
+                className="focus-strong"
               />
             </div>
 
@@ -468,6 +471,7 @@ export function SupervisionFeedbacks({
                 placeholder="Formulação funcional / cognitivo-comportamental"
                 value={form.maintenance_cycle}
                 onChange={(e) => setForm((p) => ({ ...p, maintenance_cycle: e.target.value }))}
+                className="focus-strong"
               />
             </div>
 
@@ -484,6 +488,7 @@ export function SupervisionFeedbacks({
                 rows={4}
                 value={form.clinical_hypotheses}
                 onChange={(e) => setForm((p) => ({ ...p, clinical_hypotheses: e.target.value }))}
+                className="focus-strong"
               />
             </div>
 
@@ -495,6 +500,7 @@ export function SupervisionFeedbacks({
                 placeholder="Prioridades e estratégias sugeridas para a condução do caso"
                 value={form.therapeutic_direction}
                 onChange={(e) => setForm((p) => ({ ...p, therapeutic_direction: e.target.value }))}
+                className="focus-strong"
               />
             </div>
 
