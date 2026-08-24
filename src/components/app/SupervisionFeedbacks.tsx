@@ -99,7 +99,7 @@ function ListEditor({ label, placeholder, items, onChange }: ListEditorProps) {
             }
           }}
         />
-        <Button type="button" variant="secondary" size="icon" className="shrink-0" onClick={add}>
+        <Button type="button" variant="secondary" size="icon" className="shrink-0 focus-strong" onClick={add}>
           <Plus className="h-4 w-4" />
         </Button>
       </div>
@@ -115,7 +115,7 @@ function ListEditor({ label, placeholder, items, onChange }: ListEditorProps) {
               <button
                 type="button"
                 onClick={() => onChange(items.filter((_, idx) => idx !== i))}
-                className="shrink-0 text-muted-foreground hover:text-destructive"
+                className="shrink-0 text-muted-foreground hover:text-destructive focus-strong rounded p-0.5"
                 aria-label="Remover item"
               >
                 <X className="h-3.5 w-3.5" />
@@ -359,7 +359,7 @@ export function SupervisionFeedbacks({
           </div>
         </div>
         {canManage && (
-          <Button variant="accent" size="sm" className="shrink-0 w-full sm:w-auto" onClick={openNew}>
+          <Button variant="accent" size="sm" className="shrink-0 w-full sm:w-auto focus-strong" onClick={openNew}>
             <Plus className="h-3.5 w-3.5 mr-1" /> Nova devolutiva
           </Button>
         )}
@@ -393,18 +393,18 @@ export function SupervisionFeedbacks({
                 <p className="line-clamp-2 text-sm text-muted-foreground">{summaryOf(f)}</p>
               )}
               <div className="flex flex-wrap items-center gap-2">
-                <Button variant="secondary" size="sm" onClick={() => openView(f)}>
+                <Button variant="secondary" size="sm" className="focus-strong" onClick={() => openView(f)}>
                   <Eye className="h-3.5 w-3.5 mr-1" /> Ver devolutiva completa
                 </Button>
                 {canManage && f.supervisor_id === user?.id && (
                   <>
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(f)}>
+                    <Button variant="ghost" size="sm" className="focus-strong" onClick={() => openEdit(f)}>
                       <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 hover:text-destructive"
+                      className="h-8 w-8 hover:text-destructive focus-strong"
                       onClick={() => remove(f.id)}
                       aria-label="Excluir devolutiva"
                     >
