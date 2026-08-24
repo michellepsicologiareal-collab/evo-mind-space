@@ -296,7 +296,7 @@ const Supervision = () => {
           </p>
           <Button
             variant="accent"
-            className="mt-2"
+            className="mt-2 focus-strong"
             onClick={() => {
               const msg = encodeURIComponent(
                 `Olá! Sou ${user?.email ?? "usuário(a)"} e gostaria de solicitar a liberação do perfil de Supervisor(a) no Psi Real. Poderia me ajudar?`
@@ -409,8 +409,9 @@ const Supervision = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleInvite()}
+              className="focus-strong"
             />
-            <Button onClick={handleInvite} disabled={linking || !email} className="w-full sm:w-auto">
+            <Button onClick={handleInvite} disabled={linking || !email} className="w-full sm:w-auto focus-strong">
               {linking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
               Vincular
             </Button>
@@ -441,7 +442,7 @@ const Supervision = () => {
             <button
               onClick={() => setSelectedSupervisee("all")}
               aria-pressed={selectedSupervisee === "all"}
-              className={`shrink-0 min-h-11 whitespace-nowrap rounded-full border px-3.5 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+              className={`focus-strong shrink-0 min-h-11 whitespace-nowrap rounded-full border px-3.5 py-2 text-xs font-medium transition-colors ${
                 selectedSupervisee === "all"
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40"
@@ -449,17 +450,17 @@ const Supervision = () => {
             >
               Todas ({supervisees.length})
             </button>
-            {supervisees.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setSelectedSupervisee(s.id)}
-                aria-pressed={selectedSupervisee === s.id}
-                className={`shrink-0 min-h-11 max-w-[65vw] truncate whitespace-nowrap rounded-full border px-3.5 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:max-w-none ${
-                  selectedSupervisee === s.id
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40"
-                }`}
-              >
+              {supervisees.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setSelectedSupervisee(s.id)}
+                  aria-pressed={selectedSupervisee === s.id}
+                  className={`focus-strong shrink-0 min-h-11 max-w-[65vw] truncate whitespace-nowrap rounded-full border px-3.5 py-2 text-xs font-medium transition-colors sm:max-w-none ${
+                    selectedSupervisee === s.id
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-secondary/60 text-muted-foreground hover:border-primary/40"
+                  }`}
+                >
                 {s.full_name || "Sem nome"} ({s.patients.length})
               </button>
             ))}
@@ -491,7 +492,7 @@ const Supervision = () => {
                       onClick={() => toggleExpand(s.id)}
                       aria-expanded={isOpen}
                       aria-controls={`supervisee-panel-${s.id}`}
-                      className="flex min-h-11 items-center gap-3 min-w-0 flex-1 rounded-lg text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      className="focus-strong flex min-h-11 items-center gap-3 min-w-0 flex-1 rounded-lg text-left group"
                     >
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-hero text-primary-foreground shrink-0">
                         <UserRound className="h-4 w-4" />
@@ -516,7 +517,7 @@ const Supervision = () => {
                       size="sm"
                       aria-label="Remover supervisionando"
                       title="Remover supervisionando"
-                      className="shrink-0 h-9 w-9 p-0 sm:h-9 sm:w-auto sm:px-3"
+                      className="shrink-0 h-9 w-9 p-0 sm:h-9 sm:w-auto sm:px-3 focus-strong"
                       onClick={() => handleRemove(s.id)}
                       disabled={removingId === s.id}
                     >
@@ -544,9 +545,9 @@ const Supervision = () => {
                             }
                           >
                             <TabsList className="grid w-full grid-cols-3 sm:inline-flex sm:w-auto">
-                              <TabsTrigger value="active" className="text-xs sm:text-sm">Ativos ({activeCount})</TabsTrigger>
-                              <TabsTrigger value="inactive" className="text-xs sm:text-sm">Inativos ({inactiveCount})</TabsTrigger>
-                              <TabsTrigger value="all" className="text-xs sm:text-sm">Todos ({s.patients.length})</TabsTrigger>
+                              <TabsTrigger value="active" className="text-xs sm:text-sm focus-strong">Ativos ({activeCount})</TabsTrigger>
+                              <TabsTrigger value="inactive" className="text-xs sm:text-sm focus-strong">Inativos ({inactiveCount})</TabsTrigger>
+                              <TabsTrigger value="all" className="text-xs sm:text-sm focus-strong">Todos ({s.patients.length})</TabsTrigger>
                             </TabsList>
                           </Tabs>
 
@@ -562,7 +563,7 @@ const Supervision = () => {
                                   <button
                                     onClick={() => openPatientDetail(p)}
                                     aria-label={`Abrir prontuário de ${p.initials}`}
-                                    className="w-full min-h-11 flex items-center justify-between gap-3 rounded-lg bg-card border border-border p-3 hover:border-primary hover:shadow-soft transition-all text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                                    className="focus-strong w-full min-h-11 flex items-center justify-between gap-3 rounded-lg bg-card border border-border p-3 hover:border-primary hover:shadow-soft transition-all text-left"
                                   >
                                     <div className="flex items-center gap-3 min-w-0 flex-1">
                                       <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary text-primary font-display text-xs font-bold uppercase leading-none">

@@ -99,7 +99,7 @@ function ListEditor({ label, placeholder, items, onChange }: ListEditorProps) {
             }
           }}
         />
-        <Button type="button" variant="secondary" size="icon" className="shrink-0" onClick={add}>
+        <Button type="button" variant="secondary" size="icon" className="shrink-0 focus-strong" onClick={add}>
           <Plus className="h-4 w-4" />
         </Button>
       </div>
@@ -115,7 +115,7 @@ function ListEditor({ label, placeholder, items, onChange }: ListEditorProps) {
               <button
                 type="button"
                 onClick={() => onChange(items.filter((_, idx) => idx !== i))}
-                className="shrink-0 text-muted-foreground hover:text-destructive"
+                className="shrink-0 text-muted-foreground hover:text-destructive focus-strong rounded p-0.5"
                 aria-label="Remover item"
               >
                 <X className="h-3.5 w-3.5" />
@@ -359,7 +359,7 @@ export function SupervisionFeedbacks({
           </div>
         </div>
         {canManage && (
-          <Button variant="accent" size="sm" className="shrink-0 w-full sm:w-auto" onClick={openNew}>
+          <Button variant="accent" size="sm" className="shrink-0 w-full sm:w-auto focus-strong" onClick={openNew}>
             <Plus className="h-3.5 w-3.5 mr-1" /> Nova devolutiva
           </Button>
         )}
@@ -393,18 +393,18 @@ export function SupervisionFeedbacks({
                 <p className="line-clamp-2 text-sm text-muted-foreground">{summaryOf(f)}</p>
               )}
               <div className="flex flex-wrap items-center gap-2">
-                <Button variant="secondary" size="sm" onClick={() => openView(f)}>
+                <Button variant="secondary" size="sm" className="focus-strong" onClick={() => openView(f)}>
                   <Eye className="h-3.5 w-3.5 mr-1" /> Ver devolutiva completa
                 </Button>
                 {canManage && f.supervisor_id === user?.id && (
                   <>
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(f)}>
+                    <Button variant="ghost" size="sm" className="focus-strong" onClick={() => openEdit(f)}>
                       <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 hover:text-destructive"
+                      className="h-8 w-8 hover:text-destructive focus-strong"
                       onClick={() => remove(f.id)}
                       aria-label="Excluir devolutiva"
                     >
@@ -437,6 +437,7 @@ export function SupervisionFeedbacks({
                 type="date"
                 value={form.supervision_date}
                 onChange={(e) => setForm((p) => ({ ...p, supervision_date: e.target.value }))}
+                className="focus-strong"
               />
             </div>
 
@@ -447,6 +448,7 @@ export function SupervisionFeedbacks({
                 rows={3}
                 value={form.case_synthesis}
                 onChange={(e) => setForm((p) => ({ ...p, case_synthesis: e.target.value }))}
+                className="focus-strong"
               />
             </div>
 
@@ -457,6 +459,7 @@ export function SupervisionFeedbacks({
                 rows={5}
                 value={form.conceptualization}
                 onChange={(e) => setForm((p) => ({ ...p, conceptualization: e.target.value }))}
+                className="focus-strong"
               />
             </div>
 
@@ -468,6 +471,7 @@ export function SupervisionFeedbacks({
                 placeholder="Formulação funcional / cognitivo-comportamental"
                 value={form.maintenance_cycle}
                 onChange={(e) => setForm((p) => ({ ...p, maintenance_cycle: e.target.value }))}
+                className="focus-strong"
               />
             </div>
 
@@ -484,6 +488,7 @@ export function SupervisionFeedbacks({
                 rows={4}
                 value={form.clinical_hypotheses}
                 onChange={(e) => setForm((p) => ({ ...p, clinical_hypotheses: e.target.value }))}
+                className="focus-strong"
               />
             </div>
 
@@ -495,6 +500,7 @@ export function SupervisionFeedbacks({
                 placeholder="Prioridades e estratégias sugeridas para a condução do caso"
                 value={form.therapeutic_direction}
                 onChange={(e) => setForm((p) => ({ ...p, therapeutic_direction: e.target.value }))}
+                className="focus-strong"
               />
             </div>
 
@@ -528,6 +534,7 @@ export function SupervisionFeedbacks({
                 onChange={(e) =>
                   setForm((p) => ({ ...p, next_supervision_attention: e.target.value }))
                 }
+                className="focus-strong"
               />
             </div>
 
@@ -542,7 +549,7 @@ export function SupervisionFeedbacks({
                     key={String(v)}
                     type="button"
                     onClick={() => setForm((p) => ({ ...p, shared_with_supervisee: v }))}
-                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors focus-strong ${
                       form.shared_with_supervisee === v
                         ? "border-primary bg-card font-medium text-foreground"
                         : "border-border bg-card/50 text-muted-foreground hover:border-primary/40"
@@ -560,10 +567,10 @@ export function SupervisionFeedbacks({
           </div>
 
           <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="ghost" onClick={() => setFormOpen(false)}>
+            <Button variant="ghost" onClick={() => setFormOpen(false)} className="focus-strong">
               Cancelar
             </Button>
-            <Button variant="accent" onClick={save} disabled={saving}>
+            <Button variant="accent" onClick={save} disabled={saving} className="focus-strong">
               {saving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
               {editingId ? "Salvar alterações" : "Salvar devolutiva"}
             </Button>
@@ -623,11 +630,11 @@ export function SupervisionFeedbacks({
               </div>
 
               <DialogFooter className="gap-2 sm:gap-2">
-                <Button variant="ghost" onClick={() => setViewing(null)}>
+                <Button variant="ghost" onClick={() => setViewing(null)} className="focus-strong">
                   Fechar
                 </Button>
                 {canManage && viewing.supervisor_id === user?.id && (
-                  <Button variant="accent" onClick={() => openEdit(viewing)}>
+                  <Button variant="accent" className="focus-strong" onClick={() => openEdit(viewing)}>
                     <Pencil className="h-4 w-4 mr-1" /> Editar
                   </Button>
                 )}

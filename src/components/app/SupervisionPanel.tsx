@@ -167,7 +167,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 shrink-0 px-2 text-xs"
+          className="h-8 shrink-0 px-2 text-xs focus-strong"
           onClick={() => setCompact((c) => !c)}
           aria-pressed={compact}
           title={compact ? "Modo confortável" : "Modo compacto"}
@@ -242,7 +242,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                         onClick={() => setPatientFilter(selected ? "all" : p.id)}
                         aria-pressed={selected}
                         aria-label={`${selected ? "Remover filtro de" : "Filtrar devolutivas por"} ${p.initials}`}
-                        className="flex w-full min-w-0 items-center gap-2.5 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        className="focus-strong flex w-full min-w-0 items-center gap-2.5 rounded-lg text-left"
                       >
 
                         <span
@@ -275,7 +275,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className={`ml-auto px-2 text-xs ${compact ? "h-7" : "h-8"}`}
+                          className={`ml-auto px-2 text-xs focus-strong ${compact ? "h-7" : "h-8"}`}
                           onClick={() => onOpenPatient(p)}
                         >
                           <FileText className="mr-1 h-3.5 w-3.5" /> Prontuário
@@ -298,7 +298,7 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
               <CalendarDays className="h-4 w-4 text-muted-foreground" /> Devolutivas por data
             </h3>
             {patientFilter !== "all" && (
-              <Button variant="ghost" size="sm" onClick={() => setPatientFilter("all")}>
+              <Button variant="ghost" size="sm" className="focus-strong" onClick={() => setPatientFilter("all")}>
                 Limpar filtro
               </Button>
             )}
@@ -360,12 +360,12 @@ export function SupervisionPanel({ supervisees, onOpenPatient }: Props) {
                             </p>
                           )}
                           {p && (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              className={`w-full justify-center sm:w-auto ${compact ? "h-7 text-xs" : ""}`}
-                              onClick={() => onOpenPatient(p)}
-                            >
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className={`w-full justify-center sm:w-auto focus-strong ${compact ? "h-7 text-xs" : ""}`}
+                            onClick={() => onOpenPatient(p)}
+                          >
                               <FileText className="mr-1 h-3.5 w-3.5 shrink-0" />
                               <span className="truncate">Abrir prontuário</span>
                             </Button>
