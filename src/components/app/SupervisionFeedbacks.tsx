@@ -534,6 +534,7 @@ export function SupervisionFeedbacks({
                 onChange={(e) =>
                   setForm((p) => ({ ...p, next_supervision_attention: e.target.value }))
                 }
+                className="focus-strong"
               />
             </div>
 
@@ -548,7 +549,7 @@ export function SupervisionFeedbacks({
                     key={String(v)}
                     type="button"
                     onClick={() => setForm((p) => ({ ...p, shared_with_supervisee: v }))}
-                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors focus-strong ${
                       form.shared_with_supervisee === v
                         ? "border-primary bg-card font-medium text-foreground"
                         : "border-border bg-card/50 text-muted-foreground hover:border-primary/40"
@@ -566,10 +567,10 @@ export function SupervisionFeedbacks({
           </div>
 
           <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="ghost" onClick={() => setFormOpen(false)}>
+            <Button variant="ghost" onClick={() => setFormOpen(false)} className="focus-strong">
               Cancelar
             </Button>
-            <Button variant="accent" onClick={save} disabled={saving}>
+            <Button variant="accent" onClick={save} disabled={saving} className="focus-strong">
               {saving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
               {editingId ? "Salvar alterações" : "Salvar devolutiva"}
             </Button>
@@ -629,11 +630,11 @@ export function SupervisionFeedbacks({
               </div>
 
               <DialogFooter className="gap-2 sm:gap-2">
-                <Button variant="ghost" onClick={() => setViewing(null)}>
+                <Button variant="ghost" onClick={() => setViewing(null)} className="focus-strong">
                   Fechar
                 </Button>
                 {canManage && viewing.supervisor_id === user?.id && (
-                  <Button variant="accent" onClick={() => openEdit(viewing)}>
+                  <Button variant="accent" className="focus-strong" onClick={() => openEdit(viewing)}>
                     <Pencil className="h-4 w-4 mr-1" /> Editar
                   </Button>
                 )}
