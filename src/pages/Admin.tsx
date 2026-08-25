@@ -462,7 +462,7 @@ const Admin = () => {
     <thead>
       <tr className="border-b border-border text-left text-muted-foreground text-xs whitespace-nowrap">
         <th className="pb-3 pr-4 font-medium">Nome</th>
-        <th className="pb-3 pr-4 font-medium">Email</th>
+        <th className="pb-3 pr-4 font-medium">Contato</th>
         <th className="pb-3 pr-4 font-medium">CRP</th>
         <th className="pb-3 pr-4 font-medium">Perfil</th>
         <th className="pb-3 pr-4 font-medium">Assinatura</th>
