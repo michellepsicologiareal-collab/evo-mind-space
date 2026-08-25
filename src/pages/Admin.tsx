@@ -4,7 +4,9 @@ import {
   Loader2, Shield, Users, Mail, Calendar, Building2, ArrowLeft,
   ChevronDown, CheckCircle2, XCircle, Search, FileText, UserCheck,
   Eye, Activity, Heart, ClipboardList, Stethoscope, Trash2, RotateCcw, Ban, Clock,
+  MessageCircle, Copy,
 } from "lucide-react";
+import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -315,11 +317,54 @@ const Admin = () => {
 
   const logUser = users.find((u) => u.id === logUserId);
 
+  const copyText = (value: string, label: string) => {
+    navigator.clipboard?.writeText(value);
+    toast.success(`${label} copiado`);
+  };
+
+  const ContactInfo = ({ email, phone }: { email: string | null; phone: string | null }) => {
+    const wa = normalizePhoneForWhatsApp(phone);
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center gap-1 min-w-0">
+          <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <a href={`mailto:${email ?? ""}`} className="truncate hover:underline text-foreground">{email || "—"}</a>
+          {email && (
+            <button type="button" onClick={() => copyText(email, "E-mail")} title="Copiar e-mail" aria-label="Copiar e-mail" className="text-muted-foreground hover:text-foreground shrink-0">
+              <Copy className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+        <div className="flex items-center gap-1 min-w-0">
+          <MessageCircle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          {wa ? (
+            <>
+              <a
+                href={`https://wa.me/${wa}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate text-emerald-700 hover:underline dark:text-emerald-400"
+                title="Abrir WhatsApp"
+              >
+                {phone}
+              </a>
+              <button type="button" onClick={() => copyText(phone!, "Telefone")} title="Copiar telefone" aria-label="Copiar telefone" className="text-muted-foreground hover:text-foreground shrink-0">
+                <Copy className="h-3 w-3" />
+              </button>
+            </>
+          ) : (
+            <span className="text-muted-foreground">Sem telefone</span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const UserRow = ({ u, showSupervisor = false }: { u: AdminUser; showSupervisor?: boolean }) => (
     <tr className="border-b border-border/50 hover:bg-muted/30 transition-colors">
       <td className="py-3 pr-4 font-medium text-foreground whitespace-nowrap">{u.full_name || "—"}</td>
-      <td className="py-3 pr-4 text-sm">
-        <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />{u.email}</span>
+      <td className="py-3 pr-4 text-sm max-w-[240px]">
+        <ContactInfo email={u.email} phone={u.phone} />
       </td>
       <td className="py-3 pr-4 text-sm">{u.crp || "—"}</td>
       <td className="py-3 pr-4">
@@ -417,7 +462,7 @@ const Admin = () => {
     <thead>
       <tr className="border-b border-border text-left text-muted-foreground text-xs whitespace-nowrap">
         <th className="pb-3 pr-4 font-medium">Nome</th>
-        <th className="pb-3 pr-4 font-medium">Email</th>
+        <th className="pb-3 pr-4 font-medium">Contato</th>
         <th className="pb-3 pr-4 font-medium">CRP</th>
         <th className="pb-3 pr-4 font-medium">Perfil</th>
         <th className="pb-3 pr-4 font-medium">Assinatura</th>
@@ -500,14 +545,14 @@ const Admin = () => {
             </div>
             <div className="space-y-2">
               {pendingUsers.map((u) => (
-                <div key={u.id} className="flex items-center justify-between gap-4 bg-card rounded-xl border border-border p-3">
+                <div key={u.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card rounded-xl border border-border p-3">
                   <div className="min-w-0">
                     <p className="font-medium text-foreground truncate text-sm">{u.full_name || "Sem nome"}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Mail className="h-3 w-3" /> {u.email}
-                    </p>
+                    <div className="text-xs mt-1">
+                      <ContactInfo email={u.email} phone={u.phone} />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 flex-wrap sm:shrink-0">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer ${PROFILE_STYLES[(u.profile_type as ProfileType) || "standard"]}`}>
