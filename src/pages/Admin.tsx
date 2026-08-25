@@ -317,11 +317,54 @@ const Admin = () => {
 
   const logUser = users.find((u) => u.id === logUserId);
 
+  const copyText = (value: string, label: string) => {
+    navigator.clipboard?.writeText(value);
+    toast.success(`${label} copiado`);
+  };
+
+  const ContactInfo = ({ email, phone }: { email: string | null; phone: string | null }) => {
+    const wa = normalizePhoneForWhatsApp(phone);
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center gap-1 min-w-0">
+          <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <a href={`mailto:${email ?? ""}`} className="truncate hover:underline text-foreground">{email || "—"}</a>
+          {email && (
+            <button type="button" onClick={() => copyText(email, "E-mail")} title="Copiar e-mail" aria-label="Copiar e-mail" className="text-muted-foreground hover:text-foreground shrink-0">
+              <Copy className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+        <div className="flex items-center gap-1 min-w-0">
+          <MessageCircle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          {wa ? (
+            <>
+              <a
+                href={`https://wa.me/${wa}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate text-emerald-700 hover:underline dark:text-emerald-400"
+                title="Abrir WhatsApp"
+              >
+                {phone}
+              </a>
+              <button type="button" onClick={() => copyText(phone!, "Telefone")} title="Copiar telefone" aria-label="Copiar telefone" className="text-muted-foreground hover:text-foreground shrink-0">
+                <Copy className="h-3 w-3" />
+              </button>
+            </>
+          ) : (
+            <span className="text-muted-foreground">Sem telefone</span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const UserRow = ({ u, showSupervisor = false }: { u: AdminUser; showSupervisor?: boolean }) => (
     <tr className="border-b border-border/50 hover:bg-muted/30 transition-colors">
       <td className="py-3 pr-4 font-medium text-foreground whitespace-nowrap">{u.full_name || "—"}</td>
-      <td className="py-3 pr-4 text-sm">
-        <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />{u.email}</span>
+      <td className="py-3 pr-4 text-sm max-w-[240px]">
+        <ContactInfo email={u.email} phone={u.phone} />
       </td>
       <td className="py-3 pr-4 text-sm">{u.crp || "—"}</td>
       <td className="py-3 pr-4">
