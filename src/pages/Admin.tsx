@@ -545,14 +545,14 @@ const Admin = () => {
             </div>
             <div className="space-y-2">
               {pendingUsers.map((u) => (
-                <div key={u.id} className="flex items-center justify-between gap-4 bg-card rounded-xl border border-border p-3">
+                <div key={u.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card rounded-xl border border-border p-3">
                   <div className="min-w-0">
                     <p className="font-medium text-foreground truncate text-sm">{u.full_name || "Sem nome"}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Mail className="h-3 w-3" /> {u.email}
-                    </p>
+                    <div className="text-xs mt-1">
+                      <ContactInfo email={u.email} phone={u.phone} />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 flex-wrap sm:shrink-0">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer ${PROFILE_STYLES[(u.profile_type as ProfileType) || "standard"]}`}>
