@@ -4,7 +4,9 @@ import {
   Loader2, Shield, Users, Mail, Calendar, Building2, ArrowLeft,
   ChevronDown, CheckCircle2, XCircle, Search, FileText, UserCheck,
   Eye, Activity, Heart, ClipboardList, Stethoscope, Trash2, RotateCcw, Ban, Clock,
+  MessageCircle, Copy,
 } from "lucide-react";
+import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
