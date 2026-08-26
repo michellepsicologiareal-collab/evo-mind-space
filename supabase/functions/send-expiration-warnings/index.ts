@@ -1,6 +1,8 @@
 // Scheduled function to send trial/subscription expiration warnings.
-// Trigger via pg_cron or manually. Requires email infrastructure to be set up.
+// Trigger via pg_cron or manually. Envia via Resend (domínio psireal.app verificado).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendTransactionalEmail } from "../_shared/resend.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
