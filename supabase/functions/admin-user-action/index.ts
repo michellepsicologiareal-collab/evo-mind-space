@@ -1,4 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendTransactionalEmail } from "../_shared/resend.ts";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -52,28 +54,19 @@ function emailBody(action: string, name: string, extras: Record<string, string> 
 }
 
 async function sendEmail(
-  supabase: any,
+  _supabase: any,
   to: string,
   emailAction: string,
   name: string,
   extras: Record<string, string> = {},
 ): Promise<{ sent: boolean; reason?: string }> {
-  try {
-    const { error } = await supabase.rpc("enqueue_email", {
-      queue_name: "transactional_emails",
-      payload: {
-        to,
-        subject: emailSubjects[emailAction],
-        text: emailBody(emailAction, name, extras),
-        template_name: `admin_${emailAction}`,
-      },
-    });
-    if (error) return { sent: false, reason: error.message };
-    return { sent: true };
-  } catch (e) {
-    return { sent: false, reason: (e as Error).message };
-  }
+  return await sendTransactionalEmail({
+    to,
+    subject: emailSubjects[emailAction],
+    text: emailBody(emailAction, name, extras),
+  });
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
