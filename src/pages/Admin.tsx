@@ -570,6 +570,7 @@ const Admin = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap sm:shrink-0">
+                    <WhatsAppButton phone={u.phone} label="WhatsApp" />
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer ${PROFILE_STYLES[(u.profile_type as ProfileType) || "standard"]}`}>
