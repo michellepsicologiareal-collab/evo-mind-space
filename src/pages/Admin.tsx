@@ -322,11 +322,11 @@ const Admin = () => {
     toast.success(`${label} copiado`);
   };
 
-  const ContactInfo = ({ email, phone }: { email: string | null; phone: string | null }) => {
+  const ContactInfo = ({ email, phone, compact = false }: { email: string | null; phone: string | null; compact?: boolean }) => {
     const wa = normalizePhoneForWhatsApp(phone);
     return (
-      <div className="space-y-1">
-        <div className="flex items-center gap-1 min-w-0">
+      <div className={`space-y-${compact ? "0.5" : "1"}`}>
+        <div className="flex items-center gap-1.5 min-w-0">
           <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           <a href={`mailto:${email ?? ""}`} className="truncate hover:underline text-foreground">{email || "—"}</a>
           {email && (
@@ -335,8 +335,8 @@ const Admin = () => {
             </button>
           )}
         </div>
-        <div className="flex items-center gap-1 min-w-0">
-          <MessageCircle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+        <div className="flex items-center gap-1.5 min-w-0">
+          <MessageCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
           {wa ? (
             <>
               <a
@@ -357,6 +357,23 @@ const Admin = () => {
           )}
         </div>
       </div>
+    );
+  };
+
+  const WhatsAppButton = ({ phone, label = "WhatsApp" }: { phone: string | null; label?: string }) => {
+    const wa = normalizePhoneForWhatsApp(phone);
+    if (!wa) return null;
+    return (
+      <a
+        href={`https://wa.me/${wa}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition-colors"
+        title="Conversar no WhatsApp"
+      >
+        <MessageCircle className="h-3.5 w-3.5" />
+        {label}
+      </a>
     );
   };
 
@@ -553,6 +570,7 @@ const Admin = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap sm:shrink-0">
+                    <WhatsAppButton phone={u.phone} label="WhatsApp" />
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer ${PROFILE_STYLES[(u.profile_type as ProfileType) || "standard"]}`}>
