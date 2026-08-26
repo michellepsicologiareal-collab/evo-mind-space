@@ -74,32 +74,25 @@ Deno.serve(async (req) => {
     for (const p of (trialProfiles ?? []) as any[]) {
       const email = emailById.get(p.id);
       if (!email) continue;
-      const { error } = await admin.rpc("enqueue_email", {
-        queue_name: "transactional_emails",
-        payload: {
-          to: email,
-          subject: emailSubjects.trial_warning,
-          text: trialBody(p.full_name ?? "", p.trial_ends_at),
-          template_name: "trial_warning",
-        },
+      const { sent } = await sendTransactionalEmail({
+        to: email,
+        subject: emailSubjects.trial_warning,
+        text: trialBody(p.full_name ?? "", p.trial_ends_at),
       });
-      if (!error) trialSent++;
+      if (sent) trialSent++;
     }
 
     for (const p of (subProfiles ?? []) as any[]) {
       const email = emailById.get(p.id);
       if (!email) continue;
-      const { error } = await admin.rpc("enqueue_email", {
-        queue_name: "transactional_emails",
-        payload: {
-          to: email,
-          subject: emailSubjects.subscription_warning,
-          text: subBody(p.full_name ?? "", p.subscription_ends_at),
-          template_name: "subscription_warning",
-        },
+      const { sent } = await sendTransactionalEmail({
+        to: email,
+        subject: emailSubjects.subscription_warning,
+        text: subBody(p.full_name ?? "", p.subscription_ends_at),
       });
-      if (!error) subSent++;
+      if (sent) subSent++;
     }
+
 
     return new Response(
       JSON.stringify({ ok: true, trial_sent: trialSent, subscription_sent: subSent }),
