@@ -185,17 +185,22 @@ const Admin = () => {
     toast.success(`Status alterado para ${STATUS_LABELS[newStatus]}`);
   };
 
-  const welcomeMessage = (name: string | null) =>
-    `Olá ${name || "psicólogo(a)"}! 👋\n\nSeja muito bem-vindo(a) ao Psi Real! Sua conta foi aprovada e você já pode acessar o app em https://psireal.app.\n\nQualquer dúvida, estamos por aqui.\n\nAbraços,\nEquipe Psi Real`;
-
-  const welcomeWhatsAppLink = (phone: string | null, name: string | null): string | null => {
-    const wa = normalizePhoneForWhatsApp(phone);
-    if (!wa) return null;
-    return `https://wa.me/${wa}?text=${encodeURIComponent(welcomeMessage(name))}`;
+  const welcomeMessage = (name: string | null, clinicName: string | null) => {
+    const greeting = `Olá ${name || "psicólogo(a)"}! 👋`;
+    const clinicLine = clinicName
+      ? `\nIdentificamos que você faz parte da clínica *${clinicName}*.`
+      : "";
+    return `${greeting}\n\nSeja muito bem-vindo(a) ao Psi Real!${clinicLine}\n\nSua conta foi aprovada e você já pode acessar o app em https://psireal.app.\n\nQualquer dúvida, estamos por aqui.\n\nAbraços,\nEquipe Psi Real`;
   };
 
-  const openWelcomeWhatsApp = (phone: string | null, name: string | null) => {
-    const link = welcomeWhatsAppLink(phone, name);
+  const welcomeWhatsAppLink = (phone: string | null, name: string | null, clinicName: string | null): string | null => {
+    const wa = normalizePhoneForWhatsApp(phone);
+    if (!wa) return null;
+    return `https://wa.me/${wa}?text=${encodeURIComponent(welcomeMessage(name, clinicName))}`;
+  };
+
+  const openWelcomeWhatsApp = (phone: string | null, name: string | null, clinicName: string | null) => {
+    const link = welcomeWhatsAppLink(phone, name, clinicName);
     if (link) window.open(link, "_blank", "noopener,noreferrer");
   };
 
