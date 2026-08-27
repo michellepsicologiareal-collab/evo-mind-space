@@ -484,6 +484,7 @@ const Admin = () => {
       <td className="py-3">
         <div className="flex items-center gap-1 flex-wrap">
           <WhatsAppButton phone={u.phone} label="WhatsApp" />
+          <WelcomeWhatsAppButton phone={u.phone} name={u.full_name} />
           <Button size="sm" variant="ghost" onClick={() => openLogs(u.id)} title="Ver logs">
             <Eye className="h-4 w-4" />
           </Button>
