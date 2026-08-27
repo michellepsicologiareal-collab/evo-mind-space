@@ -185,12 +185,14 @@ const Admin = () => {
     toast.success(`Status alterado para ${STATUS_LABELS[newStatus]}`);
   };
 
+  const APP_LOGIN_URL = "https://psireal.app/auth";
+
   const welcomeMessage = (name: string | null, clinicName: string | null) => {
     const greeting = `Olá ${name || "psicólogo(a)"}! 👋`;
     const clinicLine = clinicName
       ? `\nIdentificamos que você faz parte da clínica *${clinicName}*.`
       : "";
-    return `${greeting}\n\nSeja muito bem-vindo(a) ao Psi Real!${clinicLine}\n\nSua conta foi aprovada e você já pode acessar o app em https://psireal.app.\n\nQualquer dúvida, estamos por aqui.\n\nAbraços,\nEquipe Psi Real`;
+    return `${greeting}\n\nSeja muito bem-vindo(a) ao Psi Real!${clinicLine}\n\nSua conta foi aprovada e você já pode acessar o app pelo link:\n${APP_LOGIN_URL}\n\nQualquer dúvida, estamos por aqui.\n\nAbraços,\nEquipe Psi Real`;
   };
 
   const welcomeWhatsAppLink = (phone: string | null, name: string | null, clinicName: string | null): string | null => {
