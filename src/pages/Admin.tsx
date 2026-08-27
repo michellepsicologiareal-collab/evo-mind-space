@@ -185,7 +185,22 @@ const Admin = () => {
     toast.success(`Status alterado para ${STATUS_LABELS[newStatus]}`);
   };
 
+  const welcomeMessage = (name: string | null) =>
+    `Olá ${name || "psicólogo(a)"}! 👋\n\nSeja muito bem-vindo(a) ao Psi Real! Sua conta foi aprovada e você já pode acessar o app em https://psireal.app.\n\nQualquer dúvida, estamos por aqui.\n\nAbraços,\nEquipe Psi Real`;
+
+  const welcomeWhatsAppLink = (phone: string | null, name: string | null): string | null => {
+    const wa = normalizePhoneForWhatsApp(phone);
+    if (!wa) return null;
+    return `https://wa.me/${wa}?text=${encodeURIComponent(welcomeMessage(name))}`;
+  };
+
+  const openWelcomeWhatsApp = (phone: string | null, name: string | null) => {
+    const link = welcomeWhatsAppLink(phone, name);
+    if (link) window.open(link, "_blank", "noopener,noreferrer");
+  };
+
   const runAction = async (userId: string, action: "approve" | "reject" | "reactivate" | "delete") => {
+    const targetUser = users.find((u) => u.id === userId);
     const { data, error } = await supabase.functions.invoke("admin-user-action", { body: { userId, action } });
     if (error || (data as any)?.error) {
       toast.error("Erro: " + (error?.message || (data as any)?.error));
@@ -200,7 +215,12 @@ const Admin = () => {
     if (action === "approve") {
       const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
       setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_approved: true, rejected_at: null, trial_ends_at: trialEnd } : u)));
-      toast.success(emailSent ? "Aprovado — e-mail enviado" : "Aprovado (e-mail não enviado — configure o domínio)");
+      const waLink = welcomeWhatsAppLink(targetUser?.phone ?? null, targetUser?.full_name ?? null);
+      toast.success(emailSent ? "Aprovado — e-mail enviado" : "Aprovado (e-mail não enviado — configure o domínio)", {
+        action: waLink
+          ? { label: "WhatsApp de boas-vindas", onClick: () => window.open(waLink, "_blank", "noopener,noreferrer") }
+          : undefined,
+      });
     } else if (action === "reject") {
       setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_approved: false, rejected_at: new Date().toISOString() } : u)));
       toast.success(emailSent ? "Reprovado — e-mail enviado" : "Reprovado (e-mail não enviado)");
@@ -377,6 +397,23 @@ const Admin = () => {
     );
   };
 
+  const WelcomeWhatsAppButton = ({ phone, name }: { phone: string | null; name: string | null }) => {
+    const link = welcomeWhatsAppLink(phone, name);
+    if (!link) return null;
+    return (
+      <button
+        type="button"
+        onClick={() => window.open(link, "_blank", "noopener,noreferrer")}
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+        title="Enviar mensagem de boas-vindas no WhatsApp"
+        aria-label="Enviar mensagem de boas-vindas no WhatsApp"
+      >
+        <MessageCircle className="h-3.5 w-3.5" />
+        Boas-vindas
+      </button>
+    );
+  };
+
   const UserRow = ({ u, showSupervisor = false }: { u: AdminUser; showSupervisor?: boolean }) => (
     <tr className="border-b border-border/50 hover:bg-muted/30 transition-colors">
       <td className="py-3 pr-4 font-medium text-foreground whitespace-nowrap">{u.full_name || "—"}</td>
@@ -447,6 +484,7 @@ const Admin = () => {
       <td className="py-3">
         <div className="flex items-center gap-1 flex-wrap">
           <WhatsAppButton phone={u.phone} label="WhatsApp" />
+          <WelcomeWhatsAppButton phone={u.phone} name={u.full_name} />
           <Button size="sm" variant="ghost" onClick={() => openLogs(u.id)} title="Ver logs">
             <Eye className="h-4 w-4" />
           </Button>
