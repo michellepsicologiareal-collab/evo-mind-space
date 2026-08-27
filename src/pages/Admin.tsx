@@ -220,7 +220,7 @@ const Admin = () => {
     if (action === "approve") {
       const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
       setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_approved: true, rejected_at: null, trial_ends_at: trialEnd } : u)));
-      const waLink = welcomeWhatsAppLink(targetUser?.phone ?? null, targetUser?.full_name ?? null);
+      const waLink = welcomeWhatsAppLink(targetUser?.phone ?? null, targetUser?.full_name ?? null, targetUser?.clinic_name ?? null);
       toast.success(emailSent ? "Aprovado — e-mail enviado" : "Aprovado (e-mail não enviado — configure o domínio)", {
         action: waLink
           ? { label: "WhatsApp de boas-vindas", onClick: () => window.open(waLink, "_blank", "noopener,noreferrer") }
@@ -402,8 +402,8 @@ const Admin = () => {
     );
   };
 
-  const WelcomeWhatsAppButton = ({ phone, name }: { phone: string | null; name: string | null }) => {
-    const link = welcomeWhatsAppLink(phone, name);
+  const WelcomeWhatsAppButton = ({ phone, name, clinicName }: { phone: string | null; name: string | null; clinicName: string | null }) => {
+    const link = welcomeWhatsAppLink(phone, name, clinicName);
     if (!link) return null;
     return (
       <button
@@ -489,7 +489,7 @@ const Admin = () => {
       <td className="py-3">
         <div className="flex items-center gap-1 flex-wrap">
           <WhatsAppButton phone={u.phone} label="WhatsApp" />
-          <WelcomeWhatsAppButton phone={u.phone} name={u.full_name} />
+          <WelcomeWhatsAppButton phone={u.phone} name={u.full_name} clinicName={u.clinic_name} />
           <Button size="sm" variant="ghost" onClick={() => openLogs(u.id)} title="Ver logs">
             <Eye className="h-4 w-4" />
           </Button>
