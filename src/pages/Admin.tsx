@@ -397,6 +397,23 @@ const Admin = () => {
     );
   };
 
+  const WelcomeWhatsAppButton = ({ phone, name }: { phone: string | null; name: string | null }) => {
+    const link = welcomeWhatsAppLink(phone, name);
+    if (!link) return null;
+    return (
+      <button
+        type="button"
+        onClick={() => window.open(link, "_blank", "noopener,noreferrer")}
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+        title="Enviar mensagem de boas-vindas no WhatsApp"
+        aria-label="Enviar mensagem de boas-vindas no WhatsApp"
+      >
+        <MessageCircle className="h-3.5 w-3.5" />
+        Boas-vindas
+      </button>
+    );
+  };
+
   const UserRow = ({ u, showSupervisor = false }: { u: AdminUser; showSupervisor?: boolean }) => (
     <tr className="border-b border-border/50 hover:bg-muted/30 transition-colors">
       <td className="py-3 pr-4 font-medium text-foreground whitespace-nowrap">{u.full_name || "—"}</td>
