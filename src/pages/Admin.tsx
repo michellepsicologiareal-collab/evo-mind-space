@@ -322,10 +322,10 @@ const Admin = () => {
     toast.success(`${label} copiado`);
   };
 
-  const ContactInfo = ({ email, phone, compact = false }: { email: string | null; phone: string | null; compact?: boolean }) => {
+  const ContactInfo = ({ email, phone }: { email: string | null; phone: string | null }) => {
     const wa = normalizePhoneForWhatsApp(phone);
     return (
-      <div className={`space-y-${compact ? "0.5" : "1"}`}>
+      <div className="space-y-1">
         <div className="flex items-center gap-1.5 min-w-0">
           <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           <a href={`mailto:${email ?? ""}`} className="truncate hover:underline text-foreground">{email || "—"}</a>
