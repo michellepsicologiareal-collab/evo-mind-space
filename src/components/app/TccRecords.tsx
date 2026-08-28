@@ -171,11 +171,12 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
 
   const sendWhatsApp = () => {
     if (!publicLink) return;
-    const phone = (patientInfo?.phone || "").replace(/\D/g, "");
+    const phone = normalizePhoneForWhatsApp(patientInfo?.phone);
     const msg = `Olá! Use este link para registrar seus pensamentos (RPD) durante a semana: ${publicLink}${linkPassword.trim() ? `\n\nSenha: ${linkPassword.trim()}` : ""}`;
     const url = phone
-      ? `https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`
+      ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
       : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
     window.open(url, "_blank");
   };
 
