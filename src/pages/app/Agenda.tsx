@@ -48,6 +48,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 
 // Retorno exato para a Agenda (data/visão/filtros atuais) ao fechar o Registro de Sessão.
 const agendaReturnParam = () =>
@@ -1441,10 +1442,11 @@ const Agenda = () => {
 
     let phoneNumber = "";
     if (patient?.has_financial_responsible && patient.financial_responsible_phone) {
-      phoneNumber = patient.financial_responsible_phone.replace(/\D/g, "");
+      phoneNumber = normalizePhoneForWhatsApp(patient.financial_responsible_phone) ?? "";
     } else if (patient?.phone) {
-      phoneNumber = patient.phone.replace(/\D/g, "");
+      phoneNumber = normalizePhoneForWhatsApp(patient.phone) ?? "";
     }
+
 
     setConfirmPreview({
       sessionId: s.id,
@@ -1593,10 +1595,11 @@ const Agenda = () => {
     const patient = patients.find((p) => p.id === s.patient_id);
     let phoneNumber = "";
     if (patient?.has_financial_responsible && patient.financial_responsible_phone) {
-      phoneNumber = patient.financial_responsible_phone.replace(/\D/g, "");
+      phoneNumber = normalizePhoneForWhatsApp(patient.financial_responsible_phone) ?? "";
     } else if (patient?.phone) {
-      phoneNumber = patient.phone.replace(/\D/g, "");
+      phoneNumber = normalizePhoneForWhatsApp(patient.phone) ?? "";
     }
+
     window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
 
     // Save billing sent timestamp
