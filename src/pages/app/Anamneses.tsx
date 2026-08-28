@@ -16,6 +16,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageHeader } from "@/components/app/PageHeader";
+import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 
 interface ChildRow {
   id: string;
@@ -79,10 +80,10 @@ const Anamneses = () => {
     setSending(null);
     if (error || !data?.token) { toast.error("Não foi possível gerar o link."); return; }
     const link = `${window.location.origin}/${slug}/${data.token}`;
-    const phone = (p.phone || "").replace(/\D/g, "");
+    const phone = normalizePhoneForWhatsApp(p.phone);
     const msg = `Olá! Para iniciarmos o atendimento de ${p.full_name}, por favor preencha a anamnese neste link: ${link}`;
     if (phone) {
-      window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
       toast.success("Link aberto no WhatsApp");
     } else {
       await navigator.clipboard.writeText(link);

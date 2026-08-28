@@ -950,9 +950,9 @@ const Patients = () => {
 
   const buildWhatsAppUrl = (p: Patient) => {
     // Use financial responsible phone if available
-    let digits: string;
+    let digits: string | null;
     if (p.has_financial_responsible && p.financial_responsible_phone) {
-      digits = p.financial_responsible_phone.replace(/\D/g, "");
+      digits = normalizePhoneForWhatsApp(p.financial_responsible_phone);
     } else {
       digits = normalizePhoneForWhatsApp(p.phone);
     }
@@ -2073,10 +2073,10 @@ const Patients = () => {
                             return;
                           }
                           const link = `${window.location.origin}/${routeSlug}/${data.token}`;
-                          const phone = (p.phone || "").replace(/\D/g, "");
+                          const phone = normalizePhoneForWhatsApp(p.phone);
                           const msg = `Olá! Para iniciarmos o atendimento de ${p.full_name}, por favor preencha a anamnese neste link: ${link}`;
                           if (phone) {
-                            window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+                            window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
                           } else {
                             navigator.clipboard.writeText(link);
                             toast.success("Link da anamnese copiado!");
