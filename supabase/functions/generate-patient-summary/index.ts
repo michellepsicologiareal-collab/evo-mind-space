@@ -68,8 +68,8 @@ Deno.serve(async (req) => {
     // Coleta dados clínicos mínimos
     const [tccRes, teRes, actRes, recordsRes, progressRes] = await Promise.all([
       supabase.from("case_formulations").select("environment, thoughts, emotions, behaviors, physical_reactions, core_beliefs, treatment_goals, ai_summary, updated_at").eq("patient_id", patient_id).eq("user_id", user.id).maybeSingle(),
-      supabase.from("schema_formulations").select("padrao_identificado, foco_terapeutico, conexao_gerada, updated_at").eq("patient_id", patient_id).eq("user_id", user.id).maybeSingle(),
-      supabase.from("act_formulations").select("apresentacao_problema, direcionamento_gerado, valores, fusao_evitacao, acoes_comprometidas, updated_at").eq("patient_id", patient_id).eq("user_id", user.id).maybeSingle(),
+      supabase.from("schema_formulations").select("padrao_identificado, foco_terapeutico, conexao_gerada, updated_at").eq("patient_id", patient_id).eq("therapist_id", user.id).maybeSingle(),
+      supabase.from("act_formulations").select("apresentacao_problema, direcionamento_gerado, valores, hexaflex, matriz_act, updated_at").eq("patient_id", patient_id).eq("therapist_id", user.id).maybeSingle(),
       supabase.from("session_records").select("id, session_date, themes, clinical_observations, risk_indicator").eq("patient_id", patient_id).eq("user_id", user.id).order("session_date", { ascending: false }).limit(10),
       supabase.from("patient_progress").select("id, created_at, wellbeing_score, wellbeing_source, emotions, attention_flag, clinical_observation, data_model").eq("patient_id", patient_id).eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
     ]);

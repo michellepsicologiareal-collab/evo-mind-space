@@ -40,8 +40,8 @@ Deno.serve(async (req) => {
 
     const [tccRes, teRes, actRes, recordsRes] = await Promise.all([
       supabase.from("case_formulations").select("environment, thoughts, emotions, behaviors, physical_reactions, core_beliefs, treatment_goals, ai_summary").eq("patient_id", patient_id).eq("user_id", user.id).maybeSingle(),
-      supabase.from("schema_formulations").select("padrao_identificado, foco_terapeutico, conexao_gerada, esquemas_identificados, modos_ativados").eq("patient_id", patient_id).eq("user_id", user.id).maybeSingle(),
-      supabase.from("act_formulations").select("apresentacao_problema, direcionamento_gerado, valores, fusao_evitacao, acoes_comprometidas").eq("patient_id", patient_id).eq("user_id", user.id).maybeSingle(),
+      supabase.from("schema_formulations").select("padrao_identificado, foco_terapeutico, conexao_gerada, esquemas, modos").eq("patient_id", patient_id).eq("therapist_id", user.id).maybeSingle(),
+      supabase.from("act_formulations").select("apresentacao_problema, direcionamento_gerado, valores, hexaflex, matriz_act").eq("patient_id", patient_id).eq("therapist_id", user.id).maybeSingle(),
       supabase.from("session_records").select("session_date, themes, clinical_observations, risk_indicator").eq("patient_id", patient_id).eq("user_id", user.id).order("session_date", { ascending: false }).limit(5),
     ]);
 
@@ -67,10 +67,10 @@ Deno.serve(async (req) => {
       ctx.push(`\n[FORMULAÇÃO TCC]\nAmbiente: ${tcc.environment || "-"}\nPensamentos: ${tcc.thoughts || "-"}\nEmoções: ${tcc.emotions || "-"}\nComportamentos: ${tcc.behaviors || "-"}\nReações físicas: ${tcc.physical_reactions || "-"}\nCrenças centrais: ${tcc.core_beliefs || "-"}\nMetas: ${goalsText || "-"}`);
     }
     if (te) {
-      ctx.push(`\n[FORMULAÇÃO TE]\nPadrão identificado: ${te.padrao_identificado || "-"}\nFoco terapêutico: ${te.foco_terapeutico || "-"}\nConexão: ${te.conexao_gerada || "-"}\nEsquemas: ${JSON.stringify(te.esquemas_identificados || "-").slice(0, 400)}\nModos: ${JSON.stringify(te.modos_ativados || "-").slice(0, 400)}`);
+      ctx.push(`\n[FORMULAÇÃO TE]\nPadrão identificado: ${te.padrao_identificado || "-"}\nFoco terapêutico: ${te.foco_terapeutico || "-"}\nConexão: ${te.conexao_gerada || "-"}\nEsquemas: ${JSON.stringify(te.esquemas || "-").slice(0, 400)}\nModos: ${JSON.stringify(te.modos || "-").slice(0, 400)}`);
     }
     if (act) {
-      ctx.push(`\n[FORMULAÇÃO ACT]\nApresentação: ${act.apresentacao_problema || "-"}\nDirecionamento: ${act.direcionamento_gerado || "-"}\nValores: ${JSON.stringify(act.valores || "-").slice(0, 300)}\nFusão/Evitação: ${JSON.stringify(act.fusao_evitacao || "-").slice(0, 300)}`);
+      ctx.push(`\n[FORMULAÇÃO ACT]\nApresentação: ${act.apresentacao_problema || "-"}\nDirecionamento: ${act.direcionamento_gerado || "-"}\nValores: ${JSON.stringify(act.valores || "-").slice(0, 300)}\nHexaflex: ${JSON.stringify(act.hexaflex || "-").slice(0, 300)}\nMatriz: ${JSON.stringify(act.matriz_act || "-").slice(0, 300)}`);
     }
     if (records.length) {
       ctx.push(`\n[ÚLTIMOS REGISTROS DE SESSÃO]`);
