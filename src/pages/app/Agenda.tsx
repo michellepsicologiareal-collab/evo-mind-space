@@ -48,6 +48,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 
 // Retorno exato para a Agenda (data/visão/filtros atuais) ao fechar o Registro de Sessão.
 const agendaReturnParam = () =>
