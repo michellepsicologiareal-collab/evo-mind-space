@@ -3081,10 +3081,10 @@ const Agenda = () => {
             return (
               <>
                 <div className="grid min-w-0 grid-cols-2 gap-2 mb-4 lg:grid-cols-4">
-                  <Item icon={CalendarCheck} label="Sessões de hoje" value={todayCount} tone="bg-primary/10 text-primary" onClick={() => { goToDate(new Date()); setViewTab("day"); }} />
-                  <Item icon={AlertCircle} label="Registros pendentes" value={pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
-                  <Item icon={Wallet} label="Pagamentos pendentes" value={pendingPayments} tone="bg-emerald-100 text-emerald-700" onClick={() => setPendingPaymentsOpen(true)} />
-                  <Item icon={HeartPulse} label="Humor respondido hoje" value={moodCount} tone="bg-lilac/40 text-foreground" />
+                  <Item icon={CalendarCheck} label={isSameDay(selectedDate, now) ? "Sessões de hoje" : `Sessões em ${format(selectedDate, "dd/MM")}`} value={todayCount} tone="bg-primary/10 text-primary" onClick={() => { goToDate(selectedDate); setViewTab("day"); }} />
+                  <Item icon={AlertCircle} label={`Registros pendentes em ${format(currentMonth, "MMM", { locale: ptBR })}`} value={pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
+                  <Item icon={Wallet} label={`Pagamentos pendentes em ${format(currentMonth, "MMM", { locale: ptBR })}`} value={pendingPayments} tone="bg-emerald-100 text-emerald-700" onClick={() => setPendingPaymentsOpen(true)} />
+                  <Item icon={HeartPulse} label={isSameDay(selectedDate, now) ? "Humor respondido hoje" : `Humor em ${format(selectedDate, "dd/MM")}`} value={moodCount} tone="bg-lilac/40 text-foreground" />
                 </div>
                 <Sheet open={pendingRecordsOpen} onOpenChange={setPendingRecordsOpen}>
                   <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
