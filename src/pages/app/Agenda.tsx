@@ -2999,15 +2999,17 @@ const Agenda = () => {
 
 
 
-          {/* ── Resumo do dia ── */}
+          {/* ── Resumo do período (segue o dia/mês selecionado) ── */}
           {(() => {
             const now = new Date();
-            const dayStart = new Date(now); dayStart.setHours(0, 0, 0, 0);
-            const dayEnd = new Date(now); dayEnd.setHours(23, 59, 59, 999);
-            const inToday = (d: Date) => d >= dayStart && d <= dayEnd;
+            const dayStart = new Date(selectedDate); dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(selectedDate); dayEnd.setHours(23, 59, 59, 999);
+            const inSelectedDay = (d: Date) => d >= dayStart && d <= dayEnd;
+            // Pendências contam até o fim do dia selecionado (ou até agora, se o dia for futuro)
+            const cutoff = dayEnd < now ? dayEnd : now;
             const todayCount = sessions.filter((s) => {
               const d = new Date(s.scheduled_at);
-              return inToday(d) && s.status !== "cancelled";
+              return inSelectedDay(d) && s.status !== "cancelled";
             }).length;
             const pendingRecords = sessions.filter((s) => {
               const d = new Date(s.scheduled_at);
@@ -3015,7 +3017,7 @@ const Agenda = () => {
               return (
                 s.session_type === "clinical" &&
                 !!s.patient_id &&
-                d < now &&
+                d < cutoff &&
                 !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
                 !sessionRecordIds.has(s.id) &&
                 !(key && sessionRecordKeys.has(key))
@@ -3026,9 +3028,11 @@ const Agenda = () => {
               !s.is_expense &&
               s.payment_status === "pending" &&
               !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
-              new Date(s.scheduled_at) < now
+              new Date(s.scheduled_at) < cutoff
             )).length;
-            const moodCount = moodTodayPatients.size;
+            const moodCount = isSameDay(selectedDate, now)
+              ? moodTodayPatients.size
+              : sessions.filter((s) => inSelectedDay(new Date(s.scheduled_at)) && moodBySession.has(s.id)).length;
 
             const pendingPaymentList = sessions.filter((s) => (
               s.session_type === "clinical" &&
