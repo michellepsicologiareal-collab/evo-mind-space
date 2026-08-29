@@ -3039,7 +3039,7 @@ const Agenda = () => {
               !s.is_expense &&
               s.payment_status === "pending" &&
               !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
-              new Date(s.scheduled_at) < now
+              new Date(s.scheduled_at) < cutoff
             )).sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at));
 
             const pendingRecordList = sessions.filter((s) => {
@@ -3048,7 +3048,7 @@ const Agenda = () => {
                 s.session_type === "clinical" &&
                 !s.is_expense &&
                 !!s.patient_id &&
-                new Date(s.scheduled_at) < now &&
+                new Date(s.scheduled_at) < cutoff &&
                 !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
                 !sessionRecordIds.has(s.id) &&
                 !(key && sessionRecordKeys.has(key))
