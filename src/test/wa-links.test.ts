@@ -36,7 +36,10 @@ describe("wa.me links respect international country codes", () => {
     const offenders: string[] = [];
     for (const file of files) {
       const content = readFileSync(file, "utf8");
-      if (!content.includes("wa.me/${")) continue;
+      // Static support numbers stored in SCREAMING_CASE constants are fine.
+      const dynamic = content.match(/wa\.me\/\$\{[^}]+\}/g) ?? [];
+      const usesPatientPhone = dynamic.some((m) => !/^wa\.me\/\$\{[A-Z0-9_]+\}$/.test(m));
+      if (!usesPatientPhone) continue;
       // Files that build dynamic links must import the normalizer.
       if (!content.includes("normalizePhoneForWhatsApp")) {
         offenders.push(file.replace(SRC, "src"));
