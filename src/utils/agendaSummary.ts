@@ -29,13 +29,13 @@ export interface AgendaSummaryLabels {
   mood: string;
 }
 
-export interface AgendaSummary<T extends AgendaSummarySession = AgendaSummarySession> {
+export interface AgendaSummary {
   todayCount: number;
   pendingRecords: number;
   pendingPayments: number;
   moodCount: number;
-  pendingPaymentList: T[];
-  pendingRecordList: T[];
+  pendingPaymentList: AgendaSummarySession[];
+  pendingRecordList: AgendaSummarySession[];
   labels: AgendaSummaryLabels;
 }
 
@@ -50,7 +50,7 @@ const recordKey = (patientId: string | null, scheduledAt: string) =>
  * pendentes seguem o MÊS exibido, contando até o fim do dia selecionado
  * (ou até "agora" quando o dia selecionado é futuro).
  */
-export function computeAgendaSummary<T extends AgendaSummarySession>(input: AgendaSummaryInput & { sessions: T[] }): AgendaSummary<T> {
+export function computeAgendaSummary(input: AgendaSummaryInput): AgendaSummary {
   const { sessions, selectedDate, currentMonth, sessionRecordIds, sessionRecordKeys, moodBySession, moodTodayPatients } = input;
   const now = input.now ?? new Date();
 
