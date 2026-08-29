@@ -2999,15 +2999,17 @@ const Agenda = () => {
 
 
 
-          {/* ── Resumo do dia ── */}
+          {/* ── Resumo do período (segue o dia/mês selecionado) ── */}
           {(() => {
             const now = new Date();
-            const dayStart = new Date(now); dayStart.setHours(0, 0, 0, 0);
-            const dayEnd = new Date(now); dayEnd.setHours(23, 59, 59, 999);
-            const inToday = (d: Date) => d >= dayStart && d <= dayEnd;
+            const dayStart = new Date(selectedDate); dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(selectedDate); dayEnd.setHours(23, 59, 59, 999);
+            const inSelectedDay = (d: Date) => d >= dayStart && d <= dayEnd;
+            // Pendências contam até o fim do dia selecionado (ou até agora, se o dia for futuro)
+            const cutoff = dayEnd < now ? dayEnd : now;
             const todayCount = sessions.filter((s) => {
               const d = new Date(s.scheduled_at);
-              return inToday(d) && s.status !== "cancelled";
+              return inSelectedDay(d) && s.status !== "cancelled";
             }).length;
             const pendingRecords = sessions.filter((s) => {
               const d = new Date(s.scheduled_at);
@@ -3015,7 +3017,7 @@ const Agenda = () => {
               return (
                 s.session_type === "clinical" &&
                 !!s.patient_id &&
-                d < now &&
+                d < cutoff &&
                 !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
                 !sessionRecordIds.has(s.id) &&
                 !(key && sessionRecordKeys.has(key))
@@ -3026,16 +3028,18 @@ const Agenda = () => {
               !s.is_expense &&
               s.payment_status === "pending" &&
               !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
-              new Date(s.scheduled_at) < now
+              new Date(s.scheduled_at) < cutoff
             )).length;
-            const moodCount = moodTodayPatients.size;
+            const moodCount = isSameDay(selectedDate, now)
+              ? moodTodayPatients.size
+              : sessions.filter((s) => inSelectedDay(new Date(s.scheduled_at)) && moodBySession.has(s.id)).length;
 
             const pendingPaymentList = sessions.filter((s) => (
               s.session_type === "clinical" &&
               !s.is_expense &&
               s.payment_status === "pending" &&
               !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
-              new Date(s.scheduled_at) < now
+              new Date(s.scheduled_at) < cutoff
             )).sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at));
 
             const pendingRecordList = sessions.filter((s) => {
@@ -3044,7 +3048,7 @@ const Agenda = () => {
                 s.session_type === "clinical" &&
                 !s.is_expense &&
                 !!s.patient_id &&
-                new Date(s.scheduled_at) < now &&
+                new Date(s.scheduled_at) < cutoff &&
                 !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
                 !sessionRecordIds.has(s.id) &&
                 !(key && sessionRecordKeys.has(key))
@@ -3077,10 +3081,10 @@ const Agenda = () => {
             return (
               <>
                 <div className="grid min-w-0 grid-cols-2 gap-2 mb-4 lg:grid-cols-4">
-                  <Item icon={CalendarCheck} label="Sessões de hoje" value={todayCount} tone="bg-primary/10 text-primary" onClick={() => { goToDate(new Date()); setViewTab("day"); }} />
-                  <Item icon={AlertCircle} label="Registros pendentes" value={pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
-                  <Item icon={Wallet} label="Pagamentos pendentes" value={pendingPayments} tone="bg-emerald-100 text-emerald-700" onClick={() => setPendingPaymentsOpen(true)} />
-                  <Item icon={HeartPulse} label="Humor respondido hoje" value={moodCount} tone="bg-lilac/40 text-foreground" />
+                  <Item icon={CalendarCheck} label={isSameDay(selectedDate, now) ? "Sessões de hoje" : `Sessões em ${format(selectedDate, "dd/MM")}`} value={todayCount} tone="bg-primary/10 text-primary" onClick={() => { goToDate(selectedDate); setViewTab("day"); }} />
+                  <Item icon={AlertCircle} label={`Registros pendentes em ${format(currentMonth, "MMM", { locale: ptBR })}`} value={pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
+                  <Item icon={Wallet} label={`Pagamentos pendentes em ${format(currentMonth, "MMM", { locale: ptBR })}`} value={pendingPayments} tone="bg-emerald-100 text-emerald-700" onClick={() => setPendingPaymentsOpen(true)} />
+                  <Item icon={HeartPulse} label={isSameDay(selectedDate, now) ? "Humor respondido hoje" : `Humor em ${format(selectedDate, "dd/MM")}`} value={moodCount} tone="bg-lilac/40 text-foreground" />
                 </div>
                 <Sheet open={pendingRecordsOpen} onOpenChange={setPendingRecordsOpen}>
                   <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
