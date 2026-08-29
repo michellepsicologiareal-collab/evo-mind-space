@@ -32,6 +32,10 @@ jobs:
       - name: Typecheck
         run: bunx tsc --noEmit -p tsconfig.app.json
 
+      # Fast-fail on the wa.me links suite (international DDI guard)
+      - name: Unit tests — wa.me links (DDI guard)
+        run: bunx vitest run src/test/wa-links.test.ts --reporter=verbose
+
       # Fast-fail on the homework normalization suite (legacy `actions` migration)
       - name: Unit tests — PatientHomework (actions migration)
         run: bunx vitest run src/components/app/PatientHomework.test.ts --reporter=verbose
