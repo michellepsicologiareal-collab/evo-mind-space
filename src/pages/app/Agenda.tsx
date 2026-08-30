@@ -289,6 +289,8 @@ const Agenda = () => {
   const [isNavigating, setIsNavigating] = useState(false);
   const skipDateMonthSyncRef = useRef(false);
   const skipWeekSyncRef = useRef(false);
+  const skipUrlWriteRef = useRef(false);
+
 
   const goToMonth = useCallback((date: Date) => {
     const month = startOfMonth(date);
