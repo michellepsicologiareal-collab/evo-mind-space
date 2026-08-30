@@ -328,6 +328,8 @@ const Agenda = () => {
 
   // Seed patient/month/date/view from URL ONCE on mount. Subsequent URL writes are one-way
   // (state → URL) to avoid ping-pong loops between effects that watch searchParams.
+  // Fallback: quando a URL não traz data/mês, restaura o último filtro salvo em localStorage,
+  // para o psicólogo não perder o contexto ao recarregar ou voltar à Agenda.
   const urlSeededRef = useRef(false);
   useEffect(() => {
     if (urlSeededRef.current) return;
@@ -350,7 +352,16 @@ const Agenda = () => {
       if (!isNaN(parsed.getTime()) && !isSameMonth(parsed, currentMonth)) {
         goToMonth(parsed);
       }
+      return;
     }
+    // Sem parâmetros na URL → tenta localStorage
+    try {
+      const saved = localStorage.getItem("psireal_agenda_date");
+      if (saved) {
+        const parsedSaved = parse(saved, "yyyy-MM-dd", new Date());
+        if (!isNaN(parsedSaved.getTime())) goToDate(parsedSaved);
+      }
+    } catch { /* localStorage indisponível */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -376,6 +387,8 @@ const Agenda = () => {
       params.set("date", dateStr);
       changed = true;
     }
+    // Persiste a data selecionada para restaurar ao recarregar/voltar à Agenda
+    try { localStorage.setItem("psireal_agenda_date", dateStr); } catch { /* ignore */ }
     if (params.get("view") !== viewTab) {
       params.set("view", viewTab);
       changed = true;
