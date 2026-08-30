@@ -71,7 +71,7 @@ describe("generate-patient-summary — data selection scope", () => {
   const scopedTables = CLINICAL_READ_TABLES.filter((t) => t !== "patients");
 
   it.each(scopedTables)(
-    "clinical read on '%s' is scoped by both patient_id and user_id",
+    "clinical read on '%s' is scoped by both patient_id and owner column",
     (table) => {
       const chains = chainsFor(table);
       expect(chains.length, `no reads found for ${table}`).toBeGreaterThan(0);
@@ -79,8 +79,10 @@ describe("generate-patient-summary — data selection scope", () => {
         expect(c, `${table} read missing patient_id filter`).toMatch(
           /\.eq\(\s*["']patient_id["']\s*,\s*patient_id\s*\)/,
         );
-        expect(c, `${table} read missing user_id filter`).toMatch(
-          /\.eq\(\s*["']user_id["']\s*,\s*user\.id\s*\)/,
+        // schema/act formulations use therapist_id; the rest use user_id.
+        const ownerColumn = table === "schema_formulations" || table === "act_formulations" ? "therapist_id" : "user_id";
+        expect(c, `${table} read missing ${ownerColumn} filter`).toMatch(
+          new RegExp(`\\.eq\\(\\s*["']${ownerColumn}["']\\s*,\\s*user\\.id\\s*\\)`),
         );
       }
     },
