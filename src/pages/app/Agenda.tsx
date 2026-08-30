@@ -3002,60 +3002,17 @@ const Agenda = () => {
 
           {/* ── Resumo do período (segue o dia/mês selecionado) ── */}
           {(() => {
-            const now = new Date();
-            const dayStart = new Date(selectedDate); dayStart.setHours(0, 0, 0, 0);
-            const dayEnd = new Date(selectedDate); dayEnd.setHours(23, 59, 59, 999);
-            const inSelectedDay = (d: Date) => d >= dayStart && d <= dayEnd;
-            // Pendências contam até o fim do dia selecionado (ou até agora, se o dia for futuro)
-            const cutoff = dayEnd < now ? dayEnd : now;
-            const todayCount = sessions.filter((s) => {
-              const d = new Date(s.scheduled_at);
-              return inSelectedDay(d) && s.status !== "cancelled";
-            }).length;
-            const pendingRecords = sessions.filter((s) => {
-              const d = new Date(s.scheduled_at);
-              const key = s.patient_id ? `${s.patient_id}|${d.toISOString().slice(0, 10)}` : "";
-              return (
-                s.session_type === "clinical" &&
-                !!s.patient_id &&
-                d < cutoff &&
-                !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
-                !sessionRecordIds.has(s.id) &&
-                !(key && sessionRecordKeys.has(key))
-              );
-            }).length;
-            const pendingPayments = sessions.filter((s) => (
-              s.session_type === "clinical" &&
-              !s.is_expense &&
-              s.payment_status === "pending" &&
-              !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
-              new Date(s.scheduled_at) < cutoff
-            )).length;
-            const moodCount = isSameDay(selectedDate, now)
-              ? moodTodayPatients.size
-              : sessions.filter((s) => inSelectedDay(new Date(s.scheduled_at)) && moodBySession.has(s.id)).length;
-
-            const pendingPaymentList = sessions.filter((s) => (
-              s.session_type === "clinical" &&
-              !s.is_expense &&
-              s.payment_status === "pending" &&
-              !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
-              new Date(s.scheduled_at) < cutoff
-            )).sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at));
-
-            const pendingRecordList = sessions.filter((s) => {
-              const key = s.patient_id ? `${s.patient_id}|${new Date(s.scheduled_at).toISOString().slice(0, 10)}` : "";
-              return (
-                s.session_type === "clinical" &&
-                !s.is_expense &&
-                !!s.patient_id &&
-                new Date(s.scheduled_at) < cutoff &&
-                !["cancelled", "no_show", "rescheduled"].includes(s.status) &&
-                !sessionRecordIds.has(s.id) &&
-                !(key && sessionRecordKeys.has(key))
-              );
-            }).sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at));
-
+            const summary = computeAgendaSummary({
+              sessions,
+              selectedDate,
+              currentMonth,
+              sessionRecordIds,
+              sessionRecordKeys,
+              moodBySession,
+              moodTodayPatients,
+            });
+            const cutoffLabel = format(summary.cutoff, "dd/MM");
+            const periodLabel = `até ${cutoffLabel}`;
 
             const Item = ({ icon: Icon, label, value, tone, onClick }: { icon: any; label: string; value: number; tone: string; onClick?: () => void }) => {
               const Tag: any = onClick ? "button" : "div";
@@ -3079,25 +3036,47 @@ const Agenda = () => {
               );
             };
 
+            const allZero = summary.todayCount === 0 && summary.pendingRecords === 0 && summary.pendingPayments === 0 && summary.moodCount === 0;
+
             return (
               <>
-                <div className="grid min-w-0 grid-cols-2 gap-2 mb-4 lg:grid-cols-4">
-                  <Item icon={CalendarCheck} label={isSameDay(selectedDate, now) ? "Sessões de hoje" : `Sessões em ${format(selectedDate, "dd/MM")}`} value={todayCount} tone="bg-primary/10 text-primary" onClick={() => { goToDate(selectedDate); setViewTab("day"); }} />
-                  <Item icon={AlertCircle} label={`Registros pendentes em ${format(currentMonth, "MMM", { locale: ptBR })}`} value={pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
-                  <Item icon={Wallet} label={`Pagamentos pendentes em ${format(currentMonth, "MMM", { locale: ptBR })}`} value={pendingPayments} tone="bg-emerald-100 text-emerald-700" onClick={() => setPendingPaymentsOpen(true)} />
-                  <Item icon={HeartPulse} label={isSameDay(selectedDate, now) ? "Humor respondido hoje" : `Humor em ${format(selectedDate, "dd/MM")}`} value={moodCount} tone="bg-lilac/40 text-foreground" />
+                <div className="grid min-w-0 grid-cols-2 gap-2 mb-2 lg:grid-cols-4">
+                  <Item icon={CalendarCheck} label={summary.labels.sessions} value={summary.todayCount} tone="bg-primary/10 text-primary" onClick={() => { goToDate(selectedDate); setViewTab("day"); }} />
+                  <Item icon={AlertCircle} label={`${summary.labels.pendingRecords} (${periodLabel})`} value={summary.pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
+                  <Item icon={Wallet} label={`${summary.labels.pendingPayments} (${periodLabel})`} value={summary.pendingPayments} tone="bg-emerald-100 text-emerald-700" onClick={() => setPendingPaymentsOpen(true)} />
+                  <Item icon={HeartPulse} label={summary.labels.mood} value={summary.moodCount} tone="bg-lilac/40 text-foreground" />
                 </div>
+                {allZero && (
+                  <div className="mb-4 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-center text-sm text-muted-foreground">
+                    Nenhuma sessão ou pendência para este período.
+                    <button
+                      type="button"
+                      onClick={() => setNewSessionOpen(true)}
+                      className="ml-1 inline font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      Agendar uma sessão
+                    </button>
+                  </div>
+                )}
                 <Sheet open={pendingRecordsOpen} onOpenChange={setPendingRecordsOpen}>
                   <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
                     <SheetHeader className="mb-4">
                       <SheetTitle className="font-display text-xl">Registros pendentes</SheetTitle>
-                      <SheetDescription>Sessões realizadas que ainda não têm registro clínico</SheetDescription>
+                      <SheetDescription>
+                        Sessões realizadas que ainda não têm registro clínico ({periodLabel})
+                      </SheetDescription>
                     </SheetHeader>
-                    {pendingRecordList.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Tudo em dia por aqui ✨</p>
+                    {summary.pendingRecordList.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
+                        <ClipboardList className="h-8 w-8 text-muted-foreground/60" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Tudo em dia por aqui ✨</p>
+                          <p className="text-xs text-muted-foreground mt-1">Nenhum registro pendente {periodLabel}.</p>
+                        </div>
+                      </div>
                     ) : (
                       <div className="space-y-2">
-                        {pendingRecordList.map((s) => (
+                        {summary.pendingRecordList.map((s) => (
                           <button
                             key={s.id}
                             type="button"
@@ -3116,13 +3095,21 @@ const Agenda = () => {
                   <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
                     <SheetHeader className="mb-4">
                       <SheetTitle className="font-display text-xl">Pagamentos pendentes</SheetTitle>
-                      <SheetDescription>Sessões já realizadas com pagamento em aberto</SheetDescription>
+                      <SheetDescription>
+                        Sessões já realizadas com pagamento em aberto ({periodLabel})
+                      </SheetDescription>
                     </SheetHeader>
-                    {pendingPaymentList.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Nenhum pagamento pendente ✨</p>
+                    {summary.pendingPaymentList.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
+                        <Wallet className="h-8 w-8 text-muted-foreground/60" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Nenhum pagamento pendente ✨</p>
+                          <p className="text-xs text-muted-foreground mt-1">Todas as sessões {periodLabel} estão quitadas.</p>
+                        </div>
+                      </div>
                     ) : (
                       <div className="space-y-2">
-                        {pendingPaymentList.map((s) => (
+                        {summary.pendingPaymentList.map((s) => (
                           <button
                             key={s.id}
                             type="button"
