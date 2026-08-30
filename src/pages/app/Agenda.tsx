@@ -387,6 +387,8 @@ const Agenda = () => {
       params.set("date", dateStr);
       changed = true;
     }
+    // Persiste a data selecionada para restaurar ao recarregar/voltar à Agenda
+    try { localStorage.setItem("psireal_agenda_date", dateStr); } catch { /* ignore */ }
     if (params.get("view") !== viewTab) {
       params.set("view", viewTab);
       changed = true;
