@@ -3051,7 +3051,7 @@ const Agenda = () => {
                     Nenhuma sessão ou pendência para este período.
                     <button
                       type="button"
-                      onClick={() => setNewSessionOpen(true)}
+                      onClick={() => openNew(selectedDate)}
                       className="ml-1 inline font-medium text-primary underline-offset-2 hover:underline"
                     >
                       Agendar uma sessão
