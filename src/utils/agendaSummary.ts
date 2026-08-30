@@ -66,7 +66,7 @@ export function computeAgendaSummary(input: AgendaSummaryInput): AgendaSummary {
     return inSelectedDay(d) && s.status !== "cancelled";
   }).length;
 
-  const isPendingRecord = (s: T) => {
+  const isPendingRecord = (s: AgendaSummarySession) => {
     const key = recordKey(s.patient_id, s.scheduled_at);
     return (
       s.session_type === "clinical" &&
@@ -78,7 +78,7 @@ export function computeAgendaSummary(input: AgendaSummaryInput): AgendaSummary {
     );
   };
 
-  const isPendingPayment = (s: T) => (
+  const isPendingPayment = (s: AgendaSummarySession) => (
     s.session_type === "clinical" &&
     !s.is_expense &&
     s.payment_status === "pending" &&
