@@ -83,7 +83,8 @@ describe("computeAgendaSummary", () => {
       moodTodayPatients: new Set(),
     });
 
-    expect(august.pendingRecords).toBe(1);
+    // Como o corte vai até o fim do dia selecionado (31/08), a sessão de julho também aparece
+    expect(august.pendingRecords).toBe(2);
     expect(august.labels.pendingRecords).toMatch(/ago/);
   });
 
