@@ -4,11 +4,13 @@ import { ptBR } from "date-fns/locale";
 export interface AgendaSummarySession {
   id: string;
   patient_id: string | null;
+  patient_name?: string | null;
   scheduled_at: string;
   status: string;
   session_type: string;
   is_expense?: boolean;
   payment_status?: string;
+  price?: number | null;
 }
 
 export interface AgendaSummaryInput {
@@ -34,6 +36,7 @@ export interface AgendaSummary {
   pendingRecords: number;
   pendingPayments: number;
   moodCount: number;
+  cutoff: Date;
   pendingPaymentList: AgendaSummarySession[];
   pendingRecordList: AgendaSummarySession[];
   labels: AgendaSummaryLabels;
@@ -66,7 +69,7 @@ export function computeAgendaSummary(input: AgendaSummaryInput): AgendaSummary {
     return inSelectedDay(d) && s.status !== "cancelled";
   }).length;
 
-  const isPendingRecord = (s: T) => {
+  const isPendingRecord = (s: AgendaSummarySession) => {
     const key = recordKey(s.patient_id, s.scheduled_at);
     return (
       s.session_type === "clinical" &&
@@ -78,7 +81,7 @@ export function computeAgendaSummary(input: AgendaSummaryInput): AgendaSummary {
     );
   };
 
-  const isPendingPayment = (s: T) => (
+  const isPendingPayment = (s: AgendaSummarySession) => (
     s.session_type === "clinical" &&
     !s.is_expense &&
     s.payment_status === "pending" &&
@@ -109,6 +112,7 @@ export function computeAgendaSummary(input: AgendaSummaryInput): AgendaSummary {
     pendingRecords: pendingRecordList.length,
     pendingPayments: pendingPaymentList.length,
     moodCount,
+    cutoff,
     pendingPaymentList,
     pendingRecordList,
     labels,
