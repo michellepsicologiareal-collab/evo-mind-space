@@ -372,6 +372,10 @@ const Agenda = () => {
   // and to keep this effect free of `searchParams` in its dependency array.
   useEffect(() => {
     if (!urlSeededRef.current) return;
+    if (skipUrlWriteRef.current) {
+      skipUrlWriteRef.current = false;
+      return;
+    }
     const params = new URLSearchParams(window.location.search);
     const monthStr = format(currentMonth, "yyyy-MM");
     const dateStr = format(selectedDate, "yyyy-MM-dd");
@@ -404,6 +408,7 @@ const Agenda = () => {
       );
     }
   }, [patientFilter, currentMonth, selectedDate, viewTab]);
+
 
   // Pending
   const [pendingRecordsOpen, setPendingRecordsOpen] = useState(false);
