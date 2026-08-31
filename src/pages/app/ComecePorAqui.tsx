@@ -6,6 +6,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { VideoTutorials } from "@/components/app/VideoTutorials";
 
 interface Step {
   id: string;
