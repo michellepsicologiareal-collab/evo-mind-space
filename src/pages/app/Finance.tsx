@@ -1097,7 +1097,58 @@ const Finance = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="pt-3 border-t border-border space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="billing-reminder" className="text-sm">Lembrete de cobrança</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Avisa quando um Plano de Atendimento concluído está perto do vencimento.
+                      </p>
+                    </div>
+                    <Switch
+                      id="billing-reminder"
+                      checked={billingReminderEnabled}
+                      disabled={!prefsLoaded || savingPrefs}
+                      onCheckedChange={(v) => {
+                        setBillingReminderEnabled(v);
+                        savePrefs({ billingEnabled: v });
+                      }}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="billing-reminder-days" className="text-sm">Avisar com antecedência de</Label>
+                    <Select
+                      value={String(billingReminderDays)}
+                      disabled={!prefsLoaded || !billingReminderEnabled || savingPrefs}
+                      onValueChange={(v) => {
+                        const n = Number(v);
+                        setBillingReminderDays(n);
+                        billingNotifiedRef.current.clear();
+                        savePrefs({ billingDays: n });
+                      }}
+                    >
+                      <SelectTrigger id="billing-reminder-days">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 dia antes</SelectItem>
+                        <SelectItem value="2">2 dias antes</SelectItem>
+                        <SelectItem value="3">3 dias antes</SelectItem>
+                        <SelectItem value="5">5 dias antes</SelectItem>
+                        <SelectItem value="7">7 dias antes</SelectItem>
+                        <SelectItem value="10">10 dias antes</SelectItem>
+                        <SelectItem value="15">15 dias antes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Cobranças vencidas continuam sendo avisadas todos os dias.
+                    </p>
+                  </div>
+                </div>
               </div>
+
             </PopoverContent>
           </Popover>
         </div>
