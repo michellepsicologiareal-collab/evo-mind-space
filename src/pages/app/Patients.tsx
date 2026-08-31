@@ -1212,6 +1212,19 @@ const Patients = () => {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <RefreshButton />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => { setTrashOpen(true); loadTrash(); }}
+            className="gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Lixeira</span>
+            {trash.length > 0 && (
+              <span className="ml-0.5 rounded-full bg-[#C0392B] px-1.5 text-[11px] font-semibold text-white">{trash.length}</span>
+            )}
+          </Button>
+
           <button
             type="button"
             onClick={openNew}
