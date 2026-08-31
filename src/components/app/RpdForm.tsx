@@ -243,33 +243,87 @@ export const RpdForm = ({ value, onChange, accent = G }: Props) => {
 
       {textStep(4, "behavior")}
 
-      {/* Etapa 5 — armadilhas do pensamento */}
+      {/* Etapa 5 — armadilhas do pensamento (cards educativos) */}
       <StepCard {...step(5)} accent={accent}>
         <div className="grid gap-2 sm:grid-cols-2">
           {DISTORTION_OPTIONS.map((d) => {
             const active = value.distortions.includes(d.simple);
             return (
-              <button
+              <div
                 key={d.simple}
-                type="button"
+                role="button"
+                tabIndex={0}
                 aria-pressed={active}
                 onClick={() => toggleDistortion(d.simple)}
-                className="rounded-lg border px-3 py-2.5 text-left transition-colors focus-strong"
-                style={chipStyle(active)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleDistortion(d.simple);
+                  }
+                }}
+                className="relative rounded-xl border px-3 py-3 text-left transition-colors cursor-pointer focus-strong select-none"
+                style={
+                  active
+                    ? { background: "rgba(150,117,206,0.08)", borderColor: accent, boxShadow: `inset 0 0 0 1px ${accent}` }
+                    : { background: "#fff", borderColor: "hsl(var(--border))" }
+                }
               >
-                <span className="block text-sm font-medium leading-snug">{d.simple}</span>
-                {d.technical && (
+                {active && (
                   <span
-                    className="block text-xs mt-0.5"
-                    style={{ color: active ? "rgba(255,255,255,0.8)" : MUTED }}
+                    className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full"
+                    style={{ background: accent, color: "#fff" }}
+                    aria-hidden
                   >
+                    <Check className="h-3 w-3" strokeWidth={3} />
+                  </span>
+                )}
+                <span className="block pr-6 text-sm font-semibold leading-snug" style={{ color: INK }}>
+                  {d.simple}
+                </span>
+                {d.technical && (
+                  <span className="block mt-0.5 text-[11px] font-medium uppercase tracking-wide" style={{ color: MUTED }}>
                     {d.technical}
                   </span>
                 )}
-              </button>
+                <span className="block mt-1.5 text-xs leading-relaxed" style={{ color: MUTED }}>
+                  {d.description}
+                </span>
+                {d.example && (
+                  <span className="block mt-1.5 text-xs italic leading-relaxed" style={{ color: MUTED }}>
+                    Ex.: {d.example}
+                  </span>
+                )}
+                {!d.notDistortion && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLearnMore(d);
+                    }}
+                    className="mt-2 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold transition-colors hover:underline focus-strong"
+                    style={{ color: accent }}
+                  >
+                    <Lightbulb className="h-3 w-3" />
+                    Entender melhor
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>
+
+        {selectedDistortionsCount > 0 && (
+          <p
+            className="rounded-lg px-3 py-2 text-xs font-medium"
+            style={{ background: "hsl(var(--muted))", color: INK }}
+            role="status"
+          >
+            Você identificou {selectedDistortionsCount}{" "}
+            {selectedDistortionsCount === 1 ? "possível armadilha" : "possíveis armadilhas"} nesse pensamento.
+            Vamos investigar isso juntos.
+          </p>
+        )}
+
         {value.distortions.some((d) => d.startsWith("Outra")) && (
           <Input
             value={value.distortion_other}
