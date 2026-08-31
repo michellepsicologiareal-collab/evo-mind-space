@@ -827,9 +827,34 @@ const Finance = () => {
       .then(({ error }) => {
         if (error) console.warn("Não foi possível registrar a notificação de cobrança:", error.message);
       });
+
+    // Histórico de lembretes (quando avisou e com qual antecedência)
+    logBillingReminders(novos, "auto");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planBillings, loading, prefsLoaded, billingReminderEnabled, billingReminderDays, user]);
 
+  /** Grava no histórico cada aviso de cobrança disparado. */
+  const logBillingReminders = async (plans: PlanBilling[], channel: "auto" | "manual") => {
+    if (!user || plans.length === 0) return;
+    const { error } = await supabase.from("billing_reminder_logs").insert(
+      plans.map((p) => ({
+        user_id: user.id,
+        patient_id: p.patientId,
+        plan_key: p.key,
+        plan_label: `${p.name} · Plano de ${p.totalDeclared} sessões`,
+        status: p.status,
+        due_date: p.dueDate,
+        days_ahead: p.dueDate ? daysUntil(p.dueDate) : null,
+        pending_value: p.pendingValue,
+        channel,
+      }))
+    );
+    if (error) {
+      console.warn("Não foi possível registrar o histórico do lembrete:", error.message);
+      return;
+    }
+    setReminderLogsVersion((v) => v + 1);
+  };
 
   const markBillingSent = async (plan: PlanBilling) => {
     const nowIso = new Date().toISOString();
@@ -846,9 +871,11 @@ const Finance = () => {
       toast.error("Não foi possível registrar o envio da cobrança.");
       return;
     }
+    await logBillingReminders([{ ...plan, dueDate: dueStr }], "manual");
     toast.success(`Cobrança registrada como enviada · vence em ${formatDue(dueStr)}`);
     load();
   };
+
 
   const updatePlanDueDate = async (plan: PlanBilling, value: string) => {
     const ids = plan.sessions.filter((r) => r.payment_status === "pending").map((r) => r.id);
