@@ -3,7 +3,7 @@ import { logClinicalAccess } from "@/utils/auditLog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight, Link2, Copy, MessageCircle, User, Ban } from "lucide-react";
+import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight, Link2, Copy, MessageCircle, User, Ban, Pencil, TrendingUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { RpdForm } from "@/components/app/RpdForm";
-import { emptyRpdForm, toRpdPayload, hasRpdContent, type RpdFormState } from "@/lib/rpd";
+import { emptyRpdForm, toRpdPayload, hasRpdContent, fromRpdRecord, parseDistortionChips, aggregateDistortions, type RpdFormState } from "@/lib/rpd";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import {
   Dialog,
@@ -34,6 +34,8 @@ interface TccRecord {
   rational_response: string | null;
   crenca_pensamento_inicial?: number | null;
   crenca_pensamento_final?: number | null;
+  intensidade_emocao_inicial?: any;
+  intensidade_emocao_final?: any;
   filled_by?: string | null;
   created_at: string;
 }
@@ -68,6 +70,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [form, setForm] = useState<RpdFormState>(emptyRpdForm());
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Link público para o paciente preencher
   const [linkOpen, setLinkOpen] = useState(false);
@@ -83,7 +86,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const load = async () => {
     const { data } = await (supabase as any)
       .from("tcc_records")
-      .select("id, situation, automatic_thought, emotion, behavior, cognitive_distortion, rational_response, crenca_pensamento_inicial, crenca_pensamento_final, filled_by, created_at")
+      .select("id, situation, automatic_thought, emotion, behavior, cognitive_distortion, rational_response, crenca_pensamento_inicial, crenca_pensamento_final, intensidade_emocao_inicial, intensidade_emocao_final, filled_by, created_at")
       .eq("patient_id", patientId)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -187,9 +190,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
     }
     setSaving(true);
     const payload = toRpdPayload(form);
-    const { error } = await (supabase as any).from("tcc_records").insert({
-      user_id: user.id,
-      patient_id: patientId,
+    const values = {
       situation: payload.situation || null,
       automatic_thought: payload.automatic_thought || null,
       emotion: payload.emotion || null,
@@ -200,12 +201,16 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       crenca_pensamento_final: payload.crenca_pensamento_final,
       intensidade_emocao_inicial: payload.intensidade_emocao_inicial,
       intensidade_emocao_final: payload.intensidade_emocao_final,
-    });
+    };
+    const { error } = editingId
+      ? await (supabase as any).from("tcc_records").update(values).eq("id", editingId)
+      : await (supabase as any).from("tcc_records").insert({ user_id: user.id, patient_id: patientId, ...values });
     setSaving(false);
     if (error) return toast.error("Erro ao salvar registro");
-    toast.success("Registro salvo");
+    toast.success(editingId ? "Registro atualizado" : "Registro salvo");
     keepScroll();
     setOpen(false);
+    setEditingId(null);
     setForm(emptyRpdForm());
     await preserveScroll(() => load());
   };
@@ -255,7 +260,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
             </Button>
             <Button
               size="sm"
-              onClick={() => setOpen(true)}
+              onClick={() => { setEditingId(null); setForm(emptyRpdForm()); setOpen(true); }}
               className="w-full sm:w-auto"
               style={{ background: G, color: "#fff", fontWeight: 600 }}
             >
@@ -353,7 +358,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
         </ul>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setEditingId(null); setForm(emptyRpdForm()); } }}>
         <DialogContent
           className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0"
           style={{ background: "hsl(var(--muted))" }}
@@ -368,7 +373,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                 TCC · Registro de Pensamentos
               </p>
               <DialogTitle className="font-display" style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.3px", color: INK }}>
-                Novo registro
+                {editingId ? "Editar registro" : "Novo registro"}
               </DialogTitle>
               <p style={{ fontSize: 13, color: MUTED }}>
                 Use este espaço para entender uma situação que mexeu com você. Não precisa preencher perfeitamente:
@@ -401,7 +406,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
               style={{ background: G, color: "#fff", fontWeight: 600 }}
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Salvar registro
+              {editingId ? "Salvar alterações" : "Salvar registro"}
             </Button>
           </DialogFooter>
         </DialogContent>
