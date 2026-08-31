@@ -2113,11 +2113,20 @@ const Finance = () => {
                           )}
                         </p>
 
-                        {billing.status !== "na" && (
-                          <div className="mt-2">
-                            <BillingBadge status={billing.status} dueDate={billing.dueDate} />
+                        {(billing.status !== "na" || billing.sentAt) && (
+                          <div className="mt-2 space-y-1">
+                            {billing.status !== "na" && (
+                              <BillingBadge status={billing.status} dueDate={billing.dueDate} />
+                            )}
+                            {billing.sentAt && (
+                              <p className="text-[11px] text-muted-foreground">
+                                Enviada em {format(new Date(billing.sentAt), "dd/MM/yyyy 'às' HH:mm")}
+                                {sendCount > 1 ? ` · ${sendCount} envios` : ""}
+                              </p>
+                            )}
                           </div>
                         )}
+
 
                         <p className="mt-2 text-[11px] text-muted-foreground">{modalidade}</p>
 
