@@ -12,8 +12,9 @@ import {
   SceneTCC,
 } from "./scenes/Scenes";
 
-const T = () => (
+const makeTransition = (key: string) => (
   <TransitionSeries.Transition
+    key={key}
     presentation={wipe({ direction: "from-left" })}
     timing={springTiming({ config: { damping: 200 }, durationInFrames: 24 })}
   />
@@ -25,31 +26,31 @@ export const MainVideo: React.FC = () => {
       <TransitionSeries.Sequence durationInFrames={180}>
         <Intro />
       </TransitionSeries.Sequence>
-      <T />
+      {makeTransition("t1")}
       <TransitionSeries.Sequence durationInFrames={240}>
         <ScenePainel />
       </TransitionSeries.Sequence>
-      <T />
+      {makeTransition("t2")}
       <TransitionSeries.Sequence durationInFrames={300}>
         <SceneAgenda />
       </TransitionSeries.Sequence>
-      <T />
+      {makeTransition("t3")}
       <TransitionSeries.Sequence durationInFrames={300}>
         <ScenePacientes />
       </TransitionSeries.Sequence>
-      <T />
+      {makeTransition("t4")}
       <TransitionSeries.Sequence durationInFrames={240}>
         <SceneTCC />
       </TransitionSeries.Sequence>
-      <T />
+      {makeTransition("t5")}
       <TransitionSeries.Sequence durationInFrames={300}>
         <SceneFinanceiro />
       </TransitionSeries.Sequence>
-      <T />
+      {makeTransition("t6")}
       <TransitionSeries.Sequence durationInFrames={204}>
         <SceneAutocuidado />
       </TransitionSeries.Sequence>
-      <T />
+      {makeTransition("t7")}
       <TransitionSeries.Sequence durationInFrames={180}>
         <Outro />
       </TransitionSeries.Sequence>
