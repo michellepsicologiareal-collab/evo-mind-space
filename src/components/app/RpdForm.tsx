@@ -120,8 +120,20 @@ const ScaleField = ({
   </div>
 );
 
+// Tons pastel dos post-its (amarelo, rosa, lilás, azul, verde) + neutro.
+const POST_IT_COLORS = [
+  { bg: "#FDF3C8", edge: "#EAD98A" }, // amarelo
+  { bg: "#FBE3E8", edge: "#F0C3CE" }, // rosa
+  { bg: "#EDE7F8", edge: "#D5C8EC" }, // lilás
+  { bg: "#E2F0FB", edge: "#BEDCF2" }, // azul
+  { bg: "#E4F3E6", edge: "#C4E3C9" }, // verde
+];
+const POST_IT_NEUTRAL = { bg: "#F4F2EC", edge: "#DEDACB" };
+// Pequenas inclinações alternadas para o efeito de post-it colado.
+const POST_IT_TILTS = [-0.6, 0.5, -0.4, 0.7, -0.5];
+
 export const RpdForm = ({ value, onChange, accent = G }: Props) => {
-  const [learnMore, setLearnMore] = useState<DistortionOption | null>(null);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const set = (patch: Partial<RpdFormState>) => onChange({ ...value, ...patch });
   const selectedDistortionsCount = value.distortions.filter(
     (d) => DISTORTION_OPTIONS.some((o) => o.simple === d && !o.notDistortion),
@@ -438,58 +450,6 @@ export const RpdForm = ({ value, onChange, accent = G }: Props) => {
           </p>
         )}
       </section>
-
-      {/* Recurso educativo — "Entender melhor" */}
-      <Dialog open={learnMore != null} onOpenChange={(open) => !open && setLearnMore(null)}>
-        <DialogContent className="max-w-md">
-          {learnMore && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="font-display text-base leading-snug">
-                  {learnMore.simple}
-                </DialogTitle>
-                {learnMore.technical && (
-                  <DialogDescription className="text-[11px] font-semibold uppercase tracking-wide">
-                    {learnMore.technical}
-                  </DialogDescription>
-                )}
-              </DialogHeader>
-              <div className="space-y-4 text-sm leading-relaxed">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">O que é</p>
-                  <p className="mt-1">{learnMore.description}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Como costuma aparecer
-                  </p>
-                  <p className="mt-1">{learnMore.howAppears}</p>
-                </div>
-                {learnMore.examples.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exemplos</p>
-                    <ul className="mt-1 list-disc space-y-1 pl-5 italic text-muted-foreground">
-                      {learnMore.examples.map((ex) => (
-                        <li key={ex}>{ex}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div className="rounded-lg p-3" style={{ background: "hsl(var(--muted))" }}>
-                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: accent }}>
-                    Uma pergunta para investigar
-                  </p>
-                  <p className="mt-1 text-sm">{learnMore.question}</p>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Não existe resposta certa aqui — o objetivo é investigar esse pensamento com curiosidade, possivelmente
-                  junto com seu terapeuta.
-                </p>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
