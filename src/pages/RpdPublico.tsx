@@ -124,7 +124,7 @@ const RpdPublico = () => {
         className="sticky top-0 z-30 backdrop-blur-md border-b"
         style={{ background: "rgba(247,246,243,0.92)", borderColor: "rgba(0,0,0,0.06)" }}
       >
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-2">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-2">
           <img src={logoImg} alt="Psi Real" className="h-7 w-7 object-contain shrink-0" />
           <span className="font-display text-base font-bold text-foreground">Psi Real</span>
           <span className="ml-auto text-[11px] font-semibold" style={{ color: MUTED }}>
@@ -133,7 +133,7 @@ const RpdPublico = () => {
         </div>
       </header>
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-4 space-y-3 sm:space-y-4 pb-[calc(96px+env(safe-area-inset-bottom))] md:pb-10">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-4 space-y-3 sm:space-y-4 pb-[calc(96px+env(safe-area-inset-bottom))] md:pb-10">
         <div className="bg-white rounded-[10px] p-4 sm:p-6 space-y-1" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}>
           <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: G, textTransform: "uppercase" }}>
             TCC · Registro de Pensamentos
