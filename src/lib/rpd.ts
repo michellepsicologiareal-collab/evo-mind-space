@@ -273,10 +273,10 @@ export const RPD_STEPS: RpdStep[] = [
   },
   {
     n: 5,
-    question: "Meu pensamento caiu em alguma armadilha?",
+    question: "Seu pensamento caiu em alguma dessas armadilhas?",
     term: "Armadilhas do pensamento",
     description:
-      "Observe se sua mente interpretou a situação de uma forma que pode ter aumentado seu sofrimento.",
+      "Leia as opções abaixo e clique nas que mais se parecem com a forma como você pensou naquela situação. Você pode escolher mais de uma — e tudo bem se ainda não souber identificar.",
   },
   {
     n: 6,
