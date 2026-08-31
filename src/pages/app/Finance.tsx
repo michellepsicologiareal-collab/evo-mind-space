@@ -1898,7 +1898,17 @@ const Finance = () => {
                           <dt className="text-muted-foreground text-xs">Pagamento</dt>
                           <dd className={`font-medium ${pay.tone}`}>{pay.label}</dd>
                         </div>
+                        {(() => {
+                          const b = billingStatusOf(p.allInGroup);
+                          return b.status === "na" ? null : (
+                            <div className="flex items-baseline justify-between gap-3">
+                              <dt className="text-muted-foreground text-xs">Cobrança</dt>
+                              <dd><BillingBadge status={b.status} dueDate={b.dueDate} /></dd>
+                            </div>
+                          );
+                        })()}
                       </dl>
+
 
                       <div className="flex items-center gap-2 pt-2 border-t border-border/60">
                         {rowClickable && (
