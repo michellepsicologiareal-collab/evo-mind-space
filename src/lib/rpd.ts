@@ -60,6 +60,8 @@ export interface DistortionOption {
   question: string;
   /** true = opção de resposta, não uma distorção cognitiva. */
   notDistortion?: boolean;
+  /** Nomes usados em registros antigos — garantem que o parse continue funcionando. */
+  legacy?: string[];
 }
 
 export const DISTORTION_OPTIONS: DistortionOption[] = [
