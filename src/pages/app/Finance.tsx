@@ -101,9 +101,12 @@ interface Row {
   paid_at: string | null;
   session_type: string | null;
   notes: string | null;
+  billing_sent_at: string | null;
+  payment_due_date: string | null;
   patient: { id: string; full_name: string } | null;
   service: { name: string } | null;
 }
+
 
 // Recurrence detection (mirrors Agenda: recurring sessions are created with a
 // "Plano N sessões (i/N)" marker in `notes`, and single-payment groups embed a
