@@ -1746,471 +1746,312 @@ const Finance = () => {
 
 
 
-      {/* Operational patient table */}
+      {/* Sessões do Mês — visualização principal em cards */}
       <section ref={sessionsSectionRef} className="rounded-3xl bg-card border border-border shadow-card p-4 lg:p-6">
         {(() => {
-          type Aggregate = {
+          type Group = {
             key: string;
             name: string;
             patientId: string | null;
+            sessions: Row[];
+            isPlan: boolean;
+            planTotal: number;
+            totalValue: number;
+            pendingValue: number;
             totalSessions: number;
             realizadas: number;
             faltas: number;
             aRealizar: number;
-            avulsasCount: number;
-            packageCounts: Map<string, number>;
-            totalValue: number;
-            nextSession: Date | null;
-            allBillable: Row[];
-            allInGroup: Row[];
-            latestBillable: Row | null;
             paidCount: number;
             pendingCount: number;
-            hasPending: boolean;
-            oldestPendingDays: number;
-            receitaToIssueCount: number;
-            receitaIssuedCount: number;
-            receitaNoneCount: number;
+            receitaToIssue: number;
+            receitaIssued: number;
+            receitaNone: number;
+            firstAt: string;
+            lastAt: string;
           };
-          const now = Date.now();
-          // Base: fortnight + non-cancelled (includes no_show for Faltas)
+
           const baseRows = fortnightFilter_(rows.filter((r) => r.status !== "cancelled"));
-          const map = new Map<string, Aggregate>();
+          const map = new Map<string, Group>();
+
           for (const r of baseRows) {
             const name = r.patient?.full_name ?? "—";
             const patientId = r.patient?.id ?? null;
-            const groupKey = patientId ?? `name::${name}`;
-            let e = map.get(groupKey);
-            if (!e) {
-              e = {
-                key: groupKey,
-                name,
-                patientId,
-                totalSessions: 0,
-                realizadas: 0,
-                faltas: 0,
-                aRealizar: 0,
-                avulsasCount: 0,
-                packageCounts: new Map(),
-                totalValue: 0,
-                nextSession: null,
-                allBillable: [],
-                allInGroup: [],
-                latestBillable: null,
-                paidCount: 0,
-                pendingCount: 0,
-                hasPending: false,
-                oldestPendingDays: 0,
-                receitaToIssueCount: 0,
-                receitaIssuedCount: 0,
-                receitaNoneCount: 0,
+            const isPlan = isRecurringSession(r.notes);
+            const key = isPlan ? (getSeriesKey(r) ?? `single::${r.id}`) : `single::${r.id}`;
+            let g = map.get(key);
+            if (!g) {
+              g = {
+                key, name, patientId, sessions: [], isPlan,
+                planTotal: Number(r.notes?.match(/Plano (\d+) sess/)?.[1] ?? 0),
+                totalValue: 0, pendingValue: 0, totalSessions: 0,
+                realizadas: 0, faltas: 0, aRealizar: 0,
+                paidCount: 0, pendingCount: 0,
+                receitaToIssue: 0, receitaIssued: 0, receitaNone: 0,
+                firstAt: r.scheduled_at, lastAt: r.scheduled_at,
               };
-              map.set(groupKey, e);
+              map.set(key, g);
             }
-            if (!e.patientId && patientId) e.patientId = patientId;
-            e.allInGroup.push(r);
-            e.totalSessions++;
-            e.totalValue += Number(r.price ?? 0);
-
-            if (isRecurringSession(r.notes)) {
-              const k = getSeriesKey(r) ?? `unknown::${r.id}`;
-              e.packageCounts.set(k, (e.packageCounts.get(k) ?? 0) + 1);
-            } else {
-              e.avulsasCount++;
-            }
-
-            if (r.receita_saude_status === "to_issue") e.receitaToIssueCount++;
-            else if (r.receita_saude_status === "issued") e.receitaIssuedCount++;
-            else e.receitaNoneCount++;
-
-            if (r.status === "completed") {
-              e.realizadas++;
-              e.allBillable.push(r);
-              if (r.payment_status === "paid") e.paidCount++;
-              else {
-                e.pendingCount++;
-                e.hasPending = true;
-                const days = Math.floor((now - new Date(r.scheduled_at).getTime()) / 86400000);
-                if (days > e.oldestPendingDays) e.oldestPendingDays = days;
-              }
-              if (!e.latestBillable || new Date(r.scheduled_at) > new Date(e.latestBillable.scheduled_at)) {
-                e.latestBillable = r;
-              }
-            } else if (r.status === "no_show") {
-              e.faltas++;
-            } else if (r.status === "scheduled" || r.status === "confirmed") {
-              e.aRealizar++;
-              const d = new Date(r.scheduled_at);
-              if (d.getTime() >= now && (!e.nextSession || d < e.nextSession)) {
-                e.nextSession = d;
-              }
-            }
+            g.sessions.push(r);
+            g.totalSessions++;
+            g.totalValue += Number(r.price ?? 0);
+            if (r.scheduled_at < g.firstAt) g.firstAt = r.scheduled_at;
+            if (r.scheduled_at > g.lastAt) g.lastAt = r.scheduled_at;
+            if (r.payment_status === "paid") g.paidCount++;
+            else { g.pendingCount++; g.pendingValue += Number(r.price ?? 0); }
+            if (r.receita_saude_status === "to_issue") g.receitaToIssue++;
+            else if (r.receita_saude_status === "issued") g.receitaIssued++;
+            else g.receitaNone++;
+            if (r.status === "completed") g.realizadas++;
+            else if (r.status === "no_show") g.faltas++;
+            else g.aRealizar++;
           }
-          const allAggregates = Array.from(map.values()).sort((a, b) =>
-            a.name.localeCompare(b.name, "pt-BR")
-          );
-          const patients = allAggregates.filter((p) => {
-            if (receitaSaudeFilter === "to_issue") return p.receitaToIssueCount > 0;
-            if (receitaSaudeFilter === "issued") return p.receitaIssuedCount > 0 && p.receitaToIssueCount === 0;
-            return true;
-          });
 
+          const allGroups = Array.from(map.values());
 
-          if (loading) {
-            return <p className="text-center py-12 text-muted-foreground">Carregando…</p>;
-          }
-          if (patients.length === 0) {
-            const hasActiveFilters =
-              patientFilter !== "all" || receitaSaudeFilter !== "all" || fortnightFilter !== "all";
-            const clearFilters = () => {
-              setPatientFilter("all");
-              setReceitaSaudeFilter("all");
-              setFortnightFilter("all");
-            };
-            return (
-              <div className="rounded-2xl border border-dashed border-border bg-card p-10 md:p-14 text-center">
-                <Wallet className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" aria-hidden="true" />
-                <p className="font-display text-lg font-medium text-foreground/80">
-                  Nenhum paciente encontrado neste período.
-                </p>
-                <p className="text-sm mt-1 text-muted-foreground max-w-md mx-auto">
-                  Ajuste os filtros ou selecione outro período para visualizar os dados financeiros.
-                </p>
-                {hasActiveFilters && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-5 h-10 min-h-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    onClick={clearFilters}
-                  >
-                    Limpar filtros
-                  </Button>
-                )}
-              </div>
+          const groups = allGroups
+            .filter((g) => {
+              if (cardPaymentFilter === "pending" && g.pendingCount === 0) return false;
+              if (cardPaymentFilter === "paid" && g.pendingCount > 0) return false;
+              if (receitaSaudeFilter === "to_issue") return g.receitaToIssue > 0;
+              if (receitaSaudeFilter === "issued") return g.receitaIssued > 0 && g.receitaToIssue === 0;
+              return true;
+            })
+            .sort((a, b) =>
+              cardSort === "patient"
+                ? a.name.localeCompare(b.name, "pt-BR") || b.lastAt.localeCompare(a.lastAt)
+                : b.lastAt.localeCompare(a.lastAt) || a.name.localeCompare(b.name, "pt-BR")
             );
-          }
 
+          const totalPendenteCards = allGroups.reduce((s, g) => s + g.pendingValue, 0);
+          const totalPagoCards = allGroups.reduce((s, g) => s + (g.totalValue - g.pendingValue), 0);
 
-          const modalidadeFor = (p: Aggregate): string => {
-            const pkgCount = p.packageCounts.size;
-            const pkgSessions = Array.from(p.packageCounts.values()).reduce((s, n) => s + n, 0);
-            const av = p.avulsasCount;
-            const avLabel = av > 0 ? `${av} ${av === 1 ? "sessão única" : "sessões únicas"}` : "";
-            let pkgLabel = "";
-            if (pkgCount === 1) {
-              pkgLabel = `Plano de Atendimento • ${pkgSessions} ${pkgSessions === 1 ? "sessão" : "sessões"}`;
-            } else if (pkgCount > 1) {
-              pkgLabel = `${pkgCount} Planos de Atendimento, total de ${pkgSessions} ${pkgSessions === 1 ? "sessão" : "sessões"}`;
-            }
-            if (avLabel && pkgLabel) return `${avLabel} + ${pkgLabel.toLowerCase()}`;
-            return avLabel || pkgLabel || "—";
+          const receitaValue = (g: Group): "issued" | "to_issue" | "none" | "mixed" => {
+            if (g.receitaIssued > 0 && (g.receitaToIssue > 0 || g.receitaNone > 0)) return "mixed";
+            if (g.receitaToIssue > 0 && g.receitaNone > 0) return "mixed";
+            if (g.receitaIssued > 0) return "issued";
+            if (g.receitaToIssue > 0) return "to_issue";
+            return "none";
           };
 
-          const receitaSaudeFor = (p: Aggregate): { label: string; tone: string } => {
-            const hasIssue = p.receitaToIssueCount > 0;
-            const hasIssued = p.receitaIssuedCount > 0;
-            if (hasIssue && hasIssued) return { label: "Misto", tone: "bg-amber-500/10 text-amber-700 dark:text-amber-500" };
-            if (hasIssue) return { label: "Emitir Receita Saúde", tone: "bg-primary/10 text-primary" };
-            if (hasIssued) return { label: "Receita Saúde emitida", tone: "bg-moss/10 text-moss" };
-            return { label: "Não se aplica", tone: "bg-secondary text-muted-foreground" };
+          const RECEITA_TONE: Record<string, string> = {
+            issued: "bg-moss/10 text-moss border-moss/25",
+            to_issue: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400",
+            none: "bg-secondary text-muted-foreground border-border",
+            mixed: "bg-secondary text-foreground/70 border-border",
           };
 
-          const pagamentoFor = (p: Aggregate) => {
-            if (p.realizadas === 0) return { label: "—", tone: "text-muted-foreground" };
-            if (p.paidCount > 0 && p.pendingCount === 0) return { label: "Pago", tone: "text-moss" };
-            if (p.paidCount === 0 && p.pendingCount > 0) return { label: "Pendente", tone: "text-destructive" };
-            return { label: "Parcial", tone: "text-amber-600" };
-          };
+          const payLabel = (g: Group) =>
+            g.pendingCount === 0 ? "Pago" : g.paidCount === 0 ? "Pendente" : "Parcial";
 
           return (
             <>
-              <div className="flex items-center justify-between gap-3 mb-4">
-                <div>
-                  <h2 className="font-display text-lg font-semibold">Pacientes do período</h2>
-                  <p className="text-xs text-muted-foreground">
-                    {patients.length} {patients.length === 1 ? "paciente" : "pacientes"} · uma linha por paciente no período selecionado
-                  </p>
-                </div>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
+                <h2 className="font-display text-lg font-semibold">Sessões do Mês</h2>
+                <span className="text-xs text-muted-foreground">
+                  {format(monthStart, "MMMM 'de' yyyy", { locale: ptBR })}
+                </span>
+                <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                  · Pendente {formatBRL(totalPendenteCards)}
+                </span>
+                <span className="text-xs font-medium text-moss">· Pago {formatBRL(totalPagoCards)}</span>
                 {quickAlert !== "none" && (
                   <button
                     type="button"
                     onClick={() => setQuickAlert("none")}
-                    className="text-xs px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                    className="ml-auto text-xs px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
                   >
                     Limpar alerta
                   </button>
                 )}
               </div>
 
-              {/* Desktop / tablet amplo: tabela original */}
-              <div className="hidden md:block overflow-x-auto -mx-4 lg:mx-0">
-                <table className="w-full min-w-[1180px] text-sm">
-                  <thead>
-                    <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border">
-                      <th className="py-2.5 px-3 font-medium">Paciente</th>
-                      <th className="py-2.5 px-3 font-medium text-center">Sessões no mês</th>
-                      <th className="py-2.5 px-3 font-medium text-center">Realizadas</th>
-                      <th className="py-2.5 px-3 font-medium text-center">Faltas</th>
-                      <th className="py-2.5 px-3 font-medium text-center">A realizar</th>
-                      <th className="py-2.5 px-3 font-medium">Modalidade de cobrança</th>
-                      <th className="py-2.5 px-3 font-medium">Receita Saúde</th>
-                      <th className="py-2.5 px-3 font-medium">Valor total</th>
-                      <th className="py-2.5 px-3 font-medium">Pagamento</th>
-                      <th className="py-2.5 px-3 font-medium text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {patients.map((p) => {
-                      const pay = pagamentoFor(p);
-                      const rs = receitaSaudeFor(p);
-                      const modalidade = modalidadeFor(p);
-                      const editTarget = p.latestBillable ?? p.allInGroup[0] ?? null;
-                      const openPatient = (tab: "finance" | "sessions", focus?: string) => {
-                        if (!p.patientId) return;
-                        const focusParam = focus ? `&focus=${focus}` : "";
-                        navigate(`/app/pacientes?patient=${p.patientId}&tab=${tab}${focusParam}`);
-                      };
-                      const rowClickable = !!p.patientId;
-                      const openFinanceHistory = () => {
-                        if (!p.patientId) return;
-                        setFinanceHistory({ id: p.patientId, name: p.name });
-                      };
-                      return (
-                        <tr
-                          key={p.key}
-                          role={rowClickable ? "button" : undefined}
-                          tabIndex={rowClickable ? 0 : undefined}
-                          aria-label={rowClickable ? `Abrir histórico financeiro de ${p.name}` : undefined}
-                          onClick={rowClickable ? openFinanceHistory : undefined}
-                          onKeyDown={rowClickable ? (e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              openFinanceHistory();
-                            }
-                          } : undefined}
-                          className={`border-b border-border/60 hover:bg-secondary/30 transition-colors ${rowClickable ? "cursor-pointer" : ""}`}
-                        >
-                          <td className="py-3 px-3">
-                            <p className="font-medium text-foreground truncate max-w-[220px]">{p.name}</p>
-                          </td>
-                          <td className="py-3 px-3 text-center tabular-nums">{p.totalSessions}</td>
-                          <td className="py-3 px-3 text-center tabular-nums text-moss">{p.realizadas}</td>
-                          <td className={`py-3 px-3 text-center tabular-nums ${p.faltas > 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                            {p.faltas}
-                          </td>
-                          <td className="py-3 px-3 text-center tabular-nums text-muted-foreground">{p.aRealizar}</td>
-                          <td className="py-3 px-3">
-                            <span className="text-sm text-foreground">{modalidade}</span>
-                          </td>
-                          <td
-                            className={`py-3 px-3 ${rowClickable ? "cursor-pointer" : ""}`}
-                            onClick={rowClickable ? (e) => { e.stopPropagation(); openPatient("finance", "receita-saude"); } : undefined}
-                          >
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${rs.tone}`}>
-                              {rs.label}
-                            </span>
-                          </td>
-                          <td className="py-3 px-3 font-medium tabular-nums">
-                            {p.totalValue > 0 ? formatBRL(p.totalValue) : <span className="text-muted-foreground italic">—</span>}
-                          </td>
-                          <td className="py-3 px-3">
-                            <span className={`font-medium ${pay.tone}`}>{pay.label}</span>
-                            {(() => {
-                              const b = billingStatusOf(p.allInGroup, billingReminderDays);
-
-                              return b.status === "na" ? null : (
-                                <div className="mt-1">
-                                  <BillingBadge status={b.status} dueDate={b.dueDate} />
-                                </div>
-                              );
-                            })()}
-                          </td>
-
-                          <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
-                            <div className="inline-flex items-center gap-1">
-                              {p.latestBillable && p.hasPending && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const pending = p.allBillable.find((r) => r.payment_status === "pending");
-                                    if (pending) updatePayment(pending.id, "paid");
-                                  }}
-                                >
-                                  Marcar pago
-                                </Button>
-                              )}
-                              {rowClickable && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8"
-                                  onClick={(e) => { e.stopPropagation(); openFinanceHistory(); }}
-                                  title="Ver histórico financeiro"
-                                >
-                                  Detalhes
-                                </Button>
-                              )}
-                              {editTarget && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={(e) => { e.stopPropagation(); setEditing(editTarget); }}
-                                  title="Editar pagamento"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-
-                </table>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border mb-4">
+                <div className="flex items-center gap-5">
+                  {([["pending", "Pendentes"], ["paid", "Pagos"], ["all", "Todos"]] as const).map(([val, label]) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setCardPaymentFilter(val)}
+                      aria-pressed={cardPaymentFilter === val}
+                      className={`pb-2 -mb-px text-xs transition-colors border-b-2 ${
+                        cardPaymentFilter === val
+                          ? "border-primary text-primary font-semibold"
+                          : "border-transparent text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCardSort(cardSort === "date" ? "patient" : "date")}
+                  className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] text-foreground/80 hover:bg-secondary"
+                >
+                  Ordenar: {cardSort === "date" ? "Data" : "Paciente"}
+                </button>
               </div>
 
-              {/* Mobile: cards */}
-              <ul className="md:hidden space-y-3 pb-24">
-                {patients.map((p) => {
-                  const pay = pagamentoFor(p);
-                  const rs = receitaSaudeFor(p);
-                  const modalidade = modalidadeFor(p);
-                  const editTarget = p.latestBillable ?? p.allInGroup[0] ?? null;
-                  const openPatient = (tab: "finance" | "sessions", focus?: string) => {
-                    if (!p.patientId) return;
-                    const focusParam = focus ? `&focus=${focus}` : "";
-                    navigate(`/app/pacientes?patient=${p.patientId}&tab=${tab}${focusParam}`);
-                  };
-                  const rowClickable = !!p.patientId;
-                  const openFinanceHistory = () => {
-                    if (!p.patientId) return;
-                    setFinanceHistory({ id: p.patientId, name: p.name });
-                  };
-                  const payBadgeTone =
-                    pay.label === "Pago" ? "bg-moss/10 text-moss border-moss/20" :
-                    pay.label === "Pendente" ? "bg-destructive/10 text-destructive border-destructive/20" :
-                    pay.label === "Parcial" ? "bg-amber-50 text-amber-700 border-amber-200" :
-                    "bg-secondary text-muted-foreground border-border";
-                  return (
-                    <li
-                      key={p.key}
-                      className="rounded-xl border border-border bg-card shadow-sm p-4"
+              {loading ? (
+                <p className="text-center py-12 text-muted-foreground">Carregando…</p>
+              ) : groups.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border bg-card p-10 md:p-14 text-center">
+                  <Wallet className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" aria-hidden="true" />
+                  <p className="font-display text-lg font-medium text-foreground/80">
+                    {cardPaymentFilter === "paid"
+                      ? "Nenhuma cobrança paga neste período."
+                      : cardPaymentFilter === "pending"
+                        ? "Nenhum pagamento pendente por aqui 🌿"
+                        : "Nenhuma sessão neste período."}
+                  </p>
+                  <p className="text-sm mt-1 text-muted-foreground max-w-md mx-auto">
+                    Ajuste os filtros ou selecione outro período para visualizar as cobranças.
+                  </p>
+                  {(patientFilter !== "all" || receitaSaudeFilter !== "all" || fortnightFilter !== "all") && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-5 h-10 min-h-11"
+                      onClick={() => { setPatientFilter("all"); setReceitaSaudeFilter("all"); setFortnightFilter("all"); }}
                     >
-                      <div className="flex items-start justify-between gap-2 mb-3">
-                        <p className="font-medium text-foreground text-[15px] leading-snug line-clamp-2 flex-1">
-                          {p.name}
-                        </p>
-                        <span className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${payBadgeTone}`}>
-                          {pay.label}
-                        </span>
-                        {editTarget && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-11 w-11 min-h-11 min-w-11 shrink-0 -mr-1 -mt-1 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                            onClick={(e) => { e.stopPropagation(); setEditing(editTarget); }}
-                            aria-label={`Editar pagamento de ${p.name}`}
-                            title="Editar pagamento"
-                          >
-                            <Pencil className="h-4 w-4" aria-hidden="true" />
-                          </Button>
-                        )}
+                      Limpar filtros
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 pb-24 md:pb-0">
+                  {groups.map((g) => {
+                    const ids = g.sessions.map((s) => s.id);
+                    const billing = billingStatusOf(g.sessions, billingReminderDays);
+                    const pay = payLabel(g);
+                    const rs = receitaValue(g);
+                    const editTarget = g.sessions[0] ?? null;
+                    const modalidade = g.isPlan
+                      ? `Plano de Atendimento${g.planTotal ? ` • ${g.totalSessions}/${g.planTotal} sessões` : ` • ${g.totalSessions} sessões`}`
+                      : "Sessão única";
+                    const payTone =
+                      pay === "Pago" ? "bg-moss/10 text-moss border-moss/25" :
+                      pay === "Pendente" ? "bg-destructive/10 text-destructive border-destructive/25" :
+                      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400";
 
-                      </div>
+                    return (
+                      <li
+                        key={g.key}
+                        className="flex flex-col rounded-2xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-medium text-foreground leading-snug line-clamp-2">{g.name}</p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">
+                              {g.isPlan
+                                ? `${g.totalSessions} ${g.totalSessions === 1 ? "sessão" : "sessões"} · ${format(new Date(g.firstAt), "dd/MM")} – ${format(new Date(g.lastAt), "dd/MM/yyyy")}`
+                                : format(new Date(g.lastAt), "dd/MM/yyyy")}
+                            </p>
+                          </div>
+                          <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${payTone}`}>
+                            {pay}
+                          </span>
+                        </div>
 
-                      <div className="grid grid-cols-2 gap-2 mb-3">
-                        <div className="rounded-lg bg-secondary/40 px-3 py-2">
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Sessões no mês</p>
-                          <p className="text-base font-semibold tabular-nums">{p.totalSessions}</p>
-                        </div>
-                        <div className="rounded-lg bg-secondary/40 px-3 py-2">
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Realizadas</p>
-                          <p className="text-base font-semibold tabular-nums text-moss">{p.realizadas}</p>
-                        </div>
-                        <div className="rounded-lg bg-secondary/40 px-3 py-2">
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Faltas</p>
-                          <p className={`text-base font-semibold tabular-nums ${p.faltas > 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                            {p.faltas}
-                          </p>
-                        </div>
-                        <div className="rounded-lg bg-secondary/40 px-3 py-2">
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">A realizar</p>
-                          <p className="text-base font-semibold tabular-nums text-muted-foreground">{p.aRealizar}</p>
-                        </div>
-                      </div>
-
-                      <dl className="space-y-1.5 text-sm mb-3">
-                        <div className="flex items-baseline justify-between gap-3">
-                          <dt className="text-muted-foreground text-xs">Modalidade</dt>
-                          <dd className="text-foreground text-right">{modalidade}</dd>
-                        </div>
-                        <div className="flex items-baseline justify-between gap-3">
-                          <dt className="text-muted-foreground text-xs">Receita Saúde</dt>
-                          <dd>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${rs.tone}`}>
-                              {rs.label}
+                        <p className="mt-2 font-display text-xl font-semibold tabular-nums text-primary">
+                          {formatBRL(g.totalValue)}
+                          {g.pendingValue > 0 && g.pendingValue !== g.totalValue && (
+                            <span className="ml-2 text-[11px] font-normal text-muted-foreground">
+                              {formatBRL(g.pendingValue)} em aberto
                             </span>
-                          </dd>
-                        </div>
-                        <div className="flex items-baseline justify-between gap-3">
-                          <dt className="text-muted-foreground text-xs">Valor total</dt>
-                          <dd className="font-semibold tabular-nums whitespace-nowrap">
-                            {p.totalValue > 0 ? formatBRL(p.totalValue) : <span className="text-muted-foreground italic font-normal">—</span>}
-                          </dd>
-                        </div>
-                        <div className="flex items-baseline justify-between gap-3">
-                          <dt className="text-muted-foreground text-xs">Pagamento</dt>
-                          <dd className={`font-medium ${pay.tone}`}>{pay.label}</dd>
-                        </div>
-                        {(() => {
-                          const b = billingStatusOf(p.allInGroup, billingReminderDays);
-                          return b.status === "na" ? null : (
-                            <div className="flex items-baseline justify-between gap-3">
-                              <dt className="text-muted-foreground text-xs">Cobrança</dt>
-                              <dd><BillingBadge status={b.status} dueDate={b.dueDate} /></dd>
+                          )}
+                        </p>
+
+                        {billing.status !== "na" && (
+                          <div className="mt-2">
+                            <BillingBadge status={billing.status} dueDate={billing.dueDate} />
+                          </div>
+                        )}
+
+                        <p className="mt-2 text-[11px] text-muted-foreground">{modalidade}</p>
+
+                        <div className="mt-3 grid grid-cols-4 gap-1.5 text-center">
+                          {[
+                            { label: "Mês", value: g.totalSessions, tone: "text-foreground" },
+                            { label: "Realiz.", value: g.realizadas, tone: "text-moss" },
+                            { label: "Faltas", value: g.faltas, tone: g.faltas > 0 ? "text-destructive" : "text-muted-foreground" },
+                            { label: "A realizar", value: g.aRealizar, tone: "text-muted-foreground" },
+                          ].map((cell) => (
+                            <div key={cell.label} className="rounded-lg bg-secondary/40 px-1.5 py-1.5">
+                              <p className="text-[9px] uppercase tracking-wide text-muted-foreground">{cell.label}</p>
+                              <p className={`text-sm font-semibold tabular-nums ${cell.tone}`}>{cell.value}</p>
                             </div>
-                          );
-                        })()}
-                      </dl>
+                          ))}
+                        </div>
 
+                        <div className="mt-3 space-y-2">
+                          <div>
+                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Pagamento</Label>
+                            <Select
+                              value={g.pendingCount > 0 && g.paidCount > 0 ? undefined : g.pendingCount === 0 ? "paid" : "pending"}
+                              onValueChange={(v) => updatePaymentGroup(ids, v as PaymentStatus)}
+                            >
+                              <SelectTrigger className="mt-1 h-9 text-xs">
+                                <SelectValue placeholder="Parcial" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">Pendente</SelectItem>
+                                <SelectItem value="paid">Pago</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-                      <div className="flex items-center gap-2 pt-2 border-t border-border/60">
-                        {rowClickable && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 h-11 min-h-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                            onClick={openFinanceHistory}
-                            aria-label={`Ver histórico financeiro de ${p.name}`}
-                          >
-                            Ver detalhes
-                          </Button>
-                        )}
-                        {p.latestBillable && p.hasPending && (
-                          <Button
-                            variant="accent"
-                            size="sm"
-                            className="flex-1 h-11 min-h-11 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                            onClick={() => {
-                              const pending = p.allBillable.find((r) => r.payment_status === "pending");
-                              if (pending) updatePayment(pending.id, "paid");
-                            }}
-                            aria-label={`Marcar sessão de ${p.name} como paga`}
-                          >
-                            Marcar pago
-                          </Button>
-                        )}
-                      </div>
+                          <div>
+                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Receita Saúde</Label>
+                            <Select
+                              value={rs === "mixed" ? undefined : rs}
+                              onValueChange={(v) =>
+                                updateReceitaSaudeGroup(ids, v === "none" ? null : (v as ReceitaSaudeStatus))
+                              }
+                            >
+                              <SelectTrigger className={`mt-1 h-9 text-xs border ${RECEITA_TONE[rs]}`}>
+                                <SelectValue placeholder="Misto" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="to_issue">Não emitida</SelectItem>
+                                <SelectItem value="issued">Emitida</SelectItem>
+                                <SelectItem value="none">Não se aplica</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
 
-                    </li>
-                  );
-                })}
-              </ul>
+                        <div className="mt-3 flex items-center gap-2 border-t border-border/60 pt-3">
+                          {g.patientId && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 h-9"
+                              onClick={() => setFinanceHistory({ id: g.patientId!, name: g.name })}
+                              aria-label={`Ver histórico financeiro de ${g.name}`}
+                            >
+                              Ver detalhes
+                            </Button>
+                          )}
+                          {editTarget && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 shrink-0"
+                              onClick={() => setEditing(editTarget)}
+                              aria-label={`Editar pagamento de ${g.name}`}
+                              title="Editar pagamento"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </>
           );
         })()}
