@@ -16,7 +16,7 @@ const plan = {
     "Suporte por e-mail",
   ],
   cta: "Começar teste grátis",
-  href: "https://pay.kiwify.com.br/gRIR9My",
+  href: "https://pay.kiwify.com.br/k4VMHLa",
 };
 
 export const Pricing = () => {
