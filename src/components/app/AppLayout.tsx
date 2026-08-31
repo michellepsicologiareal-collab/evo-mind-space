@@ -155,6 +155,7 @@ export const AppLayout = () => {
     { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda", "/app/humor", "/app/autocuidado"] },
     { label: "GESTÃO", routes: ["/app/financeiro", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
     { label: "SUPERVISÃO", routes: ["/app/supervisao", "/app/plano-desenvolvimento"] },
+    { label: "AJUDA", routes: ["/app/comece-por-aqui"] },
     { label: "CONFIGURAÇÕES", routes: ["/app/perfil"] },
   ];
 
