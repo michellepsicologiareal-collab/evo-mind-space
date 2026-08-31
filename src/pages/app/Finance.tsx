@@ -176,7 +176,10 @@ const formatDue = (dateStr: string | null) =>
   dateStr ? dateStr.split("-").reverse().join("/") : null;
 
 /** Deriva o status da cobrança de um conjunto de sessões faturáveis. */
-const billingStatusOf = (list: Row[]): { status: BillingStatus; dueDate: string | null; sentAt: string | null } => {
+const billingStatusOf = (
+  list: Row[],
+  soonDays: number = DUE_SOON_DAYS
+): { status: BillingStatus; dueDate: string | null; sentAt: string | null } => {
   const billable = list.filter((r) => r.status === "completed" || r.payment_status === "paid");
   if (billable.length === 0) return { status: "na", dueDate: null, sentAt: null };
   const pending = billable.filter((r) => r.payment_status === "pending");
@@ -193,10 +196,11 @@ const billingStatusOf = (list: Row[]): { status: BillingStatus; dueDate: string 
   if (pending.length === 0) return { status: "pago", dueDate, sentAt };
   const dias = daysUntil(dueDate);
   if (dias !== null && dias < 0) return { status: "vencida", dueDate, sentAt };
-  if (dias !== null && dias <= DUE_SOON_DAYS) return { status: "perto", dueDate, sentAt };
+  if (dias !== null && dias <= soonDays) return { status: "perto", dueDate, sentAt };
   if (sentAt) return { status: "enviada", dueDate, sentAt };
   return { status: "a_enviar", dueDate, sentAt };
 };
+
 
 const BillingBadge = ({ status, dueDate }: { status: BillingStatus; dueDate?: string | null }) => (
   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${BILLING_TONE[status]}`}>
