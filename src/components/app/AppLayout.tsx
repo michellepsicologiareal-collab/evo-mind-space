@@ -13,7 +13,6 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { PlanModal } from "@/components/app/PlanModal";
 import { PremiumGate } from "@/components/app/PremiumGate";
 import { NotificationBell } from "@/components/app/NotificationBell";
 import { ThemeToggle } from "@/components/app/ThemeToggle";
