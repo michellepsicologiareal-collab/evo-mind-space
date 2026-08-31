@@ -3747,7 +3747,7 @@ const Agenda = () => {
           </div>
         ) : (
           <div className="grid min-w-0 grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
-            {groupedPending.map((group) => {
+            {pendingWindow.visible.map((group) => {
               const s = group.session;
               return (
                 <div
