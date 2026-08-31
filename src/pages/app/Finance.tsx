@@ -176,7 +176,10 @@ const formatDue = (dateStr: string | null) =>
   dateStr ? dateStr.split("-").reverse().join("/") : null;
 
 /** Deriva o status da cobrança de um conjunto de sessões faturáveis. */
-const billingStatusOf = (list: Row[]): { status: BillingStatus; dueDate: string | null; sentAt: string | null } => {
+const billingStatusOf = (
+  list: Row[],
+  soonDays: number = DUE_SOON_DAYS
+): { status: BillingStatus; dueDate: string | null; sentAt: string | null } => {
   const billable = list.filter((r) => r.status === "completed" || r.payment_status === "paid");
   if (billable.length === 0) return { status: "na", dueDate: null, sentAt: null };
   const pending = billable.filter((r) => r.payment_status === "pending");
@@ -193,10 +196,11 @@ const billingStatusOf = (list: Row[]): { status: BillingStatus; dueDate: string 
   if (pending.length === 0) return { status: "pago", dueDate, sentAt };
   const dias = daysUntil(dueDate);
   if (dias !== null && dias < 0) return { status: "vencida", dueDate, sentAt };
-  if (dias !== null && dias <= DUE_SOON_DAYS) return { status: "perto", dueDate, sentAt };
+  if (dias !== null && dias <= soonDays) return { status: "perto", dueDate, sentAt };
   if (sentAt) return { status: "enviada", dueDate, sentAt };
   return { status: "a_enviar", dueDate, sentAt };
 };
+
 
 const BillingBadge = ({ status, dueDate }: { status: BillingStatus; dueDate?: string | null }) => (
   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${BILLING_TONE[status]}`}>
@@ -258,12 +262,19 @@ const Finance = () => {
   const [reminderWindow, setReminderWindow] = useState(24);
   const [groupByPatient, setGroupByPatient] = useState(false);
   const [groupSort, setGroupSort] = useState<"recent" | "oldest" | "value" | "count" | "name">("recent");
+  const [billingReminderEnabled, setBillingReminderEnabled] = useState(true);
+  const [billingReminderDays, setBillingReminderDays] = useState(DUE_SOON_DAYS);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
+
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [expandedPatients, setExpandedPatients] = useState<Set<string>>(new Set());
   const [quickAlert, setQuickAlert] = useState<QuickAlert>("none");
   const [receitaSaudeFilter, setReceitaSaudeFilter] = useState<ReceitaSaudeFilter>("all");
   const notifiedIdsRef = useRef<Set<string>>(new Set());
+  const billingNotifiedRef = useRef<Set<string>>(new Set());
+  const billingSectionRef = useRef<HTMLElement | null>(null);
+
+
   const recentAlertRef = useRef<HTMLDivElement | null>(null);
   const sessionsSectionRef = useRef<HTMLElement | null>(null);
 
@@ -364,13 +375,15 @@ const Finance = () => {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient, reminder_group_sort")
+        .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient, reminder_group_sort, billing_reminder_enabled, billing_reminder_days")
         .eq("id", user.id)
         .maybeSingle();
       if (data) {
         setReminderEnabled(data.reminder_enabled ?? true);
         setReminderWindow(data.reminder_window_hours ?? 24);
         setGroupByPatient(data.reminder_group_by_patient ?? false);
+        setBillingReminderEnabled((data as any).billing_reminder_enabled ?? true);
+        setBillingReminderDays((data as any).billing_reminder_days ?? DUE_SOON_DAYS);
         const sort = data.reminder_group_sort as typeof groupSort | null;
         if (sort) setGroupSort(sort);
       }
@@ -378,12 +391,21 @@ const Finance = () => {
     })();
   }, [user]);
 
-  const savePrefs = async (next: { enabled?: boolean; window?: number; group?: boolean; sort?: typeof groupSort }) => {
+  const savePrefs = async (next: {
+    enabled?: boolean;
+    window?: number;
+    group?: boolean;
+    sort?: typeof groupSort;
+    billingEnabled?: boolean;
+    billingDays?: number;
+  }) => {
     if (!user) return;
     const enabled = next.enabled ?? reminderEnabled;
     const windowH = next.window ?? reminderWindow;
     const group = next.group ?? groupByPatient;
     const sort = next.sort ?? groupSort;
+    const billingEnabled = next.billingEnabled ?? billingReminderEnabled;
+    const billingDays = next.billingDays ?? billingReminderDays;
     setSavingPrefs(true);
     const { error } = await supabase
       .from("profiles")
@@ -392,7 +414,9 @@ const Finance = () => {
         reminder_window_hours: windowH,
         reminder_group_by_patient: group,
         reminder_group_sort: sort,
-      })
+        billing_reminder_enabled: billingEnabled,
+        billing_reminder_days: billingDays,
+      } as any)
       .eq("id", user.id);
     setSavingPrefs(false);
     if (error) {
@@ -401,7 +425,9 @@ const Finance = () => {
     }
     // Reset notified set so toggling/changing window can re-notify
     notifiedIdsRef.current.clear();
+    billingNotifiedRef.current.clear();
   };
+
 
   const billable = useMemo(() => rows.filter((r) => r.status === "completed"), [rows]);
 
@@ -764,7 +790,7 @@ const Finance = () => {
       const declared = Number(list[0].notes?.match(/Plano (\d+) sess/)?.[1] ?? list.length);
       const allDone = list.every((r) => r.status === "completed");
       if (!allDone || list.length < declared) continue;
-      const { status, dueDate, sentAt } = billingStatusOf(list);
+      const { status, dueDate, sentAt } = billingStatusOf(list, billingReminderDays);
       out.push({
         key,
         name: list[0].patient?.full_name ?? "—",
@@ -783,7 +809,7 @@ const Finance = () => {
     const order: Record<BillingStatus, number> = { vencida: 0, perto: 1, a_enviar: 2, enviada: 3, pago: 4, na: 5 };
     return out.sort((a, b) => order[a.status] - order[b.status] || a.name.localeCompare(b.name, "pt-BR"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, fortnightFilter]);
+  }, [rows, fortnightFilter, billingReminderDays]);
 
   const planBillingStats = useMemo(() => {
     const count = (s: BillingStatus) => planBillings.filter((p) => p.status === s).length;
@@ -796,6 +822,77 @@ const Finance = () => {
       emAberto: planBillings.reduce((s, p) => s + p.pendingValue, 0),
     };
   }, [planBillings]);
+
+  // ── Lembrete automático de cobranças perto do vencimento ─────────────
+  // Ao abrir o Financeiro, avisa (toast + notificação no sininho) sobre os
+  // planos que vencem dentro da janela configurada ou já vencidos.
+  // Cada plano é notificado uma vez por dia por vencimento.
+  useEffect(() => {
+    if (loading || !prefsLoaded || !billingReminderEnabled || !user) return;
+    const alerts = planBillings.filter((p) => p.status === "perto" || p.status === "vencida");
+    if (alerts.length === 0) return;
+
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const storageKey = `psireal_billing_reminder_${user.id}`;
+    let sent: Record<string, string> = {};
+    try {
+      sent = JSON.parse(localStorage.getItem(storageKey) ?? "{}");
+    } catch {
+      sent = {};
+    }
+
+    const novos = alerts.filter((p) => {
+      const memo = `${todayKey}::${p.dueDate ?? "sem-data"}::${p.status}`;
+      if (billingNotifiedRef.current.has(p.key)) return false;
+      return sent[p.key] !== memo;
+    });
+    if (novos.length === 0) return;
+
+    novos.forEach((p) => {
+      billingNotifiedRef.current.add(p.key);
+      sent[p.key] = `${todayKey}::${p.dueDate ?? "sem-data"}::${p.status}`;
+    });
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(sent));
+    } catch {
+      /* storage indisponível — o aviso ainda aparece nesta sessão */
+    }
+
+    const vencidas = novos.filter((p) => p.status === "vencida");
+    const titulo = vencidas.length === novos.length
+      ? `${novos.length} ${novos.length === 1 ? "cobrança vencida" : "cobranças vencidas"}`
+      : `${novos.length} ${novos.length === 1 ? "cobrança perto do vencimento" : "cobranças perto do vencimento"}`;
+    const detalhe = novos
+      .map((p) => `${p.name}${p.dueDate ? ` · vence ${formatDue(p.dueDate)}` : ""}`)
+      .slice(0, 4)
+      .join(" · ");
+
+    toast.warning(titulo, {
+      description: detalhe + (novos.length > 4 ? ` · +${novos.length - 4}` : ""),
+      duration: 9000,
+      action: {
+        label: "Ver cobranças",
+        onClick: () => billingSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      },
+    });
+
+    // Notificação persistente no sininho
+    supabase
+      .from("notifications")
+      .insert(
+        novos.map((p) => ({
+          user_id: user.id,
+          title: p.status === "vencida" ? "Cobrança vencida" : "Cobrança perto do vencimento",
+          message: `${p.name} · Plano de ${p.totalDeclared} sessões · ${formatBRL(p.pendingValue)}${p.dueDate ? ` · vencimento ${formatDue(p.dueDate)}` : ""}`,
+          type: "general" as const,
+        }))
+      )
+      .then(({ error }) => {
+        if (error) console.warn("Não foi possível registrar a notificação de cobrança:", error.message);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planBillings, loading, prefsLoaded, billingReminderEnabled, billingReminderDays, user]);
+
 
   const markBillingSent = async (plan: PlanBilling) => {
     const nowIso = new Date().toISOString();
@@ -1000,7 +1097,58 @@ const Finance = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="pt-3 border-t border-border space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="billing-reminder" className="text-sm">Lembrete de cobrança</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Avisa quando um Plano de Atendimento concluído está perto do vencimento.
+                      </p>
+                    </div>
+                    <Switch
+                      id="billing-reminder"
+                      checked={billingReminderEnabled}
+                      disabled={!prefsLoaded || savingPrefs}
+                      onCheckedChange={(v) => {
+                        setBillingReminderEnabled(v);
+                        savePrefs({ billingEnabled: v });
+                      }}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="billing-reminder-days" className="text-sm">Avisar com antecedência de</Label>
+                    <Select
+                      value={String(billingReminderDays)}
+                      disabled={!prefsLoaded || !billingReminderEnabled || savingPrefs}
+                      onValueChange={(v) => {
+                        const n = Number(v);
+                        setBillingReminderDays(n);
+                        billingNotifiedRef.current.clear();
+                        savePrefs({ billingDays: n });
+                      }}
+                    >
+                      <SelectTrigger id="billing-reminder-days">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 dia antes</SelectItem>
+                        <SelectItem value="2">2 dias antes</SelectItem>
+                        <SelectItem value="3">3 dias antes</SelectItem>
+                        <SelectItem value="5">5 dias antes</SelectItem>
+                        <SelectItem value="7">7 dias antes</SelectItem>
+                        <SelectItem value="10">10 dias antes</SelectItem>
+                        <SelectItem value="15">15 dias antes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Cobranças vencidas continuam sendo avisadas todos os dias.
+                    </p>
+                  </div>
+                </div>
               </div>
+
             </PopoverContent>
           </Popover>
         </div>
@@ -1389,13 +1537,16 @@ const Finance = () => {
 
       {/* Cobranças de Planos de Atendimento concluídos */}
       {planBillings.length > 0 && (
-        <section className="rounded-3xl bg-card border border-border shadow-card p-4 lg:p-6 space-y-4">
+        <section ref={billingSectionRef} className="rounded-3xl bg-card border border-border shadow-card p-4 lg:p-6 space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="font-display text-lg font-bold text-foreground">Cobranças · Planos de Atendimento concluídos</h2>
               <p className="text-sm text-muted-foreground">
-                Planos com todas as sessões realizadas. Acompanhe o que já foi enviado e o que está perto do vencimento.
+                Planos com todas as sessões realizadas. {billingReminderEnabled
+                  ? `Você é avisada ${billingReminderDays} ${billingReminderDays === 1 ? "dia" : "dias"} antes do vencimento.`
+                  : "Lembretes automáticos desativados nas preferências."}
               </p>
+
             </div>
             {planBillingStats.emAberto > 0 && (
               <div className="rounded-xl bg-secondary/50 border border-border px-3 py-2">
@@ -1748,7 +1899,8 @@ const Finance = () => {
                           <td className="py-3 px-3">
                             <span className={`font-medium ${pay.tone}`}>{pay.label}</span>
                             {(() => {
-                              const b = billingStatusOf(p.allInGroup);
+                              const b = billingStatusOf(p.allInGroup, billingReminderDays);
+
                               return b.status === "na" ? null : (
                                 <div className="mt-1">
                                   <BillingBadge status={b.status} dueDate={b.dueDate} />
@@ -1899,7 +2051,7 @@ const Finance = () => {
                           <dd className={`font-medium ${pay.tone}`}>{pay.label}</dd>
                         </div>
                         {(() => {
-                          const b = billingStatusOf(p.allInGroup);
+                          const b = billingStatusOf(p.allInGroup, billingReminderDays);
                           return b.status === "na" ? null : (
                             <div className="flex items-baseline justify-between gap-3">
                               <dt className="text-muted-foreground text-xs">Cobrança</dt>
