@@ -1745,7 +1745,18 @@ const Finance = () => {
                           <td className="py-3 px-3 font-medium tabular-nums">
                             {p.totalValue > 0 ? formatBRL(p.totalValue) : <span className="text-muted-foreground italic">—</span>}
                           </td>
-                          <td className={`py-3 px-3 font-medium ${pay.tone}`}>{pay.label}</td>
+                          <td className="py-3 px-3">
+                            <span className={`font-medium ${pay.tone}`}>{pay.label}</span>
+                            {(() => {
+                              const b = billingStatusOf(p.allInGroup);
+                              return b.status === "na" ? null : (
+                                <div className="mt-1">
+                                  <BillingBadge status={b.status} dueDate={b.dueDate} />
+                                </div>
+                              );
+                            })()}
+                          </td>
+
                           <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
                             <div className="inline-flex items-center gap-1">
                               {p.latestBillable && p.hasPending && (
