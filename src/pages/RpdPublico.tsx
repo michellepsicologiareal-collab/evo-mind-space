@@ -4,22 +4,14 @@ import { Loader2, X, Lock, ClipboardList, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { RpdForm } from "@/components/app/RpdForm";
+import { emptyRpdForm, toRpdPayload, hasRpdContent, type RpdFormState } from "@/lib/rpd";
 import { toast } from "sonner";
 import logoImg from "@/assets/logo-psireal.png";
 
 const G = "#B8860B";
 const INK = "#1A1A2E";
 const MUTED = "#6B7280";
-
-const FIELDS: { key: string; label: string; hint: string }[] = [
-  { key: "situation", label: "Situação", hint: "O que aconteceu? Onde, quando e com quem?" },
-  { key: "automatic_thought", label: "Pensamento automático", hint: "O que passou pela sua cabeça naquele momento?" },
-  { key: "emotion", label: "Emoção", hint: "O que você sentiu? Com que intensidade (0 a 100)?" },
-  { key: "behavior", label: "Comportamento", hint: "O que você fez em seguida?" },
-  { key: "cognitive_distortion", label: "Distorção cognitiva (se souber)", hint: "Ex.: catastrofização, leitura mental..." },
-  { key: "rational_response", label: "Resposta racional", hint: "Que outra forma de pensar seria possível?" },
-];
 
 const RpdPublico = () => {
   const { token } = useParams<{ token: string }>();
@@ -28,7 +20,7 @@ const RpdPublico = () => {
   const [password, setPassword] = useState("");
   const [pwdError, setPwdError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState<Record<string, string>>({});
+  const [form, setForm] = useState<RpdFormState>(emptyRpdForm());
 
   useEffect(() => {
     document.title = "RPD — Registro de Pensamentos | Psi Real";
@@ -47,15 +39,15 @@ const RpdPublico = () => {
   }, [token]);
 
   const submit = async () => {
-    if (!FIELDS.some((f) => (form[f.key] || "").trim())) {
-      toast.error("Preencha ao menos um campo.");
+    if (!hasRpdContent(form)) {
+      toast.error("Preencha ao menos uma etapa.");
       return;
     }
     setSaving(true);
     const { error } = await supabase.rpc("submit_rpd_by_token", {
       _token: token as string,
       _password: password,
-      _payload: form as any,
+      _payload: toRpdPayload(form) as any,
     });
     setSaving(false);
     if (error) {
@@ -115,7 +107,7 @@ const RpdPublico = () => {
           <Button
             variant="outline"
             className="mt-5 w-full sm:w-auto min-h-12"
-            onClick={() => { setForm({}); setState("ready"); window.scrollTo({ top: 0 }); }}
+            onClick={() => { setForm(emptyRpdForm()); setState("ready"); window.scrollTo({ top: 0 }); }}
 
           >
             Registrar outro
@@ -124,8 +116,6 @@ const RpdPublico = () => {
       </div>
     );
   }
-
-  const filledCount = FIELDS.filter((f) => (form[f.key] || "").trim()).length;
 
   return (
     <div className="min-h-screen" style={{ background: "#F7F6F3" }}>
@@ -137,8 +127,8 @@ const RpdPublico = () => {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-2">
           <img src={logoImg} alt="Psi Real" className="h-7 w-7 object-contain shrink-0" />
           <span className="font-display text-base font-bold text-foreground">Psi Real</span>
-          <span className="ml-auto text-[11px] font-semibold tabular-nums" style={{ color: MUTED }}>
-            {filledCount}/{FIELDS.length} preenchidos
+          <span className="ml-auto text-[11px] font-semibold" style={{ color: MUTED }}>
+            Registro de Pensamentos
           </span>
         </div>
       </header>
@@ -146,41 +136,20 @@ const RpdPublico = () => {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-4 space-y-3 sm:space-y-4 pb-[calc(96px+env(safe-area-inset-bottom))] md:pb-10">
         <div className="bg-white rounded-[10px] p-4 sm:p-6 space-y-1" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}>
           <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: G, textTransform: "uppercase" }}>
-            TCC · Registro de Pensamentos Disfuncionais
+            TCC · Registro de Pensamentos
           </p>
           <h1 className="font-display flex items-center gap-2 text-[18px] sm:text-[20px]" style={{ fontWeight: 700, color: INK }}>
-            <ClipboardList className="h-5 w-5 shrink-0" style={{ color: G }} /> RPD
+            <ClipboardList className="h-5 w-5 shrink-0" style={{ color: G }} /> Novo registro
           </h1>
           <p className="break-words" style={{ fontSize: 13, color: MUTED }}>
             {info?.patient_name} · Psicóloga: {info?.therapist_name}{info?.therapist_crp ? ` · CRP ${info.therapist_crp}` : ""}
           </p>
           <p style={{ fontSize: 13, color: MUTED }}>
-            Registre uma situação que gerou desconforto. Preencha o que conseguir — não precisa responder tudo.
+            Use este espaço para entender uma situação que mexeu com você. Não precisa preencher perfeitamente: registre o que você percebeu naquele momento.
           </p>
         </div>
 
-        {FIELDS.map((f, idx) => (
-          <section key={f.key} className="bg-white rounded-[10px] p-4 sm:p-5 space-y-2" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}>
-            <header className="space-y-0.5">
-              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: G, textTransform: "uppercase" }}>Coluna {idx + 1}</p>
-              <label htmlFor={`rpd-${f.key}`} className="font-display block" style={{ fontSize: 15, fontWeight: 700, color: INK }}>
-                {f.label}
-              </label>
-              <p id={`rpd-${f.key}-hint`} style={{ fontSize: 12, color: MUTED }}>{f.hint}</p>
-            </header>
-            <Textarea
-              id={`rpd-${f.key}`}
-              aria-describedby={`rpd-${f.key}-hint`}
-              rows={3}
-              value={form[f.key] ?? ""}
-              onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
-              placeholder="Escreva aqui..."
-              enterKeyHint="next"
-              autoCapitalize="sentences"
-              className="resize-y text-base leading-relaxed min-h-[96px]"
-            />
-          </section>
-        ))}
+        <RpdForm value={form} onChange={setForm} accent={G} />
 
         {/* Botão no fluxo (desktop) */}
         <div className="hidden md:block pb-6">
