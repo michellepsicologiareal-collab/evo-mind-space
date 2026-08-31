@@ -166,6 +166,10 @@ const ComecePorAqui = () => {
         </p>
       </div>
 
+      {/* Demonstração em vídeo por módulo */}
+      <VideoTutorials />
+
+
       {/* Progress bar */}
       <div className="rounded-2xl bg-card border border-border p-5 shadow-soft">
         <div className="flex items-center justify-between mb-3">
