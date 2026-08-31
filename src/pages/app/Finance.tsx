@@ -2000,7 +2000,7 @@ const Finance = () => {
                           <dd className={`font-medium ${pay.tone}`}>{pay.label}</dd>
                         </div>
                         {(() => {
-                          const b = billingStatusOf(p.allInGroup);
+                          const b = billingStatusOf(p.allInGroup, billingReminderDays);
                           return b.status === "na" ? null : (
                             <div className="flex items-baseline justify-between gap-3">
                               <dt className="text-muted-foreground text-xs">Cobrança</dt>
