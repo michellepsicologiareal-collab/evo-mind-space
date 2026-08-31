@@ -332,3 +332,130 @@ export const hasRpdContent = (form: RpdFormState) => {
   const p = toRpdPayload(form);
   return Boolean(p.situation || p.automatic_thought || p.emotion || p.behavior || p.cognitive_distortion || p.rational_response);
 };
+
+// ---------------------------------------------------------------------------
+// Recuperação (parse) — mantém o nome técnico e devolve a seleção da Etapa 5
+// ---------------------------------------------------------------------------
+
+export interface DistortionChip {
+  simple: string;
+  technical: string;
+  known: boolean;
+}
+
+const normalize = (s: string) =>
+  s
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+/** Converte o texto salvo em `cognitive_distortion` em chips (nome simples + técnico). */
+export const parseDistortionChips = (text?: string | null): DistortionChip[] => {
+  if (!text) return [];
+  return text
+    .split(";")
+    .map((raw) => raw.trim())
+    .filter(Boolean)
+    .map((raw) => {
+      // formato salvo: "Nome simples (Nome técnico)"
+      const m = raw.match(/^(.*?)\s*\((.+)\)$/);
+      const simplePart = (m ? m[1] : raw).trim();
+      const technicalPart = m ? m[2].trim() : "";
+      const opt = DISTORTION_OPTIONS.find(
+        (d) =>
+          normalize(d.simple) === normalize(simplePart) ||
+          (d.technical && normalize(d.technical) === normalize(technicalPart || simplePart)),
+      );
+      if (opt) return { simple: opt.simple, technical: opt.technical, known: true };
+      return { simple: simplePart || raw, technical: technicalPart, known: false };
+    });
+};
+
+/** Recupera a seleção da Etapa 5 para reabrir o formulário sem perder nada. */
+export const parseDistortions = (
+  text?: string | null,
+): { distortions: string[]; distortion_other: string } => {
+  const chips = parseDistortionChips(text);
+  const distortions = chips.filter((c) => c.known).map((c) => c.simple);
+  const others = chips.filter((c) => !c.known).map((c) => c.simple);
+  if (others.length) distortions.push("Outra");
+  return { distortions, distortion_other: others.join("; ") };
+};
+
+const parseEmotionsFromRecord = (record: any): { emotions: RpdEmotion[]; emotion_other: string } => {
+  const before: any[] = Array.isArray(record?.intensidade_emocao_inicial) ? record.intensidade_emocao_inicial : [];
+  const after: any[] = Array.isArray(record?.intensidade_emocao_final) ? record.intensidade_emocao_final : [];
+  if (before.length || after.length) {
+    const names = Array.from(new Set([...before, ...after].map((e) => String(e?.emocao ?? "")).filter(Boolean)));
+    const known = names.filter((n) => EMOTION_OPTIONS.includes(n));
+    const custom = names.filter((n) => !EMOTION_OPTIONS.includes(n));
+    const emotions: RpdEmotion[] = known.map((name) => ({
+      name,
+      before: before.find((e) => e.emocao === name)?.intensidade ?? null,
+      after: after.find((e) => e.emocao === name)?.intensidade ?? null,
+    }));
+    if (custom.length) {
+      emotions.push({
+        name: "Outra",
+        before: before.find((e) => e.emocao === custom[0])?.intensidade ?? null,
+        after: after.find((e) => e.emocao === custom[0])?.intensidade ?? null,
+      });
+    }
+    return { emotions, emotion_other: custom[0] ?? "" };
+  }
+  // fallback: texto legível "Ansiedade — 80/100 (depois: 40/100)"
+  const raw = String(record?.emotion ?? "").trim();
+  if (!raw) return { emotions: [], emotion_other: "" };
+  const emotions: RpdEmotion[] = [];
+  let emotion_other = "";
+  raw.split(";").map((p) => p.trim()).filter(Boolean).forEach((part) => {
+    const name = part.split("—")[0].split("(")[0].trim();
+    const beforeM = part.match(/—\s*(\d+)\/100/);
+    const afterM = part.match(/depois:\s*(\d+)\/100/i);
+    const known = EMOTION_OPTIONS.includes(name);
+    if (!known && !emotion_other) emotion_other = name;
+    emotions.push({
+      name: known ? name : "Outra",
+      before: beforeM ? Number(beforeM[1]) : null,
+      after: afterM ? Number(afterM[1]) : null,
+    });
+  });
+  return { emotions, emotion_other };
+};
+
+/** Reconstrói o estado do formulário a partir de um registro salvo. */
+export const fromRpdRecord = (record: any): RpdFormState => {
+  const { distortions, distortion_other } = parseDistortions(record?.cognitive_distortion);
+  const { emotions, emotion_other } = parseEmotionsFromRecord(record);
+  return {
+    situation: record?.situation ?? "",
+    automatic_thought: record?.automatic_thought ?? "",
+    behavior: record?.behavior ?? "",
+    rational_response: record?.rational_response ?? "",
+    emotions,
+    emotion_other,
+    distortions,
+    distortion_other,
+    belief_before: record?.crenca_pensamento_inicial ?? null,
+    belief_after: record?.crenca_pensamento_final ?? null,
+  };
+};
+
+/** Agrega as armadilhas mais frequentes (evolução do paciente / relatórios). */
+export const aggregateDistortions = (
+  records: { cognitive_distortion?: string | null }[],
+): { simple: string; technical: string; count: number }[] => {
+  const map = new Map<string, { simple: string; technical: string; count: number }>();
+  records.forEach((r) => {
+    parseDistortionChips(r.cognitive_distortion).forEach((c) => {
+      const opt = DISTORTION_OPTIONS.find((d) => d.simple === c.simple);
+      if (opt?.notDistortion) return;
+      const key = c.simple;
+      const cur = map.get(key);
+      if (cur) cur.count += 1;
+      else map.set(key, { simple: c.simple, technical: c.technical, count: 1 });
+    });
+  });
+  return [...map.values()].sort((a, b) => b.count - a.count);
+};
