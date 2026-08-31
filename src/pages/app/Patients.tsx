@@ -764,6 +764,17 @@ const Patients = () => {
 
   useAutoRefresh(() => { if (user) load(); }, { routePath: "/app/pacientes" });
 
+  // Lixeira: limpa itens com mais de 30 dias e carrega a lista
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      await (supabase as any).rpc("purge_expired_trashed_patients");
+      const { data } = await (supabase as any).rpc("list_trashed_patients");
+      setTrash(((data as TrashedPatient[]) || []));
+    })();
+  }, [user]);
+
+
   const summarizeFormulation = async (patientId: string) => {
     if (summarizing[patientId]) return;
     setSummarizing((s) => ({ ...s, [patientId]: true }));
