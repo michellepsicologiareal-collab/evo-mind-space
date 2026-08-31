@@ -55,7 +55,17 @@ const PATIENT_CATEGORIES = [
   { value: "supervisao", label: "Supervisão" },
 ] as const;
 
+interface TrashedPatient {
+  id: string;
+  full_name: string;
+  phone: string | null;
+  email: string | null;
+  deleted_at: string;
+  sessions_count: number;
+}
+
 interface FormulationItem {
+
   key: string;
   label: string;
   filled: boolean;
