@@ -47,10 +47,10 @@ const allNavItems: NavItem[] = [
   { to: "/app/supervisao", label: "Supervisão", icon: GraduationCap, visibleTo: ["supervisor"] },
   { to: "/app/plano-desenvolvimento", label: "Plano de Desenvolvimento", icon: Target, visibleTo: ["supervisor"] },
   { to: "/app/autocuidado", label: "Autocuidado", icon: Flower2 },
+  { to: "/app/comece-por-aqui", label: "Comece por Aqui", icon: PlayCircle },
   { to: "/app/perfil", label: "Configurações", icon: Settings },
 
   // Itens que continuam roteáveis, mas ficam fora do menu principal.
-  { to: "/app/comece-por-aqui", label: "Comece por Aqui", icon: Sparkles, hideFromNav: true },
   { to: "/app/humor", label: "Humor dos Pacientes", icon: HeartPulse },
   { to: "/app/registro-sessao", label: "Registro Sessão", icon: ClipboardList, hideFromNav: true },
   { to: "/app/plano-tratamento", label: "Plano de Tratamento", icon: Target, hideFromNav: true },
