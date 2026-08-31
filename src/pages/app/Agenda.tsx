@@ -2702,16 +2702,18 @@ const Agenda = () => {
           { label: "Conexões", content: "Sessões geram lembretes ao paciente, entradas no Google Calendar e linhas no Financeiro. Ao editar uma sessão, o Registro Clínico da sessão pode ser preenchido no mesmo modal." },
         ]}
       />
-      {/* FAB Nova sessão (mobile) — sempre visível acima da bottom nav */}
+      {/* FAB Nova sessão (mobile) — compacto, acima da bottom nav */}
       <button
         type="button"
         onClick={() => openNew()}
         aria-label="Nova sessão"
-        className="md:hidden fixed right-4 bottom-20 z-40 inline-flex items-center gap-2 h-14 px-5 rounded-full bg-accent text-accent-foreground shadow-elegant hover:shadow-glow active:scale-95 transition-all font-display font-semibold"
+        title="Nova sessão"
+        className="md:hidden fixed right-3 bottom-24 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent/95 text-accent-foreground shadow-elegant backdrop-blur active:scale-95 transition-all"
       >
         <Plus className="h-5 w-5" />
-        <span className="text-sm">Nova</span>
+        <span className="sr-only">Nova sessão</span>
       </button>
+
 
       <header className="flex min-w-0 max-w-full flex-wrap items-end justify-between gap-3 sticky top-16 md:static z-30 -mx-4 px-4 sm:-mx-6 sm:px-6 -mt-4 pt-4 sm:-mt-6 sm:pt-6 md:m-0 md:p-0 bg-background/95 backdrop-blur md:bg-transparent md:backdrop-blur-none pb-3 md:pb-0">
         <div className="flex items-start gap-3 sm:gap-4 min-w-0">
