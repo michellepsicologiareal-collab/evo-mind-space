@@ -962,6 +962,113 @@ const Finance = () => {
     load();
   };
 
+  /**
+   * Envio (ou reenvio) de cobrança pelo WhatsApp.
+   * Reutiliza o mesmo modelo de mensagem da Agenda e o mesmo registro
+   * financeiro (sessions.billing_sent_at + billing_reminder_logs).
+   */
+  const sendBillingWhatsApp = async (args: {
+    key: string;
+    name: string;
+    patientId: string | null;
+    sessions: Row[];
+    dueDate: string | null;
+    status: BillingStatus;
+    isResend: boolean;
+  }) => {
+    const { key, name, patientId, sessions: list, isResend } = args;
+    if (!user || list.length === 0) return;
+
+    const pending = list.filter((r) => r.payment_status === "pending");
+    const target = pending.length ? pending : list;
+    const ids = target.map((r) => r.id);
+    const valueNumber = target.reduce((s, r) => s + Number(r.price ?? 0), 0);
+    const value = valueNumber > 0 ? formatBRL(valueNumber) : "a combinar";
+    const dates = target
+      .slice()
+      .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
+      .map((r) => format(new Date(r.scheduled_at), "dd/MM/yyyy"));
+
+    // Vencimento: mantém o existente ou define 7 dias a partir de hoje
+    let dueStr = args.dueDate;
+    if (!dueStr) {
+      const d = new Date();
+      d.setDate(d.getDate() + 7);
+      dueStr = d.toISOString().slice(0, 10);
+    }
+
+    const firstName = psiName ? psiName.split(" ")[0] : "";
+    const sessionLine =
+      target.length > 1
+        ? `Passando para lembrar do acerto referente às nossas ${target.length} sessões de ${dates.join(", ")}.`
+        : `Passando para lembrar do acerto referente à nossa sessão de ${dates[0]}.`;
+    const message = [
+      `Olá, ${name}! Aqui é a sua psi, ${firstName || "sua psicóloga"}.`,
+      "",
+      sessionLine,
+      "",
+      `Valor: ${value}`,
+      `Vencimento: ${formatDue(dueStr)}`,
+      pixKey ? `Chave Pix: ${pixKey}` : "",
+      "",
+      "Assim que realizar, pode me enviar o comprovante por aqui. Qualquer dúvida, fico à disposição!",
+      "",
+      psiName || "",
+      psiCrp ? `Psicóloga | CRP ${psiCrp}` : "Psicóloga",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const contact = patientId ? patientContacts[patientId] : undefined;
+    const phone =
+      (contact?.has_financial_responsible && contact?.financial_responsible_phone
+        ? normalizePhoneForWhatsApp(contact.financial_responsible_phone)
+        : normalizePhoneForWhatsApp(contact?.phone ?? null)) ?? "";
+
+    let channel: "whatsapp" | "clipboard" = "whatsapp";
+    if (phone) {
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+    } else {
+      channel = "clipboard";
+      try {
+        await navigator.clipboard.writeText(message);
+        toast.info("Paciente sem telefone cadastrado — mensagem copiada.");
+      } catch {
+        toast.error("Paciente sem telefone cadastrado.");
+      }
+    }
+
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase
+      .from("sessions")
+      .update({ billing_sent_at: nowIso, payment_due_date: dueStr } as any)
+      .in("id", ids);
+    if (error) {
+      toast.error("Não foi possível registrar o envio da cobrança.");
+      return;
+    }
+
+    const { error: logError } = await supabase.from("billing_reminder_logs").insert({
+      user_id: user.id,
+      patient_id: patientId,
+      plan_key: key,
+      plan_label: `${name} · ${target.length} ${target.length === 1 ? "sessão" : "sessões"}`,
+      status: args.status,
+      due_date: dueStr,
+      days_ahead: daysUntil(dueStr),
+      pending_value: valueNumber,
+      channel,
+    });
+    if (logError) console.warn("Não foi possível registrar o histórico do envio:", logError.message);
+
+    setReminderLogsVersion((v) => v + 1);
+    toast.success(isResend ? "Cobrança reenviada e registrada" : "Cobrança enviada e registrada", {
+      description: `Vencimento ${formatDue(dueStr)}`,
+    });
+    load();
+  };
+
+
 
   const updatePlanDueDate = async (plan: PlanBilling, value: string) => {
     const ids = plan.sessions.filter((r) => r.payment_status === "pending").map((r) => r.id);
