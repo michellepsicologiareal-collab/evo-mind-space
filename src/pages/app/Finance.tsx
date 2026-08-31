@@ -29,6 +29,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { BillingBadge } from "@/components/app/BillingBadge";
+import {
+  BILLING_LABEL,
+  DUE_SOON_DAYS,
+  computeBillingStatus,
+  daysUntil,
+  formatDue,
+  type BillingInput,
+  type BillingStatus,
+} from "@/lib/billing";
 import { Switch } from "@/components/ui/switch";
 import {
   Sheet,
@@ -133,83 +143,10 @@ type FortnightFilter = "all" | "first" | "second";
 const formatBRL = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
 
 // ── Status da cobrança ────────────────────────────────────────────────
-// Usa `billing_sent_at` (cobrança enviada) e `payment_due_date` (vencimento
-// combinado) das sessões. "Perto do vencimento" = vence em até 3 dias.
-type BillingStatus = "pago" | "vencida" | "perto" | "enviada" | "a_enviar" | "na";
+// Regras compartilhadas com a Agenda (src/lib/billing.ts).
+const billingStatusOf = (list: Row[], soonDays: number = DUE_SOON_DAYS) =>
+  computeBillingStatus(list as unknown as BillingInput[], soonDays);
 
-const DUE_SOON_DAYS = 3;
-
-const BILLING_LABEL: Record<BillingStatus, string> = {
-  pago: "Pago",
-  vencida: "Vencida",
-  perto: "Perto do vencimento",
-  enviada: "Cobrança enviada",
-  a_enviar: "Cobrança a enviar",
-  na: "—",
-};
-
-const BILLING_TONE: Record<BillingStatus, string> = {
-  pago: "bg-moss/10 text-moss border-moss/20",
-  vencida: "bg-destructive/10 text-destructive border-destructive/25",
-  perto: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400",
-  enviada: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-400",
-  a_enviar: "bg-secondary text-foreground/70 border-border",
-  na: "bg-secondary text-muted-foreground border-border",
-};
-
-const startOfToday = () => {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-};
-
-const daysUntil = (dateStr: string | null): number | null => {
-  if (!dateStr) return null;
-  const [y, m, d] = dateStr.split("-").map(Number);
-  if (!y || !m || !d) return null;
-  const due = new Date(y, m - 1, d);
-  due.setHours(0, 0, 0, 0);
-  return Math.round((due.getTime() - startOfToday().getTime()) / 86400000);
-};
-
-const formatDue = (dateStr: string | null) =>
-  dateStr ? dateStr.split("-").reverse().join("/") : null;
-
-/** Deriva o status da cobrança de um conjunto de sessões faturáveis. */
-const billingStatusOf = (
-  list: Row[],
-  soonDays: number = DUE_SOON_DAYS
-): { status: BillingStatus; dueDate: string | null; sentAt: string | null } => {
-  const billable = list.filter((r) => r.status === "completed" || r.payment_status === "paid");
-  if (billable.length === 0) return { status: "na", dueDate: null, sentAt: null };
-  const pending = billable.filter((r) => r.payment_status === "pending");
-  const sentAt = billable
-    .map((r) => r.billing_sent_at)
-    .filter(Boolean)
-    .sort()
-    .pop() ?? null;
-  const dueDate = (pending.length ? pending : billable)
-    .map((r) => r.payment_due_date)
-    .filter(Boolean)
-    .sort()[0] ?? null;
-
-  if (pending.length === 0) return { status: "pago", dueDate, sentAt };
-  const dias = daysUntil(dueDate);
-  if (dias !== null && dias < 0) return { status: "vencida", dueDate, sentAt };
-  if (dias !== null && dias <= soonDays) return { status: "perto", dueDate, sentAt };
-  if (sentAt) return { status: "enviada", dueDate, sentAt };
-  return { status: "a_enviar", dueDate, sentAt };
-};
-
-
-const BillingBadge = ({ status, dueDate }: { status: BillingStatus; dueDate?: string | null }) => (
-  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${BILLING_TONE[status]}`}>
-    {BILLING_LABEL[status]}
-    {dueDate && status !== "pago" && status !== "na" && (
-      <span className="opacity-80">· {formatDue(dueDate)}</span>
-    )}
-  </span>
-);
 
 
 
@@ -273,6 +210,46 @@ const Finance = () => {
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const billingNotifiedRef = useRef<Set<string>>(new Set());
   const billingSectionRef = useRef<HTMLElement | null>(null);
+
+  // ── Histórico de lembretes de cobrança ───────────────────────────────
+  type ReminderLog = {
+    id: string;
+    plan_key: string;
+    plan_label: string | null;
+    status: string;
+    due_date: string | null;
+    days_ahead: number | null;
+    pending_value: number | string | null;
+    channel: string;
+    notified_at: string;
+  };
+  const [reminderLogs, setReminderLogs] = useState<ReminderLog[]>([]);
+  const [reminderLogsVersion, setReminderLogsVersion] = useState(0);
+  const [reminderHistoryPlan, setReminderHistoryPlan] = useState<{ key: string; name: string } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("billing_reminder_logs")
+        .select("id, plan_key, plan_label, status, due_date, days_ahead, pending_value, channel, notified_at")
+        .eq("user_id", user.id)
+        .order("notified_at", { ascending: false })
+        .limit(500);
+      if (!error && data) setReminderLogs(data as ReminderLog[]);
+    })();
+  }, [user, reminderLogsVersion]);
+
+  const reminderLogsByPlan = useMemo(() => {
+    const map = new Map<string, ReminderLog[]>();
+    for (const l of reminderLogs) {
+      const arr = map.get(l.plan_key) ?? [];
+      arr.push(l);
+      map.set(l.plan_key, arr);
+    }
+    return map;
+  }, [reminderLogs]);
+
 
 
   const recentAlertRef = useRef<HTMLDivElement | null>(null);
@@ -890,9 +867,34 @@ const Finance = () => {
       .then(({ error }) => {
         if (error) console.warn("Não foi possível registrar a notificação de cobrança:", error.message);
       });
+
+    // Histórico de lembretes (quando avisou e com qual antecedência)
+    logBillingReminders(novos, "auto");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planBillings, loading, prefsLoaded, billingReminderEnabled, billingReminderDays, user]);
 
+  /** Grava no histórico cada aviso de cobrança disparado. */
+  const logBillingReminders = async (plans: PlanBilling[], channel: "auto" | "manual") => {
+    if (!user || plans.length === 0) return;
+    const { error } = await supabase.from("billing_reminder_logs").insert(
+      plans.map((p) => ({
+        user_id: user.id,
+        patient_id: p.patientId,
+        plan_key: p.key,
+        plan_label: `${p.name} · Plano de ${p.totalDeclared} sessões`,
+        status: p.status,
+        due_date: p.dueDate,
+        days_ahead: p.dueDate ? daysUntil(p.dueDate) : null,
+        pending_value: p.pendingValue,
+        channel,
+      }))
+    );
+    if (error) {
+      console.warn("Não foi possível registrar o histórico do lembrete:", error.message);
+      return;
+    }
+    setReminderLogsVersion((v) => v + 1);
+  };
 
   const markBillingSent = async (plan: PlanBilling) => {
     const nowIso = new Date().toISOString();
@@ -909,9 +911,11 @@ const Finance = () => {
       toast.error("Não foi possível registrar o envio da cobrança.");
       return;
     }
+    await logBillingReminders([{ ...plan, dueDate: dueStr }], "manual");
     toast.success(`Cobrança registrada como enviada · vence em ${formatDue(dueStr)}`);
     load();
   };
+
 
   const updatePlanDueDate = async (plan: PlanBilling, value: string) => {
     const ids = plan.sessions.filter((r) => r.payment_status === "pending").map((r) => r.id);
@@ -1622,11 +1626,78 @@ const Finance = () => {
                     </Button>
                   </div>
                 )}
+
+                {(() => {
+                  const logs = reminderLogsByPlan.get(p.key) ?? [];
+                  const last = logs[0];
+                  return (
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/60">
+                      <p className="text-[11px] text-muted-foreground">
+                        {last
+                          ? `Último aviso ${new Date(last.notified_at).toLocaleDateString("pt-BR")} · ${
+                              last.days_ahead === null
+                                ? "sem vencimento definido"
+                                : last.days_ahead >= 0
+                                  ? `${last.days_ahead} ${last.days_ahead === 1 ? "dia" : "dias"} de antecedência`
+                                  : `${Math.abs(last.days_ahead)} ${Math.abs(last.days_ahead) === 1 ? "dia" : "dias"} em atraso`
+                            }`
+                          : "Nenhum lembrete registrado ainda"}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2 text-[11px]"
+                        disabled={logs.length === 0}
+                        onClick={() => setReminderHistoryPlan({ key: p.key, name: p.name })}
+                      >
+                        Histórico de lembretes{logs.length ? ` (${logs.length})` : ""}
+                      </Button>
+                    </div>
+                  );
+                })()}
               </li>
             ))}
           </ul>
         </section>
       )}
+
+      {/* Histórico de lembretes de cobrança */}
+      <Sheet open={!!reminderHistoryPlan} onOpenChange={(v) => !v && setReminderHistoryPlan(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="font-display">Histórico de lembretes</SheetTitle>
+            <SheetDescription>{reminderHistoryPlan?.name}</SheetDescription>
+          </SheetHeader>
+          <ul className="mt-5 space-y-3">
+            {(reminderHistoryPlan ? reminderLogsByPlan.get(reminderHistoryPlan.key) ?? [] : []).map((l) => (
+              <li key={l.id} className="rounded-2xl border border-border bg-background/60 p-3 space-y-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm font-medium">
+                    {new Date(l.notified_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                  </span>
+                  <BillingBadge status={(l.status as BillingStatus) ?? "na"} />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {l.days_ahead === null
+                    ? "Sem data de vencimento no momento do aviso"
+                    : l.days_ahead >= 0
+                      ? `Antecedência: ${l.days_ahead} ${l.days_ahead === 1 ? "dia" : "dias"}`
+                      : `Enviado com ${Math.abs(l.days_ahead)} ${Math.abs(l.days_ahead) === 1 ? "dia" : "dias"} de atraso`}
+                  {l.due_date ? ` · vencimento ${formatDue(l.due_date)}` : ""}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {l.channel === "manual" ? "Registro manual (cobrança enviada)" : "Lembrete automático"}
+                  {l.pending_value != null ? ` · ${formatBRL(Number(l.pending_value))} em aberto` : ""}
+                </p>
+              </li>
+            ))}
+            {reminderHistoryPlan && (reminderLogsByPlan.get(reminderHistoryPlan.key) ?? []).length === 0 && (
+              <li className="text-sm text-muted-foreground">Nenhum lembrete registrado para este plano ainda.</li>
+            )}
+          </ul>
+        </SheetContent>
+      </Sheet>
+
 
 
       {/* Operational patient table */}

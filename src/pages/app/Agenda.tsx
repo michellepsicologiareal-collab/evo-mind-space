@@ -51,6 +51,8 @@ import { PageIntro } from "@/components/app/PageIntro";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { computeAgendaSummary } from "@/utils/agendaSummary";
+import { computeBillingStatus, type BillingInput } from "@/lib/billing";
+import { BillingBadge } from "@/components/app/BillingBadge";
 
 // Retorno exato para a Agenda (data/visão/filtros atuais) ao fechar o Registro de Sessão.
 const agendaReturnParam = () =>
@@ -81,6 +83,7 @@ interface Session {
   discussed_patient_name?: string | null;
   service_id?: string | null;
   billing_sent_at?: string | null;
+  payment_due_date?: string | null;
   modality?: string;
   meeting_link?: string | null;
 }
@@ -1001,8 +1004,8 @@ const Agenda = () => {
   const prefetchedMonthsRef = useRef(new Set<string>());
   const monthKey = useCallback((d: Date) => `${user?.id ?? "anon"}:${format(d, "yyyy-MM")}`, [user?.id]);
 
-  const SESSIONS_FULL_SELECT = "id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)";
-  const SESSIONS_PENDING_SELECT = "id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)";
+  const SESSIONS_FULL_SELECT = "id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, billing_sent_at, payment_due_date, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)";
+  const SESSIONS_PENDING_SELECT = "id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, payment_due_date, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)";
 
   const fetchMonthSessions = useCallback(async (monthDate: Date): Promise<Session[] | null> => {
     if (!user) return null;
@@ -3841,6 +3844,15 @@ const Agenda = () => {
                     <p className="mt-2" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: "hsl(var(--primary))" }}>
                       R$ {group.total.toFixed(2)}
                     </p>
+                    {(() => {
+                      const billing = computeBillingStatus(group.sessions as unknown as BillingInput[]);
+                      if (billing.status === "na") return null;
+                      return (
+                        <div className="mt-2">
+                          <BillingBadge status={billing.status} dueDate={billing.dueDate} />
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="flex items-center gap-1.5 mt-3">
                     <Select value={s.payment_status} onValueChange={(v) => group.isSinglePayment ? updatePaymentGroup(group.sessions.map((item) => item.id), v as PaymentStatus) : updatePaymentStatus(s.id, v as PaymentStatus)}>
