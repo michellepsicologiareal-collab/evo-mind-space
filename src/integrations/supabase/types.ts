@@ -1273,6 +1273,8 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          billing_reminder_days: number
+          billing_reminder_enabled: boolean
           clinic_address: string | null
           clinic_name: string | null
           created_at: string
@@ -1302,6 +1304,8 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          billing_reminder_days?: number
+          billing_reminder_enabled?: boolean
           clinic_address?: string | null
           clinic_name?: string | null
           created_at?: string
@@ -1331,6 +1335,8 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          billing_reminder_days?: number
+          billing_reminder_enabled?: boolean
           clinic_address?: string | null
           clinic_name?: string | null
           created_at?: string
