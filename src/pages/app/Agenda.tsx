@@ -994,44 +994,45 @@ const Agenda = () => {
     }
   }, [user, loadGcalStatus]);
 
-  // Load all sessions for the current month
-  const load = async (silent = false) => {
-    if (!user) return;
-    if (!silent) setLoading(true);
-    const mStart = startOfMonth(currentMonth);
-    const mEnd = addDays(endOfMonth(currentMonth), 1);
-    const [sRes, pRes, svRes] = await Promise.all([
-      supabase
-        .from("sessions")
-        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)")
-        .eq("user_id", user.id)
-        .neq("status", "cancelled")
-        .gte("scheduled_at", mStart.toISOString())
-        .lt("scheduled_at", mEnd.toISOString())
-        .order("scheduled_at"),
-      supabase.from("patients").select("id, full_name, session_price, phone, has_financial_responsible, financial_responsible_name, financial_responsible_phone, homework_token, clinic_address").eq("user_id", user.id).eq("is_active", true).order("full_name"),
-      (supabase as any).from("services").select("id, name, price, is_active").eq("user_id", user.id).eq("is_active", true).order("name"),
-    ]);
-    if (sRes.error) toast.error("Erro ao carregar sessões");
-    const mapped = (sRes.data ?? []).map((s: any) => ({
+  // ===== Cache por mês + pré-carregamento dos meses vizinhos =====
+  // Mantém sessões/pendências de cada mês em memória para que a troca de
+  // mês/dia seja instantânea (sem spinner) e atualiza em segundo plano.
+  const monthCacheRef = useRef(new Map<string, { sessions?: Session[]; pending?: Session[]; pendingPackages?: Session[] }>());
+  const prefetchedMonthsRef = useRef(new Set<string>());
+  const monthKey = useCallback((d: Date) => `${user?.id ?? "anon"}:${format(d, "yyyy-MM")}`, [user?.id]);
+
+  const SESSIONS_FULL_SELECT = "id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, service_id, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name), discussed_patient:patients!sessions_discussed_patient_id_fkey(full_name)";
+  const SESSIONS_PENDING_SELECT = "id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)";
+
+  const fetchMonthSessions = useCallback(async (monthDate: Date): Promise<Session[] | null> => {
+    if (!user) return null;
+    const mStart = startOfMonth(monthDate);
+    const mEnd = addDays(endOfMonth(monthDate), 1);
+    const { data, error } = await supabase
+      .from("sessions")
+      .select(SESSIONS_FULL_SELECT)
+      .eq("user_id", user.id)
+      .neq("status", "cancelled")
+      .gte("scheduled_at", mStart.toISOString())
+      .lt("scheduled_at", mEnd.toISOString())
+      .order("scheduled_at");
+    if (error) return null;
+    return (data ?? []).map((s: any) => ({
       ...s,
       patient_name: s.patient?.full_name ?? null,
       discussed_patient_name: s.discussed_patient?.full_name ?? null,
-    }));
-    setSessions(mapped as Session[]);
-    setPatients((pRes.data as Patient[]) ?? []);
-    setServices((svRes.data as Service[]) ?? []);
-    if (!silent) setLoading(false);
-  };
+    })) as Session[];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
-  const loadPending = async (silent = false) => {
-    if (!user) return;
-    if (!silent) setLoadingPending(true);
-    const mStart = startOfMonth(currentMonth).toISOString();
-    const mEnd = endOfMonth(currentMonth).toISOString();
+  const fetchPendingBundle = useCallback(async (monthDate: Date): Promise<{ pending: Session[]; pendingPackages: Session[] }> => {
+    const empty = { pending: [] as Session[], pendingPackages: [] as Session[] };
+    if (!user) return empty;
+    const mStart = startOfMonth(monthDate).toISOString();
+    const mEnd = endOfMonth(monthDate).toISOString();
     const { data } = await supabase
       .from("sessions")
-      .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)")
+      .select(SESSIONS_PENDING_SELECT)
       .eq("user_id", user.id)
       .eq("session_type", "clinical")
       .not("patient_id", "is", null)
@@ -1040,26 +1041,91 @@ const Agenda = () => {
       .lte("scheduled_at", mEnd)
       .order("scheduled_at", { ascending: false })
       .limit(200);
-    const mapped = (data ?? []).map((s: any) => ({
+    const pending = (data ?? []).map((s: any) => ({
       ...s, patient_name: s.patient?.full_name ?? null, discussed_patient_name: null,
-    }));
-    const packagePatientIds = Array.from(new Set(mapped.filter((s: any) => /(?:Pgto|Pagamento) [úu]nico/i.test(s.notes || "") && s.patient_id).map((s: any) => s.patient_id)));
-    if (packagePatientIds.length > 0) {
-      const { data: packageData } = await supabase
-        .from("sessions")
-        .select("id, patient_id, scheduled_at, duration_minutes, status, price, notes, confirmation_token, confirmation_sent_at, session_type, discussed_patient_id, is_expense, payment_status, payment_method, payment_reference, billing_sent_at, modality, meeting_link, patient:patients!sessions_patient_id_fkey(full_name)")
-        .eq("user_id", user.id)
-        .eq("session_type", "clinical")
-        .in("patient_id", packagePatientIds)
-        .ilike("notes", "%Pgto%")
-        .not("status", "in", '("cancelled","no_show")')
-        .order("scheduled_at", { ascending: true })
-        .limit(200);
-      setPendingPackageSessions((packageData ?? []).map((s: any) => ({ ...s, patient_name: s.patient?.full_name ?? null, discussed_patient_name: null })) as Session[]);
-    } else {
-      setPendingPackageSessions([]);
+    })) as Session[];
+    const packagePatientIds = Array.from(new Set(pending.filter((s: any) => /(?:Pgto|Pagamento) [úu]nico/i.test(s.notes || "") && s.patient_id).map((s: any) => s.patient_id)));
+    if (packagePatientIds.length === 0) return { pending, pendingPackages: [] };
+    const { data: packageData } = await supabase
+      .from("sessions")
+      .select(SESSIONS_PENDING_SELECT)
+      .eq("user_id", user.id)
+      .eq("session_type", "clinical")
+      .in("patient_id", packagePatientIds)
+      .ilike("notes", "%Pgto%")
+      .not("status", "in", '("cancelled","no_show")')
+      .order("scheduled_at", { ascending: true })
+      .limit(200);
+    return {
+      pending,
+      pendingPackages: (packageData ?? []).map((s: any) => ({ ...s, patient_name: s.patient?.full_name ?? null, discussed_patient_name: null })) as Session[],
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Pré-carrega mês anterior e próximo em segundo plano (uma única vez por mês)
+  const prefetchAdjacentMonths = useCallback((monthDate: Date) => {
+    if (!user) return;
+    for (const d of [subMonths(monthDate, 1), addMonths(monthDate, 1)]) {
+      const key = monthKey(d);
+      if (prefetchedMonthsRef.current.has(key)) continue;
+      prefetchedMonthsRef.current.add(key);
+      void (async () => {
+        const [sessions, bundle] = await Promise.all([fetchMonthSessions(d), fetchPendingBundle(d)]);
+        if (sessions) {
+          monthCacheRef.current.set(key, { sessions, ...bundle });
+        } else {
+          prefetchedMonthsRef.current.delete(key); // permite tentar de novo depois
+        }
+      })();
     }
-    setPendingSessions(mapped as Session[]);
+  }, [user, monthKey, fetchMonthSessions, fetchPendingBundle]);
+
+  // Load all sessions for the current month
+  const load = async (silent = false) => {
+    if (!user) return;
+    const key = monthKey(currentMonth);
+    const cached = monthCacheRef.current.get(key);
+    if (cached?.sessions) {
+      // Exibe o cache na hora e revalida em segundo plano (sem spinner)
+      setSessions(cached.sessions);
+      setLoading(false);
+      silent = true;
+    }
+    if (!silent) setLoading(true);
+    const [mapped, pRes, svRes] = await Promise.all([
+      fetchMonthSessions(currentMonth),
+      supabase.from("patients").select("id, full_name, session_price, phone, has_financial_responsible, financial_responsible_name, financial_responsible_phone, homework_token, clinic_address").eq("user_id", user.id).eq("is_active", true).order("full_name"),
+      (supabase as any).from("services").select("id, name, price, is_active").eq("user_id", user.id).eq("is_active", true).order("name"),
+    ]);
+    if (mapped === null) {
+      toast.error("Erro ao carregar sessões");
+      if (!silent) setLoading(false);
+      return;
+    }
+    setSessions(mapped);
+    setPatients((pRes.data as Patient[]) ?? []);
+    setServices((svRes.data as Service[]) ?? []);
+    monthCacheRef.current.set(key, { ...monthCacheRef.current.get(key), sessions: mapped });
+    prefetchAdjacentMonths(currentMonth);
+    if (!silent) setLoading(false);
+  };
+
+  const loadPending = async (silent = false) => {
+    if (!user) return;
+    const key = monthKey(currentMonth);
+    const cached = monthCacheRef.current.get(key);
+    if (cached?.pending) {
+      setPendingSessions(cached.pending);
+      setPendingPackageSessions(cached.pendingPackages ?? []);
+      setLoadingPending(false);
+      silent = true;
+    }
+    if (!silent) setLoadingPending(true);
+    const bundle = await fetchPendingBundle(currentMonth);
+    setPendingSessions(bundle.pending);
+    setPendingPackageSessions(bundle.pendingPackages);
+    monthCacheRef.current.set(key, { ...monthCacheRef.current.get(key), ...bundle });
     if (!silent) setLoadingPending(false);
   };
 
