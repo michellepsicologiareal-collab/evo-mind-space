@@ -1,6 +1,6 @@
 import React from "react";
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
-import { bodyFont, colors } from "../theme";
+import { bodyFont, colors, displayFont } from "../theme";
 
 export const Bullet: React.FC<{
   text: string;
@@ -80,14 +80,13 @@ export const SceneTitle: React.FC<{
       </div>
       <div
         style={{
-          fontFamily: "inherit",
           transform: `translateY(${interpolate(t, [0, 1], [30, 0])}px)`,
           opacity: t,
         }}
       >
         <div
           style={{
-            fontFamily: bodyFont,
+            fontFamily: displayFont,
             fontWeight: 800,
             fontSize: 58,
             color: colors.ink,
