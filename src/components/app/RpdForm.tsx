@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Lightbulb } from "lucide-react";
+import { Check, Lightbulb, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
