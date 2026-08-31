@@ -821,6 +821,77 @@ const Finance = () => {
     };
   }, [planBillings]);
 
+  // ── Lembrete automático de cobranças perto do vencimento ─────────────
+  // Ao abrir o Financeiro, avisa (toast + notificação no sininho) sobre os
+  // planos que vencem dentro da janela configurada ou já vencidos.
+  // Cada plano é notificado uma vez por dia por vencimento.
+  useEffect(() => {
+    if (loading || !prefsLoaded || !billingReminderEnabled || !user) return;
+    const alerts = planBillings.filter((p) => p.status === "perto" || p.status === "vencida");
+    if (alerts.length === 0) return;
+
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const storageKey = `psireal_billing_reminder_${user.id}`;
+    let sent: Record<string, string> = {};
+    try {
+      sent = JSON.parse(localStorage.getItem(storageKey) ?? "{}");
+    } catch {
+      sent = {};
+    }
+
+    const novos = alerts.filter((p) => {
+      const memo = `${todayKey}::${p.dueDate ?? "sem-data"}::${p.status}`;
+      if (billingNotifiedRef.current.has(p.key)) return false;
+      return sent[p.key] !== memo;
+    });
+    if (novos.length === 0) return;
+
+    novos.forEach((p) => {
+      billingNotifiedRef.current.add(p.key);
+      sent[p.key] = `${todayKey}::${p.dueDate ?? "sem-data"}::${p.status}`;
+    });
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(sent));
+    } catch {
+      /* storage indisponível — o aviso ainda aparece nesta sessão */
+    }
+
+    const vencidas = novos.filter((p) => p.status === "vencida");
+    const titulo = vencidas.length === novos.length
+      ? `${novos.length} ${novos.length === 1 ? "cobrança vencida" : "cobranças vencidas"}`
+      : `${novos.length} ${novos.length === 1 ? "cobrança perto do vencimento" : "cobranças perto do vencimento"}`;
+    const detalhe = novos
+      .map((p) => `${p.name}${p.dueDate ? ` · vence ${formatDue(p.dueDate)}` : ""}`)
+      .slice(0, 4)
+      .join(" · ");
+
+    toast.warning(titulo, {
+      description: detalhe + (novos.length > 4 ? ` · +${novos.length - 4}` : ""),
+      duration: 9000,
+      action: {
+        label: "Ver cobranças",
+        onClick: () => billingSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      },
+    });
+
+    // Notificação persistente no sininho
+    supabase
+      .from("notifications")
+      .insert(
+        novos.map((p) => ({
+          user_id: user.id,
+          title: p.status === "vencida" ? "Cobrança vencida" : "Cobrança perto do vencimento",
+          message: `${p.name} · Plano de ${p.totalDeclared} sessões · ${formatBRL(p.pendingValue)}${p.dueDate ? ` · vencimento ${formatDue(p.dueDate)}` : ""}`,
+          type: "general" as const,
+        }))
+      )
+      .then(({ error }) => {
+        if (error) console.warn("Não foi possível registrar a notificação de cobrança:", error.message);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planBillings, loading, prefsLoaded, billingReminderEnabled, billingReminderDays, user]);
+
+
   const markBillingSent = async (plan: PlanBilling) => {
     const nowIso = new Date().toISOString();
     const pending = plan.sessions.filter((r) => r.payment_status === "pending");
