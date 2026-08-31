@@ -29,6 +29,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { BillingBadge } from "@/components/app/BillingBadge";
+import {
+  BILLING_LABEL,
+  DUE_SOON_DAYS,
+  computeBillingStatus,
+  daysUntil,
+  formatDue,
+  type BillingInput,
+  type BillingStatus,
+} from "@/lib/billing";
 import { Switch } from "@/components/ui/switch";
 import {
   Sheet,
