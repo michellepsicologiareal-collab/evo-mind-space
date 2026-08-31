@@ -148,7 +148,7 @@ export const RpdForm = ({ value, onChange, accent = G }: Props) => {
 
   const step = (n: number) => {
     const s = RPD_STEPS.find((x) => x.n === n)!;
-    return { n: s.n, question: s.question, term: s.term, description: s.description };
+    return { n: s.n, question: s.question, term: s.term, description: s.description, note: s.note };
   };
   const stepFull = (n: number) => RPD_STEPS.find((x) => x.n === n)!;
 
