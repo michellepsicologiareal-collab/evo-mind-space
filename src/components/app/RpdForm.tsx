@@ -1,10 +1,20 @@
+import { useState } from "react";
+import { Check, Lightbulb } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   RPD_STEPS,
   EMOTION_OPTIONS,
   DISTORTION_OPTIONS,
+  type DistortionOption,
   type RpdFormState,
 } from "@/lib/rpd";
 
@@ -113,7 +123,11 @@ const ScaleField = ({
 );
 
 export const RpdForm = ({ value, onChange, accent = G }: Props) => {
+  const [learnMore, setLearnMore] = useState<DistortionOption | null>(null);
   const set = (patch: Partial<RpdFormState>) => onChange({ ...value, ...patch });
+  const selectedDistortionsCount = value.distortions.filter(
+    (d) => DISTORTION_OPTIONS.some((o) => o.simple === d && !o.notDistortion),
+  ).length;
 
   const toggleEmotion = (name: string) => {
     const exists = value.emotions.find((e) => e.name === name);
@@ -233,33 +247,87 @@ export const RpdForm = ({ value, onChange, accent = G }: Props) => {
 
       {textStep(4, "behavior")}
 
-      {/* Etapa 5 — armadilhas do pensamento */}
+      {/* Etapa 5 — armadilhas do pensamento (cards educativos) */}
       <StepCard {...step(5)} accent={accent}>
         <div className="grid gap-2 sm:grid-cols-2">
           {DISTORTION_OPTIONS.map((d) => {
             const active = value.distortions.includes(d.simple);
             return (
-              <button
+              <div
                 key={d.simple}
-                type="button"
+                role="button"
+                tabIndex={0}
                 aria-pressed={active}
                 onClick={() => toggleDistortion(d.simple)}
-                className="rounded-lg border px-3 py-2.5 text-left transition-colors focus-strong"
-                style={chipStyle(active)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleDistortion(d.simple);
+                  }
+                }}
+                className="relative rounded-xl border px-3 py-3 text-left transition-colors cursor-pointer focus-strong select-none"
+                style={
+                  active
+                    ? { background: "rgba(150,117,206,0.08)", borderColor: accent, boxShadow: `inset 0 0 0 1px ${accent}` }
+                    : { background: "#fff", borderColor: "hsl(var(--border))" }
+                }
               >
-                <span className="block text-sm font-medium leading-snug">{d.simple}</span>
-                {d.technical && (
+                {active && (
                   <span
-                    className="block text-xs mt-0.5"
-                    style={{ color: active ? "rgba(255,255,255,0.8)" : MUTED }}
+                    className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full"
+                    style={{ background: accent, color: "#fff" }}
+                    aria-hidden
                   >
+                    <Check className="h-3 w-3" strokeWidth={3} />
+                  </span>
+                )}
+                <span className="block pr-6 text-sm font-semibold leading-snug" style={{ color: INK }}>
+                  {d.simple}
+                </span>
+                {d.technical && (
+                  <span className="block mt-0.5 text-[11px] font-medium uppercase tracking-wide" style={{ color: MUTED }}>
                     {d.technical}
                   </span>
                 )}
-              </button>
+                <span className="block mt-1.5 text-xs leading-relaxed" style={{ color: MUTED }}>
+                  {d.description}
+                </span>
+                {d.example && (
+                  <span className="block mt-1.5 text-xs italic leading-relaxed" style={{ color: MUTED }}>
+                    Ex.: {d.example}
+                  </span>
+                )}
+                {!d.notDistortion && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLearnMore(d);
+                    }}
+                    className="mt-2 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold transition-colors hover:underline focus-strong"
+                    style={{ color: accent }}
+                  >
+                    <Lightbulb className="h-3 w-3" />
+                    Entender melhor
+                  </button>
+                )}
+              </div>
             );
           })}
         </div>
+
+        {selectedDistortionsCount > 0 && (
+          <p
+            className="rounded-lg px-3 py-2 text-xs font-medium"
+            style={{ background: "hsl(var(--muted))", color: INK }}
+            role="status"
+          >
+            Você identificou {selectedDistortionsCount}{" "}
+            {selectedDistortionsCount === 1 ? "possível armadilha" : "possíveis armadilhas"} nesse pensamento.
+            Vamos investigar isso juntos.
+          </p>
+        )}
+
         {value.distortions.some((d) => d.startsWith("Outra")) && (
           <Input
             value={value.distortion_other}
@@ -325,6 +393,58 @@ export const RpdForm = ({ value, onChange, accent = G }: Props) => {
           </p>
         )}
       </section>
+
+      {/* Recurso educativo — "Entender melhor" */}
+      <Dialog open={learnMore != null} onOpenChange={(open) => !open && setLearnMore(null)}>
+        <DialogContent className="max-w-md">
+          {learnMore && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-display text-base leading-snug">
+                  {learnMore.simple}
+                </DialogTitle>
+                {learnMore.technical && (
+                  <DialogDescription className="text-[11px] font-semibold uppercase tracking-wide">
+                    {learnMore.technical}
+                  </DialogDescription>
+                )}
+              </DialogHeader>
+              <div className="space-y-4 text-sm leading-relaxed">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">O que é</p>
+                  <p className="mt-1">{learnMore.description}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Como costuma aparecer
+                  </p>
+                  <p className="mt-1">{learnMore.howAppears}</p>
+                </div>
+                {learnMore.examples.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exemplos</p>
+                    <ul className="mt-1 list-disc space-y-1 pl-5 italic text-muted-foreground">
+                      {learnMore.examples.map((ex) => (
+                        <li key={ex}>{ex}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="rounded-lg p-3" style={{ background: "hsl(var(--muted))" }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: accent }}>
+                    Uma pergunta para investigar
+                  </p>
+                  <p className="mt-1 text-sm">{learnMore.question}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Não existe resposta certa aqui — o objetivo é investigar esse pensamento com curiosidade, possivelmente
+                  junto com seu terapeuta.
+                </p>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
