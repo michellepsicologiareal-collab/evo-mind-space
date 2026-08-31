@@ -2185,7 +2185,40 @@ const Finance = () => {
                           </div>
                         </div>
 
-                        <div className="mt-3 flex items-center gap-2 border-t border-border/60 pt-3">
+                        <div className="mt-3 border-t border-border/60 pt-3 space-y-2">
+                          <Button
+                            variant={alreadySent ? "outline" : "default"}
+                            size="sm"
+                            className="w-full h-9 gap-2"
+                            onClick={() =>
+                              sendBillingWhatsApp({
+                                key: g.key,
+                                name: g.name,
+                                patientId: g.patientId,
+                                sessions: g.sessions,
+                                dueDate: billing.dueDate,
+                                status: billing.status,
+                                isResend: alreadySent,
+                              })
+                            }
+                            aria-label={`${alreadySent ? "Reenviar" : "Enviar"} cobrança de ${g.name} pelo WhatsApp`}
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            {alreadySent ? "Reenviar cobrança" : "Enviar cobrança pelo WhatsApp"}
+                          </Button>
+
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex-1 h-9 gap-1.5 text-xs"
+                              onClick={() => setReminderHistoryPlan({ key: g.key, name: g.name })}
+                              aria-label={`Ver histórico de cobranças de ${g.name}`}
+                            >
+                              <History className="h-4 w-4" />
+                              Histórico{groupLogs.length ? ` (${groupLogs.length})` : ""}
+                            </Button>
+
                           {g.patientId && (
                             <Button
                               variant="outline"
