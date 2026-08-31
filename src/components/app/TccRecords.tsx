@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
+import { RpdForm } from "@/components/app/RpdForm";
+import { emptyRpdForm, toRpdPayload, hasRpdContent, type RpdFormState } from "@/lib/rpd";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import {
   Dialog,
@@ -30,6 +32,8 @@ interface TccRecord {
   behavior: string | null;
   cognitive_distortion: string | null;
   rational_response: string | null;
+  crenca_pensamento_inicial?: number | null;
+  crenca_pensamento_final?: number | null;
   filled_by?: string | null;
   created_at: string;
 }
@@ -63,14 +67,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    situation: "",
-    automatic_thought: "",
-    emotion: "",
-    behavior: "",
-    cognitive_distortion: "",
-    rational_response: "",
-  });
+  const [form, setForm] = useState<RpdFormState>(emptyRpdForm());
 
   // Link público para o paciente preencher
   const [linkOpen, setLinkOpen] = useState(false);
@@ -86,7 +83,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const load = async () => {
     const { data } = await (supabase as any)
       .from("tcc_records")
-      .select("id, situation, automatic_thought, emotion, behavior, cognitive_distortion, rational_response, filled_by, created_at")
+      .select("id, situation, automatic_thought, emotion, behavior, cognitive_distortion, rational_response, crenca_pensamento_inicial, crenca_pensamento_final, filled_by, created_at")
       .eq("patient_id", patientId)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -184,23 +181,32 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
 
   const handleSave = async () => {
     if (!user) return;
+    if (!hasRpdContent(form)) {
+      toast.error("Preencha ao menos uma etapa.");
+      return;
+    }
     setSaving(true);
+    const payload = toRpdPayload(form);
     const { error } = await (supabase as any).from("tcc_records").insert({
       user_id: user.id,
       patient_id: patientId,
-      situation: form.situation || null,
-      automatic_thought: form.automatic_thought || null,
-      emotion: form.emotion || null,
-      behavior: form.behavior || null,
-      cognitive_distortion: form.cognitive_distortion || null,
-      rational_response: form.rational_response || null,
+      situation: payload.situation || null,
+      automatic_thought: payload.automatic_thought || null,
+      emotion: payload.emotion || null,
+      behavior: payload.behavior || null,
+      cognitive_distortion: payload.cognitive_distortion || null,
+      rational_response: payload.rational_response || null,
+      crenca_pensamento_inicial: payload.crenca_pensamento_inicial,
+      crenca_pensamento_final: payload.crenca_pensamento_final,
+      intensidade_emocao_inicial: payload.intensidade_emocao_inicial,
+      intensidade_emocao_final: payload.intensidade_emocao_final,
     });
     setSaving(false);
-    if (error) return toast.error("Erro ao salvar RPD");
-    toast.success("RPD salvo");
+    if (error) return toast.error("Erro ao salvar registro");
+    toast.success("Registro salvo");
     keepScroll();
     setOpen(false);
-    setForm({ situation: "", automatic_thought: "", emotion: "", behavior: "", cognitive_distortion: "", rational_response: "" });
+    setForm(emptyRpdForm());
     await preserveScroll(() => load());
   };
 
@@ -211,13 +217,13 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
     setRecords((prev) => prev.filter((r) => r.id !== id));
   };
 
-  const fields: { key: keyof typeof form; label: string }[] = [
-    { key: "situation", label: "Situação / Queixa" },
-    { key: "automatic_thought", label: "Pensamento Automático" },
-    { key: "emotion", label: "Emoção" },
-    { key: "behavior", label: "Comportamento" },
-    { key: "cognitive_distortion", label: "Distorção Cognitiva" },
-    { key: "rational_response", label: "Resposta Racional" },
+  const fields: { key: keyof TccRecord; label: string }[] = [
+    { key: "situation", label: "O que aconteceu? · Situação" },
+    { key: "automatic_thought", label: "O que passou pela cabeça? · Pensamento" },
+    { key: "emotion", label: "O que senti? · Emoção" },
+    { key: "behavior", label: "O que fiz? · Comportamento" },
+    { key: "cognitive_distortion", label: "Armadilhas do pensamento" },
+    { key: "rational_response", label: "Outra forma de olhar · Pensamento mais equilibrado" },
   ];
 
   return (
@@ -228,13 +234,13 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div className="space-y-1 min-w-0">
           <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: G, textTransform: "uppercase" }}>
-            TCC · Registro de Pensamentos Disfuncionais
+            TCC · Registro de Pensamentos
           </p>
           <h2 className="font-display flex items-center gap-2" style={{ fontSize: 16, fontWeight: 700, color: INK }}>
             <ClipboardList className="h-4 w-4" style={{ color: G }} />
-            RPD — Registro de Pensamentos Disfuncionais
+            RPD — Registro de Pensamentos
           </h2>
-          <p style={{ fontSize: 12, color: MUTED }}>Situação · Pensamento automático · Emoção · Comportamento · Distorção · Resposta racional</p>
+          <p style={{ fontSize: 12, color: MUTED }}>O que aconteceu · O que pensei · O que senti · O que fiz · Armadilhas do pensamento · Pensamento mais equilibrado</p>
         </div>
         {!readOnly && (
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto shrink-0">
@@ -253,7 +259,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
               className="w-full sm:w-auto"
               style={{ background: G, color: "#fff", fontWeight: 600 }}
             >
-              <Plus className="h-4 w-4" /> Novo RPD
+              <Plus className="h-4 w-4" /> Novo registro
             </Button>
           </div>
         )}
@@ -279,7 +285,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
           style={{ background: G_BG, border: `1px dashed ${G_BORDER}` }}
         >
           <p style={{ fontSize: 13, color: MUTED }}>
-            Nenhum RPD registrado ainda. Comece criando o primeiro registro de pensamento disfuncional.
+            Nenhum registro ainda. Comece criando o primeiro registro de pensamentos.
           </p>
         </div>
       ) : (
@@ -349,50 +355,28 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
           >
             <DialogHeader className="space-y-1 text-left">
               <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: G, textTransform: "uppercase" }}>
-                TCC · Registro de Pensamentos Disfuncionais
+                TCC · Registro de Pensamentos
               </p>
               <DialogTitle className="font-display" style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.3px", color: INK }}>
-                Novo RPD
+                Novo registro
               </DialogTitle>
               <p style={{ fontSize: 13, color: MUTED }}>
-                Preencha os 6 campos do modelo cognitivo: situação, pensamento, emoção, comportamento, distorção e resposta racional.
+                Use este espaço para entender uma situação que mexeu com você. Não precisa preencher perfeitamente:
+                registre o que você percebeu naquele momento.
               </p>
               <div className="pt-2">
                 <span
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md"
                   style={{ background: G_BG, color: G, border: `1px solid ${G_BORDER}`, fontSize: 11, fontWeight: 600 }}
                 >
-                  RPD · 6 colunas
+                  6 etapas
                 </span>
               </div>
             </DialogHeader>
           </div>
 
-          {/* Corpo em cards padronizados */}
-          <div className="p-3 sm:p-5 space-y-3 sm:space-y-4">
-            {fields.map(({ key, label }, idx) => (
-              <section
-                key={key}
-                className="bg-white rounded-[10px] p-4 sm:p-5 space-y-2"
-                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}
-              >
-                <header className="space-y-0.5">
-                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: G, textTransform: "uppercase" }}>
-                    Coluna {idx + 1}
-                  </p>
-                  <h3 className="font-display" style={{ fontSize: 15, fontWeight: 700, color: INK }}>
-                    {label}
-                  </h3>
-                </header>
-                <Textarea
-                  rows={3}
-                  value={form[key]}
-                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
-                  placeholder={`Descreva ${label.toLowerCase()}...`}
-                  className="resize-y"
-                />
-              </section>
-            ))}
+          <div className="p-3 sm:p-5">
+            <RpdForm value={form} onChange={setForm} accent={G} />
           </div>
 
           <DialogFooter
@@ -407,7 +391,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
               style={{ background: G, color: "#fff", fontWeight: 600 }}
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Salvar RPD
+              Salvar registro
             </Button>
           </DialogFooter>
         </DialogContent>
