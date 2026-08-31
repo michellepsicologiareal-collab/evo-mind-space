@@ -134,10 +134,14 @@ export const RpdForm = ({ value, onChange, accent = G }: Props) => {
         : [...value.distortions, simple],
     });
 
-  const step = (n: number) => RPD_STEPS.find((s) => s.n === n)!;
+  const step = (n: number) => {
+    const s = RPD_STEPS.find((x) => x.n === n)!;
+    return { n: s.n, question: s.question, term: s.term, description: s.description };
+  };
+  const stepFull = (n: number) => RPD_STEPS.find((x) => x.n === n)!;
 
   const textStep = (n: number, key: "situation" | "automatic_thought" | "behavior" | "rational_response", extra?: React.ReactNode) => {
-    const s = step(n);
+    const s = stepFull(n);
     return (
       <StepCard key={s.n} n={s.n} question={s.question} term={s.term} description={s.description} accent={accent}>
         <Textarea
