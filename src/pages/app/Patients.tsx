@@ -550,7 +550,14 @@ const Patients = () => {
     setDraftRestored(false);
   }, []);
 
+  const [trash, setTrash] = useState<TrashedPatient[]>([]);
+  const [trashOpen, setTrashOpen] = useState(false);
+  const [trashBusy, setTrashBusy] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Patient | null>(null);
+  const [deleteConfirmed, setDeleteConfirmed] = useState(false);
+
   const load = async () => {
+
     if (!user) return;
     setLoading(true);
     const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes, plansRes, goalsRes, techRes, revRes, teRes, actRes] = await Promise.all([
