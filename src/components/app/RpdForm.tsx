@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Lightbulb, X } from "lucide-react";
+import { Check, Lightbulb } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
@@ -123,7 +123,11 @@ const ScaleField = ({
 );
 
 export const RpdForm = ({ value, onChange, accent = G }: Props) => {
+  const [learnMore, setLearnMore] = useState<DistortionOption | null>(null);
   const set = (patch: Partial<RpdFormState>) => onChange({ ...value, ...patch });
+  const selectedDistortionsCount = value.distortions.filter(
+    (d) => DISTORTION_OPTIONS.some((o) => o.simple === d && !o.notDistortion),
+  ).length;
 
   const toggleEmotion = (name: string) => {
     const exists = value.emotions.find((e) => e.name === name);
