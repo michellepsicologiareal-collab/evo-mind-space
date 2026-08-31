@@ -261,7 +261,7 @@ export const VideoTutorials = () => {
                     const v = e.currentTarget;
                     if (active.resumeAt > 0) v.currentTime = active.resumeAt;
                     const track = v.textTracks?.[0];
-                    if (track) track.mode = "showing";
+                    if (track) track.mode = "hidden";
                   }}
                   onTimeUpdate={(e) => {
                     const v = e.currentTarget;
@@ -278,7 +278,7 @@ export const VideoTutorials = () => {
                   }}
                 >
                   {vttUrl && (
-                    <track kind="captions" srcLang="pt-BR" label="Português" src={vttUrl} default />
+                    <track kind="captions" srcLang="pt-BR" label="Português" src={vttUrl} />
                   )}
                 </video>
 
