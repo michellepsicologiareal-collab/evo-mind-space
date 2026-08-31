@@ -51,6 +51,8 @@ import { PageIntro } from "@/components/app/PageIntro";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { computeAgendaSummary } from "@/utils/agendaSummary";
+import { computeBillingStatus, type BillingInput } from "@/lib/billing";
+import { BillingBadge } from "@/components/app/BillingBadge";
 
 // Retorno exato para a Agenda (data/visão/filtros atuais) ao fechar o Registro de Sessão.
 const agendaReturnParam = () =>
@@ -3842,6 +3844,15 @@ const Agenda = () => {
                     <p className="mt-2" style={{ fontFamily: "Syne, sans-serif", fontWeight: 700, fontSize: 14, color: "hsl(var(--primary))" }}>
                       R$ {group.total.toFixed(2)}
                     </p>
+                    {(() => {
+                      const billing = computeBillingStatus(group.sessions as unknown as BillingInput[]);
+                      if (billing.status === "na") return null;
+                      return (
+                        <div className="mt-2">
+                          <BillingBadge status={billing.status} dueDate={billing.dueDate} />
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="flex items-center gap-1.5 mt-3">
                     <Select value={s.payment_status} onValueChange={(v) => group.isSinglePayment ? updatePaymentGroup(group.sessions.map((item) => item.id), v as PaymentStatus) : updatePaymentStatus(s.id, v as PaymentStatus)}>
