@@ -262,7 +262,10 @@ const Finance = () => {
   const [reminderWindow, setReminderWindow] = useState(24);
   const [groupByPatient, setGroupByPatient] = useState(false);
   const [groupSort, setGroupSort] = useState<"recent" | "oldest" | "value" | "count" | "name">("recent");
+  const [billingReminderEnabled, setBillingReminderEnabled] = useState(true);
+  const [billingReminderDays, setBillingReminderDays] = useState(DUE_SOON_DAYS);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
+
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [expandedPatients, setExpandedPatients] = useState<Set<string>>(new Set());
   const [quickAlert, setQuickAlert] = useState<QuickAlert>("none");
