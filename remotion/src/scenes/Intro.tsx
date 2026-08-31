@@ -56,7 +56,7 @@ export const Intro: React.FC = () => {
             opacity: logo,
           }}
         >
-          <Img src={staticFile("images/logo-psireal.png")} style={{ width: 190, height: 190, objectFit: "contain" }} />
+          <Img src={staticFile("images/logo-psireal.png")} style={{ width: 190, height: 190, objectFit: "contain", borderRadius: 44 }} />
         </div>
         <div
           style={{

@@ -39,7 +39,7 @@ export const Outro: React.FC = () => {
           boxShadow: "0 30px 70px rgba(0,0,0,0.25)",
         }}
       >
-        <Img src={staticFile("images/logo-psireal.png")} style={{ width: 130, height: 130, objectFit: "contain" }} />
+        <Img src={staticFile("images/logo-psireal.png")} style={{ width: 130, height: 130, objectFit: "contain", borderRadius: 30 }} />
       </div>
       <div
         style={{
