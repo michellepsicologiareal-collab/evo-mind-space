@@ -37,6 +37,7 @@ interface NavItem {
  * existindo (para deep-links e navegação interna), apenas saem do menu.
  */
 const allNavItems: NavItem[] = [
+  { to: "/app/comece-por-aqui", label: "Comece por Aqui", icon: PlayCircle },
   { to: "/app", label: "Painel", icon: LayoutDashboard, end: true },
   { to: "/app/pacientes", label: "Pacientes", icon: Users },
   { to: "/app/agenda", label: "Agenda", icon: Calendar },
@@ -47,8 +48,8 @@ const allNavItems: NavItem[] = [
   { to: "/app/supervisao", label: "Supervisão", icon: GraduationCap, visibleTo: ["supervisor"] },
   { to: "/app/plano-desenvolvimento", label: "Plano de Desenvolvimento", icon: Target, visibleTo: ["supervisor"] },
   { to: "/app/autocuidado", label: "Autocuidado", icon: Flower2 },
-  { to: "/app/comece-por-aqui", label: "Comece por Aqui", icon: PlayCircle },
   { to: "/app/perfil", label: "Configurações", icon: Settings },
+
 
   // Itens que continuam roteáveis, mas ficam fora do menu principal.
   { to: "/app/humor", label: "Humor dos Pacientes", icon: HeartPulse },
@@ -152,12 +153,13 @@ export const AppLayout = () => {
   );
 
   const sidebarSections: { label: string; routes: string[] }[] = [
+    { label: "COMECE POR AQUI", routes: ["/app/comece-por-aqui"] },
     { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda", "/app/humor", "/app/autocuidado"] },
     { label: "GESTÃO", routes: ["/app/financeiro", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
     { label: "SUPERVISÃO", routes: ["/app/supervisao", "/app/plano-desenvolvimento"] },
-    { label: "AJUDA", routes: ["/app/comece-por-aqui"] },
     { label: "CONFIGURAÇÕES", routes: ["/app/perfil"] },
   ];
+
 
   const renderSidebarInner = (onNavigate?: () => void) => (
     <>
