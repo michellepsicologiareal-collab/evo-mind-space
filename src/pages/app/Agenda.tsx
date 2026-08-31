@@ -1937,40 +1937,81 @@ const Agenda = () => {
     return patients.find((p) => p.id === patientFilter)?.full_name || null;
   }, [patients, patientFilter]);
 
-  const sessionsByDay = (date: Date) => filteredSessions.filter((s) => isSameDay(new Date(s.scheduled_at), date));
-
-  const daysWithSessions = useMemo(() => {
-    const set = new Set<string>();
-    filteredSessions.forEach((s) => set.add(format(new Date(s.scheduled_at), "yyyy-MM-dd")));
-    return set;
+  /**
+   * Índice de sessões por dia (O(1) por consulta em vez de varrer a lista inteira).
+   * Evita custo O(dias × sessões) ao pintar a grade do mês e a visão semanal.
+   */
+  const sessionsByDayMap = useMemo(() => {
+    const map = new Map<string, Session[]>();
+    filteredSessions.forEach((s) => {
+      const key = format(new Date(s.scheduled_at), "yyyy-MM-dd");
+      const list = map.get(key);
+      if (list) list.push(s);
+      else map.set(key, [s]);
+    });
+    return map;
   }, [filteredSessions]);
 
-  const selectedDaySessions = useMemo(() => sessionsByDay(selectedDate), [filteredSessions, selectedDate]);
+  const sessionsByDay = useCallback(
+    (date: Date) => sessionsByDayMap.get(format(date, "yyyy-MM-dd")) ?? EMPTY_SESSIONS,
+    [sessionsByDayMap]
+  );
+
+  const daysWithSessions = useMemo(() => new Set(sessionsByDayMap.keys()), [sessionsByDayMap]);
+
+  const selectedDaySessions = useMemo(() => sessionsByDay(selectedDate), [sessionsByDay, selectedDate]);
+
+  // Cache de compromissos pessoais por dia (recalculado só quando os eventos mudam)
+  const personalEventsCache = useMemo(() => new Map<string, PersonalEvent[]>(), [personalEvents]);
+  const personalEventsForDay = useCallback(
+    (date: Date) => {
+      const key = format(date, "yyyy-MM-dd");
+      const cached = personalEventsCache.get(key);
+      if (cached) return cached;
+      const value = eventsForDay(personalEvents, date);
+      personalEventsCache.set(key, value);
+      return value;
+    },
+    [personalEventsCache, personalEvents]
+  );
 
   /**
    * Linha do tempo do dia: sessões e compromissos pessoais juntos,
    * ordenados pelo horário real (itens "dia todo" primeiro).
+   * Memoizada por dia para não reordenar a cada re-render.
    */
-  const dayTimeline = (date: Date) => {
-    const sess = sessionsByDay(date).map((s) => ({
-      kind: "session" as const,
-      at: new Date(s.scheduled_at).getTime(),
-      allDay: false,
-      session: s,
-      event: null as PersonalEvent | null,
-    }));
-    const evs = eventsForDay(personalEvents, date).map((e) => ({
-      kind: "event" as const,
-      at: new Date(e.starts_at).getTime(),
-      allDay: e.all_day,
-      session: null as (typeof sess)[number]["session"] | null,
-      event: e,
-    }));
-    return [...sess, ...evs].sort((a, b) => {
-      if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
-      return a.at - b.at;
-    });
-  };
+  const timelineCache = useMemo(
+    () => new Map<string, DayTimelineItem[]>(),
+    [sessionsByDayMap, personalEvents]
+  );
+  const dayTimeline = useCallback(
+    (date: Date): DayTimelineItem[] => {
+      const key = format(date, "yyyy-MM-dd");
+      const cached = timelineCache.get(key);
+      if (cached) return cached;
+      const sess: DayTimelineItem[] = sessionsByDay(date).map((s) => ({
+        kind: "session" as const,
+        at: new Date(s.scheduled_at).getTime(),
+        allDay: false,
+        session: s,
+        event: null,
+      }));
+      const evs: DayTimelineItem[] = personalEventsForDay(date).map((e) => ({
+        kind: "event" as const,
+        at: new Date(e.starts_at).getTime(),
+        allDay: e.all_day,
+        session: null,
+        event: e,
+      }));
+      const value = [...sess, ...evs].sort((a, b) => {
+        if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
+        return a.at - b.at;
+      });
+      timelineCache.set(key, value);
+      return value;
+    },
+    [timelineCache, sessionsByDay, personalEventsForDay]
+  );
 
   // All filtered sessions in current visible month, sorted by date (used when a patient filter is active)
   const monthFilteredSessions = useMemo(
