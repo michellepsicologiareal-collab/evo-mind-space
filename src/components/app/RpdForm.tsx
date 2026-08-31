@@ -249,23 +249,27 @@ export const RpdForm = ({ value, onChange, accent = G }: Props) => {
 
       {/* Etapa 5 — armadilhas do pensamento (cards educativos) */}
       <StepCard {...step(5)} accent={accent}>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label="Armadilhas do pensamento">
           {DISTORTION_OPTIONS.map((d) => {
             const active = value.distortions.includes(d.simple);
+            const descId = `rpd-distortion-desc-${d.simple.replace(/\s+/g, "-").toLowerCase()}`;
             return (
               <div
                 key={d.simple}
                 role="button"
                 tabIndex={0}
                 aria-pressed={active}
+                aria-label={d.technical ? `${d.simple} (${d.technical})` : d.simple}
+                aria-describedby={descId}
                 onClick={() => toggleDistortion(d.simple)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
+                  if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
                     e.preventDefault();
                     toggleDistortion(d.simple);
                   }
                 }}
                 className="relative rounded-xl border px-3 py-3 text-left transition-colors cursor-pointer focus-strong select-none"
+
                 style={
                   active
                     ? { background: "rgba(150,117,206,0.08)", borderColor: accent, boxShadow: `inset 0 0 0 1px ${accent}` }
