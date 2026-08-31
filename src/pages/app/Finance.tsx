@@ -731,6 +731,121 @@ const Finance = () => {
     load();
   };
 
+  // ── Planos de Atendimento concluídos → cobrança ──────────────────────
+  // Um plano é considerado concluído quando todas as sessões da série já
+  // foram realizadas (e o total previsto no plano foi cumprido).
+  type PlanBilling = {
+    key: string;
+    name: string;
+    patientId: string | null;
+    sessions: Row[];
+    sessionsCount: number;
+    totalDeclared: number;
+    totalValue: number;
+    pendingValue: number;
+    status: BillingStatus;
+    dueDate: string | null;
+    sentAt: string | null;
+    lastSessionAt: string;
+  };
+
+  const planBillings: PlanBilling[] = useMemo(() => {
+    const base = fortnightFilter_(rows.filter((r) => r.status !== "cancelled" && isRecurringSession(r.notes)));
+    const map = new Map<string, Row[]>();
+    for (const r of base) {
+      const k = getSeriesKey(r);
+      if (!k) continue;
+      const arr = map.get(k) ?? [];
+      arr.push(r);
+      map.set(k, arr);
+    }
+    const out: PlanBilling[] = [];
+    for (const [key, list] of map) {
+      const declared = Number(list[0].notes?.match(/Plano (\d+) sess/)?.[1] ?? list.length);
+      const allDone = list.every((r) => r.status === "completed");
+      if (!allDone || list.length < declared) continue;
+      const { status, dueDate, sentAt } = billingStatusOf(list);
+      out.push({
+        key,
+        name: list[0].patient?.full_name ?? "—",
+        patientId: list[0].patient?.id ?? null,
+        sessions: list,
+        sessionsCount: list.length,
+        totalDeclared: declared,
+        totalValue: list.reduce((s, r) => s + Number(r.price ?? 0), 0),
+        pendingValue: list.filter((r) => r.payment_status === "pending").reduce((s, r) => s + Number(r.price ?? 0), 0),
+        status,
+        dueDate,
+        sentAt,
+        lastSessionAt: list.map((r) => r.scheduled_at).sort().pop()!,
+      });
+    }
+    const order: Record<BillingStatus, number> = { vencida: 0, perto: 1, a_enviar: 2, enviada: 3, pago: 4, na: 5 };
+    return out.sort((a, b) => order[a.status] - order[b.status] || a.name.localeCompare(b.name, "pt-BR"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, fortnightFilter]);
+
+  const planBillingStats = useMemo(() => {
+    const count = (s: BillingStatus) => planBillings.filter((p) => p.status === s).length;
+    return {
+      enviadas: planBillings.filter((p) => p.status === "enviada" || p.status === "perto" || p.status === "vencida").length,
+      perto: count("perto"),
+      vencidas: count("vencida"),
+      aEnviar: count("a_enviar"),
+      pagos: count("pago"),
+      emAberto: planBillings.reduce((s, p) => s + p.pendingValue, 0),
+    };
+  }, [planBillings]);
+
+  const markBillingSent = async (plan: PlanBilling) => {
+    const nowIso = new Date().toISOString();
+    const pending = plan.sessions.filter((r) => r.payment_status === "pending");
+    const ids = (pending.length ? pending : plan.sessions).map((r) => r.id);
+    const due = new Date();
+    due.setDate(due.getDate() + 7);
+    const dueStr = plan.dueDate ?? due.toISOString().slice(0, 10);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ billing_sent_at: nowIso, payment_due_date: dueStr } as any)
+      .in("id", ids);
+    if (error) {
+      toast.error("Não foi possível registrar o envio da cobrança.");
+      return;
+    }
+    toast.success(`Cobrança registrada como enviada · vence em ${formatDue(dueStr)}`);
+    load();
+  };
+
+  const updatePlanDueDate = async (plan: PlanBilling, value: string) => {
+    const ids = plan.sessions.filter((r) => r.payment_status === "pending").map((r) => r.id);
+    if (ids.length === 0) return;
+    const { error } = await supabase
+      .from("sessions")
+      .update({ payment_due_date: value || null } as any)
+      .in("id", ids);
+    if (error) {
+      toast.error("Não foi possível salvar o vencimento.");
+      return;
+    }
+    load();
+  };
+
+  const markPlanPaid = async (plan: PlanBilling) => {
+    const ids = plan.sessions.filter((r) => r.payment_status === "pending").map((r) => r.id);
+    if (ids.length === 0) return;
+    const { error } = await supabase
+      .from("sessions")
+      .update({ payment_status: "paid", paid_at: new Date().toISOString() })
+      .in("id", ids);
+    if (error) {
+      toast.error("Não foi possível atualizar o pagamento.");
+      return;
+    }
+    toast.success("Plano de Atendimento marcado como pago.");
+    load();
+  };
+
+
   return (
     <div className="space-y-8 animate-fade-up">
       <HelpCard
