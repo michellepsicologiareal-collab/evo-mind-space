@@ -316,18 +316,6 @@ export const RpdForm = ({ value, onChange, accent = G }: Props) => {
           })}
         </div>
 
-        {selectedDistortionsCount > 0 && (
-          <p
-            className="rounded-lg px-3 py-2 text-xs font-medium"
-            style={{ background: "hsl(var(--muted))", color: INK }}
-            role="status"
-          >
-            Você identificou {selectedDistortionsCount}{" "}
-            {selectedDistortionsCount === 1 ? "possível armadilha" : "possíveis armadilhas"} nesse pensamento.
-            Vamos investigar isso juntos.
-          </p>
-        )}
-
         {value.distortions.some((d) => d.startsWith("Outra")) && (
           <Input
             value={value.distortion_other}
@@ -336,6 +324,60 @@ export const RpdForm = ({ value, onChange, accent = G }: Props) => {
             className="h-11 text-base"
           />
         )}
+
+        {/* Resumo das armadilhas selecionadas — pode ajustar sem perder a escolha */}
+        {value.distortions.length > 0 && (
+          <div
+            className="rounded-lg px-3 py-3 space-y-2"
+            style={{ background: "hsl(var(--muted))" }}
+            role="status"
+            aria-live="polite"
+          >
+            <p className="text-xs font-semibold" style={{ color: INK }}>
+              {selectedDistortionsCount > 0
+                ? `Você identificou ${selectedDistortionsCount} ${
+                    selectedDistortionsCount === 1 ? "possível armadilha" : "possíveis armadilhas"
+                  } nesse pensamento. Vamos investigar isso juntos.`
+                : "Tudo bem não identificar agora — você pode voltar a esse registro depois."}
+            </p>
+            <ul className="flex flex-wrap gap-1.5">
+              {value.distortions.map((simple) => {
+                const opt = DISTORTION_OPTIONS.find((o) => o.simple === simple);
+                const label =
+                  simple.startsWith("Outra") && value.distortion_other.trim()
+                    ? value.distortion_other.trim()
+                    : simple;
+                return (
+                  <li key={simple}>
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium"
+                      style={{ background: "#fff", borderColor: accent, color: INK }}
+                    >
+                      <span>
+                        {label}
+                        {opt?.technical ? (
+                          <span style={{ color: MUTED }}> · {opt.technical}</span>
+                        ) : null}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleDistortion(simple)}
+                        aria-label={`Remover ${label}`}
+                        className="rounded-full p-0.5 transition-colors hover:bg-muted focus-strong"
+                      >
+                        <X className="h-3 w-3" style={{ color: MUTED }} />
+                      </button>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="text-[11px]" style={{ color: MUTED }}>
+              Você pode voltar e ajustar a qualquer momento — nada do que já escolheu será perdido.
+            </p>
+          </div>
+        )}
+
       </StepCard>
 
       {textStep(6, "rational_response")}
