@@ -80,7 +80,10 @@ import {
   FileWarning,
   PackageOpen,
   Receipt,
+  MessageCircle,
+  History as HistoryIcon,
 } from "lucide-react";
+
 import {
   startOfMonth,
   endOfMonth,
@@ -93,6 +96,8 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { PageIntro } from "@/components/app/PageIntro";
 import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
+import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
+
 
 type PaymentStatus = "pending" | "paid";
 type PaymentMethod = "pix" | "card" | "cash";
@@ -229,6 +234,47 @@ const Finance = () => {
   const [reminderLogs, setReminderLogs] = useState<ReminderLog[]>([]);
   const [reminderLogsVersion, setReminderLogsVersion] = useState(0);
   const [reminderHistoryPlan, setReminderHistoryPlan] = useState<{ key: string; name: string } | null>(null);
+
+  // ── Dados para o envio de cobrança pelo WhatsApp (mesma lógica da Agenda) ──
+  const [pixKey, setPixKey] = useState<string>("");
+  const [psiName, setPsiName] = useState<string>("");
+  const [psiCrp, setPsiCrp] = useState<string>("");
+  type PatientContact = {
+    phone: string | null;
+    has_financial_responsible: boolean | null;
+    financial_responsible_phone: string | null;
+  };
+  const [patientContacts, setPatientContacts] = useState<Record<string, PatientContact>>({});
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const [prof, pats] = await Promise.all([
+        supabase.from("profiles").select("full_name, crp, pix_key").eq("id", user.id).maybeSingle(),
+        supabase
+          .from("patients")
+          .select("id, phone, has_financial_responsible, financial_responsible_phone")
+          .eq("user_id", user.id),
+      ]);
+      if (prof.data) {
+        setPsiName(prof.data.full_name ?? "");
+        setPsiCrp(prof.data.crp ?? "");
+        setPixKey(prof.data.pix_key ?? "");
+      }
+      if (pats.data) {
+        const map: Record<string, PatientContact> = {};
+        for (const p of pats.data as any[]) {
+          map[p.id] = {
+            phone: p.phone ?? null,
+            has_financial_responsible: p.has_financial_responsible ?? null,
+            financial_responsible_phone: p.financial_responsible_phone ?? null,
+          };
+        }
+        setPatientContacts(map);
+      }
+    })();
+  }, [user]);
+
 
   useEffect(() => {
     if (!user) return;
@@ -961,6 +1007,113 @@ const Finance = () => {
     toast.success(`Cobrança registrada como enviada · vence em ${formatDue(dueStr)}`);
     load();
   };
+
+  /**
+   * Envio (ou reenvio) de cobrança pelo WhatsApp.
+   * Reutiliza o mesmo modelo de mensagem da Agenda e o mesmo registro
+   * financeiro (sessions.billing_sent_at + billing_reminder_logs).
+   */
+  const sendBillingWhatsApp = async (args: {
+    key: string;
+    name: string;
+    patientId: string | null;
+    sessions: Row[];
+    dueDate: string | null;
+    status: BillingStatus;
+    isResend: boolean;
+  }) => {
+    const { key, name, patientId, sessions: list, isResend } = args;
+    if (!user || list.length === 0) return;
+
+    const pending = list.filter((r) => r.payment_status === "pending");
+    const target = pending.length ? pending : list;
+    const ids = target.map((r) => r.id);
+    const valueNumber = target.reduce((s, r) => s + Number(r.price ?? 0), 0);
+    const value = valueNumber > 0 ? formatBRL(valueNumber) : "a combinar";
+    const dates = target
+      .slice()
+      .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
+      .map((r) => format(new Date(r.scheduled_at), "dd/MM/yyyy"));
+
+    // Vencimento: mantém o existente ou define 7 dias a partir de hoje
+    let dueStr = args.dueDate;
+    if (!dueStr) {
+      const d = new Date();
+      d.setDate(d.getDate() + 7);
+      dueStr = d.toISOString().slice(0, 10);
+    }
+
+    const firstName = psiName ? psiName.split(" ")[0] : "";
+    const sessionLine =
+      target.length > 1
+        ? `Passando para lembrar do acerto referente às nossas ${target.length} sessões de ${dates.join(", ")}.`
+        : `Passando para lembrar do acerto referente à nossa sessão de ${dates[0]}.`;
+    const message = [
+      `Olá, ${name}! Aqui é a sua psi, ${firstName || "sua psicóloga"}.`,
+      "",
+      sessionLine,
+      "",
+      `Valor: ${value}`,
+      `Vencimento: ${formatDue(dueStr)}`,
+      pixKey ? `Chave Pix: ${pixKey}` : "",
+      "",
+      "Assim que realizar, pode me enviar o comprovante por aqui. Qualquer dúvida, fico à disposição!",
+      "",
+      psiName || "",
+      psiCrp ? `Psicóloga | CRP ${psiCrp}` : "Psicóloga",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const contact = patientId ? patientContacts[patientId] : undefined;
+    const phone =
+      (contact?.has_financial_responsible && contact?.financial_responsible_phone
+        ? normalizePhoneForWhatsApp(contact.financial_responsible_phone)
+        : normalizePhoneForWhatsApp(contact?.phone ?? null)) ?? "";
+
+    let channel: "whatsapp" | "clipboard" = "whatsapp";
+    if (phone) {
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+    } else {
+      channel = "clipboard";
+      try {
+        await navigator.clipboard.writeText(message);
+        toast.info("Paciente sem telefone cadastrado — mensagem copiada.");
+      } catch {
+        toast.error("Paciente sem telefone cadastrado.");
+      }
+    }
+
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase
+      .from("sessions")
+      .update({ billing_sent_at: nowIso, payment_due_date: dueStr } as any)
+      .in("id", ids);
+    if (error) {
+      toast.error("Não foi possível registrar o envio da cobrança.");
+      return;
+    }
+
+    const { error: logError } = await supabase.from("billing_reminder_logs").insert({
+      user_id: user.id,
+      patient_id: patientId,
+      plan_key: key,
+      plan_label: `${name} · ${target.length} ${target.length === 1 ? "sessão" : "sessões"}`,
+      status: args.status,
+      due_date: dueStr,
+      days_ahead: daysUntil(dueStr),
+      pending_value: valueNumber,
+      channel,
+    });
+    if (logError) console.warn("Não foi possível registrar o histórico do envio:", logError.message);
+
+    setReminderLogsVersion((v) => v + 1);
+    toast.success(isResend ? "Cobrança reenviada e registrada" : "Cobrança enviada e registrada", {
+      description: `Vencimento ${formatDue(dueStr)}`,
+    });
+    load();
+  };
+
 
 
   const updatePlanDueDate = async (plan: PlanBilling, value: string) => {
@@ -1711,36 +1864,54 @@ const Finance = () => {
       <Sheet open={!!reminderHistoryPlan} onOpenChange={(v) => !v && setReminderHistoryPlan(null)}>
         <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
-            <SheetTitle className="font-display">Histórico de lembretes</SheetTitle>
+            <SheetTitle className="font-display">Histórico de cobrança</SheetTitle>
             <SheetDescription>{reminderHistoryPlan?.name}</SheetDescription>
           </SheetHeader>
           <ul className="mt-5 space-y-3">
-            {(reminderHistoryPlan ? reminderLogsByPlan.get(reminderHistoryPlan.key) ?? [] : []).map((l) => (
-              <li key={l.id} className="rounded-2xl border border-border bg-background/60 p-3 space-y-1.5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-sm font-medium">
-                    {new Date(l.notified_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
-                  </span>
-                  <BillingBadge status={(l.status as BillingStatus) ?? "na"} />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {l.days_ahead === null
-                    ? "Sem data de vencimento no momento do aviso"
-                    : l.days_ahead >= 0
-                      ? `Antecedência: ${l.days_ahead} ${l.days_ahead === 1 ? "dia" : "dias"}`
-                      : `Enviado com ${Math.abs(l.days_ahead)} ${Math.abs(l.days_ahead) === 1 ? "dia" : "dias"} de atraso`}
-                  {l.due_date ? ` · vencimento ${formatDue(l.due_date)}` : ""}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {l.channel === "manual" ? "Registro manual (cobrança enviada)" : "Lembrete automático"}
-                  {l.pending_value != null ? ` · ${formatBRL(Number(l.pending_value))} em aberto` : ""}
-                </p>
-              </li>
-            ))}
+            {(() => {
+              const logs = reminderHistoryPlan ? reminderLogsByPlan.get(reminderHistoryPlan.key) ?? [] : [];
+              const sends = logs.filter((l) => l.channel !== "auto");
+              return logs.map((l) => {
+                const isSend = l.channel !== "auto";
+                // ordinal do envio (1º = mais antigo)
+                const idx = isSend ? sends.length - sends.indexOf(l) : 0;
+                const channelLabel =
+                  l.channel === "whatsapp" ? "WhatsApp"
+                    : l.channel === "clipboard" ? "Mensagem copiada"
+                      : l.channel === "manual" ? "Registro manual"
+                        : "Lembrete automático";
+                return (
+                  <li key={l.id} className="rounded-2xl border border-border bg-background/60 p-3 space-y-1.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-sm font-medium">
+                        {new Date(l.notified_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                      </span>
+                      <BillingBadge status={(l.status as BillingStatus) ?? "na"} />
+                    </div>
+                    <p className="text-xs font-medium text-foreground/80">
+                      {channelLabel}
+                      {isSend ? ` · ${idx === 1 ? "Primeiro envio" : `${idx}º envio (reenvio)`}` : ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {l.pending_value != null ? `${formatBRL(Number(l.pending_value))}` : "Valor não informado"}
+                      {l.due_date ? ` · Vencimento: ${formatDue(l.due_date)}` : ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {l.days_ahead === null
+                        ? "Sem data de vencimento no momento do aviso"
+                        : l.days_ahead >= 0
+                          ? `Antecedência: ${l.days_ahead} ${l.days_ahead === 1 ? "dia" : "dias"}`
+                          : `Enviado com ${Math.abs(l.days_ahead)} ${Math.abs(l.days_ahead) === 1 ? "dia" : "dias"} de atraso`}
+                    </p>
+                  </li>
+                );
+              });
+            })()}
             {reminderHistoryPlan && (reminderLogsByPlan.get(reminderHistoryPlan.key) ?? []).length === 0 && (
-              <li className="text-sm text-muted-foreground">Nenhum lembrete registrado para este plano ainda.</li>
+              <li className="text-sm text-muted-foreground">Nenhuma cobrança registrada para este item ainda.</li>
             )}
           </ul>
+
         </SheetContent>
       </Sheet>
 
@@ -1927,6 +2098,10 @@ const Finance = () => {
                     const pay = payLabel(g);
                     const rs = receitaValue(g);
                     const editTarget = g.sessions[0] ?? null;
+                    const groupLogs = reminderLogsByPlan.get(g.key) ?? [];
+                    const sendCount = groupLogs.filter((l) => l.channel !== "auto").length;
+                    const alreadySent = !!billing.sentAt || sendCount > 0;
+
                     const modalidade = g.isPlan
                       ? `Plano de Atendimento${g.planTotal ? ` • ${g.totalSessions}/${g.planTotal} sessões` : ` • ${g.totalSessions} sessões`}`
                       : "Sessão única";
@@ -1963,11 +2138,20 @@ const Finance = () => {
                           )}
                         </p>
 
-                        {billing.status !== "na" && (
-                          <div className="mt-2">
-                            <BillingBadge status={billing.status} dueDate={billing.dueDate} />
+                        {(billing.status !== "na" || billing.sentAt) && (
+                          <div className="mt-2 space-y-1">
+                            {billing.status !== "na" && (
+                              <BillingBadge status={billing.status} dueDate={billing.dueDate} />
+                            )}
+                            {billing.sentAt && (
+                              <p className="text-[11px] text-muted-foreground">
+                                Enviada em {format(new Date(billing.sentAt), "dd/MM/yyyy 'às' HH:mm")}
+                                {sendCount > 1 ? ` · ${sendCount} envios` : ""}
+                              </p>
+                            )}
                           </div>
                         )}
+
 
                         <p className="mt-2 text-[11px] text-muted-foreground">{modalidade}</p>
 
@@ -2022,7 +2206,40 @@ const Finance = () => {
                           </div>
                         </div>
 
-                        <div className="mt-3 flex items-center gap-2 border-t border-border/60 pt-3">
+                        <div className="mt-3 border-t border-border/60 pt-3 space-y-2">
+                          <Button
+                            variant={alreadySent ? "outline" : "default"}
+                            size="sm"
+                            className="w-full h-9 gap-2"
+                            onClick={() =>
+                              sendBillingWhatsApp({
+                                key: g.key,
+                                name: g.name,
+                                patientId: g.patientId,
+                                sessions: g.sessions,
+                                dueDate: billing.dueDate,
+                                status: billing.status,
+                                isResend: alreadySent,
+                              })
+                            }
+                            aria-label={`${alreadySent ? "Reenviar" : "Enviar"} cobrança de ${g.name} pelo WhatsApp`}
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            {alreadySent ? "Reenviar cobrança" : "Enviar cobrança pelo WhatsApp"}
+                          </Button>
+
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex-1 h-9 gap-1.5 text-xs"
+                              onClick={() => setReminderHistoryPlan({ key: g.key, name: g.name })}
+                              aria-label={`Ver histórico de cobranças de ${g.name}`}
+                            >
+                              <HistoryIcon className="h-4 w-4" />
+                              Histórico{groupLogs.length ? ` (${groupLogs.length})` : ""}
+                            </Button>
+
                           {g.patientId && (
                             <Button
                               variant="outline"
@@ -2046,7 +2263,9 @@ const Finance = () => {
                               <Pencil className="h-4 w-4" />
                             </Button>
                           )}
+                          </div>
                         </div>
+
                       </li>
                     );
                   })}
