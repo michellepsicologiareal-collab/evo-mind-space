@@ -3,7 +3,7 @@ import { logClinicalAccess } from "@/utils/auditLog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight, Link2, Copy, MessageCircle, User, Ban } from "lucide-react";
+import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight, Link2, Copy, MessageCircle, User, Ban, Pencil, TrendingUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { RpdForm } from "@/components/app/RpdForm";
-import { emptyRpdForm, toRpdPayload, hasRpdContent, type RpdFormState } from "@/lib/rpd";
+import { emptyRpdForm, toRpdPayload, hasRpdContent, fromRpdRecord, parseDistortionChips, aggregateDistortions, type RpdFormState } from "@/lib/rpd";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import {
   Dialog,
@@ -34,6 +34,8 @@ interface TccRecord {
   rational_response: string | null;
   crenca_pensamento_inicial?: number | null;
   crenca_pensamento_final?: number | null;
+  intensidade_emocao_inicial?: any;
+  intensidade_emocao_final?: any;
   filled_by?: string | null;
   created_at: string;
 }
@@ -68,6 +70,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const [saving, setSaving] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [form, setForm] = useState<RpdFormState>(emptyRpdForm());
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Link público para o paciente preencher
   const [linkOpen, setLinkOpen] = useState(false);
@@ -83,7 +86,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const load = async () => {
     const { data } = await (supabase as any)
       .from("tcc_records")
-      .select("id, situation, automatic_thought, emotion, behavior, cognitive_distortion, rational_response, crenca_pensamento_inicial, crenca_pensamento_final, filled_by, created_at")
+      .select("id, situation, automatic_thought, emotion, behavior, cognitive_distortion, rational_response, crenca_pensamento_inicial, crenca_pensamento_final, intensidade_emocao_inicial, intensidade_emocao_final, filled_by, created_at")
       .eq("patient_id", patientId)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -187,9 +190,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
     }
     setSaving(true);
     const payload = toRpdPayload(form);
-    const { error } = await (supabase as any).from("tcc_records").insert({
-      user_id: user.id,
-      patient_id: patientId,
+    const values = {
       situation: payload.situation || null,
       automatic_thought: payload.automatic_thought || null,
       emotion: payload.emotion || null,
@@ -200,12 +201,16 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       crenca_pensamento_final: payload.crenca_pensamento_final,
       intensidade_emocao_inicial: payload.intensidade_emocao_inicial,
       intensidade_emocao_final: payload.intensidade_emocao_final,
-    });
+    };
+    const { error } = editingId
+      ? await (supabase as any).from("tcc_records").update(values).eq("id", editingId)
+      : await (supabase as any).from("tcc_records").insert({ user_id: user.id, patient_id: patientId, ...values });
     setSaving(false);
     if (error) return toast.error("Erro ao salvar registro");
-    toast.success("Registro salvo");
+    toast.success(editingId ? "Registro atualizado" : "Registro salvo");
     keepScroll();
     setOpen(false);
+    setEditingId(null);
     setForm(emptyRpdForm());
     await preserveScroll(() => load());
   };
@@ -216,6 +221,8 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
     toast.success("RPD excluído");
     setRecords((prev) => prev.filter((r) => r.id !== id));
   };
+
+  const topDistortions = aggregateDistortions(records);
 
   const fields: { key: keyof TccRecord; label: string }[] = [
     { key: "situation", label: "O que aconteceu? · Situação" },
@@ -255,7 +262,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
             </Button>
             <Button
               size="sm"
-              onClick={() => setOpen(true)}
+              onClick={() => { setEditingId(null); setForm(emptyRpdForm()); setOpen(true); }}
               className="w-full sm:w-auto"
               style={{ background: G, color: "#fff", fontWeight: 600 }}
             >
@@ -274,6 +281,30 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
           {records.length} {records.length === 1 ? "registro" : "registros"}
         </span>
       </div>
+
+      {topDistortions.length > 0 && (
+        <div className="rounded-lg p-3 space-y-2" style={{ background: G_BG, border: `1px solid ${G_BORDER}` }}>
+          <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: G }}>
+            <TrendingUp className="h-3.5 w-3.5" /> Armadilhas mais frequentes · evolução
+          </p>
+          <ul className="flex flex-wrap gap-1.5">
+            {topDistortions.slice(0, 6).map((d) => (
+              <li
+                key={d.simple}
+                className="inline-flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1"
+                style={{ border: `1px solid ${G_BORDER}`, fontSize: 11, color: INK }}
+              >
+                <span className="font-semibold">{d.simple}</span>
+                {d.technical && <span style={{ color: MUTED }}>· {d.technical}</span>}
+                <span className="tabular-nums font-bold" style={{ color: G }}>{d.count}x</span>
+              </li>
+            ))}
+          </ul>
+          <p style={{ fontSize: 11, color: MUTED }}>
+            Padrões identificados nos {records.length} registros mais recentes deste paciente.
+          </p>
+        </div>
+      )}
 
       {loading ? (
         <div className="py-6 text-center">
@@ -321,6 +352,26 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                     {fields.map(({ key, label }) => {
                       const val = r[key as keyof TccRecord];
                       if (!val) return null;
+                      if (key === "cognitive_distortion") {
+                        const chips = parseDistortionChips(val as string);
+                        return (
+                          <div key={key}>
+                            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: G }}>{label}</p>
+                            <ul className="flex flex-wrap gap-1.5 mt-1">
+                              {chips.map((c, i) => (
+                                <li
+                                  key={`${c.simple}-${i}`}
+                                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1"
+                                  style={{ background: G_BG, border: `1px solid ${G_BORDER}`, fontSize: 11, color: INK }}
+                                >
+                                  <span className="font-semibold">{c.simple}</span>
+                                  {c.technical && <span style={{ color: MUTED }}>· {c.technical}</span>}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        );
+                      }
                       return (
                         <div key={key}>
                           <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: G }}>{label}</p>
@@ -339,7 +390,15 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                       </div>
                     )}
                     {!readOnly && (
-                      <div className="flex justify-end pt-1">
+                      <div className="flex justify-end gap-1 pt-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => { setEditingId(r.id); setForm(fromRpdRecord(r)); setOpen(true); }}
+                          style={{ color: G }}
+                        >
+                          <Pencil className="h-3.5 w-3.5" /> Editar
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => handleDelete(r.id)} className="text-destructive">
                           <Trash2 className="h-3.5 w-3.5" /> Excluir
                         </Button>
@@ -353,7 +412,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
         </ul>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setEditingId(null); setForm(emptyRpdForm()); } }}>
         <DialogContent
           className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0"
           style={{ background: "hsl(var(--muted))" }}
@@ -368,7 +427,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                 TCC · Registro de Pensamentos
               </p>
               <DialogTitle className="font-display" style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.3px", color: INK }}>
-                Novo registro
+                {editingId ? "Editar registro" : "Novo registro"}
               </DialogTitle>
               <p style={{ fontSize: 13, color: MUTED }}>
                 Use este espaço para entender uma situação que mexeu com você. Não precisa preencher perfeitamente:
@@ -401,7 +460,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
               style={{ background: G, color: "#fff", fontWeight: 600 }}
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Salvar registro
+              {editingId ? "Salvar alterações" : "Salvar registro"}
             </Button>
           </DialogFooter>
         </DialogContent>

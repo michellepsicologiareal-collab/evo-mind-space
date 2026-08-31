@@ -66,13 +66,24 @@ Deno.serve(async (req) => {
     // Gera abaixo e grava em pending_draft_*, mantendo summary_data intocado.
 
     // Coleta dados clínicos mínimos
-    const [tccRes, teRes, actRes, recordsRes, progressRes] = await Promise.all([
+    const [tccRes, teRes, actRes, recordsRes, progressRes, rpdRes] = await Promise.all([
       supabase.from("case_formulations").select("environment, thoughts, emotions, behaviors, physical_reactions, core_beliefs, treatment_goals, ai_summary, updated_at").eq("patient_id", patient_id).eq("user_id", user.id).maybeSingle(),
       supabase.from("schema_formulations").select("padrao_identificado, foco_terapeutico, conexao_gerada, updated_at").eq("patient_id", patient_id).eq("therapist_id", user.id).maybeSingle(),
       supabase.from("act_formulations").select("apresentacao_problema, direcionamento_gerado, valores, hexaflex, matriz_act, updated_at").eq("patient_id", patient_id).eq("therapist_id", user.id).maybeSingle(),
       supabase.from("session_records").select("id, session_date, themes, clinical_observations, risk_indicator").eq("patient_id", patient_id).eq("user_id", user.id).order("session_date", { ascending: false }).limit(10),
       supabase.from("patient_progress").select("id, created_at, wellbeing_score, wellbeing_source, emotions, attention_flag, clinical_observation, data_model").eq("patient_id", patient_id).eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+      supabase.from("tcc_records").select("id, created_at, cognitive_distortion, automatic_thought, crenca_pensamento_inicial, crenca_pensamento_final").eq("patient_id", patient_id).eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
     ]);
+    const rpdRecords = rpdRes.data || [];
+    const distortionCounts = new Map<string, number>();
+    rpdRecords.forEach((r: any) => {
+      String(r.cognitive_distortion || "")
+        .split(";")
+        .map((x: string) => x.trim())
+        .filter(Boolean)
+        .forEach((label: string) => distortionCounts.set(label, (distortionCounts.get(label) || 0) + 1));
+    });
+    const topDistortions = [...distortionCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
 
     const records = recordsRes.data || [];
     const progress = progressRes.data || [];
@@ -88,6 +99,10 @@ Deno.serve(async (req) => {
     if (records.length) {
       parts.push(`\n[SESSÕES RECENTES]`);
       records.forEach((r: any) => parts.push(`- ${r.session_date}: temas=${Array.isArray(r.themes)?r.themes.join(", "):""} | obs=${(r.clinical_observations||"").slice(0,250)}`));
+    }
+    if (topDistortions.length) {
+      parts.push(`\n[RPD · ARMADILHAS DO PENSAMENTO] (${rpdRecords.length} registros)`);
+      topDistortions.forEach(([label, count]) => parts.push(`- ${label}: ${count}x`));
     }
     if (progress.length) {
       parts.push(`\n[PROGRESSO RECENTE]`);
@@ -163,6 +178,7 @@ Use a tool save_summary retornando as 6 seções.`;
     const sourceRecords = {
       session_record_ids: records.map((r: any) => r.id),
       progress_ids: progress.map((p: any) => p.id),
+      tcc_record_ids: rpdRecords.map((r: any) => r.id),
       formulations: {
         tcc: tccRes.data?.updated_at ?? null,
         te: teRes.data?.updated_at ?? null,
