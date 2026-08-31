@@ -230,6 +230,47 @@ const Finance = () => {
   const [reminderLogsVersion, setReminderLogsVersion] = useState(0);
   const [reminderHistoryPlan, setReminderHistoryPlan] = useState<{ key: string; name: string } | null>(null);
 
+  // ── Dados para o envio de cobrança pelo WhatsApp (mesma lógica da Agenda) ──
+  const [pixKey, setPixKey] = useState<string>("");
+  const [psiName, setPsiName] = useState<string>("");
+  const [psiCrp, setPsiCrp] = useState<string>("");
+  type PatientContact = {
+    phone: string | null;
+    has_financial_responsible: boolean | null;
+    financial_responsible_phone: string | null;
+  };
+  const [patientContacts, setPatientContacts] = useState<Record<string, PatientContact>>({});
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const [prof, pats] = await Promise.all([
+        supabase.from("profiles").select("full_name, crp, pix_key").eq("id", user.id).maybeSingle(),
+        supabase
+          .from("patients")
+          .select("id, phone, has_financial_responsible, financial_responsible_phone")
+          .eq("user_id", user.id),
+      ]);
+      if (prof.data) {
+        setPsiName(prof.data.full_name ?? "");
+        setPsiCrp(prof.data.crp ?? "");
+        setPixKey(prof.data.pix_key ?? "");
+      }
+      if (pats.data) {
+        const map: Record<string, PatientContact> = {};
+        for (const p of pats.data as any[]) {
+          map[p.id] = {
+            phone: p.phone ?? null,
+            has_financial_responsible: p.has_financial_responsible ?? null,
+            financial_responsible_phone: p.financial_responsible_phone ?? null,
+          };
+        }
+        setPatientContacts(map);
+      }
+    })();
+  }, [user]);
+
+
   useEffect(() => {
     if (!user) return;
     (async () => {
