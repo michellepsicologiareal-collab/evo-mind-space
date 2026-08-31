@@ -30,6 +30,7 @@ const CLINICAL_READ_TABLES = [
   "act_formulations",
   "session_records",
   "patient_progress",
+  "tcc_records",
 ];
 
 // Tables the function is allowed to WRITE to.
