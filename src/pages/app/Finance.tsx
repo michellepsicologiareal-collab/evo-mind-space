@@ -1626,11 +1626,78 @@ const Finance = () => {
                     </Button>
                   </div>
                 )}
+
+                {(() => {
+                  const logs = reminderLogsByPlan.get(p.key) ?? [];
+                  const last = logs[0];
+                  return (
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/60">
+                      <p className="text-[11px] text-muted-foreground">
+                        {last
+                          ? `Último aviso ${new Date(last.notified_at).toLocaleDateString("pt-BR")} · ${
+                              last.days_ahead === null
+                                ? "sem vencimento definido"
+                                : last.days_ahead >= 0
+                                  ? `${last.days_ahead} ${last.days_ahead === 1 ? "dia" : "dias"} de antecedência`
+                                  : `${Math.abs(last.days_ahead)} ${Math.abs(last.days_ahead) === 1 ? "dia" : "dias"} em atraso`
+                            }`
+                          : "Nenhum lembrete registrado ainda"}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2 text-[11px]"
+                        disabled={logs.length === 0}
+                        onClick={() => setReminderHistoryPlan({ key: p.key, name: p.name })}
+                      >
+                        Histórico de lembretes{logs.length ? ` (${logs.length})` : ""}
+                      </Button>
+                    </div>
+                  );
+                })()}
               </li>
             ))}
           </ul>
         </section>
       )}
+
+      {/* Histórico de lembretes de cobrança */}
+      <Sheet open={!!reminderHistoryPlan} onOpenChange={(v) => !v && setReminderHistoryPlan(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="font-display">Histórico de lembretes</SheetTitle>
+            <SheetDescription>{reminderHistoryPlan?.name}</SheetDescription>
+          </SheetHeader>
+          <ul className="mt-5 space-y-3">
+            {(reminderHistoryPlan ? reminderLogsByPlan.get(reminderHistoryPlan.key) ?? [] : []).map((l) => (
+              <li key={l.id} className="rounded-2xl border border-border bg-background/60 p-3 space-y-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-sm font-medium">
+                    {new Date(l.notified_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                  </span>
+                  <BillingBadge status={(l.status as BillingStatus) ?? "na"} />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {l.days_ahead === null
+                    ? "Sem data de vencimento no momento do aviso"
+                    : l.days_ahead >= 0
+                      ? `Antecedência: ${l.days_ahead} ${l.days_ahead === 1 ? "dia" : "dias"}`
+                      : `Enviado com ${Math.abs(l.days_ahead)} ${Math.abs(l.days_ahead) === 1 ? "dia" : "dias"} de atraso`}
+                  {l.due_date ? ` · vencimento ${formatDue(l.due_date)}` : ""}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {l.channel === "manual" ? "Registro manual (cobrança enviada)" : "Lembrete automático"}
+                  {l.pending_value != null ? ` · ${formatBRL(Number(l.pending_value))} em aberto` : ""}
+                </p>
+              </li>
+            ))}
+            {reminderHistoryPlan && (reminderLogsByPlan.get(reminderHistoryPlan.key) ?? []).length === 0 && (
+              <li className="text-sm text-muted-foreground">Nenhum lembrete registrado para este plano ainda.</li>
+            )}
+          </ul>
+        </SheetContent>
+      </Sheet>
+
 
 
       {/* Operational patient table */}
