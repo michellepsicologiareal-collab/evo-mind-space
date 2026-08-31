@@ -2051,6 +2051,22 @@ const Agenda = () => {
     return pendingSessions.filter(s => s.payment_status === paymentFilter);
   }, [pendingSessions, paymentFilter]);
 
+  /** Resumo do período memoizado: só recalcula ao trocar dia/mês ou dados de origem. */
+  const agendaSummary = useMemo(
+    () =>
+      computeAgendaSummary({
+        sessions,
+        selectedDate,
+        currentMonth,
+        sessionRecordIds,
+        sessionRecordKeys,
+        moodBySession,
+        moodTodayPatients,
+      }),
+    [sessions, selectedDate, currentMonth, sessionRecordIds, sessionRecordKeys, moodBySession, moodTodayPatients]
+  );
+
+
   const sortedPending = useMemo(() => {
     let list = [...filteredByPayment];
     if (filterPatientId !== "all") list = list.filter((s) => s.patient_id === filterPatientId);
