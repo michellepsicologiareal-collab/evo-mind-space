@@ -3094,15 +3094,7 @@ const Agenda = () => {
 
           {/* ── Resumo do período (segue o dia/mês selecionado) ── */}
           {(() => {
-            const summary = computeAgendaSummary({
-              sessions,
-              selectedDate,
-              currentMonth,
-              sessionRecordIds,
-              sessionRecordKeys,
-              moodBySession,
-              moodTodayPatients,
-            });
+            const summary = agendaSummary;
             const cutoffLabel = format(summary.cutoff, "dd/MM");
             const periodLabel = `até ${cutoffLabel}`;
 
