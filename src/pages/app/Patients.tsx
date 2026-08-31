@@ -2687,7 +2687,87 @@ const Patients = () => {
         </DialogContent>
       </Dialog>
 
+      {/* ─────────── CONFIRMAÇÃO EM DUAS ETAPAS ─────────── */}
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mover para a lixeira</DialogTitle>
+            <DialogDescription>
+              {deleteTarget?.full_name} e todos os registros vinculados (sessões, registros, formulações) ficarão ocultos no app e guardados na lixeira por <strong>30 dias</strong>. Depois disso poderão ser apagados definitivamente.
+            </DialogDescription>
+          </DialogHeader>
+          <label className="flex items-start gap-3 rounded-xl border p-3 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4"
+              checked={deleteConfirmed}
+              onChange={(e) => setDeleteConfirmed(e.target.checked)}
+            />
+            <span>Entendi que o paciente sairá das telas do app e ficará restaurável por 30 dias.</span>
+          </label>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              disabled={!deleteConfirmed || trashBusy}
+              onClick={confirmTrash}
+            >
+              {trashBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Mover para a lixeira
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─────────── LIXEIRA ─────────── */}
+      <Sheet open={trashOpen} onOpenChange={setTrashOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetTitle>Lixeira</SheetTitle>
+          <SheetDescription>
+            Pacientes excluídos ficam aqui por 30 dias e podem ser restaurados com todos os registros.
+          </SheetDescription>
+          <div className="mt-5 space-y-3">
+            {trash.length === 0 && (
+              <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                A lixeira está vazia. Nada foi excluído nos últimos 30 dias.
+              </div>
+            )}
+            {trash.map((t) => {
+              const deletedAt = new Date(t.deleted_at);
+              const daysLeft = Math.max(0, 30 - Math.floor((Date.now() - deletedAt.getTime()) / 86400000));
+              return (
+                <div key={t.id} className="rounded-2xl border bg-card p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{t.full_name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Excluído em {format(deletedAt, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} · {t.sessions_count} sessão(ões)
+                      </p>
+                    </div>
+                    <span
+                      className="shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold"
+                      style={{ background: daysLeft <= 5 ? "#FDECEA" : "#F1F5F9", color: daysLeft <= 5 ? "#C0392B" : "#475569" }}
+                    >
+                      {daysLeft === 0 ? "expira hoje" : `${daysLeft} dia(s)`}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" disabled={trashBusy} onClick={() => restoreFromTrash(t)}>
+                      <RefreshCw className="h-4 w-4" /> Restaurar
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-[#C0392B]" disabled={trashBusy} onClick={() => purgeFromTrash(t)}>
+                      <Trash2 className="h-4 w-4" /> Excluir definitivamente
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <PremiumGate open={gateOpen} onOpenChange={setGateOpen} />
+
       <UnsavedGuardDialog open={patientGuard.confirmOpen} onConfirm={patientGuard.confirmLeave} onCancel={patientGuard.cancelLeave} onSaveDraft={patientGuard.saveDraftAndLeave} />
     </div>
   );
