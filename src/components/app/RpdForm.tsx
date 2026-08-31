@@ -293,9 +293,10 @@ export const RpdForm = ({ value, onChange, accent = G }: Props) => {
                     {d.technical}
                   </span>
                 )}
-                <span className="block mt-1.5 text-xs leading-relaxed" style={{ color: MUTED }}>
+                <span id={descId} className="block mt-1.5 text-xs leading-relaxed" style={{ color: MUTED }}>
                   {d.description}
                 </span>
+
                 {d.example && (
                   <span className="block mt-1.5 text-xs italic leading-relaxed" style={{ color: MUTED }}>
                     Ex.: {d.example}
