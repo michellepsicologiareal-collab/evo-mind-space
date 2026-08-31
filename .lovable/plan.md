@@ -1,112 +1,54 @@
-## Objetivo
+# Roteiro do Tutorial Real do PsiReal
 
-Eliminar a duplicidade "planejar próxima sessão em dois lugares". O **Registro de Sessão** passa a ser a única fonte de verdade. O **Plano Terapêutico** apenas exibe o planejamento salvo e leva de volta ao Registro para edição. Sem alterações de banco, sem novas regras clínicas.
+Gravação da interface real (telas existentes), 16:9 Full HD, cursor visível, destaque suave antes de cada clique, pausa e legenda curta. Duração estimada: 9 a 12 minutos. Sem slides, sem telas fictícias, sem redesenho.
 
----
+## Como será produzido (técnico, resumido)
+- Uma conta de demonstração isolada com dados fictícios (Mariana Souza, João Silva, Ana Oliveira) — nenhum dado real é alterado ou apagado.
+- Um roteiro automatizado navega o app real em 1920x1080, com cursor sintético, halo de destaque, clique animado e legenda no rodapé.
+- A gravação sai em MP4 único; capítulos marcados por seção.
 
-## 1. Registro de Sessão — bloco "Próxima sessão"
+## Módulos reais identificados (menu atual)
+PRINCIPAL: Painel, Pacientes, Agenda, Humor dos Pacientes, Autocuidado.
+GESTÃO: Financeiro, Anamneses, Termo de Consentimento, Contratos.
+SUPERVISÃO (perfil supervisor): Supervisão, Plano de Desenvolvimento.
+CONFIGURAÇÕES: Perfil/Configurações, Meu Plano.
+Telas de fluxo (abertas de dentro do sistema): Registro de Sessão, Plano de Tratamento, Formulações (TCC, ACT, TE, IA), Comece por Aqui, Biblioteca.
 
-No fim do formulário (`src/pages/app/RegistroSessao.tsx`), substituir o campo solto "Combinados para a próxima sessão" por um bloco **Próxima sessão** com:
+## Capítulos
 
-- **Data da próxima sessão** (opcional) — input date+hora
-- **Objetivo da próxima sessão** — textarea
-- **O que retomar** — textarea
-- **Meta vinculada** — select (metas do plano ativo, se existir)
-- **Técnicas previstas** — chips clicáveis (técnicas do plano ativo, se existir)
-- **Observações / lembretes** — textarea
+### 1. Visão geral (0:00–0:50)
+Login → Painel. Percorrer o menu lateral seção por seção, uma legenda por item explicando para que serve. Mostrar navegação desktop e barra inferior no mobile.
 
-Se não houver plano ativo, os textareas + data continuam disponíveis; meta e técnicas ficam vazias e um texto explica que serão vinculadas depois.
+### 2. Painel (0:50–1:25)
+Indicadores: pacientes ativos e modalidade, formulações pendentes, valor médio por sessão e por plano, aniversariantes do mês/semana/dia.
 
-Pré-carregar valores existentes se houver `session_plans` da próxima sessão futura.
+### 3. Agenda (1:25–3:00)
+Visualizar agenda → trocar dia/mês (números do resumo mudam) → Novo agendamento → selecionar paciente fictício → horário → modalidade → salvar. Depois: editar, remarcar, cancelar, status coloridos (Agendado, Confirmado, Realizado), badge de registro pendente, badges de cobrança, e "Iniciar sessão" abrindo o atendimento.
 
-## 2. Ação de salvar
+### 4. Pacientes (3:00–4:30)
+Lista e indicadores → Novo paciente (nome, contato, data de nascimento, modalidade, valor) → abrir card → prontuário por abas → editar cadastro → histórico de sessões → Lixeira de 30 dias (excluir com dupla confirmação e restaurar).
 
-Ao clicar **Salvar registro**, em sequência:
+### 5. Atendimento / Registro de Sessão (4:30–6:00)
+Fluxo completo Agenda → paciente → iniciar atendimento → Registro de Sessão. Explicação curta de cada campo existente (queixa/tema, conteúdo, intervenções, tarefas, humor, evolução). Salvar permanecendo na tela; botão "Atualizar Plano" abrindo o drawer lateral. Visualização em leitura (olhinho) tipo PDF.
 
-1. Salva `session_records` (mantendo `next_session_plan` como texto sintético a partir de objetivo + retomar + observações, para preservar as telas que já usam esse campo).
-2. Resolve a "próxima sessão-alvo":
-   - Sessão futura já agendada → usa esse `session_id`.
-   - Nova data informada e sem sessão futura → cria `sessions` (`status='scheduled'`), Agenda atualizada.
-   - Nova data informada e sessão futura em data diferente → atualiza `scheduled_at`.
-   - Sem data e sem sessão futura → salva o planejamento com `session_id = null`.
-3. Upsert em `session_plans` com objetivo, meta_id, retomar, tecnicas, observacoes.
-4. **Verifica se existe `treatment_plans` ativo** (`status='ativo'`) para o paciente. Ver seção 3.
-5. Redireciona para a aba **Sessões** da ficha do paciente (fluxo atual) — exceto quando a modal do passo 3 estiver aberta.
+### 6. Plano de Atendimento (6:00–6:50)
+Onde criar, quantidade de sessões, valor, sessões realizadas x restantes, como o plano aparece na Agenda e no Financeiro.
 
-## 3. Regra quando NÃO existir Plano Terapêutico ativo
+### 7. Financeiro (6:50–8:30)
+Tela real atual: resumo no topo e filtros rápidos. Significado de Pago, Pendente, Parcial, valor recebido, valor em aberto. Status de cobrança: A enviar, Enviada, Perto do vencimento, Vencida, Paga.
+Baixa de pagamento: clicar no badge de status → selecionar Pago → mostrar o card atualizado.
 
-Após salvar tudo com sucesso, se o paciente não tiver `treatment_plans` ativo, abrir um **diálogo amigável** (sem criar nada em segundo plano):
+### 8. Cobrança por WhatsApp (8:30–9:15)
+Identificar cobrança a enviar → botão WhatsApp → mostrar a mensagem gerada → status muda para "Enviada em ..." → reenvio → histórico de envios.
 
-> Você registrou a sessão com sucesso.
-> Este paciente ainda não possui um Plano Terapêutico.
-> Deseja criar um agora utilizando as informações já registradas?
+### 9. Receita Saúde (9:15–10:00)
+Os três estados no card: Não emitida, Emitida, Não se aplica. Alterar direto no card. Deixar explícito que Pagamento e Receita Saúde são controles independentes (ex.: Pago + Receita Saúde não emitida).
 
-Dois botões:
+### 10. Histórico de cobranças e Ver detalhes (10:00–10:40)
+Painel lateral de histórico: envios, reenvios, datas, antecedência dos lembretes. Botão "Ver detalhes" abrindo o histórico financeiro do paciente por Plano de Atendimento.
 
-- **Depois** — fecha o diálogo e segue para a aba Sessões. Nenhum plano é criado.
-- **Criar Plano Terapêutico** — cria um `treatment_plans` novo com `status='rascunho'` para o paciente, pré-preenchendo **apenas**:
-  - Objetivo atual → a partir do `objetivo` da próxima sessão recém-salva.
-  - Meta vinculada → se havia `meta_id` selecionada, criar 1 registro em `treatment_goals` com essa descrição (quando ela não existir ainda). Se `meta_id` já apontava para meta existente, apenas manter o vínculo lógico.
-  - Técnicas previstas → cada técnica selecionada vira 1 registro em `treatment_techniques` vinculado ao novo plano.
-  - **NÃO** preencher: diagnóstico, CID, hipóteses, conceituação/formulação, indicadores, critérios de alta, revisões, abordagem — permanecem em branco para a psicóloga completar.
-  - Após criar, navegar para `/app/plano-tratamento?patient=<id>` e mostrar um banner/toast persistente: "Plano criado como **Rascunho** — revise antes de ativar." O banner só some quando o status muda de `rascunho`.
+### 11. Demais módulos (10:40–12:00)
+Breve passagem por: Humor dos Pacientes, Autocuidado (heatmap), Anamneses (adulto/criança por link), Termo de Consentimento e Contratos, Supervisão e Plano de Desenvolvimento (perfil supervisor), Biblioteca, Comece por Aqui, Configurações e Meu Plano. Encerramento com psireal.app.
 
-A criação **só acontece após clique explícito**. Nenhum plano é gerado silenciosamente. Se ocorrer erro na criação, exibir toast de erro e manter a psicóloga na tela do Registro (o registro em si já foi salvo).
-
-## 4. Plano Terapêutico — bloco "Próxima sessão" somente leitura
-
-Em `src/pages/app/PlanoTratamento.tsx`, o Card atual (linhas 559-619) deixa de ter formulário. Passa a exibir:
-
-- Data/hora da próxima sessão (`sessions`)
-- Objetivo, O que retomar, Meta vinculada (nome resolvido), Técnicas (chips não clicáveis), Observações
-
-Um único botão **Editar planejamento** → `navigate("/app/registro-sessao?patient=<id>&focus=proxima-sessao")`.
-
-Estado vazio: "Nenhum planejamento salvo. Registre a sessão para planejar a próxima." + mesmo botão.
-
-Se o plano estiver em `rascunho`, mostrar o banner descrito na seção 3.
-
-Remover: `saveSessionPlan`, inputs editáveis, `toggleSessionTech`. Manter as consultas usadas para render.
-
-## 5. Consistência
-
-- `session_records.next_session_plan` continua populado com texto sintético — mantém compatibilidade com Agenda, `PatientSessionsQuickView`, resumo IA.
-- Sem migração de dados.
-- Registros antigos continuam abrindo normalmente.
-
----
-
-## Detalhes técnicos
-
-**Arquivos editados:**
-
-- `src/pages/app/RegistroSessao.tsx`
-  - Estender `emptyForm`: `next_scheduled_at`, `next_objetivo`, `next_retomar`, `next_meta_id`, `next_tecnicas`, `next_observacoes`.
-  - Buscar plano ativo + `treatment_goals` + `treatment_techniques` quando `patient_id` muda.
-  - Novo bloco de UI no lugar do textarea único.
-  - `handleSave`:
-    1. `session_records` upsert (com `next_session_plan` sintético).
-    2. Resolver `nextSessionId` (`sessions` futuras, ordem asc).
-    3. `insert`/`update` em `sessions` se `next_scheduled_at` informado.
-    4. `upsert` em `session_plans`.
-    5. `select` em `treatment_plans` com `status='ativo'` — se vazio, abrir `NoTreatmentPlanDialog`.
-  - Novo componente `NoTreatmentPlanDialog` (inline no arquivo): 2 botões. "Criar Plano Terapêutico" executa:
-    - `insert` em `treatment_plans` (`status='rascunho'`, `conceitualizacao=objetivo`, demais campos vazios/null).
-    - Se técnicas → `insert` em `treatment_techniques` (bulk).
-    - Se `meta_id` era nova/inexistente → criar `treatment_goals` correspondente.
-    - `navigate("/app/plano-tratamento?patient=<id>")`.
-  - Suporte a `?focus=proxima-sessao` (scroll + highlight temporário).
-
-- `src/pages/app/PlanoTratamento.tsx`
-  - Substituir Card 559-619 por card read-only + botão único `Editar planejamento`.
-  - Adicionar banner "Rascunho — revise antes de ativar" quando `plan.status === 'rascunho'`.
-  - Remover `saveSessionPlan`, `toggleSessionTech`, inputs editáveis do bloco.
-
-**Sem mudanças em:** schema, RLS, tipos gerados, edge functions, resumo IA, Agenda, `PatientSessionsQuickView`.
-
-**Validação:**
-
-1. Paciente sem plano → salvar registro → aparece diálogo. "Depois" volta para Sessões, nenhum plano criado. "Criar" cria rascunho com objetivo/meta/técnicas e abre o Plano com banner.
-2. Paciente com plano ativo → salvar registro → nenhum diálogo, volta direto para Sessões.
-3. Plano Terapêutico exibe planejamento salvo e "Editar planejamento" leva ao Registro focado no bloco.
-4. Salvar com data cria/atualiza sessão na Agenda.
+## Dados fictícios da demonstração
+Mariana Souza (semanal, online, plano de 8 sessões, cobrança a enviar), João Silva (quinzenal, presencial, pago + Receita Saúde não emitida), Ana Oliveira (sessão única, cobrança vencida). Sessões, humores e registros coerentes para os exemplos acima.
