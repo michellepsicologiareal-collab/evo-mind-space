@@ -321,6 +321,24 @@ const Agenda = () => {
     setCurrentMonth(startOfMonth(addDays(nextWeekStart, 3)));
   }, []);
 
+  const resetToToday = useCallback(() => {
+    // Limpa o filtro salvo e os parâmetros de data na URL,
+    // voltando imediatamente para o dia de hoje.
+    try { localStorage.removeItem("psireal_agenda_date"); } catch { /* ignore */ }
+    const params = new URLSearchParams(window.location.search);
+    params.delete("month");
+    params.delete("date");
+    const qs = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash
+    );
+    skipUrlWriteRef.current = true;
+    goToDate(new Date());
+  }, [goToDate]);
+
+
   // Debounce: clear navigation lock after transitions settle
   useEffect(() => {
     if (!isNavigating) return;
@@ -3189,9 +3207,10 @@ const Agenda = () => {
                     <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Próximo" onClick={goNext}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold bg-primary/5 border-primary/25 text-primary hover:bg-primary/10 hover:text-primary shrink-0" onClick={() => goToDate(new Date())}>
-                      Hoje
+                    <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold bg-primary/5 border-primary/25 text-primary hover:bg-primary/10 hover:text-primary shrink-0" onClick={resetToToday}>
+                      Redefinir para hoje
                     </Button>
+
                   </div>
 
                   <Button
