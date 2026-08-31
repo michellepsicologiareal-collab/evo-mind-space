@@ -1486,13 +1486,16 @@ const Finance = () => {
 
       {/* Cobranças de Planos de Atendimento concluídos */}
       {planBillings.length > 0 && (
-        <section className="rounded-3xl bg-card border border-border shadow-card p-4 lg:p-6 space-y-4">
+        <section ref={billingSectionRef} className="rounded-3xl bg-card border border-border shadow-card p-4 lg:p-6 space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="font-display text-lg font-bold text-foreground">Cobranças · Planos de Atendimento concluídos</h2>
               <p className="text-sm text-muted-foreground">
-                Planos com todas as sessões realizadas. Acompanhe o que já foi enviado e o que está perto do vencimento.
+                Planos com todas as sessões realizadas. {billingReminderEnabled
+                  ? `Você é avisada ${billingReminderDays} ${billingReminderDays === 1 ? "dia" : "dias"} antes do vencimento.`
+                  : "Lembretes automáticos desativados nas preferências."}
               </p>
+
             </div>
             {planBillingStats.emAberto > 0 && (
               <div className="rounded-xl bg-secondary/50 border border-border px-3 py-2">
