@@ -213,6 +213,8 @@ export interface RpdStep {
   term: string;
   description: string;
   placeholder?: string;
+  /** Texto complementar exibido em destaque menor abaixo da descrição. */
+  note?: string;
 }
 
 export const RPD_STEPS: RpdStep[] = [
@@ -251,7 +253,8 @@ export const RPD_STEPS: RpdStep[] = [
     question: "Seu pensamento caiu em alguma dessas armadilhas?",
     term: "Armadilhas do pensamento",
     description:
-      "Leia as opções abaixo e clique nas que mais se parecem com a forma como você pensou naquela situação. Você pode escolher mais de uma — e tudo bem se ainda não souber identificar.",
+      "Às vezes, nossa mente interpreta uma situação de forma rápida e automática. Leia os post-its e marque aqueles que mais se parecem com a forma como você pensou. Você pode escolher mais de um — e tudo bem se ainda não souber identificar.",
+    note: "Essas armadilhas não significam que você pensou “errado”. Elas são padrões comuns de interpretação que podem influenciar como nos sentimos e agimos.",
   },
   {
     n: 6,
@@ -340,7 +343,8 @@ export const parseDistortionChips = (text?: string | null): DistortionChip[] => 
       const opt = DISTORTION_OPTIONS.find(
         (d) =>
           normalize(d.simple) === normalize(simplePart) ||
-          (d.technical && normalize(d.technical) === normalize(technicalPart || simplePart)),
+          (d.technical && normalize(d.technical) === normalize(technicalPart || simplePart)) ||
+          (d.legacy ?? []).some((l) => normalize(l) === normalize(simplePart) || normalize(l) === normalize(technicalPart)),
       );
       if (opt) return { simple: opt.simple, technical: opt.technical, known: true };
       return { simple: simplePart || raw, technical: technicalPart, known: false };
@@ -354,7 +358,7 @@ export const parseDistortions = (
   const chips = parseDistortionChips(text);
   const distortions = chips.filter((c) => c.known).map((c) => c.simple);
   const others = chips.filter((c) => !c.known).map((c) => c.simple);
-  if (others.length) distortions.push("Outra");
+  if (others.length) distortions.push("Outra armadilha");
   return { distortions, distortion_other: others.join("; ") };
 };
 
