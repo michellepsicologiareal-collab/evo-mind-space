@@ -103,6 +103,19 @@ interface Service {
   is_active: boolean;
 }
 
+/** Referência estável para dias sem sessões (evita re-render por nova array). */
+const EMPTY_SESSIONS: Session[] = [];
+
+type DayTimelineItem = {
+  kind: "session" | "event";
+  at: number;
+  allDay: boolean;
+  session: Session | null;
+  event: PersonalEvent | null;
+};
+
+
+
 const sessionSchema = z
   .object({
     session_type: z.enum(["clinical", "supervision"]).default("clinical"),
