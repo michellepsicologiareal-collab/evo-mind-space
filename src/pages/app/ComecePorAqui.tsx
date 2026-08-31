@@ -6,6 +6,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { VideoTutorials } from "@/components/app/VideoTutorials";
 
 interface Step {
   id: string;
@@ -164,6 +165,10 @@ const ComecePorAqui = () => {
           Siga o passo a passo para configurar e aproveitar ao máximo o Psi Real.
         </p>
       </div>
+
+      {/* Demonstração em vídeo por módulo */}
+      <VideoTutorials />
+
 
       {/* Progress bar */}
       <div className="rounded-2xl bg-card border border-border p-5 shadow-soft">

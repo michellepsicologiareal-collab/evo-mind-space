@@ -5,7 +5,7 @@ import logoSrc from "@/assets/logo-psireal.png";
 import {
   LayoutDashboard, Users, Calendar, Wallet, Settings, LogOut,
   GraduationCap, ShieldCheck, Crown, Lock, BookOpen, Flower2, FileText,
-  FileCheck, Shield, UserCog, Sparkles, ClipboardList, Baby, MoreHorizontal, Target, HeartPulse, Menu,
+  FileCheck, Shield, UserCog, Sparkles, ClipboardList, Baby, MoreHorizontal, Target, HeartPulse, Menu, PlayCircle,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,10 +47,10 @@ const allNavItems: NavItem[] = [
   { to: "/app/supervisao", label: "Supervisão", icon: GraduationCap, visibleTo: ["supervisor"] },
   { to: "/app/plano-desenvolvimento", label: "Plano de Desenvolvimento", icon: Target, visibleTo: ["supervisor"] },
   { to: "/app/autocuidado", label: "Autocuidado", icon: Flower2 },
+  { to: "/app/comece-por-aqui", label: "Comece por Aqui", icon: PlayCircle },
   { to: "/app/perfil", label: "Configurações", icon: Settings },
 
   // Itens que continuam roteáveis, mas ficam fora do menu principal.
-  { to: "/app/comece-por-aqui", label: "Comece por Aqui", icon: Sparkles, hideFromNav: true },
   { to: "/app/humor", label: "Humor dos Pacientes", icon: HeartPulse },
   { to: "/app/registro-sessao", label: "Registro Sessão", icon: ClipboardList, hideFromNav: true },
   { to: "/app/plano-tratamento", label: "Plano de Tratamento", icon: Target, hideFromNav: true },
@@ -155,6 +155,7 @@ export const AppLayout = () => {
     { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda", "/app/humor", "/app/autocuidado"] },
     { label: "GESTÃO", routes: ["/app/financeiro", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
     { label: "SUPERVISÃO", routes: ["/app/supervisao", "/app/plano-desenvolvimento"] },
+    { label: "AJUDA", routes: ["/app/comece-por-aqui"] },
     { label: "CONFIGURAÇÕES", routes: ["/app/perfil"] },
   ];
 
