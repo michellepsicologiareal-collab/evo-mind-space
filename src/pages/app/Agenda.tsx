@@ -321,6 +321,24 @@ const Agenda = () => {
     setCurrentMonth(startOfMonth(addDays(nextWeekStart, 3)));
   }, []);
 
+  const resetToToday = useCallback(() => {
+    // Limpa o filtro salvo e os parâmetros de data na URL,
+    // voltando imediatamente para o dia de hoje.
+    try { localStorage.removeItem("psireal_agenda_date"); } catch { /* ignore */ }
+    const params = new URLSearchParams(window.location.search);
+    params.delete("month");
+    params.delete("date");
+    const qs = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash
+    );
+    skipUrlWriteRef.current = true;
+    goToDate(new Date());
+  }, [goToDate]);
+
+
   // Debounce: clear navigation lock after transitions settle
   useEffect(() => {
     if (!isNavigating) return;
