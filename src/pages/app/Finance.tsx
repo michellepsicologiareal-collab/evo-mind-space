@@ -737,6 +737,49 @@ const Finance = () => {
     load();
   };
 
+  /** Dá baixa (ou reabre) o pagamento de todas as sessões da mesma cobrança. */
+  const updatePaymentGroup = async (ids: string[], value: PaymentStatus) => {
+    if (ids.length === 0) return;
+    const { error } = await supabase
+      .from("sessions")
+      .update({
+        payment_status: value,
+        paid_at: value === "paid" ? new Date().toISOString() : null,
+      })
+      .in("id", ids);
+    if (error) {
+      toast.error("Não foi possível atualizar o pagamento.");
+      return;
+    }
+    toast.success(
+      value === "paid"
+        ? ids.length > 1 ? `${ids.length} sessões marcadas como pagas.` : "Sessão marcada como paga."
+        : "Pagamento marcado como pendente."
+    );
+    load();
+  };
+
+  /** Atualiza a situação da Receita Saúde de todas as sessões da cobrança. */
+  const updateReceitaSaudeGroup = async (ids: string[], value: ReceitaSaudeStatus | null) => {
+    if (ids.length === 0) return;
+    const { error } = await supabase
+      .from("sessions")
+      .update({ receita_saude_status: value })
+      .in("id", ids);
+    if (error) {
+      toast.error("Não foi possível atualizar a Receita Saúde.");
+      return;
+    }
+    toast.success(
+      value === "issued" ? "Receita Saúde marcada como emitida." :
+      value === "to_issue" ? "Receita Saúde marcada como não emitida." :
+      "Receita Saúde marcada como não se aplica."
+    );
+    load();
+  };
+
+
+
   // ── Planos de Atendimento concluídos → cobrança ──────────────────────
   // Um plano é considerado concluído quando todas as sessões da série já
   // foram realizadas (e o total previsto no plano foi cumprido).
