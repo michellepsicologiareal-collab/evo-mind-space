@@ -80,7 +80,10 @@ import {
   FileWarning,
   PackageOpen,
   Receipt,
+  MessageCircle,
+  History as HistoryIcon,
 } from "lucide-react";
+
 import {
   startOfMonth,
   endOfMonth,
