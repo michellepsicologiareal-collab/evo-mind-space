@@ -1848,7 +1848,8 @@ const Finance = () => {
                           <td className="py-3 px-3">
                             <span className={`font-medium ${pay.tone}`}>{pay.label}</span>
                             {(() => {
-                              const b = billingStatusOf(p.allInGroup);
+                              const b = billingStatusOf(p.allInGroup, billingReminderDays);
+
                               return b.status === "na" ? null : (
                                 <div className="mt-1">
                                   <BillingBadge status={b.status} dueDate={b.dueDate} />
