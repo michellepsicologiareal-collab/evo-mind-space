@@ -393,6 +393,59 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_reminder_logs: {
+        Row: {
+          channel: string
+          created_at: string
+          days_ahead: number | null
+          due_date: string | null
+          id: string
+          notified_at: string
+          patient_id: string | null
+          pending_value: number | null
+          plan_key: string
+          plan_label: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          days_ahead?: number | null
+          due_date?: string | null
+          id?: string
+          notified_at?: string
+          patient_id?: string | null
+          pending_value?: number | null
+          plan_key: string
+          plan_label?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          days_ahead?: number | null
+          due_date?: string | null
+          id?: string
+          notified_at?: string
+          patient_id?: string | null
+          pending_value?: number | null
+          plan_key?: string
+          plan_label?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_reminder_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_formulations: {
         Row: {
           ai_summary: string | null
