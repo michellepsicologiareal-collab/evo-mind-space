@@ -788,7 +788,7 @@ const Finance = () => {
       const declared = Number(list[0].notes?.match(/Plano (\d+) sess/)?.[1] ?? list.length);
       const allDone = list.every((r) => r.status === "completed");
       if (!allDone || list.length < declared) continue;
-      const { status, dueDate, sentAt } = billingStatusOf(list);
+      const { status, dueDate, sentAt } = billingStatusOf(list, billingReminderDays);
       out.push({
         key,
         name: list[0].patient?.full_name ?? "—",
