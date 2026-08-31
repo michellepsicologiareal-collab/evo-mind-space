@@ -132,6 +132,83 @@ type FortnightFilter = "all" | "first" | "second";
 
 const formatBRL = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
 
+// ── Status da cobrança ────────────────────────────────────────────────
+// Usa `billing_sent_at` (cobrança enviada) e `payment_due_date` (vencimento
+// combinado) das sessões. "Perto do vencimento" = vence em até 3 dias.
+type BillingStatus = "pago" | "vencida" | "perto" | "enviada" | "a_enviar" | "na";
+
+const DUE_SOON_DAYS = 3;
+
+const BILLING_LABEL: Record<BillingStatus, string> = {
+  pago: "Pago",
+  vencida: "Vencida",
+  perto: "Perto do vencimento",
+  enviada: "Cobrança enviada",
+  a_enviar: "Cobrança a enviar",
+  na: "—",
+};
+
+const BILLING_TONE: Record<BillingStatus, string> = {
+  pago: "bg-moss/10 text-moss border-moss/20",
+  vencida: "bg-destructive/10 text-destructive border-destructive/25",
+  perto: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400",
+  enviada: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-400",
+  a_enviar: "bg-secondary text-foreground/70 border-border",
+  na: "bg-secondary text-muted-foreground border-border",
+};
+
+const startOfToday = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const daysUntil = (dateStr: string | null): number | null => {
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  const due = new Date(y, m - 1, d);
+  due.setHours(0, 0, 0, 0);
+  return Math.round((due.getTime() - startOfToday().getTime()) / 86400000);
+};
+
+const formatDue = (dateStr: string | null) =>
+  dateStr ? dateStr.split("-").reverse().join("/") : null;
+
+/** Deriva o status da cobrança de um conjunto de sessões faturáveis. */
+const billingStatusOf = (list: Row[]): { status: BillingStatus; dueDate: string | null; sentAt: string | null } => {
+  const billable = list.filter((r) => r.status === "completed" || r.payment_status === "paid");
+  if (billable.length === 0) return { status: "na", dueDate: null, sentAt: null };
+  const pending = billable.filter((r) => r.payment_status === "pending");
+  const sentAt = billable
+    .map((r) => r.billing_sent_at)
+    .filter(Boolean)
+    .sort()
+    .pop() ?? null;
+  const dueDate = (pending.length ? pending : billable)
+    .map((r) => r.payment_due_date)
+    .filter(Boolean)
+    .sort()[0] ?? null;
+
+  if (pending.length === 0) return { status: "pago", dueDate, sentAt };
+  const dias = daysUntil(dueDate);
+  if (dias !== null && dias < 0) return { status: "vencida", dueDate, sentAt };
+  if (dias !== null && dias <= DUE_SOON_DAYS) return { status: "perto", dueDate, sentAt };
+  if (sentAt) return { status: "enviada", dueDate, sentAt };
+  return { status: "a_enviar", dueDate, sentAt };
+};
+
+const BillingBadge = ({ status, dueDate }: { status: BillingStatus; dueDate?: string | null }) => (
+  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${BILLING_TONE[status]}`}>
+    {BILLING_LABEL[status]}
+    {dueDate && status !== "pago" && status !== "na" && (
+      <span className="opacity-80">· {formatDue(dueDate)}</span>
+    )}
+  </span>
+);
+
+
+
 const METHOD_LABEL: Record<PaymentMethod, string> = {
   pix: "PIX",
   card: "Cartão",
