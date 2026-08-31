@@ -211,6 +211,46 @@ const Finance = () => {
   const billingNotifiedRef = useRef<Set<string>>(new Set());
   const billingSectionRef = useRef<HTMLElement | null>(null);
 
+  // ── Histórico de lembretes de cobrança ───────────────────────────────
+  type ReminderLog = {
+    id: string;
+    plan_key: string;
+    plan_label: string | null;
+    status: string;
+    due_date: string | null;
+    days_ahead: number | null;
+    pending_value: number | string | null;
+    channel: string;
+    notified_at: string;
+  };
+  const [reminderLogs, setReminderLogs] = useState<ReminderLog[]>([]);
+  const [reminderLogsVersion, setReminderLogsVersion] = useState(0);
+  const [reminderHistoryPlan, setReminderHistoryPlan] = useState<{ key: string; name: string } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("billing_reminder_logs")
+        .select("id, plan_key, plan_label, status, due_date, days_ahead, pending_value, channel, notified_at")
+        .eq("user_id", user.id)
+        .order("notified_at", { ascending: false })
+        .limit(500);
+      if (!error && data) setReminderLogs(data as ReminderLog[]);
+    })();
+  }, [user, reminderLogsVersion]);
+
+  const reminderLogsByPlan = useMemo(() => {
+    const map = new Map<string, ReminderLog[]>();
+    for (const l of reminderLogs) {
+      const arr = map.get(l.plan_key) ?? [];
+      arr.push(l);
+      map.set(l.plan_key, arr);
+    }
+    return map;
+  }, [reminderLogs]);
+
+
 
   const recentAlertRef = useRef<HTMLDivElement | null>(null);
   const sessionsSectionRef = useRef<HTMLElement | null>(null);
