@@ -222,6 +222,8 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
     setRecords((prev) => prev.filter((r) => r.id !== id));
   };
 
+  const topDistortions = aggregateDistortions(records);
+
   const fields: { key: keyof TccRecord; label: string }[] = [
     { key: "situation", label: "O que aconteceu? · Situação" },
     { key: "automatic_thought", label: "O que passou pela cabeça? · Pensamento" },
@@ -280,6 +282,30 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
         </span>
       </div>
 
+      {topDistortions.length > 0 && (
+        <div className="rounded-lg p-3 space-y-2" style={{ background: G_BG, border: `1px solid ${G_BORDER}` }}>
+          <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: G }}>
+            <TrendingUp className="h-3.5 w-3.5" /> Armadilhas mais frequentes · evolução
+          </p>
+          <ul className="flex flex-wrap gap-1.5">
+            {topDistortions.slice(0, 6).map((d) => (
+              <li
+                key={d.simple}
+                className="inline-flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1"
+                style={{ border: `1px solid ${G_BORDER}`, fontSize: 11, color: INK }}
+              >
+                <span className="font-semibold">{d.simple}</span>
+                {d.technical && <span style={{ color: MUTED }}>· {d.technical}</span>}
+                <span className="tabular-nums font-bold" style={{ color: G }}>{d.count}x</span>
+              </li>
+            ))}
+          </ul>
+          <p style={{ fontSize: 11, color: MUTED }}>
+            Padrões identificados nos {records.length} registros mais recentes deste paciente.
+          </p>
+        </div>
+      )}
+
       {loading ? (
         <div className="py-6 text-center">
           <Loader2 className="h-5 w-5 animate-spin mx-auto" style={{ color: G }} />
@@ -326,6 +352,26 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                     {fields.map(({ key, label }) => {
                       const val = r[key as keyof TccRecord];
                       if (!val) return null;
+                      if (key === "cognitive_distortion") {
+                        const chips = parseDistortionChips(val as string);
+                        return (
+                          <div key={key}>
+                            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: G }}>{label}</p>
+                            <ul className="flex flex-wrap gap-1.5 mt-1">
+                              {chips.map((c, i) => (
+                                <li
+                                  key={`${c.simple}-${i}`}
+                                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1"
+                                  style={{ background: G_BG, border: `1px solid ${G_BORDER}`, fontSize: 11, color: INK }}
+                                >
+                                  <span className="font-semibold">{c.simple}</span>
+                                  {c.technical && <span style={{ color: MUTED }}>· {c.technical}</span>}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        );
+                      }
                       return (
                         <div key={key}>
                           <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: G }}>{label}</p>
@@ -344,7 +390,15 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                       </div>
                     )}
                     {!readOnly && (
-                      <div className="flex justify-end pt-1">
+                      <div className="flex justify-end gap-1 pt-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => { setEditingId(r.id); setForm(fromRpdRecord(r)); setOpen(true); }}
+                          style={{ color: G }}
+                        >
+                          <Pencil className="h-3.5 w-3.5" /> Editar
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => handleDelete(r.id)} className="text-destructive">
                           <Trash2 className="h-3.5 w-3.5" /> Excluir
                         </Button>
