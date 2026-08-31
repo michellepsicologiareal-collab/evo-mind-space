@@ -2100,6 +2100,10 @@ const Agenda = () => {
   }, [filteredByPayment]);
 
   // ── Month calendar grid ──
+  // Renderização incremental para listas grandes (mantém o DOM leve)
+  const monthSessionsWindow = useIncrementalList(monthFilteredSessions, 30);
+  const pendingWindow = useIncrementalList(groupedPending, 24);
+
   const monthGrid = useMemo(() => {
     const firstDay = startOfMonth(currentMonth);
     const totalDays = getDaysInMonth(currentMonth);
