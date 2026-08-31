@@ -3419,7 +3419,12 @@ const Agenda = () => {
                           </p>
                         ) : (
                           <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                            {monthFilteredSessions.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
+                            {monthSessionsWindow.visible.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
+                            {monthSessionsWindow.hasMore && (
+                              <div ref={monthSessionsWindow.sentinelRef} className="py-2 text-center text-xs text-muted-foreground">
+                                Carregando mais sessões…
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
