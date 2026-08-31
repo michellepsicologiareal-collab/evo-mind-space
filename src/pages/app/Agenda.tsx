@@ -3813,6 +3813,11 @@ const Agenda = () => {
                 </div>
               );
             })}
+            {pendingWindow.hasMore && (
+              <div ref={pendingWindow.sentinelRef} className="col-span-full py-2 text-center text-xs text-muted-foreground">
+                Carregando mais registros…
+              </div>
+            )}
           </div>
         )}
       </div>
