@@ -13,7 +13,6 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { PlanModal } from "@/components/app/PlanModal";
 import { PremiumGate } from "@/components/app/PremiumGate";
 import { NotificationBell } from "@/components/app/NotificationBell";
 import { ThemeToggle } from "@/components/app/ThemeToggle";
@@ -73,7 +72,6 @@ export const AppLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isPremium, profileType, isAdmin } = useSubscription();
-  const [planOpen, setPlanOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
 
@@ -207,13 +205,21 @@ export const AppLayout = () => {
       </nav>
 
       <div className="p-3 border-t border-[hsl(var(--nav-border))]">
-        <button
-          onClick={() => { onNavigate?.(); setPlanOpen(true); }}
-          className="flex items-center gap-3 px-3.5 py-3 rounded-xl font-display font-semibold text-sm transition-colors w-full bg-white/5 border border-gold/25 text-[hsl(var(--nav-fg))] hover:bg-white/10"
+        <NavLink
+          to="/app/meu-plano"
+          onClick={() => onNavigate?.()}
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-3 px-3.5 py-3 rounded-xl font-display font-semibold text-sm transition-colors w-full border",
+              isActive
+                ? "bg-primary text-primary-foreground font-semibold shadow-soft border-transparent"
+                : "bg-white/5 border-gold/25 text-[hsl(var(--nav-fg))] hover:bg-white/10"
+            )
+          }
         >
           <Crown className="h-4 w-4" style={{ color: "hsl(var(--gold))" }} />
           Meu Plano
-        </button>
+        </NavLink>
         <p className="text-xs text-[hsl(var(--nav-muted))] truncate mb-3 mt-3 px-1">{user?.email}</p>
         <div className="flex items-center gap-2">
           <Button
@@ -395,8 +401,10 @@ export const AppLayout = () => {
           </span>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button variant="accent" size="sm" onClick={() => setPlanOpen(true)}>
-              <Crown className="h-4 w-4" /> Meu Plano
+            <Button variant="accent" size="sm" asChild>
+              <Link to="/app/meu-plano">
+                <Crown className="h-4 w-4" /> Meu Plano
+              </Link>
             </Button>
           </div>
         </div>
@@ -416,8 +424,10 @@ export const AppLayout = () => {
               <p className="text-3xl font-extrabold">
                 R$ 15,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
               </p>
-              <Button variant="accent" size="lg" onClick={() => window.open("https://pay.kiwify.com.br/SEU_LINK_AQUI", "_blank")}>
-                <Crown className="h-4 w-4" /> Assinar Agora
+              <Button variant="accent" size="lg" asChild>
+                <a href="https://pay.kiwify.com.br/k4VMHLa" target="_blank" rel="noopener noreferrer">
+                  <Crown className="h-4 w-4" /> Assinar Agora
+                </a>
               </Button>
             </div>
           ) : isDynamicPatientFormulation ? (
@@ -428,7 +438,6 @@ export const AppLayout = () => {
         </div>
       </main>
 
-      <PlanModal open={planOpen} onOpenChange={setPlanOpen} />
       <PremiumGate open={gateOpen} onOpenChange={setGateOpen} />
     </div>
   );
