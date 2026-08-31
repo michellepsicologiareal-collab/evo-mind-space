@@ -7,7 +7,6 @@ import {
   RPD_STEPS,
   EMOTION_OPTIONS,
   DISTORTION_OPTIONS,
-  type DistortionOption,
   type RpdFormState,
 } from "@/lib/rpd";
 
