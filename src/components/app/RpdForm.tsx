@@ -1,15 +1,8 @@
 import { useState } from "react";
-import { Check, Lightbulb, X } from "lucide-react";
+import { Check, ChevronDown, Lightbulb, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import {
   RPD_STEPS,
   EMOTION_OPTIONS,
@@ -34,6 +27,7 @@ const StepCard = ({
   question,
   term,
   description,
+  note,
   accent,
   children,
 }: {
@@ -41,6 +35,7 @@ const StepCard = ({
   question: string;
   term: string;
   description: string;
+  note?: string;
   accent: string;
   children: React.ReactNode;
 }) => (
@@ -64,6 +59,9 @@ const StepCard = ({
           {term}
         </p>
         <p style={{ fontSize: 13, lineHeight: 1.5, color: MUTED }}>{description}</p>
+        {note && (
+          <p style={{ fontSize: 11.5, lineHeight: 1.5, color: MUTED, opacity: 0.85 }}>{note}</p>
+        )}
       </div>
     </header>
     {children}
