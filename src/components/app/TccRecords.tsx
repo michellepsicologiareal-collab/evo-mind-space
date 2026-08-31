@@ -414,7 +414,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
 
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setEditingId(null); setForm(emptyRpdForm()); } }}>
         <DialogContent
-          className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0"
+          className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0"
           style={{ background: "hsl(var(--muted))" }}
         >
           {/* Header padronizado (mesmo estilo das formulações TE/ACT) */}

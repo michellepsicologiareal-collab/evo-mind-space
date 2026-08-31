@@ -60,174 +60,149 @@ export interface DistortionOption {
   question: string;
   /** true = opção de resposta, não uma distorção cognitiva. */
   notDistortion?: boolean;
+  /** Nomes usados em registros antigos — garantem que o parse continue funcionando. */
+  legacy?: string[];
 }
 
 export const DISTORTION_OPTIONS: DistortionOption[] = [
   {
     simple: "Imaginar o pior",
     technical: "Catastrofização",
-    description: "Esperar que a pior possibilidade aconteça ou imaginar que não conseguiria lidar com ela.",
+    description: "Imaginar que o pior resultado é o mais provável ou que você não conseguiria lidar com ele.",
     example: "“Se eu errar nessa apresentação, vai ser um desastre.”",
     howAppears:
-      "Costuma aparecer quando a mente antecipa o cenário mais grave e trata essa possibilidade como provável, mesmo sem evidências.",
-    examples: [
-      "“Se eu for mal na prova, minha vida acabou.”",
-      "“Se eu sentir ansiedade na reunião, vou perder o controle.”",
-    ],
-    question: "Qual é o pior cenário que minha mente está prevendo? Qual é o cenário mais provável?",
+      "A mente aumenta o tamanho da ameaça e diminui sua percepção de capacidade para enfrentá-la.",
+    examples: [],
+    question:
+      "Qual é o resultado mais provável? Se algo difícil acontecer, como eu poderia lidar com isso?",
   },
   {
     simple: "Achar que sei o que o outro pensa",
     technical: "Leitura mental",
-    description: "Acreditar que sabemos o que outra pessoa está pensando sem ter evidências suficientes.",
+    description: "Acreditar que sabe o que outra pessoa está pensando, mesmo sem evidências suficientes.",
     example: "“Ela não respondeu porque está irritada comigo.”",
-    howAppears:
-      "Aparece quando completamos a lacuna de informação com uma interpretação negativa sobre o que o outro pensa de nós.",
-    examples: [
-      "“Ele olhou pro celular porque estava entediado comigo.”",
-      "“Meu chefe acha que eu sou incompetente.”",
-    ],
-    question: "Quais evidências reais eu tenho do que essa pessoa está pensando? Existe outra explicação possível?",
+    howAppears: "Você trata uma interpretação como se fosse uma certeza.",
+    examples: [],
+    question: "Que evidências apoiam essa conclusão? Existem outras explicações possíveis?",
   },
   {
     simple: "Prever o futuro",
     technical: "Adivinhação do futuro",
     description: "Tratar uma previsão negativa como se ela já fosse um fato.",
     example: "“Eu sei que não vou conseguir.”",
-    howAppears:
-      "Aparece quando antecipamos um resultado negativo e agimos como se ele já estivesse decidido, antes mesmo de acontecer.",
-    examples: [
-      "“Não adianta tentar, vai dar errado.”",
-      "“Na festa ninguém vai conversar comigo.”",
-    ],
-    question: "Isso é um fato ou uma previsão? O que já aconteceu antes em situações parecidas?",
+    howAppears: "A mente tenta eliminar a incerteza prevendo um resultado, geralmente negativo.",
+    examples: [],
+    question: "Estou descrevendo um fato ou fazendo uma previsão? O que ainda pode acontecer de diferente?",
   },
   {
     simple: "Tudo ou nada",
     technical: "Pensamento dicotômico",
-    description: "Enxergar as situações em extremos, sem considerar possibilidades intermediárias.",
+    description: "Enxergar uma situação em extremos, sem perceber possibilidades intermediárias.",
     example: "“Ou faço perfeitamente ou sou um fracasso.”",
-    howAppears:
-      "Aparece quando avaliamos a nós mesmos ou as situações em categorias absolutas — perfeito ou horrível, sucesso ou fracasso.",
-    examples: [
-      "“Se não for o melhor, não serve pra nada.”",
-      "“Se ele me decepcionou uma vez, não posso confiar nele nunca.”",
-    ],
-    question: "Existe algum ponto intermediário entre esses dois extremos? O que estaria entre 0 e 100?",
+    howAppears: "As experiências são avaliadas apenas como sucesso ou fracasso, certo ou errado.",
+    examples: [],
+    question: "Existe algum ponto intermediário? Como eu avaliaria essa situação em uma escala de 0 a 10?",
   },
   {
     simple: "Focar só no que deu errado",
     technical: "Filtro mental",
-    description: "Dar muita atenção a um aspecto negativo e deixar de considerar o restante da situação.",
-    example: "“Recebi vários elogios, mas só consigo pensar naquela crítica.”",
-    howAppears:
-      "Aparece quando a mente se prende a um detalhe negativo e o restante da experiência fica em segundo plano, como se não existisse.",
-    examples: [
-      "“O dia inteiro foi bom, mas aquele comentário estragou tudo.”",
-      "“Acertei quase tudo, mas aquele erro mostra como eu sou.”",
-    ],
-    question: "Se eu olhasse a cena inteira, como um filme, o que mais estaria acontecendo além dessa parte negativa?",
+    description: "Concentrar-se em um aspecto negativo e deixar o restante da experiência em segundo plano.",
+    example: "“Recebi vários elogios, mas só consigo pensar na crítica.”",
+    howAppears: "Um detalhe negativo ocupa toda a atenção e passa a representar a situação inteira.",
+    examples: [],
+    question: "O que mais aconteceu? Que informações estou deixando de considerar?",
   },
   {
     simple: "Ignorar o que deu certo",
     technical: "Desqualificação do positivo",
-    description: "Diminuir ou desconsiderar experiências positivas.",
-    example: "“Consegui porque foi fácil. Não conta.”",
-    howAppears:
-      "Aparece quando conquistas e momentos bons são explicados como sorte, facilidade ou exceção — e nunca como mérito.",
-    examples: [
-      "“Foi sorte, qualquer um conseguiria.”",
-      "“Ele elogiou só por educação.”",
-    ],
-    question: "Se uma pessoa de quem eu gosto tivesse feito isso, eu também diria que “não conta”?",
+    description: "Diminuir ou desconsiderar experiências positivas, tratando-as como se não tivessem valor.",
+    example: "“Só consegui porque tive sorte.”",
+    howAppears: "Resultados positivos são explicados como acaso, obrigação ou algo sem importância.",
+    examples: [],
+    question: "Como eu reconheceria esse resultado se tivesse acontecido com outra pessoa?",
   },
   {
-    simple: "Transformar um episódio em regra",
+    simple: "Tirar uma regra de um único caso",
     technical: "Supergeneralização",
-    description: "Usar uma experiência negativa para concluir que aquilo sempre acontecerá.",
-    example: "“Não deu certo dessa vez. Nunca dá certo para mim.”",
+    legacy: ["Transformar um episódio em regra"],
+    description: "Usar uma experiência negativa para criar uma conclusão ampla sobre outras situações.",
+    example: "“Não passei nessa entrevista. Nunca vou conseguir um emprego.”",
     howAppears:
-      "Aparece com palavras como “sempre”, “nunca”, “todo mundo” e “ninguém”, transformando um fato isolado em padrão absoluto.",
-    examples: [
-      "“Eu sempre estrago tudo.”",
-      "“Ninguém nunca me leva a sério.”",
-    ],
-    question: "Isso aconteceu sempre mesmo? Consigo lembrar de alguma vez em que foi diferente?",
+      "Um acontecimento isolado vira uma regra sobre o presente ou o futuro. Observe palavras como “sempre”, “nunca” e “tudo”.",
+    examples: [],
+    question: "Um episódio é suficiente para provar essa conclusão?",
   },
   {
-    simple: "Me culpar por tudo",
-    technical: "Personalização",
-    description: "Assumir responsabilidade excessiva por situações que possuem vários fatores envolvidos.",
-    example: "“Ele está triste. Eu devo ter feito alguma coisa.”",
-    howAppears:
-      "Aparece quando assumimos que o mal-estar ou os problemas dos outros são culpa nossa, ignorando outras causas possíveis.",
-    examples: [
-      "“A reunião foi ruim por minha causa.”",
-      "“Meu filho está mal na escola, falhei como mãe.”",
-    ],
-    question: "Que outros fatores, além de mim, podem estar contribuindo para essa situação?",
-  },
-  {
-    simple: "Me cobrar com “tenho que”",
-    technical: "Imperativos / Deveria",
-    description: "Criar regras rígidas sobre como você ou outras pessoas deveriam agir.",
-    example: "“Eu deveria conseguir dar conta de tudo.”",
-    howAppears:
-      "Aparece em frases com “tenho que”, “preciso” e “deveria”, como se existisse uma regra inegociável — e a frustração vira culpa ou raiva.",
-    examples: [
-      "“Eu não posso demonstrar fraqueza.”",
-      "“As pessoas deveriam me tratar como eu as trato.”",
-    ],
-    question: "Essa regra é um fato ou uma expectativa minha? O que aconteceria se fosse uma preferência, e não uma obrigação?",
-  },
-  {
-    simple: "Colocar um rótulo",
+    simple: "Colocar um rótulo em mim ou no outro",
     technical: "Rotulação",
-    description: "Transformar um comportamento ou erro em uma definição global sobre você ou outra pessoa.",
-    example: "“Errei isso. Sou incompetente.”",
+    legacy: ["Colocar um rótulo"],
+    description: "Transformar um comportamento ou erro em uma definição global da pessoa.",
+    example: "“Cometi um erro, então sou incompetente.”",
     howAppears:
-      "Aparece quando, em vez de descrever o que aconteceu (“eu errei”), a mente define quem a pessoa é (“eu sou um erro”).",
-    examples: [
-      "“Sou um fracasso.”",
-      "“Ele é um idiota.”",
-    ],
-    question: "Estou descrevendo um comportamento ou definindo uma pessoa inteira por um único momento?",
+      "Em vez de descrever o que aconteceu, você transforma a experiência em uma identidade fixa. Troque “eu sou” por uma descrição específica: “Eu errei nesta situação.”",
+    examples: [],
+    question: "Estou descrevendo o que aconteceu ou definindo uma pessoa inteira por um único momento?",
   },
   {
-    simple: "Sentir = acreditar que é verdade",
-    technical: "Raciocínio emocional",
-    description: "Concluir que algo é verdadeiro porque parece verdadeiro emocionalmente.",
-    example: "“Eu me sinto incapaz, então provavelmente sou incapaz.”",
+    simple: "Achar que tudo é sobre mim",
+    technical: "Personalização",
+    legacy: ["Me culpar por tudo"],
+    description: "Assumir responsabilidade por algo sem considerar todos os fatores envolvidos.",
+    example: "“Eles estão quietos porque eu estraguei o clima.”",
+    howAppears: "Você se coloca como causa principal de acontecimentos que podem ter diversas explicações.",
+    examples: [],
+    question: "Que outros fatores ou pessoas também podem ter influenciado isso?",
+  },
+  {
+    simple: "Pensar em “deveria” e “tenho que”",
+    technical: "Afirmações do tipo “Deveria”",
+    legacy: ["Me cobrar com “tenho que”", "Imperativos / Deveria"],
+    description: "Criar regras rígidas sobre como você, os outros ou o mundo deveriam funcionar.",
+    example: "“Eu não deveria me sentir ansioso.”",
     howAppears:
-      "Aparece quando tratamos a emoção como evidência dos fatos: “sinto, logo é verdade” — sem checar o que a realidade mostra.",
-    examples: [
-      "“Sinto medo, então deve ser perigoso.”",
-      "“Me sinto culpado, então devo ter feito algo errado.”",
-    ],
-    question: "Minha emoção é uma evidência dos fatos ou um sinal de como estou interpretando a situação?",
+      "Regras rígidas podem gerar culpa, frustração ou cobrança excessiva. Experimente substituir “deveria” por “eu gostaria”, “seria importante” ou “posso tentar”.",
+    examples: [],
+    question: "Essa regra é um fato ou uma expectativa minha?",
+  },
+  {
+    simple: "Sentir que algo é verdade",
+    technical: "Raciocínio emocional",
+    legacy: ["Sentir = acreditar que é verdade"],
+    description: "Concluir que algo é verdadeiro porque parece verdadeiro emocionalmente.",
+    example: "“Eu me sinto incapaz, então devo ser incapaz.”",
+    howAppears: "Os sentimentos são importantes, mas não são provas isoladas.",
+    examples: [],
+    question: "O que os fatos mostram, além do que estou sentindo agora?",
   },
   {
     simple: "Aumentar o negativo e diminuir o positivo",
     technical: "Magnificação e minimização",
-    description: "Dar um peso muito maior aos erros e menor às próprias capacidades ou conquistas.",
-    example: "“Meu erro foi enorme, mas o que fiz bem não foi nada demais.”",
-    howAppears:
-      "Aparece quando a mente usa uma lente desigual: amplia falhas e encolhe acertos, como uma balança com pesos adulterados.",
-    examples: [
-      "“Aquele erro apaga todo o resto.”",
-      "“Minhas qualidades? Qualquer pessoa tem isso.”",
-    ],
-    question: "Estou pesando erros e acertos com a mesma régua? Como essa situação pareceria se eu usasse pesos iguais?",
+    description: "Dar um peso exagerado a dificuldades e reduzir a importância das próprias qualidades ou conquistas.",
+    example: "“Meu erro foi enorme, mas meu acerto não foi nada demais.”",
+    howAppears: "A mente utiliza medidas diferentes para avaliar erros e acertos.",
+    examples: [],
+    question: "Estou avaliando os dois lados com o mesmo critério?",
   },
   {
-    simple: "Não sei identificar ainda",
+    simple: "Outra armadilha",
     technical: "",
-    description: "Tudo bem. Reconhecer padrões de pensamento é uma habilidade que se desenvolve com prática.",
+    description: "Percebi um padrão diferente dos apresentados.",
+    example: "",
+    howAppears: "",
+    examples: [],
+    question: "",
+    notDistortion: true,
+  },
+  {
+    simple: "Ainda não sei identificar",
+    technical: "",
+    legacy: ["Não sei identificar ainda"],
+    description: "Não consegui reconhecer uma armadilha neste momento — e tudo bem.",
     example: "",
     howAppears:
       "Não conseguir identificar uma armadilha agora não é um problema — você pode conversar sobre isso com seu terapeuta e voltar a esse registro depois.",
     examples: [],
-    question: "Se eu lesse esse pensamento em voz alta, alguma parte dele pareceria exagerada ou rígida demais?",
+    question: "",
     notDistortion: true,
   },
 ];
@@ -238,6 +213,8 @@ export interface RpdStep {
   term: string;
   description: string;
   placeholder?: string;
+  /** Texto complementar exibido em destaque menor abaixo da descrição. */
+  note?: string;
 }
 
 export const RPD_STEPS: RpdStep[] = [
@@ -276,7 +253,8 @@ export const RPD_STEPS: RpdStep[] = [
     question: "Seu pensamento caiu em alguma dessas armadilhas?",
     term: "Armadilhas do pensamento",
     description:
-      "Leia as opções abaixo e clique nas que mais se parecem com a forma como você pensou naquela situação. Você pode escolher mais de uma — e tudo bem se ainda não souber identificar.",
+      "Às vezes, nossa mente interpreta uma situação de forma rápida e automática. Leia os post-its e marque aqueles que mais se parecem com a forma como você pensou. Você pode escolher mais de um — e tudo bem se ainda não souber identificar.",
+    note: "Essas armadilhas não significam que você pensou “errado”. Elas são padrões comuns de interpretação que podem influenciar como nos sentimos e agimos.",
   },
   {
     n: 6,
@@ -365,7 +343,8 @@ export const parseDistortionChips = (text?: string | null): DistortionChip[] => 
       const opt = DISTORTION_OPTIONS.find(
         (d) =>
           normalize(d.simple) === normalize(simplePart) ||
-          (d.technical && normalize(d.technical) === normalize(technicalPart || simplePart)),
+          (d.technical && normalize(d.technical) === normalize(technicalPart || simplePart)) ||
+          (d.legacy ?? []).some((l) => normalize(l) === normalize(simplePart) || normalize(l) === normalize(technicalPart)),
       );
       if (opt) return { simple: opt.simple, technical: opt.technical, known: true };
       return { simple: simplePart || raw, technical: technicalPart, known: false };
@@ -379,7 +358,7 @@ export const parseDistortions = (
   const chips = parseDistortionChips(text);
   const distortions = chips.filter((c) => c.known).map((c) => c.simple);
   const others = chips.filter((c) => !c.known).map((c) => c.simple);
-  if (others.length) distortions.push("Outra");
+  if (others.length) distortions.push("Outra armadilha");
   return { distortions, distortion_other: others.join("; ") };
 };
 
