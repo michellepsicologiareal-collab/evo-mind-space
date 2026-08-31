@@ -371,13 +371,15 @@ const Finance = () => {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient, reminder_group_sort")
+        .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient, reminder_group_sort, billing_reminder_enabled, billing_reminder_days")
         .eq("id", user.id)
         .maybeSingle();
       if (data) {
         setReminderEnabled(data.reminder_enabled ?? true);
         setReminderWindow(data.reminder_window_hours ?? 24);
         setGroupByPatient(data.reminder_group_by_patient ?? false);
+        setBillingReminderEnabled((data as any).billing_reminder_enabled ?? true);
+        setBillingReminderDays((data as any).billing_reminder_days ?? DUE_SOON_DAYS);
         const sort = data.reminder_group_sort as typeof groupSort | null;
         if (sort) setGroupSort(sort);
       }
@@ -385,12 +387,21 @@ const Finance = () => {
     })();
   }, [user]);
 
-  const savePrefs = async (next: { enabled?: boolean; window?: number; group?: boolean; sort?: typeof groupSort }) => {
+  const savePrefs = async (next: {
+    enabled?: boolean;
+    window?: number;
+    group?: boolean;
+    sort?: typeof groupSort;
+    billingEnabled?: boolean;
+    billingDays?: number;
+  }) => {
     if (!user) return;
     const enabled = next.enabled ?? reminderEnabled;
     const windowH = next.window ?? reminderWindow;
     const group = next.group ?? groupByPatient;
     const sort = next.sort ?? groupSort;
+    const billingEnabled = next.billingEnabled ?? billingReminderEnabled;
+    const billingDays = next.billingDays ?? billingReminderDays;
     setSavingPrefs(true);
     const { error } = await supabase
       .from("profiles")
@@ -399,7 +410,9 @@ const Finance = () => {
         reminder_window_hours: windowH,
         reminder_group_by_patient: group,
         reminder_group_sort: sort,
-      })
+        billing_reminder_enabled: billingEnabled,
+        billing_reminder_days: billingDays,
+      } as any)
       .eq("id", user.id);
     setSavingPrefs(false);
     if (error) {
@@ -408,7 +421,9 @@ const Finance = () => {
     }
     // Reset notified set so toggling/changing window can re-notify
     notifiedIdsRef.current.clear();
+    billingNotifiedRef.current.clear();
   };
+
 
   const billable = useMemo(() => rows.filter((r) => r.status === "completed"), [rows]);
 
