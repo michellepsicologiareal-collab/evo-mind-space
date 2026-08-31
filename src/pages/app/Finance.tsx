@@ -1387,6 +1387,97 @@ const Finance = () => {
         </Alert>
       )}
 
+      {/* Cobranças de Planos de Atendimento concluídos */}
+      {planBillings.length > 0 && (
+        <section className="rounded-3xl bg-card border border-border shadow-card p-4 lg:p-6 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-display text-lg font-bold text-foreground">Cobranças · Planos de Atendimento concluídos</h2>
+              <p className="text-sm text-muted-foreground">
+                Planos com todas as sessões realizadas. Acompanhe o que já foi enviado e o que está perto do vencimento.
+              </p>
+            </div>
+            {planBillingStats.emAberto > 0 && (
+              <div className="rounded-xl bg-secondary/50 border border-border px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Em aberto</p>
+                <p className="text-base font-semibold tabular-nums">{formatBRL(planBillingStats.emAberto)}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {([
+              { label: "Cobranças enviadas", value: planBillingStats.enviadas, tone: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-400" },
+              { label: "Perto do vencimento", value: planBillingStats.perto, tone: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400" },
+              { label: "Vencidas", value: planBillingStats.vencidas, tone: "bg-destructive/10 text-destructive border-destructive/25" },
+              { label: "A enviar", value: planBillingStats.aEnviar, tone: "bg-secondary text-foreground/80 border-border" },
+            ]).map((k) => (
+              <div key={k.label} className={`rounded-xl border px-3 py-3 ${k.tone}`}>
+                <p className="text-2xl font-semibold tabular-nums leading-none">{k.value}</p>
+                <p className="text-[11px] mt-1.5 leading-snug">{k.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <ul className="grid gap-3 md:grid-cols-2">
+            {planBillings.map((p) => (
+              <li key={p.key} className="rounded-2xl border border-border bg-background/60 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground leading-snug line-clamp-2">{p.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Plano de {p.totalDeclared} sessões · concluído
+                    </p>
+                  </div>
+                  <BillingBadge status={p.status} dueDate={p.dueDate} />
+                </div>
+
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+                  <span className="font-semibold tabular-nums">{formatBRL(p.totalValue)}</span>
+                  {p.pendingValue > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      {formatBRL(p.pendingValue)} em aberto
+                    </span>
+                  )}
+                  {p.sentAt && (
+                    <span className="text-xs text-muted-foreground">
+                      Enviada em {new Date(p.sentAt).toLocaleDateString("pt-BR")}
+                    </span>
+                  )}
+                </div>
+
+                {p.status !== "pago" && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor={`due-${p.key}`} className="text-[11px] text-muted-foreground">Vencimento</Label>
+                      <Input
+                        id={`due-${p.key}`}
+                        type="date"
+                        value={p.dueDate ?? ""}
+                        onChange={(e) => updatePlanDueDate(p, e.target.value)}
+                        className="h-9 w-[150px] text-sm"
+                      />
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={p.sentAt ? "outline" : "accent"}
+                      className="h-9"
+                      onClick={() => markBillingSent(p)}
+                    >
+                      {p.sentAt ? "Reenviar cobrança" : "Marcar cobrança enviada"}
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-9" onClick={() => markPlanPaid(p)}>
+                      Marcar como pago
+                    </Button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+
       {/* Operational patient table */}
       <section ref={sessionsSectionRef} className="rounded-3xl bg-card border border-border shadow-card p-4 lg:p-6">
         {(() => {
