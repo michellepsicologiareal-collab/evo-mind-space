@@ -2172,9 +2172,13 @@ export type Database = {
           behavior: string | null
           cognitive_distortion: string | null
           created_at: string
+          crenca_pensamento_final: number | null
+          crenca_pensamento_inicial: number | null
           emotion: string | null
           filled_by: string
           id: string
+          intensidade_emocao_final: Json | null
+          intensidade_emocao_inicial: Json | null
           patient_id: string
           rational_response: string | null
           session_id: string | null
@@ -2187,9 +2191,13 @@ export type Database = {
           behavior?: string | null
           cognitive_distortion?: string | null
           created_at?: string
+          crenca_pensamento_final?: number | null
+          crenca_pensamento_inicial?: number | null
           emotion?: string | null
           filled_by?: string
           id?: string
+          intensidade_emocao_final?: Json | null
+          intensidade_emocao_inicial?: Json | null
           patient_id: string
           rational_response?: string | null
           session_id?: string | null
@@ -2202,9 +2210,13 @@ export type Database = {
           behavior?: string | null
           cognitive_distortion?: string | null
           created_at?: string
+          crenca_pensamento_final?: number | null
+          crenca_pensamento_inicial?: number | null
           emotion?: string | null
           filled_by?: string
           id?: string
+          intensidade_emocao_final?: Json | null
+          intensidade_emocao_inicial?: Json | null
           patient_id?: string
           rational_response?: string | null
           session_id?: string | null
