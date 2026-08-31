@@ -1864,36 +1864,54 @@ const Finance = () => {
       <Sheet open={!!reminderHistoryPlan} onOpenChange={(v) => !v && setReminderHistoryPlan(null)}>
         <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
           <SheetHeader>
-            <SheetTitle className="font-display">Histórico de lembretes</SheetTitle>
+            <SheetTitle className="font-display">Histórico de cobrança</SheetTitle>
             <SheetDescription>{reminderHistoryPlan?.name}</SheetDescription>
           </SheetHeader>
           <ul className="mt-5 space-y-3">
-            {(reminderHistoryPlan ? reminderLogsByPlan.get(reminderHistoryPlan.key) ?? [] : []).map((l) => (
-              <li key={l.id} className="rounded-2xl border border-border bg-background/60 p-3 space-y-1.5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-sm font-medium">
-                    {new Date(l.notified_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
-                  </span>
-                  <BillingBadge status={(l.status as BillingStatus) ?? "na"} />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {l.days_ahead === null
-                    ? "Sem data de vencimento no momento do aviso"
-                    : l.days_ahead >= 0
-                      ? `Antecedência: ${l.days_ahead} ${l.days_ahead === 1 ? "dia" : "dias"}`
-                      : `Enviado com ${Math.abs(l.days_ahead)} ${Math.abs(l.days_ahead) === 1 ? "dia" : "dias"} de atraso`}
-                  {l.due_date ? ` · vencimento ${formatDue(l.due_date)}` : ""}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {l.channel === "manual" ? "Registro manual (cobrança enviada)" : "Lembrete automático"}
-                  {l.pending_value != null ? ` · ${formatBRL(Number(l.pending_value))} em aberto` : ""}
-                </p>
-              </li>
-            ))}
+            {(() => {
+              const logs = reminderHistoryPlan ? reminderLogsByPlan.get(reminderHistoryPlan.key) ?? [] : [];
+              const sends = logs.filter((l) => l.channel !== "auto");
+              return logs.map((l) => {
+                const isSend = l.channel !== "auto";
+                // ordinal do envio (1º = mais antigo)
+                const idx = isSend ? sends.length - sends.indexOf(l) : 0;
+                const channelLabel =
+                  l.channel === "whatsapp" ? "WhatsApp"
+                    : l.channel === "clipboard" ? "Mensagem copiada"
+                      : l.channel === "manual" ? "Registro manual"
+                        : "Lembrete automático";
+                return (
+                  <li key={l.id} className="rounded-2xl border border-border bg-background/60 p-3 space-y-1.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-sm font-medium">
+                        {new Date(l.notified_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                      </span>
+                      <BillingBadge status={(l.status as BillingStatus) ?? "na"} />
+                    </div>
+                    <p className="text-xs font-medium text-foreground/80">
+                      {channelLabel}
+                      {isSend ? ` · ${idx === 1 ? "Primeiro envio" : `${idx}º envio (reenvio)`}` : ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {l.pending_value != null ? `${formatBRL(Number(l.pending_value))}` : "Valor não informado"}
+                      {l.due_date ? ` · Vencimento: ${formatDue(l.due_date)}` : ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {l.days_ahead === null
+                        ? "Sem data de vencimento no momento do aviso"
+                        : l.days_ahead >= 0
+                          ? `Antecedência: ${l.days_ahead} ${l.days_ahead === 1 ? "dia" : "dias"}`
+                          : `Enviado com ${Math.abs(l.days_ahead)} ${Math.abs(l.days_ahead) === 1 ? "dia" : "dias"} de atraso`}
+                    </p>
+                  </li>
+                );
+              });
+            })()}
             {reminderHistoryPlan && (reminderLogsByPlan.get(reminderHistoryPlan.key) ?? []).length === 0 && (
-              <li className="text-sm text-muted-foreground">Nenhum lembrete registrado para este plano ainda.</li>
+              <li className="text-sm text-muted-foreground">Nenhuma cobrança registrada para este item ainda.</li>
             )}
           </ul>
+
         </SheetContent>
       </Sheet>
 
