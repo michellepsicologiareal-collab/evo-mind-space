@@ -328,6 +328,16 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                         </div>
                       );
                     })}
+                    {(r.crenca_pensamento_inicial != null || r.crenca_pensamento_final != null) && (
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: G }}>Crença no pensamento</p>
+                        <p style={{ color: INK }}>
+                          {r.crenca_pensamento_inicial != null ? `Antes: ${r.crenca_pensamento_inicial}%` : "Antes: —"}
+                          {" · "}
+                          {r.crenca_pensamento_final != null ? `Depois: ${r.crenca_pensamento_final}%` : "Depois: —"}
+                        </p>
+                      </div>
+                    )}
                     {!readOnly && (
                       <div className="flex justify-end pt-1">
                         <Button variant="ghost" size="sm" onClick={() => handleDelete(r.id)} className="text-destructive">
