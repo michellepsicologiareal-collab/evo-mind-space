@@ -1187,6 +1187,7 @@ export type Database = {
           chief_complaint: string | null
           clinic_address: string | null
           created_at: string
+          deleted_at: string | null
           email: string | null
           financial_responsible_name: string | null
           financial_responsible_phone: string | null
@@ -1218,6 +1219,7 @@ export type Database = {
           chief_complaint?: string | null
           clinic_address?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           financial_responsible_name?: string | null
           financial_responsible_phone?: string | null
@@ -1249,6 +1251,7 @@ export type Database = {
           chief_complaint?: string | null
           clinic_address?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string | null
           financial_responsible_name?: string | null
           financial_responsible_phone?: string | null
@@ -2685,6 +2688,17 @@ export type Database = {
           user_id: string
         }[]
       }
+      list_trashed_patients: {
+        Args: never
+        Returns: {
+          deleted_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string
+          sessions_count: number
+        }[]
+      }
       log_clinical_access: {
         Args: {
           _access_type?: Database["public"]["Enums"]["audit_access_type"]
@@ -2721,10 +2735,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      purge_expired_trashed_patients: { Args: never; Returns: number }
+      purge_patient: { Args: { _patient_id: string }; Returns: undefined }
       respond_to_confirmation: {
         Args: { _confirm: boolean; _token: string }
         Returns: string
       }
+      restore_patient: { Args: { _patient_id: string }; Returns: undefined }
       set_ai_summary_event_reason: {
         Args: { _reason: string; _summary_id: string }
         Returns: undefined
@@ -2755,6 +2772,7 @@ export type Database = {
         Args: { _ip: string; _payload: Json; _token: string; _ua: string }
         Returns: string
       }
+      trash_patient: { Args: { _patient_id: string }; Returns: undefined }
       unlink_supervisee: {
         Args: { _supervisee_id: string }
         Returns: undefined

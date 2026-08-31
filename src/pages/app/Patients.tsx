@@ -55,7 +55,17 @@ const PATIENT_CATEGORIES = [
   { value: "supervisao", label: "Supervisão" },
 ] as const;
 
+interface TrashedPatient {
+  id: string;
+  full_name: string;
+  phone: string | null;
+  email: string | null;
+  deleted_at: string;
+  sessions_count: number;
+}
+
 interface FormulationItem {
+
   key: string;
   label: string;
   filled: boolean;
@@ -550,7 +560,14 @@ const Patients = () => {
     setDraftRestored(false);
   }, []);
 
+  const [trash, setTrash] = useState<TrashedPatient[]>([]);
+  const [trashOpen, setTrashOpen] = useState(false);
+  const [trashBusy, setTrashBusy] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Patient | null>(null);
+  const [deleteConfirmed, setDeleteConfirmed] = useState(false);
+
   const load = async () => {
+
     if (!user) return;
     setLoading(true);
     const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes, plansRes, goalsRes, techRes, revRes, teRes, actRes] = await Promise.all([
@@ -747,6 +764,17 @@ const Patients = () => {
 
   useAutoRefresh(() => { if (user) load(); }, { routePath: "/app/pacientes" });
 
+  // Lixeira: limpa itens com mais de 30 dias e carrega a lista
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      await (supabase as any).rpc("purge_expired_trashed_patients");
+      const { data } = await (supabase as any).rpc("list_trashed_patients");
+      setTrash(((data as TrashedPatient[]) || []));
+    })();
+  }, [user]);
+
+
   const summarizeFormulation = async (patientId: string) => {
     if (summarizing[patientId]) return;
     setSummarizing((s) => ({ ...s, [patientId]: true }));
@@ -908,16 +936,52 @@ const Patients = () => {
     await preserveScroll(() => load());
   };
 
-  const handleDelete = async (p: Patient) => {
-    if (!confirm(`Excluir ${p.full_name}? As sessões vinculadas também serão removidas.`)) return;
-    const { error } = await supabase.from("patients").delete().eq("id", p.id);
+  const handleDelete = (p: Patient) => {
+    setDeleteTarget(p);
+    setDeleteConfirmed(false);
+  };
+
+  const confirmTrash = async () => {
+    if (!deleteTarget) return;
+    setTrashBusy(true);
+    const { error } = await (supabase as any).rpc("trash_patient", { _patient_id: deleteTarget.id });
+    setTrashBusy(false);
     if (error) {
-      toast.error("Erro ao excluir");
+      toast.error("Erro ao mover para a lixeira");
       return;
     }
-    toast.success("Paciente excluído");
+    toast.success("Paciente movido para a lixeira", { description: "Você pode restaurá-lo em até 30 dias." });
+    setDeleteTarget(null);
+    await loadTrash();
     await preserveScroll(() => load());
   };
+
+  const loadTrash = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any).rpc("list_trashed_patients");
+    setTrash(((data as TrashedPatient[]) || []));
+  }, [user]);
+
+  const restoreFromTrash = async (t: TrashedPatient) => {
+    setTrashBusy(true);
+    const { error } = await (supabase as any).rpc("restore_patient", { _patient_id: t.id });
+    setTrashBusy(false);
+    if (error) return toast.error("Erro ao restaurar");
+    toast.success(`${t.full_name} restaurado com todos os registros`);
+    await loadTrash();
+    await preserveScroll(() => load());
+  };
+
+  const purgeFromTrash = async (t: TrashedPatient) => {
+    if (!confirm(`Excluir DEFINITIVAMENTE ${t.full_name}? Esta ação não pode ser desfeita e apaga sessões e registros vinculados.`)) return;
+    setTrashBusy(true);
+    const { error } = await (supabase as any).rpc("purge_patient", { _patient_id: t.id });
+    setTrashBusy(false);
+    if (error) return toast.error("Erro ao excluir definitivamente");
+    toast.success("Paciente excluído definitivamente");
+    await loadTrash();
+  };
+
 
   const toggleActive = async (p: Patient) => {
     const { error } = await supabase.from("patients").update({ is_active: !p.is_active }).eq("id", p.id);
@@ -1148,6 +1212,19 @@ const Patients = () => {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <RefreshButton />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => { setTrashOpen(true); loadTrash(); }}
+            className="gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Lixeira</span>
+            {trash.length > 0 && (
+              <span className="ml-0.5 rounded-full bg-[#C0392B] px-1.5 text-[11px] font-semibold text-white">{trash.length}</span>
+            )}
+          </Button>
+
           <button
             type="button"
             onClick={openNew}
@@ -2610,7 +2687,87 @@ const Patients = () => {
         </DialogContent>
       </Dialog>
 
+      {/* ─────────── CONFIRMAÇÃO EM DUAS ETAPAS ─────────── */}
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mover para a lixeira</DialogTitle>
+            <DialogDescription>
+              {deleteTarget?.full_name} e todos os registros vinculados (sessões, registros, formulações) ficarão ocultos no app e guardados na lixeira por <strong>30 dias</strong>. Depois disso poderão ser apagados definitivamente.
+            </DialogDescription>
+          </DialogHeader>
+          <label className="flex items-start gap-3 rounded-xl border p-3 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4"
+              checked={deleteConfirmed}
+              onChange={(e) => setDeleteConfirmed(e.target.checked)}
+            />
+            <span>Entendi que o paciente sairá das telas do app e ficará restaurável por 30 dias.</span>
+          </label>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              disabled={!deleteConfirmed || trashBusy}
+              onClick={confirmTrash}
+            >
+              {trashBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Mover para a lixeira
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─────────── LIXEIRA ─────────── */}
+      <Sheet open={trashOpen} onOpenChange={setTrashOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetTitle>Lixeira</SheetTitle>
+          <SheetDescription>
+            Pacientes excluídos ficam aqui por 30 dias e podem ser restaurados com todos os registros.
+          </SheetDescription>
+          <div className="mt-5 space-y-3">
+            {trash.length === 0 && (
+              <div className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+                A lixeira está vazia. Nada foi excluído nos últimos 30 dias.
+              </div>
+            )}
+            {trash.map((t) => {
+              const deletedAt = new Date(t.deleted_at);
+              const daysLeft = Math.max(0, 30 - Math.floor((Date.now() - deletedAt.getTime()) / 86400000));
+              return (
+                <div key={t.id} className="rounded-2xl border bg-card p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{t.full_name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Excluído em {format(deletedAt, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} · {t.sessions_count} sessão(ões)
+                      </p>
+                    </div>
+                    <span
+                      className="shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold"
+                      style={{ background: daysLeft <= 5 ? "#FDECEA" : "#F1F5F9", color: daysLeft <= 5 ? "#C0392B" : "#475569" }}
+                    >
+                      {daysLeft === 0 ? "expira hoje" : `${daysLeft} dia(s)`}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" disabled={trashBusy} onClick={() => restoreFromTrash(t)}>
+                      <RefreshCw className="h-4 w-4" /> Restaurar
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-[#C0392B]" disabled={trashBusy} onClick={() => purgeFromTrash(t)}>
+                      <Trash2 className="h-4 w-4" /> Excluir definitivamente
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <PremiumGate open={gateOpen} onOpenChange={setGateOpen} />
+
       <UnsavedGuardDialog open={patientGuard.confirmOpen} onConfirm={patientGuard.confirmLeave} onCancel={patientGuard.cancelLeave} onSaveDraft={patientGuard.saveDraftAndLeave} />
     </div>
   );
