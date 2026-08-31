@@ -807,7 +807,7 @@ const Finance = () => {
     const order: Record<BillingStatus, number> = { vencida: 0, perto: 1, a_enviar: 2, enviada: 3, pago: 4, na: 5 };
     return out.sort((a, b) => order[a.status] - order[b.status] || a.name.localeCompare(b.name, "pt-BR"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, fortnightFilter]);
+  }, [rows, fortnightFilter, billingReminderDays]);
 
   const planBillingStats = useMemo(() => {
     const count = (s: BillingStatus) => planBillings.filter((p) => p.status === s).length;
