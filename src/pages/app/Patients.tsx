@@ -908,16 +908,52 @@ const Patients = () => {
     await preserveScroll(() => load());
   };
 
-  const handleDelete = async (p: Patient) => {
-    if (!confirm(`Excluir ${p.full_name}? As sessões vinculadas também serão removidas.`)) return;
-    const { error } = await supabase.from("patients").delete().eq("id", p.id);
+  const handleDelete = (p: Patient) => {
+    setDeleteTarget(p);
+    setDeleteConfirmed(false);
+  };
+
+  const confirmTrash = async () => {
+    if (!deleteTarget) return;
+    setTrashBusy(true);
+    const { error } = await (supabase as any).rpc("trash_patient", { _patient_id: deleteTarget.id });
+    setTrashBusy(false);
     if (error) {
-      toast.error("Erro ao excluir");
+      toast.error("Erro ao mover para a lixeira");
       return;
     }
-    toast.success("Paciente excluído");
+    toast.success("Paciente movido para a lixeira", { description: "Você pode restaurá-lo em até 30 dias." });
+    setDeleteTarget(null);
+    await loadTrash();
     await preserveScroll(() => load());
   };
+
+  const loadTrash = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any).rpc("list_trashed_patients");
+    setTrash(((data as TrashedPatient[]) || []));
+  }, [user]);
+
+  const restoreFromTrash = async (t: TrashedPatient) => {
+    setTrashBusy(true);
+    const { error } = await (supabase as any).rpc("restore_patient", { _patient_id: t.id });
+    setTrashBusy(false);
+    if (error) return toast.error("Erro ao restaurar");
+    toast.success(`${t.full_name} restaurado com todos os registros`);
+    await loadTrash();
+    await preserveScroll(() => load());
+  };
+
+  const purgeFromTrash = async (t: TrashedPatient) => {
+    if (!confirm(`Excluir DEFINITIVAMENTE ${t.full_name}? Esta ação não pode ser desfeita e apaga sessões e registros vinculados.`)) return;
+    setTrashBusy(true);
+    const { error } = await (supabase as any).rpc("purge_patient", { _patient_id: t.id });
+    setTrashBusy(false);
+    if (error) return toast.error("Erro ao excluir definitivamente");
+    toast.success("Paciente excluído definitivamente");
+    await loadTrash();
+  };
+
 
   const toggleActive = async (p: Patient) => {
     const { error } = await supabase.from("patients").update({ is_active: !p.is_active }).eq("id", p.id);
