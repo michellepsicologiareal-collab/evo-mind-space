@@ -2218,7 +2218,7 @@ const Finance = () => {
                               onClick={() => setReminderHistoryPlan({ key: g.key, name: g.name })}
                               aria-label={`Ver histórico de cobranças de ${g.name}`}
                             >
-                              <History className="h-4 w-4" />
+                              <HistoryIcon className="h-4 w-4" />
                               Histórico{groupLogs.length ? ` (${groupLogs.length})` : ""}
                             </Button>
 
