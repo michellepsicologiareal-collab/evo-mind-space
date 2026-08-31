@@ -1,10 +1,20 @@
+import { useState } from "react";
+import { Check, Lightbulb, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   RPD_STEPS,
   EMOTION_OPTIONS,
   DISTORTION_OPTIONS,
+  type DistortionOption,
   type RpdFormState,
 } from "@/lib/rpd";
 
