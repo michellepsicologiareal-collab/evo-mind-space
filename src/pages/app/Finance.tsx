@@ -101,9 +101,12 @@ interface Row {
   paid_at: string | null;
   session_type: string | null;
   notes: string | null;
+  billing_sent_at: string | null;
+  payment_due_date: string | null;
   patient: { id: string; full_name: string } | null;
   service: { name: string } | null;
 }
+
 
 // Recurrence detection (mirrors Agenda: recurring sessions are created with a
 // "Plano N sessões (i/N)" marker in `notes`, and single-payment groups embed a
@@ -128,6 +131,83 @@ type ReceitaSaudeFilter = "all" | "to_issue" | "issued";
 type FortnightFilter = "all" | "first" | "second";
 
 const formatBRL = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
+
+// ── Status da cobrança ────────────────────────────────────────────────
+// Usa `billing_sent_at` (cobrança enviada) e `payment_due_date` (vencimento
+// combinado) das sessões. "Perto do vencimento" = vence em até 3 dias.
+type BillingStatus = "pago" | "vencida" | "perto" | "enviada" | "a_enviar" | "na";
+
+const DUE_SOON_DAYS = 3;
+
+const BILLING_LABEL: Record<BillingStatus, string> = {
+  pago: "Pago",
+  vencida: "Vencida",
+  perto: "Perto do vencimento",
+  enviada: "Cobrança enviada",
+  a_enviar: "Cobrança a enviar",
+  na: "—",
+};
+
+const BILLING_TONE: Record<BillingStatus, string> = {
+  pago: "bg-moss/10 text-moss border-moss/20",
+  vencida: "bg-destructive/10 text-destructive border-destructive/25",
+  perto: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400",
+  enviada: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-400",
+  a_enviar: "bg-secondary text-foreground/70 border-border",
+  na: "bg-secondary text-muted-foreground border-border",
+};
+
+const startOfToday = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const daysUntil = (dateStr: string | null): number | null => {
+  if (!dateStr) return null;
+  const [y, m, d] = dateStr.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  const due = new Date(y, m - 1, d);
+  due.setHours(0, 0, 0, 0);
+  return Math.round((due.getTime() - startOfToday().getTime()) / 86400000);
+};
+
+const formatDue = (dateStr: string | null) =>
+  dateStr ? dateStr.split("-").reverse().join("/") : null;
+
+/** Deriva o status da cobrança de um conjunto de sessões faturáveis. */
+const billingStatusOf = (list: Row[]): { status: BillingStatus; dueDate: string | null; sentAt: string | null } => {
+  const billable = list.filter((r) => r.status === "completed" || r.payment_status === "paid");
+  if (billable.length === 0) return { status: "na", dueDate: null, sentAt: null };
+  const pending = billable.filter((r) => r.payment_status === "pending");
+  const sentAt = billable
+    .map((r) => r.billing_sent_at)
+    .filter(Boolean)
+    .sort()
+    .pop() ?? null;
+  const dueDate = (pending.length ? pending : billable)
+    .map((r) => r.payment_due_date)
+    .filter(Boolean)
+    .sort()[0] ?? null;
+
+  if (pending.length === 0) return { status: "pago", dueDate, sentAt };
+  const dias = daysUntil(dueDate);
+  if (dias !== null && dias < 0) return { status: "vencida", dueDate, sentAt };
+  if (dias !== null && dias <= DUE_SOON_DAYS) return { status: "perto", dueDate, sentAt };
+  if (sentAt) return { status: "enviada", dueDate, sentAt };
+  return { status: "a_enviar", dueDate, sentAt };
+};
+
+const BillingBadge = ({ status, dueDate }: { status: BillingStatus; dueDate?: string | null }) => (
+  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${BILLING_TONE[status]}`}>
+    {BILLING_LABEL[status]}
+    {dueDate && status !== "pago" && status !== "na" && (
+      <span className="opacity-80">· {formatDue(dueDate)}</span>
+    )}
+  </span>
+);
+
+
 
 const METHOD_LABEL: Record<PaymentMethod, string> = {
   pix: "PIX",
@@ -226,7 +306,7 @@ const Finance = () => {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const selectCols = "id, scheduled_at, status, payment_status, payment_method, payment_reference, receita_saude_status, price, paid_at, is_expense, session_type, notes, patient:patients!sessions_patient_id_fkey(id, full_name), service:services(name)";
+    const selectCols = "id, scheduled_at, status, payment_status, payment_method, payment_reference, receita_saude_status, price, paid_at, is_expense, session_type, notes, billing_sent_at, payment_due_date, patient:patients!sessions_patient_id_fkey(id, full_name), service:services(name)";
 
     const { data, error } = await supabase
       .from("sessions")
@@ -650,6 +730,121 @@ const Finance = () => {
     toast.success(value === "paid" ? "Sessão marcada como paga." : "Sessão marcada como pendente.");
     load();
   };
+
+  // ── Planos de Atendimento concluídos → cobrança ──────────────────────
+  // Um plano é considerado concluído quando todas as sessões da série já
+  // foram realizadas (e o total previsto no plano foi cumprido).
+  type PlanBilling = {
+    key: string;
+    name: string;
+    patientId: string | null;
+    sessions: Row[];
+    sessionsCount: number;
+    totalDeclared: number;
+    totalValue: number;
+    pendingValue: number;
+    status: BillingStatus;
+    dueDate: string | null;
+    sentAt: string | null;
+    lastSessionAt: string;
+  };
+
+  const planBillings: PlanBilling[] = useMemo(() => {
+    const base = fortnightFilter_(rows.filter((r) => r.status !== "cancelled" && isRecurringSession(r.notes)));
+    const map = new Map<string, Row[]>();
+    for (const r of base) {
+      const k = getSeriesKey(r);
+      if (!k) continue;
+      const arr = map.get(k) ?? [];
+      arr.push(r);
+      map.set(k, arr);
+    }
+    const out: PlanBilling[] = [];
+    for (const [key, list] of map) {
+      const declared = Number(list[0].notes?.match(/Plano (\d+) sess/)?.[1] ?? list.length);
+      const allDone = list.every((r) => r.status === "completed");
+      if (!allDone || list.length < declared) continue;
+      const { status, dueDate, sentAt } = billingStatusOf(list);
+      out.push({
+        key,
+        name: list[0].patient?.full_name ?? "—",
+        patientId: list[0].patient?.id ?? null,
+        sessions: list,
+        sessionsCount: list.length,
+        totalDeclared: declared,
+        totalValue: list.reduce((s, r) => s + Number(r.price ?? 0), 0),
+        pendingValue: list.filter((r) => r.payment_status === "pending").reduce((s, r) => s + Number(r.price ?? 0), 0),
+        status,
+        dueDate,
+        sentAt,
+        lastSessionAt: list.map((r) => r.scheduled_at).sort().pop()!,
+      });
+    }
+    const order: Record<BillingStatus, number> = { vencida: 0, perto: 1, a_enviar: 2, enviada: 3, pago: 4, na: 5 };
+    return out.sort((a, b) => order[a.status] - order[b.status] || a.name.localeCompare(b.name, "pt-BR"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, fortnightFilter]);
+
+  const planBillingStats = useMemo(() => {
+    const count = (s: BillingStatus) => planBillings.filter((p) => p.status === s).length;
+    return {
+      enviadas: planBillings.filter((p) => p.status === "enviada" || p.status === "perto" || p.status === "vencida").length,
+      perto: count("perto"),
+      vencidas: count("vencida"),
+      aEnviar: count("a_enviar"),
+      pagos: count("pago"),
+      emAberto: planBillings.reduce((s, p) => s + p.pendingValue, 0),
+    };
+  }, [planBillings]);
+
+  const markBillingSent = async (plan: PlanBilling) => {
+    const nowIso = new Date().toISOString();
+    const pending = plan.sessions.filter((r) => r.payment_status === "pending");
+    const ids = (pending.length ? pending : plan.sessions).map((r) => r.id);
+    const due = new Date();
+    due.setDate(due.getDate() + 7);
+    const dueStr = plan.dueDate ?? due.toISOString().slice(0, 10);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ billing_sent_at: nowIso, payment_due_date: dueStr } as any)
+      .in("id", ids);
+    if (error) {
+      toast.error("Não foi possível registrar o envio da cobrança.");
+      return;
+    }
+    toast.success(`Cobrança registrada como enviada · vence em ${formatDue(dueStr)}`);
+    load();
+  };
+
+  const updatePlanDueDate = async (plan: PlanBilling, value: string) => {
+    const ids = plan.sessions.filter((r) => r.payment_status === "pending").map((r) => r.id);
+    if (ids.length === 0) return;
+    const { error } = await supabase
+      .from("sessions")
+      .update({ payment_due_date: value || null } as any)
+      .in("id", ids);
+    if (error) {
+      toast.error("Não foi possível salvar o vencimento.");
+      return;
+    }
+    load();
+  };
+
+  const markPlanPaid = async (plan: PlanBilling) => {
+    const ids = plan.sessions.filter((r) => r.payment_status === "pending").map((r) => r.id);
+    if (ids.length === 0) return;
+    const { error } = await supabase
+      .from("sessions")
+      .update({ payment_status: "paid", paid_at: new Date().toISOString() })
+      .in("id", ids);
+    if (error) {
+      toast.error("Não foi possível atualizar o pagamento.");
+      return;
+    }
+    toast.success("Plano de Atendimento marcado como pago.");
+    load();
+  };
+
 
   return (
     <div className="space-y-8 animate-fade-up">
@@ -1192,6 +1387,97 @@ const Finance = () => {
         </Alert>
       )}
 
+      {/* Cobranças de Planos de Atendimento concluídos */}
+      {planBillings.length > 0 && (
+        <section className="rounded-3xl bg-card border border-border shadow-card p-4 lg:p-6 space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-display text-lg font-bold text-foreground">Cobranças · Planos de Atendimento concluídos</h2>
+              <p className="text-sm text-muted-foreground">
+                Planos com todas as sessões realizadas. Acompanhe o que já foi enviado e o que está perto do vencimento.
+              </p>
+            </div>
+            {planBillingStats.emAberto > 0 && (
+              <div className="rounded-xl bg-secondary/50 border border-border px-3 py-2">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Em aberto</p>
+                <p className="text-base font-semibold tabular-nums">{formatBRL(planBillingStats.emAberto)}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {([
+              { label: "Cobranças enviadas", value: planBillingStats.enviadas, tone: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-400" },
+              { label: "Perto do vencimento", value: planBillingStats.perto, tone: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400" },
+              { label: "Vencidas", value: planBillingStats.vencidas, tone: "bg-destructive/10 text-destructive border-destructive/25" },
+              { label: "A enviar", value: planBillingStats.aEnviar, tone: "bg-secondary text-foreground/80 border-border" },
+            ]).map((k) => (
+              <div key={k.label} className={`rounded-xl border px-3 py-3 ${k.tone}`}>
+                <p className="text-2xl font-semibold tabular-nums leading-none">{k.value}</p>
+                <p className="text-[11px] mt-1.5 leading-snug">{k.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <ul className="grid gap-3 md:grid-cols-2">
+            {planBillings.map((p) => (
+              <li key={p.key} className="rounded-2xl border border-border bg-background/60 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground leading-snug line-clamp-2">{p.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Plano de {p.totalDeclared} sessões · concluído
+                    </p>
+                  </div>
+                  <BillingBadge status={p.status} dueDate={p.dueDate} />
+                </div>
+
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
+                  <span className="font-semibold tabular-nums">{formatBRL(p.totalValue)}</span>
+                  {p.pendingValue > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      {formatBRL(p.pendingValue)} em aberto
+                    </span>
+                  )}
+                  {p.sentAt && (
+                    <span className="text-xs text-muted-foreground">
+                      Enviada em {new Date(p.sentAt).toLocaleDateString("pt-BR")}
+                    </span>
+                  )}
+                </div>
+
+                {p.status !== "pago" && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor={`due-${p.key}`} className="text-[11px] text-muted-foreground">Vencimento</Label>
+                      <Input
+                        id={`due-${p.key}`}
+                        type="date"
+                        value={p.dueDate ?? ""}
+                        onChange={(e) => updatePlanDueDate(p, e.target.value)}
+                        className="h-9 w-[150px] text-sm"
+                      />
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={p.sentAt ? "outline" : "accent"}
+                      className="h-9"
+                      onClick={() => markBillingSent(p)}
+                    >
+                      {p.sentAt ? "Reenviar cobrança" : "Marcar cobrança enviada"}
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-9" onClick={() => markPlanPaid(p)}>
+                      Marcar como pago
+                    </Button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+
       {/* Operational patient table */}
       <section ref={sessionsSectionRef} className="rounded-3xl bg-card border border-border shadow-card p-4 lg:p-6">
         {(() => {
@@ -1459,7 +1745,18 @@ const Finance = () => {
                           <td className="py-3 px-3 font-medium tabular-nums">
                             {p.totalValue > 0 ? formatBRL(p.totalValue) : <span className="text-muted-foreground italic">—</span>}
                           </td>
-                          <td className={`py-3 px-3 font-medium ${pay.tone}`}>{pay.label}</td>
+                          <td className="py-3 px-3">
+                            <span className={`font-medium ${pay.tone}`}>{pay.label}</span>
+                            {(() => {
+                              const b = billingStatusOf(p.allInGroup);
+                              return b.status === "na" ? null : (
+                                <div className="mt-1">
+                                  <BillingBadge status={b.status} dueDate={b.dueDate} />
+                                </div>
+                              );
+                            })()}
+                          </td>
+
                           <td className="py-3 px-3 text-right" onClick={(e) => e.stopPropagation()}>
                             <div className="inline-flex items-center gap-1">
                               {p.latestBillable && p.hasPending && (
@@ -1601,7 +1898,17 @@ const Finance = () => {
                           <dt className="text-muted-foreground text-xs">Pagamento</dt>
                           <dd className={`font-medium ${pay.tone}`}>{pay.label}</dd>
                         </div>
+                        {(() => {
+                          const b = billingStatusOf(p.allInGroup);
+                          return b.status === "na" ? null : (
+                            <div className="flex items-baseline justify-between gap-3">
+                              <dt className="text-muted-foreground text-xs">Cobrança</dt>
+                              <dd><BillingBadge status={b.status} dueDate={b.dueDate} /></dd>
+                            </div>
+                          );
+                        })()}
                       </dl>
+
 
                       <div className="flex items-center gap-2 pt-2 border-t border-border/60">
                         {rowClickable && (
