@@ -2077,6 +2077,10 @@ const Finance = () => {
                     const pay = payLabel(g);
                     const rs = receitaValue(g);
                     const editTarget = g.sessions[0] ?? null;
+                    const groupLogs = reminderLogsByPlan.get(g.key) ?? [];
+                    const sendCount = groupLogs.filter((l) => l.channel !== "auto").length;
+                    const alreadySent = !!billing.sentAt || sendCount > 0;
+
                     const modalidade = g.isPlan
                       ? `Plano de Atendimento${g.planTotal ? ` • ${g.totalSessions}/${g.planTotal} sessões` : ` • ${g.totalSessions} sessões`}`
                       : "Sessão única";
