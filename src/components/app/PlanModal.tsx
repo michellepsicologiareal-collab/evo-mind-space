@@ -21,7 +21,7 @@ const essentialPlan = {
     "Catálogo de serviços",
     "Suporte prioritário",
   ],
-  href: "https://pay.kiwify.com.br/k4VMHLa",
+  href: "https://pay.kiwify.com.br/36rYnQ7",
 };
 
 const supervisorPlan = {
@@ -38,7 +38,7 @@ const supervisorPlan = {
     "Biblioteca de materiais",
     "Suporte prioritário",
   ],
-  href: "https://pay.kiwify.com.br/k4VMHLa",
+  href: "https://pay.kiwify.com.br/36rYnQ7",
 };
 
 export const PlanModal = ({ open, onOpenChange }: PlanModalProps) => {

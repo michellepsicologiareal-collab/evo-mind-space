@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Crown, Lock } from "lucide-react";
 
-const PAYMENT_LINK = "https://pay.kiwify.com.br/k4VMHLa";
+const PAYMENT_LINK = "https://pay.kiwify.com.br/36rYnQ7";
 
 interface PremiumGateProps {
   open: boolean;

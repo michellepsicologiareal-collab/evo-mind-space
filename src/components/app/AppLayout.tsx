@@ -428,7 +428,7 @@ export const AppLayout = () => {
                 R$ 58,90<span className="text-sm font-normal text-muted-foreground">/6 meses</span>
               </p>
               <Button variant="accent" size="lg" asChild>
-                <a href="https://pay.kiwify.com.br/k4VMHLa" target="_blank" rel="noopener noreferrer">
+                <a href="https://pay.kiwify.com.br/36rYnQ7" target="_blank" rel="noopener noreferrer">
                   <Crown className="h-4 w-4" /> Assinar Agora
                 </a>
               </Button>
