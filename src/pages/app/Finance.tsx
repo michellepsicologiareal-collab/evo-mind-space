@@ -149,8 +149,11 @@ const formatBRL = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
 
 // ── Status da cobrança ────────────────────────────────────────────────
 // Regras compartilhadas com a Agenda (src/lib/billing.ts).
-const billingStatusOf = (list: Row[], soonDays: number = DUE_SOON_DAYS) =>
-  computeBillingStatus(list as unknown as BillingInput[], soonDays);
+const billingStatusOf = (
+  list: Row[],
+  soonDays: number = DUE_SOON_DAYS,
+  mode: BillingMode = "per_session"
+) => computeBillingStatus(list as unknown as BillingInput[], soonDays, mode);
 
 
 
@@ -1021,15 +1024,24 @@ const Finance = () => {
     dueDate: string | null;
     status: BillingStatus;
     isResend: boolean;
+    isPlan?: boolean;
   }) => {
-    const { key, name, patientId, sessions: list, isResend } = args;
+    const { key, name, patientId, sessions: list, isResend, isPlan } = args;
     if (!user || list.length === 0) return;
 
-    // Cobra apenas sessões realizadas e ainda não pagas (futuras/agendadas não são cobradas)
-    const pending = list.filter((r) => r.payment_status === "pending" && r.status === "completed");
-    const target = pending.length ? pending : list.filter((r) => r.status === "completed");
+    // Plano/pacote: cobra o valor do plano (inclui sessões futuras contratadas).
+    // Sessão avulsa: cobra apenas sessões realizadas e ainda não pagas.
+    const cobravel = isPlan
+      ? list.filter((r) => r.status !== "cancelled")
+      : list.filter((r) => r.status === "completed");
+    const pending = cobravel.filter((r) => r.payment_status === "pending");
+    const target = pending.length ? pending : cobravel;
     if (target.length === 0) {
-      toast.info("Nada a cobrar: este grupo ainda não tem sessões realizadas.");
+      toast.info(
+        isPlan
+          ? "Nada a cobrar: este plano não tem sessões em aberto."
+          : "Nada a cobrar: este grupo ainda não tem sessões realizadas."
+      );
       return;
     }
     const ids = target.map((r) => r.id);
@@ -1974,9 +1986,11 @@ const Finance = () => {
             g.totalValue += Number(r.price ?? 0);
             if (r.scheduled_at < g.firstAt) g.firstAt = r.scheduled_at;
             if (r.scheduled_at > g.lastAt) g.lastAt = r.scheduled_at;
-            // Só sessões realizadas entram na cobrança: agendadas/faltas não geram pendência
+            // Modalidade de cobrança define o que entra em aberto:
+            // - Plano/pacote: todo o valor contratado é cobrável (inclusive sessões futuras).
+            // - Sessão avulsa: só sessões realizadas geram pendência.
             if (r.payment_status === "paid") { g.paidCount++; g.paidValue += Number(r.price ?? 0); }
-            else if (r.status === "completed") { g.pendingCount++; g.pendingValue += Number(r.price ?? 0); }
+            else if (isPlan || r.status === "completed") { g.pendingCount++; g.pendingValue += Number(r.price ?? 0); }
             if (r.receita_saude_status === "to_issue") g.receitaToIssue++;
             else if (r.receita_saude_status === "issued") g.receitaIssued++;
             else g.receitaNone++;
@@ -2101,9 +2115,12 @@ const Finance = () => {
                 <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 pb-24 md:pb-0">
                   {groups.map((g) => {
                     const ids = g.sessions.map((s) => s.id);
-                    // Baixa de pagamento só afeta sessões realizadas (ou já pagas) — nunca futuras
-                    const payIds = g.sessions.filter((s) => s.status === "completed" || s.payment_status === "paid").map((s) => s.id);
-                    const billing = billingStatusOf(g.sessions, billingReminderDays);
+                    // Plano/pacote: a baixa quita a cobrança inteira do plano.
+                    // Sessão avulsa: só sessões realizadas (ou já pagas) — nunca futuras.
+                    const payIds = g.isPlan
+                      ? ids
+                      : g.sessions.filter((s) => s.status === "completed" || s.payment_status === "paid").map((s) => s.id);
+                    const billing = billingStatusOf(g.sessions, billingReminderDays, g.isPlan ? "plan" : "per_session");
                     const pay = payLabel(g);
                     const rs = receitaValue(g);
                     const editTarget = g.sessions[0] ?? null;
@@ -2226,6 +2243,7 @@ const Finance = () => {
                                 name: g.name,
                                 patientId: g.patientId,
                                 sessions: g.sessions,
+                                isPlan: g.isPlan,
                                 dueDate: billing.dueDate,
                                 status: billing.status,
                                 isResend: alreadySent,
