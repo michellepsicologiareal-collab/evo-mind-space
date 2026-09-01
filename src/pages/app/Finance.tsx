@@ -1390,7 +1390,7 @@ const Finance = () => {
         <KpiCard icon={Wallet} label="Recebido no período" value={formatBRL(totalRecebido)} hint={`Pagamentos confirmados no período · ${sessoesPagas} sessões`} accent />
         <KpiCard icon={Receipt} label="Receita realizada" value={formatBRL(totalReceitaRealizada)} hint={`${sessoesRealizadas} sessões realizadas`} />
         <KpiCard icon={CalendarClock} label="Saldo pago a realizar" value={formatBRL(totalSaldoPagoARealizar)} hint={`${sessoesFuturasPagas} sessões futuras já pagas`} />
-        <KpiCard icon={Clock} label="A receber" value={formatBRL(totalAReceber)} hint={`${sessoesPendentes} pagamentos pendentes`} />
+        <KpiCard icon={Clock} label="A receber" value={formatBRL(totalAReceber)} hint={`${sessoesPendentes} cobranças em aberto${totalPrevistoAvulso > 0 ? ` · ${formatBRL(totalPrevistoAvulso)} previsto` : ""}`} />
         <KpiCard icon={CalendarClock} label="Receita prevista do mês" value={formatBRL(totalPrevisto)} hint={`${sessoesAgendadas} sessões agendadas`} />
       </section>
 
