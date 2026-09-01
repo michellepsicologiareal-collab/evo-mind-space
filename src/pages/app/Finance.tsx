@@ -516,10 +516,18 @@ const Finance = () => {
   const totalSaldoPagoARealizar = futurePaidRows.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const sessoesFuturasPagas = futurePaidRows.length;
 
-  // 4) A receber: somente pagamento pendente (não inclui sessão futura já paga).
-  const pendingRows = fortnightAllValid.filter((r) => r.payment_status === "pending");
+  // 4) A receber = cobranças EM ABERTO (mesma regra dos cards "Sessões do Mês"):
+  //    plano/pacote com cobrança pendente + sessão avulsa já realizada e não paga.
+  //    Sessão avulsa futura não paga entra em "Previsto", nunca em "A receber".
+  const chargeBase = useMemo(
+    () => fortnightFilter_(rows.filter((r) => r.status !== "cancelled")),
+    [rows, fortnightFilter]
+  );
+  const pendingRows = useMemo(() => chargeBase.filter((r) => isPendingCharge(r as any)), [chargeBase]);
   const totalAReceber = pendingRows.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const sessoesPendentes = pendingRows.length;
+  const forecastRows = useMemo(() => chargeBase.filter((r) => isForecastCharge(r as any)), [chargeBase]);
+  const totalPrevistoAvulso = forecastRows.reduce((s, r) => s + Number(r.price ?? 0), 0);
 
   // 5) Receita prevista do mês
   const sessoesAgendadas = fortnightAllValid.length;
