@@ -490,7 +490,7 @@ export const PatientSessionsQuickView = ({
             combinado = String(hw.title).trim();
           }
         }
-        if (!combinado && sess?.next_session_plan) combinado = sess.next_session_plan;
+        
         return {
           id: `v2:${r.id}`,
           source: "v2" as const,
