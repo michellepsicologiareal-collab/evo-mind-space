@@ -219,7 +219,7 @@ const Finance = () => {
   const [quickAlert, setQuickAlert] = useState<QuickAlert>("none");
   const [receitaSaudeFilter, setReceitaSaudeFilter] = useState<ReceitaSaudeFilter>("all");
   // Visualização principal em cards ("Sessões do Mês")
-  const [cardPaymentFilter, setCardPaymentFilter] = useState<"pending" | "paid" | "all">("pending");
+  const [billingFilter, setBillingFilter] = useState<"all" | "enviada" | "perto" | "vencida" | "a_enviar">("all");
   const [cardSort, setCardSort] = useState<"date" | "patient">("date");
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const billingNotifiedRef = useRef<Set<string>>(new Set());
