@@ -15,8 +15,8 @@ const plan = {
     "Espaço de Autocuidado",
     "Suporte por e-mail",
   ],
-  cta: "Começar teste grátis",
-  href: "https://pay.kiwify.com.br/k4VMHLa",
+  cta: "Assinar 6 meses por R$ 58,90",
+  href: "https://pay.kiwify.com.br/36rYnQ7",
 };
 
 export const Pricing = () => {
@@ -26,30 +26,35 @@ export const Pricing = () => {
         <div className="text-center mb-12 sm:mb-16 animate-fade-up">
           <p className="text-sm font-medium tracking-wider uppercase text-accent mb-3">Plano</p>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium text-foreground text-balance">
-            PsiReal por R$ 58,90 a cada 6 meses
+            6 meses de PsiReal por R$ 58,90
           </h2>
           <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-            Teste grátis por 14 dias. Sem cartão de crédito. Cancele quando quiser.
+            Menos de R$ 10 por mês. Pagamento único a cada 6 meses, com acesso completo desde o
+            primeiro dia.
           </p>
         </div>
 
         <div className="max-w-md mx-auto">
           <div className="relative rounded-3xl border border-accent bg-card p-6 sm:p-8 flex flex-col shadow-elegant transition-all hover:-translate-y-1">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-              <span className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground text-xs font-semibold px-4 py-1.5 rounded-full">
-                <Sparkles className="h-3.5 w-3.5" /> 14 dias grátis
+              <span className="inline-flex items-center gap-1.5 bg-accent text-accent-foreground text-xs font-semibold px-4 py-1.5 rounded-full whitespace-nowrap">
+                <Sparkles className="h-3.5 w-3.5" /> Menos de R$ 10/mês
               </span>
             </div>
+
 
             <div className="mb-6 mt-2">
               <h3 className="font-display text-2xl font-medium text-foreground">{plan.name}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
             </div>
 
-            <div className="mb-6">
+            <div className="mb-2">
               <span className="font-display text-4xl font-semibold text-foreground">{plan.price}</span>
               <span className="text-muted-foreground">{plan.period}</span>
             </div>
+            <p className="mb-6 text-sm text-muted-foreground">
+              Equivale a menos de R$ 10 por mês · Renovação a cada 6 meses
+            </p>
 
             <ul className="space-y-3 mb-8 flex-1">
               {plan.features.map((f) => (
@@ -65,6 +70,14 @@ export const Pricing = () => {
                 {plan.cta}
               </Button>
             </a>
+
+            <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
+              Cobrança única de R$ 58,90 referente a 6 meses de acesso. A assinatura renova
+              automaticamente por mais 6 meses pelo mesmo valor, salvo cancelamento. Você pode
+              cancelar quando quiser, antes da próxima renovação, e continua com acesso até o fim do
+              período já pago. Pagamento seguro processado pela Kiwify.
+            </p>
+
           </div>
         </div>
       </div>

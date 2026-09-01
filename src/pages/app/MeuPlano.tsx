@@ -165,6 +165,10 @@ export default function MeuPlano() {
             <span className="font-display text-4xl sm:text-5xl font-bold text-foreground">R$ 58,90</span>
             <span className="text-muted-foreground">/6 meses</span>
           </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Menos de R$ 10 por mês · Renovação a cada 6 meses
+          </p>
+
 
           <ul className="mt-6 space-y-3">
             {planFeatures.map((feature) => (
@@ -184,6 +188,11 @@ export default function MeuPlano() {
             <p className="text-center text-xs text-muted-foreground">
               Pagamento seguro via Kiwify · Cancele quando quiser
             </p>
+            <p className="text-center text-xs text-muted-foreground leading-relaxed">
+              Cobrança única de R$ 58,90 a cada 6 meses, com renovação automática pelo mesmo valor
+              salvo cancelamento. Ao cancelar, o acesso continua até o fim do período já pago.
+            </p>
+
           </div>
         </section>
       </div>

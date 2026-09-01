@@ -48,7 +48,7 @@ export const FREE_PLAN_NAME = "Grátis";
 export const PAID_PLAN_NAME = "PsiReal Semestral";
 
 /** Fallback usado enquanto o link configurável não carrega. */
-export const DEFAULT_KIWIFY_URL = "https://pay.kiwify.com.br/k4VMHLa";
+export const DEFAULT_KIWIFY_URL = "https://pay.kiwify.com.br/36rYnQ7";
 
 export const isProblemStatus = (s: SubscriptionStatus) =>
   s === "pending" || s === "overdue" || s === "expired";

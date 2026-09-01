@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Crown, Lock } from "lucide-react";
 
-const PAYMENT_LINK = "https://pay.kiwify.com.br/k4VMHLa";
+const PAYMENT_LINK = "https://pay.kiwify.com.br/36rYnQ7";
 
 interface PremiumGateProps {
   open: boolean;
@@ -40,6 +40,10 @@ export const PremiumGate = ({ open, onOpenChange }: PremiumGateProps) => {
           <p className="text-2xl font-extrabold">
             R$ 58,90<span className="text-sm font-normal text-muted-foreground">/6 meses</span>
           </p>
+          <p className="text-xs text-muted-foreground -mt-1">
+            Menos de R$ 10 por mês · Renovação a cada 6 meses · Cancele quando quiser
+          </p>
+
 
           <Button
             variant="accent"

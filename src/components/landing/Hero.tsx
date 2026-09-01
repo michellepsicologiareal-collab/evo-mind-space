@@ -30,8 +30,8 @@ export const Hero = () => {
 
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
             <Button variant="hero" size="xl" asChild className="w-full sm:w-auto whitespace-normal text-center">
-              <a href="/auth?tab=signup">
-                Começar meus 14 dias grátis <ArrowRight className="ml-1 shrink-0" />
+              <a href="#planos">
+                Assinar 6 meses por R$ 58,90 <ArrowRight className="ml-1 shrink-0" />
               </a>
             </Button>
             <Button variant="outline" size="xl" asChild className="w-full sm:w-auto whitespace-normal text-center">
@@ -39,15 +39,16 @@ export const Hero = () => {
             </Button>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            Sem cartão de crédito · Cancele quando quiser · Acesso completo por 14 dias
+            Menos de R$ 10 por mês · Renovação a cada 6 meses · Cancele quando quiser
           </p>
           <a
             href="/auth?tab=signup"
             className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent/80 transition-colors"
           >
             <ArrowRight className="h-4 w-4" />
-            Clique e crie sua conta grátis — leva menos de 1 minuto.
+            Criar minha conta — leva menos de 1 minuto.
           </a>
+
 
           <dl className="mt-10 sm:mt-12 grid grid-cols-3 gap-3 sm:gap-6 max-w-md">
             {[

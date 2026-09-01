@@ -39,19 +39,24 @@ export const VideoTour = () => {
             Gostou do que viu? Comece hoje mesmo.
           </h3>
           <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-            Plano semestral · 6 meses de acesso completo por{" "}
-            <span className="font-semibold text-foreground">R$ 58,90</span>
+            6 meses de acesso completo por{" "}
+            <span className="font-semibold text-foreground">R$ 58,90</span> — menos de R$ 10 por mês
           </p>
           <Button asChild variant="accent" size="lg" className="mt-6 w-full sm:w-auto">
             <a href={DEFAULT_KIWIFY_URL} target="_blank" rel="noopener noreferrer">
-              Quero o plano semestral
+              Assinar 6 meses por R$ 58,90
               <ArrowRight className="ml-2 h-4 w-4" />
             </a>
           </Button>
           <p className="mt-4 text-xs text-muted-foreground inline-flex items-center justify-center gap-1.5">
-            <ShieldCheck className="h-3.5 w-3.5" /> Pagamento seguro · Acesso imediato após a confirmação
+            <ShieldCheck className="h-3.5 w-3.5" /> Pagamento seguro via Kiwify · Acesso imediato após a confirmação
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground max-w-xl mx-auto leading-relaxed">
+            Cobrança única de R$ 58,90 a cada 6 meses, com renovação automática pelo mesmo valor
+            salvo cancelamento. Cancele quando quiser e mantenha o acesso até o fim do período pago.
           </p>
         </div>
+
 
       </div>
     </section>
