@@ -1217,17 +1217,13 @@ const Finance = () => {
     load();
   };
 
-  /** Sessões que podem receber baixa: plano = qualquer pendente não cancelada;
-   *  avulsa = apenas sessões REALIZADAS e pendentes (nunca futuras). */
+  /** Sessões que podem receber baixa: qualquer sessão pendente não cancelada
+   *  (inclui sessões agendadas — pagamento antecipado é permitido). */
   const settleableSessions = (g: { isPlan: boolean; sessions: Row[] }) =>
     g.sessions
-      .filter(
-        (r) =>
-          r.payment_status === "pending" &&
-          r.status !== "cancelled" &&
-          (g.isPlan || r.status === "completed")
-      )
+      .filter((r) => r.payment_status === "pending" && r.status !== "cancelled")
       .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+
 
   const openSettle = (g: NonNullable<typeof settle>) => {
     setSettle(g);
