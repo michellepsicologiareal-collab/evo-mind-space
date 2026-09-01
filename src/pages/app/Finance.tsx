@@ -2030,6 +2030,36 @@ const Finance = () => {
             else g.receitaNone++;
           }
 
+          // Expande cards de plano com TODAS as sessões do plano (mesmo fora do mês),
+          // para exibir valor total, progresso (x/N realizadas) e baixa corretos.
+          for (const g of map.values()) {
+            if (!g.isPlan || !g.patientId) continue;
+            const planId = planGroupIdOf(g.sessions.find((s) => isPlanNotes(s.notes))?.notes);
+            if (!planId) continue;
+            const full = planRowsById.get(planId);
+            if (!full || full.length === 0) continue;
+            const byId = new Map<string, Row>();
+            for (const s of full) byId.set(s.id, s);
+            for (const s of g.sessions) byId.set(s.id, s); // garante dados frescos do mês
+            const all = Array.from(byId.values()).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+            g.sessions = all;
+            g.total = all.length;
+            g.planSessions = all.length;
+            g.realizadas = all.filter((s) => s.status === "completed").length;
+            g.faltas = all.filter((s) => s.status === "no_show").length;
+            g.futuras = all.filter((s) => s.status !== "completed" && s.status !== "no_show").length;
+            g.planValue = all.reduce((s, x) => s + Number(x.price ?? 0), 0);
+            g.pago = all.filter((s) => s.payment_status === "paid").reduce((s, x) => s + Number(x.price ?? 0), 0);
+            g.paidCount = all.filter((s) => s.payment_status === "paid").length;
+            g.emAberto = all.filter((s) => isPendingCharge(s as any)).reduce((s, x) => s + Number(x.price ?? 0), 0);
+            g.pendingCount = all.filter((s) => isPendingCharge(s as any)).length;
+            g.previsto = all.filter((s) => isForecastCharge(s as any)).reduce((s, x) => s + Number(x.price ?? 0), 0);
+            g.receitaToIssue = all.filter((s) => s.receita_saude_status === "to_issue").length;
+            g.receitaIssued = all.filter((s) => s.receita_saude_status === "issued").length;
+            g.receitaNone = all.length - g.receitaToIssue - g.receitaIssued;
+            g.lastAt = all[all.length - 1]?.scheduled_at ?? g.lastAt;
+          }
+
           const allGroups = Array.from(map.values()).map((g) => ({
             ...g,
             billing: billingStatusOf(g.sessions, billingReminderDays, g.isPlan ? "plan" : "per_session"),
