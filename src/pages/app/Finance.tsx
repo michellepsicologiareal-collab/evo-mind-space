@@ -2259,7 +2259,7 @@ const Finance = () => {
                                 className="h-8 gap-1.5 text-xs"
                                 disabled={pay === "Pago"}
                                 onClick={() =>
-                                  sendBillingWhatsApp({
+                                  setConfirmSend({
                                     key: g.key,
                                     name: g.name,
                                     patientId: g.patientId,
