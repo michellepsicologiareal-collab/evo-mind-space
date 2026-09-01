@@ -2009,9 +2009,9 @@ const Finance = () => {
                     Recebido no mês: <strong className="text-moss font-semibold tabular-nums">{formatBRL(quinzenaChartData.total)}</strong>
                   </p>
                 </div>
-                <div className="mt-3 h-40 w-full">
+                <div className="mt-3 h-44 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={quinzenaChartData.bars} margin={{ top: 20, right: 8, left: 8, bottom: 0 }} barCategoryGap="35%">
+                    <BarChart data={quinzenaChartData.bars} margin={{ top: 30, right: 8, left: 8, bottom: 0 }} barCategoryGap="35%">
                       <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                       <XAxis
                         dataKey="name"
