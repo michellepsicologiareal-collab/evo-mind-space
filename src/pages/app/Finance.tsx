@@ -1885,7 +1885,12 @@ const Finance = () => {
           const map = new Map<string, PGroup>();
           for (const r of chargeBase) {
             const patientId = r.patient?.id ?? null;
-            const key = patientId ?? `s::${r.id}`;
+            // Separa por modalidade: sessões avulsas e cada plano viram cards distintos
+            // (ex.: paciente avulsa que também tem dois planos de atendimento).
+            const planSize = isPlanNotes(r.notes) ? (r.notes?.match(/Plano (\d+) sess/i)?.[1] ?? "") : null;
+            const key = patientId
+              ? `${patientId}::${planSize !== null ? `plan-${planSize || "x"}` : "avulsa"}`
+              : `s::${r.id}`;
             let g = map.get(key);
             if (!g) {
               g = {
