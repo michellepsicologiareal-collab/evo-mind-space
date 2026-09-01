@@ -1940,7 +1940,7 @@ const Finance = () => {
             g.pendingCount === 0 ? (g.paidCount === 0 ? "—" : "Pago") : g.paidCount === 0 ? "Pendente" : "Parcial";
 
           const filterCards = [
-            { key: "enviada" as const, label: "Cobranças enviadas", hint: "Pacientes com cobrança já enviada", count: counts.enviada, icon: MessageCircle, tone: "border-sky-200 bg-sky-50/70 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400 dark:border-sky-500/25" },
+            { key: "enviada" as const, label: "Cobranças enviadas", hint: "Pacientes com cobrança já enviada", count: counts.enviada, icon: MessageCircle, tone: "border-orange-200 bg-orange-50/70 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/25" },
             { key: "perto" as const, label: "Perto do vencimento", hint: `Próximos ${billingReminderDays} dias do vencimento`, count: counts.perto, icon: Clock, tone: "border-amber-200 bg-amber-50/70 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/25" },
             { key: "vencida" as const, label: "Vencidas", hint: "Cobranças com prazo vencido", count: counts.vencida, icon: AlertTriangle, tone: "border-destructive/25 bg-destructive/10 text-destructive" },
             { key: "a_enviar" as const, label: "A enviar", hint: "Pacientes que ainda não receberam cobrança", count: counts.a_enviar, icon: BellRing, tone: "border-border bg-secondary/50 text-foreground/80" },
