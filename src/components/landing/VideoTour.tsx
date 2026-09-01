@@ -1,6 +1,9 @@
-import { Play } from "lucide-react";
+import { Play, ArrowRight, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DEFAULT_KIWIFY_URL } from "@/lib/subscription";
 
 const VIDEO_URL = "/__l5e/assets-v1/f32fd9bb-8c73-4e29-a2c2-66d0086f8834/psireal-comercial.mp4";
+
 
 export const VideoTour = () => {
   return (
