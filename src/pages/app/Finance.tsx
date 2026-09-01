@@ -1217,17 +1217,13 @@ const Finance = () => {
     load();
   };
 
-  /** Sessões que podem receber baixa: plano = qualquer pendente não cancelada;
-   *  avulsa = apenas sessões REALIZADAS e pendentes (nunca futuras). */
+  /** Sessões que podem receber baixa: qualquer sessão pendente não cancelada
+   *  (inclui sessões agendadas — pagamento antecipado é permitido). */
   const settleableSessions = (g: { isPlan: boolean; sessions: Row[] }) =>
     g.sessions
-      .filter(
-        (r) =>
-          r.payment_status === "pending" &&
-          r.status !== "cancelled" &&
-          (g.isPlan || r.status === "completed")
-      )
+      .filter((r) => r.payment_status === "pending" && r.status !== "cancelled")
       .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+
 
   const openSettle = (g: NonNullable<typeof settle>) => {
     setSettle(g);
@@ -2408,7 +2404,7 @@ const Finance = () => {
                         .map((r) => {
                           const pago = r.payment_status === "paid";
                           const realizada = r.status === "completed" || r.status === "no_show";
-                          const podeBaixar = !pago && r.status === "completed";
+                          const podeBaixar = !pago;
                           const badge = pago ? "Pago" : realizada ? "Pendente" : "Previsto";
                           const badgeTone = pago
                             ? "bg-moss/10 text-moss border-moss/20"
@@ -2432,8 +2428,7 @@ const Finance = () => {
                                 {podeBaixar && (
                                   <Button
                                     size="sm"
-                                    variant="accent"
-                                    className="h-7 text-xs"
+                                    className="h-7 text-xs bg-moss text-moss-foreground hover:bg-moss/90"
                                     disabled={settling}
                                     onClick={() =>
                                       settlePayment(
@@ -2451,7 +2446,7 @@ const Finance = () => {
                                   className="h-7 text-xs"
                                   onClick={() => { setSettle(null); setEditing(r); }}
                                 >
-                                  Editar
+                                  Detalhes
                                 </Button>
                               </span>
                             </li>
@@ -2460,8 +2455,7 @@ const Finance = () => {
                     </ul>
                     {pendentes.length > 1 && (
                       <Button
-                        variant="outline"
-                        className="w-full"
+                        className="w-full bg-moss text-moss-foreground hover:bg-moss/90"
                         disabled={settling}
                         onClick={() =>
                           settlePayment(
@@ -2470,16 +2464,17 @@ const Finance = () => {
                           )
                         }
                       >
-                        Dar baixa em todas as realizadas pendentes
+                        Dar baixa em todas as sessões pendentes
                       </Button>
                     )}
                     {futuras.length > 0 && (
                       <p className="text-[11px] text-muted-foreground">
-                        Sessões futuras aparecem como Previsto e não podem receber baixa nem entram no valor devido.
+                        Sessões futuras aparecem como Previsto e não entram no valor devido, mas podem receber baixa em caso de pagamento antecipado.
                       </p>
                     )}
                   </div>
                 )}
+
 
 
                 {settle.patientId && (
@@ -2736,44 +2731,27 @@ const PaymentDetailsDialog = ({
   onClose: () => void;
   onSaved: () => void;
 }) => {
-  const [method, setMethod] = useState<PaymentMethod | "none">("none");
-  const [reference, setReference] = useState("");
   const [receitaSaude, setReceitaSaude] = useState<ReceitaSaudeStatus | "none">("none");
+  const [pago, setPago] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [refError, setRefError] = useState<string | null>(null);
 
   useEffect(() => {
     if (row) {
-      setMethod((row.payment_method as PaymentMethod | null) ?? "none");
-      setReference(row.payment_reference ?? "");
       setReceitaSaude((row.receita_saude_status as ReceitaSaudeStatus | null) ?? "none");
-      setRefError(null);
+      setPago(row.payment_status === "paid");
     }
   }, [row]);
 
   if (!row) return null;
 
-  const requiresReference = method === "pix" || method === "card";
-  const trimmedRef = reference.trim();
-
   const save = async () => {
-    if (requiresReference && trimmedRef.length === 0) {
-      setRefError(
-        method === "pix"
-          ? "Informe a referência do PIX (ex.: comprovante, ID da transação)."
-          : "Informe a referência do cartão (ex.: últimos 4 dígitos, NSU)."
-      );
-      return;
-    }
-    setRefError(null);
     setSaving(true);
-    const ref = trimmedRef.slice(0, 500);
     const { error } = await supabase
       .from("sessions")
       .update({
-        payment_method: method === "none" ? null : method,
-        payment_reference: ref.length > 0 ? ref : null,
         receita_saude_status: receitaSaude === "none" ? null : receitaSaude,
+        payment_status: pago ? "paid" : "pending",
+        paid_at: pago ? (row.paid_at ?? new Date().toISOString()) : null,
       })
       .eq("id", row.id);
     setSaving(false);
@@ -2800,46 +2778,29 @@ const PaymentDetailsDialog = ({
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label>Método de pagamento</Label>
-            <Select value={method} onValueChange={(v) => setMethod(v as PaymentMethod | "none")}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Não informado</SelectItem>
-                <SelectItem value="pix">PIX</SelectItem>
-                <SelectItem value="card">Cartão</SelectItem>
-                <SelectItem value="cash">Dinheiro</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary/30 px-3 py-2.5">
+            <div>
+              <p className="text-sm font-medium">Pagamento</p>
+              <p className="text-xs text-muted-foreground">
+                {pago ? "Sessão registrada como paga." : "Sessão em aberto."}
+              </p>
+            </div>
+            {pago ? (
+              <Button size="sm" variant="outline" onClick={() => setPago(false)}>
+                Desfazer baixa
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                className="bg-moss text-moss-foreground hover:bg-moss/90"
+                onClick={() => setPago(true)}
+              >
+                Marcar como paga
+              </Button>
+            )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="reference">
-              Referência / nota
-              {requiresReference && <span className="text-destructive ml-1">*</span>}
-            </Label>
-            <Input
-              id="reference"
-              maxLength={500}
-              placeholder="Ex.: comprovante #1234, pago via Nubank"
-              value={reference}
-              onChange={(e) => {
-                setReference(e.target.value);
-                if (refError) setRefError(null);
-              }}
-              aria-invalid={!!refError}
-              className={refError ? "border-destructive focus-visible:ring-destructive" : ""}
-            />
-            {refError ? (
-              <p className="text-xs text-destructive">{refError}</p>
-            ) : requiresReference ? (
-              <p className="text-xs text-muted-foreground">
-                Obrigatório para {method === "pix" ? "PIX" : "cartão"}.
-              </p>
-            ) : null}
-          </div>
+
 
           <div className="space-y-2">
             <Label htmlFor="receita-saude">Receita Saúde</Label>
