@@ -130,7 +130,7 @@ export default function MeuPlano() {
           {!loading && isFree && (
             <div className="mt-6 space-y-4 rounded-2xl bg-accent/8 p-4 border border-accent/20">
               <p className="text-sm text-foreground/90">
-                Você está no plano gratuito. Assine o PsiReal Mensal para liberar todos os recursos.
+                Você está no plano gratuito. Assine o PsiReal Semestral para liberar todos os recursos.
               </p>
               <Button variant="accent" className="w-full" onClick={openCheckout}>
                 <CreditCard className="h-4 w-4 mr-1" />
@@ -155,15 +155,15 @@ export default function MeuPlano() {
           </span>
 
           <div className="mt-4">
-            <h3 className="font-display text-2xl font-semibold text-foreground">PsiReal Mensal</h3>
+            <h3 className="font-display text-2xl font-semibold text-foreground">PsiReal Semestral</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Tudo que você precisa para organizar seu consultório com clareza.
             </p>
           </div>
 
           <div className="mt-6 flex items-baseline gap-1">
-            <span className="font-display text-4xl sm:text-5xl font-bold text-foreground">R$ 15,90</span>
-            <span className="text-muted-foreground">/mês</span>
+            <span className="font-display text-4xl sm:text-5xl font-bold text-foreground">R$ 58,90</span>
+            <span className="text-muted-foreground">/6 meses</span>
           </div>
 
           <ul className="mt-6 space-y-3">
@@ -178,7 +178,7 @@ export default function MeuPlano() {
           <div className="mt-8 space-y-3">
             <Button variant="accent" size="lg" className="w-full" onClick={openCheckout}>
               <CreditCard className="h-4 w-4 mr-1" />
-              {isPremium ? "Gerenciar assinatura" : "Assinar mensalmente"}
+              {isPremium ? "Gerenciar assinatura" : "Assinar semestral"}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
             <p className="text-center text-xs text-muted-foreground">
