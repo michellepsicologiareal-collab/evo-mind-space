@@ -1188,6 +1188,45 @@ const Finance = () => {
     load();
   };
 
+  /** Sessões que podem receber baixa: plano = qualquer pendente não cancelada;
+   *  avulsa = apenas sessões REALIZADAS e pendentes (nunca futuras). */
+  const settleableSessions = (g: { isPlan: boolean; sessions: Row[] }) =>
+    g.sessions
+      .filter(
+        (r) =>
+          r.payment_status === "pending" &&
+          r.status !== "cancelled" &&
+          (g.isPlan || r.status === "completed")
+      )
+      .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+
+  const openSettle = (g: NonNullable<typeof settle>) => {
+    setSettle(g);
+    setSettleSelected(new Set(settleableSessions(g).map((r) => r.id)));
+  };
+
+  /** Registra pagamento das sessões informadas (sem duplicar: só pendentes). */
+  const settlePayment = async (ids: string[], label: string) => {
+    if (ids.length === 0) return;
+    setSettling(true);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ payment_status: "paid", paid_at: new Date().toISOString() })
+      .in("id", ids)
+      .eq("payment_status", "pending");
+    setSettling(false);
+    if (error) {
+      toast.error("Não foi possível registrar o pagamento.");
+      return;
+    }
+    toast.success(label);
+    setSettle(null);
+    setSettleSelected(new Set());
+    load();
+  };
+
+
+
 
   return (
     <div className="space-y-8 animate-fade-up">
