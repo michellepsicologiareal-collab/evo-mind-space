@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -151,6 +152,16 @@ type ReceitaSaudeFilter = "all" | "to_issue" | "issued";
 type FortnightFilter = "all" | "first" | "second";
 
 const formatBRL = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
+// Versão compacta para telas estreitas: "R$ 1,2 mil" / "R$ 850"
+const formatBRLCompact = (n: number) => {
+  const abs = Math.abs(n);
+  if (abs >= 1000) {
+    const v = n / 1000;
+    const txt = v >= 10 ? Math.round(v).toString() : v.toFixed(1).replace(".", ",");
+    return `R$ ${txt} mil`;
+  }
+  return `R$ ${Math.round(n)}`;
+};
 
 // ── Status da cobrança ────────────────────────────────────────────────
 // Regras compartilhadas com a Agenda (src/lib/billing.ts).
@@ -180,6 +191,7 @@ type QuickAlert = "none" | "receita_saude" | "sem_pagamento" | "pix_sem_conf" | 
 const Finance = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [monthCursor, setMonthCursor] = useState<Date>(new Date());
   const [rawRows, setRawRows] = useState<Row[]>([]);
@@ -2041,9 +2053,18 @@ const Finance = () => {
                     </p>
                   </div>
                 </div>
-                <div className="mx-auto mt-3 h-52 w-full max-w-2xl">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={quinzenaChartData.bars} margin={{ top: 26, right: 8, left: 8, bottom: 0 }} barCategoryGap="28%" barGap={6}>
+                 {/* Legenda manual — mais legível no mobile que o Legend do gráfico */}
+                 <div className="mt-3 flex items-center justify-center gap-5 text-xs text-muted-foreground">
+                   <span className="inline-flex items-center gap-1.5">
+                     <span className="h-2.5 w-2.5 rounded-full bg-moss" /> Recebido
+                   </span>
+                   <span className="inline-flex items-center gap-1.5">
+                     <span className="h-2.5 w-2.5 rounded-full" style={{ background: "hsl(var(--accent))" }} /> A receber
+                   </span>
+                 </div>
+                 <div className="mx-auto mt-1 h-48 w-full max-w-2xl md:h-52">
+                   <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={quinzenaChartData.bars} margin={{ top: 24, right: isMobile ? 2 : 8, left: isMobile ? 2 : 8, bottom: 0 }} barCategoryGap={isMobile ? "22%" : "28%"} barGap={isMobile ? 4 : 6}>
                       <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                       <XAxis
                         dataKey="name"
@@ -2053,12 +2074,13 @@ const Finance = () => {
                           const item = quinzenaChartData.bars.find((b) => b.name === payload.value);
                           return (
                             <g transform={`translate(${x},${y})`}>
-                              <text textAnchor="middle" dy={14} className="fill-foreground text-xs font-medium">{payload.value}</text>
-                              <text textAnchor="middle" dy={28} className="fill-muted-foreground text-[10px]">{item?.periodo}</text>
+                              <text textAnchor="middle" dy={14} className="fill-foreground text-[11px] md:text-xs font-medium">{payload.value}</text>
+                              <text textAnchor="middle" dy={27} className="fill-muted-foreground text-[10px]">{item?.periodo}</text>
                             </g>
                           );
                         }}
-                        height={44}
+                        height={42}
+                        interval={0}
                       />
                       <YAxis hide domain={[0, "dataMax"]} />
                       <RechartsTooltip
@@ -2075,20 +2097,22 @@ const Finance = () => {
                           fontSize: 12,
                         }}
                       />
-                      <Legend
-                        verticalAlign="top"
-                        align="right"
-                        iconType="circle"
-                        iconSize={8}
-                        formatter={(value: any) => (
-                          <span className="text-xs text-muted-foreground">{value === "recebido" ? "Recebido" : "A receber"}</span>
-                        )}
+                      {!isMobile && (
+                        <Legend
+                          verticalAlign="top"
+                          align="right"
+                          iconType="circle"
+                          iconSize={8}
+                          formatter={(value: any) => (
+                            <span className="text-xs text-muted-foreground">{value === "recebido" ? "Recebido" : "A receber"}</span>
+                          )}
+                        />
+                      )}
+                      <Bar dataKey="recebido" name="recebido" fill="hsl(var(--moss))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48}
+                        label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? (isMobile ? formatBRLCompact(Number(v)) : formatBRL(Number(v))) : ""), className: "fill-foreground text-[10px] md:text-[11px] font-semibold tabular-nums" } as any}
                       />
-                      <Bar dataKey="recebido" name="recebido" fill="hsl(var(--moss))" radius={[6, 6, 0, 0]} maxBarSize={48}
-                        label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? formatBRL(Number(v)) : ""), className: "fill-foreground text-[11px] font-semibold tabular-nums" } as any}
-                      />
-                      <Bar dataKey="aReceber" name="aReceber" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} maxBarSize={48}
-                        label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? formatBRL(Number(v)) : ""), className: "fill-foreground text-[11px] font-semibold tabular-nums" } as any}
+                      <Bar dataKey="aReceber" name="aReceber" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48}
+                        label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? (isMobile ? formatBRLCompact(Number(v)) : formatBRL(Number(v))) : ""), className: "fill-foreground text-[10px] md:text-[11px] font-semibold tabular-nums" } as any}
                       />
                     </BarChart>
                   </ResponsiveContainer>
@@ -2190,7 +2214,7 @@ const Finance = () => {
                         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.9fr)] lg:items-center">
                           {/* Coluna 1 — paciente e modalidade */}
                           <div className="flex items-start gap-3 min-w-0">
-                            <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-foreground/70">
+                            <span className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-xs sm:text-sm font-semibold text-foreground/70">
                               {initials || "?"}
                             </span>
                             <div className="min-w-0">
@@ -2224,7 +2248,7 @@ const Finance = () => {
                           </div>
 
                           {/* Coluna 2 — valores */}
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border/60 pt-3 lg:border-0 lg:pt-0">
                             {g.isPlan ? (
                               <>
                                 {money("Valor do plano", g.planValue)}
@@ -2242,7 +2266,7 @@ const Finance = () => {
                           </div>
 
                           {/* Coluna 3 — status e ações */}
-                          <div className="min-w-0 space-y-2">
+                          <div className="min-w-0 space-y-2 border-t border-border/60 pt-3 lg:border-0 lg:pt-0">
                             <div className="flex flex-wrap items-center gap-2">
                               <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${payTone}`}>{pay}</span>
                               {billing.status !== "na" && (
@@ -2293,7 +2317,7 @@ const Finance = () => {
                           </div>
 
                           {/* Coluna 4 — Receita Saúde + detalhes */}
-                          <div className="flex items-center justify-between gap-3 lg:flex-col lg:items-end">
+                          <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3 lg:border-0 lg:pt-0 lg:flex-col lg:items-end">
                             <div className="flex items-center gap-2">
                               <Label className="text-[11px] text-muted-foreground whitespace-nowrap">Receita Saúde:</Label>
                               <Select
