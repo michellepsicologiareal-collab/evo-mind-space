@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/landing/Navbar";
 import { Hero } from "@/components/landing/Hero";
+import { VideoTour } from "@/components/landing/VideoTour";
 import { Problem } from "@/components/landing/Problem";
 import { Features } from "@/components/landing/Features";
 import { Differential } from "@/components/landing/Differential";
@@ -17,6 +18,7 @@ const Index = () => {
       <Navbar />
       <main>
         <Hero />
+        <VideoTour />
         <Problem />
         <Features />
         <Selfcare />
