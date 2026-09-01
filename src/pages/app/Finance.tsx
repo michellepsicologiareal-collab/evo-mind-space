@@ -2117,24 +2117,29 @@ const Finance = () => {
                  </div>
                  <div className="mx-auto mt-1 h-48 w-full max-w-2xl md:h-52">
                    <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={quinzenaChartData.bars} margin={{ top: 24, right: isMobile ? 2 : 8, left: isMobile ? 2 : 8, bottom: 0 }} barCategoryGap={isMobile ? "22%" : "28%"} barGap={isMobile ? 4 : 6}>
-                      <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey="name"
-                        tickLine={false}
-                        axisLine={false}
-                        tick={({ x, y, payload }: any) => {
-                          const item = quinzenaChartData.bars.find((b) => b.name === payload.value);
-                          return (
-                            <g transform={`translate(${x},${y})`}>
-                              <text textAnchor="middle" dy={14} className="fill-foreground text-[11px] md:text-xs font-medium">{payload.value}</text>
-                              <text textAnchor="middle" dy={27} className="fill-muted-foreground text-[10px]">{item?.periodo}</text>
-                            </g>
-                          );
-                        }}
-                        height={42}
-                        interval={0}
-                      />
+                     <BarChart data={quinzenaChartData.bars} margin={{ top: 24, right: isMobile ? 2 : 8, left: isMobile ? 2 : 8, bottom: 0 }} barCategoryGap={isMobile ? "22%" : "28%"} barGap={isMobile ? 4 : 6}>
+                       <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                       <XAxis
+                         dataKey="name"
+                         tickLine={false}
+                         axisLine={false}
+                         tick={({ x, y, payload }: any) => {
+                           const idx = quinzenaChartData.bars.findIndex((b) => b.name === payload.value);
+                           const item = quinzenaChartData.bars[idx];
+                           return (
+                             <g
+                               transform={`translate(${x},${y})`}
+                               className="cursor-pointer"
+                               onClick={() => setQuinzenaDetail(idx === 0 ? 0 : 1)}
+                             >
+                               <text textAnchor="middle" dy={14} className="fill-foreground text-[11px] md:text-xs font-medium underline decoration-dotted underline-offset-4 decoration-muted-foreground/60">{payload.value}</text>
+                               <text textAnchor="middle" dy={27} className="fill-muted-foreground text-[10px]">{item?.periodo}</text>
+                             </g>
+                           );
+                         }}
+                         height={42}
+                         interval={0}
+                       />
                       <YAxis hide domain={[0, "dataMax"]} />
                       <RechartsTooltip
                         cursor={{ fill: "hsl(var(--secondary))", opacity: 0.5 }}
