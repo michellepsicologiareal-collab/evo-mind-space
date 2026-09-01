@@ -2404,7 +2404,7 @@ const Finance = () => {
                         .map((r) => {
                           const pago = r.payment_status === "paid";
                           const realizada = r.status === "completed" || r.status === "no_show";
-                          const podeBaixar = !pago && r.status === "completed";
+                          const podeBaixar = !pago;
                           const badge = pago ? "Pago" : realizada ? "Pendente" : "Previsto";
                           const badgeTone = pago
                             ? "bg-moss/10 text-moss border-moss/20"
@@ -2428,8 +2428,7 @@ const Finance = () => {
                                 {podeBaixar && (
                                   <Button
                                     size="sm"
-                                    variant="accent"
-                                    className="h-7 text-xs"
+                                    className="h-7 text-xs bg-moss text-moss-foreground hover:bg-moss/90"
                                     disabled={settling}
                                     onClick={() =>
                                       settlePayment(
@@ -2447,7 +2446,7 @@ const Finance = () => {
                                   className="h-7 text-xs"
                                   onClick={() => { setSettle(null); setEditing(r); }}
                                 >
-                                  Editar
+                                  Detalhes
                                 </Button>
                               </span>
                             </li>
@@ -2456,8 +2455,7 @@ const Finance = () => {
                     </ul>
                     {pendentes.length > 1 && (
                       <Button
-                        variant="outline"
-                        className="w-full"
+                        className="w-full bg-moss text-moss-foreground hover:bg-moss/90"
                         disabled={settling}
                         onClick={() =>
                           settlePayment(
@@ -2466,16 +2464,17 @@ const Finance = () => {
                           )
                         }
                       >
-                        Dar baixa em todas as realizadas pendentes
+                        Dar baixa em todas as sessões pendentes
                       </Button>
                     )}
                     {futuras.length > 0 && (
                       <p className="text-[11px] text-muted-foreground">
-                        Sessões futuras aparecem como Previsto e não podem receber baixa nem entram no valor devido.
+                        Sessões futuras aparecem como Previsto e não entram no valor devido, mas podem receber baixa em caso de pagamento antecipado.
                       </p>
                     )}
                   </div>
                 )}
+
 
 
                 {settle.patientId && (
