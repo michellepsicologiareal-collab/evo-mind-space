@@ -580,6 +580,32 @@ const Finance = () => {
     return weeks;
   }, [rows, monthStart, monthEnd]);
 
+  // Recebimentos por quinzena — somente pagamentos efetivos, pela DATA DO PAGAMENTO (paid_at).
+  // Respeita o filtro de paciente e o mês selecionado; independente do filtro de quinzena.
+  const quinzenaChartData = useMemo(() => {
+    const base = allValid.filter(
+      (r) =>
+        r.payment_status === "paid" &&
+        r.paid_at &&
+        (patientFilter === "all" || r.patient?.id === patientFilter) &&
+        (() => {
+          const t = new Date(r.paid_at as string).getTime();
+          return t >= monthStartMs && t <= monthEndMs;
+        })()
+    );
+    const sum = (arr: Row[]) => arr.reduce((s, r) => s + Number(r.price ?? 0), 0);
+    const first = sum(base.filter((r) => new Date(r.paid_at as string).getDate() <= 15));
+    const second = sum(base.filter((r) => new Date(r.paid_at as string).getDate() >= 16));
+    const lastDay = monthEnd.getDate();
+    return {
+      bars: [
+        { name: "1ª quinzena", periodo: "01 a 15", valor: first, fill: "hsl(var(--moss))" },
+        { name: "2ª quinzena", periodo: `16 a ${lastDay}`, valor: second, fill: "hsl(var(--accent))" },
+      ],
+      total: first + second,
+    };
+  }, [allValid, patientFilter, monthStartMs, monthEndMs, monthEnd]);
+
   // Service breakdown — agrupa por serviço/atendimento separando previsto x realizado.
   // Previsto = todas as sessões não canceladas/no_show. Realizado = sessões concluídas.
   const serviceBreakdown = useMemo(() => {
