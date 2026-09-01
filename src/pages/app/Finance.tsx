@@ -580,29 +580,44 @@ const Finance = () => {
     return weeks;
   }, [rows, monthStart, monthEnd]);
 
-  // Recebimentos por quinzena — somente pagamentos efetivos, pela DATA DO PAGAMENTO (paid_at).
+  // Quinzenas — Recebido (pagamentos efetivos, pela DATA DO PAGAMENTO) x A receber
+  // (sessões não canceladas e não pagas, pela DATA DA SESSÃO — independente de realizada ou não).
   // Respeita o filtro de paciente e o mês selecionado; independente do filtro de quinzena.
   const quinzenaChartData = useMemo(() => {
-    const base = allValid.filter(
+    const inPatient = (r: Row) => patientFilter === "all" || r.patient?.id === patientFilter;
+    const sum = (arr: Row[]) => arr.reduce((s, r) => s + Number(r.price ?? 0), 0);
+
+    const recebidoBase = allValid.filter(
       (r) =>
         r.payment_status === "paid" &&
         r.paid_at &&
-        (patientFilter === "all" || r.patient?.id === patientFilter) &&
+        inPatient(r) &&
         (() => {
           const t = new Date(r.paid_at as string).getTime();
           return t >= monthStartMs && t <= monthEndMs;
         })()
     );
-    const sum = (arr: Row[]) => arr.reduce((s, r) => s + Number(r.price ?? 0), 0);
-    const first = sum(base.filter((r) => new Date(r.paid_at as string).getDate() <= 15));
-    const second = sum(base.filter((r) => new Date(r.paid_at as string).getDate() >= 16));
+    const aReceberBase = allValid.filter(
+      (r) =>
+        r.payment_status !== "paid" &&
+        r.status !== "cancelled" &&
+        r.status !== "no_show" &&
+        inPatient(r)
+    );
+
+    const isFirst = (d: Date) => d.getDate() <= 15;
     const lastDay = monthEnd.getDate();
+    const rec1 = sum(recebidoBase.filter((r) => isFirst(new Date(r.paid_at as string))));
+    const rec2 = sum(recebidoBase.filter((r) => !isFirst(new Date(r.paid_at as string))));
+    const arec1 = sum(aReceberBase.filter((r) => isFirst(new Date(r.scheduled_at))));
+    const arec2 = sum(aReceberBase.filter((r) => !isFirst(new Date(r.scheduled_at))));
     return {
       bars: [
-        { name: "1ª quinzena", periodo: "01 a 15", valor: first, fill: "hsl(var(--moss))" },
-        { name: "2ª quinzena", periodo: `16 a ${lastDay}`, valor: second, fill: "hsl(var(--accent))" },
+        { name: "1ª quinzena", periodo: "01 a 15", recebido: rec1, aReceber: arec1 },
+        { name: "2ª quinzena", periodo: `16 a ${lastDay}`, recebido: rec2, aReceber: arec2 },
       ],
-      total: first + second,
+      totalRecebido: rec1 + rec2,
+      totalAReceber: arec1 + arec2,
     };
   }, [allValid, patientFilter, monthStartMs, monthEndMs, monthEnd]);
 
