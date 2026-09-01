@@ -2254,7 +2254,9 @@ const Finance = () => {
           <SheetHeader className="text-left">
             <SheetTitle className="font-display">{settle?.name ?? ""}</SheetTitle>
             <SheetDescription>
-              {settle?.isPlan ? "Plano de Atendimento" : "Cobrança por sessão"} · ações financeiras
+              {settle?.isPlan
+                ? "Plano de Atendimento · ações financeiras"
+                : `Sessão avulsa · ações financeiras${settle?.unitPrice ? ` · ${formatBRL(settle.unitPrice)} por sessão` : ""}`}
             </SheetDescription>
           </SheetHeader>
 
