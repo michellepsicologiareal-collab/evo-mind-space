@@ -1948,7 +1948,7 @@ const Finance = () => {
 
           const tabs = [
             { key: "all" as const, label: "Todos" },
-            { key: "enviada" as const, label: "Cobranças enviadas" },
+            { key: "enviada" as const, label: "Enviar cobrança" },
             { key: "perto" as const, label: "Perto do vencimento" },
             { key: "vencida" as const, label: "Vencidas" },
             { key: "a_enviar" as const, label: "A enviar" },
