@@ -165,6 +165,10 @@ export default function MeuPlano() {
             <span className="font-display text-4xl sm:text-5xl font-bold text-foreground">R$ 58,90</span>
             <span className="text-muted-foreground">/6 meses</span>
           </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Menos de R$ 10 por mês · Renovação a cada 6 meses
+          </p>
+
 
           <ul className="mt-6 space-y-3">
             {planFeatures.map((feature) => (
