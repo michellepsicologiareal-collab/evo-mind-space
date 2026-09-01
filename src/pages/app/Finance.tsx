@@ -1987,7 +1987,7 @@ const Finance = () => {
                 patientId,
                 sessions: [],
                 isPlan: false,
-                planSize: planSize ?? "",
+                planSize: planId?.startsWith("size-") ? planId.slice(5) : "",
                 planSessions: 0,
                 unitPrice: 0,
                 total: 0,
