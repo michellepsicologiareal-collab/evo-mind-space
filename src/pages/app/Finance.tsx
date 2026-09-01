@@ -41,6 +41,7 @@ import {
   type BillingStatus,
   isPendingCharge,
   isForecastCharge,
+  isPlanNotes,
 } from "@/lib/billing";
 import { Switch } from "@/components/ui/switch";
 import {
