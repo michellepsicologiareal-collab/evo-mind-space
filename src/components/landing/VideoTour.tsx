@@ -21,7 +21,7 @@ export const VideoTour = () => {
         <div className="relative rounded-3xl overflow-hidden shadow-elegant border border-border bg-card animate-fade-up">
           <video
             src={VIDEO_URL}
-            poster="/__l5e/assets-v1/ba29c2cf-e6ec-4db3-8340-465f65406054/psireal-comercial-poster.jpg"
+            poster="/__l5e/assets-v1/740eaa40-4fcd-4792-9504-2d94a50d8e6c/psireal-comercial-poster.jpg"
             controls
             playsInline
             preload="metadata"
