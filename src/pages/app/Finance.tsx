@@ -1112,10 +1112,11 @@ const Finance = () => {
    */
   const getBillingTarget = (list: Row[], isPlan: boolean) => {
     // Plano/pacote: cobra o valor do plano (inclui sessões futuras contratadas).
-    // Sessão avulsa: cobra apenas sessões realizadas e ainda não pagas.
+    // Sessão avulsa: permite cobrar antes ou depois da sessão — inclui
+    // realizadas, agendadas e confirmadas (exclui canceladas e faltas).
     const cobravel = isPlan
       ? list.filter((r) => r.status !== "cancelled")
-      : list.filter((r) => r.status === "completed");
+      : list.filter((r) => r.status === "completed" || r.status === "scheduled" || r.status === "confirmed");
     const pending = cobravel.filter((r) => r.payment_status === "pending");
     return pending.length ? pending : cobravel;
   };
@@ -1138,7 +1139,7 @@ const Finance = () => {
       toast.info(
         isPlan
           ? "Nada a cobrar: este plano já está quitado."
-          : "Nada a cobrar: não há sessões realizadas pendentes."
+          : "Nada a cobrar: não há sessões pendentes (realizadas ou agendadas)."
       );
       return;
     }
