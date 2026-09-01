@@ -1029,7 +1029,7 @@ const Finance = () => {
     const pending = list.filter((r) => r.payment_status === "pending" && r.status === "completed");
     const target = pending.length ? pending : list.filter((r) => r.status === "completed");
     if (target.length === 0) {
-      toast({ title: "Nada a cobrar", description: "Este grupo ainda não tem sessões realizadas." });
+      toast.info("Nada a cobrar: este grupo ainda não tem sessões realizadas.");
       return;
     }
     const ids = target.map((r) => r.id);
