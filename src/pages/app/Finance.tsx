@@ -640,16 +640,10 @@ const Finance = () => {
     const inPatient = (r: Row) => patientFilter === "all" || r.patient?.id === patientFilter;
     const sum = (arr: Row[]) => arr.reduce((s, r) => s + Number(r.price ?? 0), 0);
 
-    const recebidoBase = allValid.filter(
-      (r) =>
-        r.payment_status === "paid" &&
-        r.paid_at &&
-        inPatient(r) &&
-        (() => {
-          const t = new Date(r.paid_at as string).getTime();
-          return t >= monthStartMs && t <= monthEndMs;
-        })()
-    );
+    // Recebido = TODA sessão do mês já paga (inclusive pagamento antecipado feito em
+    // outro mês). Antes filtrávamos por paid_at dentro do mês, o que fazia sumir do
+    // gráfico as sessões pagas adiantado — a receita prevista do mês ficava menor.
+    const recebidoBase = allValid.filter((r) => r.payment_status === "paid" && inPatient(r));
     const aReceberBase = allValid.filter(
       (r) =>
         r.payment_status !== "paid" &&
@@ -660,8 +654,17 @@ const Finance = () => {
 
     const isFirst = (d: Date) => d.getDate() <= 15;
     const lastDay = monthEnd.getDate();
-    const recebidoRows1 = recebidoBase.filter((r) => isFirst(new Date(r.paid_at as string)));
-    const recebidoRows2 = recebidoBase.filter((r) => !isFirst(new Date(r.paid_at as string)));
+    // Quinzena do recebido: pela data do pagamento quando ela cai no mês; caso
+    // contrário (pagamento antecipado), pela data da sessão.
+    const refDate = (r: Row) => {
+      if (r.paid_at) {
+        const t = new Date(r.paid_at as string).getTime();
+        if (t >= monthStartMs && t <= monthEndMs) return new Date(r.paid_at as string);
+      }
+      return new Date(r.scheduled_at);
+    };
+    const recebidoRows1 = recebidoBase.filter((r) => isFirst(refDate(r)));
+    const recebidoRows2 = recebidoBase.filter((r) => !isFirst(refDate(r)));
     const aReceberRows1 = aReceberBase.filter((r) => isFirst(new Date(r.scheduled_at)));
     const aReceberRows2 = aReceberBase.filter((r) => !isFirst(new Date(r.scheduled_at)));
     const rec1 = sum(recebidoRows1);
