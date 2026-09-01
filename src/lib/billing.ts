@@ -86,9 +86,10 @@ export const computeBillingStatus = (
 };
 
 // ── Fonte única da regra de "em aberto" (cabeçalho, totais e lista) ──────
-/** Sessão criada como Plano/Pacote (marcador "Plano N sessões" em notes). */
+/** Modalidade FINANCEIRA de plano/pacote: série com pagamento único ("Pgto único").
+ *  Uma série clínica marcada como "Pgto por sessão" é cobrança avulsa. */
 export const isPlanNotes = (notes?: string | null): boolean =>
-  !!notes && /Plano \d+ sess/.test(notes);
+  !!notes && /Plano \d+ sess/.test(notes) && !/Pgto por sess/i.test(notes);
 
 export type ChargeRow = {
   status?: string | null;

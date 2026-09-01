@@ -41,6 +41,7 @@ import {
   type BillingStatus,
   isPendingCharge,
   isForecastCharge,
+  isPlanNotes,
 } from "@/lib/billing";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -208,6 +209,7 @@ const Finance = () => {
     pago: number;
     emAberto: number;
     planSessions: number;
+    unitPrice?: number;
     sessions: Row[];
   } | null>(null);
   const [settleSelected, setSettleSelected] = useState<Set<string>>(new Set());
@@ -1850,7 +1852,7 @@ const Finance = () => {
             g.sessions.push(r);
             g.total++;
             if (r.scheduled_at > g.lastAt) g.lastAt = r.scheduled_at;
-            if (isRecurringSession(r.notes)) {
+            if (isPlanNotes(r.notes)) {
               g.isPlan = true;
               g.planSessions++;
               g.planValue += price;
@@ -2253,7 +2255,9 @@ const Finance = () => {
           <SheetHeader className="text-left">
             <SheetTitle className="font-display">{settle?.name ?? ""}</SheetTitle>
             <SheetDescription>
-              {settle?.isPlan ? "Plano de Atendimento" : "Cobrança por sessão"} · ações financeiras
+              {settle?.isPlan
+                ? "Plano de Atendimento · ações financeiras"
+                : `Sessão avulsa · ações financeiras${settle?.unitPrice ? ` · ${formatBRL(settle.unitPrice)} por sessão` : ""}`}
             </SheetDescription>
           </SheetHeader>
 
@@ -2286,92 +2290,113 @@ const Finance = () => {
                   </div>
                 </div>
 
-                {pendentes.length === 0 ? (
-                  <p className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
-                    Nada a dar baixa: não há {settle.isPlan ? "valores pendentes neste plano" : "sessões realizadas pendentes"}.
-                  </p>
-                ) : settle.isPlan ? (
-                  <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
-                    <p className="text-sm font-medium text-foreground">Dar baixa no plano</p>
-                    <p className="text-xs text-muted-foreground">
-                      {settle.planSessions} {settle.planSessions === 1 ? "sessão" : "sessões"} contratadas · registrar o pagamento do valor em aberto.
+                {settle.isPlan ? (
+                  pendentes.length === 0 ? (
+                    <p className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
+                      Nada a dar baixa: não há valores pendentes neste plano.
                     </p>
-                    <p className="font-display text-2xl font-semibold tabular-nums">{formatBRL(settle.emAberto)}</p>
-                    <Button
-                      variant="accent"
-                      className="w-full"
-                      disabled={settling}
-                      onClick={() =>
-                        settlePayment(pendentes.map((r) => r.id), `Plano de ${settle.name} quitado · ${formatBRL(settle.emAberto)}`)
-                      }
-                    >
-                      Confirmar pagamento
-                    </Button>
-                  </div>
+                  ) : (
+                    <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                      <p className="text-sm font-medium text-foreground">Dar baixa no plano</p>
+                      <p className="text-xs text-muted-foreground">
+                        {settle.planSessions} {settle.planSessions === 1 ? "sessão" : "sessões"} contratadas · registrar o pagamento do valor em aberto.
+                      </p>
+                      <p className="font-display text-2xl font-semibold tabular-nums">{formatBRL(settle.emAberto)}</p>
+                      <Button
+                        variant="accent"
+                        className="w-full"
+                        disabled={settling}
+                        onClick={() =>
+                          settlePayment(pendentes.map((r) => r.id), `Plano de ${settle.name} quitado · ${formatBRL(settle.emAberto)}`)
+                        }
+                      >
+                        Confirmar pagamento
+                      </Button>
+                    </div>
+                  )
                 ) : (
                   <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
-                    <p className="text-sm font-medium text-foreground">Sessões realizadas pendentes</p>
+                    <p className="text-sm font-medium text-foreground">Sessões do período</p>
                     <ul className="space-y-2">
-                      {pendentes.map((r) => {
-                        const checked = settleSelected.has(r.id);
-                        return (
-                          <li key={r.id}>
-                            <label className="flex items-center gap-3 rounded-xl border border-border px-3 py-2 text-sm cursor-pointer hover:bg-secondary/40">
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() =>
-                                  setSettleSelected((prev) => {
-                                    const next = new Set(prev);
-                                    if (next.has(r.id)) next.delete(r.id);
-                                    else next.add(r.id);
-                                    return next;
-                                  })
-                                }
-                                className="h-4 w-4 accent-[hsl(var(--accent))]"
-                              />
-                              <span className="tabular-nums">{format(new Date(r.scheduled_at), "dd/MM")}</span>
-                              <span className="text-muted-foreground text-xs">Realizada</span>
-                              <span className="ml-auto font-medium tabular-nums">{formatBRL(Number(r.price ?? 0))}</span>
-                            </label>
-                          </li>
-                        );
-                      })}
+                      {settle.sessions
+                        .filter((r) => r.status !== "cancelled")
+                        .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
+                        .map((r) => {
+                          const pago = r.payment_status === "paid";
+                          const realizada = r.status === "completed" || r.status === "no_show";
+                          const podeBaixar = !pago && r.status === "completed";
+                          const badge = pago ? "Pago" : realizada ? "Pendente" : "Previsto";
+                          const badgeTone = pago
+                            ? "bg-moss/10 text-moss border-moss/20"
+                            : realizada
+                              ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400"
+                              : "bg-secondary text-muted-foreground border-border";
+                          return (
+                            <li
+                              key={r.id}
+                              className="rounded-xl border border-border px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm"
+                            >
+                              <span className="tabular-nums font-medium">
+                                {format(new Date(r.scheduled_at), "dd/MM/yyyy")}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {r.status === "completed" ? "Realizada" : r.status === "no_show" ? "Falta" : "Agendada"}
+                              </span>
+                              <span className="tabular-nums font-medium">{formatBRL(Number(r.price ?? 0))}</span>
+                              <span className={`text-[11px] px-2 py-0.5 rounded-full border ${badgeTone}`}>{badge}</span>
+                              <span className="ml-auto flex items-center gap-1">
+                                {podeBaixar && (
+                                  <Button
+                                    size="sm"
+                                    variant="accent"
+                                    className="h-7 text-xs"
+                                    disabled={settling}
+                                    onClick={() =>
+                                      settlePayment(
+                                        [r.id],
+                                        `Sessão de ${format(new Date(r.scheduled_at), "dd/MM/yyyy")} paga · ${formatBRL(Number(r.price ?? 0))}`
+                                      )
+                                    }
+                                  >
+                                    Dar baixa
+                                  </Button>
+                                )}
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 text-xs"
+                                  onClick={() => { setSettle(null); setEditing(r); }}
+                                >
+                                  Editar
+                                </Button>
+                              </span>
+                            </li>
+                          );
+                        })}
                     </ul>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Total selecionado</span>
-                      <strong className="tabular-nums">{formatBRL(totalSelecionado)}</strong>
-                    </div>
-                    <Button
-                      variant="accent"
-                      className="w-full"
-                      disabled={settling || selecionadas.length === 0}
-                      onClick={() =>
-                        settlePayment(
-                          selecionadas.map((r) => r.id),
-                          `${selecionadas.length} ${selecionadas.length === 1 ? "sessão paga" : "sessões pagas"} · ${formatBRL(totalSelecionado)}`
-                        )
-                      }
-                    >
-                      Dar baixa nas sessões selecionadas
-                    </Button>
+                    {pendentes.length > 1 && (
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        disabled={settling}
+                        onClick={() =>
+                          settlePayment(
+                            pendentes.map((r) => r.id),
+                            `${pendentes.length} sessões pagas · ${formatBRL(pendentes.reduce((s, r) => s + Number(r.price ?? 0), 0))}`
+                          )
+                        }
+                      >
+                        Dar baixa em todas as realizadas pendentes
+                      </Button>
+                    )}
+                    {futuras.length > 0 && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Sessões futuras aparecem como Previsto e não podem receber baixa nem entram no valor devido.
+                      </p>
+                    )}
                   </div>
                 )}
 
-                {!settle.isPlan && futuras.length > 0 && (
-                  <div className="rounded-2xl border border-dashed border-border p-4">
-                    <p className="text-xs font-medium text-muted-foreground">Sessões futuras (previstas — não podem ser quitadas)</p>
-                    <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                      {futuras.map((r) => (
-                        <li key={r.id} className="flex items-center gap-2">
-                          <span className="tabular-nums">{format(new Date(r.scheduled_at), "dd/MM")}</span>
-                          <span>· Agendada</span>
-                          <span className="ml-auto tabular-nums">{formatBRL(Number(r.price ?? 0))}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
 
                 {settle.patientId && (
                   <button
