@@ -195,6 +195,9 @@ const Finance = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [monthCursor, setMonthCursor] = useState<Date>(new Date());
   const [rawRows, setRawRows] = useState<Row[]>([]);
+  // Todas as sessões (qualquer data) dos planos de atendimento ativos no mês —
+  // usado para montar o card completo de cada plano, mesmo quando ele atravessa meses.
+  const [planRowsAll, setPlanRowsAll] = useState<Row[]>([]);
   const [patientFilter, setPatientFilter] = useState<string>("all");
   const rows = useMemo(
     () => (patientFilter === "all" ? rawRows : rawRows.filter((r) => r.patient?.id === patientFilter)),
