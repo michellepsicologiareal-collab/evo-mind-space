@@ -1029,6 +1029,105 @@ const Admin = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Editor manual de assinatura */}
+        <Dialog open={!!planUser} onOpenChange={(o) => !o && setPlanUser(null)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>
+                Assinatura · {planUser?.full_name || planUser?.email}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="plan-name">Plano</Label>
+                <Input
+                  id="plan-name"
+                  value={planForm.plan_name}
+                  onChange={(e) => setPlanForm((f) => ({ ...f, plan_name: e.target.value }))}
+                  placeholder={PAID_PLAN_NAME}
+                />
+                <div className="flex gap-2 pt-1">
+                  {[FREE_PLAN_NAME, PAID_PLAN_NAME].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setPlanForm((f) => ({ ...f, plan_name: preset }))}
+                      className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted"
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Status da assinatura</Label>
+                <div className="flex flex-wrap gap-2">
+                  {SUBSCRIPTION_STATUSES.map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setPlanForm((f) => ({ ...f, subscription_status: st }))}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${STATUS_STYLES[st]} ${planForm.subscription_status === st ? "ring-2 ring-primary ring-offset-1" : "opacity-70"}`}
+                    >
+                      <span className={`h-2 w-2 rounded-full ${STATUS_DOTS[st]}`} />
+                      {STATUS_LABELS[st]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="plan-start">Início</Label>
+                  <Input
+                    id="plan-start"
+                    type="date"
+                    value={planForm.subscription_started_at}
+                    onChange={(e) => setPlanForm((f) => ({ ...f, subscription_started_at: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="plan-payment">Último pagamento</Label>
+                  <Input
+                    id="plan-payment"
+                    type="date"
+                    value={planForm.last_payment_at}
+                    onChange={(e) => setPlanForm((f) => ({ ...f, last_payment_at: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="plan-renewal">Próxima renovação</Label>
+                  <Input
+                    id="plan-renewal"
+                    type="date"
+                    value={planForm.next_renewal_at}
+                    onChange={(e) => setPlanForm((f) => ({ ...f, next_renewal_at: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="plan-notes">Observações (visível para o usuário)</Label>
+                <Textarea
+                  id="plan-notes"
+                  rows={3}
+                  value={planForm.subscription_notes}
+                  onChange={(e) => setPlanForm((f) => ({ ...f, subscription_notes: e.target.value }))}
+                  placeholder="Ex.: pagamento confirmado via Pix em 01/09."
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="ghost" onClick={() => setPlanUser(null)}>Cancelar</Button>
+                <Button onClick={savePlan} disabled={planSaving}>
+                  {planSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar assinatura"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
