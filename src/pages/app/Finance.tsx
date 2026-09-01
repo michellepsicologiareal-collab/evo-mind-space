@@ -631,19 +631,64 @@ const Finance = () => {
 
     const isFirst = (d: Date) => d.getDate() <= 15;
     const lastDay = monthEnd.getDate();
-    const rec1 = sum(recebidoBase.filter((r) => isFirst(new Date(r.paid_at as string))));
-    const rec2 = sum(recebidoBase.filter((r) => !isFirst(new Date(r.paid_at as string))));
-    const arec1 = sum(aReceberBase.filter((r) => isFirst(new Date(r.scheduled_at))));
-    const arec2 = sum(aReceberBase.filter((r) => !isFirst(new Date(r.scheduled_at))));
+    const recebidoRows1 = recebidoBase.filter((r) => isFirst(new Date(r.paid_at as string)));
+    const recebidoRows2 = recebidoBase.filter((r) => !isFirst(new Date(r.paid_at as string)));
+    const aReceberRows1 = aReceberBase.filter((r) => isFirst(new Date(r.scheduled_at)));
+    const aReceberRows2 = aReceberBase.filter((r) => !isFirst(new Date(r.scheduled_at)));
+    const rec1 = sum(recebidoRows1);
+    const rec2 = sum(recebidoRows2);
+    const arec1 = sum(aReceberRows1);
+    const arec2 = sum(aReceberRows2);
     return {
       bars: [
         { name: "1ª quinzena", periodo: "01 a 15", recebido: rec1, aReceber: arec1 },
         { name: "2ª quinzena", periodo: `16 a ${lastDay}`, recebido: rec2, aReceber: arec2 },
       ],
+      rows: [
+        { recebido: recebidoRows1, aReceber: aReceberRows1 },
+        { recebido: recebidoRows2, aReceber: aReceberRows2 },
+      ],
       totalRecebido: rec1 + rec2,
       totalAReceber: arec1 + arec2,
     };
   }, [allValid, patientFilter, monthStartMs, monthEndMs, monthEnd]);
+
+  // Detalhe da quinzena (clique no gráfico) — agrupa por paciente
+  const [quinzenaDetail, setQuinzenaDetail] = useState<0 | 1 | null>(null);
+  const quinzenaDetailData = useMemo(() => {
+    if (quinzenaDetail === null) return null;
+    const group = quinzenaChartData.rows[quinzenaDetail];
+    const byPatient = new Map<string, {
+      name: string;
+      recebido: number; recebidoCount: number;
+      aReceber: number; aReceberCount: number;
+      earliest: number;
+    }>();
+    const ensure = (r: Row) => {
+      const id = r.patient?.id ?? "sem-paciente";
+      const name = r.patient?.full_name ?? "Sem paciente";
+      let e = byPatient.get(id);
+      if (!e) { e = { name, recebido: 0, recebidoCount: 0, aReceber: 0, aReceberCount: 0, earliest: Infinity }; byPatient.set(id, e); }
+      return e;
+    };
+    group.recebido.forEach((r) => {
+      const e = ensure(r);
+      e.recebido += Number(r.price ?? 0);
+      e.recebidoCount++;
+      e.earliest = Math.min(e.earliest, new Date(r.scheduled_at).getTime());
+    });
+    group.aReceber.forEach((r) => {
+      const e = ensure(r);
+      e.aReceber += Number(r.price ?? 0);
+      e.aReceberCount++;
+      e.earliest = Math.min(e.earliest, new Date(r.scheduled_at).getTime());
+    });
+    return {
+      title: quinzenaChartData.bars[quinzenaDetail].name,
+      periodo: quinzenaChartData.bars[quinzenaDetail].periodo,
+      patients: Array.from(byPatient.values()).sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
+    };
+  }, [quinzenaDetail, quinzenaChartData]);
 
   // Service breakdown — agrupa por serviço/atendimento separando previsto x realizado.
   // Previsto = todas as sessões não canceladas/no_show. Realizado = sessões concluídas.
