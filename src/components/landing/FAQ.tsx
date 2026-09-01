@@ -31,9 +31,10 @@ const faqs = [
     a: "Você registra sessões realizadas, cobranças e pagamentos recebidos. O sistema gera relatórios mensais automáticos, diferencia planos de atendimento de sessão única e mostra com clareza o que entrou de verdade no caixa.",
   },
   {
-    q: "Existe período de teste gratuito?",
-    a: "Sim. Você tem 14 dias grátis para testar todas as funcionalidades, sem cartão de crédito e sem compromisso.",
+    q: "Quanto custa e como funciona a renovação?",
+    a: "O PsiReal custa R$ 58,90 por 6 meses de acesso completo — menos de R$ 10 por mês. É uma cobrança única a cada semestre, renovada automaticamente pelo mesmo valor, salvo cancelamento. Você pode cancelar quando quiser antes da próxima renovação e continua com acesso até o fim do período já pago. O pagamento é processado com segurança pela Kiwify.",
   },
+
   {
     q: "Preciso instalar algum programa?",
     a: "Não. O Psi Real funciona 100% no navegador. Basta acessar psireal.app e fazer login.",
