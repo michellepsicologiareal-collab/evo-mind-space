@@ -1863,6 +1863,7 @@ const Finance = () => {
             patientId: string | null;
             sessions: Row[];
             isPlan: boolean;
+            planSize: string;
             planSessions: number;
             unitPrice: number;
             total: number;
@@ -1899,6 +1900,7 @@ const Finance = () => {
                 patientId,
                 sessions: [],
                 isPlan: false,
+                planSize: planSize ?? "",
                 planSessions: 0,
                 unitPrice: 0,
                 total: 0,
