@@ -420,13 +420,13 @@ export const PatientSessionsQuickView = ({
       const v2SessionIdList = Array.from(
         new Set(v2Rows.map((r) => r.session_id).filter((sid): sid is string => !!sid))
       );
-      const sessionsMap = new Map<string, { scheduled_at: string | null; modality: string | null; duration_minutes: number | null; status: string | null; next_session_plan: string | null }>();
+      const sessionsMap = new Map<string, { scheduled_at: string | null; modality: string | null; duration_minutes: number | null; status: string | null }>();
       const homeworkMap = new Map<string, { title: string | null; weekly_goal: string | null; actions: any }>();
       if (v2SessionIdList.length > 0) {
         const [sessRes, hwRes] = await Promise.all([
           supabase
             .from("sessions")
-            .select("id, scheduled_at, modality, duration_minutes, status, next_session_plan")
+            .select("id, scheduled_at, modality, duration_minutes, status")
             .in("id", v2SessionIdList),
           supabase
             .from("homework_tasks")
@@ -439,7 +439,6 @@ export const PatientSessionsQuickView = ({
             modality: s.modality ?? null,
             duration_minutes: s.duration_minutes ?? null,
             status: s.status ?? null,
-            next_session_plan: s.next_session_plan ?? null,
           });
         });
         (hwRes.data ?? []).forEach((h: any) => {
@@ -476,7 +475,7 @@ export const PatientSessionsQuickView = ({
       const v2Unified: UnifiedRecord[] = v2Rows.map((r) => {
         const sess = r.session_id ? sessionsMap.get(r.session_id) ?? null : null;
         const hw = r.session_id ? homeworkMap.get(r.session_id) ?? null : null;
-        // Combinado/tarefa: prioridade homework (weekly_goal > ações > título) > next_session_plan da sessão
+        // Combinado/tarefa: origem homework (weekly_goal > ações > título)
         let combinado: string | null = null;
         if (hw) {
           if (hw.weekly_goal && String(hw.weekly_goal).trim()) {
@@ -491,7 +490,7 @@ export const PatientSessionsQuickView = ({
             combinado = String(hw.title).trim();
           }
         }
-        if (!combinado && sess?.next_session_plan) combinado = sess.next_session_plan;
+        
         return {
           id: `v2:${r.id}`,
           source: "v2" as const,
