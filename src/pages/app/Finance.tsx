@@ -39,6 +39,8 @@ import {
   type BillingInput,
   type BillingMode,
   type BillingStatus,
+  isPendingCharge,
+  isForecastCharge,
 } from "@/lib/billing";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -514,10 +516,18 @@ const Finance = () => {
   const totalSaldoPagoARealizar = futurePaidRows.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const sessoesFuturasPagas = futurePaidRows.length;
 
-  // 4) A receber: somente pagamento pendente (não inclui sessão futura já paga).
-  const pendingRows = fortnightAllValid.filter((r) => r.payment_status === "pending");
+  // 4) A receber = cobranças EM ABERTO (mesma regra dos cards "Sessões do Mês"):
+  //    plano/pacote com cobrança pendente + sessão avulsa já realizada e não paga.
+  //    Sessão avulsa futura não paga entra em "Previsto", nunca em "A receber".
+  const chargeBase = useMemo(
+    () => fortnightFilter_(rows.filter((r) => r.status !== "cancelled")),
+    [rows, fortnightFilter]
+  );
+  const pendingRows = useMemo(() => chargeBase.filter((r) => isPendingCharge(r as any)), [chargeBase]);
   const totalAReceber = pendingRows.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const sessoesPendentes = pendingRows.length;
+  const forecastRows = useMemo(() => chargeBase.filter((r) => isForecastCharge(r as any)), [chargeBase]);
+  const totalPrevistoAvulso = forecastRows.reduce((s, r) => s + Number(r.price ?? 0), 0);
 
   // 5) Receita prevista do mês
   const sessoesAgendadas = fortnightAllValid.length;
@@ -1380,7 +1390,7 @@ const Finance = () => {
         <KpiCard icon={Wallet} label="Recebido no período" value={formatBRL(totalRecebido)} hint={`Pagamentos confirmados no período · ${sessoesPagas} sessões`} accent />
         <KpiCard icon={Receipt} label="Receita realizada" value={formatBRL(totalReceitaRealizada)} hint={`${sessoesRealizadas} sessões realizadas`} />
         <KpiCard icon={CalendarClock} label="Saldo pago a realizar" value={formatBRL(totalSaldoPagoARealizar)} hint={`${sessoesFuturasPagas} sessões futuras já pagas`} />
-        <KpiCard icon={Clock} label="A receber" value={formatBRL(totalAReceber)} hint={`${sessoesPendentes} pagamentos pendentes`} />
+        <KpiCard icon={Clock} label="A receber" value={formatBRL(totalAReceber)} hint={`${sessoesPendentes} cobranças em aberto${totalPrevistoAvulso > 0 ? ` · ${formatBRL(totalPrevistoAvulso)} previsto` : ""}`} />
         <KpiCard icon={CalendarClock} label="Receita prevista do mês" value={formatBRL(totalPrevisto)} hint={`${sessoesAgendadas} sessões agendadas`} />
       </section>
 
@@ -1388,7 +1398,7 @@ const Finance = () => {
       <section className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {([
           { key: "receita_saude" as QuickAlert, label: "Receita Saúde pendente", hint: `${receitaSaudeToIssue.length} a emitir`, icon: Receipt, count: receitaSaudeToIssue.length, tone: "text-amber-600 bg-amber-50 border-amber-200", clickable: true },
-          { key: "sem_pagamento" as QuickAlert, label: "Sessões realizadas sem pagamento", hint: `${sessoesPendentes} pendentes`, icon: FileWarning, count: sessoesPendentes, tone: "text-destructive bg-destructive/10 border-destructive/30", clickable: true },
+          { key: "sem_pagamento" as QuickAlert, label: "Cobranças em aberto", hint: `${sessoesPendentes} pendentes · ${formatBRL(totalAReceber)}`, icon: FileWarning, count: sessoesPendentes, tone: "text-destructive bg-destructive/10 border-destructive/30", clickable: true },
           { key: "none" as QuickAlert, label: "Planos de Atendimento no mês", hint: `${packagesStats.sessions} ${packagesStats.sessions === 1 ? "sessão vinculada" : "sessões vinculadas"} a Planos de Atendimento`, icon: PackageOpen, count: packagesStats.count, tone: "text-primary bg-secondary/60 border-border", clickable: false },
           { key: "none" as QuickAlert, label: "Sessões únicas no mês", hint: `${avulsasStats.patients} ${avulsasStats.patients === 1 ? "paciente" : "pacientes"} com sessões únicas`, icon: CalendarClock, count: avulsasStats.count, tone: "text-foreground bg-card border-border", clickable: false },
         ]).map((a, idx) => {
@@ -1961,7 +1971,7 @@ const Finance = () => {
             lastAt: string;
           };
 
-          const baseRows = fortnightFilter_(rows.filter((r) => r.status !== "cancelled"));
+          const baseRows = chargeBase;
           const map = new Map<string, Group>();
 
           for (const r of baseRows) {
@@ -1987,11 +1997,10 @@ const Finance = () => {
             g.totalValue += Number(r.price ?? 0);
             if (r.scheduled_at < g.firstAt) g.firstAt = r.scheduled_at;
             if (r.scheduled_at > g.lastAt) g.lastAt = r.scheduled_at;
-            // Modalidade de cobrança define o que entra em aberto:
-            // - Plano/pacote: todo o valor contratado é cobrável (inclusive sessões futuras).
-            // - Sessão avulsa: só sessões realizadas geram pendência.
+            // Fonte única (src/lib/billing.ts): plano em aberto conta mesmo com sessões
+            // futuras; sessão avulsa só depois de realizada (futura = previsto).
             if (r.payment_status === "paid") { g.paidCount++; g.paidValue += Number(r.price ?? 0); }
-            else if (isPlan || r.status === "completed") { g.pendingCount++; g.pendingValue += Number(r.price ?? 0); }
+            else if (isPendingCharge(r as any)) { g.pendingCount++; g.pendingValue += Number(r.price ?? 0); }
             if (r.receita_saude_status === "to_issue") g.receitaToIssue++;
             else if (r.receita_saude_status === "issued") g.receitaIssued++;
             else g.receitaNone++;
