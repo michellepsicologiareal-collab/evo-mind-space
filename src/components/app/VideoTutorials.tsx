@@ -16,17 +16,26 @@ interface VideoModule {
 
 /** Demonstrações gravadas no sistema real, separadas por módulo. */
 export const videoModules: VideoModule[] = [
-  { file: "01-visao-geral.mp4", title: "Visão geral", description: "Login, menu lateral e como o sistema está organizado.", duration: "0:54", seconds: 54 },
-  { file: "02-painel.mp4", title: "Painel", description: "Indicadores do dia, aniversariantes e formulações pendentes.", duration: "0:22", seconds: 22 },
-  { file: "03-agenda.mp4", title: "Agenda", description: "Criar, editar e acompanhar sessões com status coloridos.", duration: "1:14", seconds: 74 },
-  { file: "04-pacientes.mp4", title: "Pacientes", description: "Cadastro clínico, prontuário por abas e lixeira de 30 dias.", duration: "0:55", seconds: 55 },
-  { file: "05-registro-sessao.mp4", title: "Registro de Sessão", description: "Preencher a sessão, salvar e atualizar o plano no drawer.", duration: "0:43", seconds: 43 },
-  { file: "06-plano-atendimento.mp4", title: "Plano de Atendimento", description: "Sessões contratadas, realizadas e restantes.", duration: "0:25", seconds: 25 },
-  { file: "07-financeiro.mp4", title: "Financeiro", description: "Resumo, filtros e baixa de pagamento direto no card.", duration: "1:16", seconds: 76 },
-  { file: "08-cobranca-whatsapp.mp4", title: "Cobrança por WhatsApp", description: "Enviar, reenviar e acompanhar o status da cobrança.", duration: "0:27", seconds: 27 },
-  { file: "09-receita-saude.mp4", title: "Receita Saúde", description: "Não emitida, Emitida e Não se aplica direto no card.", duration: "0:42", seconds: 42 },
-  { file: "10-historico-detalhes.mp4", title: "Histórico e detalhes", description: "Histórico de lembretes e financeiro por plano.", duration: "0:21", seconds: 21 },
-  { file: "11-demais-modulos.mp4", title: "Demais módulos", description: "Humor, Autocuidado, Anamneses, Termo, Contratos e Configurações.", duration: "1:13", seconds: 73 },
+  { file: "01-visao-geral.mp4", title: "1. Visão geral", description: "Comece por aqui: login, menu lateral e como o sistema está organizado.", duration: "0:54", seconds: 54 },
+  { file: "02-painel.mp4", title: "2. Painel", description: "Veja os indicadores do dia, aniversariantes e o que está pendente.", duration: "0:22", seconds: 22 },
+  { file: "03-agenda.mp4", title: "3. Agenda", description: "Crie, edite e acompanhe sessões com status coloridos.", duration: "1:14", seconds: 74 },
+  { file: "04-pacientes.mp4", title: "4. Pacientes", description: "Cadastre pacientes e navegue pelo prontuário por abas.", duration: "0:55", seconds: 55 },
+  { file: "05-registro-sessao.mp4", title: "5. Registro de Sessão", description: "Registre o atendimento e atualize o plano sem sair da tela.", duration: "0:43", seconds: 43 },
+  { file: "06-plano-atendimento.mp4", title: "6. Plano de Atendimento", description: "Controle sessões contratadas, realizadas e restantes.", duration: "0:25", seconds: 25 },
+  { file: "12-formulacao-caso.mp4", title: "7. Formulação de Caso", description: "Monte a formulação nos modelos TCC, Terapia do Esquema e ACT.", duration: "1:34", seconds: 95 },
+  { file: "13-tcc-atividades.mp4", title: "8. Registro TCC e atividades", description: "Envie um registro TCC para o paciente preencher entre as sessões.", duration: "1:02", seconds: 63 },
+  { file: "14-resumo-ia.mp4", title: "9. Resumo com IA", description: "Gere um resumo clínico de apoio a partir dos registros do paciente.", duration: "0:49", seconds: 49 },
+  { file: "07-financeiro.mp4", title: "10. Financeiro", description: "Acompanhe o mês, filtre e dê baixa no pagamento pelo card.", duration: "1:16", seconds: 76 },
+  { file: "08-cobranca-whatsapp.mp4", title: "11. Cobrança por WhatsApp", description: "Envie, reenvie e acompanhe o status de cada cobrança.", duration: "0:27", seconds: 27 },
+  { file: "09-receita-saude.mp4", title: "12. Receita Saúde", description: "Marque Não emitida, Emitida ou Não se aplica direto no card.", duration: "0:42", seconds: 42 },
+  { file: "10-historico-detalhes.mp4", title: "13. Histórico e detalhes", description: "Consulte lembretes enviados e o financeiro por plano.", duration: "0:21", seconds: 21 },
+  { file: "15-humor-pacientes.mp4", title: "14. Humor dos Pacientes", description: "Acompanhe a evolução do humor entre as sessões.", duration: "0:40", seconds: 40 },
+  { file: "16-autocuidado.mp4", title: "15. Autocuidado do Terapeuta", description: "Faça seu check-in e acompanhe seus padrões no heatmap.", duration: "0:32", seconds: 33 },
+  { file: "17-anamneses.mp4", title: "16. Anamneses", description: "Envie a anamnese de adulto ou criança e receba as respostas.", duration: "0:31", seconds: 32 },
+  { file: "18-termo-consentimento.mp4", title: "17. Termo de Consentimento", description: "Monte o modelo com suas cláusulas e gere o link de assinatura.", duration: "0:42", seconds: 43 },
+  { file: "19-contratos.mp4", title: "18. Contratos", description: "Veja os termos já assinados e consulte cada documento.", duration: "0:36", seconds: 37 },
+  { file: "20-lixeira.mp4", title: "19. Lixeira de pacientes", description: "Entenda como excluir, restaurar e recuperar pacientes por até 30 dias.", duration: "1:48", seconds: 109 },
+  { file: "11-demais-modulos.mp4", title: "20. Outros módulos e ajustes", description: "Supervisão, configurações, metas e preferências do sistema.", duration: "1:13", seconds: 73 },
 ];
 
 interface ProgressRow {
