@@ -1971,7 +1971,7 @@ const Finance = () => {
             lastAt: string;
           };
 
-          const baseRows = fortnightFilter_(rows.filter((r) => r.status !== "cancelled"));
+          const baseRows = chargeBase;
           const map = new Map<string, Group>();
 
           for (const r of baseRows) {
