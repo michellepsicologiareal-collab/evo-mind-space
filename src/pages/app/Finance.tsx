@@ -2182,6 +2182,68 @@ const Finance = () => {
                 </p>
               </div>
 
+              {/* Detalhe da quinzena — pacientes recebidos x a receber */}
+              <Sheet open={quinzenaDetail !== null} onOpenChange={(o) => !o && setQuinzenaDetail(null)}>
+                <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle className="font-display">
+                      Pacientes · {quinzenaDetailData?.title}
+                    </SheetTitle>
+                    <SheetDescription>
+                      {quinzenaDetailData ? `Dias ${quinzenaDetailData.periodo} — recebido e a receber por paciente` : ""}
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-5 space-y-3">
+                    {quinzenaDetailData?.patients.length === 0 && (
+                      <div className="rounded-2xl border border-dashed border-border bg-secondary/40 p-6 text-center">
+                        <p className="text-sm text-muted-foreground">Nenhuma movimentação nesta quinzena.</p>
+                      </div>
+                    )}
+                    {quinzenaDetailData?.patients.map((p) => (
+                      <div key={p.name} className="rounded-2xl border border-border bg-card p-4">
+                        <p className="font-display text-sm font-semibold text-foreground">{p.name}</p>
+                        <div className="mt-2 space-y-1.5 text-sm">
+                          {p.recebido > 0 && (
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                                <span className="h-2 w-2 rounded-full bg-moss" />
+                                Recebido · {p.recebidoCount} {p.recebidoCount === 1 ? "sessão" : "sessões"}
+                              </span>
+                              <strong className="text-moss font-semibold tabular-nums">{formatBRL(p.recebido)}</strong>
+                            </div>
+                          )}
+                          {p.aReceber > 0 && (
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                                <span className="h-2 w-2 rounded-full" style={{ background: "hsl(var(--accent))" }} />
+                                A receber · {p.aReceberCount} {p.aReceberCount === 1 ? "sessão" : "sessões"}
+                              </span>
+                              <strong className="font-semibold tabular-nums" style={{ color: "hsl(var(--accent))" }}>{formatBRL(p.aReceber)}</strong>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {quinzenaDetailData && quinzenaDetailData.patients.length > 0 && (
+                      <div className="rounded-2xl bg-secondary/60 p-4 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Total recebido</span>
+                          <strong className="text-moss font-semibold tabular-nums">
+                            {formatBRL(quinzenaDetailData.patients.reduce((s, p) => s + p.recebido, 0))}
+                          </strong>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between">
+                          <span className="text-muted-foreground">Total a receber</span>
+                          <strong className="font-semibold tabular-nums" style={{ color: "hsl(var(--accent))" }}>
+                            {formatBRL(quinzenaDetailData.patients.reduce((s, p) => s + p.aReceber, 0))}
+                          </strong>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+
               {/* Abas + ordenação */}
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-b border-border">
                 <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
