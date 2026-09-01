@@ -38,7 +38,7 @@ export const PremiumGate = ({ open, onOpenChange }: PremiumGateProps) => {
           </div>
 
           <p className="text-2xl font-extrabold">
-            R$ 15,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
+            R$ 58,90<span className="text-sm font-normal text-muted-foreground">/6 meses</span>
           </p>
 
           <Button

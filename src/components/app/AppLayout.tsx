@@ -425,7 +425,7 @@ export const AppLayout = () => {
                 </p>
               </div>
               <p className="text-3xl font-extrabold">
-                R$ 15,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
+                R$ 58,90<span className="text-sm font-normal text-muted-foreground">/6 meses</span>
               </p>
               <Button variant="accent" size="lg" asChild>
                 <a href="https://pay.kiwify.com.br/k4VMHLa" target="_blank" rel="noopener noreferrer">

@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 
 const plan = {
   name: "PsiReal",
-  price: "R$ 15,90",
-  period: "/mês",
+  price: "R$ 58,90",
+  period: "/6 meses",
   description: "Tudo que você precisa para organizar seu consultório com clareza.",
   features: [
     "Pacientes ilimitados",
@@ -26,7 +26,7 @@ export const Pricing = () => {
         <div className="text-center mb-12 sm:mb-16 animate-fade-up">
           <p className="text-sm font-medium tracking-wider uppercase text-accent mb-3">Plano</p>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium text-foreground text-balance">
-            PsiReal por R$ 15,90/mês
+            PsiReal por R$ 58,90/mês
           </h2>
           <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
             Teste grátis por 14 dias. Sem cartão de crédito. Cancele quando quiser.

@@ -162,8 +162,8 @@ export default function MeuPlano() {
           </div>
 
           <div className="mt-6 flex items-baseline gap-1">
-            <span className="font-display text-4xl sm:text-5xl font-bold text-foreground">R$ 15,90</span>
-            <span className="text-muted-foreground">/mês</span>
+            <span className="font-display text-4xl sm:text-5xl font-bold text-foreground">R$ 58,90</span>
+            <span className="text-muted-foreground">/6 meses</span>
           </div>
 
           <ul className="mt-6 space-y-3">
