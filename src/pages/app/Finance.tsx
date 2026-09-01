@@ -1098,6 +1098,16 @@ const Finance = () => {
    * Reutiliza o mesmo modelo de mensagem da Agenda e o mesmo registro
    * financeiro (sessions.billing_sent_at + billing_reminder_logs).
    */
+  const getBillingTarget = (list: Row[], isPlan: boolean) => {
+    // Plano/pacote: cobra o valor do plano (inclui sessões futuras contratadas).
+    // Sessão avulsa: cobra apenas sessões realizadas e ainda não pagas.
+    const cobravel = isPlan
+      ? list.filter((r) => r.status !== "cancelled")
+      : list.filter((r) => r.status === "completed");
+    const pending = cobravel.filter((r) => r.payment_status === "pending");
+    return pending.length ? pending : cobravel;
+  };
+
   const sendBillingWhatsApp = async (args: {
     key: string;
     name: string;
@@ -1111,13 +1121,7 @@ const Finance = () => {
     const { key, name, patientId, sessions: list, isResend, isPlan } = args;
     if (!user || list.length === 0) return;
 
-    // Plano/pacote: cobra o valor do plano (inclui sessões futuras contratadas).
-    // Sessão avulsa: cobra apenas sessões realizadas e ainda não pagas.
-    const cobravel = isPlan
-      ? list.filter((r) => r.status !== "cancelled")
-      : list.filter((r) => r.status === "completed");
-    const pending = cobravel.filter((r) => r.payment_status === "pending");
-    const target = pending.length ? pending : cobravel;
+    const target = getBillingTarget(list, !!isPlan);
     if (target.length === 0) {
       toast.info(
         isPlan
