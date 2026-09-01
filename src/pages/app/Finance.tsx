@@ -30,7 +30,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from "recharts";
 import { BillingBadge } from "@/components/app/BillingBadge";
 import {
   BILLING_LABEL,
@@ -44,6 +44,7 @@ import {
   isPendingCharge,
   isForecastCharge,
   isPlanNotes,
+  planGroupIdOf,
 } from "@/lib/billing";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -195,6 +196,9 @@ const Finance = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [monthCursor, setMonthCursor] = useState<Date>(new Date());
   const [rawRows, setRawRows] = useState<Row[]>([]);
+  // Todas as sessões (qualquer data) dos planos de atendimento ativos no mês —
+  // usado para montar o card completo de cada plano, mesmo quando ele atravessa meses.
+  const [planRowsAll, setPlanRowsAll] = useState<Row[]>([]);
   const [patientFilter, setPatientFilter] = useState<string>("all");
   const rows = useMemo(
     () => (patientFilter === "all" ? rawRows : rawRows.filter((r) => r.patient?.id === patientFilter)),
@@ -406,7 +410,32 @@ const Finance = () => {
       setLoading(false);
       return;
     }
-    setRawRows((data ?? []) as any);
+    const monthRows = (data ?? []) as any[];
+    setRawRows(monthRows);
+
+    // Planos de atendimento podem atravessar meses (ex.: "Plano 2 sessões (1/2)" em
+    // agosto e "(2/2)" em setembro). Para o card mostrar o plano completo, buscamos
+    // TODAS as sessões dos planos que têm ao menos uma sessão no mês — agrupadas
+    // pelo identificador único do plano presente nas notas ([xxxxxxxx]).
+    const planIds = Array.from(
+      new Set(
+        monthRows
+          .map((r) => planGroupIdOf(r.notes))
+          .filter((v): v is string => !!v)
+      )
+    );
+    if (planIds.length > 0) {
+      const orFilter = planIds.map((id) => `notes.ilike.%[${id}]%`).join(",");
+      const { data: planData } = await supabase
+        .from("sessions")
+        .select(selectCols)
+        .eq("user_id", user.id)
+        .neq("status", "cancelled")
+        .or(orFilter);
+      setPlanRowsAll((planData ?? []) as any);
+    } else {
+      setPlanRowsAll([]);
+    }
     setLoading(false);
   };
 
@@ -1929,14 +1958,26 @@ const Finance = () => {
             lastAt: string;
           };
 
+          // Índice das sessões completas de cada plano (qualquer data), por ID do plano.
+          const planRowsById = new Map<string, Row[]>();
+          for (const r of planRowsAll) {
+            const pid = planGroupIdOf(r.notes);
+            if (!pid) continue;
+            const arr = planRowsById.get(pid) ?? [];
+            arr.push(r);
+            planRowsById.set(pid, arr);
+          }
+
           const map = new Map<string, PGroup>();
           for (const r of chargeBase) {
             const patientId = r.patient?.id ?? null;
             // Separa por modalidade: sessões avulsas e cada plano viram cards distintos
             // (ex.: paciente avulsa que também tem dois planos de atendimento).
-            const planSize = isPlanNotes(r.notes) ? (r.notes?.match(/Plano (\d+) sess/i)?.[1] ?? "") : null;
+            // A chave do plano usa o identificador único das notas — nunca o número de
+            // sessões — para não misturar planos diferentes de mesmo tamanho.
+            const planId = isPlanNotes(r.notes) ? (planGroupIdOf(r.notes) ?? `size-${r.notes?.match(/Plano (\d+) sess/i)?.[1] ?? "x"}`) : null;
             const key = patientId
-              ? `${patientId}::${planSize !== null ? `plan-${planSize || "x"}` : "avulsa"}`
+              ? `${patientId}::${planId !== null ? `plan-${planId}` : "avulsa"}`
               : `s::${r.id}`;
             let g = map.get(key);
             if (!g) {
@@ -1946,7 +1987,7 @@ const Finance = () => {
                 patientId,
                 sessions: [],
                 isPlan: false,
-                planSize: planSize ?? "",
+                planSize: planId?.startsWith("size-") ? planId.slice(5) : "",
                 planSessions: 0,
                 unitPrice: 0,
                 total: 0,
@@ -1987,6 +2028,36 @@ const Finance = () => {
             if (r.receita_saude_status === "to_issue") g.receitaToIssue++;
             else if (r.receita_saude_status === "issued") g.receitaIssued++;
             else g.receitaNone++;
+          }
+
+          // Expande cards de plano com TODAS as sessões do plano (mesmo fora do mês),
+          // para exibir valor total, progresso (x/N realizadas) e baixa corretos.
+          for (const g of map.values()) {
+            if (!g.isPlan || !g.patientId) continue;
+            const planId = planGroupIdOf(g.sessions.find((s) => isPlanNotes(s.notes))?.notes);
+            if (!planId) continue;
+            const full = planRowsById.get(planId);
+            if (!full || full.length === 0) continue;
+            const byId = new Map<string, Row>();
+            for (const s of full) byId.set(s.id, s);
+            for (const s of g.sessions) byId.set(s.id, s); // garante dados frescos do mês
+            const all = Array.from(byId.values()).sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+            g.sessions = all;
+            g.total = all.length;
+            g.planSessions = all.length;
+            g.realizadas = all.filter((s) => s.status === "completed").length;
+            g.faltas = all.filter((s) => s.status === "no_show").length;
+            g.futuras = all.filter((s) => s.status !== "completed" && s.status !== "no_show").length;
+            g.planValue = all.reduce((s, x) => s + Number(x.price ?? 0), 0);
+            g.pago = all.filter((s) => s.payment_status === "paid").reduce((s, x) => s + Number(x.price ?? 0), 0);
+            g.paidCount = all.filter((s) => s.payment_status === "paid").length;
+            g.emAberto = all.filter((s) => isPendingCharge(s as any)).reduce((s, x) => s + Number(x.price ?? 0), 0);
+            g.pendingCount = all.filter((s) => isPendingCharge(s as any)).length;
+            g.previsto = all.filter((s) => isForecastCharge(s as any)).reduce((s, x) => s + Number(x.price ?? 0), 0);
+            g.receitaToIssue = all.filter((s) => s.receita_saude_status === "to_issue").length;
+            g.receitaIssued = all.filter((s) => s.receita_saude_status === "issued").length;
+            g.receitaNone = all.length - g.receitaToIssue - g.receitaIssued;
+            g.lastAt = all[all.length - 1]?.scheduled_at ?? g.lastAt;
           }
 
           const allGroups = Array.from(map.values()).map((g) => ({
@@ -2155,25 +2226,14 @@ const Finance = () => {
                           fontSize: 12,
                         }}
                       />
-                      {!isMobile && (
-                        <Legend
-                          verticalAlign="top"
-                          align="right"
-                          iconType="circle"
-                          iconSize={8}
-                          formatter={(value: any) => (
-                            <span className="text-xs text-muted-foreground">{value === "recebido" ? "Recebido" : "A receber"}</span>
-                          )}
-                        />
-                      )}
-                      <Bar dataKey="recebido" name="recebido" fill="hsl(var(--moss))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48} className="cursor-pointer"
-                        onClick={(data: any) => { const idx = quinzenaChartData.bars.findIndex((b) => b.name === data?.name); if (idx >= 0) setQuinzenaDetail(idx as 0 | 1); }}
-                        label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? (isMobile ? formatBRLCompact(Number(v)) : formatBRL(Number(v))) : ""), className: "fill-foreground text-[10px] md:text-[11px] font-semibold tabular-nums" } as any}
-                      />
-                      <Bar dataKey="aReceber" name="aReceber" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48} className="cursor-pointer"
-                        onClick={(data: any) => { const idx = quinzenaChartData.bars.findIndex((b) => b.name === data?.name); if (idx >= 0) setQuinzenaDetail(idx as 0 | 1); }}
-                        label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? (isMobile ? formatBRLCompact(Number(v)) : formatBRL(Number(v))) : ""), className: "fill-foreground text-[10px] md:text-[11px] font-semibold tabular-nums" } as any}
-                      />
+                       <Bar dataKey="recebido" name="recebido" fill="hsl(var(--moss))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48} className="cursor-pointer"
+                         onClick={(data: any) => { const idx = quinzenaChartData.bars.findIndex((b) => b.name === data?.name); if (idx >= 0) setQuinzenaDetail(idx as 0 | 1); }}
+                         label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? formatBRLCompact(Number(v)) : ""), className: "fill-foreground text-[10px] md:text-[11px] font-semibold tabular-nums" } as any}
+                       />
+                       <Bar dataKey="aReceber" name="aReceber" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48} className="cursor-pointer"
+                         onClick={(data: any) => { const idx = quinzenaChartData.bars.findIndex((b) => b.name === data?.name); if (idx >= 0) setQuinzenaDetail(idx as 0 | 1); }}
+                         label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? formatBRLCompact(Number(v)) : ""), className: "fill-foreground text-[10px] md:text-[11px] font-semibold tabular-nums" } as any}
+                       />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

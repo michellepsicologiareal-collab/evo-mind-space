@@ -91,6 +91,13 @@ export const computeBillingStatus = (
 export const isPlanNotes = (notes?: string | null): boolean =>
   !!notes && /Plano \d+ sess/.test(notes) && !/Pgto por sess/i.test(notes);
 
+/** Identificador único do plano de atendimento gravado nas notas da sessão
+ *  (ex.: "Plano 2 sessões (1/2) — Pgto único [523258e5]" → "523258e5").
+ *  Permite agrupar todas as sessões do MESMO plano, mesmo entre meses
+ *  diferentes e mesmo quando dois planos têm o mesmo número de sessões. */
+export const planGroupIdOf = (notes?: string | null): string | null =>
+  notes?.match(/\[([0-9a-z]{6,})\]/i)?.[1]?.toLowerCase() ?? null;
+
 export type ChargeRow = {
   status?: string | null;
   payment_status?: string | null;
