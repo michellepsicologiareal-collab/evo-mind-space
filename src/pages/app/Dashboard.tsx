@@ -683,7 +683,7 @@ export default function Dashboard() {
               <span className="text-foreground font-medium">{nextTime}</span>
             </p>
           </div>
-          <PlanStatusBadge className="md:hidden" />
+          <PlanStatusBadge className="md:order-last" />
           <div className="flex w-full items-center gap-2 md:w-auto">
 
             <Button
