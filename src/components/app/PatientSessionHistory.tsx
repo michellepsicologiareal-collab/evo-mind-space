@@ -294,9 +294,32 @@ export const PatientSessionHistory = ({ patientId, patientName = "Paciente" }: S
           <TabsTrigger value="payment">Por Pagamento</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="space-y-2 mt-3">
-          {sessions.map((s) => <SessionCard key={s.id} s={s} />)}
+        <TabsContent value="all" className="space-y-4 mt-3">
+          {(() => {
+            const isPlan = (n?: string | null) =>
+              !!n && /Plano \d+ sess/.test(n) && !/Pgto por sess/i.test(n);
+            const grupos: { label: string; items: SessionRow[] }[] = [
+              { label: "Plano de Atendimento", items: sessions.filter((s) => isPlan(s.notes)) },
+              { label: "Sessão avulsa", items: sessions.filter((s) => !isPlan(s.notes)) },
+            ].filter((g) => g.items.length > 0);
+            return grupos.map((g) => (
+              <div key={g.label}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium bg-muted text-foreground/80">
+                    {g.label}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    ({g.items.length}) — R$ {g.items.filter(s => s.price).reduce((sum, s) => sum + Number(s.price), 0).toFixed(2).replace(".", ",")}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {g.items.map((s) => <SessionCard key={s.id} s={s} />)}
+                </div>
+              </div>
+            ));
+          })()}
         </TabsContent>
+
 
         <TabsContent value="status" className="space-y-4 mt-3">
           {Object.entries(byStatus).map(([status, items]) => (
