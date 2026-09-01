@@ -259,6 +259,18 @@ const Finance = () => {
   const [reminderLogsVersion, setReminderLogsVersion] = useState(0);
   const [reminderHistoryPlan, setReminderHistoryPlan] = useState<{ key: string; name: string } | null>(null);
 
+  // ── Tela de conferência antes de enviar cobrança ────────────────────────
+  const [confirmSend, setConfirmSend] = useState<{
+    key: string;
+    name: string;
+    patientId: string | null;
+    sessions: Row[];
+    isPlan: boolean;
+    dueDate: string | null;
+    status: BillingStatus;
+    isResend: boolean;
+  } | null>(null);
+
   // ── Dados para o envio de cobrança pelo WhatsApp (mesma lógica da Agenda) ──
   const [pixKey, setPixKey] = useState<string>("");
   const [psiName, setPsiName] = useState<string>("");
@@ -1086,6 +1098,16 @@ const Finance = () => {
    * Reutiliza o mesmo modelo de mensagem da Agenda e o mesmo registro
    * financeiro (sessions.billing_sent_at + billing_reminder_logs).
    */
+  const getBillingTarget = (list: Row[], isPlan: boolean) => {
+    // Plano/pacote: cobra o valor do plano (inclui sessões futuras contratadas).
+    // Sessão avulsa: cobra apenas sessões realizadas e ainda não pagas.
+    const cobravel = isPlan
+      ? list.filter((r) => r.status !== "cancelled")
+      : list.filter((r) => r.status === "completed");
+    const pending = cobravel.filter((r) => r.payment_status === "pending");
+    return pending.length ? pending : cobravel;
+  };
+
   const sendBillingWhatsApp = async (args: {
     key: string;
     name: string;
@@ -1099,13 +1121,7 @@ const Finance = () => {
     const { key, name, patientId, sessions: list, isResend, isPlan } = args;
     if (!user || list.length === 0) return;
 
-    // Plano/pacote: cobra o valor do plano (inclui sessões futuras contratadas).
-    // Sessão avulsa: cobra apenas sessões realizadas e ainda não pagas.
-    const cobravel = isPlan
-      ? list.filter((r) => r.status !== "cancelled")
-      : list.filter((r) => r.status === "completed");
-    const pending = cobravel.filter((r) => r.payment_status === "pending");
-    const target = pending.length ? pending : cobravel;
+    const target = getBillingTarget(list, !!isPlan);
     if (target.length === 0) {
       toast.info(
         isPlan
@@ -2247,7 +2263,7 @@ const Finance = () => {
                                 className="h-8 gap-1.5 text-xs"
                                 disabled={pay === "Pago"}
                                 onClick={() =>
-                                  sendBillingWhatsApp({
+                                  setConfirmSend({
                                     key: g.key,
                                     name: g.name,
                                     patientId: g.patientId,
@@ -2626,6 +2642,86 @@ const Finance = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Tela de conferência antes de enviar cobrança */}
+      <Dialog open={!!confirmSend} onOpenChange={(open) => { if (!open) setConfirmSend(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar envio de cobrança</DialogTitle>
+          </DialogHeader>
+          {confirmSend && (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-border/60 bg-secondary/30 p-4 space-y-2">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Paciente</p>
+                  <p className="text-sm font-semibold text-foreground">{confirmSend.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Vencimento</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {confirmSend.dueDate ? formatDue(confirmSend.dueDate) : "—"}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                  Sessões incluídas
+                </p>
+                {(() => {
+                  const target = getBillingTarget(confirmSend.sessions, confirmSend.isPlan).slice().sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+                  if (target.length === 0) {
+                    return (
+                      <p className="text-sm text-muted-foreground">Nenhuma sessão incluída.</p>
+                    );
+                  }
+                  return (
+                    <ul className="rounded-xl border border-border/60 divide-y divide-border max-h-60 overflow-y-auto">
+                      {target.map((r) => (
+                        <li key={r.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
+                          <span className="text-sm text-foreground">
+                            {format(new Date(r.scheduled_at), "dd/MM/yyyy")}
+                          </span>
+                          <span className="text-sm font-medium text-foreground">
+                            {formatBRL(Number(r.price ?? 0))}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                })()}
+              </div>
+
+              {(() => {
+                const target = getBillingTarget(confirmSend.sessions, confirmSend.isPlan);
+                const total = target.reduce((s, r) => s + Number(r.price ?? 0), 0);
+                return (
+                  <div className="flex items-center justify-between rounded-xl bg-moss/10 px-4 py-3">
+                    <span className="text-sm font-medium text-moss">Total a cobrar</span>
+                    <span className="text-base font-bold text-moss">{formatBRL(total)}</span>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setConfirmSend(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="accent"
+              onClick={() => {
+                if (!confirmSend) return;
+                const args = { ...confirmSend };
+                setConfirmSend(null);
+                sendBillingWhatsApp(args);
+              }}
+            >
+              {confirmSend?.isResend ? "Reenviar cobrança" : "Enviar cobrança"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
