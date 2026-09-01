@@ -4,7 +4,7 @@ import {
   Loader2, Shield, Users, Mail, Calendar, Building2, ArrowLeft,
   ChevronDown, CheckCircle2, XCircle, Search, FileText, UserCheck,
   Eye, Activity, Heart, ClipboardList, Stethoscope, Trash2, RotateCcw, Ban, Clock,
-  MessageCircle, Copy,
+  MessageCircle, Copy, CreditCard,
 } from "lucide-react";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { toast } from "sonner";
@@ -26,21 +26,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  STATUS_LABELS,
+  STATUS_STYLES,
+  STATUS_DOTS,
+  SUBSCRIPTION_STATUSES,
+  PAID_PLAN_NAME,
+  FREE_PLAN_NAME,
+  DEFAULT_KIWIFY_URL,
+  type SubscriptionStatus,
+} from "@/lib/subscription";
 
-type SubStatus = "free" | "pending" | "active";
+type SubStatus = SubscriptionStatus;
 type ProfileType = "standard" | "supervisee" | "supervisor";
-
-const STATUS_LABELS: Record<SubStatus, string> = {
-  free: "Gratuito",
-  pending: "Pendente",
-  active: "Ativo",
-};
-
-const STATUS_STYLES: Record<SubStatus, string> = {
-  free: "bg-muted text-muted-foreground",
-  pending: "bg-yellow-100 text-yellow-800",
-  active: "bg-green-100 text-green-800",
-};
 
 const PROFILE_LABELS: Record<ProfileType, string> = {
   standard: "Padrão",
@@ -82,6 +82,11 @@ interface AdminUser {
   rejected_at: string | null;
   trial_ends_at: string | null;
   subscription_ends_at: string | null;
+  plan_name: string | null;
+  subscription_started_at: string | null;
+  last_payment_at: string | null;
+  next_renewal_at: string | null;
+  subscription_notes: string | null;
 }
 
 interface AdminPatient {
@@ -145,6 +150,70 @@ const Admin = () => {
   const [globalLogsLoading, setGlobalLogsLoading] = useState(false);
   const [patientFilter, setPatientFilter] = useState<"all" | "active" | "inactive">("all");
   const [supervisorFilter, setSupervisorFilter] = useState<string>("all");
+  const [planUser, setPlanUser] = useState<AdminUser | null>(null);
+  const [planForm, setPlanForm] = useState({
+    plan_name: FREE_PLAN_NAME,
+    subscription_status: "free" as SubStatus,
+    subscription_started_at: "",
+    last_payment_at: "",
+    next_renewal_at: "",
+    subscription_notes: "",
+  });
+  const [planSaving, setPlanSaving] = useState(false);
+  const [kiwifyUrl, setKiwifyUrl] = useState(DEFAULT_KIWIFY_URL);
+  const [kiwifySaving, setKiwifySaving] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "kiwify_checkout_url")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) setKiwifyUrl(data.value);
+      });
+  }, []);
+
+  const saveKiwifyUrl = async () => {
+    setKiwifySaving(true);
+    const { error } = await supabase
+      .from("app_settings")
+      .upsert({ key: "kiwify_checkout_url", value: kiwifyUrl.trim(), updated_at: new Date().toISOString() });
+    setKiwifySaving(false);
+    if (error) { toast.error("Erro ao salvar link da Kiwify"); return; }
+    toast.success("Link de checkout atualizado");
+  };
+
+  const openPlanEditor = (u: AdminUser) => {
+    setPlanUser(u);
+    setPlanForm({
+      plan_name: u.plan_name || (u.subscription_status === "active" ? PAID_PLAN_NAME : FREE_PLAN_NAME),
+      subscription_status: u.subscription_status,
+      subscription_started_at: u.subscription_started_at ?? "",
+      last_payment_at: u.last_payment_at ?? "",
+      next_renewal_at: u.next_renewal_at ?? "",
+      subscription_notes: u.subscription_notes ?? "",
+    });
+  };
+
+  const savePlan = async () => {
+    if (!planUser) return;
+    setPlanSaving(true);
+    const payload = {
+      plan_name: planForm.plan_name.trim() || FREE_PLAN_NAME,
+      subscription_status: planForm.subscription_status,
+      subscription_started_at: planForm.subscription_started_at || null,
+      last_payment_at: planForm.last_payment_at || null,
+      next_renewal_at: planForm.next_renewal_at || null,
+      subscription_notes: planForm.subscription_notes.trim() || null,
+    };
+    const { error } = await supabase.from("profiles").update(payload as any).eq("id", planUser.id);
+    setPlanSaving(false);
+    if (error) { toast.error("Erro ao salvar assinatura"); return; }
+    setUsers((prev) => prev.map((u) => (u.id === planUser.id ? { ...u, ...payload } : u)));
+    setPlanUser(null);
+    toast.success("Assinatura atualizada");
+  };
 
   useEffect(() => {
     if (authLoading) return;
@@ -456,7 +525,7 @@ const Admin = () => {
           <DropdownMenuContent align="start">
             {(Object.keys(STATUS_LABELS) as SubStatus[]).map((status) => (
               <DropdownMenuItem key={status} onClick={() => handleStatusChange(u.id, status)} className={u.subscription_status === status ? "font-bold" : ""}>
-                <span className={`inline-block w-2 h-2 rounded-full mr-2 ${status === "active" ? "bg-green-500" : status === "pending" ? "bg-yellow-500" : "bg-gray-400"}`} />
+                <span className={`inline-block w-2 h-2 rounded-full mr-2 ${STATUS_DOTS[status]}`} />
                 {STATUS_LABELS[status]}
               </DropdownMenuItem>
             ))}
@@ -492,6 +561,9 @@ const Admin = () => {
         <div className="flex items-center gap-1 flex-wrap">
           <WhatsAppButton phone={u.phone} label="WhatsApp" />
           <WelcomeWhatsAppButton phone={u.phone} name={u.full_name} clinicName={u.clinic_name} />
+          <Button size="sm" variant="ghost" onClick={() => openPlanEditor(u)} title="Editar assinatura">
+            <CreditCard className="h-4 w-4" />
+          </Button>
           <Button size="sm" variant="ghost" onClick={() => openLogs(u.id)} title="Ver logs">
             <Eye className="h-4 w-4" />
           </Button>
@@ -597,6 +669,27 @@ const Admin = () => {
           <Button variant="outline" size="sm" onClick={openGlobalLogs} className="gap-2 shrink-0">
             <FileText className="h-4 w-4" /> Logs do Sistema
           </Button>
+        </div>
+
+        {/* Link de checkout (Kiwify) */}
+        <div className="rounded-2xl border border-border bg-card p-4 space-y-2">
+          <Label htmlFor="kiwify-url" className="text-sm font-medium">
+            Link de checkout da Kiwify
+          </Label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              id="kiwify-url"
+              value={kiwifyUrl}
+              onChange={(e) => setKiwifyUrl(e.target.value)}
+              placeholder="https://pay.kiwify.com.br/..."
+            />
+            <Button onClick={saveKiwifyUrl} disabled={kiwifySaving} className="shrink-0">
+              {kiwifySaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar link"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Usado no botão “Assinar PsiReal” dentro de Meu Plano.
+          </p>
         </div>
 
         {/* Pending approval alert */}
