@@ -47,13 +47,23 @@ export type BillingInput = {
   payment_due_date?: string | null;
 };
 
-/** Deriva o status da cobrança de um conjunto de sessões faturáveis. */
+/** Modalidade de cobrança: por sessão realizada ou por plano/pacote fechado. */
+export type BillingMode = "per_session" | "plan";
+
+/** Deriva o status da cobrança de um conjunto de sessões faturáveis.
+ *  - per_session: só sessões realizadas (ou já pagas) entram na cobrança.
+ *  - plan: o pacote inteiro é cobrável, mesmo com sessões futuras. */
 export const computeBillingStatus = (
   list: BillingInput[],
-  soonDays: number = DUE_SOON_DAYS
+  soonDays: number = DUE_SOON_DAYS,
+  mode: BillingMode = "per_session"
 ): { status: BillingStatus; dueDate: string | null; sentAt: string | null } => {
-  const billable = list.filter((r) => r.status === "completed" || r.payment_status === "paid");
+  const billable =
+    mode === "plan"
+      ? list.filter((r) => r.status !== "cancelled")
+      : list.filter((r) => r.status === "completed" || r.payment_status === "paid");
   if (billable.length === 0) return { status: "na", dueDate: null, sentAt: null };
+
   const pending = billable.filter((r) => r.payment_status === "pending");
   const sentAt =
     billable
