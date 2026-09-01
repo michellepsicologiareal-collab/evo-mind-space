@@ -2731,44 +2731,27 @@ const PaymentDetailsDialog = ({
   onClose: () => void;
   onSaved: () => void;
 }) => {
-  const [method, setMethod] = useState<PaymentMethod | "none">("none");
-  const [reference, setReference] = useState("");
   const [receitaSaude, setReceitaSaude] = useState<ReceitaSaudeStatus | "none">("none");
+  const [pago, setPago] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [refError, setRefError] = useState<string | null>(null);
 
   useEffect(() => {
     if (row) {
-      setMethod((row.payment_method as PaymentMethod | null) ?? "none");
-      setReference(row.payment_reference ?? "");
       setReceitaSaude((row.receita_saude_status as ReceitaSaudeStatus | null) ?? "none");
-      setRefError(null);
+      setPago(row.payment_status === "paid");
     }
   }, [row]);
 
   if (!row) return null;
 
-  const requiresReference = method === "pix" || method === "card";
-  const trimmedRef = reference.trim();
-
   const save = async () => {
-    if (requiresReference && trimmedRef.length === 0) {
-      setRefError(
-        method === "pix"
-          ? "Informe a referência do PIX (ex.: comprovante, ID da transação)."
-          : "Informe a referência do cartão (ex.: últimos 4 dígitos, NSU)."
-      );
-      return;
-    }
-    setRefError(null);
     setSaving(true);
-    const ref = trimmedRef.slice(0, 500);
     const { error } = await supabase
       .from("sessions")
       .update({
-        payment_method: method === "none" ? null : method,
-        payment_reference: ref.length > 0 ? ref : null,
         receita_saude_status: receitaSaude === "none" ? null : receitaSaude,
+        payment_status: pago ? "paid" : "pending",
+        paid_at: pago ? (row.paid_at ?? new Date().toISOString()) : null,
       })
       .eq("id", row.id);
     setSaving(false);
@@ -2795,46 +2778,29 @@ const PaymentDetailsDialog = ({
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label>Método de pagamento</Label>
-            <Select value={method} onValueChange={(v) => setMethod(v as PaymentMethod | "none")}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Não informado</SelectItem>
-                <SelectItem value="pix">PIX</SelectItem>
-                <SelectItem value="card">Cartão</SelectItem>
-                <SelectItem value="cash">Dinheiro</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary/30 px-3 py-2.5">
+            <div>
+              <p className="text-sm font-medium">Pagamento</p>
+              <p className="text-xs text-muted-foreground">
+                {pago ? "Sessão registrada como paga." : "Sessão em aberto."}
+              </p>
+            </div>
+            {pago ? (
+              <Button size="sm" variant="outline" onClick={() => setPago(false)}>
+                Desfazer baixa
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                className="bg-moss text-moss-foreground hover:bg-moss/90"
+                onClick={() => setPago(true)}
+              >
+                Marcar como paga
+              </Button>
+            )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="reference">
-              Referência / nota
-              {requiresReference && <span className="text-destructive ml-1">*</span>}
-            </Label>
-            <Input
-              id="reference"
-              maxLength={500}
-              placeholder="Ex.: comprovante #1234, pago via Nubank"
-              value={reference}
-              onChange={(e) => {
-                setReference(e.target.value);
-                if (refError) setRefError(null);
-              }}
-              aria-invalid={!!refError}
-              className={refError ? "border-destructive focus-visible:ring-destructive" : ""}
-            />
-            {refError ? (
-              <p className="text-xs text-destructive">{refError}</p>
-            ) : requiresReference ? (
-              <p className="text-xs text-muted-foreground">
-                Obrigatório para {method === "pix" ? "PIX" : "cartão"}.
-              </p>
-            ) : null}
-          </div>
+
 
           <div className="space-y-2">
             <Label htmlFor="receita-saude">Receita Saúde</Label>
