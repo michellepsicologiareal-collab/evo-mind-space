@@ -2711,8 +2711,13 @@ const Finance = () => {
                     <ul className="rounded-xl border border-border/60 divide-y divide-border max-h-60 overflow-y-auto">
                       {target.map((r) => (
                         <li key={r.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
-                          <span className="text-sm text-foreground">
+                          <span className="flex items-center gap-2 text-sm text-foreground">
                             {format(new Date(r.scheduled_at), "dd/MM/yyyy")}
+                            {r.status !== "completed" && (
+                              <span className="rounded-full bg-sky-50 text-sky-700 border border-sky-200 px-2 py-0.5 text-[10px] font-medium">
+                                {r.status === "confirmed" ? "Confirmada" : "Agendada"}
+                              </span>
+                            )}
                           </span>
                           <span className="text-sm font-medium text-foreground">
                             {formatBRL(Number(r.price ?? 0))}
