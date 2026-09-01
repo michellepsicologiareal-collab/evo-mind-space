@@ -1934,6 +1934,7 @@ const Finance = () => {
             planTotal: number;
             totalValue: number;
             pendingValue: number;
+            paidValue: number;
             totalSessions: number;
             realizadas: number;
             faltas: number;
@@ -1960,7 +1961,7 @@ const Finance = () => {
               g = {
                 key, name, patientId, sessions: [], isPlan,
                 planTotal: Number(r.notes?.match(/Plano (\d+) sess/)?.[1] ?? 0),
-                totalValue: 0, pendingValue: 0, totalSessions: 0,
+                totalValue: 0, pendingValue: 0, paidValue: 0, totalSessions: 0,
                 realizadas: 0, faltas: 0, aRealizar: 0,
                 paidCount: 0, pendingCount: 0,
                 receitaToIssue: 0, receitaIssued: 0, receitaNone: 0,
@@ -1974,7 +1975,7 @@ const Finance = () => {
             if (r.scheduled_at < g.firstAt) g.firstAt = r.scheduled_at;
             if (r.scheduled_at > g.lastAt) g.lastAt = r.scheduled_at;
             // Só sessões realizadas entram na cobrança: agendadas/faltas não geram pendência
-            if (r.payment_status === "paid") g.paidCount++;
+            if (r.payment_status === "paid") { g.paidCount++; g.paidValue += Number(r.price ?? 0); }
             else if (r.status === "completed") { g.pendingCount++; g.pendingValue += Number(r.price ?? 0); }
             if (r.receita_saude_status === "to_issue") g.receitaToIssue++;
             else if (r.receita_saude_status === "issued") g.receitaIssued++;
@@ -2001,7 +2002,7 @@ const Finance = () => {
             );
 
           const totalPendenteCards = allGroups.reduce((s, g) => s + g.pendingValue, 0);
-          const totalPagoCards = allGroups.reduce((s, g) => s + (g.totalValue - g.pendingValue), 0);
+          const totalPagoCards = allGroups.reduce((s, g) => s + g.paidValue, 0);
 
           const receitaValue = (g: Group): "issued" | "to_issue" | "none" | "mixed" => {
             if (g.receitaIssued > 0 && (g.receitaToIssue > 0 || g.receitaNone > 0)) return "mixed";
@@ -2019,7 +2020,7 @@ const Finance = () => {
           };
 
           const payLabel = (g: Group) =>
-            g.pendingCount === 0 ? "Pago" : g.paidCount === 0 ? "Pendente" : "Parcial";
+            g.pendingCount === 0 ? (g.paidCount === 0 ? "—" : "Pago") : g.paidCount === 0 ? "Pendente" : "Parcial";
 
           return (
             <>
@@ -2100,6 +2101,8 @@ const Finance = () => {
                 <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 pb-24 md:pb-0">
                   {groups.map((g) => {
                     const ids = g.sessions.map((s) => s.id);
+                    // Baixa de pagamento só afeta sessões realizadas (ou já pagas) — nunca futuras
+                    const payIds = g.sessions.filter((s) => s.status === "completed" || s.payment_status === "paid").map((s) => s.id);
                     const billing = billingStatusOf(g.sessions, billingReminderDays);
                     const pay = payLabel(g);
                     const rs = receitaValue(g);
@@ -2179,8 +2182,8 @@ const Finance = () => {
                           <div>
                             <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Pagamento</Label>
                             <Select
-                              value={g.pendingCount > 0 && g.paidCount > 0 ? undefined : g.pendingCount === 0 ? "paid" : "pending"}
-                              onValueChange={(v) => updatePaymentGroup(ids, v as PaymentStatus)}
+                              value={g.pendingCount > 0 && g.paidCount > 0 ? undefined : g.pendingCount === 0 && g.paidCount > 0 ? "paid" : "pending"}
+                              onValueChange={(v) => updatePaymentGroup(payIds, v as PaymentStatus)}
                             >
                               <SelectTrigger className="mt-1 h-9 text-xs">
                                 <SelectValue placeholder="Parcial" />
