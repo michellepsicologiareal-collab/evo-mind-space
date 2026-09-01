@@ -406,7 +406,32 @@ const Finance = () => {
       setLoading(false);
       return;
     }
-    setRawRows((data ?? []) as any);
+    const monthRows = (data ?? []) as any[];
+    setRawRows(monthRows);
+
+    // Planos de atendimento podem atravessar meses (ex.: "Plano 2 sessões (1/2)" em
+    // agosto e "(2/2)" em setembro). Para o card mostrar o plano completo, buscamos
+    // TODAS as sessões dos planos que têm ao menos uma sessão no mês — agrupadas
+    // pelo identificador único do plano presente nas notas ([xxxxxxxx]).
+    const planIds = Array.from(
+      new Set(
+        monthRows
+          .map((r) => planGroupIdOf(r.notes))
+          .filter((v): v is string => !!v)
+      )
+    );
+    if (planIds.length > 0) {
+      const orFilter = planIds.map((id) => `notes.ilike.%[${id}]%`).join(",");
+      const { data: planData } = await supabase
+        .from("sessions")
+        .select(selectCols)
+        .eq("user_id", user.id)
+        .neq("status", "cancelled")
+        .or(orFilter);
+      setPlanRowsAll((planData ?? []) as any);
+    } else {
+      setPlanRowsAll([]);
+    }
     setLoading(false);
   };
 
