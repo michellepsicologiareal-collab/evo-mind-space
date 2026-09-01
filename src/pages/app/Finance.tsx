@@ -2053,9 +2053,18 @@ const Finance = () => {
                     </p>
                   </div>
                 </div>
-                <div className="mx-auto mt-3 h-52 w-full max-w-2xl">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={quinzenaChartData.bars} margin={{ top: 26, right: 8, left: 8, bottom: 0 }} barCategoryGap="28%" barGap={6}>
+                 {/* Legenda manual — mais legível no mobile que o Legend do gráfico */}
+                 <div className="mt-3 flex items-center justify-center gap-5 text-xs text-muted-foreground">
+                   <span className="inline-flex items-center gap-1.5">
+                     <span className="h-2.5 w-2.5 rounded-full bg-moss" /> Recebido
+                   </span>
+                   <span className="inline-flex items-center gap-1.5">
+                     <span className="h-2.5 w-2.5 rounded-full" style={{ background: "hsl(var(--accent))" }} /> A receber
+                   </span>
+                 </div>
+                 <div className="mx-auto mt-1 h-48 w-full max-w-2xl md:h-52">
+                   <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={quinzenaChartData.bars} margin={{ top: 24, right: isMobile ? 2 : 8, left: isMobile ? 2 : 8, bottom: 0 }} barCategoryGap={isMobile ? "22%" : "28%"} barGap={isMobile ? 4 : 6}>
                       <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                       <XAxis
                         dataKey="name"
@@ -2065,12 +2074,13 @@ const Finance = () => {
                           const item = quinzenaChartData.bars.find((b) => b.name === payload.value);
                           return (
                             <g transform={`translate(${x},${y})`}>
-                              <text textAnchor="middle" dy={14} className="fill-foreground text-xs font-medium">{payload.value}</text>
-                              <text textAnchor="middle" dy={28} className="fill-muted-foreground text-[10px]">{item?.periodo}</text>
+                              <text textAnchor="middle" dy={14} className="fill-foreground text-[11px] md:text-xs font-medium">{payload.value}</text>
+                              <text textAnchor="middle" dy={27} className="fill-muted-foreground text-[10px]">{item?.periodo}</text>
                             </g>
                           );
                         }}
-                        height={44}
+                        height={42}
+                        interval={0}
                       />
                       <YAxis hide domain={[0, "dataMax"]} />
                       <RechartsTooltip
@@ -2087,20 +2097,22 @@ const Finance = () => {
                           fontSize: 12,
                         }}
                       />
-                      <Legend
-                        verticalAlign="top"
-                        align="right"
-                        iconType="circle"
-                        iconSize={8}
-                        formatter={(value: any) => (
-                          <span className="text-xs text-muted-foreground">{value === "recebido" ? "Recebido" : "A receber"}</span>
-                        )}
+                      {!isMobile && (
+                        <Legend
+                          verticalAlign="top"
+                          align="right"
+                          iconType="circle"
+                          iconSize={8}
+                          formatter={(value: any) => (
+                            <span className="text-xs text-muted-foreground">{value === "recebido" ? "Recebido" : "A receber"}</span>
+                          )}
+                        />
+                      )}
+                      <Bar dataKey="recebido" name="recebido" fill="hsl(var(--moss))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48}
+                        label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? (isMobile ? formatBRLCompact(Number(v)) : formatBRL(Number(v))) : ""), className: "fill-foreground text-[10px] md:text-[11px] font-semibold tabular-nums" } as any}
                       />
-                      <Bar dataKey="recebido" name="recebido" fill="hsl(var(--moss))" radius={[6, 6, 0, 0]} maxBarSize={48}
-                        label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? formatBRL(Number(v)) : ""), className: "fill-foreground text-[11px] font-semibold tabular-nums" } as any}
-                      />
-                      <Bar dataKey="aReceber" name="aReceber" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} maxBarSize={48}
-                        label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? formatBRL(Number(v)) : ""), className: "fill-foreground text-[11px] font-semibold tabular-nums" } as any}
+                      <Bar dataKey="aReceber" name="aReceber" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48}
+                        label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? (isMobile ? formatBRLCompact(Number(v)) : formatBRL(Number(v))) : ""), className: "fill-foreground text-[10px] md:text-[11px] font-semibold tabular-nums" } as any}
                       />
                     </BarChart>
                   </ResponsiveContainer>
