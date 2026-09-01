@@ -188,6 +188,11 @@ export default function MeuPlano() {
             <p className="text-center text-xs text-muted-foreground">
               Pagamento seguro via Kiwify · Cancele quando quiser
             </p>
+            <p className="text-center text-xs text-muted-foreground leading-relaxed">
+              Cobrança única de R$ 58,90 a cada 6 meses, com renovação automática pelo mesmo valor
+              salvo cancelamento. Ao cancelar, o acesso continua até o fim do período já pago.
+            </p>
+
           </div>
         </section>
       </div>
