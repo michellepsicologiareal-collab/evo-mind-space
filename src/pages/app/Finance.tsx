@@ -631,19 +631,64 @@ const Finance = () => {
 
     const isFirst = (d: Date) => d.getDate() <= 15;
     const lastDay = monthEnd.getDate();
-    const rec1 = sum(recebidoBase.filter((r) => isFirst(new Date(r.paid_at as string))));
-    const rec2 = sum(recebidoBase.filter((r) => !isFirst(new Date(r.paid_at as string))));
-    const arec1 = sum(aReceberBase.filter((r) => isFirst(new Date(r.scheduled_at))));
-    const arec2 = sum(aReceberBase.filter((r) => !isFirst(new Date(r.scheduled_at))));
+    const recebidoRows1 = recebidoBase.filter((r) => isFirst(new Date(r.paid_at as string)));
+    const recebidoRows2 = recebidoBase.filter((r) => !isFirst(new Date(r.paid_at as string)));
+    const aReceberRows1 = aReceberBase.filter((r) => isFirst(new Date(r.scheduled_at)));
+    const aReceberRows2 = aReceberBase.filter((r) => !isFirst(new Date(r.scheduled_at)));
+    const rec1 = sum(recebidoRows1);
+    const rec2 = sum(recebidoRows2);
+    const arec1 = sum(aReceberRows1);
+    const arec2 = sum(aReceberRows2);
     return {
       bars: [
         { name: "1ª quinzena", periodo: "01 a 15", recebido: rec1, aReceber: arec1 },
         { name: "2ª quinzena", periodo: `16 a ${lastDay}`, recebido: rec2, aReceber: arec2 },
       ],
+      rows: [
+        { recebido: recebidoRows1, aReceber: aReceberRows1 },
+        { recebido: recebidoRows2, aReceber: aReceberRows2 },
+      ],
       totalRecebido: rec1 + rec2,
       totalAReceber: arec1 + arec2,
     };
   }, [allValid, patientFilter, monthStartMs, monthEndMs, monthEnd]);
+
+  // Detalhe da quinzena (clique no gráfico) — agrupa por paciente
+  const [quinzenaDetail, setQuinzenaDetail] = useState<0 | 1 | null>(null);
+  const quinzenaDetailData = useMemo(() => {
+    if (quinzenaDetail === null) return null;
+    const group = quinzenaChartData.rows[quinzenaDetail];
+    const byPatient = new Map<string, {
+      name: string;
+      recebido: number; recebidoCount: number;
+      aReceber: number; aReceberCount: number;
+      earliest: number;
+    }>();
+    const ensure = (r: Row) => {
+      const id = r.patient?.id ?? "sem-paciente";
+      const name = r.patient?.full_name ?? "Sem paciente";
+      let e = byPatient.get(id);
+      if (!e) { e = { name, recebido: 0, recebidoCount: 0, aReceber: 0, aReceberCount: 0, earliest: Infinity }; byPatient.set(id, e); }
+      return e;
+    };
+    group.recebido.forEach((r) => {
+      const e = ensure(r);
+      e.recebido += Number(r.price ?? 0);
+      e.recebidoCount++;
+      e.earliest = Math.min(e.earliest, new Date(r.scheduled_at).getTime());
+    });
+    group.aReceber.forEach((r) => {
+      const e = ensure(r);
+      e.aReceber += Number(r.price ?? 0);
+      e.aReceberCount++;
+      e.earliest = Math.min(e.earliest, new Date(r.scheduled_at).getTime());
+    });
+    return {
+      title: quinzenaChartData.bars[quinzenaDetail].name,
+      periodo: quinzenaChartData.bars[quinzenaDetail].periodo,
+      patients: Array.from(byPatient.values()).sort((a, b) => a.name.localeCompare(b.name, "pt-BR")),
+    };
+  }, [quinzenaDetail, quinzenaChartData]);
 
   // Service breakdown — agrupa por serviço/atendimento separando previsto x realizado.
   // Previsto = todas as sessões não canceladas/no_show. Realizado = sessões concluídas.
@@ -2072,24 +2117,29 @@ const Finance = () => {
                  </div>
                  <div className="mx-auto mt-1 h-48 w-full max-w-2xl md:h-52">
                    <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={quinzenaChartData.bars} margin={{ top: 24, right: isMobile ? 2 : 8, left: isMobile ? 2 : 8, bottom: 0 }} barCategoryGap={isMobile ? "22%" : "28%"} barGap={isMobile ? 4 : 6}>
-                      <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey="name"
-                        tickLine={false}
-                        axisLine={false}
-                        tick={({ x, y, payload }: any) => {
-                          const item = quinzenaChartData.bars.find((b) => b.name === payload.value);
-                          return (
-                            <g transform={`translate(${x},${y})`}>
-                              <text textAnchor="middle" dy={14} className="fill-foreground text-[11px] md:text-xs font-medium">{payload.value}</text>
-                              <text textAnchor="middle" dy={27} className="fill-muted-foreground text-[10px]">{item?.periodo}</text>
-                            </g>
-                          );
-                        }}
-                        height={42}
-                        interval={0}
-                      />
+                     <BarChart data={quinzenaChartData.bars} margin={{ top: 24, right: isMobile ? 2 : 8, left: isMobile ? 2 : 8, bottom: 0 }} barCategoryGap={isMobile ? "22%" : "28%"} barGap={isMobile ? 4 : 6}>
+                       <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
+                       <XAxis
+                         dataKey="name"
+                         tickLine={false}
+                         axisLine={false}
+                         tick={({ x, y, payload }: any) => {
+                           const idx = quinzenaChartData.bars.findIndex((b) => b.name === payload.value);
+                           const item = quinzenaChartData.bars[idx];
+                           return (
+                             <g
+                               transform={`translate(${x},${y})`}
+                               className="cursor-pointer"
+                               onClick={() => setQuinzenaDetail(idx === 0 ? 0 : 1)}
+                             >
+                               <text textAnchor="middle" dy={14} className="fill-foreground text-[11px] md:text-xs font-medium underline decoration-dotted underline-offset-4 decoration-muted-foreground/60">{payload.value}</text>
+                               <text textAnchor="middle" dy={27} className="fill-muted-foreground text-[10px]">{item?.periodo}</text>
+                             </g>
+                           );
+                         }}
+                         height={42}
+                         interval={0}
+                       />
                       <YAxis hide domain={[0, "dataMax"]} />
                       <RechartsTooltip
                         cursor={{ fill: "hsl(var(--secondary))", opacity: 0.5 }}
@@ -2116,16 +2166,83 @@ const Finance = () => {
                           )}
                         />
                       )}
-                      <Bar dataKey="recebido" name="recebido" fill="hsl(var(--moss))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48}
+                      <Bar dataKey="recebido" name="recebido" fill="hsl(var(--moss))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48} className="cursor-pointer"
+                        onClick={(data: any) => { const idx = quinzenaChartData.bars.findIndex((b) => b.name === data?.name); if (idx >= 0) setQuinzenaDetail(idx as 0 | 1); }}
                         label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? (isMobile ? formatBRLCompact(Number(v)) : formatBRL(Number(v))) : ""), className: "fill-foreground text-[10px] md:text-[11px] font-semibold tabular-nums" } as any}
                       />
-                      <Bar dataKey="aReceber" name="aReceber" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48}
+                      <Bar dataKey="aReceber" name="aReceber" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48} className="cursor-pointer"
+                        onClick={(data: any) => { const idx = quinzenaChartData.bars.findIndex((b) => b.name === data?.name); if (idx >= 0) setQuinzenaDetail(idx as 0 | 1); }}
                         label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? (isMobile ? formatBRLCompact(Number(v)) : formatBRL(Number(v))) : ""), className: "fill-foreground text-[10px] md:text-[11px] font-semibold tabular-nums" } as any}
                       />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
+                <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                  Toque em uma quinzena para ver os pacientes
+                </p>
               </div>
+
+              {/* Detalhe da quinzena — pacientes recebidos x a receber */}
+              <Sheet open={quinzenaDetail !== null} onOpenChange={(o) => !o && setQuinzenaDetail(null)}>
+                <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle className="font-display">
+                      Pacientes · {quinzenaDetailData?.title}
+                    </SheetTitle>
+                    <SheetDescription>
+                      {quinzenaDetailData ? `Dias ${quinzenaDetailData.periodo} — recebido e a receber por paciente` : ""}
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-5 space-y-3">
+                    {quinzenaDetailData?.patients.length === 0 && (
+                      <div className="rounded-2xl border border-dashed border-border bg-secondary/40 p-6 text-center">
+                        <p className="text-sm text-muted-foreground">Nenhuma movimentação nesta quinzena.</p>
+                      </div>
+                    )}
+                    {quinzenaDetailData?.patients.map((p) => (
+                      <div key={p.name} className="rounded-2xl border border-border bg-card p-4">
+                        <p className="font-display text-sm font-semibold text-foreground">{p.name}</p>
+                        <div className="mt-2 space-y-1.5 text-sm">
+                          {p.recebido > 0 && (
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                                <span className="h-2 w-2 rounded-full bg-moss" />
+                                Recebido · {p.recebidoCount} {p.recebidoCount === 1 ? "sessão" : "sessões"}
+                              </span>
+                              <strong className="text-moss font-semibold tabular-nums">{formatBRL(p.recebido)}</strong>
+                            </div>
+                          )}
+                          {p.aReceber > 0 && (
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                                <span className="h-2 w-2 rounded-full" style={{ background: "hsl(var(--accent))" }} />
+                                A receber · {p.aReceberCount} {p.aReceberCount === 1 ? "sessão" : "sessões"}
+                              </span>
+                              <strong className="font-semibold tabular-nums" style={{ color: "hsl(var(--accent))" }}>{formatBRL(p.aReceber)}</strong>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {quinzenaDetailData && quinzenaDetailData.patients.length > 0 && (
+                      <div className="rounded-2xl bg-secondary/60 p-4 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Total recebido</span>
+                          <strong className="text-moss font-semibold tabular-nums">
+                            {formatBRL(quinzenaDetailData.patients.reduce((s, p) => s + p.recebido, 0))}
+                          </strong>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between">
+                          <span className="text-muted-foreground">Total a receber</span>
+                          <strong className="font-semibold tabular-nums" style={{ color: "hsl(var(--accent))" }}>
+                            {formatBRL(quinzenaDetailData.patients.reduce((s, p) => s + p.aReceber, 0))}
+                          </strong>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
 
               {/* Abas + ordenação */}
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-b border-border">
