@@ -1025,8 +1025,13 @@ const Finance = () => {
     const { key, name, patientId, sessions: list, isResend } = args;
     if (!user || list.length === 0) return;
 
-    const pending = list.filter((r) => r.payment_status === "pending");
-    const target = pending.length ? pending : list;
+    // Cobra apenas sessões realizadas e ainda não pagas (futuras/agendadas não são cobradas)
+    const pending = list.filter((r) => r.payment_status === "pending" && r.status === "completed");
+    const target = pending.length ? pending : list.filter((r) => r.status === "completed");
+    if (target.length === 0) {
+      toast.info("Nada a cobrar: este grupo ainda não tem sessões realizadas.");
+      return;
+    }
     const ids = target.map((r) => r.id);
     const valueNumber = target.reduce((s, r) => s + Number(r.price ?? 0), 0);
     const value = valueNumber > 0 ? formatBRL(valueNumber) : "a combinar";
@@ -1968,8 +1973,9 @@ const Finance = () => {
             g.totalValue += Number(r.price ?? 0);
             if (r.scheduled_at < g.firstAt) g.firstAt = r.scheduled_at;
             if (r.scheduled_at > g.lastAt) g.lastAt = r.scheduled_at;
+            // Só sessões realizadas entram na cobrança: agendadas/faltas não geram pendência
             if (r.payment_status === "paid") g.paidCount++;
-            else { g.pendingCount++; g.pendingValue += Number(r.price ?? 0); }
+            else if (r.status === "completed") { g.pendingCount++; g.pendingValue += Number(r.price ?? 0); }
             if (r.receita_saude_status === "to_issue") g.receitaToIssue++;
             else if (r.receita_saude_status === "issued") g.receitaIssued++;
             else g.receitaNone++;
