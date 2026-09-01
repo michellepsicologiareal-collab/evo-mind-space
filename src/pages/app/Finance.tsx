@@ -1398,7 +1398,7 @@ const Finance = () => {
       <section className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {([
           { key: "receita_saude" as QuickAlert, label: "Receita Saúde pendente", hint: `${receitaSaudeToIssue.length} a emitir`, icon: Receipt, count: receitaSaudeToIssue.length, tone: "text-amber-600 bg-amber-50 border-amber-200", clickable: true },
-          { key: "sem_pagamento" as QuickAlert, label: "Sessões realizadas sem pagamento", hint: `${sessoesPendentes} pendentes`, icon: FileWarning, count: sessoesPendentes, tone: "text-destructive bg-destructive/10 border-destructive/30", clickable: true },
+          { key: "sem_pagamento" as QuickAlert, label: "Cobranças em aberto", hint: `${sessoesPendentes} pendentes · ${formatBRL(totalAReceber)}`, icon: FileWarning, count: sessoesPendentes, tone: "text-destructive bg-destructive/10 border-destructive/30", clickable: true },
           { key: "none" as QuickAlert, label: "Planos de Atendimento no mês", hint: `${packagesStats.sessions} ${packagesStats.sessions === 1 ? "sessão vinculada" : "sessões vinculadas"} a Planos de Atendimento`, icon: PackageOpen, count: packagesStats.count, tone: "text-primary bg-secondary/60 border-border", clickable: false },
           { key: "none" as QuickAlert, label: "Sessões únicas no mês", hint: `${avulsasStats.patients} ${avulsasStats.patients === 1 ? "paciente" : "pacientes"} com sessões únicas`, icon: CalendarClock, count: avulsasStats.count, tone: "text-foreground bg-card border-border", clickable: false },
         ]).map((a, idx) => {
