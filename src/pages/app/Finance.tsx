@@ -259,6 +259,18 @@ const Finance = () => {
   const [reminderLogsVersion, setReminderLogsVersion] = useState(0);
   const [reminderHistoryPlan, setReminderHistoryPlan] = useState<{ key: string; name: string } | null>(null);
 
+  // ── Tela de conferência antes de enviar cobrança ────────────────────────
+  const [confirmSend, setConfirmSend] = useState<{
+    key: string;
+    name: string;
+    patientId: string | null;
+    sessions: Row[];
+    isPlan: boolean;
+    dueDate: string | null;
+    status: BillingStatus;
+    isResend: boolean;
+  } | null>(null);
+
   // ── Dados para o envio de cobrança pelo WhatsApp (mesma lógica da Agenda) ──
   const [pixKey, setPixKey] = useState<string>("");
   const [psiName, setPsiName] = useState<string>("");
