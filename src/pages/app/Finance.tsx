@@ -2214,7 +2214,7 @@ const Finance = () => {
                         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.9fr)] lg:items-center">
                           {/* Coluna 1 — paciente e modalidade */}
                           <div className="flex items-start gap-3 min-w-0">
-                            <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-foreground/70">
+                            <span className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-xs sm:text-sm font-semibold text-foreground/70">
                               {initials || "?"}
                             </span>
                             <div className="min-w-0">
