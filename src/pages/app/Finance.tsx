@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -151,6 +152,16 @@ type ReceitaSaudeFilter = "all" | "to_issue" | "issued";
 type FortnightFilter = "all" | "first" | "second";
 
 const formatBRL = (n: number) => `R$ ${n.toFixed(2).replace(".", ",")}`;
+// Versão compacta para telas estreitas: "R$ 1,2 mil" / "R$ 850"
+const formatBRLCompact = (n: number) => {
+  const abs = Math.abs(n);
+  if (abs >= 1000) {
+    const v = n / 1000;
+    const txt = v >= 10 ? Math.round(v).toString() : v.toFixed(1).replace(".", ",");
+    return `R$ ${txt} mil`;
+  }
+  return `R$ ${Math.round(n)}`;
+};
 
 // ── Status da cobrança ────────────────────────────────────────────────
 // Regras compartilhadas com a Agenda (src/lib/billing.ts).
@@ -180,6 +191,7 @@ type QuickAlert = "none" | "receita_saude" | "sem_pagamento" | "pix_sem_conf" | 
 const Finance = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [monthCursor, setMonthCursor] = useState<Date>(new Date());
   const [rawRows, setRawRows] = useState<Row[]>([]);
