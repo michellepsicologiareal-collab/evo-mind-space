@@ -149,12 +149,10 @@ export default function MeuPlano() {
         </section>
 
         {/* Plano pago */}
-        <section className="relative overflow-hidden rounded-3xl border-2 border-accent bg-card p-6 sm:p-8 shadow-elegant">
-          <div className="absolute -top-3 left-6">
-            <span className="inline-flex items-center gap-1 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full">
-              <Sparkles className="h-3 w-3" /> Recomendado
-            </span>
-          </div>
+        <section className="relative rounded-3xl border-2 border-accent bg-card p-6 sm:p-8 shadow-elegant">
+          <span className="absolute -top-3 left-6 inline-flex items-center gap-1 bg-accent text-accent-foreground text-xs font-bold px-3 py-1 rounded-full">
+            <Sparkles className="h-3 w-3" /> Recomendado
+          </span>
 
           <div className="mt-4">
             <h3 className="font-display text-2xl font-semibold text-foreground">PsiReal Mensal</h3>
