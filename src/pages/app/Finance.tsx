@@ -2166,15 +2166,20 @@ const Finance = () => {
                           )}
                         />
                       )}
-                      <Bar dataKey="recebido" name="recebido" fill="hsl(var(--moss))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48}
+                      <Bar dataKey="recebido" name="recebido" fill="hsl(var(--moss))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48} className="cursor-pointer"
+                        onClick={(data: any) => { const idx = quinzenaChartData.bars.findIndex((b) => b.name === data?.name); if (idx >= 0) setQuinzenaDetail(idx as 0 | 1); }}
                         label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? (isMobile ? formatBRLCompact(Number(v)) : formatBRL(Number(v))) : ""), className: "fill-foreground text-[10px] md:text-[11px] font-semibold tabular-nums" } as any}
                       />
-                      <Bar dataKey="aReceber" name="aReceber" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48}
+                      <Bar dataKey="aReceber" name="aReceber" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} maxBarSize={isMobile ? 40 : 48} className="cursor-pointer"
+                        onClick={(data: any) => { const idx = quinzenaChartData.bars.findIndex((b) => b.name === data?.name); if (idx >= 0) setQuinzenaDetail(idx as 0 | 1); }}
                         label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? (isMobile ? formatBRLCompact(Number(v)) : formatBRL(Number(v))) : ""), className: "fill-foreground text-[10px] md:text-[11px] font-semibold tabular-nums" } as any}
                       />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
+                <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                  Toque em uma quinzena para ver os pacientes
+                </p>
               </div>
 
               {/* Abas + ordenação */}
