@@ -1997,11 +1997,10 @@ const Finance = () => {
             g.totalValue += Number(r.price ?? 0);
             if (r.scheduled_at < g.firstAt) g.firstAt = r.scheduled_at;
             if (r.scheduled_at > g.lastAt) g.lastAt = r.scheduled_at;
-            // Modalidade de cobrança define o que entra em aberto:
-            // - Plano/pacote: todo o valor contratado é cobrável (inclusive sessões futuras).
-            // - Sessão avulsa: só sessões realizadas geram pendência.
+            // Fonte única (src/lib/billing.ts): plano em aberto conta mesmo com sessões
+            // futuras; sessão avulsa só depois de realizada (futura = previsto).
             if (r.payment_status === "paid") { g.paidCount++; g.paidValue += Number(r.price ?? 0); }
-            else if (isPlan || r.status === "completed") { g.pendingCount++; g.pendingValue += Number(r.price ?? 0); }
+            else if (isPendingCharge(r as any)) { g.pendingCount++; g.pendingValue += Number(r.price ?? 0); }
             if (r.receita_saude_status === "to_issue") g.receitaToIssue++;
             else if (r.receita_saude_status === "issued") g.receitaIssued++;
             else g.receitaNone++;
