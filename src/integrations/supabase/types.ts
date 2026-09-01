@@ -309,6 +309,24 @@ export type Database = {
           },
         ]
       }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           access_type: Database["public"]["Enums"]["audit_access_type"]
@@ -1341,8 +1359,11 @@ export type Database = {
           goal_sessions: number
           id: string
           is_approved: boolean
+          last_payment_at: string | null
+          next_renewal_at: string | null
           phone: string | null
           pix_key: string | null
+          plan_name: string
           presencial_message: string | null
           profile_type: Database["public"]["Enums"]["profile_type"]
           rejected_at: string | null
@@ -1352,6 +1373,8 @@ export type Database = {
           reminder_window_hours: number
           specialty: string | null
           subscription_ends_at: string | null
+          subscription_notes: string | null
+          subscription_started_at: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status"]
           supervisor_id: string | null
           terms_accepted_at: string | null
@@ -1372,8 +1395,11 @@ export type Database = {
           goal_sessions?: number
           id: string
           is_approved?: boolean
+          last_payment_at?: string | null
+          next_renewal_at?: string | null
           phone?: string | null
           pix_key?: string | null
+          plan_name?: string
           presencial_message?: string | null
           profile_type?: Database["public"]["Enums"]["profile_type"]
           rejected_at?: string | null
@@ -1383,6 +1409,8 @@ export type Database = {
           reminder_window_hours?: number
           specialty?: string | null
           subscription_ends_at?: string | null
+          subscription_notes?: string | null
+          subscription_started_at?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           supervisor_id?: string | null
           terms_accepted_at?: string | null
@@ -1403,8 +1431,11 @@ export type Database = {
           goal_sessions?: number
           id?: string
           is_approved?: boolean
+          last_payment_at?: string | null
+          next_renewal_at?: string | null
           phone?: string | null
           pix_key?: string | null
+          plan_name?: string
           presencial_message?: string | null
           profile_type?: Database["public"]["Enums"]["profile_type"]
           rejected_at?: string | null
@@ -1414,6 +1445,8 @@ export type Database = {
           reminder_window_hours?: number
           specialty?: string | null
           subscription_ends_at?: string | null
+          subscription_notes?: string | null
+          subscription_started_at?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           supervisor_id?: string | null
           terms_accepted_at?: string | null
@@ -2845,7 +2878,13 @@ export type Database = {
         | "cancelled"
         | "confirmed"
       session_type: "clinical" | "supervision"
-      subscription_status: "free" | "pending" | "active"
+      subscription_status:
+        | "free"
+        | "pending"
+        | "active"
+        | "overdue"
+        | "cancelled"
+        | "expired"
       wellbeing_source: "patient_self_report" | "professional_estimate"
     }
     CompositeTypes: {
@@ -3007,7 +3046,14 @@ export const Constants = {
         "confirmed",
       ],
       session_type: ["clinical", "supervision"],
-      subscription_status: ["free", "pending", "active"],
+      subscription_status: [
+        "free",
+        "pending",
+        "active",
+        "overdue",
+        "cancelled",
+        "expired",
+      ],
       wellbeing_source: ["patient_self_report", "professional_estimate"],
     },
   },

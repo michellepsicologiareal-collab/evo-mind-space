@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
 
     const { data: profiles } = await adminClient
       .from("profiles")
-      .select("id, full_name, crp, profile_type, clinic_name, subscription_status, is_approved, supervisor_id, phone, specialty, created_at, rejected_at, trial_ends_at, subscription_ends_at");
+      .select("id, full_name, crp, profile_type, clinic_name, subscription_status, is_approved, supervisor_id, phone, specialty, created_at, rejected_at, trial_ends_at, subscription_ends_at, plan_name, subscription_started_at, last_payment_at, next_renewal_at, subscription_notes");
 
     const { data: patientCounts } = await adminClient
       .from("patients")
@@ -106,6 +106,11 @@ Deno.serve(async (req) => {
         rejected_at: profile?.rejected_at ?? null,
         trial_ends_at: profile?.trial_ends_at ?? null,
         subscription_ends_at: profile?.subscription_ends_at ?? null,
+        plan_name: profile?.plan_name ?? "Grátis",
+        subscription_started_at: profile?.subscription_started_at ?? null,
+        last_payment_at: profile?.last_payment_at ?? null,
+        next_renewal_at: profile?.next_renewal_at ?? null,
+        subscription_notes: profile?.subscription_notes ?? null,
       };
     });
 

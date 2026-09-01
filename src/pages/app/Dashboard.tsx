@@ -1,5 +1,7 @@
 import { RefreshButton } from "@/components/app/RefreshButton";
 import { HelpCard } from "@/components/app/HelpCard";
+import { PlanStatusBadge } from "@/components/app/PlanStatusBadge";
+
 import { useEffect, useMemo, useRef, useState, KeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -683,7 +685,9 @@ export default function Dashboard() {
               <span className="text-foreground font-medium">{nextTime}</span>
             </p>
           </div>
+          <PlanStatusBadge className="md:order-last" />
           <div className="flex w-full items-center gap-2 md:w-auto">
+
             <Button
               variant="outline"
               size="sm"
