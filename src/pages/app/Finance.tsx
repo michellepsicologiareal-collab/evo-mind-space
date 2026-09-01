@@ -1958,14 +1958,26 @@ const Finance = () => {
             lastAt: string;
           };
 
+          // Índice das sessões completas de cada plano (qualquer data), por ID do plano.
+          const planRowsById = new Map<string, Row[]>();
+          for (const r of planRowsAll) {
+            const pid = planGroupIdOf(r.notes);
+            if (!pid) continue;
+            const arr = planRowsById.get(pid) ?? [];
+            arr.push(r);
+            planRowsById.set(pid, arr);
+          }
+
           const map = new Map<string, PGroup>();
           for (const r of chargeBase) {
             const patientId = r.patient?.id ?? null;
             // Separa por modalidade: sessões avulsas e cada plano viram cards distintos
             // (ex.: paciente avulsa que também tem dois planos de atendimento).
-            const planSize = isPlanNotes(r.notes) ? (r.notes?.match(/Plano (\d+) sess/i)?.[1] ?? "") : null;
+            // A chave do plano usa o identificador único das notas — nunca o número de
+            // sessões — para não misturar planos diferentes de mesmo tamanho.
+            const planId = isPlanNotes(r.notes) ? (planGroupIdOf(r.notes) ?? `size-${r.notes?.match(/Plano (\d+) sess/i)?.[1] ?? "x"}`) : null;
             const key = patientId
-              ? `${patientId}::${planSize !== null ? `plan-${planSize || "x"}` : "avulsa"}`
+              ? `${patientId}::${planId !== null ? `plan-${planId}` : "avulsa"}`
               : `s::${r.id}`;
             let g = map.get(key);
             if (!g) {
