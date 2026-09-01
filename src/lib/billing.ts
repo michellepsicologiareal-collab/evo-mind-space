@@ -17,7 +17,7 @@ export const BILLING_TONE: Record<BillingStatus, string> = {
   pago: "bg-moss/10 text-moss border-moss/20",
   vencida: "bg-destructive/10 text-destructive border-destructive/25",
   perto: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400",
-  enviada: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-400",
+  enviada: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400",
   a_enviar: "bg-secondary text-foreground/70 border-border",
   na: "bg-secondary text-muted-foreground border-border",
 };
