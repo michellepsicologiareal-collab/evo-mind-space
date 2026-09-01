@@ -84,3 +84,28 @@ export const computeBillingStatus = (
   if (sentAt) return { status: "enviada", dueDate, sentAt };
   return { status: "a_enviar", dueDate, sentAt };
 };
+
+// ── Fonte única da regra de "em aberto" (cabeçalho, totais e lista) ──────
+/** Sessão criada como Plano/Pacote (marcador "Plano N sessões" em notes). */
+export const isPlanNotes = (notes?: string | null): boolean =>
+  !!notes && /Plano \d+ sess/.test(notes);
+
+export type ChargeRow = {
+  status?: string | null;
+  payment_status?: string | null;
+  notes?: string | null;
+};
+
+/** Cobrança EM ABERTO (pendente):
+ *  - Plano/pacote: a cobrança do plano fica em aberto mesmo com sessões futuras.
+ *  - Sessão avulsa: só depois de realizada. */
+export const isPendingCharge = (r: ChargeRow): boolean =>
+  r.payment_status === "pending" &&
+  r.status !== "cancelled" &&
+  (isPlanNotes(r.notes) || r.status === "completed");
+
+/** PREVISTO: sessão avulsa futura (agendada/confirmada) ainda não paga. */
+export const isForecastCharge = (r: ChargeRow): boolean =>
+  r.payment_status === "pending" &&
+  !isPlanNotes(r.notes) &&
+  (r.status === "scheduled" || r.status === "confirmed");
