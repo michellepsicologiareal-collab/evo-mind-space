@@ -1200,25 +1200,69 @@ const Finance = () => {
 
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           <RefreshButton />
-          <Button
-            variant="accent"
-            onClick={() => sessionsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Adicionar pagamento
-          </Button>
 
-          <div className="flex items-center gap-2 bg-card border border-border rounded-full p-1">
-            <Button variant="ghost" size="icon" onClick={() => setMonthCursor(subMonths(monthCursor, 1))}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-xs sm:text-sm font-medium px-1 sm:px-3 capitalize min-w-[100px] sm:min-w-[140px] text-center">
-              {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
-            </span>
-            <Button variant="ghost" size="icon" onClick={() => setMonthCursor(addMonths(monthCursor, 1))}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Filtros
+                <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Período do mês</Label>
+                <Tabs value={fortnightFilter} onValueChange={(v) => setFortnightFilter(v as FortnightFilter)}>
+                  <TabsList className="w-full">
+                    <TabsTrigger className="flex-1" value="all">Mês todo</TabsTrigger>
+                    <TabsTrigger className="flex-1" value="first">1ª quinz.</TabsTrigger>
+                    <TabsTrigger className="flex-1" value="second">2ª quinz.</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="receita-saude-filter" className="text-xs text-muted-foreground">Receita Saúde</Label>
+                <Select value={receitaSaudeFilter} onValueChange={(v) => setReceitaSaudeFilter(v as ReceitaSaudeFilter)}>
+                  <SelectTrigger id="receita-saude-filter" className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="to_issue">A emitir</SelectItem>
+                    <SelectItem value="issued">Emitido</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="patient-filter" className="text-xs text-muted-foreground">Paciente</Label>
+                <Select value={patientFilter} onValueChange={setPatientFilter}>
+                  <SelectTrigger id="patient-filter" className="h-9">
+                    <SelectValue placeholder="Todos os pacientes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os pacientes</SelectItem>
+                    {patientOptions.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {(fortnightFilter !== "all" || receitaSaudeFilter !== "all" || patientFilter !== "all") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => { setFortnightFilter("all"); setReceitaSaudeFilter("all"); setPatientFilter("all"); }}
+                >
+                  Limpar filtros
+                </Button>
+              )}
+            </PopoverContent>
+          </Popover>
+
 
           <Popover>
             <PopoverTrigger asChild>
