@@ -1050,8 +1050,8 @@ const Finance = () => {
     if (target.length === 0) {
       toast.info(
         isPlan
-          ? "Nada a cobrar: este plano não tem sessões em aberto."
-          : "Nada a cobrar: este grupo ainda não tem sessões realizadas."
+          ? "Nada a cobrar: este plano já está quitado."
+          : "Nada a cobrar: não há sessões realizadas pendentes."
       );
       return;
     }
