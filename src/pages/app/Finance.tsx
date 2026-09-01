@@ -209,6 +209,7 @@ const Finance = () => {
     pago: number;
     emAberto: number;
     planSessions: number;
+    unitPrice?: number;
     sessions: Row[];
   } | null>(null);
   const [settleSelected, setSettleSelected] = useState<Set<string>>(new Set());
