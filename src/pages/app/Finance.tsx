@@ -2248,7 +2248,7 @@ const Finance = () => {
                           </div>
 
                           {/* Coluna 2 — valores */}
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border/60 pt-3 lg:border-0 lg:pt-0">
                             {g.isPlan ? (
                               <>
                                 {money("Valor do plano", g.planValue)}
@@ -2266,7 +2266,7 @@ const Finance = () => {
                           </div>
 
                           {/* Coluna 3 — status e ações */}
-                          <div className="min-w-0 space-y-2">
+                          <div className="min-w-0 space-y-2 border-t border-border/60 pt-3 lg:border-0 lg:pt-0">
                             <div className="flex flex-wrap items-center gap-2">
                               <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${payTone}`}>{pay}</span>
                               {billing.status !== "na" && (
@@ -2317,7 +2317,7 @@ const Finance = () => {
                           </div>
 
                           {/* Coluna 4 — Receita Saúde + detalhes */}
-                          <div className="flex items-center justify-between gap-3 lg:flex-col lg:items-end">
+                          <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3 lg:border-0 lg:pt-0 lg:flex-col lg:items-end">
                             <div className="flex items-center gap-2">
                               <Label className="text-[11px] text-muted-foreground whitespace-nowrap">Receita Saúde:</Label>
                               <Select
