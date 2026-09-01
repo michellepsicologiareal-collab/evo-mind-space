@@ -48,10 +48,13 @@ export const Pricing = () => {
               <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
             </div>
 
-            <div className="mb-6">
+            <div className="mb-2">
               <span className="font-display text-4xl font-semibold text-foreground">{plan.price}</span>
               <span className="text-muted-foreground">{plan.period}</span>
             </div>
+            <p className="mb-6 text-sm text-muted-foreground">
+              Equivale a menos de R$ 10 por mês · Renovação a cada 6 meses
+            </p>
 
             <ul className="space-y-3 mb-8 flex-1">
               {plan.features.map((f) => (
@@ -67,6 +70,14 @@ export const Pricing = () => {
                 {plan.cta}
               </Button>
             </a>
+
+            <p className="mt-4 text-xs text-muted-foreground leading-relaxed">
+              Cobrança única de R$ 58,90 referente a 6 meses de acesso. A assinatura renova
+              automaticamente por mais 6 meses pelo mesmo valor, salvo cancelamento. Você pode
+              cancelar quando quiser, antes da próxima renovação, e continua com acesso até o fim do
+              período já pago. Pagamento seguro processado pela Kiwify.
+            </p>
+
           </div>
         </div>
       </div>
