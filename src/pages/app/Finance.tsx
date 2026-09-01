@@ -2054,8 +2054,13 @@ const Finance = () => {
                     return (
                       <li
                         key={g.key}
-                        className="rounded-2xl border border-border bg-card px-4 py-4 transition-shadow hover:shadow-md"
+                        onClick={(e) => {
+                          if ((e.target as HTMLElement).closest("button,input,a,[role='combobox']")) return;
+                          openSettle(g);
+                        }}
+                        className="cursor-pointer rounded-2xl border border-border bg-card px-4 py-4 transition-shadow hover:shadow-md"
                       >
+
                         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.9fr)] lg:items-center">
                           {/* Coluna 1 — paciente e modalidade */}
                           <div className="flex items-start gap-3 min-w-0">
