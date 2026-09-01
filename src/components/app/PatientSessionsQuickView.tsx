@@ -475,7 +475,7 @@ export const PatientSessionsQuickView = ({
       const v2Unified: UnifiedRecord[] = v2Rows.map((r) => {
         const sess = r.session_id ? sessionsMap.get(r.session_id) ?? null : null;
         const hw = r.session_id ? homeworkMap.get(r.session_id) ?? null : null;
-        // Combinado/tarefa: prioridade homework (weekly_goal > ações > título) > next_session_plan da sessão
+        // Combinado/tarefa: origem homework (weekly_goal > ações > título)
         let combinado: string | null = null;
         if (hw) {
           if (hw.weekly_goal && String(hw.weekly_goal).trim()) {
