@@ -2009,20 +2009,25 @@ const Finance = () => {
                 })}
               </div>
 
-              {/* Recebimentos por quinzena */}
+              {/* Recebido x A receber por quinzena */}
               <div className="mt-5 rounded-2xl border border-border bg-card p-4 md:p-5">
-                <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1">
                   <div>
                     <h3 className="font-display text-base md:text-lg font-semibold tracking-tight">Recebimentos do mês</h3>
-                    <p className="text-xs text-muted-foreground">Acompanhe quanto entrou em cada quinzena</p>
+                    <p className="text-xs text-muted-foreground">Recebido e a receber em cada quinzena</p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Recebido no mês: <strong className="text-moss font-semibold tabular-nums">{formatBRL(quinzenaChartData.total)}</strong>
-                  </p>
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+                    <p className="text-muted-foreground">
+                      Recebido no mês: <strong className="text-moss font-semibold tabular-nums">{formatBRL(quinzenaChartData.totalRecebido)}</strong>
+                    </p>
+                    <p className="text-muted-foreground">
+                      A receber no mês: <strong className="font-semibold tabular-nums" style={{ color: "hsl(var(--accent))" }}>{formatBRL(quinzenaChartData.totalAReceber)}</strong>
+                    </p>
+                  </div>
                 </div>
-                <div className="mt-3 h-44 w-full">
+                <div className="mx-auto mt-3 h-52 w-full max-w-2xl">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={quinzenaChartData.bars} margin={{ top: 30, right: 8, left: 8, bottom: 0 }} barCategoryGap="35%">
+                    <BarChart data={quinzenaChartData.bars} margin={{ top: 26, right: 8, left: 8, bottom: 0 }} barCategoryGap="28%" barGap={6}>
                       <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
                       <XAxis
                         dataKey="name"
@@ -2042,7 +2047,7 @@ const Finance = () => {
                       <YAxis hide domain={[0, "dataMax"]} />
                       <RechartsTooltip
                         cursor={{ fill: "hsl(var(--secondary))", opacity: 0.5 }}
-                        formatter={(value: any) => [formatBRL(Number(value)), "Recebido"]}
+                        formatter={(value: any, name: any) => [formatBRL(Number(value)), name === "recebido" ? "Recebido" : "A receber"]}
                         labelFormatter={(_, payload: any) => {
                           const item = payload?.[0]?.payload;
                           return item ? `${item.name} (${item.periodo})` : "";
@@ -2054,13 +2059,21 @@ const Finance = () => {
                           fontSize: 12,
                         }}
                       />
-                      <Bar dataKey="valor" radius={[8, 8, 0, 0]} maxBarSize={72}
-                        label={{ position: "top", formatter: (v: any) => formatBRL(Number(v)), className: "fill-foreground text-xs font-semibold tabular-nums" } as any}
-                      >
-                        {quinzenaChartData.bars.map((b) => (
-                          <Cell key={b.name} fill={b.fill} />
-                        ))}
-                      </Bar>
+                      <Legend
+                        verticalAlign="top"
+                        align="right"
+                        iconType="circle"
+                        iconSize={8}
+                        formatter={(value: any) => (
+                          <span className="text-xs text-muted-foreground">{value === "recebido" ? "Recebido" : "A receber"}</span>
+                        )}
+                      />
+                      <Bar dataKey="recebido" name="recebido" fill="hsl(var(--moss))" radius={[6, 6, 0, 0]} maxBarSize={48}
+                        label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? formatBRL(Number(v)) : ""), className: "fill-foreground text-[11px] font-semibold tabular-nums" } as any}
+                      />
+                      <Bar dataKey="aReceber" name="aReceber" fill="hsl(var(--accent))" radius={[6, 6, 0, 0]} maxBarSize={48}
+                        label={{ position: "top", formatter: (v: any) => (Number(v) > 0 ? formatBRL(Number(v)) : ""), className: "fill-foreground text-[11px] font-semibold tabular-nums" } as any}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
