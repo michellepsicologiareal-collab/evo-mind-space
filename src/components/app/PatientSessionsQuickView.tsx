@@ -420,13 +420,13 @@ export const PatientSessionsQuickView = ({
       const v2SessionIdList = Array.from(
         new Set(v2Rows.map((r) => r.session_id).filter((sid): sid is string => !!sid))
       );
-      const sessionsMap = new Map<string, { scheduled_at: string | null; modality: string | null; duration_minutes: number | null; status: string | null; next_session_plan: string | null }>();
+      const sessionsMap = new Map<string, { scheduled_at: string | null; modality: string | null; duration_minutes: number | null; status: string | null }>();
       const homeworkMap = new Map<string, { title: string | null; weekly_goal: string | null; actions: any }>();
       if (v2SessionIdList.length > 0) {
         const [sessRes, hwRes] = await Promise.all([
           supabase
             .from("sessions")
-            .select("id, scheduled_at, modality, duration_minutes, status, next_session_plan")
+            .select("id, scheduled_at, modality, duration_minutes, status")
             .in("id", v2SessionIdList),
           supabase
             .from("homework_tasks")
@@ -439,7 +439,6 @@ export const PatientSessionsQuickView = ({
             modality: s.modality ?? null,
             duration_minutes: s.duration_minutes ?? null,
             status: s.status ?? null,
-            next_session_plan: s.next_session_plan ?? null,
           });
         });
         (hwRes.data ?? []).forEach((h: any) => {
