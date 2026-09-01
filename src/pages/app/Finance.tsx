@@ -2643,6 +2643,86 @@ const Finance = () => {
         </SheetContent>
       </Sheet>
 
+      {/* Tela de conferência antes de enviar cobrança */}
+      <Dialog open={!!confirmSend} onOpenChange={(open) => { if (!open) setConfirmSend(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar envio de cobrança</DialogTitle>
+          </DialogHeader>
+          {confirmSend && (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-border/60 bg-secondary/30 p-4 space-y-2">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Paciente</p>
+                  <p className="text-sm font-semibold text-foreground">{confirmSend.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Vencimento</p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {confirmSend.dueDate ? formatDue(confirmSend.dueDate) : "—"}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                  Sessões incluídas
+                </p>
+                {(() => {
+                  const target = getBillingTarget(confirmSend.sessions, confirmSend.isPlan).slice().sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+                  if (target.length === 0) {
+                    return (
+                      <p className="text-sm text-muted-foreground">Nenhuma sessão incluída.</p>
+                    );
+                  }
+                  return (
+                    <ul className="rounded-xl border border-border/60 divide-y divide-border max-h-60 overflow-y-auto">
+                      {target.map((r) => (
+                        <li key={r.id} className="flex items-center justify-between gap-3 px-3 py-2.5">
+                          <span className="text-sm text-foreground">
+                            {format(new Date(r.scheduled_at), "dd/MM/yyyy")}
+                          </span>
+                          <span className="text-sm font-medium text-foreground">
+                            {formatBRL(Number(r.price ?? 0))}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                })()}
+              </div>
+
+              {(() => {
+                const target = getBillingTarget(confirmSend.sessions, confirmSend.isPlan);
+                const total = target.reduce((s, r) => s + Number(r.price ?? 0), 0);
+                return (
+                  <div className="flex items-center justify-between rounded-xl bg-moss/10 px-4 py-3">
+                    <span className="text-sm font-medium text-moss">Total a cobrar</span>
+                    <span className="text-base font-bold text-moss">{formatBRL(total)}</span>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setConfirmSend(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="accent"
+              onClick={() => {
+                if (!confirmSend) return;
+                const args = { ...confirmSend };
+                setConfirmSend(null);
+                sendBillingWhatsApp(args);
+              }}
+            >
+              {confirmSend?.isResend ? "Reenviar cobrança" : "Enviar cobrança"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
