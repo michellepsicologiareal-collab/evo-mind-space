@@ -198,6 +198,21 @@ const Finance = () => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
   const [financeHistory, setFinanceHistory] = useState<{ id: string; name: string } | null>(null);
+  // Drawer de baixa financeira (aberto ao clicar no card / "Ver detalhes")
+  const [settle, setSettle] = useState<{
+    key: string;
+    name: string;
+    patientId: string | null;
+    isPlan: boolean;
+    planValue: number;
+    pago: number;
+    emAberto: number;
+    planSessions: number;
+    sessions: Row[];
+  } | null>(null);
+  const [settleSelected, setSettleSelected] = useState<Set<string>>(new Set());
+  const [settling, setSettling] = useState(false);
+
   // Pagamentos atrasados (vindo do Painel via ?filter=atrasados): sessões passadas,
   // não canceladas, com pagamento pendente — mesma regra usada no indicador do Painel.
   const [overdueOpen, setOverdueOpen] = useState(false);
@@ -1173,6 +1188,45 @@ const Finance = () => {
     load();
   };
 
+  /** Sessões que podem receber baixa: plano = qualquer pendente não cancelada;
+   *  avulsa = apenas sessões REALIZADAS e pendentes (nunca futuras). */
+  const settleableSessions = (g: { isPlan: boolean; sessions: Row[] }) =>
+    g.sessions
+      .filter(
+        (r) =>
+          r.payment_status === "pending" &&
+          r.status !== "cancelled" &&
+          (g.isPlan || r.status === "completed")
+      )
+      .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+
+  const openSettle = (g: NonNullable<typeof settle>) => {
+    setSettle(g);
+    setSettleSelected(new Set(settleableSessions(g).map((r) => r.id)));
+  };
+
+  /** Registra pagamento das sessões informadas (sem duplicar: só pendentes). */
+  const settlePayment = async (ids: string[], label: string) => {
+    if (ids.length === 0) return;
+    setSettling(true);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ payment_status: "paid", paid_at: new Date().toISOString() })
+      .in("id", ids)
+      .eq("payment_status", "pending");
+    setSettling(false);
+    if (error) {
+      toast.error("Não foi possível registrar o pagamento.");
+      return;
+    }
+    toast.success(label);
+    setSettle(null);
+    setSettleSelected(new Set());
+    load();
+  };
+
+
+
 
   return (
     <div className="space-y-8 animate-fade-up">
@@ -2000,8 +2054,13 @@ const Finance = () => {
                     return (
                       <li
                         key={g.key}
-                        className="rounded-2xl border border-border bg-card px-4 py-4 transition-shadow hover:shadow-md"
+                        onClick={(e) => {
+                          if ((e.target as HTMLElement).closest("button,input,a,[role='combobox']")) return;
+                          openSettle(g);
+                        }}
+                        className="cursor-pointer rounded-2xl border border-border bg-card px-4 py-4 transition-shadow hover:shadow-md"
                       >
+
                         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.9fr)] lg:items-center">
                           {/* Coluna 1 — paciente e modalidade */}
                           <div className="flex items-start gap-3 min-w-0">
@@ -2126,17 +2185,16 @@ const Finance = () => {
                                 </SelectContent>
                               </Select>
                             </div>
-                            {g.patientId && (
-                              <button
-                                type="button"
-                                onClick={() => setFinanceHistory({ id: g.patientId!, name: g.name })}
-                                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                                aria-label={`Ver detalhes financeiros de ${g.name}`}
-                              >
-                                Ver detalhes
-                                <ChevronRight className="h-3.5 w-3.5" />
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); openSettle(g); }}
+                              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                              aria-label={`Abrir ações financeiras de ${g.name}`}
+                            >
+                              Ver detalhes
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+
                           </div>
                         </div>
                       </li>
@@ -2184,7 +2242,159 @@ const Finance = () => {
         }}
       />
 
+      {/* Baixa financeira — ações do paciente sem sair do Financeiro */}
+      <Sheet
+        open={!!settle}
+        onOpenChange={(o) => {
+          if (!o) { setSettle(null); setSettleSelected(new Set()); }
+        }}
+      >
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle className="font-display">{settle?.name ?? ""}</SheetTitle>
+            <SheetDescription>
+              {settle?.isPlan ? "Plano de Atendimento" : "Cobrança por sessão"} · ações financeiras
+            </SheetDescription>
+          </SheetHeader>
+
+          {settle && (() => {
+            const pendentes = settleableSessions(settle);
+            const selecionadas = pendentes.filter((r) => settleSelected.has(r.id));
+            const totalSelecionado = selecionadas.reduce((s, r) => s + Number(r.price ?? 0), 0);
+            const futuras = settle.sessions
+              .filter((r) => r.payment_status === "pending" && r.status !== "cancelled" && r.status !== "completed" && r.status !== "no_show")
+              .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+
+            return (
+              <div className="mt-5 space-y-5">
+                <div className="grid grid-cols-3 gap-3 rounded-2xl border border-border bg-secondary/30 p-4">
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">{settle.isPlan ? "Valor do plano" : "Total do mês"}</p>
+                    <p className="text-sm font-semibold tabular-nums">
+                      {formatBRL(settle.isPlan ? settle.planValue : settle.pago + settle.emAberto)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Pago</p>
+                    <p className="text-sm font-semibold tabular-nums text-moss">{formatBRL(settle.pago)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Em aberto</p>
+                    <p className={`text-sm font-semibold tabular-nums ${settle.emAberto > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                      {formatBRL(settle.emAberto)}
+                    </p>
+                  </div>
+                </div>
+
+                {pendentes.length === 0 ? (
+                  <p className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
+                    Nada a dar baixa: não há {settle.isPlan ? "valores pendentes neste plano" : "sessões realizadas pendentes"}.
+                  </p>
+                ) : settle.isPlan ? (
+                  <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                    <p className="text-sm font-medium text-foreground">Dar baixa no plano</p>
+                    <p className="text-xs text-muted-foreground">
+                      {settle.planSessions} {settle.planSessions === 1 ? "sessão" : "sessões"} contratadas · registrar o pagamento do valor em aberto.
+                    </p>
+                    <p className="font-display text-2xl font-semibold tabular-nums">{formatBRL(settle.emAberto)}</p>
+                    <Button
+                      variant="accent"
+                      className="w-full"
+                      disabled={settling}
+                      onClick={() =>
+                        settlePayment(pendentes.map((r) => r.id), `Plano de ${settle.name} quitado · ${formatBRL(settle.emAberto)}`)
+                      }
+                    >
+                      Confirmar pagamento
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                    <p className="text-sm font-medium text-foreground">Sessões realizadas pendentes</p>
+                    <ul className="space-y-2">
+                      {pendentes.map((r) => {
+                        const checked = settleSelected.has(r.id);
+                        return (
+                          <li key={r.id}>
+                            <label className="flex items-center gap-3 rounded-xl border border-border px-3 py-2 text-sm cursor-pointer hover:bg-secondary/40">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() =>
+                                  setSettleSelected((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(r.id)) next.delete(r.id);
+                                    else next.add(r.id);
+                                    return next;
+                                  })
+                                }
+                                className="h-4 w-4 accent-[hsl(var(--accent))]"
+                              />
+                              <span className="tabular-nums">{format(new Date(r.scheduled_at), "dd/MM")}</span>
+                              <span className="text-muted-foreground text-xs">Realizada</span>
+                              <span className="ml-auto font-medium tabular-nums">{formatBRL(Number(r.price ?? 0))}</span>
+                            </label>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Total selecionado</span>
+                      <strong className="tabular-nums">{formatBRL(totalSelecionado)}</strong>
+                    </div>
+                    <Button
+                      variant="accent"
+                      className="w-full"
+                      disabled={settling || selecionadas.length === 0}
+                      onClick={() =>
+                        settlePayment(
+                          selecionadas.map((r) => r.id),
+                          `${selecionadas.length} ${selecionadas.length === 1 ? "sessão paga" : "sessões pagas"} · ${formatBRL(totalSelecionado)}`
+                        )
+                      }
+                    >
+                      Dar baixa nas sessões selecionadas
+                    </Button>
+                  </div>
+                )}
+
+                {!settle.isPlan && futuras.length > 0 && (
+                  <div className="rounded-2xl border border-dashed border-border p-4">
+                    <p className="text-xs font-medium text-muted-foreground">Sessões futuras (previstas — não podem ser quitadas)</p>
+                    <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                      {futuras.map((r) => (
+                        <li key={r.id} className="flex items-center gap-2">
+                          <span className="tabular-nums">{format(new Date(r.scheduled_at), "dd/MM")}</span>
+                          <span>· Agendada</span>
+                          <span className="ml-auto tabular-nums">{formatBRL(Number(r.price ?? 0))}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {settle.patientId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const p = { id: settle.patientId!, name: settle.name };
+                      setSettle(null);
+                      setFinanceHistory(p);
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                  >
+                    Ver histórico financeiro completo
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
+
       {/* Histórico financeiro do paciente — permanece dentro do contexto do Financeiro */}
+
       <Sheet open={!!financeHistory} onOpenChange={(open) => { if (!open) setFinanceHistory(null); }}>
         <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
           <SheetHeader className="text-left">
