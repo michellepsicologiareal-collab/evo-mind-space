@@ -198,6 +198,21 @@ const Finance = () => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
   const [financeHistory, setFinanceHistory] = useState<{ id: string; name: string } | null>(null);
+  // Drawer de baixa financeira (aberto ao clicar no card / "Ver detalhes")
+  const [settle, setSettle] = useState<{
+    key: string;
+    name: string;
+    patientId: string | null;
+    isPlan: boolean;
+    planValue: number;
+    pago: number;
+    emAberto: number;
+    planSessions: number;
+    sessions: Row[];
+  } | null>(null);
+  const [settleSelected, setSettleSelected] = useState<Set<string>>(new Set());
+  const [settling, setSettling] = useState(false);
+
   // Pagamentos atrasados (vindo do Painel via ?filter=atrasados): sessões passadas,
   // não canceladas, com pagamento pendente — mesma regra usada no indicador do Painel.
   const [overdueOpen, setOverdueOpen] = useState(false);
