@@ -1850,7 +1850,7 @@ const Finance = () => {
             g.sessions.push(r);
             g.total++;
             if (r.scheduled_at > g.lastAt) g.lastAt = r.scheduled_at;
-            if (isRecurringSession(r.notes)) {
+            if (isPlanNotes(r.notes)) {
               g.isPlan = true;
               g.planSessions++;
               g.planValue += price;
