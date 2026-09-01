@@ -2180,17 +2180,16 @@ const Finance = () => {
                                 </SelectContent>
                               </Select>
                             </div>
-                            {g.patientId && (
-                              <button
-                                type="button"
-                                onClick={() => setFinanceHistory({ id: g.patientId!, name: g.name })}
-                                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                                aria-label={`Ver detalhes financeiros de ${g.name}`}
-                              >
-                                Ver detalhes
-                                <ChevronRight className="h-3.5 w-3.5" />
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); openSettle(g); }}
+                              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                              aria-label={`Abrir ações financeiras de ${g.name}`}
+                            >
+                              Ver detalhes
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            </button>
+
                           </div>
                         </div>
                       </li>
