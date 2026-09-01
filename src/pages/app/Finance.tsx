@@ -219,7 +219,7 @@ const Finance = () => {
   const [quickAlert, setQuickAlert] = useState<QuickAlert>("none");
   const [receitaSaudeFilter, setReceitaSaudeFilter] = useState<ReceitaSaudeFilter>("all");
   // Visualização principal em cards ("Sessões do Mês")
-  const [cardPaymentFilter, setCardPaymentFilter] = useState<"pending" | "paid" | "all">("pending");
+  const [billingFilter, setBillingFilter] = useState<"all" | "enviada" | "perto" | "vencida" | "a_enviar">("all");
   const [cardSort, setCardSort] = useState<"date" | "patient">("date");
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const billingNotifiedRef = useRef<Set<string>>(new Set());
@@ -1050,8 +1050,8 @@ const Finance = () => {
     if (target.length === 0) {
       toast.info(
         isPlan
-          ? "Nada a cobrar: este plano não tem sessões em aberto."
-          : "Nada a cobrar: este grupo ainda não tem sessões realizadas."
+          ? "Nada a cobrar: este plano já está quitado."
+          : "Nada a cobrar: não há sessões realizadas pendentes."
       );
       return;
     }
@@ -1200,25 +1200,69 @@ const Finance = () => {
 
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           <RefreshButton />
-          <Button
-            variant="accent"
-            onClick={() => sessionsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Adicionar pagamento
-          </Button>
 
-          <div className="flex items-center gap-2 bg-card border border-border rounded-full p-1">
-            <Button variant="ghost" size="icon" onClick={() => setMonthCursor(subMonths(monthCursor, 1))}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-xs sm:text-sm font-medium px-1 sm:px-3 capitalize min-w-[100px] sm:min-w-[140px] text-center">
-              {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
-            </span>
-            <Button variant="ghost" size="icon" onClick={() => setMonthCursor(addMonths(monthCursor, 1))}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Filtros
+                <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Período do mês</Label>
+                <Tabs value={fortnightFilter} onValueChange={(v) => setFortnightFilter(v as FortnightFilter)}>
+                  <TabsList className="w-full">
+                    <TabsTrigger className="flex-1" value="all">Mês todo</TabsTrigger>
+                    <TabsTrigger className="flex-1" value="first">1ª quinz.</TabsTrigger>
+                    <TabsTrigger className="flex-1" value="second">2ª quinz.</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="receita-saude-filter" className="text-xs text-muted-foreground">Receita Saúde</Label>
+                <Select value={receitaSaudeFilter} onValueChange={(v) => setReceitaSaudeFilter(v as ReceitaSaudeFilter)}>
+                  <SelectTrigger id="receita-saude-filter" className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="to_issue">A emitir</SelectItem>
+                    <SelectItem value="issued">Emitido</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="patient-filter" className="text-xs text-muted-foreground">Paciente</Label>
+                <Select value={patientFilter} onValueChange={setPatientFilter}>
+                  <SelectTrigger id="patient-filter" className="h-9">
+                    <SelectValue placeholder="Todos os pacientes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os pacientes</SelectItem>
+                    {patientOptions.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {(fortnightFilter !== "all" || receitaSaudeFilter !== "all" || patientFilter !== "all") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => { setFortnightFilter("all"); setReceitaSaudeFilter("all"); setPatientFilter("all"); }}
+                >
+                  Limpar filtros
+                </Button>
+              )}
+            </PopoverContent>
+          </Popover>
+
 
           <Popover>
             <PopoverTrigger asChild>
@@ -1385,96 +1429,6 @@ const Finance = () => {
         </div>
       </header>
 
-      {/* KPI Cards — 5 cards */}
-      <section className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <KpiCard icon={Wallet} label="Recebido no período" value={formatBRL(totalRecebido)} hint={`Pagamentos confirmados no período · ${sessoesPagas} sessões`} accent />
-        <KpiCard icon={Receipt} label="Receita realizada" value={formatBRL(totalReceitaRealizada)} hint={`${sessoesRealizadas} sessões realizadas`} />
-        <KpiCard icon={CalendarClock} label="Saldo pago a realizar" value={formatBRL(totalSaldoPagoARealizar)} hint={`${sessoesFuturasPagas} sessões futuras já pagas`} />
-        <KpiCard icon={Clock} label="A receber" value={formatBRL(totalAReceber)} hint={`${sessoesPendentes} cobranças em aberto${totalPrevistoAvulso > 0 ? ` · ${formatBRL(totalPrevistoAvulso)} previsto` : ""}`} />
-        <KpiCard icon={CalendarClock} label="Receita prevista do mês" value={formatBRL(totalPrevisto)} hint={`${sessoesAgendadas} sessões agendadas`} />
-      </section>
-
-      {/* Alerts row — filtros clicáveis que refinam a lista de sessões */}
-      <section className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        {([
-          { key: "receita_saude" as QuickAlert, label: "Receita Saúde pendente", hint: `${receitaSaudeToIssue.length} a emitir`, icon: Receipt, count: receitaSaudeToIssue.length, tone: "text-amber-600 bg-amber-50 border-amber-200", clickable: true },
-          { key: "sem_pagamento" as QuickAlert, label: "Cobranças em aberto", hint: `${sessoesPendentes} pendentes · ${formatBRL(totalAReceber)}`, icon: FileWarning, count: sessoesPendentes, tone: "text-destructive bg-destructive/10 border-destructive/30", clickable: true },
-          { key: "none" as QuickAlert, label: "Planos de Atendimento no mês", hint: `${packagesStats.sessions} ${packagesStats.sessions === 1 ? "sessão vinculada" : "sessões vinculadas"} a Planos de Atendimento`, icon: PackageOpen, count: packagesStats.count, tone: "text-primary bg-secondary/60 border-border", clickable: false },
-          { key: "none" as QuickAlert, label: "Sessões únicas no mês", hint: `${avulsasStats.patients} ${avulsasStats.patients === 1 ? "paciente" : "pacientes"} com sessões únicas`, icon: CalendarClock, count: avulsasStats.count, tone: "text-foreground bg-card border-border", clickable: false },
-        ]).map((a, idx) => {
-          const active = a.clickable && quickAlert === a.key;
-          const Icon = a.icon;
-          const commonClass = `text-left rounded-2xl border p-4 transition-all ${a.tone} ${a.clickable ? "hover:-translate-y-0.5 hover:shadow-soft" : "cursor-default"} ${active ? "ring-2 ring-offset-2 ring-primary/60" : ""}`;
-          const content = (
-            <>
-              <div className="flex items-center justify-between gap-3">
-                <Icon className="h-4 w-4 shrink-0" />
-                <span className="font-display text-2xl font-semibold">{a.count}</span>
-              </div>
-              <p className="mt-2 text-xs font-medium leading-snug">{a.label}</p>
-              {a.hint && <p className="mt-0.5 text-[11px] opacity-80 leading-snug">{a.hint}</p>}
-            </>
-          );
-          if (!a.clickable) {
-            return (
-              <div key={`${a.label}-${idx}`} className={commonClass}>
-                {content}
-              </div>
-            );
-          }
-          return (
-            <button
-              key={`${a.label}-${idx}`}
-              type="button"
-              onClick={() => {
-                setQuickAlert((cur) => (cur === a.key ? "none" : a.key));
-                sessionsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-              className={commonClass}
-            >
-              {content}
-            </button>
-          );
-        })}
-
-        {/* Distribuição dos Honorários — carteira ativa (independe de mês/quinzena/filtros) */}
-        <div className="rounded-2xl border border-border bg-card p-4 text-foreground">
-          <div className="flex items-center justify-between gap-3">
-            <Wallet className="h-4 w-4 shrink-0 text-primary" />
-            <span className="font-display text-2xl font-semibold">{feeBands.total - feeBands.invalid}</span>
-          </div>
-          <p className="mt-2 text-xs font-medium leading-snug">Distribuição dos Honorários</p>
-          <div className="mt-2 space-y-1 text-[11px] leading-snug">
-            <button
-              type="button"
-              onClick={() => feeBands.low.length && setFeeBandOpen("low")}
-              disabled={!feeBands.low.length}
-              className="flex w-full items-center justify-between rounded-md px-1 py-0.5 -mx-1 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-70 disabled:hover:bg-transparent disabled:cursor-default text-left"
-            >
-              <span className="text-muted-foreground">Até R$ 100</span>
-              <span className="tabular-nums font-medium">{feeBands.low.length}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => feeBands.mid.length && setFeeBandOpen("mid")}
-              disabled={!feeBands.mid.length}
-              className="flex w-full items-center justify-between rounded-md px-1 py-0.5 -mx-1 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-70 disabled:hover:bg-transparent disabled:cursor-default text-left"
-            >
-              <span className="text-muted-foreground">R$ 100,01–180</span>
-              <span className="tabular-nums font-medium">{feeBands.mid.length}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => feeBands.high.length && setFeeBandOpen("high")}
-              disabled={!feeBands.high.length}
-              className="flex w-full items-center justify-between rounded-md px-1 py-0.5 -mx-1 hover:bg-muted/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-70 disabled:hover:bg-transparent disabled:cursor-default text-left"
-            >
-              <span className="text-muted-foreground">Acima de R$ 180</span>
-              <span className="tabular-nums font-medium">{feeBands.high.length}</span>
-            </button>
-          </div>
-        </div>
-      </section>
 
       {/* Drawer lateral com pacientes por faixa de honorários */}
       <Sheet open={feeBandOpen !== null} onOpenChange={(o) => !o && setFeeBandOpen(null)}>
@@ -1512,52 +1466,6 @@ const Finance = () => {
 
 
 
-      {/* Fortnight filter */}
-      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
-        <Tabs value={fortnightFilter} onValueChange={(v) => setFortnightFilter(v as FortnightFilter)} className="w-full sm:w-auto">
-          <TabsList className="w-full sm:w-auto overflow-x-auto no-scrollbar">
-            <TabsTrigger value="all">Mês todo</TabsTrigger>
-            <TabsTrigger value="first">1ª Quinzena</TabsTrigger>
-            <TabsTrigger value="second">2ª Quinzena</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Label htmlFor="receita-saude-filter" className="text-xs text-muted-foreground whitespace-nowrap">Receita Saúde</Label>
-          <Select value={receitaSaudeFilter} onValueChange={(v) => setReceitaSaudeFilter(v as ReceitaSaudeFilter)}>
-            <SelectTrigger id="receita-saude-filter" className="h-9 flex-1 sm:w-[160px] sm:flex-none">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="to_issue">A emitir</SelectItem>
-              <SelectItem value="issued">Emitido</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Label htmlFor="patient-filter" className="text-xs text-muted-foreground whitespace-nowrap">Paciente</Label>
-          <Select value={patientFilter} onValueChange={setPatientFilter}>
-            <SelectTrigger id="patient-filter" className="h-9 flex-1 sm:w-[220px] sm:flex-none">
-              <SelectValue placeholder="Todos os pacientes" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os pacientes</SelectItem>
-              {patientOptions.map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {patientFilter !== "all" && (
-            <button
-              type="button"
-              onClick={() => setPatientFilter("all")}
-              className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
-            >
-              limpar
-            </button>
-          )}
-        </div>
-      </div>
 
 
 
@@ -1766,127 +1674,6 @@ const Finance = () => {
         </Alert>
       )}
 
-      {/* Cobranças de Planos de Atendimento concluídos */}
-      {planBillings.length > 0 && (
-        <section ref={billingSectionRef} className="rounded-3xl bg-card border border-border shadow-card p-4 lg:p-6 space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="font-display text-lg font-bold text-foreground">Cobranças · Planos de Atendimento concluídos</h2>
-              <p className="text-sm text-muted-foreground">
-                Planos com todas as sessões realizadas. {billingReminderEnabled
-                  ? `Você é avisada ${billingReminderDays} ${billingReminderDays === 1 ? "dia" : "dias"} antes do vencimento.`
-                  : "Lembretes automáticos desativados nas preferências."}
-              </p>
-
-            </div>
-            {planBillingStats.emAberto > 0 && (
-              <div className="rounded-xl bg-secondary/50 border border-border px-3 py-2">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Em aberto</p>
-                <p className="text-base font-semibold tabular-nums">{formatBRL(planBillingStats.emAberto)}</p>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {([
-              { label: "Cobranças enviadas", value: planBillingStats.enviadas, tone: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-400" },
-              { label: "Perto do vencimento", value: planBillingStats.perto, tone: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400" },
-              { label: "Vencidas", value: planBillingStats.vencidas, tone: "bg-destructive/10 text-destructive border-destructive/25" },
-              { label: "A enviar", value: planBillingStats.aEnviar, tone: "bg-secondary text-foreground/80 border-border" },
-            ]).map((k) => (
-              <div key={k.label} className={`rounded-xl border px-3 py-3 ${k.tone}`}>
-                <p className="text-2xl font-semibold tabular-nums leading-none">{k.value}</p>
-                <p className="text-[11px] mt-1.5 leading-snug">{k.label}</p>
-              </div>
-            ))}
-          </div>
-
-          <ul className="grid gap-3 md:grid-cols-2">
-            {planBillings.map((p) => (
-              <li key={p.key} className="rounded-2xl border border-border bg-background/60 p-4 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-medium text-foreground leading-snug line-clamp-2">{p.name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Plano de {p.totalDeclared} sessões · concluído
-                    </p>
-                  </div>
-                  <BillingBadge status={p.status} dueDate={p.dueDate} />
-                </div>
-
-                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm">
-                  <span className="font-semibold tabular-nums">{formatBRL(p.totalValue)}</span>
-                  {p.pendingValue > 0 && (
-                    <span className="text-xs text-muted-foreground">
-                      {formatBRL(p.pendingValue)} em aberto
-                    </span>
-                  )}
-                  {p.sentAt && (
-                    <span className="text-xs text-muted-foreground">
-                      Enviada em {new Date(p.sentAt).toLocaleDateString("pt-BR")}
-                    </span>
-                  )}
-                </div>
-
-                {p.status !== "pago" && (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <Label htmlFor={`due-${p.key}`} className="text-[11px] text-muted-foreground">Vencimento</Label>
-                      <Input
-                        id={`due-${p.key}`}
-                        type="date"
-                        value={p.dueDate ?? ""}
-                        onChange={(e) => updatePlanDueDate(p, e.target.value)}
-                        className="h-9 w-[150px] text-sm"
-                      />
-                    </div>
-                    <Button
-                      size="sm"
-                      variant={p.sentAt ? "outline" : "accent"}
-                      className="h-9"
-                      onClick={() => markBillingSent(p)}
-                    >
-                      {p.sentAt ? "Reenviar cobrança" : "Marcar cobrança enviada"}
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-9" onClick={() => markPlanPaid(p)}>
-                      Marcar como pago
-                    </Button>
-                  </div>
-                )}
-
-                {(() => {
-                  const logs = reminderLogsByPlan.get(p.key) ?? [];
-                  const last = logs[0];
-                  return (
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/60">
-                      <p className="text-[11px] text-muted-foreground">
-                        {last
-                          ? `Último aviso ${new Date(last.notified_at).toLocaleDateString("pt-BR")} · ${
-                              last.days_ahead === null
-                                ? "sem vencimento definido"
-                                : last.days_ahead >= 0
-                                  ? `${last.days_ahead} ${last.days_ahead === 1 ? "dia" : "dias"} de antecedência`
-                                  : `${Math.abs(last.days_ahead)} ${Math.abs(last.days_ahead) === 1 ? "dia" : "dias"} em atraso`
-                            }`
-                          : "Nenhum lembrete registrado ainda"}
-                      </p>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 px-2 text-[11px]"
-                        disabled={logs.length === 0}
-                        onClick={() => setReminderHistoryPlan({ key: p.key, name: p.name })}
-                      >
-                        Histórico de lembretes{logs.length ? ` (${logs.length})` : ""}
-                      </Button>
-                    </div>
-                  );
-                })()}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {/* Histórico de lembretes de cobrança */}
       <Sheet open={!!reminderHistoryPlan} onOpenChange={(v) => !v && setReminderHistoryPlan(null)}>
@@ -1945,373 +1732,444 @@ const Finance = () => {
 
 
 
-      {/* Sessões do Mês — visualização principal em cards */}
+      {/* Financeiro · Sessões do Mês — visualização principal (1 card por paciente) */}
       <section ref={sessionsSectionRef} className="rounded-3xl bg-card border border-border shadow-card p-4 lg:p-6">
         {(() => {
-          type Group = {
+          type PGroup = {
             key: string;
             name: string;
             patientId: string | null;
             sessions: Row[];
             isPlan: boolean;
-            planTotal: number;
-            totalValue: number;
-            pendingValue: number;
-            paidValue: number;
-            totalSessions: number;
+            planSessions: number;
+            unitPrice: number;
+            total: number;
             realizadas: number;
+            futuras: number;
             faltas: number;
-            aRealizar: number;
+            gerado: number;
+            pago: number;
+            emAberto: number;
+            previsto: number;
+            planValue: number;
             paidCount: number;
             pendingCount: number;
             receitaToIssue: number;
             receitaIssued: number;
             receitaNone: number;
-            firstAt: string;
             lastAt: string;
           };
 
-          const baseRows = chargeBase;
-          const map = new Map<string, Group>();
-
-          for (const r of baseRows) {
-            const name = r.patient?.full_name ?? "—";
+          const map = new Map<string, PGroup>();
+          for (const r of chargeBase) {
             const patientId = r.patient?.id ?? null;
-            const isPlan = isRecurringSession(r.notes);
-            const key = isPlan ? (getSeriesKey(r) ?? `single::${r.id}`) : `single::${r.id}`;
+            const key = patientId ?? `s::${r.id}`;
             let g = map.get(key);
             if (!g) {
               g = {
-                key, name, patientId, sessions: [], isPlan,
-                planTotal: Number(r.notes?.match(/Plano (\d+) sess/)?.[1] ?? 0),
-                totalValue: 0, pendingValue: 0, paidValue: 0, totalSessions: 0,
-                realizadas: 0, faltas: 0, aRealizar: 0,
-                paidCount: 0, pendingCount: 0,
-                receitaToIssue: 0, receitaIssued: 0, receitaNone: 0,
-                firstAt: r.scheduled_at, lastAt: r.scheduled_at,
+                key,
+                name: r.patient?.full_name ?? "—",
+                patientId,
+                sessions: [],
+                isPlan: false,
+                planSessions: 0,
+                unitPrice: 0,
+                total: 0,
+                realizadas: 0,
+                futuras: 0,
+                faltas: 0,
+                gerado: 0,
+                pago: 0,
+                emAberto: 0,
+                previsto: 0,
+                planValue: 0,
+                paidCount: 0,
+                pendingCount: 0,
+                receitaToIssue: 0,
+                receitaIssued: 0,
+                receitaNone: 0,
+                lastAt: r.scheduled_at,
               };
               map.set(key, g);
             }
+            const price = Number(r.price ?? 0);
             g.sessions.push(r);
-            g.totalSessions++;
-            g.totalValue += Number(r.price ?? 0);
-            if (r.scheduled_at < g.firstAt) g.firstAt = r.scheduled_at;
+            g.total++;
             if (r.scheduled_at > g.lastAt) g.lastAt = r.scheduled_at;
-            // Fonte única (src/lib/billing.ts): plano em aberto conta mesmo com sessões
-            // futuras; sessão avulsa só depois de realizada (futura = previsto).
-            if (r.payment_status === "paid") { g.paidCount++; g.paidValue += Number(r.price ?? 0); }
-            else if (isPendingCharge(r as any)) { g.pendingCount++; g.pendingValue += Number(r.price ?? 0); }
+            if (isRecurringSession(r.notes)) {
+              g.isPlan = true;
+              g.planSessions++;
+              g.planValue += price;
+            } else if (price > 0 && !g.unitPrice) {
+              g.unitPrice = price;
+            }
+            if (r.status === "completed") { g.realizadas++; g.gerado += price; }
+            else if (r.status === "no_show") g.faltas++;
+            else g.futuras++;
+            if (r.payment_status === "paid") { g.paidCount++; g.pago += price; }
+            else if (isPendingCharge(r as any)) { g.pendingCount++; g.emAberto += price; }
+            if (isForecastCharge(r as any)) g.previsto += price;
             if (r.receita_saude_status === "to_issue") g.receitaToIssue++;
             else if (r.receita_saude_status === "issued") g.receitaIssued++;
             else g.receitaNone++;
-            if (r.status === "completed") g.realizadas++;
-            else if (r.status === "no_show") g.faltas++;
-            else g.aRealizar++;
           }
 
-          const allGroups = Array.from(map.values());
+          const allGroups = Array.from(map.values()).map((g) => ({
+            ...g,
+            billing: billingStatusOf(g.sessions, billingReminderDays, g.isPlan ? "plan" : "per_session"),
+          }));
+
+          const totalPagoCards = allGroups.reduce((s, g) => s + g.pago, 0);
+          const totalPendenteCards = allGroups.reduce((s, g) => s + g.emAberto, 0);
+
+          const counts = {
+            enviada: allGroups.filter((g) => g.billing.status === "enviada").length,
+            perto: allGroups.filter((g) => g.billing.status === "perto").length,
+            vencida: allGroups.filter((g) => g.billing.status === "vencida").length,
+            a_enviar: allGroups.filter((g) => g.billing.status === "a_enviar").length,
+          };
 
           const groups = allGroups
             .filter((g) => {
-              if (cardPaymentFilter === "pending" && g.pendingCount === 0) return false;
-              if (cardPaymentFilter === "paid" && g.pendingCount > 0) return false;
+              if (billingFilter !== "all" && g.billing.status !== billingFilter) return false;
               if (receitaSaudeFilter === "to_issue") return g.receitaToIssue > 0;
               if (receitaSaudeFilter === "issued") return g.receitaIssued > 0 && g.receitaToIssue === 0;
               return true;
             })
             .sort((a, b) =>
               cardSort === "patient"
-                ? a.name.localeCompare(b.name, "pt-BR") || b.lastAt.localeCompare(a.lastAt)
+                ? a.name.localeCompare(b.name, "pt-BR")
                 : b.lastAt.localeCompare(a.lastAt) || a.name.localeCompare(b.name, "pt-BR")
             );
 
-          const totalPendenteCards = allGroups.reduce((s, g) => s + g.pendingValue, 0);
-          const totalPagoCards = allGroups.reduce((s, g) => s + g.paidValue, 0);
-
-          const receitaValue = (g: Group): "issued" | "to_issue" | "none" | "mixed" => {
-            if (g.receitaIssued > 0 && (g.receitaToIssue > 0 || g.receitaNone > 0)) return "mixed";
-            if (g.receitaToIssue > 0 && g.receitaNone > 0) return "mixed";
-            if (g.receitaIssued > 0) return "issued";
-            if (g.receitaToIssue > 0) return "to_issue";
-            return "none";
-          };
-
-          const RECEITA_TONE: Record<string, string> = {
-            issued: "bg-moss/10 text-moss border-moss/25",
-            to_issue: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400",
-            none: "bg-secondary text-muted-foreground border-border",
-            mixed: "bg-secondary text-foreground/70 border-border",
-          };
-
-          const payLabel = (g: Group) =>
+          const payLabel = (g: (typeof allGroups)[number]) =>
             g.pendingCount === 0 ? (g.paidCount === 0 ? "—" : "Pago") : g.paidCount === 0 ? "Pendente" : "Parcial";
+
+          const filterCards = [
+            { key: "enviada" as const, label: "Cobranças enviadas", hint: "Pacientes com cobrança já enviada", count: counts.enviada, icon: MessageCircle, tone: "border-sky-200 bg-sky-50/70 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400 dark:border-sky-500/25" },
+            { key: "perto" as const, label: "Perto do vencimento", hint: `Próximos ${billingReminderDays} dias do vencimento`, count: counts.perto, icon: Clock, tone: "border-amber-200 bg-amber-50/70 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/25" },
+            { key: "vencida" as const, label: "Vencidas", hint: "Cobranças com prazo vencido", count: counts.vencida, icon: AlertTriangle, tone: "border-destructive/25 bg-destructive/10 text-destructive" },
+            { key: "a_enviar" as const, label: "A enviar", hint: "Pacientes que ainda não receberam cobrança", count: counts.a_enviar, icon: BellRing, tone: "border-border bg-secondary/50 text-foreground/80" },
+          ];
+
+          const tabs = [
+            { key: "all" as const, label: "Todos" },
+            { key: "enviada" as const, label: "Cobranças enviadas" },
+            { key: "perto" as const, label: "Perto do vencimento" },
+            { key: "vencida" as const, label: "Vencidas" },
+            { key: "a_enviar" as const, label: "A enviar" },
+          ];
 
           return (
             <>
-              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
-                <h2 className="font-display text-lg font-semibold">Sessões do Mês</h2>
-                <span className="text-xs text-muted-foreground">
-                  {format(monthStart, "MMMM 'de' yyyy", { locale: ptBR })}
-                </span>
-                <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
-                  · Pendente {formatBRL(totalPendenteCards)}
-                </span>
-                <span className="text-xs font-medium text-moss">· Pago {formatBRL(totalPagoCards)}</span>
-                {quickAlert !== "none" && (
-                  <button
-                    type="button"
-                    onClick={() => setQuickAlert("none")}
-                    className="ml-auto text-xs px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
-                  >
-                    Limpar alerta
-                  </button>
-                )}
+              {/* Topo */}
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                <h2 className="font-display text-xl md:text-2xl font-semibold tracking-tight">
+                  Financeiro · Sessões do Mês
+                </h2>
+                <div className="ml-auto flex items-center gap-2">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthCursor(subMonths(monthCursor, 1))} aria-label="Mês anterior">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm font-medium text-primary capitalize min-w-[130px] text-center">
+                    {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
+                  </span>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthCursor(addMonths(monthCursor, 1))} aria-label="Próximo mês">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border mb-4">
-                <div className="flex items-center gap-5">
-                  {([["pending", "Pendentes"], ["paid", "Pagos"], ["all", "Todos"]] as const).map(([val, label]) => (
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+                <span className="text-muted-foreground">
+                  Pago <strong className="text-moss tabular-nums">{formatBRL(totalPagoCards)}</strong>
+                </span>
+                <span className="text-muted-foreground">
+                  Em aberto <strong className="text-destructive tabular-nums">{formatBRL(totalPendenteCards)}</strong>
+                </span>
+              </div>
+
+              {/* Cards/filtros clicáveis */}
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                {filterCards.map((c) => {
+                  const Icon = c.icon;
+                  const active = billingFilter === c.key;
+                  return (
                     <button
-                      key={val}
+                      key={c.key}
                       type="button"
-                      onClick={() => setCardPaymentFilter(val)}
-                      aria-pressed={cardPaymentFilter === val}
-                      className={`pb-2 -mb-px text-xs transition-colors border-b-2 ${
-                        cardPaymentFilter === val
+                      onClick={() => setBillingFilter(active ? "all" : c.key)}
+                      aria-pressed={active}
+                      className={`flex items-start gap-3 rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-soft ${c.tone} ${active ? "ring-2 ring-primary/50 ring-offset-2 ring-offset-background" : ""}`}
+                    >
+                      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background/70">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block font-display text-2xl font-semibold leading-none tabular-nums">{c.count}</span>
+                        <span className="mt-1.5 block text-xs font-medium leading-snug">{c.label}</span>
+                        <span className="mt-0.5 block text-[11px] leading-snug opacity-75">{c.hint}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Abas + ordenação */}
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-b border-border">
+                <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
+                  {tabs.map((t) => (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => setBillingFilter(t.key)}
+                      aria-pressed={billingFilter === t.key}
+                      className={`whitespace-nowrap pb-2 -mb-px text-sm transition-colors border-b-2 ${
+                        billingFilter === t.key
                           ? "border-primary text-primary font-semibold"
                           : "border-transparent text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      {label}
+                      {t.label}
                     </button>
                   ))}
                 </div>
                 <button
                   type="button"
                   onClick={() => setCardSort(cardSort === "date" ? "patient" : "date")}
-                  className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] text-foreground/80 hover:bg-secondary"
+                  className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-foreground/80 hover:bg-secondary"
                 >
                   Ordenar: {cardSort === "date" ? "Data" : "Paciente"}
+                  <ChevronDown className="h-3.5 w-3.5" />
                 </button>
               </div>
 
               {loading ? (
                 <p className="text-center py-12 text-muted-foreground">Carregando…</p>
               ) : groups.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border bg-card p-10 md:p-14 text-center">
+                <div className="mt-4 rounded-2xl border border-dashed border-border bg-card p-10 md:p-14 text-center">
                   <Wallet className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" aria-hidden="true" />
                   <p className="font-display text-lg font-medium text-foreground/80">
-                    {cardPaymentFilter === "paid"
-                      ? "Nenhuma cobrança paga neste período."
-                      : cardPaymentFilter === "pending"
-                        ? "Nenhum pagamento pendente por aqui 🌿"
-                        : "Nenhuma sessão neste período."}
+                    Nenhuma cobrança neste filtro 🌿
                   </p>
                   <p className="text-sm mt-1 text-muted-foreground max-w-md mx-auto">
                     Ajuste os filtros ou selecione outro período para visualizar as cobranças.
                   </p>
-                  {(patientFilter !== "all" || receitaSaudeFilter !== "all" || fortnightFilter !== "all") && (
+                  {(billingFilter !== "all" || patientFilter !== "all" || receitaSaudeFilter !== "all" || fortnightFilter !== "all") && (
                     <Button
                       variant="outline"
                       size="sm"
                       className="mt-5 h-10 min-h-11"
-                      onClick={() => { setPatientFilter("all"); setReceitaSaudeFilter("all"); setFortnightFilter("all"); }}
+                      onClick={() => { setBillingFilter("all"); setPatientFilter("all"); setReceitaSaudeFilter("all"); setFortnightFilter("all"); }}
                     >
                       Limpar filtros
                     </Button>
                   )}
                 </div>
               ) : (
-                <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 pb-24 md:pb-0">
+                <ul className="mt-4 space-y-3 pb-24 md:pb-0">
                   {groups.map((g) => {
                     const ids = g.sessions.map((s) => s.id);
-                    // Plano/pacote: a baixa quita a cobrança inteira do plano.
-                    // Sessão avulsa: só sessões realizadas (ou já pagas) — nunca futuras.
-                    const payIds = g.isPlan
-                      ? ids
-                      : g.sessions.filter((s) => s.status === "completed" || s.payment_status === "paid").map((s) => s.id);
-                    const billing = billingStatusOf(g.sessions, billingReminderDays, g.isPlan ? "plan" : "per_session");
+                    const billing = g.billing;
                     const pay = payLabel(g);
-                    const rs = receitaValue(g);
-                    const editTarget = g.sessions[0] ?? null;
                     const groupLogs = reminderLogsByPlan.get(g.key) ?? [];
                     const sendCount = groupLogs.filter((l) => l.channel !== "auto").length;
                     const alreadySent = !!billing.sentAt || sendCount > 0;
-
-                    const modalidade = g.isPlan
-                      ? `Plano de Atendimento${g.planTotal ? ` • ${g.totalSessions}/${g.planTotal} sessões` : ` • ${g.totalSessions} sessões`}`
-                      : "Sessão única";
+                    const receitaAplica = !(g.receitaNone === g.total);
                     const payTone =
-                      pay === "Pago" ? "bg-moss/10 text-moss border-moss/25" :
-                      pay === "Pendente" ? "bg-destructive/10 text-destructive border-destructive/25" :
-                      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400";
+                      pay === "Pago"
+                        ? "bg-moss/10 text-moss border-moss/25"
+                        : pay === "Pendente"
+                          ? "bg-destructive/10 text-destructive border-destructive/25"
+                          : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400";
+                    const initials = g.name
+                      .split(" ")
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((p) => p[0])
+                      .join("")
+                      .toUpperCase();
+
+                    const money = (label: string, value: number, tone = "text-foreground") => (
+                      <div>
+                        <p className="text-[11px] text-muted-foreground leading-tight">{label}</p>
+                        <p className={`text-sm font-semibold tabular-nums ${tone}`}>{formatBRL(value)}</p>
+                      </div>
+                    );
 
                     return (
                       <li
                         key={g.key}
-                        className="flex flex-col rounded-2xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
+                        className="rounded-2xl border border-border bg-card px-4 py-4 transition-shadow hover:shadow-md"
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="font-medium text-foreground leading-snug line-clamp-2">{g.name}</p>
-                            <p className="mt-0.5 text-[11px] text-muted-foreground">
-                              {g.isPlan
-                                ? `${g.totalSessions} ${g.totalSessions === 1 ? "sessão" : "sessões"} · ${format(new Date(g.firstAt), "dd/MM")} – ${format(new Date(g.lastAt), "dd/MM/yyyy")}`
-                                : format(new Date(g.lastAt), "dd/MM/yyyy")}
-                            </p>
-                          </div>
-                          <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${payTone}`}>
-                            {pay}
-                          </span>
-                        </div>
-
-                        <p className="mt-2 font-display text-xl font-semibold tabular-nums text-primary">
-                          {formatBRL(g.totalValue)}
-                          {g.pendingValue > 0 && g.pendingValue !== g.totalValue && (
-                            <span className="ml-2 text-[11px] font-normal text-muted-foreground">
-                              {formatBRL(g.pendingValue)} em aberto
+                        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.9fr)] lg:items-center">
+                          {/* Coluna 1 — paciente e modalidade */}
+                          <div className="flex items-start gap-3 min-w-0">
+                            <span className="hidden sm:flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-foreground/70">
+                              {initials || "?"}
                             </span>
-                          )}
-                        </p>
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground leading-snug truncate">{g.name}</p>
+                              <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                                <span className="rounded-full border border-lilac/30 bg-lilac/10 px-2 py-0.5 font-medium text-foreground/80">
+                                  {g.isPlan ? "Plano de Atendimento" : "Sessão avulsa"}
+                                </span>
+                                <span>
+                                  ·{" "}
+                                  {g.isPlan
+                                    ? `${g.planSessions} ${g.planSessions === 1 ? "sessão" : "sessões"}`
+                                    : g.unitPrice > 0
+                                      ? `${formatBRL(g.unitPrice)} por sessão`
+                                      : "valor por sessão"}
+                                </span>
+                              </p>
+                              <p className="mt-1.5 text-xs text-muted-foreground">
+                                {g.isPlan
+                                  ? `${g.realizadas}/${g.total} sessões realizadas`
+                                  : `${g.total} ${g.total === 1 ? "sessão" : "sessões"} no mês`}
+                              </p>
+                              {!g.isPlan && (
+                                <p className="text-xs">
+                                  <span className="text-moss">{g.realizadas} realizadas</span>
+                                  {g.futuras > 0 && <span className="text-muted-foreground"> · {g.futuras} futuras</span>}
+                                  {g.faltas > 0 && <span className="text-destructive"> · {g.faltas} faltas</span>}
+                                </p>
+                              )}
+                            </div>
+                          </div>
 
-                        {(billing.status !== "na" || billing.sentAt) && (
-                          <div className="mt-2 space-y-1">
-                            {billing.status !== "na" && (
-                              <BillingBadge status={billing.status} dueDate={billing.dueDate} />
+                          {/* Coluna 2 — valores */}
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                            {g.isPlan ? (
+                              <>
+                                {money("Valor do plano", g.planValue)}
+                                {money("Em aberto", g.emAberto, g.emAberto > 0 ? "text-destructive" : "text-muted-foreground")}
+                                {money("Pago", g.pago, "text-moss")}
+                              </>
+                            ) : (
+                              <>
+                                {money("Gerado no mês", g.gerado)}
+                                {money("Em aberto", g.emAberto, g.emAberto > 0 ? "text-destructive" : "text-muted-foreground")}
+                                {money("Pago", g.pago, "text-moss")}
+                                {money("Previsto", g.previsto, "text-muted-foreground")}
+                              </>
                             )}
-                            {billing.sentAt && (
+                          </div>
+
+                          {/* Coluna 3 — status e ações */}
+                          <div className="min-w-0 space-y-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${payTone}`}>{pay}</span>
+                              {billing.status !== "na" && (
+                                <BillingBadge status={billing.status} dueDate={billing.dueDate} />
+                              )}
+                            </div>
+                            {(billing.sentAt || billing.dueDate) && (
                               <p className="text-[11px] text-muted-foreground">
-                                Enviada em {format(new Date(billing.sentAt), "dd/MM/yyyy 'às' HH:mm")}
+                                {billing.sentAt ? `Enviada em ${format(new Date(billing.sentAt), "dd/MM/yyyy")}` : "Sem envio registrado"}
+                                {billing.dueDate ? ` · Vence ${formatDue(billing.dueDate)}` : ""}
                                 {sendCount > 1 ? ` · ${sendCount} envios` : ""}
                               </p>
                             )}
-                          </div>
-                        )}
-
-
-                        <p className="mt-2 text-[11px] text-muted-foreground">{modalidade}</p>
-
-                        <div className="mt-3 grid grid-cols-4 gap-1.5 text-center">
-                          {[
-                            { label: "Mês", value: g.totalSessions, tone: "text-foreground" },
-                            { label: "Realiz.", value: g.realizadas, tone: "text-moss" },
-                            { label: "Faltas", value: g.faltas, tone: g.faltas > 0 ? "text-destructive" : "text-muted-foreground" },
-                            { label: "A realizar", value: g.aRealizar, tone: "text-muted-foreground" },
-                          ].map((cell) => (
-                            <div key={cell.label} className="rounded-lg bg-secondary/40 px-1.5 py-1.5">
-                              <p className="text-[9px] uppercase tracking-wide text-muted-foreground">{cell.label}</p>
-                              <p className={`text-sm font-semibold tabular-nums ${cell.tone}`}>{cell.value}</p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-1.5 text-xs"
+                                disabled={pay === "Pago"}
+                                onClick={() =>
+                                  sendBillingWhatsApp({
+                                    key: g.key,
+                                    name: g.name,
+                                    patientId: g.patientId,
+                                    sessions: g.sessions,
+                                    isPlan: g.isPlan,
+                                    dueDate: billing.dueDate,
+                                    status: billing.status,
+                                    isResend: alreadySent,
+                                  })
+                                }
+                                aria-label={`${alreadySent ? "Reenviar" : "Enviar"} cobrança de ${g.name} pelo WhatsApp`}
+                              >
+                                <MessageCircle className="h-3.5 w-3.5" />
+                                {alreadySent ? "Reenviar cobrança" : "Enviar cobrança"}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-1.5 text-xs"
+                                onClick={() => setReminderHistoryPlan({ key: g.key, name: g.name })}
+                                aria-label={`Ver histórico de cobranças de ${g.name}`}
+                              >
+                                <HistoryIcon className="h-3.5 w-3.5" />
+                                Histórico
+                              </Button>
                             </div>
-                          ))}
-                        </div>
-
-                        <div className="mt-3 space-y-2">
-                          <div>
-                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Pagamento</Label>
-                            <Select
-                              value={g.pendingCount > 0 && g.paidCount > 0 ? undefined : g.pendingCount === 0 && g.paidCount > 0 ? "paid" : "pending"}
-                              onValueChange={(v) => updatePaymentGroup(payIds, v as PaymentStatus)}
-                            >
-                              <SelectTrigger className="mt-1 h-9 text-xs">
-                                <SelectValue placeholder="Parcial" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="pending">Pendente</SelectItem>
-                                <SelectItem value="paid">Pago</SelectItem>
-                              </SelectContent>
-                            </Select>
                           </div>
 
-                          <div>
-                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Receita Saúde</Label>
-                            <Select
-                              value={rs === "mixed" ? undefined : rs}
-                              onValueChange={(v) =>
-                                updateReceitaSaudeGroup(ids, v === "none" ? null : (v as ReceitaSaudeStatus))
-                              }
-                            >
-                              <SelectTrigger className={`mt-1 h-9 text-xs border ${RECEITA_TONE[rs]}`}>
-                                <SelectValue placeholder="Misto" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="to_issue">Não emitida</SelectItem>
-                                <SelectItem value="issued">Emitida</SelectItem>
-                                <SelectItem value="none">Não se aplica</SelectItem>
-                              </SelectContent>
-                            </Select>
+                          {/* Coluna 4 — Receita Saúde + detalhes */}
+                          <div className="flex items-center justify-between gap-3 lg:flex-col lg:items-end">
+                            <div className="flex items-center gap-2">
+                              <Label className="text-[11px] text-muted-foreground whitespace-nowrap">Receita Saúde:</Label>
+                              <Select
+                                value={receitaAplica ? "aplica" : "nao"}
+                                onValueChange={(v) =>
+                                  updateReceitaSaudeGroup(ids, v === "aplica" ? "to_issue" : null)
+                                }
+                              >
+                                <SelectTrigger className="h-8 w-[130px] text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="aplica">Se aplica</SelectItem>
+                                  <SelectItem value="nao">Não se aplica</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {g.patientId && (
+                              <button
+                                type="button"
+                                onClick={() => setFinanceHistory({ id: g.patientId!, name: g.name })}
+                                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                                aria-label={`Ver detalhes financeiros de ${g.name}`}
+                              >
+                                Ver detalhes
+                                <ChevronRight className="h-3.5 w-3.5" />
+                              </button>
+                            )}
                           </div>
                         </div>
-
-                        <div className="mt-3 border-t border-border/60 pt-3 space-y-2">
-                          <Button
-                            variant={alreadySent ? "outline" : "default"}
-                            size="sm"
-                            className="w-full h-9 gap-2"
-                            onClick={() =>
-                              sendBillingWhatsApp({
-                                key: g.key,
-                                name: g.name,
-                                patientId: g.patientId,
-                                sessions: g.sessions,
-                                isPlan: g.isPlan,
-                                dueDate: billing.dueDate,
-                                status: billing.status,
-                                isResend: alreadySent,
-                              })
-                            }
-                            aria-label={`${alreadySent ? "Reenviar" : "Enviar"} cobrança de ${g.name} pelo WhatsApp`}
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                            {alreadySent ? "Reenviar cobrança" : "Enviar cobrança pelo WhatsApp"}
-                          </Button>
-
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="flex-1 h-9 gap-1.5 text-xs"
-                              onClick={() => setReminderHistoryPlan({ key: g.key, name: g.name })}
-                              aria-label={`Ver histórico de cobranças de ${g.name}`}
-                            >
-                              <HistoryIcon className="h-4 w-4" />
-                              Histórico{groupLogs.length ? ` (${groupLogs.length})` : ""}
-                            </Button>
-
-                          {g.patientId && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 h-9"
-                              onClick={() => setFinanceHistory({ id: g.patientId!, name: g.name })}
-                              aria-label={`Ver histórico financeiro de ${g.name}`}
-                            >
-                              Ver detalhes
-                            </Button>
-                          )}
-                          {editTarget && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 shrink-0"
-                              onClick={() => setEditing(editTarget)}
-                              aria-label={`Editar pagamento de ${g.name}`}
-                              title="Editar pagamento"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          )}
-                          </div>
-                        </div>
-
                       </li>
                     );
                   })}
                 </ul>
               )}
+
+              {/* Legenda */}
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 rounded-2xl bg-secondary/40 p-4">
+                {[
+                  { icon: Wallet, label: "Gerado no mês", text: "Valor das sessões realizadas neste mês (para avulsas) ou valor do plano contratado." },
+                  { icon: CheckCircle2, label: "Pago", text: "Total recebido do paciente referente às sessões ou ao plano." },
+                  { icon: Clock, label: "Em aberto", text: "Valor que ainda não foi pago pelo paciente." },
+                  { icon: CalendarClock, label: "Previsto", text: "Valor das sessões futuras já agendadas (somente para sessão avulsa)." },
+                ].map((l) => {
+                  const Icon = l.icon;
+                  return (
+                    <div key={l.label} className="flex items-start gap-2.5">
+                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-background text-primary">
+                        <Icon className="h-3.5 w-3.5" />
+                      </span>
+                      <div>
+                        <p className="text-xs font-medium text-foreground">{l.label}</p>
+                        <p className="text-[11px] leading-snug text-muted-foreground">{l.text}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </>
           );
         })()}
-
       </section>
 
 
