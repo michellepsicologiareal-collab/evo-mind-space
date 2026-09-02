@@ -2008,7 +2008,22 @@ const Agenda = () => {
       }
     }
 
+    // Persist the "Objetivo da próxima sessão" / "Retomar" planning edited inside this dialog
+    if (session?.patient_id && session.session_type !== "supervision" && planningPatientId) {
+      const hasPlanningContent =
+        !!planningValue.next_objetivo?.trim() ||
+        !!planningValue.next_retomar?.trim() ||
+        !!planningValue.next_observacoes?.trim() ||
+        (planningValue.next_tecnicas?.length ?? 0) > 0 ||
+        !!planningValue.next_meta_id ||
+        !!planningValue.next_scheduled_at;
+      if (hasPlanningContent) {
+        await savePlanningFromSheet({ silent: true });
+      }
+    }
+
     setEditSaving(false);
+
     if (!rescheduleAll || !(session && isPackageSession(session.notes) && didDateTimeChange(session))) {
       toast.success("Sessão atualizada");
     }
