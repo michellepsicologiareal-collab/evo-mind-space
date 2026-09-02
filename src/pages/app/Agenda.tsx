@@ -2274,7 +2274,9 @@ const Agenda = () => {
     const sessionDateKey = s.patient_id ? `${s.patient_id}|${new Date(s.scheduled_at).toISOString().slice(0, 10)}` : "";
     const hasRecord = sessionRecordIds.has(s.id) || (sessionDateKey && sessionRecordKeys.has(sessionDateKey));
     const registroPendente = !isSupervisionCard && isPast && isActiveStatus && !hasRecord && !!s.patient_id;
+    const planning = !isSupervisionCard ? planningBySession.get(s.id) : undefined;
     const prevPlan = !isSupervisionCard
+
       ? (planBySession.get(s.id) || recordPlanBySession.get(s.id) || progressPlanBySession.get(s.id))
       : undefined;
     const sessionSummary = !isSupervisionCard ? summaryBySession.get(s.id) : undefined;
