@@ -1144,7 +1144,7 @@ const Agenda = () => {
     const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
     (async () => {
       const sessionIds = sessions.map((s) => s.id).filter(Boolean);
-      const [recs, moods, homework, progressPlans] = await Promise.all([
+      const [recs, moods, homework, progressPlans, plans] = await Promise.all([
         supabase.from("session_records")
           .select("session_id, patient_id, session_date, next_session_plan, clinical_observations, chief_complaint, updated_at, created_at")
           .eq("user_id", user.id)
@@ -1169,7 +1169,23 @@ const Agenda = () => {
               .in("session_id", sessionIds)
               .order("recorded_at", { ascending: false })
           : Promise.resolve({ data: [] as any[] }),
+        sessionIds.length
+          ? supabase.from("session_plans")
+              .select("session_id, objetivo, retomar, updated_at")
+              .eq("user_id", user.id)
+              .in("session_id", sessionIds)
+              .order("updated_at", { ascending: false })
+          : Promise.resolve({ data: [] as any[] }),
       ]);
+      const planningMap = new Map<string, { objetivo: string; retomar: string }>();
+      (plans.data ?? []).forEach((p: any) => {
+        if (!p.session_id || planningMap.has(p.session_id)) return;
+        const objetivo = typeof p.objetivo === "string" ? p.objetivo.trim() : "";
+        const retomar = typeof p.retomar === "string" ? p.retomar.trim() : "";
+        if (objetivo || retomar) planningMap.set(p.session_id, { objetivo, retomar });
+      });
+      setPlanningBySession(planningMap);
+
       const recPlan = new Map<string, string>();
       const recIds = new Set<string>();
       const recKeys = new Set<string>();
