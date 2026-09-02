@@ -2595,6 +2595,28 @@ const Agenda = () => {
           </div>
         )}
 
+        {/* Planejamento desta sessão: objetivo e retomar */}
+        {!compact && planning && (
+          <div className="mt-2 space-y-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-2">
+            {planning.objetivo && (
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                  <Target className="h-3 w-3" /> Objetivo da próxima sessão
+                </p>
+                <p className="text-xs text-foreground/85 mt-0.5 break-words whitespace-pre-line">{planning.objetivo}</p>
+              </div>
+            )}
+            {planning.retomar && (
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                  <RotateCcw className="h-3 w-3" /> Retomar / Continuidade
+                </p>
+                <p className="text-xs text-foreground/85 mt-0.5 break-words whitespace-pre-line">{planning.retomar}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Contexto clínico rápido: combinado / próximo passo da sessão anterior */}
         {!compact && prevPlan && (
           <div className="mt-2 rounded-lg border border-primary/15 bg-primary/[0.04] px-2.5 py-1.5">
