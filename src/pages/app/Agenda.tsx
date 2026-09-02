@@ -260,6 +260,8 @@ const Agenda = () => {
   const [homeworkSentBySession, setHomeworkSentBySession] = useState<Map<string, string>>(new Map());
   const [recordPlanBySession, setRecordPlanBySession] = useState<Map<string, string>>(new Map());
   const [progressPlanBySession, setProgressPlanBySession] = useState<Map<string, string>>(new Map());
+  const [planningBySession, setPlanningBySession] = useState<Map<string, { objetivo: string; retomar: string }>>(new Map());
+
   const [summaryBySession, setSummaryBySession] = useState<Map<string, string>>(new Map());
   const [sessionRecordIds, setSessionRecordIds] = useState<Set<string>>(new Set());
   // Chaves compostas "patient_id|yyyy-MM-dd" para registros salvos sem session_id
@@ -1144,7 +1146,7 @@ const Agenda = () => {
     const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
     (async () => {
       const sessionIds = sessions.map((s) => s.id).filter(Boolean);
-      const [recs, moods, homework, progressPlans] = await Promise.all([
+      const [recs, moods, homework, progressPlans, plans] = await Promise.all([
         supabase.from("session_records")
           .select("session_id, patient_id, session_date, next_session_plan, clinical_observations, chief_complaint, updated_at, created_at")
           .eq("user_id", user.id)
@@ -1169,7 +1171,23 @@ const Agenda = () => {
               .in("session_id", sessionIds)
               .order("recorded_at", { ascending: false })
           : Promise.resolve({ data: [] as any[] }),
+        sessionIds.length
+          ? supabase.from("session_plans")
+              .select("session_id, objetivo, retomar, updated_at")
+              .eq("user_id", user.id)
+              .in("session_id", sessionIds)
+              .order("updated_at", { ascending: false })
+          : Promise.resolve({ data: [] as any[] }),
       ]);
+      const planningMap = new Map<string, { objetivo: string; retomar: string }>();
+      (plans.data ?? []).forEach((p: any) => {
+        if (!p.session_id || planningMap.has(p.session_id)) return;
+        const objetivo = typeof p.objetivo === "string" ? p.objetivo.trim() : "";
+        const retomar = typeof p.retomar === "string" ? p.retomar.trim() : "";
+        if (objetivo || retomar) planningMap.set(p.session_id, { objetivo, retomar });
+      });
+      setPlanningBySession(planningMap);
+
       const recPlan = new Map<string, string>();
       const recIds = new Set<string>();
       const recKeys = new Set<string>();
@@ -2256,7 +2274,9 @@ const Agenda = () => {
     const sessionDateKey = s.patient_id ? `${s.patient_id}|${new Date(s.scheduled_at).toISOString().slice(0, 10)}` : "";
     const hasRecord = sessionRecordIds.has(s.id) || (sessionDateKey && sessionRecordKeys.has(sessionDateKey));
     const registroPendente = !isSupervisionCard && isPast && isActiveStatus && !hasRecord && !!s.patient_id;
+    const planning = !isSupervisionCard ? planningBySession.get(s.id) : undefined;
     const prevPlan = !isSupervisionCard
+
       ? (planBySession.get(s.id) || recordPlanBySession.get(s.id) || progressPlanBySession.get(s.id))
       : undefined;
     const sessionSummary = !isSupervisionCard ? summaryBySession.get(s.id) : undefined;
@@ -2571,6 +2591,28 @@ const Agenda = () => {
               <span className="text-emerald-600" title={`Plano entre sessões enviado em ${format(new Date(homeworkSentAt), "dd/MM 'às' HH:mm")}`} aria-label="Plano entre sessões enviado">
                 <ClipboardList className="h-3.5 w-3.5" />
               </span>
+            )}
+          </div>
+        )}
+
+        {/* Planejamento desta sessão: objetivo e retomar */}
+        {!compact && planning && (
+          <div className="mt-2 space-y-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-2">
+            {planning.objetivo && (
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                  <Target className="h-3 w-3" /> Objetivo da próxima sessão
+                </p>
+                <p className="text-xs text-foreground/85 mt-0.5 break-words whitespace-pre-line">{planning.objetivo}</p>
+              </div>
+            )}
+            {planning.retomar && (
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                  <RotateCcw className="h-3 w-3" /> Retomar / Continuidade
+                </p>
+                <p className="text-xs text-foreground/85 mt-0.5 break-words whitespace-pre-line">{planning.retomar}</p>
+              </div>
             )}
           </div>
         )}
