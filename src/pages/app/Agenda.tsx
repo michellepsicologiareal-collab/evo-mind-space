@@ -1171,22 +1171,48 @@ const Agenda = () => {
               .in("session_id", sessionIds)
               .order("recorded_at", { ascending: false })
           : Promise.resolve({ data: [] as any[] }),
-        sessionIds.length
+        patientIdsForPlans.length
           ? supabase.from("session_plans")
-              .select("session_id, objetivo, retomar, updated_at")
+              .select("session_id, patient_id, objetivo, retomar, updated_at, created_at")
               .eq("user_id", user.id)
-              .in("session_id", sessionIds)
+              .in("patient_id", patientIdsForPlans)
               .order("updated_at", { ascending: false })
           : Promise.resolve({ data: [] as any[] }),
       ]);
-      const planningMap = new Map<string, { objetivo: string; retomar: string }>();
-      (plans.data ?? []).forEach((p: any) => {
+      // Planejamento: o que foi escrito na sessão atual vira resumo no card da próxima sessão do paciente.
+      const planRows = (plans.data ?? [])
+        .map((p: any) => ({
+          session_id: p.session_id as string | null,
+          patient_id: p.patient_id as string | null,
+          objetivo: typeof p.objetivo === "string" ? p.objetivo.trim() : "",
+          retomar: typeof p.retomar === "string" ? p.retomar.trim() : "",
+          at: new Date(p.updated_at ?? p.created_at ?? 0).getTime(),
+        }))
+        .filter((p) => p.objetivo || p.retomar);
+      const planningMap = new Map<string, { objetivo: string; retomar: string; carried?: boolean }>();
+      planRows.forEach((p) => {
         if (!p.session_id || planningMap.has(p.session_id)) return;
-        const objetivo = typeof p.objetivo === "string" ? p.objetivo.trim() : "";
-        const retomar = typeof p.retomar === "string" ? p.retomar.trim() : "";
-        if (objetivo || retomar) planningMap.set(p.session_id, { objetivo, retomar });
+        planningMap.set(p.session_id, { objetivo: p.objetivo, retomar: p.retomar });
+      });
+      // Fallback: sessões futuras sem planejamento próprio herdam o último planejamento escrito antes delas.
+      const plansByPatient = new Map<string, typeof planRows>();
+      planRows.forEach((p) => {
+        if (!p.patient_id) return;
+        const arr = plansByPatient.get(p.patient_id) ?? [];
+        arr.push(p);
+        plansByPatient.set(p.patient_id, arr);
+      });
+      sessions.forEach((s) => {
+        if (!s.patient_id || planningMap.has(s.id)) return;
+        const scheduledMs = new Date(s.scheduled_at).getTime();
+        const candidates = (plansByPatient.get(s.patient_id) ?? [])
+          .filter((p) => p.session_id !== s.id && p.at <= scheduledMs)
+          .sort((a, b) => b.at - a.at);
+        const best = candidates[0];
+        if (best) planningMap.set(s.id, { objetivo: best.objetivo, retomar: best.retomar, carried: true });
       });
       setPlanningBySession(planningMap);
+
 
       const recPlan = new Map<string, string>();
       const recIds = new Set<string>();
