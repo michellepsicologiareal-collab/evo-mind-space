@@ -2625,6 +2625,12 @@ const Agenda = () => {
         {/* Planejamento desta sessão: objetivo e retomar */}
         {!compact && planning && (
           <div className="mt-2 space-y-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-2">
+            {planning.carried && (
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-semibold">
+                Planejado na sessão anterior
+              </p>
+            )}
+
             {planning.objetivo && (
               <div>
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
