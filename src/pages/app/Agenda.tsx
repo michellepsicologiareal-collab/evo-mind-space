@@ -1146,6 +1146,7 @@ const Agenda = () => {
     const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
     (async () => {
       const sessionIds = sessions.map((s) => s.id).filter(Boolean);
+      const patientIdsForPlans = Array.from(new Set(sessions.map((s) => s.patient_id).filter(Boolean))) as string[];
       const [recs, moods, homework, progressPlans, plans] = await Promise.all([
         supabase.from("session_records")
           .select("session_id, patient_id, session_date, next_session_plan, clinical_observations, chief_complaint, updated_at, created_at")
