@@ -2748,6 +2748,24 @@ export type Database = {
           specialty: string
         }[]
       }
+      list_rpd_by_token: {
+        Args: { _password: string; _token: string }
+        Returns: {
+          automatic_thought: string
+          behavior: string
+          cognitive_distortion: string
+          created_at: string
+          crenca_pensamento_final: number
+          crenca_pensamento_inicial: number
+          emotion: string
+          filled_by: string
+          id: string
+          intensidade_emocao_final: Json
+          intensidade_emocao_inicial: Json
+          rational_response: string
+          situation: string
+        }[]
+      }
       list_supervised_patients: {
         Args: never
         Returns: {
