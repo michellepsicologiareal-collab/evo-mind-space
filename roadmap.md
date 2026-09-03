@@ -1,0 +1,2 @@
+- [x] Paciente ver seus registros de TCC (RPD) pelo link
+- [x] Ajustar visualização mobile do registro de TCC

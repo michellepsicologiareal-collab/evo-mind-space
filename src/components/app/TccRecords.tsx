@@ -414,19 +414,19 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
 
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setEditingId(null); setForm(emptyRpdForm()); } }}>
         <DialogContent
-          className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0"
+          className="w-[100vw] max-w-none h-[100dvh] max-h-[100dvh] rounded-none sm:w-full sm:max-w-3xl sm:h-auto sm:max-h-[90vh] sm:rounded-lg overflow-y-auto overflow-x-hidden p-0 gap-0"
           style={{ background: "hsl(var(--muted))" }}
         >
           {/* Header padronizado (mesmo estilo das formulações TE/ACT) */}
           <div
-            className="bg-white rounded-t-lg p-5 sm:p-6"
+            className="bg-white rounded-none sm:rounded-t-lg p-4 sm:p-6"
             style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}
           >
             <DialogHeader className="space-y-1 text-left">
               <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: G, textTransform: "uppercase" }}>
                 TCC · Registro de Pensamentos
               </p>
-              <DialogTitle className="font-display" style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.3px", color: INK }}>
+              <DialogTitle className="font-display text-[18px] sm:text-[22px]" style={{ fontWeight: 700, letterSpacing: "-0.3px", color: INK }}>
                 {editingId ? "Editar registro" : "Novo registro"}
               </DialogTitle>
               <p style={{ fontSize: 13, color: MUTED }}>
@@ -445,11 +445,11 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
           </div>
 
           <div className="p-3 sm:p-5">
-            <RpdForm value={form} onChange={setForm} accent={G} />
+            <div className="min-w-0"><RpdForm value={form} onChange={setForm} accent={G} /></div>
           </div>
 
           <DialogFooter
-            className="p-4 sm:p-5 bg-white rounded-b-lg gap-2 sm:gap-2 flex-col-reverse sm:flex-row"
+            className="sticky bottom-0 p-4 sm:p-5 bg-white rounded-none sm:rounded-b-lg gap-2 sm:gap-2 flex-col-reverse sm:flex-row"
             style={{ boxShadow: "0 -1px 4px rgba(0,0,0,0.04)" }}
           >
             <Button variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">Cancelar</Button>
