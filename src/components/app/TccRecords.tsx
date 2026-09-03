@@ -426,7 +426,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
               <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", color: G, textTransform: "uppercase" }}>
                 TCC · Registro de Pensamentos
               </p>
-              <DialogTitle className="font-display" className="text-[18px] sm:text-[22px]" style={{ fontWeight: 700, letterSpacing: "-0.3px", color: INK }}>
+              <DialogTitle className="font-display text-[18px] sm:text-[22px]" style={{ fontWeight: 700, letterSpacing: "-0.3px", color: INK }}>
                 {editingId ? "Editar registro" : "Novo registro"}
               </DialogTitle>
               <p style={{ fontSize: 13, color: MUTED }}>
