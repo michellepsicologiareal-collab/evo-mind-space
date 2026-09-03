@@ -1,0 +1,2 @@
+- [ ] Paciente ver seus registros de TCC (RPD) pelo link, como no Plano entre Sessões
+- [ ] Ajustar visualização mobile do registro de TCC
