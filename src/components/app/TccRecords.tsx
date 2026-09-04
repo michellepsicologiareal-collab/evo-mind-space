@@ -3,7 +3,8 @@ import { logClinicalAccess } from "@/utils/auditLog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight, Link2, Copy, MessageCircle, User, Ban, Pencil, TrendingUp } from "lucide-react";
+import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight, Link2, Copy, MessageCircle, User, Ban, Pencil, TrendingUp, BarChart3 } from "lucide-react";
+import { RpdEvolutionPanel } from "@/components/app/RpdEvolutionPanel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,6 +72,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [form, setForm] = useState<RpdFormState>(emptyRpdForm());
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [evoOpen, setEvoOpen] = useState(true);
 
   // Link público para o paciente preencher
   const [linkOpen, setLinkOpen] = useState(false);
@@ -303,6 +305,28 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
           <p style={{ fontSize: 11, color: MUTED }}>
             Padrões identificados nos {records.length} registros mais recentes deste paciente.
           </p>
+        </div>
+      )}
+
+      {!loading && records.length > 0 && (
+        <div className="rounded-lg border overflow-hidden" style={{ borderColor: G_BORDER }}>
+          <button
+            type="button"
+            onClick={() => setEvoOpen((v) => !v)}
+            className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left transition-colors hover:bg-muted/50"
+            style={{ background: G_BG }}
+            aria-expanded={evoOpen}
+          >
+            <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: G }}>
+              <BarChart3 className="h-3.5 w-3.5" /> Painel de evolução
+            </span>
+            {evoOpen ? <ChevronDown className="h-4 w-4" style={{ color: G }} /> : <ChevronRight className="h-4 w-4" style={{ color: G }} />}
+          </button>
+          {evoOpen && (
+            <div className="p-3 sm:p-4" style={{ background: "hsl(var(--gold) / 0.04)" }}>
+              <RpdEvolutionPanel records={records} accent={G} ink={INK} muted={MUTED} />
+            </div>
+          )}
         </div>
       )}
 
