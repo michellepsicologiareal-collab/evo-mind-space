@@ -2549,6 +2549,15 @@ const Agenda = () => {
                 {!isSupervisionCard && (
                   <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar confirmação no WhatsApp</DropdownMenuItem>
                 )}
+                {!isSupervisionCard && s.patient_id && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setRpdOpen(true)}><NotebookPen className="h-4 w-4" /> Ver registros RPD</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => void sendRpdLinkToPatient(s)} className="text-amber-600 font-medium">
+                      <Link2 className="h-4 w-4" /> Enviar link RPD ao paciente
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => updateStatus(s.id, "completed")}><Check className="h-4 w-4" /> Realizada</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => updateStatus(s.id, "no_show")}><X className="h-4 w-4" /> Falta</DropdownMenuItem>
