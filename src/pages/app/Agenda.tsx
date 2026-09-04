@@ -2389,6 +2389,7 @@ const Agenda = () => {
     const sessionMood = !isSupervisionCard ? moodBySession.get(s.id) : undefined;
     const patientRpdAt = !isSupervisionCard && s.patient_id ? rpdByPatient.get(s.patient_id) : undefined;
     const hasNewPatientRpd = !!patientRpdAt && (nowMs - patientRpdAt) < 7 * 24 * 60 * 60 * 1000;
+    const patientRpdInviteAt = !isSupervisionCard && s.patient_id ? rpdInviteByPatient.get(s.patient_id) : undefined;
     const moodEmoji = sessionMood
       ? (sessionMood.score >= 8 ? "😄" : sessionMood.score >= 6 ? "🙂" : sessionMood.score >= 4 ? "😐" : sessionMood.score >= 2 ? "🙁" : "😔")
       : null;
@@ -2702,6 +2703,23 @@ const Agenda = () => {
               >
                 <NotebookPen className="h-3 w-3" /> Novo RPD do paciente
               </button>
+            )}
+            {!isSupervisionCard && s.patient_id && (
+              patientRpdInviteAt ? (
+                <span
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-300/70 rounded-full px-2 py-0.5"
+                  title={`Último link de RPD enviado em ${format(new Date(patientRpdInviteAt), "dd/MM/yyyy 'às' HH:mm")}`}
+                >
+                  <Send className="h-3 w-3" /> RPD enviado {format(new Date(patientRpdInviteAt), "dd/MM")}
+                </span>
+              ) : (
+                <span
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-muted/60 border border-border rounded-full px-2 py-0.5"
+                  title="Nenhum link de RPD enviado a este paciente ainda"
+                >
+                  <NotebookPen className="h-3 w-3" /> RPD não enviado
+                </span>
+              )
             )}
             {modalityOnline && (s as any).meeting_link && (
               <a href={(s as any).meeting_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline" title="Entrar na sala online">
