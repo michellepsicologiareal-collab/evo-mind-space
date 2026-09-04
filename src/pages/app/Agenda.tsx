@@ -468,6 +468,7 @@ const Agenda = () => {
 
   // New session dialog
   const [open, setOpen] = useState(false);
+  const [newSessionExpanded, setNewSessionExpanded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [patientMonthCount, setPatientMonthCount] = useState<{ count: number; dates: string[] } | null>(null);
   const DRAFT_SESSION_KEY = "rascunho_nova_sessao";
