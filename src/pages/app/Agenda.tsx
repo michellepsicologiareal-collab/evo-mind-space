@@ -2802,7 +2802,7 @@ const Agenda = () => {
               <button
                 onClick={(e) => { e.stopPropagation(); setRpdOpen(true); }}
                 className={cn(
-                  "col-span-2 inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-center text-[11px] leading-tight font-medium transition-colors sm:col-span-1 sm:h-8 sm:justify-start sm:px-2.5 sm:text-left",
+                  "inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-center text-[11px] leading-tight font-medium transition-colors sm:h-8 sm:justify-start sm:px-2.5 sm:text-left",
                   hasNewPatientRpd
                     ? "text-sky-800 bg-sky-100 hover:bg-sky-200 font-semibold"
                     : "text-foreground/75 bg-card hover:bg-muted"
@@ -2810,6 +2810,14 @@ const Agenda = () => {
                 aria-label={`Ver registros RPD de ${s.patient_name || "paciente"}`}
               >
                 <NotebookPen className="h-3.5 w-3.5" /> Ver RPD
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); void sendRpdLinkToPatient(s); }}
+                className="inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-center text-[11px] leading-tight font-semibold transition-colors sm:h-8 sm:justify-start sm:px-2.5 sm:text-left rounded-lg border border-amber-300/70 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                aria-label={`Enviar link de RPD para ${s.patient_name || "paciente"}`}
+                title="Enviar link de RPD para o paciente"
+              >
+                <Link2 className="h-3.5 w-3.5" /> Enviar link RPD
               </button>
             </div>
           </div>
