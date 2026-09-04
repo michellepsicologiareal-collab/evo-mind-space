@@ -468,6 +468,7 @@ const Agenda = () => {
 
   // New session dialog
   const [open, setOpen] = useState(false);
+  const [newSessionExpanded, setNewSessionExpanded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [patientMonthCount, setPatientMonthCount] = useState<{ count: number; dates: string[] } | null>(null);
   const DRAFT_SESSION_KEY = "rascunho_nova_sessao";
@@ -2936,16 +2937,38 @@ const Agenda = () => {
         >
           <Plus className="h-4 w-4" /> Compromisso pessoal
         </Button>
-        <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setOpen(false); }, () => setOpen(false)); } else { setOpen(true); } }}>
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { newGuard.guardClose(() => { clearSessionDraft(); setNewSessionExpanded(false); setOpen(false); }, () => { setNewSessionExpanded(false); setOpen(false); }); } else { setOpen(true); } }}>
 
           <DialogTrigger asChild>
             <Button variant="accent" size="sm" onClick={() => openNew()} className="hidden rounded-[40px] font-display font-semibold w-full sm:inline-flex sm:w-auto sm:size-default">
               <Plus className="h-4 w-4" /> Nova sessão
             </Button>
           </DialogTrigger>
-          <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[90dvh] overflow-x-hidden overflow-y-auto p-4 sm:p-6" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
-            <DialogHeader>
-              <DialogTitle className="font-display text-2xl">Nova sessão</DialogTitle>
+          <DialogContent
+            className={cn(
+              "overflow-x-hidden overflow-y-auto p-4 sm:p-6 transition-all duration-200",
+              newSessionExpanded
+                ? "w-screen max-w-[100vw] h-[100dvh] max-h-[100dvh] rounded-none border-0"
+                : "w-[calc(100vw-1rem)] max-w-2xl max-h-[90dvh]"
+            )}
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
+          >
+            <DialogHeader className="flex flex-row items-center justify-between gap-4">
+              <div className="text-left">
+                <DialogTitle className="font-display text-2xl">Nova sessão</DialogTitle>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                aria-label={newSessionExpanded ? "Sair da tela cheia" : "Expandir para tela cheia"}
+                title={newSessionExpanded ? "Sair da tela cheia" : "Expandir para tela cheia"}
+                onClick={() => setNewSessionExpanded((v) => !v)}
+              >
+                {newSessionExpanded ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+              </Button>
             </DialogHeader>
             {draftRestored && (
               <div className="rounded-lg bg-accent/20 border border-accent/30 px-3 py-2 text-sm text-muted-foreground flex items-center justify-between gap-2">
