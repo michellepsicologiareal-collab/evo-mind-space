@@ -271,6 +271,7 @@ const Agenda = () => {
   // Humor do paciente por sessão (preenchido no registro/progresso)
   type SessionMood = { score: number; source: string | null; recordedAt: string };
   const [moodBySession, setMoodBySession] = useState<Map<string, SessionMood>>(new Map());
+  const [rpdByPatient, setRpdByPatient] = useState<Map<string, number>>(new Map());
   const [patients, setPatients] = useState<Patient[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1149,7 +1150,7 @@ const Agenda = () => {
     (async () => {
       const sessionIds = sessions.map((s) => s.id).filter(Boolean);
       const patientIdsForPlans = Array.from(new Set(sessions.map((s) => s.patient_id).filter(Boolean))) as string[];
-      const [recs, moods, homework, progressPlans, plans] = await Promise.all([
+      const [recs, moods, homework, progressPlans, plans, rpdRows] = await Promise.all([
         supabase.from("session_records")
           .select("session_id, patient_id, session_date, next_session_plan, clinical_observations, chief_complaint, updated_at, created_at")
           .eq("user_id", user.id)
@@ -1181,6 +1182,12 @@ const Agenda = () => {
               .in("patient_id", patientIdsForPlans)
               .order("updated_at", { ascending: false })
           : Promise.resolve({ data: [] as any[] }),
+        supabase.from("tcc_records")
+          .select("patient_id, created_at")
+          .eq("user_id", user.id)
+          .eq("filled_by", "patient")
+          .gte("created_at", from.toISOString())
+          .order("created_at", { ascending: false }),
       ]);
       // Planejamento: o que foi escrito na sessão atual vira resumo no card da próxima sessão do paciente.
       const planRows = (plans.data ?? [])
@@ -1259,6 +1266,12 @@ const Agenda = () => {
         }
       });
       setMoodBySession(moodMap);
+      const rpdMap = new Map<string, number>();
+      (rpdRows.data ?? []).forEach((r: any) => {
+        if (!r.patient_id || rpdMap.has(r.patient_id)) return;
+        rpdMap.set(r.patient_id, new Date(r.created_at).getTime());
+      });
+      setRpdByPatient(rpdMap);
       latestSessionRecords.forEach((presence, sessionId) => {
         if (!presence.hasContent) return;
         recIds.add(sessionId);
@@ -2329,6 +2342,8 @@ const Agenda = () => {
     const registroFeito = !isSupervisionCard && isPast && isActiveStatus && hasRecord && !!s.patient_id;
     const homeworkSentAt = !isSupervisionCard ? homeworkSentBySession.get(s.id) : undefined;
     const sessionMood = !isSupervisionCard ? moodBySession.get(s.id) : undefined;
+    const patientRpdAt = !isSupervisionCard && s.patient_id ? rpdByPatient.get(s.patient_id) : undefined;
+    const hasNewPatientRpd = !!patientRpdAt && (nowMs - patientRpdAt) < 7 * 24 * 60 * 60 * 1000;
     const moodEmoji = sessionMood
       ? (sessionMood.score >= 8 ? "😄" : sessionMood.score >= 6 ? "🙂" : sessionMood.score >= 4 ? "😐" : sessionMood.score >= 2 ? "🙁" : "😔")
       : null;
@@ -2410,7 +2425,8 @@ const Agenda = () => {
           "relative min-w-0 overflow-hidden rounded-xl border border-border bg-card group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/15",
           compact ? "py-1.5 pr-2 pl-3" : "p-3 pl-4",
           "before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-['']",
-          accentClass
+          accentClass,
+          hasNewPatientRpd && "border-sky-300 ring-1 ring-sky-200 bg-sky-50/40"
         )}
       >
         <div className="flex min-w-0 items-start justify-between gap-2">
@@ -2612,6 +2628,16 @@ const Agenda = () => {
                 <Check className="h-3.5 w-3.5" /> Registro feito
               </span>
             )}
+            {hasNewPatientRpd && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setRpdOpen(true); }}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-800 bg-sky-100 border border-sky-300 rounded-full px-2 py-0.5 hover:bg-sky-200 transition-colors"
+                title={`RPD preenchido pelo paciente em ${format(new Date(patientRpdAt!), "dd/MM 'às' HH:mm")} — toque para ler`}
+              >
+                <NotebookPen className="h-3 w-3" /> Novo RPD do paciente
+              </button>
+            )}
             {modalityOnline && (s as any).meeting_link && (
               <a href={(s as any).meeting_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline" title="Entrar na sala online">
                 <Link2 className="h-3.5 w-3.5" /> Entrar
@@ -2741,7 +2767,12 @@ const Agenda = () => {
               </Link>
               <button
                 onClick={(e) => { e.stopPropagation(); setRpdOpen(true); }}
-                className="col-span-2 inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-center text-[11px] leading-tight font-medium text-foreground/75 bg-card hover:bg-muted transition-colors sm:col-span-1 sm:h-8 sm:justify-start sm:px-2.5 sm:text-left"
+                className={cn(
+                  "col-span-2 inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-center text-[11px] leading-tight font-medium transition-colors sm:col-span-1 sm:h-8 sm:justify-start sm:px-2.5 sm:text-left",
+                  hasNewPatientRpd
+                    ? "text-sky-800 bg-sky-100 hover:bg-sky-200 font-semibold"
+                    : "text-foreground/75 bg-card hover:bg-muted"
+                )}
                 aria-label={`Ver registros RPD de ${s.patient_name || "paciente"}`}
               >
                 <NotebookPen className="h-3.5 w-3.5" /> Ver RPD
