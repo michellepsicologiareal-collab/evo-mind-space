@@ -2407,6 +2407,17 @@ const Agenda = () => {
             <Link2 className="h-4 w-4 text-primary" /> Enviar confirmação no WhatsApp
           </button>
         )}
+        {!isSupervisionCard && s.patient_id && (
+          <>
+            <div className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">RPD</div>
+            <button onClick={() => { setSheetOpen(false); setRpdOpen(true); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
+              <NotebookPen className="h-4 w-4 text-primary" /> Ver registros RPD
+            </button>
+            <button onClick={() => { setSheetOpen(false); void sendRpdLinkToPatient(s); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 text-left text-sm font-medium">
+              <Link2 className="h-4 w-4" /> Enviar link RPD ao paciente
+            </button>
+          </>
+        )}
         <div className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Status da sessão</div>
         <button onClick={() => { setSheetOpen(false); updateStatus(s.id, "completed"); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
           <Check className="h-4 w-4 text-emerald-600" /> Realizada
