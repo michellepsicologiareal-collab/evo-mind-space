@@ -2640,31 +2640,43 @@ const Agenda = () => {
           </div>
         )}
 
-        {/* Planejamento desta sessão: objetivo e retomar */}
+        {/* Planejamento desta sessão: objetivo e retomar (resumido + olhinho) */}
         {!compact && planning && (
-          <div className="mt-2 space-y-1.5 rounded-lg border border-border bg-muted/40 px-2.5 py-2">
-            {planning.carried && (
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-semibold">
-                Planejado na sessão anterior
-              </p>
-            )}
-
-            {planning.objetivo && (
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
-                  <Target className="h-3 w-3" /> Objetivo da próxima sessão
-                </p>
-                <p className="text-xs text-foreground/85 mt-0.5 break-words whitespace-pre-line">{planning.objetivo}</p>
+          <div className="mt-2 rounded-lg border border-border bg-muted/40 px-2.5 py-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1 space-y-1.5">
+                {planning.carried && (
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-semibold">
+                    Planejado na sessão anterior
+                  </p>
+                )}
+                {planning.objetivo && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                      <Target className="h-3 w-3" /> Objetivo da próxima sessão
+                    </p>
+                    <p className="text-xs text-foreground/85 mt-0.5 break-words whitespace-pre-line line-clamp-2">{planning.objetivo}</p>
+                  </div>
+                )}
+                {planning.retomar && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                      <RotateCcw className="h-3 w-3" /> Retomar / Continuidade
+                    </p>
+                    <p className="text-xs text-foreground/85 mt-0.5 break-words whitespace-pre-line line-clamp-2">{planning.retomar}</p>
+                  </div>
+                )}
               </div>
-            )}
-            {planning.retomar && (
-              <div>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
-                  <RotateCcw className="h-3 w-3" /> Retomar / Continuidade
-                </p>
-                <p className="text-xs text-foreground/85 mt-0.5 break-words whitespace-pre-line">{planning.retomar}</p>
-              </div>
-            )}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setPlanOpen(true); }}
+                className="shrink-0 inline-flex items-center justify-center h-7 w-7 rounded-full border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                aria-label="Ler planejamento completo"
+                title="Ler planejamento completo"
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         )}
 
