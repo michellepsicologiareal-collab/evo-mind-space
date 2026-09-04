@@ -2425,7 +2425,8 @@ const Agenda = () => {
           "relative min-w-0 overflow-hidden rounded-xl border border-border bg-card group transition-colors cursor-pointer hover:ring-2 hover:ring-primary/15",
           compact ? "py-1.5 pr-2 pl-3" : "p-3 pl-4",
           "before:absolute before:left-0 before:top-0 before:h-full before:w-1.5 before:content-['']",
-          accentClass
+          accentClass,
+          hasNewPatientRpd && "border-sky-300 ring-1 ring-sky-200 bg-sky-50/40"
         )}
       >
         <div className="flex min-w-0 items-start justify-between gap-2">
