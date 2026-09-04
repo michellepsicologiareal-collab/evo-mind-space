@@ -13,8 +13,8 @@ export interface RpdReadRecord {
   behavior: string | null;
   cognitive_distortion: string | null;
   rational_response: string | null;
-  crenca_pensamento_inicial: number | null;
-  crenca_pensamento_final: number | null;
+  crenca_pensamento_inicial?: number | null;
+  crenca_pensamento_final?: number | null;
 }
 
 const FIELDS: { key: keyof RpdReadRecord; label: string }[] = [
