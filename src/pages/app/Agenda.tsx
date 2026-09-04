@@ -1792,6 +1792,40 @@ const Agenda = () => {
     toast.success("Cobrança enviada registrada");
   };
 
+  const sendRpdLinkToPatient = async (s: Session) => {
+    if (!user || !s.patient_id) return;
+    const patient = patients.find((p) => p.id === s.patient_id);
+    if (!patient) {
+      toast.error("Paciente não encontrado.");
+      return;
+    }
+
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabase
+      .from("rpd_invites")
+      .insert({ user_id: user.id, patient_id: s.patient_id, password: null, expires_at: expiresAt })
+      .select("token")
+      .single();
+
+    if (error || !data?.token) {
+      toast.error("Não foi possível gerar o link do RPD.");
+      return;
+    }
+
+    const link = `${window.location.origin}/rpd/${data.token}`;
+    const msg = `Olá! Use este link para registrar seus pensamentos (RPD) durante a semana: ${link}`;
+
+    let phoneNumber = "";
+    if (patient.has_financial_responsible && patient.financial_responsible_phone) {
+      phoneNumber = normalizePhoneForWhatsApp(patient.financial_responsible_phone) ?? "";
+    } else if (patient.phone) {
+      phoneNumber = normalizePhoneForWhatsApp(patient.phone) ?? "";
+    }
+
+    window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(msg)}`, "_blank");
+    toast.success("Link do RPD enviado");
+  };
+
   const openEdit = async (s: Session) => {
     setEditSessionId(s.id);
     setEditProgressId(null);
