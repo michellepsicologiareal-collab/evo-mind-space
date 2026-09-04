@@ -531,8 +531,8 @@ const Patients = () => {
   const [fullscreen, setFullscreen] = useState<Record<string, boolean>>({});
   const toggleFull = (k: string) => setFullscreen((s) => ({ ...s, [k]: !s[k] }));
   const dlgCls = (k: string) => fullscreen[k]
-    ? "max-w-[98vw] w-[98vw] h-[95vh] max-h-[95vh] overflow-y-auto"
-    : "w-[calc(100%-1rem)] sm:w-full max-w-3xl max-h-[90vh] overflow-y-auto";
+    ? "w-[100vw] max-w-[100vw] h-[100dvh] max-h-[100dvh] rounded-none overflow-y-auto overflow-x-hidden"
+    : "w-[calc(100vw-1rem)] sm:w-full max-w-3xl max-h-[90dvh] overflow-y-auto overflow-x-hidden";
   const FullBtn = ({ k }: { k: string }) => (
     <Button type="button" variant="ghost" size="icon" className="absolute right-12 top-4 h-7 w-7" onClick={() => toggleFull(k)} title={fullscreen[k] ? "Reduzir" : "Abrir em página inteira"}>
       {fullscreen[k] ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}

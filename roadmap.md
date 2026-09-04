@@ -1,2 +1,4 @@
 - [x] Paciente ver seus registros de TCC (RPD) pelo link
-- [x] Ajustar visualização mobile do registro de TCC
+- [x] Ajustar visualização mobile do registro de TCC (paciente)
+- [x] Painel de evolução (gráficos) dos registros de TCC para o paciente
+- [x] Corrigir visão mobile do registro de TCC no app do psicólogo (dialog cortado/rolagem horizontal)
