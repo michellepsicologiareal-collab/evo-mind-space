@@ -1792,6 +1792,40 @@ const Agenda = () => {
     toast.success("Cobrança enviada registrada");
   };
 
+  const sendRpdLinkToPatient = async (s: Session) => {
+    if (!user || !s.patient_id) return;
+    const patient = patients.find((p) => p.id === s.patient_id);
+    if (!patient) {
+      toast.error("Paciente não encontrado.");
+      return;
+    }
+
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabase
+      .from("rpd_invites")
+      .insert({ user_id: user.id, patient_id: s.patient_id, password: null, expires_at: expiresAt })
+      .select("token")
+      .single();
+
+    if (error || !data?.token) {
+      toast.error("Não foi possível gerar o link do RPD.");
+      return;
+    }
+
+    const link = `${window.location.origin}/rpd/${data.token}`;
+    const msg = `Olá! Use este link para registrar seus pensamentos (RPD) durante a semana: ${link}`;
+
+    let phoneNumber = "";
+    if (patient.has_financial_responsible && patient.financial_responsible_phone) {
+      phoneNumber = normalizePhoneForWhatsApp(patient.financial_responsible_phone) ?? "";
+    } else if (patient.phone) {
+      phoneNumber = normalizePhoneForWhatsApp(patient.phone) ?? "";
+    }
+
+    window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(msg)}`, "_blank");
+    toast.success("Link do RPD enviado");
+  };
+
   const openEdit = async (s: Session) => {
     setEditSessionId(s.id);
     setEditProgressId(null);
@@ -2373,6 +2407,17 @@ const Agenda = () => {
             <Link2 className="h-4 w-4 text-primary" /> Enviar confirmação no WhatsApp
           </button>
         )}
+        {!isSupervisionCard && s.patient_id && (
+          <>
+            <div className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">RPD</div>
+            <button onClick={() => { setSheetOpen(false); setRpdOpen(true); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
+              <NotebookPen className="h-4 w-4 text-primary" /> Ver registros RPD
+            </button>
+            <button onClick={() => { setSheetOpen(false); void sendRpdLinkToPatient(s); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 text-left text-sm font-medium">
+              <Link2 className="h-4 w-4" /> Enviar link RPD ao paciente
+            </button>
+          </>
+        )}
         <div className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Status da sessão</div>
         <button onClick={() => { setSheetOpen(false); updateStatus(s.id, "completed"); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
           <Check className="h-4 w-4 text-emerald-600" /> Realizada
@@ -2503,6 +2548,15 @@ const Agenda = () => {
                 <DropdownMenuItem onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /> Editar sessão</DropdownMenuItem>
                 {!isSupervisionCard && (
                   <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar confirmação no WhatsApp</DropdownMenuItem>
+                )}
+                {!isSupervisionCard && s.patient_id && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setRpdOpen(true)}><NotebookPen className="h-4 w-4" /> Ver registros RPD</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => void sendRpdLinkToPatient(s)} className="text-amber-600 font-medium">
+                      <Link2 className="h-4 w-4" /> Enviar link RPD ao paciente
+                    </DropdownMenuItem>
+                  </>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => updateStatus(s.id, "completed")}><Check className="h-4 w-4" /> Realizada</DropdownMenuItem>
@@ -2768,7 +2822,7 @@ const Agenda = () => {
               <button
                 onClick={(e) => { e.stopPropagation(); setRpdOpen(true); }}
                 className={cn(
-                  "col-span-2 inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-center text-[11px] leading-tight font-medium transition-colors sm:col-span-1 sm:h-8 sm:justify-start sm:px-2.5 sm:text-left",
+                  "inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-center text-[11px] leading-tight font-medium transition-colors sm:h-8 sm:justify-start sm:px-2.5 sm:text-left",
                   hasNewPatientRpd
                     ? "text-sky-800 bg-sky-100 hover:bg-sky-200 font-semibold"
                     : "text-foreground/75 bg-card hover:bg-muted"
@@ -2776,6 +2830,14 @@ const Agenda = () => {
                 aria-label={`Ver registros RPD de ${s.patient_name || "paciente"}`}
               >
                 <NotebookPen className="h-3.5 w-3.5" /> Ver RPD
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); void sendRpdLinkToPatient(s); }}
+                className="inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-center text-[11px] leading-tight font-semibold transition-colors sm:h-8 sm:justify-start sm:px-2.5 sm:text-left rounded-lg border border-amber-300/70 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                aria-label={`Enviar link de RPD para ${s.patient_name || "paciente"}`}
+                title="Enviar link de RPD para o paciente"
+              >
+                <Link2 className="h-3.5 w-3.5" /> Enviar link RPD
               </button>
             </div>
           </div>
