@@ -2342,6 +2342,8 @@ const Agenda = () => {
     const registroFeito = !isSupervisionCard && isPast && isActiveStatus && hasRecord && !!s.patient_id;
     const homeworkSentAt = !isSupervisionCard ? homeworkSentBySession.get(s.id) : undefined;
     const sessionMood = !isSupervisionCard ? moodBySession.get(s.id) : undefined;
+    const patientRpdAt = !isSupervisionCard && s.patient_id ? rpdByPatient.get(s.patient_id) : undefined;
+    const hasNewPatientRpd = !!patientRpdAt && (nowMs - patientRpdAt) < 7 * 24 * 60 * 60 * 1000;
     const moodEmoji = sessionMood
       ? (sessionMood.score >= 8 ? "😄" : sessionMood.score >= 6 ? "🙂" : sessionMood.score >= 4 ? "😐" : sessionMood.score >= 2 ? "🙁" : "😔")
       : null;
@@ -2625,6 +2627,16 @@ const Agenda = () => {
                 <Check className="h-3.5 w-3.5" /> Registro feito
               </span>
             )}
+            {hasNewPatientRpd && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setRpdOpen(true); }}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-800 bg-sky-100 border border-sky-300 rounded-full px-2 py-0.5 hover:bg-sky-200 transition-colors"
+                title={`RPD preenchido pelo paciente em ${format(new Date(patientRpdAt!), "dd/MM 'às' HH:mm")} — toque para ler`}
+              >
+                <NotebookPen className="h-3 w-3" /> Novo RPD do paciente
+              </button>
+            )}
             {modalityOnline && (s as any).meeting_link && (
               <a href={(s as any).meeting_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline" title="Entrar na sala online">
                 <Link2 className="h-3.5 w-3.5" /> Entrar
@@ -2754,7 +2766,12 @@ const Agenda = () => {
               </Link>
               <button
                 onClick={(e) => { e.stopPropagation(); setRpdOpen(true); }}
-                className="col-span-2 inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-center text-[11px] leading-tight font-medium text-foreground/75 bg-card hover:bg-muted transition-colors sm:col-span-1 sm:h-8 sm:justify-start sm:px-2.5 sm:text-left"
+                className={cn(
+                  "col-span-2 inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-center text-[11px] leading-tight font-medium transition-colors sm:col-span-1 sm:h-8 sm:justify-start sm:px-2.5 sm:text-left",
+                  hasNewPatientRpd
+                    ? "text-sky-800 bg-sky-100 hover:bg-sky-200 font-semibold"
+                    : "text-foreground/75 bg-card hover:bg-muted"
+                )}
                 aria-label={`Ver registros RPD de ${s.patient_name || "paciente"}`}
               >
                 <NotebookPen className="h-3.5 w-3.5" /> Ver RPD
