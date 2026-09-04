@@ -8,7 +8,7 @@ export const BILLING_LABEL: Record<BillingStatus, string> = {
   pago: "Pago",
   vencida: "Vencida",
   perto: "Perto do vencimento",
-  enviada: "Enviar cobrança",
+  enviada: "Cobrança enviada",
   a_enviar: "Cobrança a enviar",
   na: "—",
 };
