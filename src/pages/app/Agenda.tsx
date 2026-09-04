@@ -1151,7 +1151,7 @@ const Agenda = () => {
     (async () => {
       const sessionIds = sessions.map((s) => s.id).filter(Boolean);
       const patientIdsForPlans = Array.from(new Set(sessions.map((s) => s.patient_id).filter(Boolean))) as string[];
-      const [recs, moods, homework, progressPlans, plans, rpdRows] = await Promise.all([
+      const [recs, moods, homework, progressPlans, plans, rpdRows, rpdInvites] = await Promise.all([
         supabase.from("session_records")
           .select("session_id, patient_id, session_date, next_session_plan, clinical_observations, chief_complaint, updated_at, created_at")
           .eq("user_id", user.id)
@@ -1277,6 +1277,12 @@ const Agenda = () => {
         rpdMap.set(r.patient_id, new Date(r.created_at).getTime());
       });
       setRpdByPatient(rpdMap);
+      const rpdInviteMap = new Map<string, number>();
+      ((rpdInvites as any)?.data ?? []).forEach((r: any) => {
+        if (!r.patient_id || rpdInviteMap.has(r.patient_id)) return;
+        rpdInviteMap.set(r.patient_id, new Date(r.created_at).getTime());
+      });
+      setRpdInviteByPatient(rpdInviteMap);
       latestSessionRecords.forEach((presence, sessionId) => {
         if (!presence.hasContent) return;
         recIds.add(sessionId);
