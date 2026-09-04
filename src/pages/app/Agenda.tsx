@@ -272,6 +272,7 @@ const Agenda = () => {
   type SessionMood = { score: number; source: string | null; recordedAt: string };
   const [moodBySession, setMoodBySession] = useState<Map<string, SessionMood>>(new Map());
   const [rpdByPatient, setRpdByPatient] = useState<Map<string, number>>(new Map());
+  const [rpdInviteByPatient, setRpdInviteByPatient] = useState<Map<string, number>>(new Map());
   const [patients, setPatients] = useState<Patient[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1187,6 +1188,10 @@ const Agenda = () => {
           .eq("user_id", user.id)
           .eq("filled_by", "patient")
           .gte("created_at", from.toISOString())
+          .order("created_at", { ascending: false }),
+        supabase.from("rpd_invites")
+          .select("patient_id, created_at, revoked_at")
+          .eq("user_id", user.id)
           .order("created_at", { ascending: false }),
       ]);
       // Planejamento: o que foi escrito na sessão atual vira resumo no card da próxima sessão do paciente.
