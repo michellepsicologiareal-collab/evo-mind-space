@@ -271,6 +271,7 @@ const Agenda = () => {
   // Humor do paciente por sessão (preenchido no registro/progresso)
   type SessionMood = { score: number; source: string | null; recordedAt: string };
   const [moodBySession, setMoodBySession] = useState<Map<string, SessionMood>>(new Map());
+  const [rpdByPatient, setRpdByPatient] = useState<Map<string, number>>(new Map());
   const [patients, setPatients] = useState<Patient[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1149,7 +1150,7 @@ const Agenda = () => {
     (async () => {
       const sessionIds = sessions.map((s) => s.id).filter(Boolean);
       const patientIdsForPlans = Array.from(new Set(sessions.map((s) => s.patient_id).filter(Boolean))) as string[];
-      const [recs, moods, homework, progressPlans, plans] = await Promise.all([
+      const [recs, moods, homework, progressPlans, plans, rpdRows] = await Promise.all([
         supabase.from("session_records")
           .select("session_id, patient_id, session_date, next_session_plan, clinical_observations, chief_complaint, updated_at, created_at")
           .eq("user_id", user.id)
@@ -1181,6 +1182,12 @@ const Agenda = () => {
               .in("patient_id", patientIdsForPlans)
               .order("updated_at", { ascending: false })
           : Promise.resolve({ data: [] as any[] }),
+        supabase.from("tcc_records")
+          .select("patient_id, created_at")
+          .eq("user_id", user.id)
+          .eq("filled_by", "patient")
+          .gte("created_at", from.toISOString())
+          .order("created_at", { ascending: false }),
       ]);
       // Planejamento: o que foi escrito na sessão atual vira resumo no card da próxima sessão do paciente.
       const planRows = (plans.data ?? [])
@@ -1259,6 +1266,12 @@ const Agenda = () => {
         }
       });
       setMoodBySession(moodMap);
+      const rpdMap = new Map<string, number>();
+      (rpdRows.data ?? []).forEach((r: any) => {
+        if (!r.patient_id || rpdMap.has(r.patient_id)) return;
+        rpdMap.set(r.patient_id, new Date(r.created_at).getTime());
+      });
+      setRpdByPatient(rpdMap);
       latestSessionRecords.forEach((presence, sessionId) => {
         if (!presence.hasContent) return;
         recIds.add(sessionId);
