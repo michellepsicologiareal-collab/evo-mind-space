@@ -2725,6 +2725,13 @@ const Agenda = () => {
               >
                 <Target className="h-3.5 w-3.5" /> Plano de tratamento
               </Link>
+              <button
+                onClick={(e) => { e.stopPropagation(); setRpdOpen(true); }}
+                className="col-span-2 inline-flex min-w-0 items-center justify-center gap-1.5 px-2 h-9 text-center text-[11px] leading-tight font-medium text-foreground/75 bg-card hover:bg-muted transition-colors sm:col-span-1 sm:h-8 sm:justify-start sm:px-2.5 sm:text-left"
+                aria-label={`Ver registros RPD de ${s.patient_name || "paciente"}`}
+              >
+                <NotebookPen className="h-3.5 w-3.5" /> Ver RPD
+              </button>
             </div>
           </div>
         )}
@@ -2776,6 +2783,18 @@ const Agenda = () => {
                   />
                 );
               })()}
+            </SheetContent>
+          </Sheet>
+        )}
+
+        {!isSupervisionCard && s.patient_id && (
+          <Sheet open={rpdOpen} onOpenChange={setRpdOpen}>
+            <SheetContent side="right" className="w-screen max-w-none sm:max-w-none h-[100dvh] border-0 rounded-none overflow-y-auto overflow-x-hidden p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-8" onClick={(e) => e.stopPropagation()}>
+              <SheetHeader className="mb-4">
+                <SheetTitle className="font-display text-xl">Registros RPD</SheetTitle>
+                <SheetDescription>{s.patient_name}</SheetDescription>
+              </SheetHeader>
+              {rpdOpen && <TccRecords patientId={s.patient_id} readOnly />}
             </SheetContent>
           </Sheet>
         )}
