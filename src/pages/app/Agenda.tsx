@@ -272,6 +272,7 @@ const Agenda = () => {
   type SessionMood = { score: number; source: string | null; recordedAt: string };
   const [moodBySession, setMoodBySession] = useState<Map<string, SessionMood>>(new Map());
   const [rpdByPatient, setRpdByPatient] = useState<Map<string, number>>(new Map());
+  const [rpdInviteByPatient, setRpdInviteByPatient] = useState<Map<string, number>>(new Map());
   const [patients, setPatients] = useState<Patient[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1150,7 +1151,7 @@ const Agenda = () => {
     (async () => {
       const sessionIds = sessions.map((s) => s.id).filter(Boolean);
       const patientIdsForPlans = Array.from(new Set(sessions.map((s) => s.patient_id).filter(Boolean))) as string[];
-      const [recs, moods, homework, progressPlans, plans, rpdRows] = await Promise.all([
+      const [recs, moods, homework, progressPlans, plans, rpdRows, rpdInvites] = await Promise.all([
         supabase.from("session_records")
           .select("session_id, patient_id, session_date, next_session_plan, clinical_observations, chief_complaint, updated_at, created_at")
           .eq("user_id", user.id)
@@ -1187,6 +1188,10 @@ const Agenda = () => {
           .eq("user_id", user.id)
           .eq("filled_by", "patient")
           .gte("created_at", from.toISOString())
+          .order("created_at", { ascending: false }),
+        supabase.from("rpd_invites")
+          .select("patient_id, created_at, revoked_at")
+          .eq("user_id", user.id)
           .order("created_at", { ascending: false }),
       ]);
       // Planejamento: o que foi escrito na sessão atual vira resumo no card da próxima sessão do paciente.
@@ -1272,6 +1277,12 @@ const Agenda = () => {
         rpdMap.set(r.patient_id, new Date(r.created_at).getTime());
       });
       setRpdByPatient(rpdMap);
+      const rpdInviteMap = new Map<string, number>();
+      ((rpdInvites as any)?.data ?? []).forEach((r: any) => {
+        if (!r.patient_id || rpdInviteMap.has(r.patient_id)) return;
+        rpdInviteMap.set(r.patient_id, new Date(r.created_at).getTime());
+      });
+      setRpdInviteByPatient(rpdInviteMap);
       latestSessionRecords.forEach((presence, sessionId) => {
         if (!presence.hasContent) return;
         recIds.add(sessionId);
@@ -2378,6 +2389,7 @@ const Agenda = () => {
     const sessionMood = !isSupervisionCard ? moodBySession.get(s.id) : undefined;
     const patientRpdAt = !isSupervisionCard && s.patient_id ? rpdByPatient.get(s.patient_id) : undefined;
     const hasNewPatientRpd = !!patientRpdAt && (nowMs - patientRpdAt) < 7 * 24 * 60 * 60 * 1000;
+    const patientRpdInviteAt = !isSupervisionCard && s.patient_id ? rpdInviteByPatient.get(s.patient_id) : undefined;
     const moodEmoji = sessionMood
       ? (sessionMood.score >= 8 ? "😄" : sessionMood.score >= 6 ? "🙂" : sessionMood.score >= 4 ? "😐" : sessionMood.score >= 2 ? "🙁" : "😔")
       : null;
@@ -2691,6 +2703,23 @@ const Agenda = () => {
               >
                 <NotebookPen className="h-3 w-3" /> Novo RPD do paciente
               </button>
+            )}
+            {!isSupervisionCard && s.patient_id && (
+              patientRpdInviteAt ? (
+                <span
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-300/70 rounded-full px-2 py-0.5"
+                  title={`Último link de RPD enviado em ${format(new Date(patientRpdInviteAt), "dd/MM/yyyy 'às' HH:mm")}`}
+                >
+                  <Link2 className="h-3 w-3" /> RPD enviado {format(new Date(patientRpdInviteAt), "dd/MM")}
+                </span>
+              ) : (
+                <span
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-muted/60 border border-border rounded-full px-2 py-0.5"
+                  title="Nenhum link de RPD enviado a este paciente ainda"
+                >
+                  <NotebookPen className="h-3 w-3" /> RPD não enviado
+                </span>
+              )
             )}
             {modalityOnline && (s as any).meeting_link && (
               <a href={(s as any).meeting_link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline" title="Entrar na sala online">
