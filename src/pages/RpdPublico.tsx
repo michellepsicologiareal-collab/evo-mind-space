@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Loader2, X, Lock, ClipboardList, CheckCircle2, History, PenLine } from "lucide-react";
+import { Loader2, X, Lock, ClipboardList, CheckCircle2, History, PenLine, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RpdForm } from "@/components/app/RpdForm";
 import { RpdRecordsRead, type RpdReadRecord } from "@/components/app/RpdRecordsRead";
+import { RpdEvolutionPanel } from "@/components/app/RpdEvolutionPanel";
 import { emptyRpdForm, toRpdPayload, hasRpdContent, type RpdFormState } from "@/lib/rpd";
 import { toast } from "sonner";
 import logoImg from "@/assets/logo-psireal.png";
@@ -22,7 +23,7 @@ const RpdPublico = () => {
   const [pwdError, setPwdError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<RpdFormState>(emptyRpdForm());
-  const [tab, setTab] = useState<"form" | "list">("form");
+  const [tab, setTab] = useState<"form" | "list" | "evo">("form");
   const [records, setRecords] = useState<RpdReadRecord[]>([]);
   const [loadingRecords, setLoadingRecords] = useState(false);
 
@@ -174,17 +175,18 @@ const RpdPublico = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 rounded-[10px] bg-white p-1" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+        <div className="grid grid-cols-3 gap-2 rounded-[10px] bg-white p-1" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
           {([
             { id: "form" as const, label: "Novo registro", Icon: PenLine },
             { id: "list" as const, label: `Meus registros${records.length ? ` (${records.length})` : ""}`, Icon: History },
+            { id: "evo" as const, label: "Minha evolução", Icon: TrendingUp },
           ]).map(({ id, label, Icon }) => (
             <button
               key={id}
               type="button"
               onClick={() => setTab(id)}
               aria-pressed={tab === id}
-              className="min-h-11 rounded-[8px] px-2 text-[13px] font-semibold inline-flex items-center justify-center gap-1.5"
+              className="min-h-11 rounded-[8px] px-2 text-[11px] sm:text-[13px] font-semibold inline-flex items-center justify-center gap-1.5"
               style={tab === id ? { background: G, color: "#fff" } : { color: MUTED }}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -197,8 +199,10 @@ const RpdPublico = () => {
           <RpdForm value={form} onChange={setForm} accent={G} />
         ) : loadingRecords ? (
           <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto" style={{ color: G }} /></div>
-        ) : (
+        ) : tab === "list" ? (
           <RpdRecordsRead records={records} accent={G} ink={INK} muted={MUTED} />
+        ) : (
+          <RpdEvolutionPanel records={records} accent={G} ink={INK} muted={MUTED} />
         )}
 
         {/* Botão no fluxo (desktop) */}
