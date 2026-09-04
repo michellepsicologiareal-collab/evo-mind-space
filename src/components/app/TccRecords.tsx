@@ -235,7 +235,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
 
   return (
     <section
-      className="bg-white rounded-[10px] p-4 sm:p-6 space-y-4"
+      className="bg-white rounded-[10px] p-4 sm:p-6 space-y-4 w-full max-w-full min-w-0 overflow-x-hidden"
       style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}
     >
       <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -287,11 +287,11 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
           <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: G }}>
             <TrendingUp className="h-3.5 w-3.5" /> Armadilhas mais frequentes · evolução
           </p>
-          <ul className="flex flex-wrap gap-1.5">
+          <ul className="flex flex-wrap gap-1.5 min-w-0">
             {topDistortions.slice(0, 6).map((d) => (
               <li
                 key={d.simple}
-                className="inline-flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1"
+                className="inline-flex items-center gap-1.5 rounded-full bg-background px-2.5 py-1 max-w-full break-words"
                 style={{ border: `1px solid ${G_BORDER}`, fontSize: 11, color: INK }}
               >
                 <span className="font-semibold">{d.simple}</span>
@@ -414,7 +414,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
 
       <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setEditingId(null); setForm(emptyRpdForm()); } }}>
         <DialogContent
-          className="w-[100vw] max-w-none h-[100dvh] max-h-[100dvh] rounded-none sm:w-full sm:max-w-3xl sm:h-auto sm:max-h-[90vh] sm:rounded-lg overflow-y-auto overflow-x-hidden p-0 gap-0"
+          className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] max-h-[100dvh] overflow-y-auto overflow-x-hidden p-0 gap-0 sm:w-full sm:max-w-3xl sm:max-h-[90vh]"
           style={{ background: "hsl(var(--muted))" }}
         >
           {/* Header padronizado (mesmo estilo das formulações TE/ACT) */}
