@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.notify_patient_rpd_submission() FROM anon, authenticated, public;
