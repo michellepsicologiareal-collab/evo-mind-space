@@ -81,7 +81,7 @@ export function RpdEvolutionPanel({ records, accent, ink = "#1A1A2E", muted = "#
     );
   }
 
-  const axis = { fontSize: 10, fill: muted } as const;
+  const axis = { fontSize: 9, fill: muted } as const;
 
   const Card = ({ title, hint, children }: { title: string; hint: string; children: React.ReactNode }) => (
     <section className="bg-white rounded-[10px] p-3 sm:p-5" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
@@ -110,9 +110,9 @@ export function RpdEvolutionPanel({ records, accent, ink = "#1A1A2E", muted = "#
           { label: "Armadilha mais comum", value: stats.topDistortion ?? "—", Icon: BarChart3 },
         ].map(({ label, value, Icon }) => (
           <div key={label} className="bg-white rounded-[10px] p-3 min-w-0" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-            <div className="flex items-center gap-1.5">
-              <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: accent }} />
-              <span className="text-[10px] font-bold uppercase tracking-wider truncate" style={{ color: muted }}>{label}</span>
+            <div className="flex items-start gap-1.5">
+              <Icon className="h-3.5 w-3.5 shrink-0 mt-px" style={{ color: accent }} />
+              <span className="text-[10px] font-bold uppercase tracking-wide leading-tight" style={{ color: muted }}>{label}</span>
             </div>
             <p className="mt-1 font-display break-words" style={{ fontSize: 16, fontWeight: 700, color: ink }}>{value}</p>
           </div>
@@ -125,10 +125,10 @@ export function RpdEvolutionPanel({ records, accent, ink = "#1A1A2E", muted = "#
       >
         <div style={{ height: 190 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={series} margin={{ top: 6, right: 6, left: -22, bottom: 0 }}>
+            <LineChart data={series} margin={{ top: 6, right: 6, left: -28, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
               <XAxis dataKey="label" tick={axis} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-              <YAxis domain={[0, 100]} tick={axis} tickLine={false} axisLine={false} width={34} />
+              <YAxis domain={[0, 100]} tick={axis} tickLine={false} axisLine={false} width={30} tickCount={5} />
               <Tooltip
                 contentStyle={{ borderRadius: 10, border: "1px solid rgba(0,0,0,0.08)", fontSize: 12 }}
                 formatter={(v: any, n: any) => [`${v}%`, n === "crencaAntes" ? "Antes" : "Depois"]}
@@ -147,10 +147,10 @@ export function RpdEvolutionPanel({ records, accent, ink = "#1A1A2E", muted = "#
       >
         <div style={{ height: 190 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={series} margin={{ top: 6, right: 6, left: -22, bottom: 0 }}>
+            <LineChart data={series} margin={{ top: 6, right: 6, left: -28, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
               <XAxis dataKey="label" tick={axis} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-              <YAxis domain={[0, 100]} tick={axis} tickLine={false} axisLine={false} width={34} />
+              <YAxis domain={[0, 100]} tick={axis} tickLine={false} axisLine={false} width={30} tickCount={5} />
               <Tooltip
                 contentStyle={{ borderRadius: 10, border: "1px solid rgba(0,0,0,0.08)", fontSize: 12 }}
                 formatter={(v: any, n: any) => [`${v}`, n === "emocaoAntes" ? "Antes" : "Depois"]}
