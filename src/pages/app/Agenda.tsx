@@ -2710,7 +2710,7 @@ const Agenda = () => {
                   className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-300/70 rounded-full px-2 py-0.5"
                   title={`Último link de RPD enviado em ${format(new Date(patientRpdInviteAt), "dd/MM/yyyy 'às' HH:mm")}`}
                 >
-                  <Send className="h-3 w-3" /> RPD enviado {format(new Date(patientRpdInviteAt), "dd/MM")}
+                  <Link2 className="h-3 w-3" /> RPD enviado {format(new Date(patientRpdInviteAt), "dd/MM")}
                 </span>
               ) : (
                 <span
