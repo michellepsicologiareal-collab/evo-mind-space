@@ -2811,6 +2811,44 @@ const Agenda = () => {
             </SheetContent>
           </Sheet>
         )}
+
+        {/* Sheet com o planejamento completo da sessão */}
+        {!isSupervisionCard && planning && (
+          <Sheet open={planOpen} onOpenChange={setPlanOpen}>
+            <SheetContent side="right" className="w-screen max-w-none sm:max-w-none h-[100dvh] border-0 rounded-none overflow-y-auto overflow-x-hidden p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:p-8" onClick={(e) => e.stopPropagation()}>
+              <SheetHeader className="mb-4">
+                <SheetTitle className="font-display text-xl">Planejamento da sessão</SheetTitle>
+                <SheetDescription>{s.patient_name}</SheetDescription>
+              </SheetHeader>
+              <div className="space-y-4">
+                {planning.carried && (
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-semibold">
+                    Planejado na sessão anterior
+                  </p>
+                )}
+                {planning.objetivo && (
+                  <div className="rounded-lg border border-border bg-muted/40 p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1 mb-1">
+                      <Target className="h-3 w-3" /> Objetivo da próxima sessão
+                    </p>
+                    <p className="text-sm text-foreground/90 break-words whitespace-pre-line">{planning.objetivo}</p>
+                  </div>
+                )}
+                {planning.retomar && (
+                  <div className="rounded-lg border border-border bg-muted/40 p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1 mb-1">
+                      <RotateCcw className="h-3 w-3" /> Retomar / Continuidade
+                    </p>
+                    <p className="text-sm text-foreground/90 break-words whitespace-pre-line">{planning.retomar}</p>
+                  </div>
+                )}
+                {!planning.objetivo && !planning.retomar && (
+                  <p className="text-sm text-muted-foreground">Nenhum planejamento registrado para esta sessão.</p>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        )}
       </div>
     );
   };
