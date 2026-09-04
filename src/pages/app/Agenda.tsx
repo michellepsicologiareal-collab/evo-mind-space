@@ -2311,6 +2311,7 @@ const Agenda = () => {
     const [historyOpen, setHistoryOpen] = useState(false);
     const [rpdOpen, setRpdOpen] = useState(false);
     const [readOpen, setReadOpen] = useState(false);
+    const [planOpen, setPlanOpen] = useState(false);
     const nowMs = Date.now();
     const scheduledMs = new Date(s.scheduled_at).getTime();
     const isPast = scheduledMs < nowMs;
