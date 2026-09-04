@@ -15,6 +15,7 @@ import {
 import { SessionReadView } from "@/components/app/SessionReadView";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
 import { PatientSessionsQuickView } from "@/components/app/PatientSessionsQuickView";
+import { TccRecords } from "@/components/app/TccRecords";
 import {
   PersonalEventDialog, PersonalEventCard, usePersonalEvents, eventsForDay,
   type PersonalEvent,
@@ -2308,6 +2309,7 @@ const Agenda = () => {
     const isSupervisionCard = s.session_type === "supervision";
     const [sheetOpen, setSheetOpen] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
+    const [rpdOpen, setRpdOpen] = useState(false);
     const [readOpen, setReadOpen] = useState(false);
     const nowMs = Date.now();
     const scheduledMs = new Date(s.scheduled_at).getTime();
