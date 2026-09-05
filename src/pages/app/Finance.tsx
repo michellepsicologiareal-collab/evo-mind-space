@@ -2273,6 +2273,26 @@ const Finance = () => {
                     variant="outline"
                     size="sm"
                     className="h-8 gap-1.5 text-xs"
+                    onClick={exportCSV}
+                    aria-label="Exportar registros do mês em CSV"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    CSV
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs"
+                    onClick={exportPDF}
+                    aria-label="Exportar registros do mês em PDF"
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                    PDF
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs"
                     onClick={() => setAuditOpen(true)}
                     aria-label="Abrir auditoria de pagamentos e cobranças"
                   >
