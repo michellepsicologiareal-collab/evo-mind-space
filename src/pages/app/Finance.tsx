@@ -2457,7 +2457,7 @@ const Finance = () => {
                           <div className="min-w-0 space-y-2 border-t border-border/60 pt-3 lg:border-0 lg:pt-0">
                             <div className="flex flex-wrap items-center gap-2">
                               <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${payTone}`}>{pay}</span>
-                              {billing.status !== "na" && (
+                              {billing.status !== "na" && billing.status !== "pago" && (
                                 <BillingBadge status={billing.status} dueDate={billing.dueDate} />
                               )}
                             </div>
