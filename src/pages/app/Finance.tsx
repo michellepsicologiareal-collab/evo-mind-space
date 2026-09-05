@@ -89,6 +89,8 @@ import {
   Receipt,
   MessageCircle,
   History as HistoryIcon,
+  FileSearch,
+  Info,
 } from "lucide-react";
 
 import {
@@ -103,6 +105,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { PageIntro } from "@/components/app/PageIntro";
 import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
+import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 
 
@@ -274,6 +277,7 @@ const Finance = () => {
   const [reminderLogs, setReminderLogs] = useState<ReminderLog[]>([]);
   const [reminderLogsVersion, setReminderLogsVersion] = useState(0);
   const [reminderHistoryPlan, setReminderHistoryPlan] = useState<{ key: string; name: string } | null>(null);
+  const [auditOpen, setAuditOpen] = useState(false);
 
   // ── Tela de conferência antes de enviar cobrança ────────────────────────
   const [confirmSend, setConfirmSend] = useState<{
@@ -2126,6 +2130,16 @@ const Finance = () => {
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthCursor(addMonths(monthCursor, 1))} aria-label="Próximo mês">
                     <ChevronRight className="h-4 w-4" />
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs"
+                    onClick={() => setAuditOpen(true)}
+                    aria-label="Abrir auditoria de pagamentos e cobranças"
+                  >
+                    <FileSearch className="h-3.5 w-3.5" />
+                    Auditoria
+                  </Button>
                 </div>
               </div>
 
@@ -2460,6 +2474,22 @@ const Finance = () => {
                               {billing.status !== "na" && billing.status !== "pago" && (
                                 <BillingBadge status={billing.status} dueDate={billing.dueDate} />
                               )}
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-muted-foreground/70 hover:text-foreground transition-colors"
+                                    aria-label="Entenda a diferença entre selo de pagamento e selo de cobrança"
+                                  >
+                                    <Info className="h-3.5 w-3.5" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-[260px] text-xs leading-snug">
+                                  <p><strong>Pagamento</strong> (Pago / Parcial / Pendente): mostra o dinheiro que já entrou referente às sessões.</p>
+                                  <p className="mt-1"><strong>Cobrança</strong> (a enviar / enviada / perto do vencimento / vencida): mostra em que ponto está o pedido de pagamento feito ao paciente.</p>
+                                </TooltipContent>
+                              </Tooltip>
                             </div>
                             {(billing.sentAt || billing.dueDate) && (
                               <p className="text-[11px] text-muted-foreground">
@@ -2548,6 +2578,7 @@ const Finance = () => {
                   { icon: CheckCircle2, label: "Pago", text: "Total recebido do paciente referente às sessões ou ao plano." },
                   { icon: Clock, label: "Em aberto", text: "Valor que ainda não foi pago pelo paciente." },
                   { icon: CalendarClock, label: "Previsto", text: "Valor das sessões futuras já agendadas (somente para sessão avulsa)." },
+                  { icon: MessageCircle, label: "Pagamento × Cobrança", text: "O selo de pagamento (Pago/Parcial/Pendente) indica o que já foi recebido. O selo de cobrança indica o andamento do pedido enviado ao paciente." },
                 ].map((l) => {
                   const Icon = l.icon;
                   return (
@@ -2563,6 +2594,13 @@ const Finance = () => {
                   );
                 })}
               </div>
+              <BillingAuditSheet
+                open={auditOpen}
+                onOpenChange={setAuditOpen}
+                sessions={[...rows, ...planRowsAll].filter((r, i, arr) => arr.findIndex((x) => x.id === r.id) === i)}
+                reminderLogs={reminderLogs}
+                periodLabel={format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
+              />
             </>
           );
         })()}
