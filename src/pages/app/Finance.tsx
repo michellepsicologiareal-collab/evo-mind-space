@@ -91,6 +91,8 @@ import {
   History as HistoryIcon,
   FileSearch,
   Info,
+  Download,
+  FileText,
 } from "lucide-react";
 
 import {
@@ -1353,6 +1355,143 @@ const Finance = () => {
   const openSettle = (g: NonNullable<typeof settle>) => {
     setSettle(g);
     setSettleSelected(new Set(settleableSessions(g).map((r) => r.id)));
+  };
+
+  // ── Exportação (CSV / PDF) dos registros financeiros do mês ─────────────
+  const SESSION_STATUS_LABEL: Record<string, string> = {
+    scheduled: "Agendada",
+    confirmed: "Confirmada",
+    completed: "Realizada",
+    cancelled: "Cancelada",
+    no_show: "Falta",
+  };
+  const PAYMENT_METHOD_LABEL: Record<string, string> = { pix: "PIX", card: "Cartão", cash: "Dinheiro" };
+
+  /** Linhas exportáveis: sessões do mês, sem canceladas nem despesas. */
+  const exportRows = () =>
+    rawRows
+      .filter((r) => r.status !== "cancelled" && !(r as any).is_expense)
+      .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+
+  const monthLabel = () => format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR });
+  const monthSlug = () => format(monthCursor, "yyyy-MM");
+
+  const exportCSV = () => {
+    const rows = exportRows();
+    if (rows.length === 0) {
+      toast.info("Nenhum registro financeiro neste mês para exportar.");
+      return;
+    }
+    const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const dt = (iso: string | null) =>
+      iso ? format(new Date(iso), "dd/MM/yyyy HH:mm") : "";
+    const dOnly = (iso: string | null) =>
+      iso ? format(new Date(iso), "dd/MM/yyyy") : "";
+    const header = [
+      "Data da sessão", "Paciente", "Serviço", "Status da sessão", "Valor (R$)",
+      "Pagamento", "Método", "Referência", "Data do pagamento", "Cobrança enviada em", "Vencimento",
+    ].map(esc).join(";");
+    const lines = rows.map((r) =>
+      [
+        dt(r.scheduled_at),
+        r.patient?.full_name ?? "—",
+        r.service?.name ?? "—",
+        SESSION_STATUS_LABEL[r.status] ?? r.status,
+        r.price != null ? Number(r.price).toFixed(2).replace(".", ",") : "",
+        r.payment_status === "paid" ? "Pago" : "Pendente",
+        r.payment_method ? PAYMENT_METHOD_LABEL[r.payment_method] ?? r.payment_method : "",
+        r.payment_reference ?? "",
+        dt(r.paid_at),
+        dt(r.billing_sent_at),
+        r.payment_due_date ? dOnly(`${r.payment_due_date}T12:00:00`) : "",
+      ].map(esc).join(";")
+    );
+    // BOM para o Excel abrir com acentos corretos
+    const blob = new Blob(["\uFEFF" + [header, ...lines].join("\r\n")], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `financeiro-${monthSlug()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exportado com os registros do mês.");
+  };
+
+  const exportPDF = () => {
+    const rows = exportRows();
+    if (rows.length === 0) {
+      toast.info("Nenhum registro financeiro neste mês para exportar.");
+      return;
+    }
+    const escHtml = (v: string) =>
+      v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const dt = (iso: string | null) =>
+      iso ? format(new Date(iso), "dd/MM/yyyy HH:mm") : "—";
+    const totalPago = rows
+      .filter((r) => r.payment_status === "paid")
+      .reduce((s, r) => s + (Number(r.price) || 0), 0);
+    const totalAberto = rows
+      .filter((r) => r.payment_status !== "paid")
+      .reduce((s, r) => s + (Number(r.price) || 0), 0);
+    const trs = rows
+      .map((r) => {
+        const pago = r.payment_status === "paid";
+        return `<tr>
+          <td>${dt(r.scheduled_at)}</td>
+          <td>${escHtml(r.patient?.full_name ?? "—")}</td>
+          <td>${escHtml(r.service?.name ?? "—")}</td>
+          <td>${SESSION_STATUS_LABEL[r.status] ?? r.status}</td>
+          <td class="num">${r.price != null ? formatBRL(Number(r.price)) : "—"}</td>
+          <td><span class="pill ${pago ? "ok" : "pend"}">${pago ? "Pago" : "Pendente"}</span></td>
+          <td>${r.payment_method ? PAYMENT_METHOD_LABEL[r.payment_method] ?? r.payment_method : "—"}</td>
+          <td>${dt(r.paid_at)}</td>
+          <td>${r.payment_due_date ? format(new Date(`${r.payment_due_date}T12:00:00`), "dd/MM/yyyy") : "—"}</td>
+        </tr>`;
+      })
+      .join("");
+    const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+      <title>Financeiro · ${monthLabel()}</title>
+      <style>
+        body{font-family:Inter,Arial,sans-serif;color:#333;margin:32px;font-size:12px}
+        h1{font-size:18px;color:#A57164;margin:0}
+        .sub{color:#777;margin:4px 0 16px}
+        .totals{display:flex;gap:24px;margin-bottom:16px}
+        .totals div{border:1px solid #e5e0d8;border-radius:8px;padding:8px 14px}
+        .totals b{display:block;font-size:15px}
+        .ok-c{color:#3D5C35}.pend-c{color:#b91c1c}
+        table{width:100%;border-collapse:collapse}
+        th{background:#A57164;color:#fff;text-align:left;padding:6px 8px;font-size:11px}
+        td{border-bottom:1px solid #eee6de;padding:6px 8px;vertical-align:top}
+        .num{text-align:right;white-space:nowrap}
+        .pill{border-radius:999px;padding:1px 8px;font-size:10px;font-weight:600}
+        .pill.ok{background:#e6efe3;color:#3D5C35}
+        .pill.pend{background:#fdeaea;color:#b91c1c}
+        footer{margin-top:20px;color:#999;font-size:10px}
+        @media print{body{margin:12mm}}
+      </style></head><body>
+      <h1>Psi Real · Relatório financeiro</h1>
+      <p class="sub">${monthLabel()} — gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm")}</p>
+      <div class="totals">
+        <div><span>Recebido</span><b class="ok-c">${formatBRL(totalPago)}</b></div>
+        <div><span>Em aberto</span><b class="pend-c">${formatBRL(totalAberto)}</b></div>
+        <div><span>Registros</span><b>${rows.length}</b></div>
+      </div>
+      <table><thead><tr>
+        <th>Data</th><th>Paciente</th><th>Serviço</th><th>Status</th><th>Valor</th>
+        <th>Pagamento</th><th>Método</th><th>Pago em</th><th>Vencimento</th>
+      </tr></thead><tbody>${trs}</tbody></table>
+      <footer>Documento gerado pelo Psi Real para conferência e controle interno.</footer>
+      <script>window.onload=()=>window.print()</script>
+      </body></html>`;
+    const w = window.open("", "_blank");
+    if (!w) {
+      toast.error("Permita pop-ups para gerar o PDF.");
+      return;
+    }
+    w.document.write(html);
+    w.document.close();
   };
 
   /** Registra pagamento das sessões informadas (sem duplicar: só pendentes). */
