@@ -16,7 +16,7 @@ const plan = {
     "Suporte por e-mail",
   ],
   cta: "Assinar 6 meses por R$ 58,90",
-  href: "https://pay.kiwify.com.br/36rYnQ7",
+  href: "https://invoice.infinitepay.io/plans/psimichelledonega/czjQXfB6nr/m5FgghbAfq?md[rid]=16p0ne",
 };
 
 export const Pricing = () => {
@@ -75,7 +75,7 @@ export const Pricing = () => {
               Cobrança única de R$ 58,90 referente a 6 meses de acesso. A assinatura renova
               automaticamente por mais 6 meses pelo mesmo valor, salvo cancelamento. Você pode
               cancelar quando quiser, antes da próxima renovação, e continua com acesso até o fim do
-              período já pago. Pagamento seguro processado pela Kiwify.
+              período já pago. Pagamento seguro processado de forma segura.
             </p>
 
           </div>

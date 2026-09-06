@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles } from "lucide-react";
-import { DEFAULT_KIWIFY_URL } from "@/lib/subscription";
+import { DEFAULT_CHECKOUT_URL } from "@/lib/subscription";
 
 interface PlanModalProps {
   open: boolean;
@@ -22,7 +22,7 @@ const semestralPlan = {
     "Catálogo de serviços",
     "Suporte prioritário",
   ],
-  href: DEFAULT_KIWIFY_URL,
+  href: DEFAULT_CHECKOUT_URL,
 };
 
 export const PlanModal = ({ open, onOpenChange }: PlanModalProps) => {
@@ -68,7 +68,7 @@ export const PlanModal = ({ open, onOpenChange }: PlanModalProps) => {
             <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
               Cobrança única de R$ 58,90 a cada 6 meses, renovada automaticamente pelo mesmo valor
               salvo cancelamento. Cancele quando quiser e mantenha o acesso até o fim do período
-              pago. Pagamento seguro via Kiwify.
+              pago. Pagamento seguro de forma segura.
             </p>
           </div>
         </div>

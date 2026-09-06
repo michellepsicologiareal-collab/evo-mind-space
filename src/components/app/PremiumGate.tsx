@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Crown, Lock } from "lucide-react";
 
-const PAYMENT_LINK = "https://pay.kiwify.com.br/36rYnQ7";
+const PAYMENT_LINK = "https://invoice.infinitepay.io/plans/psimichelledonega/czjQXfB6nr/m5FgghbAfq?md[rid]=16p0ne";
 
 interface PremiumGateProps {
   open: boolean;
