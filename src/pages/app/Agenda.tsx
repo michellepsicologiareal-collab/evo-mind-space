@@ -1834,6 +1834,12 @@ const Agenda = () => {
     }
 
     window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(msg)}`, "_blank");
+    // Atualiza o selo do card imediatamente ("RPD enviado hoje"), sem esperar reload.
+    setRpdInviteByPatient((prev) => {
+      const next = new Map(prev);
+      next.set(s.patient_id as string, Date.now());
+      return next;
+    });
     toast.success("Link do RPD enviado");
   };
 
