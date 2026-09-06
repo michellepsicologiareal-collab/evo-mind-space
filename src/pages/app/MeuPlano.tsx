@@ -130,11 +130,11 @@ export default function MeuPlano() {
           {!loading && isFree && (
             <div className="mt-6 space-y-4 rounded-2xl bg-accent/8 p-4 border border-accent/20">
               <p className="text-sm text-foreground/90">
-                Você está no plano gratuito. Assine o PsiReal Semestral para liberar todos os recursos.
+                Você está no plano gratuito. Assine o PsiReal — Assinatura Semestral para liberar todos os recursos.
               </p>
               <Button variant="accent" className="w-full" onClick={openCheckout}>
                 <CreditCard className="h-4 w-4 mr-1" />
-                Assinar PsiReal
+                Assinar o PsiReal
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
@@ -155,7 +155,7 @@ export default function MeuPlano() {
           </span>
 
           <div className="mt-4">
-            <h3 className="font-display text-2xl font-semibold text-foreground">PsiReal Semestral</h3>
+            <h3 className="font-display text-2xl font-semibold text-foreground">PsiReal — Assinatura Semestral</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Tudo que você precisa para organizar seu consultório com clareza.
             </p>
@@ -182,7 +182,7 @@ export default function MeuPlano() {
           <div className="mt-8 space-y-3">
             <Button variant="accent" size="lg" className="w-full" onClick={openCheckout}>
               <CreditCard className="h-4 w-4 mr-1" />
-              {isPremium ? "Gerenciar assinatura" : "Assinar semestral"}
+              {isPremium ? "Gerenciar assinatura" : "Assinar o PsiReal"}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
             <p className="text-center text-xs text-muted-foreground">

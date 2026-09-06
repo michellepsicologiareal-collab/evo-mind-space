@@ -15,7 +15,7 @@ const plan = {
     "Espaço de Autocuidado",
     "Suporte por e-mail",
   ],
-  cta: "Assinar 6 meses por R$ 58,90",
+  cta: "Assinar o PsiReal",
   href: "https://invoice.infinitepay.io/plans/psimichelledonega/czjQXfB6nr/m5FgghbAfq?md[rid]=16p0ne",
 };
 

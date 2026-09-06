@@ -44,7 +44,7 @@ export const VideoTour = () => {
           </p>
           <Button asChild variant="accent" size="lg" className="mt-6 w-full sm:w-auto">
             <a href={DEFAULT_CHECKOUT_URL} target="_blank" rel="noopener noreferrer">
-              Assinar 6 meses por R$ 58,90
+              Assinar o PsiReal
               <ArrowRight className="ml-2 h-4 w-4" />
             </a>
           </Button>

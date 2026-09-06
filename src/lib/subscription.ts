@@ -45,7 +45,7 @@ export const STATUS_DOTS: Record<SubscriptionStatus, string> = {
 /** Plano gratuito padrão exibido quando o usuário ainda não assinou. */
 export const FREE_PLAN_NAME = "Grátis";
 /** Nome do plano pago padrão sugerido no painel administrativo. */
-export const PAID_PLAN_NAME = "PsiReal Semestral";
+export const PAID_PLAN_NAME = "PsiReal — Assinatura Semestral";
 
 /** Fallback usado enquanto o link configurável não carrega. */
 export const DEFAULT_CHECKOUT_URL = "https://invoice.infinitepay.io/plans/psimichelledonega/czjQXfB6nr/m5FgghbAfq?md[rid]=16p0ne";

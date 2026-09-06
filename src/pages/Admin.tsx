@@ -688,7 +688,7 @@ const Admin = () => {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Usado no botão “Assinar PsiReal” dentro de Meu Plano.
+            Usado no botão “Assinar o PsiReal” dentro de Meu Plano.
           </p>
         </div>
 

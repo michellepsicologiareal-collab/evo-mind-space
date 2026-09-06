@@ -51,7 +51,7 @@ export const PremiumGate = ({ open, onOpenChange }: PremiumGateProps) => {
             className="w-full"
             onClick={() => window.open(PAYMENT_LINK, "_blank")}
           >
-            <Crown className="h-4 w-4" /> Assinar Agora
+            <Crown className="h-4 w-4" /> Assinar o PsiReal
           </Button>
         </div>
       </DialogContent>
