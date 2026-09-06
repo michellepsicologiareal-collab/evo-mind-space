@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app/PageHeader";
-import { useSubscription, useKiwifyLink } from "@/hooks/useSubscription";
+import { useSubscription, useCheckoutLink } from "@/hooks/useSubscription";
 import {
   STATUS_LABELS,
   STATUS_STYLES,
@@ -35,11 +35,11 @@ const planFeatures = [
 
 export default function MeuPlano() {
   const { status, isPremium, plan, loading } = useSubscription();
-  const { url: kiwifyUrl } = useKiwifyLink();
+  const { url: checkoutUrl } = useCheckoutLink();
   const navigate = useNavigate();
 
   const openCheckout = () => {
-    window.open(kiwifyUrl, "_blank", "noopener,noreferrer");
+    window.open(checkoutUrl, "_blank", "noopener,noreferrer");
   };
 
   const isFree = status === "free";
@@ -130,11 +130,11 @@ export default function MeuPlano() {
           {!loading && isFree && (
             <div className="mt-6 space-y-4 rounded-2xl bg-accent/8 p-4 border border-accent/20">
               <p className="text-sm text-foreground/90">
-                Você está no plano gratuito. Assine o PsiReal Semestral para liberar todos os recursos.
+                Você está no plano gratuito. Assine o PsiReal — Assinatura Semestral para liberar todos os recursos.
               </p>
               <Button variant="accent" className="w-full" onClick={openCheckout}>
                 <CreditCard className="h-4 w-4 mr-1" />
-                Assinar PsiReal
+                Assinar o PsiReal
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
@@ -155,7 +155,7 @@ export default function MeuPlano() {
           </span>
 
           <div className="mt-4">
-            <h3 className="font-display text-2xl font-semibold text-foreground">PsiReal Semestral</h3>
+            <h3 className="font-display text-2xl font-semibold text-foreground">PsiReal — Assinatura Semestral</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Tudo que você precisa para organizar seu consultório com clareza.
             </p>
@@ -182,11 +182,11 @@ export default function MeuPlano() {
           <div className="mt-8 space-y-3">
             <Button variant="accent" size="lg" className="w-full" onClick={openCheckout}>
               <CreditCard className="h-4 w-4 mr-1" />
-              {isPremium ? "Gerenciar assinatura" : "Assinar semestral"}
+              {isPremium ? "Gerenciar assinatura" : "Assinar o PsiReal"}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              Pagamento seguro via Kiwify · Cancele quando quiser
+              Pagamento seguro de forma segura · Cancele quando quiser
             </p>
             <p className="text-center text-xs text-muted-foreground leading-relaxed">
               Cobrança única de R$ 58,90 a cada 6 meses, com renovação automática pelo mesmo valor
@@ -201,7 +201,7 @@ export default function MeuPlano() {
       <section className="mt-6 rounded-3xl border border-border bg-card p-6 sm:p-8">
         <h3 className="font-display text-lg font-semibold text-foreground">Dúvidas sobre sua assinatura?</h3>
         <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
-          O pagamento é processado com segurança pela Kiwify. Após a confirmação, sua assinatura é
+          O pagamento é processado com segurança de forma segura. Após a confirmação, sua assinatura é
           liberada pela nossa equipe. Para cancelamentos ou reembolsos, entre em contato pelo WhatsApp
           de suporte.
         </p>

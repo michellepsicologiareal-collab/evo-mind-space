@@ -35,7 +35,7 @@ import {
   SUBSCRIPTION_STATUSES,
   PAID_PLAN_NAME,
   FREE_PLAN_NAME,
-  DEFAULT_KIWIFY_URL,
+  DEFAULT_CHECKOUT_URL,
   type SubscriptionStatus,
 } from "@/lib/subscription";
 
@@ -160,27 +160,27 @@ const Admin = () => {
     subscription_notes: "",
   });
   const [planSaving, setPlanSaving] = useState(false);
-  const [kiwifyUrl, setKiwifyUrl] = useState(DEFAULT_KIWIFY_URL);
-  const [kiwifySaving, setKiwifySaving] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState(DEFAULT_CHECKOUT_URL);
+  const [checkoutSaving, setCheckoutSaving] = useState(false);
 
   useEffect(() => {
     supabase
       .from("app_settings")
       .select("value")
-      .eq("key", "kiwify_checkout_url")
+      .eq("key", "checkout_url")
       .maybeSingle()
       .then(({ data }) => {
-        if (data?.value) setKiwifyUrl(data.value);
+        if (data?.value) setCheckoutUrl(data.value);
       });
   }, []);
 
-  const saveKiwifyUrl = async () => {
-    setKiwifySaving(true);
+  const saveCheckoutUrl = async () => {
+    setCheckoutSaving(true);
     const { error } = await supabase
       .from("app_settings")
-      .upsert({ key: "kiwify_checkout_url", value: kiwifyUrl.trim(), updated_at: new Date().toISOString() });
-    setKiwifySaving(false);
-    if (error) { toast.error("Erro ao salvar link da Kiwify"); return; }
+      .upsert({ key: "checkout_url", value: checkoutUrl.trim(), updated_at: new Date().toISOString() });
+    setCheckoutSaving(false);
+    if (error) { toast.error("Erro ao salvar link de pagamento"); return; }
     toast.success("Link de checkout atualizado");
   };
 
@@ -671,24 +671,24 @@ const Admin = () => {
           </Button>
         </div>
 
-        {/* Link de checkout (Kiwify) */}
+        {/* Link de checkout de pagamento */}
         <div className="rounded-2xl border border-border bg-card p-4 space-y-2">
-          <Label htmlFor="kiwify-url" className="text-sm font-medium">
-            Link de checkout da Kiwify
+          <Label htmlFor="checkout-url" className="text-sm font-medium">
+            Link de checkout de pagamento
           </Label>
           <div className="flex flex-col sm:flex-row gap-2">
             <Input
-              id="kiwify-url"
-              value={kiwifyUrl}
-              onChange={(e) => setKiwifyUrl(e.target.value)}
-              placeholder="https://pay.kiwify.com.br/..."
+              id="checkout-url"
+              value={checkoutUrl}
+              onChange={(e) => setCheckoutUrl(e.target.value)}
+              placeholder="https://invoice.infinitepay.io/..."
             />
-            <Button onClick={saveKiwifyUrl} disabled={kiwifySaving} className="shrink-0">
-              {kiwifySaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar link"}
+            <Button onClick={saveCheckoutUrl} disabled={checkoutSaving} className="shrink-0">
+              {checkoutSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar link"}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Usado no botão “Assinar PsiReal” dentro de Meu Plano.
+            Usado no botão “Assinar o PsiReal” dentro de Meu Plano.
           </p>
         </div>
 

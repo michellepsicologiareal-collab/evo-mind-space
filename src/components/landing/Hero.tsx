@@ -31,7 +31,7 @@ export const Hero = () => {
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
             <Button variant="hero" size="xl" asChild className="w-full sm:w-auto whitespace-normal text-center">
               <a href="#planos">
-                Assinar 6 meses por R$ 58,90 <ArrowRight className="ml-1 shrink-0" />
+                Assinar o PsiReal <ArrowRight className="ml-1 shrink-0" />
               </a>
             </Button>
             <Button variant="outline" size="xl" asChild className="w-full sm:w-auto whitespace-normal text-center">

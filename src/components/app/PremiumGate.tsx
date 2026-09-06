@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Crown, Lock } from "lucide-react";
 
-const PAYMENT_LINK = "https://pay.kiwify.com.br/36rYnQ7";
+const PAYMENT_LINK = "https://invoice.infinitepay.io/plans/psimichelledonega/czjQXfB6nr/m5FgghbAfq?md[rid]=16p0ne";
 
 interface PremiumGateProps {
   open: boolean;
@@ -51,7 +51,7 @@ export const PremiumGate = ({ open, onOpenChange }: PremiumGateProps) => {
             className="w-full"
             onClick={() => window.open(PAYMENT_LINK, "_blank")}
           >
-            <Crown className="h-4 w-4" /> Assinar Agora
+            <Crown className="h-4 w-4" /> Assinar o PsiReal
           </Button>
         </div>
       </DialogContent>

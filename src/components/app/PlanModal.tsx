@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles } from "lucide-react";
-import { DEFAULT_KIWIFY_URL } from "@/lib/subscription";
+import { DEFAULT_CHECKOUT_URL } from "@/lib/subscription";
 
 interface PlanModalProps {
   open: boolean;
@@ -9,7 +9,7 @@ interface PlanModalProps {
 }
 
 const semestralPlan = {
-  name: "PsiReal Semestral",
+  name: "PsiReal — Assinatura Semestral",
   price: "R$ 58,90",
   period: "/6 meses",
   description: "Tudo que você precisa para organizar seu consultório",
@@ -22,7 +22,7 @@ const semestralPlan = {
     "Catálogo de serviços",
     "Suporte prioritário",
   ],
-  href: DEFAULT_KIWIFY_URL,
+  href: DEFAULT_CHECKOUT_URL,
 };
 
 export const PlanModal = ({ open, onOpenChange }: PlanModalProps) => {
@@ -31,7 +31,7 @@ export const PlanModal = ({ open, onOpenChange }: PlanModalProps) => {
       <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden rounded-2xl">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-accent" /> PsiReal Semestral
+            <Sparkles className="h-5 w-5 text-accent" /> PsiReal — Assinatura Semestral
           </DialogTitle>
           <DialogDescription>
             6 meses de acesso completo por R$ 58,90 — menos de R$ 10 por mês.
@@ -63,12 +63,12 @@ export const PlanModal = ({ open, onOpenChange }: PlanModalProps) => {
               className="mt-5 w-full"
               onClick={() => window.open(semestralPlan.href, "_blank")}
             >
-              Assinar 6 meses por R$ 58,90
+              Assinar o PsiReal
             </Button>
             <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
               Cobrança única de R$ 58,90 a cada 6 meses, renovada automaticamente pelo mesmo valor
               salvo cancelamento. Cancele quando quiser e mantenha o acesso até o fim do período
-              pago. Pagamento seguro via Kiwify.
+              pago. Pagamento seguro de forma segura.
             </p>
           </div>
         </div>

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  DEFAULT_KIWIFY_URL,
+  DEFAULT_CHECKOUT_URL,
   FREE_PLAN_NAME,
   type SubscriptionStatus,
 } from "@/lib/subscription";
@@ -84,16 +84,16 @@ export function useSubscription() {
   };
 }
 
-/** Link de checkout da Kiwify, configurável pelo painel administrativo. */
-export function useKiwifyLink() {
-  const [url, setUrl] = useState<string>(DEFAULT_KIWIFY_URL);
+/** Link de checkout de pagamento, configurável pelo painel administrativo. */
+export function useCheckoutLink() {
+  const [url, setUrl] = useState<string>(DEFAULT_CHECKOUT_URL);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     const { data } = await supabase
       .from("app_settings")
       .select("value")
-      .eq("key", "kiwify_checkout_url")
+      .eq("key", "checkout_url")
       .maybeSingle();
     if (data?.value) setUrl(data.value);
     setLoading(false);

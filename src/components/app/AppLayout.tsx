@@ -432,8 +432,8 @@ export const AppLayout = () => {
               </p>
 
               <Button variant="accent" size="lg" asChild>
-                <a href="https://pay.kiwify.com.br/36rYnQ7" target="_blank" rel="noopener noreferrer">
-                  <Crown className="h-4 w-4" /> Assinar Agora
+                <a href="https://invoice.infinitepay.io/plans/psimichelledonega/czjQXfB6nr/m5FgghbAfq?md[rid]=16p0ne" target="_blank" rel="noopener noreferrer">
+                  <Crown className="h-4 w-4" /> Assinar o PsiReal
                 </a>
               </Button>
             </div>
