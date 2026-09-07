@@ -1,22 +1,18 @@
-import { MessageCircle, RefreshCw, LifeBuoy } from "lucide-react";
+import { MessageCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/app/PageHeader";
 
 const WHATSAPP_SUPPORT_URL = "https://wa.me/5511947388423";
 
 export default function Suporte() {
   return (
-    <div className="app-page">
-      <header className="mb-8">
-        <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2.5">
-          <LifeBuoy className="h-7 w-7 text-primary" aria-hidden />
-          Suporte
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1.5">
-          Estamos aqui para ajudar você a aproveitar o PsiReal da melhor forma.
-        </p>
-      </header>
+    <div className="min-h-[calc(100vh-8rem)]">
+      <PageHeader
+        title="Suporte"
+        subtitle="Estamos aqui para ajudar você a aproveitar o PsiReal da melhor forma."
+      />
 
-      <div className="grid gap-4 md:grid-cols-2 max-w-4xl">
+      <div className="mt-6 grid gap-4 md:grid-cols-2 max-w-4xl">
         {/* Dúvidas e suporte */}
         <section className="rounded-2xl bg-card border border-border p-6 shadow-soft">
           <div className="flex items-center gap-3 mb-3">
