@@ -4,6 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { SubscriptionNotice } from "@/components/subscription/SubscriptionNotice";
 
 const faqs = [
   {
