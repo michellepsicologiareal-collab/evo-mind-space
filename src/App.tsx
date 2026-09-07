@@ -47,6 +47,7 @@ const AnamneseAdultoPublica = lazy(() => import("./pages/AnamneseAdultoPublica")
 const Humor = lazy(() => import("./pages/app/Humor"));
 const RpdPublico = lazy(() => import("./pages/RpdPublico"));
 const MeuPlano = lazy(() => import("./pages/app/MeuPlano"));
+const Suporte = lazy(() => import("./pages/app/Suporte"));
 
 const queryClient = new QueryClient();
 
@@ -172,6 +173,7 @@ const App = () => (
                   <Route path="registro-sessao" element={<RegistroSessao />} />
                   <Route path="anamneses" element={<Anamneses />} />
                   <Route path="meu-plano" element={<MeuPlano />} />
+                  <Route path="suporte" element={<Suporte />} />
                   <Route path="perfil" element={<Profile />} />
                 </Route>
 
