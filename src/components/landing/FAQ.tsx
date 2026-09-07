@@ -71,6 +71,9 @@ export const FAQ = () => {
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground">
                 {faq.a}
+                {faq.q === "Quanto custa e como funciona a renovação?" && (
+                  <SubscriptionNotice className="mt-3" />
+                )}
               </AccordionContent>
             </AccordionItem>
           ))}
