@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles } from "lucide-react";
 import { DEFAULT_CHECKOUT_URL } from "@/lib/subscription";
+import { SubscriptionNotice } from "@/components/subscription/SubscriptionNotice";
 
 interface PlanModalProps {
   open: boolean;
@@ -70,6 +71,7 @@ export const PlanModal = ({ open, onOpenChange }: PlanModalProps) => {
               salvo cancelamento. Cancele quando quiser e mantenha o acesso até o fim do período
               pago. Pagamento seguro de forma segura.
             </p>
+            <SubscriptionNotice className="mt-4" />
           </div>
         </div>
       </DialogContent>
