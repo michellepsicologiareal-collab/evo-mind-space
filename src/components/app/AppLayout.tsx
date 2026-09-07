@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { PremiumGate } from "@/components/app/PremiumGate";
 import { NotificationBell } from "@/components/app/NotificationBell";
 import { ThemeToggle } from "@/components/app/ThemeToggle";
+import { SubscriptionNotice } from "@/components/subscription/SubscriptionNotice";
 
 const PREMIUM_ROUTES = new Set(["/app/financeiro", "/app/supervisionandos"]);
 
@@ -430,6 +431,7 @@ export const AppLayout = () => {
               <p className="text-xs text-muted-foreground -mt-2">
                 Menos de R$ 10 por mês · Renovação a cada 6 meses · Cancele quando quiser
               </p>
+              <SubscriptionNotice className="w-full max-w-lg" />
 
               <Button variant="accent" size="lg" asChild>
                 <a href="https://invoice.infinitepay.io/plans/psimichelledonega/czjQXfB6nr/m5FgghbAfq?md[rid]=16p0ne" target="_blank" rel="noopener noreferrer">

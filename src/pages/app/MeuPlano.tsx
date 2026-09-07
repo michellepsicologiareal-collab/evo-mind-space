@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app/PageHeader";
+import { SubscriptionNotice } from "@/components/subscription/SubscriptionNotice";
 import { useSubscription, useCheckoutLink } from "@/hooks/useSubscription";
 import {
   STATUS_LABELS,
@@ -137,6 +138,7 @@ export default function MeuPlano() {
                 Assinar o PsiReal
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
+              <SubscriptionNotice />
             </div>
           )}
 
@@ -192,6 +194,7 @@ export default function MeuPlano() {
               Cobrança única de R$ 58,90 a cada 6 meses, com renovação automática pelo mesmo valor
               salvo cancelamento. Ao cancelar, o acesso continua até o fim do período já pago.
             </p>
+            <SubscriptionNotice />
 
           </div>
         </section>

@@ -1,5 +1,6 @@
 import { Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SubscriptionNotice } from "@/components/subscription/SubscriptionNotice";
 
 const plan = {
   name: "PsiReal",
@@ -77,6 +78,7 @@ export const Pricing = () => {
               cancelar quando quiser, antes da próxima renovação, e continua com acesso até o fim do
               período já pago. Pagamento seguro processado de forma segura.
             </p>
+            <SubscriptionNotice className="mt-4" />
 
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import mockupDashboard from "@/assets/mockup-dashboard.png";
+import { SubscriptionNotice } from "@/components/subscription/SubscriptionNotice";
 
 export const Hero = () => {
   return (
@@ -41,6 +42,7 @@ export const Hero = () => {
           <p className="mt-3 text-xs text-muted-foreground">
             Menos de R$ 10 por mês · Renovação a cada 6 meses · Cancele quando quiser
           </p>
+          <SubscriptionNotice className="mt-4 max-w-xl" />
           <a
             href="/auth?tab=signup"
             className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent/80 transition-colors"

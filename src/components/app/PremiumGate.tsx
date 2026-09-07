@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Crown, Lock } from "lucide-react";
+import { SubscriptionNotice } from "@/components/subscription/SubscriptionNotice";
 
 const PAYMENT_LINK = "https://invoice.infinitepay.io/plans/psimichelledonega/czjQXfB6nr/m5FgghbAfq?md[rid]=16p0ne";
 
@@ -43,8 +44,7 @@ export const PremiumGate = ({ open, onOpenChange }: PremiumGateProps) => {
           <p className="text-xs text-muted-foreground -mt-1">
             Menos de R$ 10 por mês · Renovação a cada 6 meses · Cancele quando quiser
           </p>
-
-
+          <SubscriptionNotice />
           <Button
             variant="accent"
             size="lg"
