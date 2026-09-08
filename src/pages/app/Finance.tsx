@@ -303,6 +303,8 @@ const Finance = () => {
     financial_responsible_phone: string | null;
   };
   const [patientContacts, setPatientContacts] = useState<Record<string, PatientContact>>({});
+  // Cadastro completo de pacientes (fora da lixeira), em ordem alfabética — base do filtro.
+  const [patientDirectory, setPatientDirectory] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -311,8 +313,9 @@ const Finance = () => {
         supabase.from("profiles").select("full_name, crp, pix_key").eq("id", user.id).maybeSingle(),
         supabase
           .from("patients")
-          .select("id, phone, has_financial_responsible, financial_responsible_phone")
-          .eq("user_id", user.id),
+          .select("id, full_name, phone, has_financial_responsible, financial_responsible_phone")
+          .eq("user_id", user.id)
+          .is("deleted_at", null),
       ]);
       if (prof.data) {
         setPsiName(prof.data.full_name ?? "");
@@ -321,14 +324,18 @@ const Finance = () => {
       }
       if (pats.data) {
         const map: Record<string, PatientContact> = {};
+        const directory: Array<{ id: string; name: string }> = [];
         for (const p of pats.data as any[]) {
           map[p.id] = {
             phone: p.phone ?? null,
             has_financial_responsible: p.has_financial_responsible ?? null,
             financial_responsible_phone: p.financial_responsible_phone ?? null,
           };
+          if (p.full_name) directory.push({ id: p.id, name: p.full_name });
         }
+        directory.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
         setPatientContacts(map);
+        setPatientDirectory(directory);
       }
     })();
   }, [user]);
