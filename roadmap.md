@@ -2,3 +2,7 @@
 - [x] Ajustar visualização mobile do registro de TCC (paciente)
 - [x] Painel de evolução (gráficos) dos registros de TCC para o paciente
 - [x] Corrigir visão mobile do registro de TCC no app do psicólogo (dialog cortado/rolagem horizontal)
+
+## Filtro no Financeiro
+- [ ] Filtro para ver por paciente
+- [ ] Ordenação alfabética
