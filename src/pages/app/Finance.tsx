@@ -307,8 +307,7 @@ const Finance = () => {
     financial_responsible_phone: string | null;
   };
   const [patientContacts, setPatientContacts] = useState<Record<string, PatientContact>>({});
-  // Cadastro completo de pacientes (fora da lixeira), em ordem alfabética — base do filtro.
-  const [patientDirectory, setPatientDirectory] = useState<Array<{ id: string; name: string }>>([]);
+
 
   useEffect(() => {
     if (!user) return;
