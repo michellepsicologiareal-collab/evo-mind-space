@@ -1554,6 +1554,23 @@ const Finance = () => {
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           <RefreshButton />
 
+          {/* Filtro por paciente — cadastro completo, em ordem alfabética */}
+          <Select value={patientFilter} onValueChange={setPatientFilter}>
+            <SelectTrigger
+              id="patient-filter"
+              aria-label="Filtrar por paciente"
+              className="h-10 w-full sm:w-[240px]"
+            >
+              <SelectValue placeholder="Todos os pacientes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os pacientes</SelectItem>
+              {patientOptions.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="gap-2">
