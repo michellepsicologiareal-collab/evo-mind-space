@@ -1605,21 +1605,6 @@ const Finance = () => {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="patient-filter" className="text-xs text-muted-foreground">Paciente</Label>
-                <Select value={patientFilter} onValueChange={setPatientFilter}>
-                  <SelectTrigger id="patient-filter" className="h-9">
-                    <SelectValue placeholder="Todos os pacientes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os pacientes</SelectItem>
-                    {patientOptions.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               {(fortnightFilter !== "all" || receitaSaudeFilter !== "all" || patientFilter !== "all") && (
                 <Button
                   variant="ghost"
