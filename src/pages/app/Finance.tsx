@@ -2857,6 +2857,34 @@ const Finance = () => {
                       >
                         Confirmar pagamento
                       </Button>
+                      {(() => {
+                        const b = billingStatusOf(settle.sessions, billingReminderDays, "plan");
+                        const jaEnviada = !!b.sentAt;
+                        return (
+                          <Button
+                            variant="outline"
+                            className="w-full gap-1.5"
+                            disabled={settling || b.status === "pago"}
+                            onClick={() => {
+                              setSettle(null);
+                              setConfirmSend({
+                                key: settle.key,
+                                name: settle.name,
+                                patientId: settle.patientId,
+                                sessions: settle.sessions,
+                                isPlan: true,
+                                dueDate: b.dueDate,
+                                status: b.status,
+                                isResend: jaEnviada,
+                              });
+                            }}
+                            aria-label={`${jaEnviada ? "Reenviar" : "Enviar"} cobrança do plano de ${settle.name} pelo WhatsApp`}
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            {jaEnviada ? "Reenviar cobrança do plano" : "Enviar cobrança do plano"}
+                          </Button>
+                        );
+                      })()}
                     </div>
                   )
                 ) : (
@@ -2890,6 +2918,32 @@ const Finance = () => {
                               <span className="tabular-nums font-medium">{formatBRL(Number(r.price ?? 0))}</span>
                               <span className={`text-[11px] px-2 py-0.5 rounded-full border ${badgeTone}`}>{badge}</span>
                               <span className="ml-auto flex items-center gap-1">
+                                {!pago && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs gap-1"
+                                    disabled={settling}
+                                    onClick={() => {
+                                      const b = billingStatusOf([r], billingReminderDays, "per_session");
+                                      setSettle(null);
+                                      setConfirmSend({
+                                        key: settle.key,
+                                        name: settle.name,
+                                        patientId: settle.patientId,
+                                        sessions: [r],
+                                        isPlan: false,
+                                        dueDate: b.dueDate,
+                                        status: b.status,
+                                        isResend: !!r.billing_sent_at,
+                                      });
+                                    }}
+                                    aria-label={`Enviar cobrança da sessão de ${format(new Date(r.scheduled_at), "dd/MM/yyyy")} pelo WhatsApp`}
+                                  >
+                                    <MessageCircle className="h-3 w-3" />
+                                    Cobrar
+                                  </Button>
+                                )}
                                 {podeBaixar && (
                                   <Button
                                     size="sm"
