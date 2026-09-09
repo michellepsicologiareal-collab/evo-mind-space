@@ -210,14 +210,16 @@ const Finance = () => {
     [rawRows, patientFilter]
   );
   const patientOptions = useMemo(() => {
-    const map = new Map<string, string>();
+    // Cadastro completo (ordem alfabética) + qualquer paciente presente no mês
+    // que ainda não esteja no diretório (ex.: recém-arquivado).
+    const map = new Map<string, string>(patientDirectory.map((p) => [p.id, p.name]));
     for (const r of rawRows) {
-      if (r.patient?.id && r.patient?.full_name) map.set(r.patient.id, r.patient.full_name);
+      if (r.patient?.id && r.patient?.full_name && !map.has(r.patient.id)) map.set(r.patient.id, r.patient.full_name);
     }
     return Array.from(map.entries())
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-  }, [rawRows]);
+  }, [patientDirectory, rawRows]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
   const [financeHistory, setFinanceHistory] = useState<{ id: string; name: string } | null>(null);
