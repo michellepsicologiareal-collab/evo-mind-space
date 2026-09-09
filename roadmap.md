@@ -4,5 +4,5 @@
 - [x] Corrigir visão mobile do registro de TCC no app do psicólogo (dialog cortado/rolagem horizontal)
 
 ## Filtro no Financeiro
-- [ ] Filtro para ver por paciente
-- [ ] Ordenação alfabética
+- [x] Filtro para ver por paciente
+- [x] Ordenação alfabética
