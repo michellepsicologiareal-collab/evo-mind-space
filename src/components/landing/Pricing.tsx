@@ -76,7 +76,7 @@ export const Pricing = () => {
               Cobrança única de R$ 58,90 referente a 6 meses de acesso. A assinatura renova
               automaticamente por mais 6 meses pelo mesmo valor, salvo cancelamento. Você pode
               cancelar quando quiser, antes da próxima renovação, e continua com acesso até o fim do
-              período já pago. Pagamento seguro processado de forma segura.
+              período já pago. Pagamento processado com segurança.
             </p>
             <SubscriptionNotice className="mt-4" />
 

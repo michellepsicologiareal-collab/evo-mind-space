@@ -50,7 +50,7 @@ export const VideoTour = () => {
             </a>
           </Button>
           <p className="mt-4 text-xs text-muted-foreground inline-flex items-center justify-center gap-1.5">
-            <ShieldCheck className="h-3.5 w-3.5" /> Pagamento seguro de forma segura · Acesso imediato após a confirmação
+            <ShieldCheck className="h-3.5 w-3.5" /> Pagamento seguro · Acesso imediato após a confirmação
           </p>
           <p className="mt-2 text-xs text-muted-foreground max-w-xl mx-auto leading-relaxed">
             Cobrança única de R$ 58,90 a cada 6 meses, com renovação automática pelo mesmo valor

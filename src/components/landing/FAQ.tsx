@@ -33,7 +33,7 @@ const faqs = [
   },
   {
     q: "Quanto custa e como funciona a renovação?",
-    a: "O PsiReal custa R$ 58,90 por 6 meses de acesso completo — menos de R$ 10 por mês. É uma cobrança única a cada semestre, renovada automaticamente pelo mesmo valor, salvo cancelamento. Você pode cancelar quando quiser antes da próxima renovação e continua com acesso até o fim do período já pago. O pagamento é processado com segurança de forma segura.",
+    a: "O PsiReal custa R$ 58,90 por 6 meses de acesso completo — menos de R$ 10 por mês. É uma cobrança única a cada semestre, renovada automaticamente pelo mesmo valor, salvo cancelamento. Você pode cancelar quando quiser antes da próxima renovação e continua com acesso até o fim do período já pago. O pagamento é processado com segurança.",
   },
 
   {

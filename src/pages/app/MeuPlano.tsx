@@ -188,7 +188,7 @@ export default function MeuPlano() {
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              Pagamento seguro de forma segura · Cancele quando quiser
+              Pagamento seguro · Cancele quando quiser
             </p>
             <p className="text-center text-xs text-muted-foreground leading-relaxed">
               Cobrança única de R$ 58,90 a cada 6 meses, com renovação automática pelo mesmo valor
@@ -204,7 +204,7 @@ export default function MeuPlano() {
       <section className="mt-6 rounded-3xl border border-border bg-card p-6 sm:p-8">
         <h3 className="font-display text-lg font-semibold text-foreground">Dúvidas sobre sua assinatura?</h3>
         <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
-          O pagamento é processado com segurança de forma segura. Após a confirmação, sua assinatura é
+          O pagamento é processado com segurança. Após a confirmação, sua assinatura é
           liberada pela nossa equipe. Para cancelamentos ou reembolsos, entre em contato pelo WhatsApp
           de suporte.
         </p>
