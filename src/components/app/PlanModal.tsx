@@ -69,7 +69,7 @@ export const PlanModal = ({ open, onOpenChange }: PlanModalProps) => {
             <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
               Cobrança única de R$ 58,90 a cada 6 meses, renovada automaticamente pelo mesmo valor
               salvo cancelamento. Cancele quando quiser e mantenha o acesso até o fim do período
-              pago. Pagamento seguro de forma segura.
+              pago. Pagamento seguro.
             </p>
             <SubscriptionNotice className="mt-4" />
           </div>
