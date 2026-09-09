@@ -205,19 +205,23 @@ const Finance = () => {
   // usado para montar o card completo de cada plano, mesmo quando ele atravessa meses.
   const [planRowsAll, setPlanRowsAll] = useState<Row[]>([]);
   const [patientFilter, setPatientFilter] = useState<string>("all");
+  // Cadastro completo de pacientes (fora da lixeira), em ordem alfabética — base do filtro.
+  const [patientDirectory, setPatientDirectory] = useState<Array<{ id: string; name: string }>>([]);
   const rows = useMemo(
     () => (patientFilter === "all" ? rawRows : rawRows.filter((r) => r.patient?.id === patientFilter)),
     [rawRows, patientFilter]
   );
   const patientOptions = useMemo(() => {
-    const map = new Map<string, string>();
+    // Cadastro completo (ordem alfabética) + qualquer paciente presente no mês
+    // que ainda não esteja no diretório (ex.: recém-arquivado).
+    const map = new Map<string, string>(patientDirectory.map((p) => [p.id, p.name]));
     for (const r of rawRows) {
-      if (r.patient?.id && r.patient?.full_name) map.set(r.patient.id, r.patient.full_name);
+      if (r.patient?.id && r.patient?.full_name && !map.has(r.patient.id)) map.set(r.patient.id, r.patient.full_name);
     }
     return Array.from(map.entries())
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-  }, [rawRows]);
+  }, [patientDirectory, rawRows]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Row | null>(null);
   const [financeHistory, setFinanceHistory] = useState<{ id: string; name: string } | null>(null);
@@ -248,7 +252,7 @@ const Finance = () => {
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [reminderWindow, setReminderWindow] = useState(24);
   const [groupByPatient, setGroupByPatient] = useState(false);
-  const [groupSort, setGroupSort] = useState<"recent" | "oldest" | "value" | "count" | "name">("recent");
+  const [groupSort, setGroupSort] = useState<"recent" | "oldest" | "value" | "count" | "name">("name");
   const [billingReminderEnabled, setBillingReminderEnabled] = useState(true);
   const [billingReminderDays, setBillingReminderDays] = useState(DUE_SOON_DAYS);
   const [prefsLoaded, setPrefsLoaded] = useState(false);
@@ -303,8 +307,7 @@ const Finance = () => {
     financial_responsible_phone: string | null;
   };
   const [patientContacts, setPatientContacts] = useState<Record<string, PatientContact>>({});
-  // Cadastro completo de pacientes (fora da lixeira), em ordem alfabética — base do filtro.
-  const [patientDirectory, setPatientDirectory] = useState<Array<{ id: string; name: string }>>([]);
+
 
   useEffect(() => {
     if (!user) return;
@@ -1551,6 +1554,23 @@ const Finance = () => {
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           <RefreshButton />
 
+          {/* Filtro por paciente — cadastro completo, em ordem alfabética */}
+          <Select value={patientFilter} onValueChange={setPatientFilter}>
+            <SelectTrigger
+              id="patient-filter"
+              aria-label="Filtrar por paciente"
+              className="h-10 w-full sm:w-[240px]"
+            >
+              <SelectValue placeholder="Todos os pacientes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os pacientes</SelectItem>
+              {patientOptions.map((p) => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="gap-2">
@@ -1581,21 +1601,6 @@ const Finance = () => {
                     <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="to_issue">A emitir</SelectItem>
                     <SelectItem value="issued">Emitido</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="patient-filter" className="text-xs text-muted-foreground">Paciente</Label>
-                <Select value={patientFilter} onValueChange={setPatientFilter}>
-                  <SelectTrigger id="patient-filter" className="h-9">
-                    <SelectValue placeholder="Todos os pacientes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os pacientes</SelectItem>
-                    {patientOptions.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                    ))}
                   </SelectContent>
                 </Select>
               </div>
