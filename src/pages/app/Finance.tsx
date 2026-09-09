@@ -205,6 +205,8 @@ const Finance = () => {
   // usado para montar o card completo de cada plano, mesmo quando ele atravessa meses.
   const [planRowsAll, setPlanRowsAll] = useState<Row[]>([]);
   const [patientFilter, setPatientFilter] = useState<string>("all");
+  // Cadastro completo de pacientes (fora da lixeira), em ordem alfabética — base do filtro.
+  const [patientDirectory, setPatientDirectory] = useState<Array<{ id: string; name: string }>>([]);
   const rows = useMemo(
     () => (patientFilter === "all" ? rawRows : rawRows.filter((r) => r.patient?.id === patientFilter)),
     [rawRows, patientFilter]
