@@ -6,18 +6,35 @@ import { useEffect, useRef } from "react";
  * - the document becomes visible again
  * - the keep-alive route becomes active (custom "route-active" event)
  *
- * Throttled to avoid back-to-back reloads.
+ * Importante: as páginas do app ficam montadas em segundo plano (keep-alive).
+ * Por isso só atualizamos a página que está realmente visível — caso contrário
+ * cada retorno ao app dispararia dezenas de consultas ao mesmo tempo.
  */
 export function useAutoRefresh(onRefresh: () => void | Promise<void>, opts?: { routePath?: string; minIntervalMs?: number }) {
   const cbRef = useRef(onRefresh);
   cbRef.current = onRefresh;
-  const lastRef = useRef(0);
-  const minInterval = opts?.minIntervalMs ?? 1500;
+  const lastRef = useRef(Date.now());
+  const minInterval = opts?.minIntervalMs ?? 60_000;
+  const routePath = opts?.routePath;
 
   useEffect(() => {
-    const trigger = () => {
+    const isActiveRoute = () => !routePath || window.location.pathname === routePath;
+
+    const isBusy = () => {
+      const active = document.activeElement as HTMLElement | null;
+      if (active) {
+        const tag = active.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || active.isContentEditable) return true;
+      }
+      return !!document.querySelector('[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]');
+    };
+
+    const trigger = (force = false) => {
+      if (!isActiveRoute()) return;
+      if (document.visibilityState !== "visible") return;
+      if (isBusy()) return;
       const now = Date.now();
-      if (now - lastRef.current < minInterval) return;
+      if (!force && now - lastRef.current < minInterval) return;
       lastRef.current = now;
       try { void cbRef.current(); } catch { /* noop */ }
     };
@@ -25,9 +42,9 @@ export function useAutoRefresh(onRefresh: () => void | Promise<void>, opts?: { r
     const onFocus = () => trigger();
     const onVisibility = () => { if (document.visibilityState === "visible") trigger(); };
     const onRouteActive = (e: Event) => {
-      if (!opts?.routePath) return trigger();
       const detail = (e as CustomEvent).detail;
-      if (detail?.path === opts.routePath) trigger();
+      if (routePath && detail?.path !== routePath) return;
+      trigger();
     };
 
     window.addEventListener("focus", onFocus);
@@ -39,5 +56,5 @@ export function useAutoRefresh(onRefresh: () => void | Promise<void>, opts?: { r
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("route-active", onRouteActive as EventListener);
     };
-  }, [opts?.routePath, minInterval]);
+  }, [routePath, minInterval]);
 }
