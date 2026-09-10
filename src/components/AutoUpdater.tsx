@@ -31,6 +31,7 @@ export const AutoUpdater = () => {
   const baseline = useRef<string>("");
   const pending = useRef(false);
   const pendingSignature = useRef("");
+  const openedAt = useRef(Date.now());
 
   useEffect(() => {
     if (consumeUpdatedNotice()) {
@@ -46,6 +47,7 @@ export const AutoUpdater = () => {
 
     const maybeApply = () => {
       if (!pending.current || cancelled) return;
+      if (Date.now() - openedAt.current < MIN_UPTIME_MS) return;
       if (!isSafeToReload()) return;
       const signature = pendingSignature.current;
       if (!signature || isUpdateLocked() || wasSignatureAlreadyApplied(signature)) {
@@ -65,7 +67,6 @@ export const AutoUpdater = () => {
         if (isUpdateLocked() || wasSignatureAlreadyApplied(remote)) return;
         pending.current = true;
         pendingSignature.current = remote;
-        maybeApply();
       }
     };
 
@@ -73,14 +74,11 @@ export const AutoUpdater = () => {
 
     const interval = window.setInterval(() => void check(), POLL_MS);
 
+    // Ao voltar para a aba apenas verificamos se há versão nova — nunca
+    // recarregamos, para não tirar a usuária da tela em que estava.
     const onVisibility = () => {
-      if (document.visibilityState !== "visible") {
-        // Aba oculta: momento seguro para aplicar o que já estava pendente.
-        maybeApply();
-        return;
-      }
+      if (document.visibilityState !== "visible") return;
       if (hoursSinceLastCheck() >= 24) void check();
-      maybeApply();
     };
 
     document.addEventListener("visibilitychange", onVisibility);
