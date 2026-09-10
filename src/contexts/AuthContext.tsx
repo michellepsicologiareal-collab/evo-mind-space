@@ -82,14 +82,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       ) as SupabaseResult<{ is_approved: boolean }>;
 
       if (!error && data) {
-        setIsApproved(data.is_approved ?? false);
+        const approved = data.is_approved ?? false;
+        writeCachedApproval(userId, approved);
+        setIsApproved(approved);
         return;
       }
     } catch {
       // silent
     }
 
-    // If both fail, default to false (unapproved) — don't throw
+    // Se o servidor não respondeu, mantém o último resultado conhecido.
+    const cached = readCachedApproval(userId);
+    if (cached !== null) {
+      setIsApproved(cached);
+      return;
+    }
     console.warn("Não foi possível verificar aprovação; assumindo não aprovado.");
     setIsApproved(false);
   };
