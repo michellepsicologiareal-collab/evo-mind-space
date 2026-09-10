@@ -1310,7 +1310,8 @@ const Agenda = () => {
 
       setMoodTodayPatients(new Set((moods.data ?? []).map((m: any) => m.patient_id)));
     })();
-  }, [user, sessions, currentMonth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, sessionsKey]);
 
   useAutoRefresh(() => { if (user) { load(true); loadPending(true); } }, { routePath: "/app/agenda" });
 
