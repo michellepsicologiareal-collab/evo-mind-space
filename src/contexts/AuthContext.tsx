@@ -63,7 +63,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       ) as SupabaseResult<Array<{ is_approved: boolean }>>;
 
       if (!ensureError && ensuredProfile?.[0]) {
-        setIsApproved(Boolean(ensuredProfile[0].is_approved));
+        const approved = Boolean(ensuredProfile[0].is_approved);
+        writeCachedApproval(userId, approved);
+        setIsApproved(approved);
         return;
       }
     } catch {
