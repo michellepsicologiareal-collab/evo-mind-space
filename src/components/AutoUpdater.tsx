@@ -14,7 +14,11 @@ import {
   wasSignatureAlreadyApplied,
 } from "@/lib/appUpdate";
 
-const POLL_MS = 30 * 60 * 1000; // 30 min
+const POLL_MS = 60 * 60 * 1000; // 1 h
+// Só aplicamos a atualização depois que o app já está aberto há um tempo e
+// somente ao trocar de página — nunca ao voltar para a aba, para que ninguém
+// seja tirado do meio da Agenda.
+const MIN_UPTIME_MS = 15 * 60 * 1000;
 
 /**
  * Mantém o app sempre na versão publicada mais recente.
@@ -27,6 +31,7 @@ export const AutoUpdater = () => {
   const baseline = useRef<string>("");
   const pending = useRef(false);
   const pendingSignature = useRef("");
+  const openedAt = useRef(Date.now());
 
   useEffect(() => {
     if (consumeUpdatedNotice()) {
@@ -42,6 +47,7 @@ export const AutoUpdater = () => {
 
     const maybeApply = () => {
       if (!pending.current || cancelled) return;
+      if (Date.now() - openedAt.current < MIN_UPTIME_MS) return;
       if (!isSafeToReload()) return;
       const signature = pendingSignature.current;
       if (!signature || isUpdateLocked() || wasSignatureAlreadyApplied(signature)) {
@@ -61,7 +67,6 @@ export const AutoUpdater = () => {
         if (isUpdateLocked() || wasSignatureAlreadyApplied(remote)) return;
         pending.current = true;
         pendingSignature.current = remote;
-        maybeApply();
       }
     };
 
@@ -69,14 +74,11 @@ export const AutoUpdater = () => {
 
     const interval = window.setInterval(() => void check(), POLL_MS);
 
+    // Ao voltar para a aba apenas verificamos se há versão nova — nunca
+    // recarregamos, para não tirar a usuária da tela em que estava.
     const onVisibility = () => {
-      if (document.visibilityState !== "visible") {
-        // Aba oculta: momento seguro para aplicar o que já estava pendente.
-        maybeApply();
-        return;
-      }
+      if (document.visibilityState !== "visible") return;
       if (hoursSinceLastCheck() >= 24) void check();
-      maybeApply();
     };
 
     document.addEventListener("visibilitychange", onVisibility);
@@ -92,6 +94,7 @@ export const AutoUpdater = () => {
   // Verifica ao entrar/sair de sessão (login) e aplica em troca de página.
   useEffect(() => {
     if (!import.meta.env.PROD) return;
+    if (Date.now() - openedAt.current < MIN_UPTIME_MS) return;
     if (pending.current && isSafeToReload()) {
       const signature = pendingSignature.current;
       if (signature) void applyUpdate(signature);

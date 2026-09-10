@@ -43,6 +43,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
 
+  // Cache local da aprovação: evita esperar o servidor a cada abertura do app.
+  const APPROVAL_KEY = (userId: string) => `psireal:approved:${userId}`;
+  const readCachedApproval = (userId: string): boolean | null => {
+    try {
+      const raw = localStorage.getItem(APPROVAL_KEY(userId));
+      return raw === "1" ? true : raw === "0" ? false : null;
+    } catch { return null; }
+  };
+  const writeCachedApproval = (userId: string, value: boolean) => {
+    try { localStorage.setItem(APPROVAL_KEY(userId), value ? "1" : "0"); } catch { /* ignore */ }
+  };
+
   const checkApproval = async (userId: string) => {
     // Try RPC first, then direct query — never throw
     try {
@@ -51,7 +63,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       ) as SupabaseResult<Array<{ is_approved: boolean }>>;
 
       if (!ensureError && ensuredProfile?.[0]) {
-        setIsApproved(Boolean(ensuredProfile[0].is_approved));
+        const approved = Boolean(ensuredProfile[0].is_approved);
+        writeCachedApproval(userId, approved);
+        setIsApproved(approved);
         return;
       }
     } catch {
@@ -68,14 +82,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       ) as SupabaseResult<{ is_approved: boolean }>;
 
       if (!error && data) {
-        setIsApproved(data.is_approved ?? false);
+        const approved = data.is_approved ?? false;
+        writeCachedApproval(userId, approved);
+        setIsApproved(approved);
         return;
       }
     } catch {
       // silent
     }
 
-    // If both fail, default to false (unapproved) — don't throw
+    // Se o servidor não respondeu, mantém o último resultado conhecido.
+    const cached = readCachedApproval(userId);
+    if (cached !== null) {
+      setIsApproved(cached);
+      return;
+    }
     console.warn("Não foi possível verificar aprovação; assumindo não aprovado.");
     setIsApproved(false);
   };
@@ -141,6 +162,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (existing?.user) {
         lastCheckedUserId = existing.user.id;
+        // Abre o app na hora usando o último resultado conhecido e revalida atrás.
+        const cached = readCachedApproval(existing.user.id);
+        if (cached !== null) {
+          setIsApproved(cached);
+          setLoading(false);
+        }
         checkApproval(existing.user.id).finally(() => mounted && setLoading(false));
       } else {
         setLoading(false);
