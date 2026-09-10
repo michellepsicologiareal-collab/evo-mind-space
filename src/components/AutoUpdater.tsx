@@ -14,7 +14,11 @@ import {
   wasSignatureAlreadyApplied,
 } from "@/lib/appUpdate";
 
-const POLL_MS = 30 * 60 * 1000; // 30 min
+const POLL_MS = 60 * 60 * 1000; // 1 h
+// Só aplicamos a atualização depois que o app já está aberto há um tempo e
+// somente ao trocar de página — nunca ao voltar para a aba, para que ninguém
+// seja tirado do meio da Agenda.
+const MIN_UPTIME_MS = 15 * 60 * 1000;
 
 /**
  * Mantém o app sempre na versão publicada mais recente.
