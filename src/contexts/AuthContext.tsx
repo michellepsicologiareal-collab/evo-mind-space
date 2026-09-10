@@ -43,6 +43,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
 
+  // Cache local da aprovação: evita esperar o servidor a cada abertura do app.
+  const APPROVAL_KEY = (userId: string) => `psireal:approved:${userId}`;
+  const readCachedApproval = (userId: string): boolean | null => {
+    try {
+      const raw = localStorage.getItem(APPROVAL_KEY(userId));
+      return raw === "1" ? true : raw === "0" ? false : null;
+    } catch { return null; }
+  };
+  const writeCachedApproval = (userId: string, value: boolean) => {
+    try { localStorage.setItem(APPROVAL_KEY(userId), value ? "1" : "0"); } catch { /* ignore */ }
+  };
+
   const checkApproval = async (userId: string) => {
     // Try RPC first, then direct query — never throw
     try {
