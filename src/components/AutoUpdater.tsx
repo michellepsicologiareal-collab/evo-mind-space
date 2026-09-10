@@ -94,6 +94,7 @@ export const AutoUpdater = () => {
   // Verifica ao entrar/sair de sessão (login) e aplica em troca de página.
   useEffect(() => {
     if (!import.meta.env.PROD) return;
+    if (Date.now() - openedAt.current < MIN_UPTIME_MS) return;
     if (pending.current && isSafeToReload()) {
       const signature = pendingSignature.current;
       if (signature) void applyUpdate(signature);
