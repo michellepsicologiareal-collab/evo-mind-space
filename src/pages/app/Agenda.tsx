@@ -1141,6 +1141,8 @@ const Agenda = () => {
   useEffect(() => { if (user) { load(); loadPending(); } }, [user, currentMonth]);
 
   // Enriquece a agenda com dados existentes: registros feitos, combinado da sessão anterior e humor de hoje.
+  // A chave abaixo evita refazer todas as consultas quando a lista volta igual do servidor.
+  const sessionsKey = useMemo(() => sessions.map((s) => s.id).join(","), [sessions]);
   useEffect(() => {
     if (!user) return;
     const now = new Date();
