@@ -162,6 +162,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (existing?.user) {
         lastCheckedUserId = existing.user.id;
+        // Abre o app na hora usando o último resultado conhecido e revalida atrás.
+        const cached = readCachedApproval(existing.user.id);
+        if (cached !== null) {
+          setIsApproved(cached);
+          setLoading(false);
+        }
         checkApproval(existing.user.id).finally(() => mounted && setLoading(false));
       } else {
         setLoading(false);
