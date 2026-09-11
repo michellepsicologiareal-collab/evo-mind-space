@@ -2346,6 +2346,16 @@ const Finance = () => {
                     <FileSearch className="h-3.5 w-3.5" />
                     Auditoria
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs"
+                    onClick={() => setHistoryOpen(true)}
+                    aria-label="Abrir histórico de cobranças enviadas"
+                  >
+                    <History className="h-3.5 w-3.5" />
+                    Histórico
+                  </Button>
                 </div>
               </div>
 
