@@ -279,11 +279,16 @@ const Finance = () => {
     pending_value: number | string | null;
     channel: string;
     notified_at: string;
+    is_resend?: boolean | null;
+    sessions_label?: string | null;
   };
   const [reminderLogs, setReminderLogs] = useState<ReminderLog[]>([]);
   const [reminderLogsVersion, setReminderLogsVersion] = useState(0);
   const [reminderHistoryPlan, setReminderHistoryPlan] = useState<{ key: string; name: string } | null>(null);
   const [auditOpen, setAuditOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  // Texto editável da cobrança na tela de conferência
+  const [draftMessage, setDraftMessage] = useState("");
 
   // ── Tela de conferência antes de enviar cobrança ────────────────────────
   const [confirmSend, setConfirmSend] = useState<{
