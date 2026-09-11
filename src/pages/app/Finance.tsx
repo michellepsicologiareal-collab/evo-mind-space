@@ -358,7 +358,7 @@ const Finance = () => {
         .eq("user_id", user.id)
         .order("notified_at", { ascending: false })
         .limit(500);
-      if (!error && data) setReminderLogs(data as ReminderLog[]);
+      if (!error && data) setReminderLogs(data as any as ReminderLog[]);
     })();
   }, [user, reminderLogsVersion]);
 
