@@ -3252,7 +3252,7 @@ const Finance = () => {
 
       {/* Tela de conferência antes de enviar cobrança */}
       <Dialog open={!!confirmSend} onOpenChange={(open) => { if (!open) setConfirmSend(null); }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Confirmar envio de cobrança</DialogTitle>
           </DialogHeader>
