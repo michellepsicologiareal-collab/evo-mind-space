@@ -2095,8 +2095,14 @@ const Finance = () => {
                     </div>
                     <p className="text-xs font-medium text-foreground/80">
                       {channelLabel}
-                      {isSend ? ` · ${idx === 1 ? "Primeiro envio" : `${idx}º envio (reenvio)`}` : ""}
+                      {isSend ? ` · ${l.is_resend || idx > 1 ? `${idx}º envio (reenvio)` : "Primeiro envio"}` : ""}
                     </p>
+                    {l.plan_label && (
+                      <p className="text-xs text-muted-foreground">{l.plan_label}</p>
+                    )}
+                    {l.sessions_label && (
+                      <p className="text-xs text-muted-foreground">Sessões: {l.sessions_label}</p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       {l.pending_value != null ? `${formatBRL(Number(l.pending_value))}` : "Valor não informado"}
                       {l.due_date ? ` · Vencimento: ${formatDue(l.due_date)}` : ""}
