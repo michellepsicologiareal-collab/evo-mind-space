@@ -354,7 +354,7 @@ const Finance = () => {
     (async () => {
       const { data, error } = await supabase
         .from("billing_reminder_logs")
-        .select("id, plan_key, plan_label, status, due_date, days_ahead, pending_value, channel, notified_at")
+        .select("id, plan_key, plan_label, status, due_date, days_ahead, pending_value, channel, notified_at, is_resend, sessions_label")
         .eq("user_id", user.id)
         .order("notified_at", { ascending: false })
         .limit(500);
