@@ -1276,6 +1276,20 @@ const Finance = () => {
     return { message, target, dates, valueNumber, dueStr };
   };
 
+  // Preenche o texto editável sempre que a conferência de cobrança abre.
+  useEffect(() => {
+    if (!confirmSend) return;
+    setDraftMessage(
+      buildBillingMessage({
+        name: confirmSend.name,
+        sessions: confirmSend.sessions,
+        isPlan: confirmSend.isPlan,
+        dueDate: confirmSend.dueDate,
+      }).message
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [confirmSend, pixKey, psiName, psiCrp]);
+
   const sendBillingWhatsApp = async (args: {
     key: string;
     name: string;
