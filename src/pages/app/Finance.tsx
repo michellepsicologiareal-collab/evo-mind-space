@@ -9,6 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -279,11 +280,16 @@ const Finance = () => {
     pending_value: number | string | null;
     channel: string;
     notified_at: string;
+    is_resend?: boolean | null;
+    sessions_label?: string | null;
   };
   const [reminderLogs, setReminderLogs] = useState<ReminderLog[]>([]);
   const [reminderLogsVersion, setReminderLogsVersion] = useState(0);
   const [reminderHistoryPlan, setReminderHistoryPlan] = useState<{ key: string; name: string } | null>(null);
   const [auditOpen, setAuditOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  // Texto editável da cobrança na tela de conferência
+  const [draftMessage, setDraftMessage] = useState("");
 
   // ── Tela de conferência antes de enviar cobrança ────────────────────────
   const [confirmSend, setConfirmSend] = useState<{
@@ -349,11 +355,11 @@ const Finance = () => {
     (async () => {
       const { data, error } = await supabase
         .from("billing_reminder_logs")
-        .select("id, plan_key, plan_label, status, due_date, days_ahead, pending_value, channel, notified_at")
+        .select("id, plan_key, plan_label, status, due_date, days_ahead, pending_value, channel, notified_at, is_resend, sessions_label")
         .eq("user_id", user.id)
         .order("notified_at", { ascending: false })
         .limit(500);
-      if (!error && data) setReminderLogs(data as ReminderLog[]);
+      if (!error && data) setReminderLogs(data as any as ReminderLog[]);
     })();
   }, [user, reminderLogsVersion]);
 
@@ -1214,29 +1220,18 @@ const Finance = () => {
     return pending.length ? pending : cobravel;
   };
 
-  const sendBillingWhatsApp = async (args: {
-    key: string;
+  /**
+   * Monta a mensagem de cobrança com todos os campos preenchidos
+   * (paciente, sessões, valor, vencimento e forma de pagamento).
+   * Usada tanto na pré-visualização editável quanto no envio.
+   */
+  const buildBillingMessage = (args: {
     name: string;
-    patientId: string | null;
     sessions: Row[];
-    dueDate: string | null;
-    status: BillingStatus;
-    isResend: boolean;
     isPlan?: boolean;
+    dueDate: string | null;
   }) => {
-    const { key, name, patientId, sessions: list, isResend, isPlan } = args;
-    if (!user || list.length === 0) return;
-
-    const target = getBillingTarget(list, !!isPlan);
-    if (target.length === 0) {
-      toast.info(
-        isPlan
-          ? "Nada a cobrar: este plano já está quitado."
-          : "Nada a cobrar: não há sessões pendentes (realizadas ou agendadas)."
-      );
-      return;
-    }
-    const ids = target.map((r) => r.id);
+    const target = getBillingTarget(args.sessions, !!args.isPlan);
     const valueNumber = target.reduce((s, r) => s + Number(r.price ?? 0), 0);
     const value = valueNumber > 0 ? formatBRL(valueNumber) : "a combinar";
     const dates = target
@@ -1244,7 +1239,6 @@ const Finance = () => {
       .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
       .map((r) => format(new Date(r.scheduled_at), "dd/MM/yyyy"));
 
-    // Vencimento: mantém o existente ou define 7 dias a partir de hoje
     let dueStr = args.dueDate;
     if (!dueStr) {
       const d = new Date();
@@ -1254,17 +1248,22 @@ const Finance = () => {
 
     const firstName = psiName ? psiName.split(" ")[0] : "";
     const sessionLine =
-      target.length > 1
-        ? `Passando para lembrar do acerto referente às nossas ${target.length} sessões de ${dates.join(", ")}.`
-        : `Passando para lembrar do acerto referente à nossa sessão de ${dates[0]}.`;
+      target.length === 0
+        ? "Passando para lembrar do acerto do nosso atendimento."
+        : target.length > 1
+          ? `Passando para lembrar do acerto referente às nossas ${target.length} sessões de ${dates.join(", ")}.`
+          : `Passando para lembrar do acerto referente à nossa sessão de ${dates[0]}.`;
+
     const message = [
-      `Olá, ${name}! Aqui é a sua psi, ${firstName || "sua psicóloga"}.`,
+      `Olá, ${args.name}! Aqui é a sua psi, ${firstName || "sua psicóloga"}.`,
       "",
       sessionLine,
       "",
       `Valor: ${value}`,
       `Vencimento: ${formatDue(dueStr)}`,
-      pixKey ? `Chave Pix: ${pixKey}` : "",
+      pixKey
+        ? `Chave Pix: ${pixKey}`
+        : "Pagamento: me avise por aqui a forma que preferir que eu envio os dados.",
       "",
       "Assim que realizar, pode me enviar o comprovante por aqui. Qualquer dúvida, fico à disposição!",
       "",
@@ -1273,6 +1272,54 @@ const Finance = () => {
     ]
       .filter(Boolean)
       .join("\n");
+
+    return { message, target, dates, valueNumber, dueStr };
+  };
+
+  // Preenche o texto editável sempre que a conferência de cobrança abre.
+  useEffect(() => {
+    if (!confirmSend) return;
+    setDraftMessage(
+      buildBillingMessage({
+        name: confirmSend.name,
+        sessions: confirmSend.sessions,
+        isPlan: confirmSend.isPlan,
+        dueDate: confirmSend.dueDate,
+      }).message
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [confirmSend, pixKey, psiName, psiCrp]);
+
+  const sendBillingWhatsApp = async (args: {
+    key: string;
+    name: string;
+    patientId: string | null;
+    sessions: Row[];
+    dueDate: string | null;
+    status: BillingStatus;
+    isResend: boolean;
+    isPlan?: boolean;
+    messageOverride?: string;
+  }) => {
+    const { key, name, patientId, sessions: list, isResend, isPlan } = args;
+    if (!user || list.length === 0) return;
+
+    const built = buildBillingMessage({ name, sessions: list, isPlan, dueDate: args.dueDate });
+    const target = built.target;
+    if (target.length === 0) {
+      toast.info(
+        isPlan
+          ? "Nada a cobrar: este plano já está quitado."
+          : "Nada a cobrar: não há sessões pendentes (realizadas ou agendadas)."
+      );
+      return;
+    }
+    const ids = target.map((r) => r.id);
+    const valueNumber = built.valueNumber;
+    const dates = built.dates;
+    const dueStr = built.dueStr;
+    const message = (args.messageOverride?.trim() ? args.messageOverride : built.message);
+
 
     const contact = patientId ? patientContacts[patientId] : undefined;
     const phone =
@@ -1307,13 +1354,16 @@ const Finance = () => {
       user_id: user.id,
       patient_id: patientId,
       plan_key: key,
-      plan_label: `${name} · ${target.length} ${target.length === 1 ? "sessão" : "sessões"}`,
+      plan_label: `${name} · ${isPlan ? "Plano de atendimento" : "Sessão avulsa"} · ${target.length} ${target.length === 1 ? "sessão" : "sessões"}`,
       status: args.status,
       due_date: dueStr,
       days_ahead: daysUntil(dueStr),
       pending_value: valueNumber,
       channel,
-    });
+      is_resend: isResend,
+      session_ids: ids,
+      sessions_label: dates.join(", "),
+    } as any);
     if (logError) console.warn("Não foi possível registrar o histórico do envio:", logError.message);
 
     setReminderLogsVersion((v) => v + 1);
@@ -2060,8 +2110,14 @@ const Finance = () => {
                     </div>
                     <p className="text-xs font-medium text-foreground/80">
                       {channelLabel}
-                      {isSend ? ` · ${idx === 1 ? "Primeiro envio" : `${idx}º envio (reenvio)`}` : ""}
+                      {isSend ? ` · ${l.is_resend || idx > 1 ? `${idx}º envio (reenvio)` : "Primeiro envio"}` : ""}
                     </p>
+                    {l.plan_label && (
+                      <p className="text-xs text-muted-foreground">{l.plan_label}</p>
+                    )}
+                    {l.sessions_label && (
+                      <p className="text-xs text-muted-foreground">Sessões: {l.sessions_label}</p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       {l.pending_value != null ? `${formatBRL(Number(l.pending_value))}` : "Valor não informado"}
                       {l.due_date ? ` · Vencimento: ${formatDue(l.due_date)}` : ""}
@@ -2084,6 +2140,72 @@ const Finance = () => {
 
         </SheetContent>
       </Sheet>
+
+      {/* Histórico geral de cobranças enviadas */}
+      <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="font-display">Histórico de cobranças</SheetTitle>
+            <SheetDescription>
+              Quando cada cobrança foi enviada, para qual plano ou sessão e se foi um reenvio.
+            </SheetDescription>
+          </SheetHeader>
+          {(() => {
+            const sends = reminderLogs.filter((l) => l.channel !== "auto");
+            const countByKey = new Map<string, number>();
+            // ordem cronológica para numerar os envios
+            const ordinal = new Map<string, number>();
+            for (const l of sends.slice().reverse()) {
+              const n = (countByKey.get(l.plan_key) ?? 0) + 1;
+              countByKey.set(l.plan_key, n);
+              ordinal.set(l.id, n);
+            }
+            if (sends.length === 0) {
+              return (
+                <p className="mt-6 text-sm text-muted-foreground">
+                  Nenhuma cobrança enviada ainda. Assim que você enviar a primeira, ela aparece aqui.
+                </p>
+              );
+            }
+            return (
+              <ul className="mt-5 space-y-3">
+                {sends.map((l) => {
+                  const n = ordinal.get(l.id) ?? 1;
+                  const resend = !!l.is_resend || n > 1;
+                  return (
+                    <li key={l.id} className="rounded-2xl border border-border bg-background/60 p-3 space-y-1.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-sm font-medium">
+                          {new Date(l.notified_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                        </span>
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+                            resend
+                              ? "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/25 dark:bg-orange-500/10 dark:text-orange-400"
+                              : "border-moss/25 bg-moss/10 text-moss"
+                          }`}
+                        >
+                          {resend ? `${n}º envio · reenviada` : "1º envio"}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-foreground">{l.plan_label ?? "Cobrança"}</p>
+                      {l.sessions_label && (
+                        <p className="text-xs text-muted-foreground">Sessões: {l.sessions_label}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {l.pending_value != null ? formatBRL(Number(l.pending_value)) : "Valor não informado"}
+                        {l.due_date ? ` · Vencimento: ${formatDue(l.due_date)}` : ""}
+                        {l.channel === "clipboard" ? " · Mensagem copiada" : l.channel === "manual" ? " · Registro manual" : " · WhatsApp"}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
+
 
 
 
@@ -2310,6 +2432,16 @@ const Finance = () => {
                   >
                     <FileSearch className="h-3.5 w-3.5" />
                     Auditoria
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs"
+                    onClick={() => setHistoryOpen(true)}
+                    aria-label="Abrir histórico de cobranças enviadas"
+                  >
+                    <HistoryIcon className="h-3.5 w-3.5" />
+                    Histórico
                   </Button>
                 </div>
               </div>
@@ -3120,7 +3252,7 @@ const Finance = () => {
 
       {/* Tela de conferência antes de enviar cobrança */}
       <Dialog open={!!confirmSend} onOpenChange={(open) => { if (!open) setConfirmSend(null); }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Confirmar envio de cobrança</DialogTitle>
           </DialogHeader>
@@ -3182,6 +3314,42 @@ const Finance = () => {
                   </div>
                 );
               })()}
+
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                    Mensagem do WhatsApp
+                  </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() =>
+                      setDraftMessage(
+                        buildBillingMessage({
+                          name: confirmSend.name,
+                          sessions: confirmSend.sessions,
+                          isPlan: confirmSend.isPlan,
+                          dueDate: confirmSend.dueDate,
+                        }).message
+                      )
+                    }
+                  >
+                    Restaurar texto
+                  </Button>
+                </div>
+                <Textarea
+                  value={draftMessage}
+                  onChange={(e) => setDraftMessage(e.target.value)}
+                  rows={10}
+                  className="text-sm leading-relaxed"
+                  aria-label="Texto da cobrança"
+                />
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Nome, datas das sessões e valor já vêm preenchidos. Você pode ajustar antes de enviar.
+                </p>
+              </div>
             </div>
           )}
           <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
@@ -3192,7 +3360,7 @@ const Finance = () => {
               variant="accent"
               onClick={() => {
                 if (!confirmSend) return;
-                const args = { ...confirmSend };
+                const args = { ...confirmSend, messageOverride: draftMessage };
                 setConfirmSend(null);
                 sendBillingWhatsApp(args);
               }}
