@@ -2353,7 +2353,7 @@ const Finance = () => {
                     onClick={() => setHistoryOpen(true)}
                     aria-label="Abrir histórico de cobranças enviadas"
                   >
-                    <History className="h-3.5 w-3.5" />
+                    <HistoryIcon className="h-3.5 w-3.5" />
                     Histórico
                   </Button>
                 </div>
