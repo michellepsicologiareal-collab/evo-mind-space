@@ -418,11 +418,14 @@ export type Database = {
           days_ahead: number | null
           due_date: string | null
           id: string
+          is_resend: boolean
           notified_at: string
           patient_id: string | null
           pending_value: number | null
           plan_key: string
           plan_label: string | null
+          session_ids: string[]
+          sessions_label: string | null
           status: string
           user_id: string
         }
@@ -432,11 +435,14 @@ export type Database = {
           days_ahead?: number | null
           due_date?: string | null
           id?: string
+          is_resend?: boolean
           notified_at?: string
           patient_id?: string | null
           pending_value?: number | null
           plan_key: string
           plan_label?: string | null
+          session_ids?: string[]
+          sessions_label?: string | null
           status: string
           user_id: string
         }
@@ -446,11 +452,14 @@ export type Database = {
           days_ahead?: number | null
           due_date?: string | null
           id?: string
+          is_resend?: boolean
           notified_at?: string
           patient_id?: string | null
           pending_value?: number | null
           plan_key?: string
           plan_label?: string | null
+          session_ids?: string[]
+          sessions_label?: string | null
           status?: string
           user_id?: string
         }
