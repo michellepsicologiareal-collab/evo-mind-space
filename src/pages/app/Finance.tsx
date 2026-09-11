@@ -1214,29 +1214,18 @@ const Finance = () => {
     return pending.length ? pending : cobravel;
   };
 
-  const sendBillingWhatsApp = async (args: {
-    key: string;
+  /**
+   * Monta a mensagem de cobrança com todos os campos preenchidos
+   * (paciente, sessões, valor, vencimento e forma de pagamento).
+   * Usada tanto na pré-visualização editável quanto no envio.
+   */
+  const buildBillingMessage = (args: {
     name: string;
-    patientId: string | null;
     sessions: Row[];
-    dueDate: string | null;
-    status: BillingStatus;
-    isResend: boolean;
     isPlan?: boolean;
+    dueDate: string | null;
   }) => {
-    const { key, name, patientId, sessions: list, isResend, isPlan } = args;
-    if (!user || list.length === 0) return;
-
-    const target = getBillingTarget(list, !!isPlan);
-    if (target.length === 0) {
-      toast.info(
-        isPlan
-          ? "Nada a cobrar: este plano já está quitado."
-          : "Nada a cobrar: não há sessões pendentes (realizadas ou agendadas)."
-      );
-      return;
-    }
-    const ids = target.map((r) => r.id);
+    const target = getBillingTarget(args.sessions, !!args.isPlan);
     const valueNumber = target.reduce((s, r) => s + Number(r.price ?? 0), 0);
     const value = valueNumber > 0 ? formatBRL(valueNumber) : "a combinar";
     const dates = target
@@ -1244,7 +1233,6 @@ const Finance = () => {
       .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
       .map((r) => format(new Date(r.scheduled_at), "dd/MM/yyyy"));
 
-    // Vencimento: mantém o existente ou define 7 dias a partir de hoje
     let dueStr = args.dueDate;
     if (!dueStr) {
       const d = new Date();
@@ -1254,17 +1242,22 @@ const Finance = () => {
 
     const firstName = psiName ? psiName.split(" ")[0] : "";
     const sessionLine =
-      target.length > 1
-        ? `Passando para lembrar do acerto referente às nossas ${target.length} sessões de ${dates.join(", ")}.`
-        : `Passando para lembrar do acerto referente à nossa sessão de ${dates[0]}.`;
+      target.length === 0
+        ? "Passando para lembrar do acerto do nosso atendimento."
+        : target.length > 1
+          ? `Passando para lembrar do acerto referente às nossas ${target.length} sessões de ${dates.join(", ")}.`
+          : `Passando para lembrar do acerto referente à nossa sessão de ${dates[0]}.`;
+
     const message = [
-      `Olá, ${name}! Aqui é a sua psi, ${firstName || "sua psicóloga"}.`,
+      `Olá, ${args.name}! Aqui é a sua psi, ${firstName || "sua psicóloga"}.`,
       "",
       sessionLine,
       "",
       `Valor: ${value}`,
       `Vencimento: ${formatDue(dueStr)}`,
-      pixKey ? `Chave Pix: ${pixKey}` : "",
+      pixKey
+        ? `Chave Pix: ${pixKey}`
+        : "Pagamento: me avise por aqui a forma que preferir que eu envio os dados.",
       "",
       "Assim que realizar, pode me enviar o comprovante por aqui. Qualquer dúvida, fico à disposição!",
       "",
@@ -1273,6 +1266,40 @@ const Finance = () => {
     ]
       .filter(Boolean)
       .join("\n");
+
+    return { message, target, dates, valueNumber, dueStr };
+  };
+
+  const sendBillingWhatsApp = async (args: {
+    key: string;
+    name: string;
+    patientId: string | null;
+    sessions: Row[];
+    dueDate: string | null;
+    status: BillingStatus;
+    isResend: boolean;
+    isPlan?: boolean;
+    messageOverride?: string;
+  }) => {
+    const { key, name, patientId, sessions: list, isResend, isPlan } = args;
+    if (!user || list.length === 0) return;
+
+    const built = buildBillingMessage({ name, sessions: list, isPlan, dueDate: args.dueDate });
+    const target = built.target;
+    if (target.length === 0) {
+      toast.info(
+        isPlan
+          ? "Nada a cobrar: este plano já está quitado."
+          : "Nada a cobrar: não há sessões pendentes (realizadas ou agendadas)."
+      );
+      return;
+    }
+    const ids = target.map((r) => r.id);
+    const valueNumber = built.valueNumber;
+    const dates = built.dates;
+    const dueStr = built.dueStr;
+    const message = (args.messageOverride?.trim() ? args.messageOverride : built.message);
+
 
     const contact = patientId ? patientContacts[patientId] : undefined;
     const phone =
