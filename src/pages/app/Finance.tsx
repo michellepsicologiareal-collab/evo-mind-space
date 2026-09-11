@@ -2126,6 +2126,72 @@ const Finance = () => {
         </SheetContent>
       </Sheet>
 
+      {/* Histórico geral de cobranças enviadas */}
+      <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="font-display">Histórico de cobranças</SheetTitle>
+            <SheetDescription>
+              Quando cada cobrança foi enviada, para qual plano ou sessão e se foi um reenvio.
+            </SheetDescription>
+          </SheetHeader>
+          {(() => {
+            const sends = reminderLogs.filter((l) => l.channel !== "auto");
+            const countByKey = new Map<string, number>();
+            // ordem cronológica para numerar os envios
+            const ordinal = new Map<string, number>();
+            for (const l of sends.slice().reverse()) {
+              const n = (countByKey.get(l.plan_key) ?? 0) + 1;
+              countByKey.set(l.plan_key, n);
+              ordinal.set(l.id, n);
+            }
+            if (sends.length === 0) {
+              return (
+                <p className="mt-6 text-sm text-muted-foreground">
+                  Nenhuma cobrança enviada ainda. Assim que você enviar a primeira, ela aparece aqui.
+                </p>
+              );
+            }
+            return (
+              <ul className="mt-5 space-y-3">
+                {sends.map((l) => {
+                  const n = ordinal.get(l.id) ?? 1;
+                  const resend = !!l.is_resend || n > 1;
+                  return (
+                    <li key={l.id} className="rounded-2xl border border-border bg-background/60 p-3 space-y-1.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-sm font-medium">
+                          {new Date(l.notified_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+                        </span>
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+                            resend
+                              ? "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/25 dark:bg-orange-500/10 dark:text-orange-400"
+                              : "border-moss/25 bg-moss/10 text-moss"
+                          }`}
+                        >
+                          {resend ? `${n}º envio · reenviada` : "1º envio"}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-foreground">{l.plan_label ?? "Cobrança"}</p>
+                      {l.sessions_label && (
+                        <p className="text-xs text-muted-foreground">Sessões: {l.sessions_label}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {l.pending_value != null ? formatBRL(Number(l.pending_value)) : "Valor não informado"}
+                        {l.due_date ? ` · Vencimento: ${formatDue(l.due_date)}` : ""}
+                        {l.channel === "clipboard" ? " · Mensagem copiada" : l.channel === "manual" ? " · Registro manual" : " · WhatsApp"}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
+
+
 
 
       {/* Financeiro · Sessões do Mês — visualização principal (1 card por paciente) */}
