@@ -3314,6 +3314,42 @@ const Finance = () => {
                   </div>
                 );
               })()}
+
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                    Mensagem do WhatsApp
+                  </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() =>
+                      setDraftMessage(
+                        buildBillingMessage({
+                          name: confirmSend.name,
+                          sessions: confirmSend.sessions,
+                          isPlan: confirmSend.isPlan,
+                          dueDate: confirmSend.dueDate,
+                        }).message
+                      )
+                    }
+                  >
+                    Restaurar texto
+                  </Button>
+                </div>
+                <Textarea
+                  value={draftMessage}
+                  onChange={(e) => setDraftMessage(e.target.value)}
+                  rows={10}
+                  className="text-sm leading-relaxed"
+                  aria-label="Texto da cobrança"
+                />
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Nome, datas das sessões e valor já vêm preenchidos. Você pode ajustar antes de enviar.
+                </p>
+              </div>
             </div>
           )}
           <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
@@ -3324,7 +3360,7 @@ const Finance = () => {
               variant="accent"
               onClick={() => {
                 if (!confirmSend) return;
-                const args = { ...confirmSend };
+                const args = { ...confirmSend, messageOverride: draftMessage };
                 setConfirmSend(null);
                 sendBillingWhatsApp(args);
               }}
