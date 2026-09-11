@@ -1334,13 +1334,16 @@ const Finance = () => {
       user_id: user.id,
       patient_id: patientId,
       plan_key: key,
-      plan_label: `${name} · ${target.length} ${target.length === 1 ? "sessão" : "sessões"}`,
+      plan_label: `${name} · ${isPlan ? "Plano de atendimento" : "Sessão avulsa"} · ${target.length} ${target.length === 1 ? "sessão" : "sessões"}`,
       status: args.status,
       due_date: dueStr,
       days_ahead: daysUntil(dueStr),
       pending_value: valueNumber,
       channel,
-    });
+      is_resend: isResend,
+      session_ids: ids,
+      sessions_label: dates.join(", "),
+    } as any);
     if (logError) console.warn("Não foi possível registrar o histórico do envio:", logError.message);
 
     setReminderLogsVersion((v) => v + 1);
