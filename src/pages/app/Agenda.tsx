@@ -2,6 +2,7 @@ import { RefreshButton } from "@/components/app/RefreshButton";
 import { HelpCard } from "@/components/app/HelpCard";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useIncrementalList } from "@/hooks/useIncrementalList";
+import { cachedQuery } from "@/lib/dataCache";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -970,7 +971,9 @@ const Agenda = () => {
   // Fetch pix key + gcal status + handle OAuth callback
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("pix_key, full_name, crp, clinic_name, clinic_address, presencial_message").eq("id", user.id).single().then(({ data }) => {
+    cachedQuery(`profile:agenda:${user.id}`, async () =>
+      await supabase.from("profiles").select("pix_key, full_name, crp, clinic_name, clinic_address, presencial_message").eq("id", user.id).single()
+    ).then(({ data }) => {
       setPixKey(data?.pix_key || "");
       setPsiName(data?.full_name || "");
       setPsiCrp(data?.crp || "");
@@ -1104,8 +1107,12 @@ const Agenda = () => {
     if (!silent) setLoading(true);
     const [mapped, pRes, svRes] = await Promise.all([
       fetchMonthSessions(currentMonth),
-      supabase.from("patients").select("id, full_name, session_price, phone, has_financial_responsible, financial_responsible_name, financial_responsible_phone, homework_token, clinic_address").eq("user_id", user.id).eq("is_active", true).order("full_name"),
-      (supabase as any).from("services").select("id, name, price, is_active").eq("user_id", user.id).eq("is_active", true).order("name"),
+      cachedQuery(`patients:agenda:${user.id}`, async () =>
+        await supabase.from("patients").select("id, full_name, session_price, phone, has_financial_responsible, financial_responsible_name, financial_responsible_phone, homework_token, clinic_address").eq("user_id", user.id).eq("is_active", true).order("full_name")
+      ),
+      cachedQuery(`services:agenda:${user.id}`, async () =>
+        await (supabase as any).from("services").select("id, name, price, is_active").eq("user_id", user.id).eq("is_active", true).order("name")
+      ),
     ]);
     if (mapped === null) {
       toast.error("Erro ao carregar sessões");

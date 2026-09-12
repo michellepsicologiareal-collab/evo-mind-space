@@ -110,6 +110,7 @@ import { PageIntro } from "@/components/app/PageIntro";
 import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
+import { cachedQuery, invalidateCache } from "@/lib/dataCache";
 
 
 type PaymentStatus = "pending" | "paid";
@@ -319,12 +320,16 @@ const Finance = () => {
     if (!user) return;
     (async () => {
       const [prof, pats] = await Promise.all([
-        supabase.from("profiles").select("full_name, crp, pix_key").eq("id", user.id).maybeSingle(),
-        supabase
-          .from("patients")
-          .select("id, full_name, phone, has_financial_responsible, financial_responsible_phone")
-          .eq("user_id", user.id)
-          .is("deleted_at", null),
+        cachedQuery(`profile:contact:${user.id}`, async () =>
+          await supabase.from("profiles").select("full_name, crp, pix_key").eq("id", user.id).maybeSingle()
+        ),
+        cachedQuery(`patients:contacts:${user.id}`, async () =>
+          await supabase
+            .from("patients")
+            .select("id, full_name, phone, has_financial_responsible, financial_responsible_phone")
+            .eq("user_id", user.id)
+            .is("deleted_at", null)
+        ),
       ]);
       if (prof.data) {
         setPsiName(prof.data.full_name ?? "");
@@ -385,11 +390,13 @@ const Finance = () => {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data, error } = await supabase
-        .from("patients")
-        .select("id, full_name, session_price")
-        .eq("user_id", user.id)
-        .eq("is_active", true);
+      const { data, error } = await cachedQuery(`patients:fees:${user.id}`, async () =>
+        await supabase
+          .from("patients")
+          .select("id, full_name, session_price")
+          .eq("user_id", user.id)
+          .eq("is_active", true)
+      );
       if (error || !data) return;
       const low: FeePatient[] = [], mid: FeePatient[] = [], high: FeePatient[] = [];
       let invalid = 0;
@@ -498,11 +505,13 @@ const Finance = () => {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient, reminder_group_sort, billing_reminder_enabled, billing_reminder_days")
-        .eq("id", user.id)
-        .maybeSingle();
+      const { data } = await cachedQuery(`profile:prefs:${user.id}`, async () =>
+        await supabase
+          .from("profiles")
+          .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient, reminder_group_sort, billing_reminder_enabled, billing_reminder_days")
+          .eq("id", user.id)
+          .maybeSingle()
+      );
       if (data) {
         setReminderEnabled(data.reminder_enabled ?? true);
         setReminderWindow(data.reminder_window_hours ?? 24);
@@ -548,6 +557,7 @@ const Finance = () => {
       toast.error("Não foi possível salvar a preferência.");
       return;
     }
+    invalidateCache(`profile:prefs:${user.id}`);
     // Reset notified set so toggling/changing window can re-notify
     notifiedIdsRef.current.clear();
     billingNotifiedRef.current.clear();

@@ -1,5 +1,6 @@
 import { RefreshButton } from "@/components/app/RefreshButton";
 import { HelpCard } from "@/components/app/HelpCard";
+import { invalidateCache } from "@/lib/dataCache";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -569,6 +570,9 @@ const Patients = () => {
   const load = async () => {
 
     if (!user) return;
+    // Qualquer recarga desta tela invalida o cache compartilhado de pacientes
+    // usado pela Agenda e pelo Financeiro.
+    invalidateCache("patients:");
     setLoading(true);
     const [patientsRes, profileRes, sessionsRes, anamRes, moodRes, tccRes, recordsRes, historyRes, formRes, plansRes, goalsRes, techRes, revRes, teRes, actRes] = await Promise.all([
       supabase.from("patients").select("*").eq("user_id", user.id).order("full_name"),
