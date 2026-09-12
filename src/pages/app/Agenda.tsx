@@ -2302,6 +2302,9 @@ const Agenda = () => {
   // Renderização incremental para listas grandes (mantém o DOM leve)
   const monthSessionsWindow = useIncrementalList(monthFilteredSessions, 30);
   const pendingWindow = useIncrementalList(groupedPending, 24);
+  // Linha do tempo do dia selecionado: memoizada + renderização incremental
+  const selectedDayTimeline = useMemo(() => dayTimeline(selectedDate), [dayTimeline, selectedDate]);
+  const dayWindow = useIncrementalList(selectedDayTimeline, 20);
 
   const monthGrid = useMemo(() => {
     const firstDay = startOfMonth(currentMonth);
@@ -3760,7 +3763,7 @@ const Agenda = () => {
                           <Plus className="h-3.5 w-3.5" /> Nova
                         </Button>
                       </div>
-                      {dayTimeline(selectedDate).length === 0 ? (
+                      {selectedDayTimeline.length === 0 ? (
                         <div className="py-8 text-center text-muted-foreground">
                           <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-30" />
                           <p className="text-sm">
@@ -3774,10 +3777,15 @@ const Agenda = () => {
                         </div>
                       ) : (
                         <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                          {dayTimeline(selectedDate).map((item) =>
+                          {dayWindow.visible.map((item) =>
                             item.kind === "session"
                               ? <SessionCard key={item.session!.id} s={item.session!} compact={dense} />
                               : <PersonalEventCard key={`pe-${item.event!.id}-${item.at}`} event={item.event!} compact onClick={() => openPersonalEvent(item.event!)} />
+                          )}
+                          {dayWindow.hasMore && (
+                            <div ref={dayWindow.sentinelRef} className="py-2 text-center text-xs text-muted-foreground">
+                              Carregando mais…
+                            </div>
                           )}
                         </div>
                       )}
@@ -3879,7 +3887,7 @@ const Agenda = () => {
                     </div>
 
                     {/* Linha do tempo do dia (sessões + compromissos pessoais) */}
-                    {dayTimeline(selectedDate).length === 0 ? (
+                    {selectedDayTimeline.length === 0 ? (
                       <button
                         onClick={() => openNew(selectedDate)}
                         className="w-full rounded-2xl border border-dashed border-border bg-card/50 py-8 text-sm text-muted-foreground hover:text-accent hover:border-accent/40 transition-colors text-center"
@@ -3888,10 +3896,15 @@ const Agenda = () => {
                       </button>
                     ) : (
                       <div className="space-y-2">
-                        {dayTimeline(selectedDate).map((item) =>
+                        {dayWindow.visible.map((item) =>
                           item.kind === "session"
                             ? <SessionCard key={item.session!.id} s={item.session!} compact={dense} />
                             : <PersonalEventCard key={`pe-${item.event!.id}-${item.at}`} event={item.event!} compact onClick={() => openPersonalEvent(item.event!)} />
+                        )}
+                        {dayWindow.hasMore && (
+                          <div ref={dayWindow.sentinelRef} className="py-2 text-center text-xs text-muted-foreground">
+                            Carregando mais…
+                          </div>
                         )}
                       </div>
                     )}
@@ -4034,7 +4047,7 @@ const Agenda = () => {
 
                 {loading ? (
                   <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
-                ) : dayTimeline(selectedDate).length === 0 ? (
+                ) : selectedDayTimeline.length === 0 ? (
                           <div className="rounded-2xl border border-dashed border-border bg-card/50 px-4 py-10 text-center sm:p-14">
                     <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/40" />
                     <p className="mt-4 font-display text-lg font-medium text-foreground/70">
@@ -4048,10 +4061,15 @@ const Agenda = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {dayTimeline(selectedDate).map((item) =>
+                    {dayWindow.visible.map((item) =>
                       item.kind === "session"
                         ? <SessionCard key={item.session!.id} s={item.session!} compact={dense} />
                         : <PersonalEventCard key={`pe-${item.event!.id}-${item.at}`} event={item.event!} onClick={() => openPersonalEvent(item.event!)} />
+                    )}
+                    {dayWindow.hasMore && (
+                      <div ref={dayWindow.sentinelRef} className="py-2 text-center text-xs text-muted-foreground">
+                        Carregando mais…
+                      </div>
                     )}
                   </div>
                 )}
