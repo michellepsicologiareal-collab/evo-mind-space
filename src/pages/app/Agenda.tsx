@@ -970,7 +970,9 @@ const Agenda = () => {
   // Fetch pix key + gcal status + handle OAuth callback
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("pix_key, full_name, crp, clinic_name, clinic_address, presencial_message").eq("id", user.id).single().then(({ data }) => {
+    cachedQuery(`profile:agenda:${user.id}`, async () =>
+      await supabase.from("profiles").select("pix_key, full_name, crp, clinic_name, clinic_address, presencial_message").eq("id", user.id).single()
+    ).then(({ data }) => {
       setPixKey(data?.pix_key || "");
       setPsiName(data?.full_name || "");
       setPsiCrp(data?.crp || "");
