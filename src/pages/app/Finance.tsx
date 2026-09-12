@@ -110,6 +110,7 @@ import { PageIntro } from "@/components/app/PageIntro";
 import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
+import { cachedQuery, invalidateCache } from "@/lib/dataCache";
 
 
 type PaymentStatus = "pending" | "paid";
