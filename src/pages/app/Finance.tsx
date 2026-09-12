@@ -505,11 +505,13 @@ const Finance = () => {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient, reminder_group_sort, billing_reminder_enabled, billing_reminder_days")
-        .eq("id", user.id)
-        .maybeSingle();
+      const { data } = await cachedQuery(`profile:prefs:${user.id}`, async () =>
+        await supabase
+          .from("profiles")
+          .select("reminder_enabled, reminder_window_hours, reminder_group_by_patient, reminder_group_sort, billing_reminder_enabled, billing_reminder_days")
+          .eq("id", user.id)
+          .maybeSingle()
+      );
       if (data) {
         setReminderEnabled(data.reminder_enabled ?? true);
         setReminderWindow(data.reminder_window_hours ?? 24);
