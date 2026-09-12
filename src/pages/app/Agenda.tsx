@@ -3777,10 +3777,15 @@ const Agenda = () => {
                         </div>
                       ) : (
                         <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                          {dayTimeline(selectedDate).map((item) =>
+                          {dayWindow.visible.map((item) =>
                             item.kind === "session"
                               ? <SessionCard key={item.session!.id} s={item.session!} compact={dense} />
                               : <PersonalEventCard key={`pe-${item.event!.id}-${item.at}`} event={item.event!} compact onClick={() => openPersonalEvent(item.event!)} />
+                          )}
+                          {dayWindow.hasMore && (
+                            <div ref={dayWindow.sentinelRef} className="py-2 text-center text-xs text-muted-foreground">
+                              Carregando mais…
+                            </div>
                           )}
                         </div>
                       )}
