@@ -2302,6 +2302,9 @@ const Agenda = () => {
   // Renderização incremental para listas grandes (mantém o DOM leve)
   const monthSessionsWindow = useIncrementalList(monthFilteredSessions, 30);
   const pendingWindow = useIncrementalList(groupedPending, 24);
+  // Linha do tempo do dia selecionado: memoizada + renderização incremental
+  const selectedDayTimeline = useMemo(() => dayTimeline(selectedDate), [dayTimeline, selectedDate]);
+  const dayWindow = useIncrementalList(selectedDayTimeline, 20);
 
   const monthGrid = useMemo(() => {
     const firstDay = startOfMonth(currentMonth);
