@@ -3882,7 +3882,7 @@ const Agenda = () => {
                     </div>
 
                     {/* Linha do tempo do dia (sessões + compromissos pessoais) */}
-                    {dayTimeline(selectedDate).length === 0 ? (
+                    {selectedDayTimeline.length === 0 ? (
                       <button
                         onClick={() => openNew(selectedDate)}
                         className="w-full rounded-2xl border border-dashed border-border bg-card/50 py-8 text-sm text-muted-foreground hover:text-accent hover:border-accent/40 transition-colors text-center"
