@@ -319,12 +319,16 @@ const Finance = () => {
     if (!user) return;
     (async () => {
       const [prof, pats] = await Promise.all([
-        supabase.from("profiles").select("full_name, crp, pix_key").eq("id", user.id).maybeSingle(),
-        supabase
-          .from("patients")
-          .select("id, full_name, phone, has_financial_responsible, financial_responsible_phone")
-          .eq("user_id", user.id)
-          .is("deleted_at", null),
+        cachedQuery(`profile:contact:${user.id}`, () =>
+          supabase.from("profiles").select("full_name, crp, pix_key").eq("id", user.id).maybeSingle()
+        ),
+        cachedQuery(`patients:contacts:${user.id}`, () =>
+          supabase
+            .from("patients")
+            .select("id, full_name, phone, has_financial_responsible, financial_responsible_phone")
+            .eq("user_id", user.id)
+            .is("deleted_at", null)
+        ),
       ]);
       if (prof.data) {
         setPsiName(prof.data.full_name ?? "");
