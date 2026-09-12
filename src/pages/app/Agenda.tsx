@@ -1107,8 +1107,12 @@ const Agenda = () => {
     if (!silent) setLoading(true);
     const [mapped, pRes, svRes] = await Promise.all([
       fetchMonthSessions(currentMonth),
-      supabase.from("patients").select("id, full_name, session_price, phone, has_financial_responsible, financial_responsible_name, financial_responsible_phone, homework_token, clinic_address").eq("user_id", user.id).eq("is_active", true).order("full_name"),
-      (supabase as any).from("services").select("id, name, price, is_active").eq("user_id", user.id).eq("is_active", true).order("name"),
+      cachedQuery(`patients:agenda:${user.id}`, async () =>
+        await supabase.from("patients").select("id, full_name, session_price, phone, has_financial_responsible, financial_responsible_name, financial_responsible_phone, homework_token, clinic_address").eq("user_id", user.id).eq("is_active", true).order("full_name")
+      ),
+      cachedQuery(`services:agenda:${user.id}`, async () =>
+        await (supabase as any).from("services").select("id, name, price, is_active").eq("user_id", user.id).eq("is_active", true).order("name")
+      ),
     ]);
     if (mapped === null) {
       toast.error("Erro ao carregar sessões");
