@@ -3763,7 +3763,7 @@ const Agenda = () => {
                           <Plus className="h-3.5 w-3.5" /> Nova
                         </Button>
                       </div>
-                      {dayTimeline(selectedDate).length === 0 ? (
+                      {selectedDayTimeline.length === 0 ? (
                         <div className="py-8 text-center text-muted-foreground">
                           <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-30" />
                           <p className="text-sm">
