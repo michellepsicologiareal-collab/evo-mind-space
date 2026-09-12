@@ -390,11 +390,13 @@ const Finance = () => {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data, error } = await supabase
-        .from("patients")
-        .select("id, full_name, session_price")
-        .eq("user_id", user.id)
-        .eq("is_active", true);
+      const { data, error } = await cachedQuery(`patients:fees:${user.id}`, async () =>
+        await supabase
+          .from("patients")
+          .select("id, full_name, session_price")
+          .eq("user_id", user.id)
+          .eq("is_active", true)
+      );
       if (error || !data) return;
       const low: FeePatient[] = [], mid: FeePatient[] = [], high: FeePatient[] = [];
       let invalid = 0;
