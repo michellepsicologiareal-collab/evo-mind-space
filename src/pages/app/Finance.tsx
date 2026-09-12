@@ -557,6 +557,7 @@ const Finance = () => {
       toast.error("Não foi possível salvar a preferência.");
       return;
     }
+    invalidateCache(`profile:prefs:${user.id}`);
     // Reset notified set so toggling/changing window can re-notify
     notifiedIdsRef.current.clear();
     billingNotifiedRef.current.clear();
