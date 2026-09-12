@@ -4037,7 +4037,7 @@ const Agenda = () => {
 
                 {loading ? (
                   <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
-                ) : dayTimeline(selectedDate).length === 0 ? (
+                ) : selectedDayTimeline.length === 0 ? (
                           <div className="rounded-2xl border border-dashed border-border bg-card/50 px-4 py-10 text-center sm:p-14">
                     <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/40" />
                     <p className="mt-4 font-display text-lg font-medium text-foreground/70">
