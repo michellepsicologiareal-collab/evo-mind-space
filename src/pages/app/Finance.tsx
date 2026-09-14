@@ -111,6 +111,8 @@ import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { cachedQuery, invalidateCache } from "@/lib/dataCache";
+import { ListSkeleton } from "@/components/app/Skeletons";
+import { notifySessionDataChanged } from "@/lib/dataEvents";
 
 
 type PaymentStatus = "pending" | "paid";
@@ -1210,6 +1212,7 @@ const Finance = () => {
       return;
     }
     await logBillingReminders([{ ...plan, dueDate: dueStr }], "manual");
+    notifySessionDataChanged();
     toast.success(`Cobrança registrada como enviada · vence em ${formatDue(dueStr)}`);
     load();
   };
@@ -1377,6 +1380,7 @@ const Finance = () => {
     if (logError) console.warn("Não foi possível registrar o histórico do envio:", logError.message);
 
     setReminderLogsVersion((v) => v + 1);
+    notifySessionDataChanged();
     toast.success(isResend ? "Cobrança reenviada e registrada" : "Cobrança enviada e registrada", {
       description: `Vencimento ${formatDue(dueStr)}`,
     });
@@ -1411,6 +1415,7 @@ const Finance = () => {
       return;
     }
     toast.success("Plano de Atendimento marcado como pago.");
+    notifySessionDataChanged();
     load();
   };
 
@@ -1579,6 +1584,7 @@ const Finance = () => {
       return;
     }
     toast.success(label);
+    notifySessionDataChanged();
     setSettle(null);
     setSettleSelected(new Set());
     load();
@@ -2664,7 +2670,7 @@ const Finance = () => {
               </div>
 
               {loading ? (
-                <p className="text-center py-12 text-muted-foreground">Carregando…</p>
+                <div className="mt-4"><ListSkeleton count={5} /></div>
               ) : groups.length === 0 ? (
                 <div className="mt-4 rounded-2xl border border-dashed border-border bg-card p-10 md:p-14 text-center">
                   <Wallet className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" aria-hidden="true" />
@@ -3423,7 +3429,7 @@ const SessionsTable = ({
   }, [allRows]);
 
   if (loading) {
-    return <p className="text-center py-12 text-muted-foreground">Carregando…</p>;
+    return <ListSkeleton count={5} />;
   }
   if (rows.length === 0) {
     return (
@@ -3542,6 +3548,7 @@ const PaymentDetailsDialog = ({
       return;
     }
     toast.success("Pagamento atualizado.");
+    notifySessionDataChanged();
     onSaved();
   };
 

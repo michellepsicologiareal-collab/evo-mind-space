@@ -60,6 +60,7 @@ import { toast } from "sonner";
 import { fetchWeekSessions } from "@/lib/sessions/weekSessions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BirthdaysCard } from "@/components/app/BirthdaysCard";
+import { MetricSkeleton } from "@/components/app/Skeletons";
 
 /* ─── Real data types ─── */
 interface WeekSession {
@@ -199,6 +200,7 @@ export default function Dashboard() {
 
   const [weekSessions, setWeekSessions] = useState<WeekSession[]>([]);
   const [loadingWeek, setLoadingWeek] = useState(true);
+  const [loadingOverview, setLoadingOverview] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const t = new Date();
     const day = t.getDay();
@@ -249,6 +251,7 @@ export default function Dashboard() {
     if (!user?.id) return;
     let cancelled = false;
     (async () => {
+      setLoadingOverview(true);
       setLoadingWeek(true);
       const { data, error } = await fetchWeekSessions({ userId: user.id, reference: today });
       if (cancelled) return;
@@ -442,6 +445,7 @@ export default function Dashboard() {
         ? Array.from(seriesTotals.values()).reduce((a, b) => a + b, 0) / planCount
         : null;
       setAvgPlanValue(avgP);
+      if (!cancelled) setLoadingOverview(false);
     })();
     return () => { cancelled = true; };
   }, [user?.id, selectedMonth]);
@@ -761,11 +765,14 @@ export default function Dashboard() {
         <BirthdaysCard />
 
         {/* ─ KPIs ─ */}
-        <section
-          aria-label="Indicadores principais"
-          className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 xl:grid-cols-5"
-        >
-          {KPI.map((k, i) => {
+        {loadingOverview ? (
+          <MetricSkeleton count={5} className="lg:grid-cols-3 xl:grid-cols-5" />
+        ) : (
+          <section
+            aria-label="Indicadores principais"
+            className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 xl:grid-cols-5"
+          >
+            {KPI.map((k, i) => {
             const tones = ["--primary", "--primary", "--lilac", "--primary", "--lilac"] as const;
             const tone = tones[i % tones.length];
             return (
@@ -796,8 +803,9 @@ export default function Dashboard() {
                 </Card>
               </Link>
             );
-          })}
-        </section>
+            })}
+          </section>
+        )}
 
 
         {/* ─ Tendência: Sessões x Faturamento ─ */}

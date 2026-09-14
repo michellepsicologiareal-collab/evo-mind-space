@@ -3,6 +3,7 @@ import { HelpCard } from "@/components/app/HelpCard";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useIncrementalList } from "@/hooks/useIncrementalList";
 import { cachedQuery } from "@/lib/dataCache";
+import { notifySessionDataChanged, SESSION_DATA_CHANGED_EVENT } from "@/lib/dataEvents";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -55,6 +56,7 @@ import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { computeAgendaSummary } from "@/utils/agendaSummary";
 import { computeBillingStatus, type BillingInput } from "@/lib/billing";
 import { BillingBadge } from "@/components/app/BillingBadge";
+import { CalendarSkeleton, ListSkeleton, MetricSkeleton } from "@/components/app/Skeletons";
 
 // Retorno exato para a Agenda (data/visão/filtros atuais) ao fechar o Registro de Sessão.
 const agendaReturnParam = () =>
@@ -1147,6 +1149,18 @@ const Agenda = () => {
 
   useEffect(() => { if (user) { load(); loadPending(); } }, [user, currentMonth]);
 
+  useEffect(() => {
+    const refreshChangedSessions = () => {
+      monthCacheRef.current.clear();
+      prefetchedMonthsRef.current.clear();
+      void load(true);
+      void loadPending(true);
+    };
+    window.addEventListener(SESSION_DATA_CHANGED_EVENT, refreshChangedSessions);
+    return () => window.removeEventListener(SESSION_DATA_CHANGED_EVENT, refreshChangedSessions);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, currentMonth]);
+
   // Enriquece a agenda com dados existentes: registros feitos, combinado da sessão anterior e humor de hoje.
   // A chave abaixo evita refazer todas as consultas quando a lista volta igual do servidor.
   const sessionsKey = useMemo(() => sessions.map((s) => s.id).join(","), [sessions]);
@@ -1458,6 +1472,7 @@ const Agenda = () => {
     }
 
     setSaving(false);
+    notifySessionDataChanged();
     const totalValue = unitPrice ? unitPrice * totalSessions : 0;
     if (isRecurring) {
       const payLabel = form.payment_plan === "single_payment"
@@ -1488,6 +1503,7 @@ const Agenda = () => {
       ...(paymentStatus === "paid" ? { paid_at: new Date().toISOString() } : {}),
     }).eq("id", id);
     if (error) return toast.error("Erro ao atualizar pagamento");
+    notifySessionDataChanged();
     toast.success(`Pagamento: ${paymentStatusLabel[paymentStatus]}`);
     load(true); loadPending(true);
   };
@@ -1498,6 +1514,7 @@ const Agenda = () => {
       ...(paymentStatus === "paid" ? { paid_at: new Date().toISOString() } : { paid_at: null }),
     }).in("id", ids);
     if (error) return toast.error("Erro ao atualizar pagamento");
+    notifySessionDataChanged();
     toast.success(`${ids.length} sessões marcadas como ${paymentStatusLabel[paymentStatus].toLowerCase()}`);
     load(true); loadPending(true);
   };
@@ -1808,6 +1825,7 @@ const Agenda = () => {
     // Save billing sent timestamp
     const now = new Date().toISOString();
     await supabase.from("sessions").update({ billing_sent_at: now } as any).eq("id", s.id);
+    notifySessionDataChanged();
     setSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
     setPendingSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
     toast.success("Cobrança enviada registrada");
@@ -1990,6 +2008,7 @@ const Agenda = () => {
     } as any).eq("id", editSessionId);
 
     if (error) { setEditSaving(false); toast.error("Erro ao salvar sessão"); return; }
+    notifySessionDataChanged();
 
     // Reschedule all future sessions in the package
     if (rescheduleAll && session && newScheduledAt) {
@@ -3542,13 +3561,17 @@ const Agenda = () => {
 
             return (
               <>
-                <div className="grid min-w-0 grid-cols-2 gap-2 mb-2 lg:grid-cols-4">
-                  <Item icon={CalendarCheck} label={summary.labels.sessions} value={summary.todayCount} tone="bg-primary/10 text-primary" onClick={() => { goToDate(selectedDate); setViewTab("day"); }} />
-                  <Item icon={AlertCircle} label={`${summary.labels.pendingRecords} (${periodLabel})`} value={summary.pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
-                  <Item icon={Wallet} label={`${summary.labels.pendingPayments} (${periodLabel})`} value={summary.pendingPayments} tone="bg-emerald-100 text-emerald-700" onClick={() => setPendingPaymentsOpen(true)} />
-                  <Item icon={HeartPulse} label={summary.labels.mood} value={summary.moodCount} tone="bg-lilac/40 text-foreground" />
-                </div>
-                {allZero && (
+                {loading || loadingPending ? (
+                  <MetricSkeleton count={4} className="mb-2 lg:grid-cols-4" />
+                ) : (
+                  <div className="grid min-w-0 grid-cols-2 gap-2 mb-2 lg:grid-cols-4">
+                    <Item icon={CalendarCheck} label={summary.labels.sessions} value={summary.todayCount} tone="bg-primary/10 text-primary" onClick={() => { goToDate(selectedDate); setViewTab("day"); }} />
+                    <Item icon={AlertCircle} label={`${summary.labels.pendingRecords} (${periodLabel})`} value={summary.pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
+                    <Item icon={Wallet} label={`${summary.labels.pendingPayments} (${periodLabel})`} value={summary.pendingPayments} tone="bg-emerald-100 text-emerald-700" onClick={() => setPendingPaymentsOpen(true)} />
+                    <Item icon={HeartPulse} label={summary.labels.mood} value={summary.moodCount} tone="bg-lilac/40 text-foreground" />
+                  </div>
+                )}
+                {!loading && !loadingPending && allZero && (
                   <div className="mb-4 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-center text-sm text-muted-foreground">
                     Nenhuma sessão ou pendência para este período.
                     <button
@@ -3705,7 +3728,7 @@ const Agenda = () => {
               <div className="space-y-4">
 
                 {loading ? (
-                  <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                  <CalendarSkeleton mode="month" />
                 ) : (
                   <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr] [&>*]:min-w-0">
                     {/* Calendar grid */}
@@ -3846,7 +3869,7 @@ const Agenda = () => {
               <div className="space-y-4">
 
                 {loading ? (
-                  <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                  <CalendarSkeleton mode="week" />
                 ) : isMobile ? (
                   /* ── COMPACT MOBILE WEEK ── */
                   <div className="space-y-3">
@@ -4053,7 +4076,7 @@ const Agenda = () => {
               <div className="space-y-4">
 
                 {loading ? (
-                  <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                  <ListSkeleton count={5} />
                 ) : selectedDayTimeline.length === 0 ? (
                           <div className="rounded-2xl border border-dashed border-border bg-card/50 px-4 py-10 text-center sm:p-14">
                     <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/40" />

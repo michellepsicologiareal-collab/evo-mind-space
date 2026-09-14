@@ -29,6 +29,8 @@ import { SessionPlanningForm } from "@/components/app/SessionPlanningForm";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
 import { preserveScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
+import { FormSkeleton } from "@/components/app/Skeletons";
+import { notifySessionDataChanged } from "@/lib/dataEvents";
 
 const DRAFT_KEY = "rascunho_registro_sessao";
 
@@ -1123,6 +1125,7 @@ const RegistroSessao = () => {
     }
 
     setSaving(false);
+    notifySessionDataChanged();
     toast.success("Registro salvo com sucesso.");
     clearDraft();
     const keepPatient = form.patient_id;
@@ -1295,11 +1298,7 @@ const RegistroSessao = () => {
   const selectedPatient = patients.find((p) => p.id === form.patient_id);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
+    return <FormSkeleton />;
   }
 
   const SectionHeader = ({

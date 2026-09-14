@@ -6,3 +6,7 @@
 ## Filtro no Financeiro
 - [x] Filtro para ver por paciente
 - [x] Ordenação alfabética
+
+## Desempenho e atualização de dados
+- [x] Adicionar skeletons e estados de carregamento nas telas principais
+- [x] Invalidar e atualizar caches após dar baixa, enviar cobrança e registrar sessões

@@ -5,10 +5,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, ClipboardList, Target, Calendar, ChevronRight, Users } from "lucide-react";
+import { Search, ClipboardList, Target, Calendar, ChevronRight, Users } from "lucide-react";
 import { format, isToday, isThisWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { ListSkeleton, MetricSkeleton } from "@/components/app/Skeletons";
 
 interface PatientRow {
   id: string;
@@ -126,7 +127,7 @@ export const PlanoTratamentoHub = () => {
   }), [rows]);
 
   if (loading) {
-    return <div className="py-16 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>;
+    return <div className="space-y-5"><MetricSkeleton count={5} className="md:grid-cols-5" /><ListSkeleton count={5} /></div>;
   }
 
   if (rows.length === 0) {
