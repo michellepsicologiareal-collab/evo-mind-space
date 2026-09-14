@@ -66,6 +66,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
   TrendingUp,
   Wallet,
   Clock,
@@ -94,6 +102,9 @@ import {
   Info,
   Download,
   FileText,
+  Search,
+  Check,
+  X,
 } from "lucide-react";
 
 import {
@@ -209,6 +220,7 @@ const Finance = () => {
   // usado para montar o card completo de cada plano, mesmo quando ele atravessa meses.
   const [planRowsAll, setPlanRowsAll] = useState<Row[]>([]);
   const [patientFilter, setPatientFilter] = useState<string>("all");
+  const [patientPickerOpen, setPatientPickerOpen] = useState(false);
   // Cadastro completo de pacientes (fora da lixeira), em ordem alfabética — base do filtro.
   const [patientDirectory, setPatientDirectory] = useState<Array<{ id: string; name: string }>>([]);
   const rows = useMemo(
@@ -267,6 +279,7 @@ const Finance = () => {
   const [receitaSaudeFilter, setReceitaSaudeFilter] = useState<ReceitaSaudeFilter>("all");
   // Visualização principal em cards ("Sessões do Mês")
   const [billingFilter, setBillingFilter] = useState<"all" | "enviada" | "perto" | "vencida" | "a_enviar">("all");
+  const [paymentView, setPaymentView] = useState<"all" | "paid" | "pending">("all");
   const [cardSort, setCardSort] = useState<"date" | "patient">("date");
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const billingNotifiedRef = useRef<Set<string>>(new Set());
@@ -1620,22 +1633,82 @@ const Finance = () => {
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           <RefreshButton />
 
-          {/* Filtro por paciente — cadastro completo, em ordem alfabética */}
-          <Select value={patientFilter} onValueChange={setPatientFilter}>
-            <SelectTrigger
-              id="patient-filter"
-              aria-label="Filtrar por paciente"
-              className="h-10 w-full sm:w-[240px]"
-            >
-              <SelectValue placeholder="Todos os pacientes" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os pacientes</SelectItem>
-              {patientOptions.map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Busca por paciente — pesquisável e em ordem alfabética */}
+          <Popover open={patientPickerOpen} onOpenChange={setPatientPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                id="patient-filter"
+                variant="outline"
+                role="combobox"
+                aria-expanded={patientPickerOpen}
+                aria-label="Buscar paciente no Financeiro"
+                className="h-10 w-full justify-start gap-2 sm:w-[270px]"
+              >
+                <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="min-w-0 flex-1 truncate text-left font-normal">
+                  {patientFilter === "all"
+                    ? "Buscar paciente..."
+                    : patientOptions.find((p) => p.id === patientFilter)?.name ?? "Buscar paciente..."}
+                </span>
+                {patientFilter !== "all" && (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Limpar paciente"
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setPatientFilter("all");
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setPatientFilter("all");
+                      }
+                    }}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-[min(340px,calc(100vw-2rem))] p-0">
+              <Command>
+                <CommandInput placeholder="Digite o nome do paciente" />
+                <CommandList>
+                  <CommandEmpty>Nenhum paciente encontrado.</CommandEmpty>
+                  <CommandGroup heading={`${patientOptions.length} pacientes`}>
+                    <CommandItem
+                      value="Todos os pacientes"
+                      onSelect={() => {
+                        setPatientFilter("all");
+                        setPatientPickerOpen(false);
+                      }}
+                      className="gap-2 py-2.5"
+                    >
+                      <Check className={`h-4 w-4 ${patientFilter === "all" ? "opacity-100" : "opacity-0"}`} />
+                      Todos os pacientes
+                    </CommandItem>
+                    {patientOptions.map((patient) => (
+                      <CommandItem
+                        key={patient.id}
+                        value={patient.name}
+                        onSelect={() => {
+                          setPatientFilter(patient.id);
+                          setPatientPickerOpen(false);
+                        }}
+                        className="gap-2 py-2.5"
+                      >
+                        <Check className={`h-4 w-4 ${patientFilter === patient.id ? "opacity-100" : "opacity-0"}`} />
+                        <span className="truncate">{patient.name}</span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
 
           <Popover>
             <PopoverTrigger asChild>
@@ -1671,12 +1744,12 @@ const Finance = () => {
                 </Select>
               </div>
 
-              {(fortnightFilter !== "all" || receitaSaudeFilter !== "all" || patientFilter !== "all") && (
+              {(fortnightFilter !== "all" || receitaSaudeFilter !== "all" || patientFilter !== "all" || paymentView !== "all") && (
                 <Button
                   variant="ghost"
                   size="sm"
                   className="w-full"
-                  onClick={() => { setFortnightFilter("all"); setReceitaSaudeFilter("all"); setPatientFilter("all"); }}
+                  onClick={() => { setFortnightFilter("all"); setReceitaSaudeFilter("all"); setPatientFilter("all"); setPaymentView("all"); }}
                 >
                   Limpar filtros
                 </Button>
@@ -2363,6 +2436,11 @@ const Finance = () => {
 
           const totalPagoCards = allGroups.reduce((s, g) => s + g.pago, 0);
           const totalPendenteCards = allGroups.reduce((s, g) => s + g.emAberto, 0);
+          const paymentCounts = {
+            all: allGroups.length,
+            paid: allGroups.filter((g) => g.pendingCount === 0 && g.paidCount > 0).length,
+            pending: allGroups.filter((g) => g.pendingCount > 0).length,
+          };
 
           const counts = {
             enviada: allGroups.filter((g) => g.billing.status === "enviada").length,
@@ -2373,6 +2451,8 @@ const Finance = () => {
 
           const groups = allGroups
             .filter((g) => {
+              if (paymentView === "paid" && (g.pendingCount > 0 || g.paidCount === 0)) return false;
+              if (paymentView === "pending" && g.pendingCount === 0) return false;
               if (billingFilter !== "all" && g.billing.status !== billingFilter) return false;
               if (receitaSaudeFilter === "to_issue") return g.receitaToIssue > 0;
               if (receitaSaudeFilter === "issued") return g.receitaIssued > 0 && g.receitaToIssue === 0;
@@ -2640,8 +2720,42 @@ const Finance = () => {
                 </SheetContent>
               </Sheet>
 
+              {/* Busca rápida por situação do pagamento */}
+              <div className="mt-5 flex flex-col gap-3 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+                  <span className="text-sm font-medium">Localizar por pagamento</span>
+                </div>
+                <div className="grid grid-cols-3 rounded-lg bg-secondary/70 p-1" aria-label="Filtrar por situação do pagamento">
+                  {([
+                    { key: "all" as const, label: "Todos", count: paymentCounts.all },
+                    { key: "paid" as const, label: "Pagos", count: paymentCounts.paid },
+                    { key: "pending" as const, label: "Pendentes", count: paymentCounts.pending },
+                  ]).map((option) => (
+                    <Button
+                      key={option.key}
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      aria-pressed={paymentView === option.key}
+                      onClick={() => setPaymentView(option.key)}
+                      className={`h-8 gap-1.5 px-2 sm:px-3 ${
+                        paymentView === option.key
+                          ? "bg-card text-foreground shadow-sm hover:bg-card"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {option.key === "paid" && <CheckCircle2 className="h-3.5 w-3.5 text-moss" />}
+                      {option.key === "pending" && <Clock className="h-3.5 w-3.5 text-accent" />}
+                      <span>{option.label}</span>
+                      <span className="tabular-nums text-xs opacity-70">{option.count}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
               {/* Abas + ordenação */}
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-b border-border">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-b border-border">
                 <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
                   {tabs.map((t) => (
                     <button
@@ -2680,12 +2794,12 @@ const Finance = () => {
                   <p className="text-sm mt-1 text-muted-foreground max-w-md mx-auto">
                     Ajuste os filtros ou selecione outro período para visualizar as cobranças.
                   </p>
-                  {(billingFilter !== "all" || patientFilter !== "all" || receitaSaudeFilter !== "all" || fortnightFilter !== "all") && (
+                  {(billingFilter !== "all" || paymentView !== "all" || patientFilter !== "all" || receitaSaudeFilter !== "all" || fortnightFilter !== "all") && (
                     <Button
                       variant="outline"
                       size="sm"
                       className="mt-5 h-10 min-h-11"
-                      onClick={() => { setBillingFilter("all"); setPatientFilter("all"); setReceitaSaudeFilter("all"); setFortnightFilter("all"); }}
+                      onClick={() => { setBillingFilter("all"); setPaymentView("all"); setPatientFilter("all"); setReceitaSaudeFilter("all"); setFortnightFilter("all"); }}
                     >
                       Limpar filtros
                     </Button>
