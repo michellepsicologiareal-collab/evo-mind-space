@@ -8,5 +8,5 @@
 - [x] Ordenação alfabética
 
 ## Desempenho e atualização de dados
-- [ ] Adicionar skeletons e estados de carregamento nas telas principais
-- [ ] Invalidar e atualizar caches após dar baixa, enviar cobrança e registrar sessões
+- [x] Adicionar skeletons e estados de carregamento nas telas principais
+- [x] Invalidar e atualizar caches após dar baixa, enviar cobrança e registrar sessões
