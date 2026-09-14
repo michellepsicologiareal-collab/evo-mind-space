@@ -112,6 +112,7 @@ import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { cachedQuery, invalidateCache } from "@/lib/dataCache";
 import { ListSkeleton } from "@/components/app/Skeletons";
+import { notifySessionDataChanged } from "@/lib/dataEvents";
 
 
 type PaymentStatus = "pending" | "paid";
@@ -1211,6 +1212,7 @@ const Finance = () => {
       return;
     }
     await logBillingReminders([{ ...plan, dueDate: dueStr }], "manual");
+    notifySessionDataChanged();
     toast.success(`Cobrança registrada como enviada · vence em ${formatDue(dueStr)}`);
     load();
   };
@@ -1378,6 +1380,7 @@ const Finance = () => {
     if (logError) console.warn("Não foi possível registrar o histórico do envio:", logError.message);
 
     setReminderLogsVersion((v) => v + 1);
+    notifySessionDataChanged();
     toast.success(isResend ? "Cobrança reenviada e registrada" : "Cobrança enviada e registrada", {
       description: `Vencimento ${formatDue(dueStr)}`,
     });
@@ -1412,6 +1415,7 @@ const Finance = () => {
       return;
     }
     toast.success("Plano de Atendimento marcado como pago.");
+    notifySessionDataChanged();
     load();
   };
 
@@ -1580,6 +1584,7 @@ const Finance = () => {
       return;
     }
     toast.success(label);
+    notifySessionDataChanged();
     setSettle(null);
     setSettleSelected(new Set());
     load();
@@ -3543,6 +3548,7 @@ const PaymentDetailsDialog = ({
       return;
     }
     toast.success("Pagamento atualizado.");
+    notifySessionDataChanged();
     onSaved();
   };
 

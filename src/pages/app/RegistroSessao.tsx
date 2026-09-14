@@ -30,6 +30,7 @@ import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/Ho
 import { preserveScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
 import { FormSkeleton } from "@/components/app/Skeletons";
+import { notifySessionDataChanged } from "@/lib/dataEvents";
 
 const DRAFT_KEY = "rascunho_registro_sessao";
 
@@ -1124,6 +1125,7 @@ const RegistroSessao = () => {
     }
 
     setSaving(false);
+    notifySessionDataChanged();
     toast.success("Registro salvo com sucesso.");
     clearDraft();
     const keepPatient = form.patient_id;
