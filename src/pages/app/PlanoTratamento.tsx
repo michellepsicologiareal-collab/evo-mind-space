@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { PageIntro } from "@/components/app/PageIntro";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { SessionPlanningForm, type SessionPlanningValue, planningValueFromDb } from "@/components/app/SessionPlanningForm";
+import { FormSkeleton } from "@/components/app/Skeletons";
 
 type Patient = {
   id: string;
@@ -617,7 +618,7 @@ const PlanoTratamento = () => {
       {!patientId ? (
         <PlanoTratamentoHub />
       ) : loading ? (
-        <div className="py-16 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+        <FormSkeleton />
       ) : (
         <></>
       )}

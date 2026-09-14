@@ -55,6 +55,7 @@ import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { computeAgendaSummary } from "@/utils/agendaSummary";
 import { computeBillingStatus, type BillingInput } from "@/lib/billing";
 import { BillingBadge } from "@/components/app/BillingBadge";
+import { CalendarSkeleton, ListSkeleton, MetricSkeleton } from "@/components/app/Skeletons";
 
 // Retorno exato para a Agenda (data/visão/filtros atuais) ao fechar o Registro de Sessão.
 const agendaReturnParam = () =>
@@ -3542,13 +3543,17 @@ const Agenda = () => {
 
             return (
               <>
-                <div className="grid min-w-0 grid-cols-2 gap-2 mb-2 lg:grid-cols-4">
-                  <Item icon={CalendarCheck} label={summary.labels.sessions} value={summary.todayCount} tone="bg-primary/10 text-primary" onClick={() => { goToDate(selectedDate); setViewTab("day"); }} />
-                  <Item icon={AlertCircle} label={`${summary.labels.pendingRecords} (${periodLabel})`} value={summary.pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
-                  <Item icon={Wallet} label={`${summary.labels.pendingPayments} (${periodLabel})`} value={summary.pendingPayments} tone="bg-emerald-100 text-emerald-700" onClick={() => setPendingPaymentsOpen(true)} />
-                  <Item icon={HeartPulse} label={summary.labels.mood} value={summary.moodCount} tone="bg-lilac/40 text-foreground" />
-                </div>
-                {allZero && (
+                {loading || loadingPending ? (
+                  <MetricSkeleton count={4} className="mb-2 lg:grid-cols-4" />
+                ) : (
+                  <div className="grid min-w-0 grid-cols-2 gap-2 mb-2 lg:grid-cols-4">
+                    <Item icon={CalendarCheck} label={summary.labels.sessions} value={summary.todayCount} tone="bg-primary/10 text-primary" onClick={() => { goToDate(selectedDate); setViewTab("day"); }} />
+                    <Item icon={AlertCircle} label={`${summary.labels.pendingRecords} (${periodLabel})`} value={summary.pendingRecords} tone="bg-amber-100 text-amber-700" onClick={() => setPendingRecordsOpen(true)} />
+                    <Item icon={Wallet} label={`${summary.labels.pendingPayments} (${periodLabel})`} value={summary.pendingPayments} tone="bg-emerald-100 text-emerald-700" onClick={() => setPendingPaymentsOpen(true)} />
+                    <Item icon={HeartPulse} label={summary.labels.mood} value={summary.moodCount} tone="bg-lilac/40 text-foreground" />
+                  </div>
+                )}
+                {!loading && !loadingPending && allZero && (
                   <div className="mb-4 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-center text-sm text-muted-foreground">
                     Nenhuma sessão ou pendência para este período.
                     <button
@@ -3705,7 +3710,7 @@ const Agenda = () => {
               <div className="space-y-4">
 
                 {loading ? (
-                  <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                  <CalendarSkeleton mode="month" />
                 ) : (
                   <div className="grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr] [&>*]:min-w-0">
                     {/* Calendar grid */}
@@ -3846,7 +3851,7 @@ const Agenda = () => {
               <div className="space-y-4">
 
                 {loading ? (
-                  <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                  <CalendarSkeleton mode="week" />
                 ) : isMobile ? (
                   /* ── COMPACT MOBILE WEEK ── */
                   <div className="space-y-3">
@@ -4053,7 +4058,7 @@ const Agenda = () => {
               <div className="space-y-4">
 
                 {loading ? (
-                  <div className="text-center py-12"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>
+                  <ListSkeleton count={5} />
                 ) : selectedDayTimeline.length === 0 ? (
                           <div className="rounded-2xl border border-dashed border-border bg-card/50 px-4 py-10 text-center sm:p-14">
                     <CalendarIcon className="h-12 w-12 mx-auto text-muted-foreground/40" />

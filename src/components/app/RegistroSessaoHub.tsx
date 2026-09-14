@@ -3,10 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Loader2, Search, FileText, Calendar, ChevronRight, Users, ClipboardList } from "lucide-react";
+import { Search, FileText, Calendar, ChevronRight, Users, ClipboardList } from "lucide-react";
 import { format, isToday, isThisWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { ListSkeleton, MetricSkeleton } from "@/components/app/Skeletons";
 
 interface PatientRow {
   id: string;
@@ -110,7 +111,7 @@ export const RegistroSessaoHub = ({ onSelectPatient }: Props) => {
   }), [rows]);
 
   if (loading) {
-    return <div className="py-16 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></div>;
+    return <div className="space-y-5"><MetricSkeleton count={5} className="md:grid-cols-5" /><ListSkeleton count={5} /></div>;
   }
 
   if (rows.length === 0) {

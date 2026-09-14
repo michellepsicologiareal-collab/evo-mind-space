@@ -111,6 +111,7 @@ import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { cachedQuery, invalidateCache } from "@/lib/dataCache";
+import { ListSkeleton } from "@/components/app/Skeletons";
 
 
 type PaymentStatus = "pending" | "paid";
@@ -2664,7 +2665,7 @@ const Finance = () => {
               </div>
 
               {loading ? (
-                <p className="text-center py-12 text-muted-foreground">Carregando…</p>
+                <div className="mt-4"><ListSkeleton count={5} /></div>
               ) : groups.length === 0 ? (
                 <div className="mt-4 rounded-2xl border border-dashed border-border bg-card p-10 md:p-14 text-center">
                   <Wallet className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" aria-hidden="true" />
@@ -3423,7 +3424,7 @@ const SessionsTable = ({
   }, [allRows]);
 
   if (loading) {
-    return <p className="text-center py-12 text-muted-foreground">Carregando…</p>;
+    return <ListSkeleton count={5} />;
   }
   if (rows.length === 0) {
     return (

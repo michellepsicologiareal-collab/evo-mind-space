@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
 const Pulse = ({ className }: { className?: string }) => (
   <div className={cn("rounded bg-muted motion-safe:animate-pulse", className)} />
@@ -9,7 +10,7 @@ export const LoadingRegion = ({
   label = "Carregando conteúdo",
   className,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   label?: string;
   className?: string;
 }) => (
