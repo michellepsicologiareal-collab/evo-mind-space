@@ -6,6 +6,7 @@
 ## Filtro no Financeiro
 - [x] Filtro para ver por paciente
 - [x] Ordenação alfabética
+- [ ] Corrigir botões e filtros do Financeiro no mobile sem sobreposição
 
 ## Desempenho e atualização de dados
 - [x] Adicionar skeletons e estados de carregamento nas telas principais
