@@ -2726,7 +2726,7 @@ const Finance = () => {
                   <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   <span className="text-sm font-medium">Localizar por pagamento</span>
                 </div>
-                <div className="grid grid-cols-3 rounded-lg bg-secondary/70 p-1" aria-label="Filtrar por situação do pagamento">
+                <div className="grid min-w-0 grid-cols-3 rounded-lg bg-secondary/70 p-1" aria-label="Filtrar por situação do pagamento">
                   {([
                     { key: "all" as const, label: "Todos", count: paymentCounts.all },
                     { key: "paid" as const, label: "Pagos", count: paymentCounts.paid },
@@ -2739,16 +2739,16 @@ const Finance = () => {
                       size="sm"
                       aria-pressed={paymentView === option.key}
                       onClick={() => setPaymentView(option.key)}
-                      className={`h-8 gap-1.5 px-2 sm:px-3 ${
+                      className={`h-9 min-w-0 gap-1 px-1 text-[11px] sm:gap-1.5 sm:px-3 sm:text-sm ${
                         paymentView === option.key
                           ? "bg-card text-foreground shadow-sm hover:bg-card"
                           : "text-muted-foreground"
                       }`}
                     >
-                      {option.key === "paid" && <CheckCircle2 className="h-3.5 w-3.5 text-moss" />}
-                      {option.key === "pending" && <Clock className="h-3.5 w-3.5 text-accent" />}
-                      <span>{option.label}</span>
-                      <span className="tabular-nums text-xs opacity-70">{option.count}</span>
+                      {option.key === "paid" && <CheckCircle2 className="hidden h-3.5 w-3.5 shrink-0 text-moss sm:block" />}
+                      {option.key === "pending" && <Clock className="hidden h-3.5 w-3.5 shrink-0 text-accent sm:block" />}
+                      <span className="truncate">{option.label}</span>
+                      <span className="shrink-0 tabular-nums text-[10px] opacity-70 sm:text-xs">{option.count}</span>
                     </Button>
                   ))}
                 </div>
@@ -2931,11 +2931,11 @@ const Finance = () => {
                                 {sendCount > 1 ? ` · ${sendCount} envios` : ""}
                               </p>
                             )}
-                            <div className="flex flex-wrap items-center gap-2">
+                            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 gap-1.5 text-xs"
+                                className="h-auto min-h-10 min-w-0 gap-1.5 px-2 text-[11px] leading-tight sm:h-8 sm:min-h-0 sm:px-3 sm:text-xs"
                                 disabled={pay === "Pago"}
                                 onClick={() =>
                                   setConfirmSend({
@@ -2952,12 +2952,12 @@ const Finance = () => {
                                 aria-label={`${alreadySent ? "Reenviar" : "Enviar"} cobrança de ${g.name} pelo WhatsApp`}
                               >
                                 <MessageCircle className="h-3.5 w-3.5" />
-                                {alreadySent ? "Reenviar cobrança" : "Enviar cobrança"}
+                                <span className="truncate">{alreadySent ? "Reenviar cobrança" : "Enviar cobrança"}</span>
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 gap-1.5 text-xs"
+                                className="h-auto min-h-10 min-w-0 gap-1.5 px-2 text-[11px] sm:h-8 sm:min-h-0 sm:px-3 sm:text-xs"
                                 onClick={() => setReminderHistoryPlan({ key: g.key, name: g.name })}
                                 aria-label={`Ver histórico de cobranças de ${g.name}`}
                               >
@@ -2968,8 +2968,8 @@ const Finance = () => {
                           </div>
 
                           {/* Coluna 4 — Receita Saúde + detalhes */}
-                          <div className="flex items-center justify-between gap-3 border-t border-border/60 pt-3 lg:border-0 lg:pt-0 lg:flex-col lg:items-end">
-                            <div className="flex items-center gap-2">
+                          <div className="flex flex-col gap-3 border-t border-border/60 pt-3 sm:flex-row sm:items-center sm:justify-between lg:border-0 lg:pt-0 lg:flex-col lg:items-end">
+                            <div className="flex min-w-0 items-center justify-between gap-2 sm:justify-start">
                               <Label className="text-[11px] text-muted-foreground whitespace-nowrap">Receita Saúde:</Label>
                               <Select
                                 value={receitaAplica ? "aplica" : "nao"}
@@ -2977,7 +2977,7 @@ const Finance = () => {
                                   updateReceitaSaudeGroup(ids, v === "aplica" ? "to_issue" : null)
                                 }
                               >
-                                <SelectTrigger className="h-8 w-[130px] text-xs">
+                                <SelectTrigger className="h-9 min-w-0 flex-1 text-xs sm:w-[130px] sm:flex-none">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -2986,15 +2986,17 @@ const Finance = () => {
                                 </SelectContent>
                               </Select>
                             </div>
-                            <button
+                            <Button
                               type="button"
+                              variant="ghost"
+                              size="sm"
                               onClick={(e) => { e.stopPropagation(); openSettle(g); }}
-                              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                              className="h-10 w-full justify-center gap-1 text-xs text-primary sm:h-8 sm:w-auto lg:self-end"
                               aria-label={`Abrir ações financeiras de ${g.name}`}
                             >
                               Ver detalhes
                               <ChevronRight className="h-3.5 w-3.5" />
-                            </button>
+                            </Button>
 
                           </div>
                         </div>
