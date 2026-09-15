@@ -2485,24 +2485,26 @@ const Finance = () => {
           return (
             <>
               {/* Topo */}
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-                <h2 className="font-display text-xl md:text-2xl font-semibold tracking-tight">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                <h2 className="w-full font-display text-xl font-semibold tracking-tight md:w-auto md:text-2xl">
                   Financeiro · Sessões do Mês
                 </h2>
-                <div className="ml-auto flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthCursor(subMonths(monthCursor, 1))} aria-label="Mês anterior">
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm font-medium text-primary capitalize min-w-[130px] text-center">
-                    {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
-                  </span>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMonthCursor(addMonths(monthCursor, 1))} aria-label="Próximo mês">
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                <div className="grid w-full grid-cols-4 gap-2 lg:ml-auto lg:flex lg:w-auto lg:items-center">
+                  <div className="col-span-4 grid grid-cols-[36px_minmax(0,1fr)_36px] items-center sm:col-span-2 lg:flex">
+                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setMonthCursor(subMonths(monthCursor, 1))} aria-label="Mês anterior">
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="min-w-0 text-center text-sm font-medium capitalize text-primary lg:min-w-[130px]">
+                      {format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
+                    </span>
+                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setMonthCursor(addMonths(monthCursor, 1))} aria-label="Próximo mês">
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 gap-1.5 text-xs"
+                    className="h-10 min-w-0 gap-1 px-1.5 text-[10px] sm:text-xs lg:h-8 lg:px-3"
                     onClick={exportCSV}
                     aria-label="Exportar registros do mês em CSV"
                   >
@@ -2512,7 +2514,7 @@ const Finance = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 gap-1.5 text-xs"
+                    className="h-10 min-w-0 gap-1 px-1.5 text-[10px] sm:text-xs lg:h-8 lg:px-3"
                     onClick={exportPDF}
                     aria-label="Exportar registros do mês em PDF"
                   >
@@ -2522,7 +2524,7 @@ const Finance = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 gap-1.5 text-xs"
+                    className="h-10 min-w-0 gap-1 px-1 text-[10px] sm:px-2 sm:text-xs lg:h-8 lg:px-3"
                     onClick={() => setAuditOpen(true)}
                     aria-label="Abrir auditoria de pagamentos e cobranças"
                   >
@@ -2532,7 +2534,7 @@ const Finance = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 gap-1.5 text-xs"
+                    className="h-10 min-w-0 gap-1 px-1 text-[10px] sm:px-2 sm:text-xs lg:h-8 lg:px-3"
                     onClick={() => setHistoryOpen(true)}
                     aria-label="Abrir histórico de cobranças enviadas"
                   >
@@ -2755,15 +2757,15 @@ const Finance = () => {
               </div>
 
               {/* Abas + ordenação */}
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-b border-border">
-                <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
+              <div className="mt-4 flex flex-col gap-3 border-b border-border sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+                <div className="grid w-full grid-cols-2 gap-x-3 gap-y-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-4">
                   {tabs.map((t) => (
                     <button
                       key={t.key}
                       type="button"
                       onClick={() => setBillingFilter(t.key)}
                       aria-pressed={billingFilter === t.key}
-                      className={`whitespace-nowrap pb-2 -mb-px text-sm transition-colors border-b-2 ${
+                      className={`min-w-0 pb-2 text-left text-xs transition-colors border-b-2 sm:-mb-px sm:whitespace-nowrap sm:text-sm ${
                         billingFilter === t.key
                           ? "border-primary text-primary font-semibold"
                           : "border-transparent text-muted-foreground hover:text-foreground"
@@ -2776,7 +2778,7 @@ const Finance = () => {
                 <button
                   type="button"
                   onClick={() => setCardSort(cardSort === "date" ? "patient" : "date")}
-                  className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-foreground/80 hover:bg-secondary"
+                  className="mb-2 inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground/80 hover:bg-secondary sm:min-h-0 sm:w-auto sm:rounded-full"
                 >
                   Ordenar: {cardSort === "date" ? "Data" : "Paciente"}
                   <ChevronDown className="h-3.5 w-3.5" />
