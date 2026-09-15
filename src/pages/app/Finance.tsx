@@ -1920,6 +1920,37 @@ const Finance = () => {
 
             </PopoverContent>
           </Popover>
+
+          <div className="grid w-full grid-cols-2 gap-2 pt-1 md:hidden" aria-label="Filtros rápidos de pagamento">
+            <Button
+              type="button"
+              variant="outline"
+              aria-pressed={paymentView === "paid"}
+              onClick={() => setPaymentView(paymentView === "paid" ? "all" : "paid")}
+              className={`h-10 gap-2 rounded-full ${
+                paymentView === "paid"
+                  ? "border-moss/40 bg-moss/10 text-moss hover:bg-moss/15 hover:text-moss"
+                  : "text-muted-foreground"
+              }`}
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              Pagos
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              aria-pressed={paymentView === "pending"}
+              onClick={() => setPaymentView(paymentView === "pending" ? "all" : "pending")}
+              className={`h-10 gap-2 rounded-full ${
+                paymentView === "pending"
+                  ? "border-accent/40 bg-accent/10 text-accent hover:bg-accent/15 hover:text-accent"
+                  : "text-muted-foreground"
+              }`}
+            >
+              <Clock className="h-4 w-4" />
+              Pendentes
+            </Button>
+          </div>
         </div>
       </header>
 
