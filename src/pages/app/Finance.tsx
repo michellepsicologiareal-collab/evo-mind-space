@@ -279,7 +279,17 @@ const Finance = () => {
   const [receitaSaudeFilter, setReceitaSaudeFilter] = useState<ReceitaSaudeFilter>("all");
   // Visualização principal em cards ("Sessões do Mês")
   const [billingFilter, setBillingFilter] = useState<"all" | "enviada" | "perto" | "vencida" | "a_enviar">("all");
-  const [paymentView, setPaymentView] = useState<"all" | "paid" | "pending">("all");
+  const PAYMENT_VIEW_KEY = "psireal:finance:paymentView";
+  const [paymentView, setPaymentView] = useState<"all" | "paid" | "pending">(() => {
+    try {
+      const saved = localStorage.getItem(PAYMENT_VIEW_KEY);
+      if (saved === "paid" || saved === "pending" || saved === "all") return saved;
+    } catch { /* ignora storage indisponível */ }
+    return "all";
+  });
+  useEffect(() => {
+    try { localStorage.setItem(PAYMENT_VIEW_KEY, paymentView); } catch { /* ignora */ }
+  }, [paymentView]);
   const [cardSort, setCardSort] = useState<"date" | "patient">("date");
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const billingNotifiedRef = useRef<Set<string>>(new Set());
