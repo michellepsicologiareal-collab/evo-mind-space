@@ -3263,7 +3263,7 @@ const Finance = () => {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-7 text-xs gap-1"
+                                    className="h-8 min-w-0 flex-1 text-xs gap-1 sm:h-7 sm:flex-none"
                                     disabled={settling}
                                     onClick={() => {
                                       const b = billingStatusOf([r], billingReminderDays, "per_session");
@@ -3288,7 +3288,7 @@ const Finance = () => {
                                 {podeBaixar && (
                                   <Button
                                     size="sm"
-                                    className="h-7 text-xs bg-moss text-moss-foreground hover:bg-moss/90"
+                                    className="h-8 min-w-0 flex-1 text-xs bg-moss text-moss-foreground hover:bg-moss/90 sm:h-7 sm:flex-none"
                                     disabled={settling}
                                     onClick={() =>
                                       settlePayment(
@@ -3303,7 +3303,7 @@ const Finance = () => {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-7 text-xs"
+                                  className="h-8 shrink-0 text-xs sm:h-7"
                                   onClick={() => { setSettle(null); setEditing(r); }}
                                 >
                                   Detalhes
