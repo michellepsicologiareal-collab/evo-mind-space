@@ -3023,6 +3023,17 @@ const Finance = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
+                                className="h-auto min-h-10 min-w-0 gap-1.5 border-emerald-600/40 px-2 text-[11px] leading-tight text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 sm:h-8 sm:min-h-0 sm:px-3 sm:text-xs"
+                                disabled={pay === "Pago" || quickSettling === g.key}
+                                onClick={(e) => { e.stopPropagation(); quickSettle(g); }}
+                                aria-label={`Dar baixa nas sessões pendentes de ${g.name}`}
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                <span className="truncate">{quickSettling === g.key ? "Dando baixa..." : "Dar baixa"}</span>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="h-auto min-h-10 min-w-0 gap-1.5 px-2 text-[11px] sm:h-8 sm:min-h-0 sm:px-3 sm:text-xs"
                                 onClick={() => setReminderHistoryPlan({ key: g.key, name: g.name })}
                                 aria-label={`Ver histórico de cobranças de ${g.name}`}
