@@ -3248,7 +3248,7 @@ const Finance = () => {
                           return (
                             <li
                               key={r.id}
-                              className="rounded-xl border border-border px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm"
+                              className="rounded-xl border border-border px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm overflow-hidden"
                             >
                               <span className="tabular-nums font-medium">
                                 {format(new Date(r.scheduled_at), "dd/MM/yyyy")}
@@ -3258,7 +3258,7 @@ const Finance = () => {
                               </span>
                               <span className="tabular-nums font-medium">{formatBRL(Number(r.price ?? 0))}</span>
                               <span className={`text-[11px] px-2 py-0.5 rounded-full border ${badgeTone}`}>{badge}</span>
-                              <span className="ml-auto flex items-center gap-1">
+                              <span className="flex w-full flex-wrap items-center gap-1.5 sm:ml-auto sm:w-auto">
                                 {!pago && (
                                   <Button
                                     size="sm"
