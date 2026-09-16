@@ -1449,6 +1449,29 @@ const Finance = () => {
       .filter((r) => r.payment_status === "pending" && r.status !== "cancelled")
       .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
 
+  /** Baixa rápida direto no card: quita todas as sessões pendentes do grupo. */
+  const [quickSettling, setQuickSettling] = useState<string | null>(null);
+  const quickSettle = async (g: { key: string; name: string; isPlan: boolean; sessions: Row[] }) => {
+    const ids = settleableSessions(g).map((r) => r.id);
+    if (ids.length === 0) {
+      toast.info("Não há sessões pendentes para dar baixa.");
+      return;
+    }
+    setQuickSettling(g.key);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ payment_status: "paid", paid_at: new Date().toISOString() })
+      .in("id", ids);
+    setQuickSettling(null);
+    if (error) {
+      toast.error("Não foi possível dar baixa no pagamento.");
+      return;
+    }
+    toast.success(`Baixa registrada para ${g.name} (${ids.length} ${ids.length === 1 ? "sessão" : "sessões"}).`);
+    notifySessionDataChanged();
+    load();
+  };
+
 
   const openSettle = (g: NonNullable<typeof settle>) => {
     setSettle(g);
