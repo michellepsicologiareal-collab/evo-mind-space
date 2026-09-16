@@ -279,7 +279,17 @@ const Finance = () => {
   const [receitaSaudeFilter, setReceitaSaudeFilter] = useState<ReceitaSaudeFilter>("all");
   // Visualização principal em cards ("Sessões do Mês")
   const [billingFilter, setBillingFilter] = useState<"all" | "enviada" | "perto" | "vencida" | "a_enviar">("all");
-  const [paymentView, setPaymentView] = useState<"all" | "paid" | "pending">("all");
+  const PAYMENT_VIEW_KEY = "psireal:finance:paymentView";
+  const [paymentView, setPaymentView] = useState<"all" | "paid" | "pending">(() => {
+    try {
+      const saved = localStorage.getItem(PAYMENT_VIEW_KEY);
+      if (saved === "paid" || saved === "pending" || saved === "all") return saved;
+    } catch { /* ignora storage indisponível */ }
+    return "all";
+  });
+  useEffect(() => {
+    try { localStorage.setItem(PAYMENT_VIEW_KEY, paymentView); } catch { /* ignora */ }
+  }, [paymentView]);
   const [cardSort, setCardSort] = useState<"date" | "patient">("date");
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const billingNotifiedRef = useRef<Set<string>>(new Set());
@@ -1438,6 +1448,29 @@ const Finance = () => {
     g.sessions
       .filter((r) => r.payment_status === "pending" && r.status !== "cancelled")
       .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+
+  /** Baixa rápida direto no card: quita todas as sessões pendentes do grupo. */
+  const [quickSettling, setQuickSettling] = useState<string | null>(null);
+  const quickSettle = async (g: { key: string; name: string; isPlan: boolean; sessions: Row[] }) => {
+    const ids = settleableSessions(g).map((r) => r.id);
+    if (ids.length === 0) {
+      toast.info("Não há sessões pendentes para dar baixa.");
+      return;
+    }
+    setQuickSettling(g.key);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ payment_status: "paid", paid_at: new Date().toISOString() })
+      .in("id", ids);
+    setQuickSettling(null);
+    if (error) {
+      toast.error("Não foi possível dar baixa no pagamento.");
+      return;
+    }
+    toast.success(`Baixa registrada para ${g.name} (${ids.length} ${ids.length === 1 ? "sessão" : "sessões"}).`);
+    notifySessionDataChanged();
+    load();
+  };
 
 
   const openSettle = (g: NonNullable<typeof settle>) => {
@@ -2986,6 +3019,17 @@ const Finance = () => {
                               >
                                 <MessageCircle className="h-3.5 w-3.5" />
                                 <span className="truncate">{alreadySent ? "Reenviar cobrança" : "Enviar cobrança"}</span>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-auto min-h-10 min-w-0 gap-1.5 border-emerald-600/40 px-2 text-[11px] leading-tight text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 sm:h-8 sm:min-h-0 sm:px-3 sm:text-xs"
+                                disabled={pay === "Pago" || quickSettling === g.key}
+                                onClick={(e) => { e.stopPropagation(); quickSettle(g); }}
+                                aria-label={`Dar baixa nas sessões pendentes de ${g.name}`}
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                <span className="truncate">{quickSettling === g.key ? "Dando baixa..." : "Dar baixa"}</span>
                               </Button>
                               <Button
                                 variant="outline"
