@@ -3001,7 +3001,7 @@ const Finance = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-auto min-h-10 min-w-0 gap-1.5 px-2 text-[11px] leading-tight sm:h-8 sm:min-h-0 sm:px-3 sm:text-xs"
+                                className="h-auto min-h-10 min-w-0 gap-1.5 border-accent/40 px-2 text-[11px] leading-tight text-accent hover:bg-accent/10 hover:text-accent sm:h-8 sm:min-h-0 sm:px-3 sm:text-xs"
                                 disabled={pay === "Pago"}
                                 onClick={() =>
                                   setConfirmSend({
@@ -3021,9 +3021,8 @@ const Finance = () => {
                                 <span className="truncate">{alreadySent ? "Reenviar cobrança" : "Enviar cobrança"}</span>
                               </Button>
                               <Button
-                                variant="outline"
                                 size="sm"
-                                className="h-auto min-h-10 min-w-0 gap-1.5 border-emerald-600/40 px-2 text-[11px] leading-tight text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 sm:h-8 sm:min-h-0 sm:px-3 sm:text-xs"
+                                className="h-auto min-h-10 min-w-0 gap-1.5 bg-moss px-2 text-[11px] leading-tight text-moss-foreground hover:bg-moss/90 sm:h-8 sm:min-h-0 sm:px-3 sm:text-xs"
                                 disabled={pay === "Pago" || quickSettling === g.key}
                                 onClick={(e) => { e.stopPropagation(); quickSettle(g); }}
                                 aria-label={`Dar baixa nas sessões pendentes de ${g.name}`}
@@ -3263,7 +3262,7 @@ const Finance = () => {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-8 min-w-0 flex-1 text-xs gap-1 sm:h-7 sm:flex-none"
+                                    className="h-8 min-w-0 flex-1 gap-1 border-accent/40 text-xs text-accent hover:bg-accent/10 hover:text-accent sm:h-7 sm:flex-none"
                                     disabled={settling}
                                     onClick={() => {
                                       const b = billingStatusOf([r], billingReminderDays, "per_session");

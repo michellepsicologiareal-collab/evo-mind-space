@@ -11,3 +11,6 @@
 ## Desempenho e atualização de dados
 - [x] Adicionar skeletons e estados de carregamento nas telas principais
 - [x] Invalidar e atualizar caches após dar baixa, enviar cobrança e registrar sessões
+
+## Financeiro
+- [x] Ajustar cor dos botões de ação dos cards (Dar baixa verde sólido, Cobrança em roxo de destaque)
