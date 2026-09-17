@@ -1449,19 +1449,29 @@ const Finance = () => {
       .filter((r) => r.payment_status === "pending" && r.status !== "cancelled")
       .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
 
-  /** Baixa rápida direto no card: quita todas as sessões pendentes do grupo. */
+  /** Baixa rápida direto no card.
+   *  Só quita direto quando há UMA sessão pendente (ou quando é Plano de Atendimento,
+   *  cujo pagamento é único). Com várias sessões avulsas pendentes, abre o painel
+   *  para a psicóloga escolher exatamente qual sessão receber. */
   const [quickSettling, setQuickSettling] = useState<string | null>(null);
-  const quickSettle = async (g: { key: string; name: string; isPlan: boolean; sessions: Row[] }) => {
-    const ids = settleableSessions(g).map((r) => r.id);
-    if (ids.length === 0) {
+  const quickSettle = async (g: NonNullable<typeof settle>) => {
+    const pendentes = settleableSessions(g);
+    if (pendentes.length === 0) {
       toast.info("Não há sessões pendentes para dar baixa.");
       return;
     }
+    if (!g.isPlan && pendentes.length > 1) {
+      openSettle(g);
+      toast.info("Escolha a sessão que foi paga.");
+      return;
+    }
+    const ids = pendentes.map((r) => r.id);
     setQuickSettling(g.key);
     const { error } = await supabase
       .from("sessions")
       .update({ payment_status: "paid", paid_at: new Date().toISOString() })
-      .in("id", ids);
+      .in("id", ids)
+      .eq("payment_status", "pending");
     setQuickSettling(null);
     if (error) {
       toast.error("Não foi possível dar baixa no pagamento.");
