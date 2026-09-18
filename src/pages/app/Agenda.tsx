@@ -2526,7 +2526,10 @@ const Agenda = () => {
       >
         <div className="flex min-w-0 items-start justify-between gap-2">
           <div className="flex flex-1 items-center gap-x-2 gap-y-1 min-w-0 flex-wrap pr-1">
-            <p className="shrink-0 font-display text-sm font-semibold text-foreground">{format(new Date(s.scheduled_at), "HH:mm")}</p>
+            <p className="shrink-0 font-display text-sm font-semibold text-foreground">
+              <span className="sm:hidden">{format(new Date(s.scheduled_at), "dd/MM")} · </span>
+              {format(new Date(s.scheduled_at), "HH:mm")}
+            </p>
             {(() => {
               const StatusIcon = isSupervisionCard ? GraduationCap : statusIcon[s.status];
               const label = isSupervisionCard ? "Supervisão" : statusLabel[s.status];
@@ -3840,7 +3843,7 @@ const Agenda = () => {
                             Sessões de {selectedPatientName} em {format(currentMonth, "MMMM yyyy", { locale: ptBR })}
                           </p>
                           <span className="text-xs text-muted-foreground">
-                            {monthFilteredSessions.length} sessão{monthFilteredSessions.length === 1 ? "" : "es"}
+                            {monthFilteredSessions.length} {monthFilteredSessions.length === 1 ? "sessão" : "sessões"}
                           </span>
                         </div>
                         {monthFilteredSessions.length === 0 ? (
