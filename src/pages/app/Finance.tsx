@@ -105,6 +105,7 @@ import {
   Search,
   Check,
   X,
+  Loader2,
 } from "lucide-react";
 
 import {
@@ -316,6 +317,7 @@ const Finance = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
   // Texto editável da cobrança na tela de conferência
   const [draftMessage, setDraftMessage] = useState("");
+  const [sendingBillingKey, setSendingBillingKey] = useState<string | null>(null);
 
   // ── Tela de conferência antes de enviar cobrança ────────────────────────
   const [confirmSend, setConfirmSend] = useState<{
@@ -1339,10 +1341,12 @@ const Finance = () => {
   }) => {
     const { key, name, patientId, sessions: list, isResend, isPlan } = args;
     if (!user || list.length === 0) return;
+    setSendingBillingKey(key);
 
     const built = buildBillingMessage({ name, sessions: list, isPlan, dueDate: args.dueDate });
     const target = built.target;
     if (target.length === 0) {
+      setSendingBillingKey(null);
       toast.info(
         isPlan
           ? "Nada a cobrar: este plano já está quitado."
@@ -1382,6 +1386,7 @@ const Finance = () => {
       .update({ billing_sent_at: nowIso, payment_due_date: dueStr } as any)
       .in("id", ids);
     if (error) {
+      setSendingBillingKey(null);
       toast.error("Não foi possível registrar o envio da cobrança.");
       return;
     }
@@ -1407,6 +1412,7 @@ const Finance = () => {
     toast.success(isResend ? "Cobrança reenviada e registrada" : "Cobrança enviada e registrada", {
       description: `Vencimento ${formatDue(dueStr)}`,
     });
+    setSendingBillingKey(null);
     load();
   };
 
@@ -1752,6 +1758,19 @@ const Finance = () => {
               </Command>
             </PopoverContent>
           </Popover>
+
+          {patientFilter !== "all" && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-10 w-full gap-1.5 sm:w-auto"
+              onClick={() => setPatientFilter("all")}
+              aria-label="Limpar busca por paciente e manter o status selecionado"
+            >
+              <X className="h-4 w-4" />
+              Limpar busca
+            </Button>
+          )}
 
           <Popover>
             <PopoverTrigger asChild>
@@ -2919,7 +2938,7 @@ const Finance = () => {
                           if ((e.target as HTMLElement).closest("button,input,a,[role='combobox']")) return;
                           openSettle(g);
                         }}
-                        className="cursor-pointer rounded-2xl border border-border bg-card px-4 py-4 transition-shadow hover:shadow-md"
+                        className="min-h-[270px] cursor-pointer rounded-2xl border border-border bg-card p-3.5 transition-shadow hover:shadow-md sm:min-h-0 sm:p-4"
                       >
 
                         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,0.9fr)] lg:items-center">
@@ -3007,13 +3026,13 @@ const Finance = () => {
                                 {sendCount > 1 ? ` · ${sendCount} envios` : ""}
                               </p>
                             )}
-                            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+                            <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:items-center sm:gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-auto min-h-10 min-w-0 gap-1.5 border-accent/40 px-2 text-[11px] leading-tight text-accent hover:bg-accent/10 hover:text-accent sm:h-8 sm:min-h-0 sm:px-3 sm:text-xs"
-                                disabled={pay === "Pago"}
-                                onClick={() =>
+                                className="h-11 min-w-0 gap-1.5 border-accent/40 px-2 text-xs leading-tight text-accent hover:bg-accent/10 hover:text-accent sm:h-8 sm:px-3"
+                                disabled={pay === "Pago" || sendingBillingKey === g.key}
+                                onClick={() => {
                                   setConfirmSend({
                                     key: g.key,
                                     name: g.name,
@@ -3023,27 +3042,28 @@ const Finance = () => {
                                     dueDate: billing.dueDate,
                                     status: billing.status,
                                     isResend: alreadySent,
-                                  })
-                                }
+                                  });
+                                  toast.info("Cobrança pronta para conferir.");
+                                }}
                                 aria-label={`${alreadySent ? "Reenviar" : "Enviar"} cobrança de ${g.name} pelo WhatsApp`}
                               >
-                                <MessageCircle className="h-3.5 w-3.5" />
+                                {sendingBillingKey === g.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
                                 <span className="truncate">{alreadySent ? "Reenviar cobrança" : "Enviar cobrança"}</span>
                               </Button>
                               <Button
                                 size="sm"
-                                className="h-auto min-h-10 min-w-0 gap-1.5 bg-moss px-2 text-[11px] leading-tight text-moss-foreground hover:bg-moss/90 sm:h-8 sm:min-h-0 sm:px-3 sm:text-xs"
+                                className="h-11 min-w-0 gap-1.5 bg-moss px-2 text-xs leading-tight text-moss-foreground hover:bg-moss/90 sm:h-8 sm:px-3"
                                 disabled={pay === "Pago" || quickSettling === g.key}
                                 onClick={(e) => { e.stopPropagation(); quickSettle(g); }}
                                 aria-label={`Dar baixa nas sessões pendentes de ${g.name}`}
                               >
-                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                {quickSettling === g.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
                                 <span className="truncate">{quickSettling === g.key ? "Dando baixa..." : "Dar baixa"}</span>
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-auto min-h-10 min-w-0 gap-1.5 px-2 text-[11px] sm:h-8 sm:min-h-0 sm:px-3 sm:text-xs"
+                                className="h-11 min-w-0 gap-1.5 px-2 text-xs sm:h-8 sm:px-3"
                                 onClick={() => setReminderHistoryPlan({ key: g.key, name: g.name })}
                                 aria-label={`Ver histórico de cobranças de ${g.name}`}
                               >
@@ -3257,7 +3277,7 @@ const Finance = () => {
                           return (
                             <li
                               key={r.id}
-                              className="rounded-xl border border-border px-3 py-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm overflow-hidden"
+                              className="min-h-[132px] rounded-xl border border-border p-3 flex flex-wrap content-start items-center gap-x-3 gap-y-3 text-sm overflow-hidden sm:min-h-0 sm:py-2"
                             >
                               <span className="tabular-nums font-medium">
                                 {format(new Date(r.scheduled_at), "dd/MM/yyyy")}
@@ -3267,13 +3287,13 @@ const Finance = () => {
                               </span>
                               <span className="tabular-nums font-medium">{formatBRL(Number(r.price ?? 0))}</span>
                               <span className={`text-[11px] px-2 py-0.5 rounded-full border ${badgeTone}`}>{badge}</span>
-                              <span className="flex w-full flex-wrap items-center gap-1.5 sm:ml-auto sm:w-auto">
+                              <span className="grid w-full grid-cols-3 items-stretch gap-2 sm:ml-auto sm:flex sm:w-auto sm:items-center sm:gap-1.5">
                                 {!pago && (
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-8 min-w-0 flex-1 gap-1 border-accent/40 text-xs text-accent hover:bg-accent/10 hover:text-accent sm:h-7 sm:flex-none"
-                                    disabled={settling}
+                                    className="h-11 min-w-0 gap-1 border-accent/40 px-2 text-xs text-accent hover:bg-accent/10 hover:text-accent sm:h-7 sm:flex-none"
+                                    disabled={settling || sendingBillingKey === settle.key}
                                     onClick={() => {
                                       const b = billingStatusOf([r], billingReminderDays, "per_session");
                                       setSettle(null);
@@ -3287,17 +3307,18 @@ const Finance = () => {
                                         status: b.status,
                                         isResend: !!r.billing_sent_at,
                                       });
+                                      toast.info("Cobrança pronta para conferir.");
                                     }}
                                     aria-label={`Enviar cobrança da sessão de ${format(new Date(r.scheduled_at), "dd/MM/yyyy")} pelo WhatsApp`}
                                   >
-                                    <MessageCircle className="h-3 w-3" />
+                                    {sendingBillingKey === settle.key ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageCircle className="h-3 w-3" />}
                                     Cobrar
                                   </Button>
                                 )}
                                 {podeBaixar && (
                                   <Button
                                     size="sm"
-                                    className="h-8 min-w-0 flex-1 text-xs bg-moss text-moss-foreground hover:bg-moss/90 sm:h-7 sm:flex-none"
+                                    className="h-11 min-w-0 px-2 text-xs bg-moss text-moss-foreground hover:bg-moss/90 sm:h-7 sm:flex-none"
                                     disabled={settling}
                                     onClick={() =>
                                       settlePayment(
@@ -3306,13 +3327,13 @@ const Finance = () => {
                                       )
                                     }
                                   >
-                                    Dar baixa
+                                    {settling ? <><Loader2 className="h-3 w-3 animate-spin" /> Baixando</> : "Dar baixa"}
                                   </Button>
                                 )}
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-8 shrink-0 text-xs sm:h-7"
+                                  className="h-11 min-w-0 px-2 text-xs sm:h-7"
                                   onClick={() => { setSettle(null); setEditing(r); }}
                                 >
                                   Detalhes
@@ -3576,6 +3597,7 @@ const Finance = () => {
             </Button>
             <Button
               variant="accent"
+              disabled={!!sendingBillingKey}
               onClick={() => {
                 if (!confirmSend) return;
                 const args = { ...confirmSend, messageOverride: draftMessage };
@@ -3583,7 +3605,7 @@ const Finance = () => {
                 sendBillingWhatsApp(args);
               }}
             >
-              {confirmSend?.isResend ? "Reenviar cobrança" : "Enviar cobrança"}
+              {sendingBillingKey ? <><Loader2 className="h-4 w-4 animate-spin" /> Registrando...</> : confirmSend?.isResend ? "Reenviar cobrança" : "Enviar cobrança"}
             </Button>
           </DialogFooter>
         </DialogContent>
