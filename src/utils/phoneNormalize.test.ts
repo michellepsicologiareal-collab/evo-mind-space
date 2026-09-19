@@ -59,6 +59,19 @@ describe("normalizePhoneForWhatsApp", () => {
     expect(normalizePhoneForWhatsApp("+55 11 9876-5432")).toBe("5511998765432");
   });
 
+  it("does NOT add the 9th digit to landlines typed with DDI (+55 43 3375-4505)", () => {
+    expect(normalizePhoneForWhatsApp("+55 43 3375-4505")).toBe("554333754505");
+  });
+
+  it("does NOT add the 9th digit to landlines without DDI (43 3375-4505)", () => {
+    expect(normalizePhoneForWhatsApp("(43) 3375-4505")).toBe("554333754505");
+    expect(normalizePhoneForWhatsApp("4333754505")).toBe("554333754505");
+  });
+
+  it("keeps 13-digit mobile numbers untouched", () => {
+    expect(normalizePhoneForWhatsApp("+55 43 93375-4505")).toBe("5543933754505");
+  });
+
   it("handles number with only zeros", () => {
     expect(normalizePhoneForWhatsApp("0000")).toBeNull();
   });

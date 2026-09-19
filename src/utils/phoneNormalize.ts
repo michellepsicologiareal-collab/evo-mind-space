@@ -12,6 +12,19 @@
  *
  * Returns null if the input has no usable digits.
  */
+/**
+ * Inserts the Brazilian 9th digit only for MOBILE numbers.
+ * Mobile local numbers (8 digits, after 55+DDD) start with 6–9.
+ * Landlines start with 2–5 and must NOT receive the 9th digit —
+ * WhatsApp Business numbers registered on a landline keep the 8-digit form.
+ */
+function withNinthDigitIfMobile(digitsWith55: string): string {
+  if (digitsWith55.length !== 12) return digitsWith55;
+  const local = digitsWith55.slice(4); // after "55" + 2-digit DDD
+  if (!/^[6-9]/.test(local)) return digitsWith55;
+  return digitsWith55.slice(0, 4) + "9" + local;
+}
+
 export function normalizePhoneForWhatsApp(raw: string | null | undefined): string | null {
   const trimmed = (raw ?? "").trim();
   if (!trimmed) return null;
@@ -26,9 +39,9 @@ export function normalizePhoneForWhatsApp(raw: string | null | undefined): strin
   if (hasPlus || hasIddPrefix) {
     const intl = hasPlus ? digitsOnly : digitsOnly.replace(/^00/, "");
     if (!intl) return null;
-    // Brazilian numbers written internationally still get the 9th-digit fix
-    if (intl.startsWith("55") && intl.length === 12) {
-      return intl.slice(0, 4) + "9" + intl.slice(4);
+    // Brazilian numbers written internationally still get the 9th-digit fix (mobile only)
+    if (intl.startsWith("55")) {
+      return withNinthDigitIfMobile(intl);
     }
     return intl;
   }
@@ -39,10 +52,8 @@ export function normalizePhoneForWhatsApp(raw: string | null | undefined): strin
 
   if (!digits.startsWith("55")) digits = "55" + digits;
 
-  // 55 + 2-digit DDD + 8-digit number = 12 digits → insert 9th digit
-  if (digits.length === 12) {
-    digits = digits.slice(0, 4) + "9" + digits.slice(4);
-  }
+  // 55 + 2-digit DDD + 8-digit number = 12 digits → insert 9th digit only for mobiles
+  digits = withNinthDigitIfMobile(digits);
 
   return digits;
 }

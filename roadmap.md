@@ -23,4 +23,4 @@
 
 ## RPD e WhatsApp
 - [x] Após enviar link de RPD pela Agenda, voltar para a tela (ficha) do paciente
-- [ ] Investigar envio de WhatsApp da paciente Paula (cobrança, RPD e confirmação) — números cadastrados são válidos; provável número fora do WhatsApp (aguardando confirmação do número correto)
+- [x] WhatsApp da Paula corrigido: regra do 9º dígito só para celulares (começando com 6–9); cadastro da Paula Pilegi ajustado para +55 43 3375-4505
