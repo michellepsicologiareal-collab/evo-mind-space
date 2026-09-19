@@ -52,10 +52,8 @@ export function normalizePhoneForWhatsApp(raw: string | null | undefined): strin
 
   if (!digits.startsWith("55")) digits = "55" + digits;
 
-  // 55 + 2-digit DDD + 8-digit number = 12 digits → insert 9th digit
-  if (digits.length === 12) {
-    digits = digits.slice(0, 4) + "9" + digits.slice(4);
-  }
+  // 55 + 2-digit DDD + 8-digit number = 12 digits → insert 9th digit only for mobiles
+  digits = withNinthDigitIfMobile(digits);
 
   return digits;
 }
