@@ -20,3 +20,7 @@
 - [x] Manter filtro Pagos/Pendentes e permitir limpar somente a busca por paciente
 - [x] Corrigir texto de sessões e incluir data no card de sessão da Agenda
 - [x] Confirmar ações rápidas de cobrança e baixa nos cards
+
+## RPD e WhatsApp
+- [x] Após enviar link de RPD pela Agenda, voltar para a tela (ficha) do paciente
+- [ ] Investigar envio de WhatsApp da paciente Paula (cobrança, RPD e confirmação) — números cadastrados são válidos; provável número fora do WhatsApp (aguardando confirmação do número correto)
