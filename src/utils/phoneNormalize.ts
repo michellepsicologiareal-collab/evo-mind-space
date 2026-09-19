@@ -12,6 +12,19 @@
  *
  * Returns null if the input has no usable digits.
  */
+/**
+ * Inserts the Brazilian 9th digit only for MOBILE numbers.
+ * Mobile local numbers (8 digits, after 55+DDD) start with 6–9.
+ * Landlines start with 2–5 and must NOT receive the 9th digit —
+ * WhatsApp Business numbers registered on a landline keep the 8-digit form.
+ */
+function withNinthDigitIfMobile(digitsWith55: string): string {
+  if (digitsWith55.length !== 12) return digitsWith55;
+  const local = digitsWith55.slice(4); // after "55" + 2-digit DDD
+  if (!/^[6-9]/.test(local)) return digitsWith55;
+  return digitsWith55.slice(0, 4) + "9" + local;
+}
+
 export function normalizePhoneForWhatsApp(raw: string | null | undefined): string | null {
   const trimmed = (raw ?? "").trim();
   if (!trimmed) return null;
