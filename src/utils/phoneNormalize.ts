@@ -39,9 +39,9 @@ export function normalizePhoneForWhatsApp(raw: string | null | undefined): strin
   if (hasPlus || hasIddPrefix) {
     const intl = hasPlus ? digitsOnly : digitsOnly.replace(/^00/, "");
     if (!intl) return null;
-    // Brazilian numbers written internationally still get the 9th-digit fix
-    if (intl.startsWith("55") && intl.length === 12) {
-      return intl.slice(0, 4) + "9" + intl.slice(4);
+    // Brazilian numbers written internationally still get the 9th-digit fix (mobile only)
+    if (intl.startsWith("55")) {
+      return withNinthDigitIfMobile(intl);
     }
     return intl;
   }
