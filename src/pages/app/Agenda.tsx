@@ -1869,6 +1869,8 @@ const Agenda = () => {
       return next;
     });
     toast.success("Link do RPD enviado");
+    // Retorna à tela do paciente para a psicóloga continuar o atendimento
+    void openPatientDrawer(s.patient_id as string);
   };
 
   const openEdit = async (s: Session) => {
