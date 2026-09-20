@@ -122,6 +122,7 @@ import { PageIntro } from "@/components/app/PageIntro";
 import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
+import { WhatsAppNumberPreview } from "@/components/app/WhatsAppNumberPreview";
 import { cachedQuery, invalidateCache } from "@/lib/dataCache";
 import { ListSkeleton } from "@/components/app/Skeletons";
 import { notifySessionDataChanged } from "@/lib/dataEvents";
