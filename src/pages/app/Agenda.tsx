@@ -1829,15 +1829,22 @@ const Agenda = () => {
       phoneNumber = normalizePhoneForWhatsApp(patient.phone) ?? "";
     }
 
-    window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
-
-    // Save billing sent timestamp
-    const now = new Date().toISOString();
-    await supabase.from("sessions").update({ billing_sent_at: now } as any).eq("id", s.id);
-    notifySessionDataChanged();
-    setSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
-    setPendingSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
-    toast.success("Cobrança enviada registrada");
+    setWaSendConfirm({
+      title: "Enviar cobrança pelo WhatsApp",
+      patientName: name,
+      phone: phoneNumber,
+      message,
+      onConfirm: async () => {
+        window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
+        // Save billing sent timestamp
+        const now = new Date().toISOString();
+        await supabase.from("sessions").update({ billing_sent_at: now } as any).eq("id", s.id);
+        notifySessionDataChanged();
+        setSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
+        setPendingSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
+        toast.success("Cobrança enviada registrada");
+      },
+    });
   };
 
   const sendRpdLinkToPatient = async (s: Session) => {
@@ -1870,16 +1877,24 @@ const Agenda = () => {
       phoneNumber = normalizePhoneForWhatsApp(patient.phone) ?? "";
     }
 
-    window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(msg)}`, "_blank");
-    // Atualiza o selo do card imediatamente ("RPD enviado hoje"), sem esperar reload.
-    setRpdInviteByPatient((prev) => {
-      const next = new Map(prev);
-      next.set(s.patient_id as string, Date.now());
-      return next;
+    setWaSendConfirm({
+      title: "Enviar link de RPD pelo WhatsApp",
+      patientName: patient.full_name || "Paciente",
+      phone: phoneNumber,
+      message: msg,
+      onConfirm: () => {
+        window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(msg)}`, "_blank");
+        // Atualiza o selo do card imediatamente ("RPD enviado hoje"), sem esperar reload.
+        setRpdInviteByPatient((prev) => {
+          const next = new Map(prev);
+          next.set(s.patient_id as string, Date.now());
+          return next;
+        });
+        toast.success("Link do RPD enviado");
+        // Retorna à tela do paciente para a psicóloga continuar o atendimento
+        void openPatientDrawer(s.patient_id as string);
+      },
     });
-    toast.success("Link do RPD enviado");
-    // Retorna à tela do paciente para a psicóloga continuar o atendimento
-    void openPatientDrawer(s.patient_id as string);
   };
 
   const openEdit = async (s: Session) => {
