@@ -53,6 +53,7 @@ import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
+import { WhatsAppNumberPreview } from "@/components/app/WhatsAppNumberPreview";
 import { computeAgendaSummary } from "@/utils/agendaSummary";
 import { computeBillingStatus, type BillingInput } from "@/lib/billing";
 import { BillingBadge } from "@/components/app/BillingBadge";
@@ -305,6 +306,14 @@ const Agenda = () => {
   const [confirmHistory, setConfirmHistory] = useState<
     { id: string; modality: string; content_type: string; channel: string; created_at: string }[]
   >([]);
+  // Confirmação visual do número final do WhatsApp antes de enviar (cobrança / link RPD)
+  const [waSendConfirm, setWaSendConfirm] = useState<{
+    title: string;
+    patientName: string;
+    phone: string;
+    message: string;
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
   const [viewTab, setViewTab] = useState<string>("day");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
