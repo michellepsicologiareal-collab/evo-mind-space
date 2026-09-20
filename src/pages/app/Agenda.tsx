@@ -4932,6 +4932,7 @@ const Agenda = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 flex flex-col gap-3 min-h-0">
+            <WhatsAppNumberPreview phone={confirmPreview?.phone || null} />
             <Textarea
               value={confirmPreview?.message ?? ""}
               onChange={(e) => setConfirmPreview((p) => (p ? { ...p, message: e.target.value } : p))}
@@ -4973,6 +4974,36 @@ const Agenda = () => {
             </Button>
             <Button variant="outline" onClick={copyConfirmationPreview}>Copiar</Button>
             <Button onClick={sendConfirmationPreview} className="bg-[#25D366] hover:bg-[#1fb857] text-white">
+              Enviar no WhatsApp
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmação do número final do WhatsApp antes de enviar cobrança / link RPD */}
+      <Dialog open={!!waSendConfirm} onOpenChange={(o) => !o && setWaSendConfirm(null)}>
+        <DialogContent className="w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{waSendConfirm?.title ?? "Enviar pelo WhatsApp"}</DialogTitle>
+            <DialogDescription>{waSendConfirm?.patientName ?? ""}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <WhatsAppNumberPreview phone={waSendConfirm?.phone || null} />
+            <div className="rounded-xl border border-border/60 bg-secondary/30 p-3">
+              <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">Mensagem</p>
+              <p className="whitespace-pre-wrap text-sm text-foreground max-h-48 overflow-y-auto">{waSendConfirm?.message}</p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2 mt-4">
+            <Button variant="outline" onClick={() => setWaSendConfirm(null)}>Cancelar</Button>
+            <Button
+              className="bg-[#25D366] hover:bg-[#1fb857] text-white"
+              onClick={async () => {
+                const action = waSendConfirm?.onConfirm;
+                setWaSendConfirm(null);
+                if (action) await action();
+              }}
+            >
               Enviar no WhatsApp
             </Button>
           </DialogFooter>
