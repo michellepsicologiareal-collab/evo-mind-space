@@ -3510,6 +3510,15 @@ const Finance = () => {
                 </div>
               </div>
 
+              {(() => {
+                const contact = confirmSend.patientId ? patientContacts[confirmSend.patientId] : undefined;
+                const phone =
+                  (contact?.has_financial_responsible && contact?.financial_responsible_phone
+                    ? normalizePhoneForWhatsApp(contact.financial_responsible_phone)
+                    : normalizePhoneForWhatsApp(contact?.phone ?? null)) ?? "";
+                return <WhatsAppNumberPreview phone={phone || null} />;
+              })()}
+
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
                   Sessões incluídas
