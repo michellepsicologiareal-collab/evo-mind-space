@@ -53,6 +53,7 @@ import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
+import { WhatsAppNumberPreview } from "@/components/app/WhatsAppNumberPreview";
 import { computeAgendaSummary } from "@/utils/agendaSummary";
 import { computeBillingStatus, type BillingInput } from "@/lib/billing";
 import { BillingBadge } from "@/components/app/BillingBadge";
@@ -305,6 +306,14 @@ const Agenda = () => {
   const [confirmHistory, setConfirmHistory] = useState<
     { id: string; modality: string; content_type: string; channel: string; created_at: string }[]
   >([]);
+  // Confirmação visual do número final do WhatsApp antes de enviar (cobrança / link RPD)
+  const [waSendConfirm, setWaSendConfirm] = useState<{
+    title: string;
+    patientName: string;
+    phone: string;
+    message: string;
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
   const [viewTab, setViewTab] = useState<string>("day");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const [patientFilter, setPatientFilter] = useState<string>("all");
@@ -1820,15 +1829,22 @@ const Agenda = () => {
       phoneNumber = normalizePhoneForWhatsApp(patient.phone) ?? "";
     }
 
-    window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
-
-    // Save billing sent timestamp
-    const now = new Date().toISOString();
-    await supabase.from("sessions").update({ billing_sent_at: now } as any).eq("id", s.id);
-    notifySessionDataChanged();
-    setSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
-    setPendingSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
-    toast.success("Cobrança enviada registrada");
+    setWaSendConfirm({
+      title: "Enviar cobrança pelo WhatsApp",
+      patientName: name,
+      phone: phoneNumber,
+      message,
+      onConfirm: async () => {
+        window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
+        // Save billing sent timestamp
+        const now = new Date().toISOString();
+        await supabase.from("sessions").update({ billing_sent_at: now } as any).eq("id", s.id);
+        notifySessionDataChanged();
+        setSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
+        setPendingSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
+        toast.success("Cobrança enviada registrada");
+      },
+    });
   };
 
   const sendRpdLinkToPatient = async (s: Session) => {
@@ -1861,16 +1877,24 @@ const Agenda = () => {
       phoneNumber = normalizePhoneForWhatsApp(patient.phone) ?? "";
     }
 
-    window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(msg)}`, "_blank");
-    // Atualiza o selo do card imediatamente ("RPD enviado hoje"), sem esperar reload.
-    setRpdInviteByPatient((prev) => {
-      const next = new Map(prev);
-      next.set(s.patient_id as string, Date.now());
-      return next;
+    setWaSendConfirm({
+      title: "Enviar link de RPD pelo WhatsApp",
+      patientName: patient.full_name || "Paciente",
+      phone: phoneNumber,
+      message: msg,
+      onConfirm: () => {
+        window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(msg)}`, "_blank");
+        // Atualiza o selo do card imediatamente ("RPD enviado hoje"), sem esperar reload.
+        setRpdInviteByPatient((prev) => {
+          const next = new Map(prev);
+          next.set(s.patient_id as string, Date.now());
+          return next;
+        });
+        toast.success("Link do RPD enviado");
+        // Retorna à tela do paciente para a psicóloga continuar o atendimento
+        void openPatientDrawer(s.patient_id as string);
+      },
     });
-    toast.success("Link do RPD enviado");
-    // Retorna à tela do paciente para a psicóloga continuar o atendimento
-    void openPatientDrawer(s.patient_id as string);
   };
 
   const openEdit = async (s: Session) => {
@@ -4908,6 +4932,7 @@ const Agenda = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 flex flex-col gap-3 min-h-0">
+            <WhatsAppNumberPreview phone={confirmPreview?.phone || null} />
             <Textarea
               value={confirmPreview?.message ?? ""}
               onChange={(e) => setConfirmPreview((p) => (p ? { ...p, message: e.target.value } : p))}
@@ -4949,6 +4974,36 @@ const Agenda = () => {
             </Button>
             <Button variant="outline" onClick={copyConfirmationPreview}>Copiar</Button>
             <Button onClick={sendConfirmationPreview} className="bg-[#25D366] hover:bg-[#1fb857] text-white">
+              Enviar no WhatsApp
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmação do número final do WhatsApp antes de enviar cobrança / link RPD */}
+      <Dialog open={!!waSendConfirm} onOpenChange={(o) => !o && setWaSendConfirm(null)}>
+        <DialogContent className="w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{waSendConfirm?.title ?? "Enviar pelo WhatsApp"}</DialogTitle>
+            <DialogDescription>{waSendConfirm?.patientName ?? ""}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <WhatsAppNumberPreview phone={waSendConfirm?.phone || null} />
+            <div className="rounded-xl border border-border/60 bg-secondary/30 p-3">
+              <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">Mensagem</p>
+              <p className="whitespace-pre-wrap text-sm text-foreground max-h-48 overflow-y-auto">{waSendConfirm?.message}</p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2 mt-4">
+            <Button variant="outline" onClick={() => setWaSendConfirm(null)}>Cancelar</Button>
+            <Button
+              className="bg-[#25D366] hover:bg-[#1fb857] text-white"
+              onClick={async () => {
+                const action = waSendConfirm?.onConfirm;
+                setWaSendConfirm(null);
+                if (action) await action();
+              }}
+            >
               Enviar no WhatsApp
             </Button>
           </DialogFooter>

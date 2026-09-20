@@ -122,6 +122,7 @@ import { PageIntro } from "@/components/app/PageIntro";
 import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
+import { WhatsAppNumberPreview } from "@/components/app/WhatsAppNumberPreview";
 import { cachedQuery, invalidateCache } from "@/lib/dataCache";
 import { ListSkeleton } from "@/components/app/Skeletons";
 import { notifySessionDataChanged } from "@/lib/dataEvents";
@@ -3509,6 +3510,15 @@ const Finance = () => {
                   </p>
                 </div>
               </div>
+
+              {(() => {
+                const contact = confirmSend.patientId ? patientContacts[confirmSend.patientId] : undefined;
+                const phone =
+                  (contact?.has_financial_responsible && contact?.financial_responsible_phone
+                    ? normalizePhoneForWhatsApp(contact.financial_responsible_phone)
+                    : normalizePhoneForWhatsApp(contact?.phone ?? null)) ?? "";
+                return <WhatsAppNumberPreview phone={phone || null} />;
+              })()}
 
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
