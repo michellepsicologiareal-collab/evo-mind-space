@@ -5010,7 +5010,7 @@ const Agenda = () => {
                         : p
                     )
                   );
-                  if (user) invalidateCache(`patients:list:${user.id}`);
+                  if (user) invalidateCache(`patients:agenda:${user.id}`);
                 }
               }}
             />
