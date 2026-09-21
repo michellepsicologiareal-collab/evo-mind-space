@@ -1653,6 +1653,26 @@ const Finance = () => {
     load();
   };
 
+  /** Desfaz a baixa: volta as sessões informadas para "pendente". */
+  const undoPayment = async (ids: string[], label: string) => {
+    if (ids.length === 0) return;
+    setSettling(true);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ payment_status: "pending", paid_at: null })
+      .in("id", ids)
+      .eq("payment_status", "paid");
+    setSettling(false);
+    if (error) {
+      toast.error("Não foi possível desfazer a baixa.");
+      return;
+    }
+    toast.success(label);
+    notifySessionDataChanged();
+    setSettleSelected(new Set());
+    load();
+  };
+
 
 
 
