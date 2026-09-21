@@ -27,3 +27,7 @@
 
 ## Confirmação do número do WhatsApp
 - [x] Prévia do número final (fixo/celular) antes de enviar cobrança, lembrete e link RPD
+
+## Confirmação do WhatsApp e pagamentos
+- [x] Atalho para editar o telefone do paciente na confirmação (cobrança, RPD e lembrete)
+- [x] Botão para desfazer baixa (voltar sessão/plano para pendente) no Financeiro
