@@ -3512,12 +3512,34 @@ const Finance = () => {
               </div>
 
               {(() => {
-                const contact = confirmSend.patientId ? patientContacts[confirmSend.patientId] : undefined;
+                const pid = confirmSend.patientId;
+                const contact = pid ? patientContacts[pid] : undefined;
+                const useResponsible = !!(contact?.has_financial_responsible && contact?.financial_responsible_phone);
                 const phone =
-                  (contact?.has_financial_responsible && contact?.financial_responsible_phone
-                    ? normalizePhoneForWhatsApp(contact.financial_responsible_phone)
+                  (useResponsible
+                    ? normalizePhoneForWhatsApp(contact?.financial_responsible_phone ?? null)
                     : normalizePhoneForWhatsApp(contact?.phone ?? null)) ?? "";
-                return <WhatsAppNumberPreview phone={phone || null} />;
+                return (
+                  <WhatsAppNumberPreview
+                    phone={phone || null}
+                    patientId={pid}
+                    field={useResponsible ? "financial_responsible_phone" : "phone"}
+                    onPhoneUpdated={(next) => {
+                      if (!pid) return;
+                      setPatientContacts((prev) => ({
+                        ...prev,
+                        [pid]: {
+                          phone: useResponsible ? (prev[pid]?.phone ?? null) : next,
+                          has_financial_responsible: prev[pid]?.has_financial_responsible ?? false,
+                          financial_responsible_phone: useResponsible
+                            ? next
+                            : (prev[pid]?.financial_responsible_phone ?? null),
+                        },
+                      }));
+                      if (user) invalidateCache(`patients:contacts:${user.id}`);
+                    }}
+                  />
+                );
               })()}
 
               <div>
