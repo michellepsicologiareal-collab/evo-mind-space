@@ -2,7 +2,7 @@ import { RefreshButton } from "@/components/app/RefreshButton";
 import { HelpCard } from "@/components/app/HelpCard";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useIncrementalList } from "@/hooks/useIncrementalList";
-import { cachedQuery } from "@/lib/dataCache";
+import { cachedQuery, invalidateCache } from "@/lib/dataCache";
 import { notifySessionDataChanged, SESSION_DATA_CHANGED_EVENT } from "@/lib/dataEvents";
 import { useAutoRefresh } from "@/hooks/useAutoRefresh";
 import { z } from "zod";
@@ -310,9 +310,11 @@ const Agenda = () => {
   const [waSendConfirm, setWaSendConfirm] = useState<{
     title: string;
     patientName: string;
+    patientId: string | null;
+    useResponsiblePhone?: boolean;
     phone: string;
     message: string;
-    onConfirm: () => void | Promise<void>;
+    onConfirm: (phone: string) => void | Promise<void>;
   } | null>(null);
   const [viewTab, setViewTab] = useState<string>("day");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
@@ -1832,10 +1834,12 @@ const Agenda = () => {
     setWaSendConfirm({
       title: "Enviar cobrança pelo WhatsApp",
       patientName: name,
+      patientId: s.patient_id || null,
+      useResponsiblePhone: !!(patient?.has_financial_responsible && patient.financial_responsible_phone),
       phone: phoneNumber,
       message,
-      onConfirm: async () => {
-        window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
+      onConfirm: async (finalPhone) => {
+        window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`, "_blank");
         // Save billing sent timestamp
         const now = new Date().toISOString();
         await supabase.from("sessions").update({ billing_sent_at: now } as any).eq("id", s.id);
@@ -1880,10 +1884,12 @@ const Agenda = () => {
     setWaSendConfirm({
       title: "Enviar link de RPD pelo WhatsApp",
       patientName: patient.full_name || "Paciente",
+      patientId: s.patient_id || null,
+      useResponsiblePhone: !!(patient.has_financial_responsible && patient.financial_responsible_phone),
       phone: phoneNumber,
       message: msg,
-      onConfirm: () => {
-        window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(msg)}`, "_blank");
+      onConfirm: (finalPhone) => {
+        window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(msg)}`, "_blank");
         // Atualiza o selo do card imediatamente ("RPD enviado hoje"), sem esperar reload.
         setRpdInviteByPatient((prev) => {
           const next = new Map(prev);
@@ -4932,7 +4938,18 @@ const Agenda = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 flex flex-col gap-3 min-h-0">
-            <WhatsAppNumberPreview phone={confirmPreview?.phone || null} />
+            <WhatsAppNumberPreview
+              phone={confirmPreview?.phone || null}
+              patientId={confirmPreview?.patientId ?? null}
+              onPhoneUpdated={(next) => {
+                setConfirmPreview((p) => (p ? { ...p, phone: next } : p));
+                const pid = confirmPreview?.patientId;
+                if (pid) {
+                  setPatients((prev) => prev.map((p) => (p.id === pid ? { ...p, phone: next } : p)));
+                  if (user) invalidateCache(`patients:agenda:${user.id}`);
+                }
+              }}
+            />
             <Textarea
               value={confirmPreview?.message ?? ""}
               onChange={(e) => setConfirmPreview((p) => (p ? { ...p, message: e.target.value } : p))}
@@ -4988,7 +5005,26 @@ const Agenda = () => {
             <DialogDescription>{waSendConfirm?.patientName ?? ""}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <WhatsAppNumberPreview phone={waSendConfirm?.phone || null} />
+            <WhatsAppNumberPreview
+              phone={waSendConfirm?.phone || null}
+              patientId={waSendConfirm?.patientId ?? null}
+              field={waSendConfirm?.useResponsiblePhone ? "financial_responsible_phone" : "phone"}
+              onPhoneUpdated={(next) => {
+                setWaSendConfirm((p) => (p ? { ...p, phone: next } : p));
+                const pid = waSendConfirm?.patientId;
+                const respo = waSendConfirm?.useResponsiblePhone;
+                if (pid) {
+                  setPatients((prev) =>
+                    prev.map((p) =>
+                      p.id === pid
+                        ? { ...p, ...(respo ? { financial_responsible_phone: next } : { phone: next }) }
+                        : p
+                    )
+                  );
+                  if (user) invalidateCache(`patients:agenda:${user.id}`);
+                }
+              }}
+            />
             <div className="rounded-xl border border-border/60 bg-secondary/30 p-3">
               <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">Mensagem</p>
               <p className="whitespace-pre-wrap text-sm text-foreground max-h-48 overflow-y-auto">{waSendConfirm?.message}</p>
@@ -5000,8 +5036,9 @@ const Agenda = () => {
               className="bg-[#25D366] hover:bg-[#1fb857] text-white"
               onClick={async () => {
                 const action = waSendConfirm?.onConfirm;
+                const finalPhone = waSendConfirm?.phone ?? "";
                 setWaSendConfirm(null);
-                if (action) await action();
+                if (action) await action(finalPhone);
               }}
             >
               Enviar no WhatsApp

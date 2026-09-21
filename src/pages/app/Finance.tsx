@@ -106,6 +106,7 @@ import {
   Check,
   X,
   Loader2,
+  Undo2,
 } from "lucide-react";
 
 import {
@@ -1649,6 +1650,26 @@ const Finance = () => {
     toast.success(label);
     notifySessionDataChanged();
     setSettle(null);
+    setSettleSelected(new Set());
+    load();
+  };
+
+  /** Desfaz a baixa: volta as sessões informadas para "pendente". */
+  const undoPayment = async (ids: string[], label: string) => {
+    if (ids.length === 0) return;
+    setSettling(true);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ payment_status: "pending", paid_at: null })
+      .in("id", ids)
+      .eq("payment_status", "paid");
+    setSettling(false);
+    if (error) {
+      toast.error("Não foi possível desfazer a baixa.");
+      return;
+    }
+    toast.success(label);
+    notifySessionDataChanged();
     setSettleSelected(new Set());
     load();
   };
@@ -3208,9 +3229,26 @@ const Finance = () => {
 
                 {settle.isPlan ? (
                   pendentes.length === 0 ? (
-                    <p className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
-                      Nada a dar baixa: não há valores pendentes neste plano.
-                    </p>
+                    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        Nada a dar baixa: não há valores pendentes neste plano.
+                      </p>
+                      {settle.sessions.some((r) => r.payment_status === "paid") && (
+                        <Button
+                          variant="outline"
+                          className="w-full gap-1.5"
+                          disabled={settling}
+                          onClick={() =>
+                            undoPayment(
+                              settle.sessions.filter((r) => r.payment_status === "paid").map((r) => r.id),
+                              `Baixa desfeita · plano de ${settle.name} voltou para pendente`
+                            )
+                          }
+                        >
+                          <Undo2 className="h-4 w-4" /> Desfazer baixa do plano
+                        </Button>
+                      )}
+                    </div>
                   ) : (
                     <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
                       <p className="text-sm font-medium text-foreground">Dar baixa no plano</p>
@@ -3330,10 +3368,27 @@ const Finance = () => {
                                   >
                                     {settling ? <><Loader2 className="h-3 w-3 animate-spin" /> Baixando</> : "Dar baixa"}
                                   </Button>
-                                )}
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
+                                 )}
+                                 {pago && (
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     className="h-11 min-w-0 gap-1 px-2 text-xs sm:h-7 sm:flex-none"
+                                     disabled={settling}
+                                     onClick={() =>
+                                       undoPayment(
+                                         [r.id],
+                                         `Baixa desfeita · sessão de ${format(new Date(r.scheduled_at), "dd/MM/yyyy")} voltou para pendente`
+                                       )
+                                     }
+                                     aria-label={`Desfazer baixa da sessão de ${format(new Date(r.scheduled_at), "dd/MM/yyyy")}`}
+                                   >
+                                     <Undo2 className="h-3 w-3" /> Desfazer baixa
+                                   </Button>
+                                 )}
+                                 <Button
+                                   size="sm"
+                                   variant="ghost"
                                   className="h-11 min-w-0 px-2 text-xs sm:h-7"
                                   onClick={() => { setSettle(null); setEditing(r); }}
                                 >
@@ -3512,12 +3567,34 @@ const Finance = () => {
               </div>
 
               {(() => {
-                const contact = confirmSend.patientId ? patientContacts[confirmSend.patientId] : undefined;
+                const pid = confirmSend.patientId;
+                const contact = pid ? patientContacts[pid] : undefined;
+                const useResponsible = !!(contact?.has_financial_responsible && contact?.financial_responsible_phone);
                 const phone =
-                  (contact?.has_financial_responsible && contact?.financial_responsible_phone
-                    ? normalizePhoneForWhatsApp(contact.financial_responsible_phone)
+                  (useResponsible
+                    ? normalizePhoneForWhatsApp(contact?.financial_responsible_phone ?? null)
                     : normalizePhoneForWhatsApp(contact?.phone ?? null)) ?? "";
-                return <WhatsAppNumberPreview phone={phone || null} />;
+                return (
+                  <WhatsAppNumberPreview
+                    phone={phone || null}
+                    patientId={pid}
+                    field={useResponsible ? "financial_responsible_phone" : "phone"}
+                    onPhoneUpdated={(next) => {
+                      if (!pid) return;
+                      setPatientContacts((prev) => ({
+                        ...prev,
+                        [pid]: {
+                          phone: useResponsible ? (prev[pid]?.phone ?? null) : next,
+                          has_financial_responsible: prev[pid]?.has_financial_responsible ?? false,
+                          financial_responsible_phone: useResponsible
+                            ? next
+                            : (prev[pid]?.financial_responsible_phone ?? null),
+                        },
+                      }));
+                      if (user) invalidateCache(`patients:contacts:${user.id}`);
+                    }}
+                  />
+                );
               })()}
 
               <div>
