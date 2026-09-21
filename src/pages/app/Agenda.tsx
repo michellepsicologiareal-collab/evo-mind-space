@@ -310,9 +310,11 @@ const Agenda = () => {
   const [waSendConfirm, setWaSendConfirm] = useState<{
     title: string;
     patientName: string;
+    patientId: string | null;
+    useResponsiblePhone?: boolean;
     phone: string;
     message: string;
-    onConfirm: () => void | Promise<void>;
+    onConfirm: (phone: string) => void | Promise<void>;
   } | null>(null);
   const [viewTab, setViewTab] = useState<string>("day");
   const [serviceFilter, setServiceFilter] = useState<string>("all");
@@ -1832,10 +1834,12 @@ const Agenda = () => {
     setWaSendConfirm({
       title: "Enviar cobrança pelo WhatsApp",
       patientName: name,
+      patientId: s.patient_id || null,
+      useResponsiblePhone: !!(patient?.has_financial_responsible && patient.financial_responsible_phone),
       phone: phoneNumber,
       message,
-      onConfirm: async () => {
-        window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, "_blank");
+      onConfirm: async (finalPhone) => {
+        window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(message)}`, "_blank");
         // Save billing sent timestamp
         const now = new Date().toISOString();
         await supabase.from("sessions").update({ billing_sent_at: now } as any).eq("id", s.id);
@@ -1880,10 +1884,12 @@ const Agenda = () => {
     setWaSendConfirm({
       title: "Enviar link de RPD pelo WhatsApp",
       patientName: patient.full_name || "Paciente",
+      patientId: s.patient_id || null,
+      useResponsiblePhone: !!(patient.has_financial_responsible && patient.financial_responsible_phone),
       phone: phoneNumber,
       message: msg,
-      onConfirm: () => {
-        window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(msg)}`, "_blank");
+      onConfirm: (finalPhone) => {
+        window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(msg)}`, "_blank");
         // Atualiza o selo do card imediatamente ("RPD enviado hoje"), sem esperar reload.
         setRpdInviteByPatient((prev) => {
           const next = new Map(prev);
