@@ -3350,10 +3350,27 @@ const Finance = () => {
                                   >
                                     {settling ? <><Loader2 className="h-3 w-3 animate-spin" /> Baixando</> : "Dar baixa"}
                                   </Button>
-                                )}
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
+                                 )}
+                                 {pago && (
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     className="h-11 min-w-0 gap-1 px-2 text-xs sm:h-7 sm:flex-none"
+                                     disabled={settling}
+                                     onClick={() =>
+                                       undoPayment(
+                                         [r.id],
+                                         `Baixa desfeita · sessão de ${format(new Date(r.scheduled_at), "dd/MM/yyyy")} voltou para pendente`
+                                       )
+                                     }
+                                     aria-label={`Desfazer baixa da sessão de ${format(new Date(r.scheduled_at), "dd/MM/yyyy")}`}
+                                   >
+                                     <Undo2 className="h-3 w-3" /> Desfazer baixa
+                                   </Button>
+                                 )}
+                                 <Button
+                                   size="sm"
+                                   variant="ghost"
                                   className="h-11 min-w-0 px-2 text-xs sm:h-7"
                                   onClick={() => { setSettle(null); setEditing(r); }}
                                 >
