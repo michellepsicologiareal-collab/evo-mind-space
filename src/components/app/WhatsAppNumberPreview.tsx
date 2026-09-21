@@ -49,9 +49,13 @@ export function WhatsAppNumberPreview({
       return;
     }
     setSaving(true);
+    const payload =
+      field === "financial_responsible_phone"
+        ? { financial_responsible_phone: draft.trim() }
+        : { phone: draft.trim() };
     const { error } = await supabase
       .from("patients")
-      .update({ [field]: draft.trim() })
+      .update(payload)
       .eq("id", patientId);
     setSaving(false);
     if (error) {
