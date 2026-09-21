@@ -3229,9 +3229,26 @@ const Finance = () => {
 
                 {settle.isPlan ? (
                   pendentes.length === 0 ? (
-                    <p className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
-                      Nada a dar baixa: não há valores pendentes neste plano.
-                    </p>
+                    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        Nada a dar baixa: não há valores pendentes neste plano.
+                      </p>
+                      {settle.sessions.some((r) => r.payment_status === "paid") && (
+                        <Button
+                          variant="outline"
+                          className="w-full gap-1.5"
+                          disabled={settling}
+                          onClick={() =>
+                            undoPayment(
+                              settle.sessions.filter((r) => r.payment_status === "paid").map((r) => r.id),
+                              `Baixa desfeita · plano de ${settle.name} voltou para pendente`
+                            )
+                          }
+                        >
+                          <Undo2 className="h-4 w-4" /> Desfazer baixa do plano
+                        </Button>
+                      )}
+                    </div>
                   ) : (
                     <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
                       <p className="text-sm font-medium text-foreground">Dar baixa no plano</p>
