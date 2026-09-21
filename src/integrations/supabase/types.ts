@@ -2569,6 +2569,63 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_message_logs: {
+        Row: {
+          channel: string
+          created_at: string
+          detail: string | null
+          id: string
+          message_type: string
+          patient_id: string | null
+          phone: string | null
+          phone_display: string | null
+          sent_at: string
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          message_type: string
+          patient_id?: string | null
+          phone?: string | null
+          phone_display?: string | null
+          sent_at?: string
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          message_type?: string
+          patient_id?: string | null
+          phone?: string | null
+          phone_display?: string | null
+          sent_at?: string
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_message_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_message_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
