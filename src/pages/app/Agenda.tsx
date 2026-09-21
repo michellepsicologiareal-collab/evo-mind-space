@@ -4938,7 +4938,18 @@ const Agenda = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 flex flex-col gap-3 min-h-0">
-            <WhatsAppNumberPreview phone={confirmPreview?.phone || null} />
+            <WhatsAppNumberPreview
+              phone={confirmPreview?.phone || null}
+              patientId={confirmPreview?.patientId ?? null}
+              onPhoneUpdated={(next) => {
+                setConfirmPreview((p) => (p ? { ...p, phone: next } : p));
+                const pid = confirmPreview?.patientId;
+                if (pid) {
+                  setPatients((prev) => prev.map((p) => (p.id === pid ? { ...p, phone: next } : p)));
+                  if (user) invalidateCache(`patients:agenda:${user.id}`);
+                }
+              }}
+            />
             <Textarea
               value={confirmPreview?.message ?? ""}
               onChange={(e) => setConfirmPreview((p) => (p ? { ...p, message: e.target.value } : p))}
