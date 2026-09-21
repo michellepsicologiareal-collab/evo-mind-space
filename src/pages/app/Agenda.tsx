@@ -4994,7 +4994,26 @@ const Agenda = () => {
             <DialogDescription>{waSendConfirm?.patientName ?? ""}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <WhatsAppNumberPreview phone={waSendConfirm?.phone || null} />
+            <WhatsAppNumberPreview
+              phone={waSendConfirm?.phone || null}
+              patientId={waSendConfirm?.patientId ?? null}
+              field={waSendConfirm?.useResponsiblePhone ? "financial_responsible_phone" : "phone"}
+              onPhoneUpdated={(next) => {
+                setWaSendConfirm((p) => (p ? { ...p, phone: next } : p));
+                const pid = waSendConfirm?.patientId;
+                const respo = waSendConfirm?.useResponsiblePhone;
+                if (pid) {
+                  setPatients((prev) =>
+                    prev.map((p) =>
+                      p.id === pid
+                        ? { ...p, ...(respo ? { financial_responsible_phone: next } : { phone: next }) }
+                        : p
+                    )
+                  );
+                  if (user) invalidateCache(`patients:list:${user.id}`);
+                }
+              }}
+            />
             <div className="rounded-xl border border-border/60 bg-secondary/30 p-3">
               <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">Mensagem</p>
               <p className="whitespace-pre-wrap text-sm text-foreground max-h-48 overflow-y-auto">{waSendConfirm?.message}</p>
@@ -5006,8 +5025,9 @@ const Agenda = () => {
               className="bg-[#25D366] hover:bg-[#1fb857] text-white"
               onClick={async () => {
                 const action = waSendConfirm?.onConfirm;
+                const finalPhone = waSendConfirm?.phone ?? "";
                 setWaSendConfirm(null);
-                if (action) await action();
+                if (action) await action(finalPhone);
               }}
             >
               Enviar no WhatsApp
