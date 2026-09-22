@@ -288,11 +288,17 @@ export const PatientSessionHistory = ({ patientId, patientName = "Paciente" }: S
       </div>
 
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="w-full grid grid-cols-3">
+        <TabsList className="w-full grid grid-cols-4">
           <TabsTrigger value="all">Todas</TabsTrigger>
           <TabsTrigger value="status">Por Status</TabsTrigger>
           <TabsTrigger value="payment">Por Pagamento</TabsTrigger>
+          <TabsTrigger value="messages">Mensagens</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="messages" className="space-y-4 mt-3">
+          <PatientWhatsAppLog patientId={patientId} />
+        </TabsContent>
+
 
         <TabsContent value="all" className="space-y-4 mt-3">
           {(() => {
