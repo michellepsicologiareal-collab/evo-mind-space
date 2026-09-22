@@ -122,6 +122,7 @@ import { toast } from "sonner";
 import { PageIntro } from "@/components/app/PageIntro";
 import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
+import { logWhatsAppMessage } from "@/lib/whatsappLog";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { WhatsAppNumberPreview } from "@/components/app/WhatsAppNumberPreview";
 import { cachedQuery, invalidateCache } from "@/lib/dataCache";
@@ -1408,6 +1409,15 @@ const Finance = () => {
       sessions_label: dates.join(", "),
     } as any);
     if (logError) console.warn("Não foi possível registrar o histórico do envio:", logError.message);
+
+    await logWhatsAppMessage({
+      patientId,
+      sessionId: ids.length === 1 ? ids[0] : null,
+      type: "billing",
+      phone: phone || null,
+      detail: `${isPlan ? "Plano de atendimento" : "Sessão avulsa"} · ${dates.join(", ")}`,
+      channel,
+    });
 
     setReminderLogsVersion((v) => v + 1);
     notifySessionDataChanged();
