@@ -52,6 +52,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
 import { PageIntro } from "@/components/app/PageIntro";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { logWhatsAppMessage } from "@/lib/whatsappLog";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { WhatsAppNumberPreview } from "@/components/app/WhatsAppNumberPreview";
 import { computeAgendaSummary } from "@/utils/agendaSummary";
@@ -1723,6 +1724,14 @@ const Agenda = () => {
       content: confirmPreview.contentValue || null,
       channel,
     });
+    await logWhatsAppMessage({
+      patientId: confirmPreview.patientId,
+      sessionId: confirmPreview.sessionId,
+      type: "confirmation",
+      phone: confirmPreview.phone || null,
+      detail: "Confirmação/lembrete de sessão",
+      channel,
+    });
   };
 
   const sendConfirmationPreview = async () => {
@@ -1846,6 +1855,13 @@ const Agenda = () => {
         notifySessionDataChanged();
         setSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
         setPendingSessions(prev => prev.map(ss => ss.id === s.id ? { ...ss, billing_sent_at: now } : ss));
+        await logWhatsAppMessage({
+          patientId: s.patient_id || null,
+          sessionId: s.id,
+          type: "billing",
+          phone: finalPhone,
+          detail: "Cobrança enviada pela Agenda",
+        });
         toast.success("Cobrança enviada registrada");
       },
     });
@@ -1890,6 +1906,13 @@ const Agenda = () => {
       message: msg,
       onConfirm: (finalPhone) => {
         window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(msg)}`, "_blank");
+        void logWhatsAppMessage({
+          patientId: s.patient_id || null,
+          sessionId: s.id,
+          type: "rpd",
+          phone: finalPhone,
+          detail: "Link de RPD enviado",
+        });
         // Atualiza o selo do card imediatamente ("RPD enviado hoje"), sem esperar reload.
         setRpdInviteByPatient((prev) => {
           const next = new Map(prev);
