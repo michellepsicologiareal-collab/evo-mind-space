@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import PatientWhatsAppLog from "@/components/app/PatientWhatsAppLog";
+
 
 interface SessionHistoryProps {
   patientId: string;
