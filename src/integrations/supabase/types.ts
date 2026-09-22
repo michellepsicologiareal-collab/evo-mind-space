@@ -1305,6 +1305,63 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_change_logs: {
+        Row: {
+          action: string
+          actor_id: string
+          actor_name: string | null
+          amount: number | null
+          created_at: string
+          id: string
+          label: string | null
+          patient_id: string | null
+          session_id: string | null
+          sessions_count: number
+          user_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          actor_name?: string | null
+          amount?: number | null
+          created_at?: string
+          id?: string
+          label?: string | null
+          patient_id?: string | null
+          session_id?: string | null
+          sessions_count?: number
+          user_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          actor_name?: string | null
+          amount?: number | null
+          created_at?: string
+          id?: string
+          label?: string | null
+          patient_id?: string | null
+          session_id?: string | null
+          sessions_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_change_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_change_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       personal_events: {
         Row: {
           all_day: boolean

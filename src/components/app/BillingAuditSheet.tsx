@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, MessageCircle, BellRing, FileSearch } from "lucide-react";
+import { CheckCircle2, MessageCircle, BellRing, FileSearch, History } from "lucide-react";
 
 export interface AuditSessionRow {
   id: string;
@@ -37,7 +37,19 @@ export interface AuditReminderLog {
   notified_at: string;
 }
 
-type EventKind = "pagamento" | "cobranca" | "lembrete";
+export interface AuditChangeLog {
+  id: string;
+  patient_id: string | null;
+  session_id: string | null;
+  action: string;
+  sessions_count: number;
+  amount: number | string | null;
+  label: string | null;
+  actor_name: string | null;
+  created_at: string;
+}
+
+type EventKind = "pagamento" | "cobranca" | "lembrete" | "alteracao";
 
 interface AuditEvent {
   id: string;
@@ -59,6 +71,11 @@ const KIND_META: Record<EventKind, { label: string; icon: typeof CheckCircle2; t
     label: "Cobrança",
     icon: MessageCircle,
     tone: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/25",
+  },
+  alteracao: {
+    label: "Alteração",
+    icon: History,
+    tone: "bg-lilac/10 text-lilac border-lilac/25",
   },
   lembrete: {
     label: "Lembrete",
@@ -83,6 +100,7 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   sessions: AuditSessionRow[];
   reminderLogs: AuditReminderLog[];
+  changeLogs?: AuditChangeLog[];
   periodLabel?: string;
 }
 
@@ -90,7 +108,13 @@ interface Props {
  * Auditoria financeira: mostra a origem de cada selo exibido no Financeiro
  * (pagamento recebido, cobrança enviada e lembretes), com data e evento.
  */
-export const BillingAuditSheet = ({ open, onOpenChange, sessions, reminderLogs, periodLabel }: Props) => {
+const CHANGE_LABEL: Record<string, string> = {
+  paid: "Pagamento registrado",
+  undone: "Baixa desfeita",
+  repaid: "Pagamento registrado novamente",
+};
+
+export const BillingAuditSheet = ({ open, onOpenChange, sessions, reminderLogs, changeLogs = [], periodLabel }: Props) => {
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState<"all" | EventKind>("all");
 
@@ -149,8 +173,28 @@ export const BillingAuditSheet = ({ open, onOpenChange, sessions, reminderLogs, 
       });
     }
 
+    for (const c of changeLogs) {
+      const value = c.amount == null ? null : Number(c.amount);
+      list.push({
+        id: `chg-${c.id}`,
+        kind: "alteracao",
+        at: c.created_at,
+        patient: c.label?.split(" · ")[0] ?? "Paciente",
+        title: `${CHANGE_LABEL[c.action] ?? "Alteração no pagamento"}${
+          value != null && Number.isFinite(value) && value > 0 ? ` · ${formatBRL(value)}` : ""
+        }`,
+        origin: `Responsável: ${c.actor_name ?? "você"}`,
+        detail: [
+          c.label,
+          c.sessions_count > 1 ? `${c.sessions_count} sessões` : null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      });
+    }
+
     return list.sort((a, b) => b.at.localeCompare(a.at));
-  }, [sessions, reminderLogs]);
+  }, [sessions, reminderLogs, changeLogs]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -163,6 +207,7 @@ export const BillingAuditSheet = ({ open, onOpenChange, sessions, reminderLogs, 
     { key: "all", label: `Todos (${events.length})` },
     { key: "pagamento", label: `Pagamentos (${events.filter((e) => e.kind === "pagamento").length})` },
     { key: "cobranca", label: `Cobranças (${events.filter((e) => e.kind === "cobranca").length})` },
+    { key: "alteracao", label: `Alterações (${events.filter((e) => e.kind === "alteracao").length})` },
     { key: "lembrete", label: `Lembretes (${events.filter((e) => e.kind === "lembrete").length})` },
   ];
 
@@ -176,7 +221,7 @@ export const BillingAuditSheet = ({ open, onOpenChange, sessions, reminderLogs, 
           </SheetTitle>
           <SheetDescription>
             Todos os eventos que geram os selos do Financeiro{periodLabel ? ` — ${periodLabel}` : ""}: pagamento
-            recebido, cobrança enviada e lembretes, com data e origem.
+            recebido, cobrança enviada, lembretes e alterações de pagamento, com data, origem e responsável.
           </SheetDescription>
         </SheetHeader>
 

@@ -123,6 +123,7 @@ import { PageIntro } from "@/components/app/PageIntro";
 import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
 import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
 import { logWhatsAppMessage } from "@/lib/whatsappLog";
+import { logPaymentChange, type PaymentChangeAction } from "@/lib/paymentAudit";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { WhatsAppNumberPreview } from "@/components/app/WhatsAppNumberPreview";
 import { cachedQuery, invalidateCache } from "@/lib/dataCache";
@@ -134,6 +135,18 @@ type PaymentStatus = "pending" | "paid";
 type PaymentMethod = "pix" | "card" | "cash";
 
 type ReceitaSaudeStatus = "to_issue" | "issued";
+
+interface PaymentChangeLog {
+  id: string;
+  patient_id: string | null;
+  session_id: string | null;
+  action: string;
+  sessions_count: number;
+  amount: number | string | null;
+  label: string | null;
+  actor_name: string | null;
+  created_at: string;
+}
 
 interface Row {
   id: string;
@@ -397,6 +410,46 @@ const Finance = () => {
       if (!error && data) setReminderLogs(data as any as ReminderLog[]);
     })();
   }, [user, reminderLogsVersion]);
+
+  // Histórico de alterações financeiras (pago / desfeito / pago novamente)
+  const [changeLogs, setChangeLogs] = useState<PaymentChangeLog[]>([]);
+  const [changeLogsVersion, setChangeLogsVersion] = useState(0);
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("payment_change_logs")
+        .select("id, patient_id, session_id, action, sessions_count, amount, label, actor_name, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (!error && data) setChangeLogs(data as any as PaymentChangeLog[]);
+    })();
+  }, [user, changeLogsVersion]);
+
+  /** Registra pago / desfeito / pago novamente, com data e responsável. */
+  const recordPaymentChange = async (ids: string[], action: "paid" | "undone") => {
+    if (!user || ids.length === 0) return;
+    const all = [...rawRows, ...planRowsAll];
+    const picked = ids.map((id) => all.find((r) => r.id === id)).filter(Boolean) as Row[];
+    const patientId = picked[0]?.patient?.id ?? null;
+    const amount = picked.reduce((sum, r) => sum + Number(r.price ?? 0), 0);
+    const wasUndone = changeLogs.some((l) => l.action === "undone" && l.session_id && ids.includes(l.session_id));
+    const finalAction: PaymentChangeAction = action === "paid" && wasUndone ? "repaid" : action;
+    const dates = picked
+      .map((r) => format(new Date(r.scheduled_at), "dd/MM/yyyy", { locale: ptBR }))
+      .join(", ");
+    await logPaymentChange({
+      userId: user.id,
+      actorName: psiName || null,
+      patientId,
+      sessionIds: ids,
+      action: finalAction,
+      amount: amount || null,
+      label: [picked[0]?.patient?.full_name, dates].filter(Boolean).join(" · ") || null,
+    });
+    setChangeLogsVersion((v) => v + 1);
+  };
 
   const reminderLogsByPlan = useMemo(() => {
     const map = new Map<string, ReminderLog[]>();
@@ -1455,6 +1508,7 @@ const Finance = () => {
       toast.error("Não foi possível atualizar o pagamento.");
       return;
     }
+    await recordPaymentChange(ids, "paid");
     toast.success("Plano de Atendimento marcado como pago.");
     notifySessionDataChanged();
     load();
@@ -1495,6 +1549,7 @@ const Finance = () => {
       toast.error("Não foi possível dar baixa no pagamento.");
       return;
     }
+    await recordPaymentChange(ids, "paid");
     toast.success(`Baixa registrada para ${g.name} (${ids.length} ${ids.length === 1 ? "sessão" : "sessões"}).`);
     notifySessionDataChanged();
     load();
@@ -1657,6 +1712,7 @@ const Finance = () => {
       toast.error("Não foi possível registrar o pagamento.");
       return;
     }
+    await recordPaymentChange(ids, "paid");
     toast.success(label);
     notifySessionDataChanged();
     setSettle(null);
@@ -1678,6 +1734,7 @@ const Finance = () => {
       toast.error("Não foi possível desfazer a baixa.");
       return;
     }
+    await recordPaymentChange(ids, "undone");
     toast.success(label);
     notifySessionDataChanged();
     setSettleSelected(new Set());
@@ -3172,6 +3229,7 @@ const Finance = () => {
                 onOpenChange={setAuditOpen}
                 sessions={[...rows, ...planRowsAll].filter((r, i, arr) => arr.findIndex((x) => x.id === r.id) === i)}
                 reminderLogs={reminderLogs}
+                changeLogs={changeLogs}
                 periodLabel={format(monthCursor, "MMMM 'de' yyyy", { locale: ptBR })}
               />
             </>
