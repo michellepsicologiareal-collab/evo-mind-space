@@ -3789,6 +3789,30 @@ const Agenda = () => {
                   <Button variant="accent" size="sm" className="hidden h-8 rounded-[40px] font-display font-semibold shrink-0 sm:inline-flex" onClick={() => openNew(selectedDate)}>
                     <Plus className="h-3.5 w-3.5" /> Nova sessão
                   </Button>
+
+                  {/* Status em massa: aplica a todas as sessões do período visível */}
+                  {(() => {
+                    const bulkTargets = viewTab === "day" ? selectedDaySessions
+                      : viewTab === "week" ? weekSessions
+                      : monthFilteredSessions;
+                    if (bulkTargets.length === 0) return null;
+                    return (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold shrink-0 gap-1.5 w-full sm:w-auto">
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Status em todas ({bulkTargets.length})
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {(Object.keys(statusLabel) as Status[]).map((st) => (
+                            <DropdownMenuItem key={st} onClick={() => updateStatusBulk(bulkTargets, st)}>
+                              {statusLabel[st]}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
+                  })()}
                 </div>
               );
             })()}
