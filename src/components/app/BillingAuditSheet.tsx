@@ -10,6 +10,13 @@ import {
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CheckCircle2, MessageCircle, BellRing, FileSearch, History } from "lucide-react";
 
 export interface AuditSessionRow {
@@ -59,7 +66,7 @@ interface AuditEvent {
   title: string;
   origin: string;
   detail?: string;
-  /** Responsável pelo evento (para o filtro por usuário). */
+  /** Responsável pelo evento (filtro por usuário). */
   actor: string;
 }
 
@@ -131,6 +138,8 @@ const CHANGE_LABEL: Record<string, string> = {
 export const BillingAuditSheet = ({ open, onOpenChange, sessions, reminderLogs, changeLogs = [], periodLabel }: Props) => {
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState<"all" | EventKind>("all");
+  const [period, setPeriod] = useState<PeriodFilter>("all");
+  const [actor, setActor] = useState<string>("all");
 
   const events = useMemo<AuditEvent[]>(() => {
     const list: AuditEvent[] = [];
@@ -149,6 +158,7 @@ export const BillingAuditSheet = ({ open, onOpenChange, sessions, reminderLogs, 
           title: `Pagamento registrado · ${value}`,
           origin: `Baixa registrada no app${s.payment_method ? ` · ${METHOD_LABEL[s.payment_method] ?? s.payment_method}` : ""}`,
           detail: `Sessão de ${sessionDate}${s.payment_reference ? ` · ref. ${s.payment_reference}` : ""}`,
+          actor: SELF_ACTOR,
         });
       }
 
@@ -165,6 +175,7 @@ export const BillingAuditSheet = ({ open, onOpenChange, sessions, reminderLogs, 
               ? ` · vencimento ${format(new Date(`${s.payment_due_date}T12:00:00`), "dd/MM/yyyy")}`
               : ""
           }`,
+          actor: SELF_ACTOR,
         });
       }
     }
@@ -184,6 +195,7 @@ export const BillingAuditSheet = ({ open, onOpenChange, sessions, reminderLogs, 
         ]
           .filter(Boolean)
           .join(" · "),
+        actor: l.channel === "auto" ? SYSTEM_ACTOR : SELF_ACTOR,
       });
     }
 
@@ -204,18 +216,30 @@ export const BillingAuditSheet = ({ open, onOpenChange, sessions, reminderLogs, 
         ]
           .filter(Boolean)
           .join(" · "),
+        actor: c.actor_name ?? SELF_ACTOR,
       });
     }
 
     return list.sort((a, b) => b.at.localeCompare(a.at));
   }, [sessions, reminderLogs, changeLogs]);
 
+  const actors = useMemo(
+    () => Array.from(new Set(events.map((e) => e.actor))).sort((a, b) => a.localeCompare(b, "pt-BR")),
+    [events]
+  );
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const cutoff =
+      period === "all" ? null : new Date(Date.now() - Number(period) * 24 * 60 * 60 * 1000);
     return events.filter(
-      (e) => (kind === "all" || e.kind === kind) && (!q || e.patient.toLowerCase().includes(q))
+      (e) =>
+        (kind === "all" || e.kind === kind) &&
+        (actor === "all" || e.actor === actor) &&
+        (!cutoff || new Date(e.at) >= cutoff) &&
+        (!q || e.patient.toLowerCase().includes(q))
     );
-  }, [events, kind, query]);
+  }, [events, kind, actor, period, query]);
 
   const chips: Array<{ key: "all" | EventKind; label: string }> = [
     { key: "all", label: `Todos (${events.length})` },
@@ -246,6 +270,33 @@ export const BillingAuditSheet = ({ open, onOpenChange, sessions, reminderLogs, 
             placeholder="Buscar por paciente…"
             aria-label="Buscar por paciente na auditoria"
           />
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <Select value={period} onValueChange={(v) => setPeriod(v as PeriodFilter)}>
+              <SelectTrigger aria-label="Filtrar por período" className="h-9 text-xs">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                {PERIOD_OPTIONS.map((p) => (
+                  <SelectItem key={p.key} value={p.key}>
+                    {p.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={actor} onValueChange={setActor}>
+              <SelectTrigger aria-label="Filtrar por responsável" className="h-9 text-xs">
+                <SelectValue placeholder="Responsável" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os responsáveis</SelectItem>
+                {actors.map((a) => (
+                  <SelectItem key={a} value={a}>
+                    {a}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex flex-wrap gap-2">
             {chips.map((c) => (
               <Button
