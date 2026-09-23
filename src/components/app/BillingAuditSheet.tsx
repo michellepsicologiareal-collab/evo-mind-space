@@ -59,7 +59,21 @@ interface AuditEvent {
   title: string;
   origin: string;
   detail?: string;
+  /** Responsável pelo evento (para o filtro por usuário). */
+  actor: string;
 }
+
+type PeriodFilter = "all" | "7" | "30" | "90";
+
+const SELF_ACTOR = "Você";
+const SYSTEM_ACTOR = "Sistema (lembrete automático)";
+
+const PERIOD_OPTIONS: Array<{ key: PeriodFilter; label: string }> = [
+  { key: "all", label: "Todo o período" },
+  { key: "7", label: "Últimos 7 dias" },
+  { key: "30", label: "Últimos 30 dias" },
+  { key: "90", label: "Últimos 90 dias" },
+];
 
 const KIND_META: Record<EventKind, { label: string; icon: typeof CheckCircle2; tone: string }> = {
   pagamento: {
