@@ -1509,6 +1509,19 @@ const Agenda = () => {
     await preserveScroll(async () => { load(true); loadPending(true); });
   };
 
+  // Aplica o mesmo status a todas as sessões visíveis no período atual (dia/semana/mês).
+  const updateStatusBulk = async (targets: Session[], status: Status) => {
+    const ids = targets.map((s) => s.id);
+    if (ids.length === 0) return;
+    const ok = window.confirm(`Marcar ${ids.length} sessão(ões) como "${statusLabel[status]}"?`);
+    if (!ok) return;
+    const { error } = await supabase.from("sessions").update({ status }).in("id", ids);
+    if (error) return toast.error("Erro ao atualizar");
+    if (status === "cancelled") ids.forEach((id) => deleteSessionFromGcal(id));
+    toast.success(`${ids.length} sessão(ões) marcadas como ${statusLabel[status].toLowerCase()}`);
+    await preserveScroll(async () => { load(true); loadPending(true); });
+  };
+
   const updatePaymentStatus = async (id: string, paymentStatus: PaymentStatus) => {
     const { error } = await supabase.from("sessions").update({
       payment_status: paymentStatus,
