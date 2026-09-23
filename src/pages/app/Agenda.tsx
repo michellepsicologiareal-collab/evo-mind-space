@@ -2638,6 +2638,26 @@ const Agenda = () => {
               </>
             )}
           </div>
+          {/* Seletor de status rápido por evento (desktop) */}
+          {!isMobile && (
+            <div onClick={(e) => e.stopPropagation()} className="shrink-0">
+              <Select value={s.status} onValueChange={(v) => updateStatus(s.id, v as Status)}>
+                <SelectTrigger
+                  aria-label={`Status da sessão ${format(new Date(s.scheduled_at), "HH:mm")}`}
+                  className={cn("h-8 w-[8.5rem] gap-1 text-[11px] font-medium", compact && "h-7 w-[7.5rem]")}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent onClick={(e) => e.stopPropagation()}>
+                  {(Object.keys(statusLabel) as Status[]).map((st) => (
+                    <SelectItem key={st} value={st} className="text-xs">
+                      {statusLabel[st]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           {isMobile ? (
             <>
               <Button variant="outline" size="sm" className="h-8 w-8 shrink-0 p-0" aria-label="Ações da sessão" onClick={(e) => { e.stopPropagation(); setSheetOpen(true); }}>
