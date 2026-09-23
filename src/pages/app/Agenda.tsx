@@ -1509,6 +1509,19 @@ const Agenda = () => {
     await preserveScroll(async () => { load(true); loadPending(true); });
   };
 
+  // Aplica o mesmo status a todas as sessões visíveis no período atual (dia/semana/mês).
+  const updateStatusBulk = async (targets: Session[], status: Status) => {
+    const ids = targets.map((s) => s.id);
+    if (ids.length === 0) return;
+    const ok = window.confirm(`Marcar ${ids.length} sessão(ões) como "${statusLabel[status]}"?`);
+    if (!ok) return;
+    const { error } = await supabase.from("sessions").update({ status }).in("id", ids);
+    if (error) return toast.error("Erro ao atualizar");
+    if (status === "cancelled") ids.forEach((id) => deleteSessionFromGcal(id));
+    toast.success(`${ids.length} sessão(ões) marcadas como ${statusLabel[status].toLowerCase()}`);
+    await preserveScroll(async () => { load(true); loadPending(true); });
+  };
+
   const updatePaymentStatus = async (id: string, paymentStatus: PaymentStatus) => {
     const { error } = await supabase.from("sessions").update({
       payment_status: paymentStatus,
@@ -2625,6 +2638,26 @@ const Agenda = () => {
               </>
             )}
           </div>
+          {/* Seletor de status rápido por evento (desktop) */}
+          {!isMobile && (
+            <div onClick={(e) => e.stopPropagation()} className="shrink-0">
+              <Select value={s.status} onValueChange={(v) => updateStatus(s.id, v as Status)}>
+                <SelectTrigger
+                  aria-label={`Status da sessão ${format(new Date(s.scheduled_at), "HH:mm")}`}
+                  className={cn("h-8 w-[8.5rem] gap-1 text-[11px] font-medium", compact && "h-7 w-[7.5rem]")}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent onClick={(e) => e.stopPropagation()}>
+                  {(Object.keys(statusLabel) as Status[]).map((st) => (
+                    <SelectItem key={st} value={st} className="text-xs">
+                      {statusLabel[st]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           {isMobile ? (
             <>
               <Button variant="outline" size="sm" className="h-8 w-8 shrink-0 p-0" aria-label="Ações da sessão" onClick={(e) => { e.stopPropagation(); setSheetOpen(true); }}>
@@ -3776,6 +3809,30 @@ const Agenda = () => {
                   <Button variant="accent" size="sm" className="hidden h-8 rounded-[40px] font-display font-semibold shrink-0 sm:inline-flex" onClick={() => openNew(selectedDate)}>
                     <Plus className="h-3.5 w-3.5" /> Nova sessão
                   </Button>
+
+                  {/* Status em massa: aplica a todas as sessões do período visível */}
+                  {(() => {
+                    const bulkTargets = viewTab === "day" ? selectedDaySessions
+                      : viewTab === "week" ? weekSessions
+                      : monthFilteredSessions;
+                    if (bulkTargets.length === 0) return null;
+                    return (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold shrink-0 gap-1.5 w-full sm:w-auto">
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Status em todas ({bulkTargets.length})
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {(Object.keys(statusLabel) as Status[]).map((st) => (
+                            <DropdownMenuItem key={st} onClick={() => updateStatusBulk(bulkTargets, st)}>
+                              {statusLabel[st]}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    );
+                  })()}
                 </div>
               );
             })()}
