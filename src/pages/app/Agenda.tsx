@@ -1502,8 +1502,11 @@ const Agenda = () => {
   };
 
   const updateStatus = async (id: string, status: Status) => {
+    const prev = sessions;
+    setSessions((list) => list.map((x) => (x.id === id ? { ...x, status } : x)));
     const { error } = await supabase.from("sessions").update({ status }).eq("id", id);
-    if (error) return toast.error("Erro ao atualizar");
+    if (error) { setSessions(prev); return toast.error("Erro ao atualizar"); }
+    notifySessionDataChanged();
     if (status === "cancelled") { deleteSessionFromGcal(id); } else { syncSessionToGcal(id); }
     toast.success(`Marcada como ${statusLabel[status].toLowerCase()}`);
     await preserveScroll(async () => { load(true); loadPending(true); });
