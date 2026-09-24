@@ -1510,14 +1510,24 @@ const Agenda = () => {
   };
 
   // Aplica o mesmo status a todas as sessões visíveis no período atual (dia/semana/mês).
-  const updateStatusBulk = async (targets: Session[], status: Status) => {
+  const [bulkPending, setBulkPending] = useState<{ targets: Session[]; status: Status } | null>(null);
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const updateStatusBulk = (targets: Session[], status: Status) => {
+    if (targets.length === 0) return;
+    setBulkPending({ targets, status });
+  };
+  const confirmStatusBulk = async () => {
+    if (!bulkPending) return;
+    const { targets, status } = bulkPending;
     const ids = targets.map((s) => s.id);
-    if (ids.length === 0) return;
-    const ok = window.confirm(`Marcar ${ids.length} sessão(ões) como "${statusLabel[status]}"?`);
-    if (!ok) return;
+    setBulkSaving(true);
     const { error } = await supabase.from("sessions").update({ status }).in("id", ids);
+    setBulkSaving(false);
     if (error) return toast.error("Erro ao atualizar");
+    setBulkPending(null);
     if (status === "cancelled") ids.forEach((id) => deleteSessionFromGcal(id));
+    else ids.forEach((id) => syncSessionToGcal(id));
+    notifySessionDataChanged();
     toast.success(`${ids.length} sessão(ões) marcadas como ${statusLabel[status].toLowerCase()}`);
     await preserveScroll(async () => { load(true); loadPending(true); });
   };
@@ -2638,13 +2648,13 @@ const Agenda = () => {
               </>
             )}
           </div>
-          {/* Seletor de status rápido por evento (desktop) */}
-          {!isMobile && (
-            <div onClick={(e) => e.stopPropagation()} className="shrink-0">
+          {/* Seletor de status rápido por evento */}
+          {(
+            <div onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} className="shrink-0">
               <Select value={s.status} onValueChange={(v) => updateStatus(s.id, v as Status)}>
                 <SelectTrigger
                   aria-label={`Status da sessão ${format(new Date(s.scheduled_at), "HH:mm")}`}
-                  className={cn("h-8 w-[8.5rem] gap-1 text-[11px] font-medium", compact && "h-7 w-[7.5rem]")}
+                  className={cn("h-8 w-[8.5rem] gap-1 text-[11px] font-medium", compact && "h-7 w-[7.5rem]", isMobile && "w-[6.5rem]")}
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -4995,6 +5005,22 @@ const Agenda = () => {
       </Sheet>
       <UnsavedGuardDialog open={newGuard.confirmOpen} onConfirm={newGuard.confirmLeave} onCancel={newGuard.cancelLeave} onSaveDraft={newGuard.saveDraftAndLeave} />
       <UnsavedGuardDialog open={editGuard.confirmOpen} onConfirm={editGuard.confirmLeave} onCancel={editGuard.cancelLeave} onSaveDraft={editGuard.saveDraftAndLeave} />
+      <Dialog open={!!bulkPending} onOpenChange={(o) => { if (!o && !bulkSaving) setBulkPending(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Alterar status em todas</DialogTitle>
+            <DialogDescription>
+              {bulkPending && `Marcar ${bulkPending.targets.length} sessão(ões) como "${statusLabel[bulkPending.status]}"?`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" disabled={bulkSaving} onClick={() => setBulkPending(null)}>Cancelar</Button>
+            <Button variant="accent" disabled={bulkSaving} onClick={() => void confirmStatusBulk()}>
+              {bulkSaving ? "Aplicando..." : "Aplicar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <PersonalEventDialog
         open={personalEventOpen}
