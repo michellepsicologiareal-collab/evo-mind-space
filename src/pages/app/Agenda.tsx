@@ -5005,6 +5005,22 @@ const Agenda = () => {
       </Sheet>
       <UnsavedGuardDialog open={newGuard.confirmOpen} onConfirm={newGuard.confirmLeave} onCancel={newGuard.cancelLeave} onSaveDraft={newGuard.saveDraftAndLeave} />
       <UnsavedGuardDialog open={editGuard.confirmOpen} onConfirm={editGuard.confirmLeave} onCancel={editGuard.cancelLeave} onSaveDraft={editGuard.saveDraftAndLeave} />
+      <Dialog open={!!bulkPending} onOpenChange={(o) => { if (!o && !bulkSaving) setBulkPending(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Alterar status em todas</DialogTitle>
+            <DialogDescription>
+              {bulkPending && `Marcar ${bulkPending.targets.length} sessão(ões) como "${statusLabel[bulkPending.status]}"?`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" disabled={bulkSaving} onClick={() => setBulkPending(null)}>Cancelar</Button>
+            <Button variant="accent" disabled={bulkSaving} onClick={() => void confirmStatusBulk()}>
+              {bulkSaving ? "Aplicando..." : "Aplicar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <PersonalEventDialog
         open={personalEventOpen}
