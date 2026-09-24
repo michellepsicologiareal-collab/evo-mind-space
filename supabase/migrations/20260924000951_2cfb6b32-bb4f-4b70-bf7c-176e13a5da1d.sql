@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "app_settings readable by everyone" ON public.app_settings;
+CREATE POLICY "app_settings public keys readable" ON public.app_settings FOR SELECT TO anon, authenticated USING (key = 'checkout_url');
