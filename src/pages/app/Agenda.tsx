@@ -322,6 +322,7 @@ const Agenda = () => {
   const [patientFilter, setPatientFilter] = useState<string>("all");
   const [reminderFilter, setReminderFilter] = useState<boolean>(false);
   const [billingFilter, setBillingFilter] = useState<boolean>(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchParams] = useSearchParams();
   const [isNavigating, setIsNavigating] = useState(false);
   const skipDateMonthSyncRef = useRef(false);
@@ -2241,6 +2242,7 @@ const Agenda = () => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
     return sessions.filter((s) => {
+      if (statusFilter !== "all" && s.status !== statusFilter) return false;
       if (serviceFilter !== "all" && s.service_id !== serviceFilter) return false;
       if (patientFilter !== "all" && s.patient_id !== patientFilter) return false;
       if (reminderFilter && !s.confirmation_sent_at) return false;
@@ -2249,7 +2251,7 @@ const Agenda = () => {
       if (d < monthStart || d > monthEnd) return false;
       return true;
     });
-  }, [sessions, serviceFilter, patientFilter, reminderFilter, billingFilter, currentMonth]);
+  }, [sessions, statusFilter, serviceFilter, patientFilter, reminderFilter, billingFilter, currentMonth]);
 
   const selectedPatientName = useMemo(() => {
     if (patientFilter === "all") return null;
