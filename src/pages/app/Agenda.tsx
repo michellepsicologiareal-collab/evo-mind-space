@@ -322,6 +322,7 @@ const Agenda = () => {
   const [patientFilter, setPatientFilter] = useState<string>("all");
   const [reminderFilter, setReminderFilter] = useState<boolean>(false);
   const [billingFilter, setBillingFilter] = useState<boolean>(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchParams] = useSearchParams();
   const [isNavigating, setIsNavigating] = useState(false);
   const skipDateMonthSyncRef = useRef(false);
@@ -2241,6 +2242,7 @@ const Agenda = () => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
     return sessions.filter((s) => {
+      if (statusFilter !== "all" && s.status !== statusFilter) return false;
       if (serviceFilter !== "all" && s.service_id !== serviceFilter) return false;
       if (patientFilter !== "all" && s.patient_id !== patientFilter) return false;
       if (reminderFilter && !s.confirmation_sent_at) return false;
@@ -2249,7 +2251,7 @@ const Agenda = () => {
       if (d < monthStart || d > monthEnd) return false;
       return true;
     });
-  }, [sessions, serviceFilter, patientFilter, reminderFilter, billingFilter, currentMonth]);
+  }, [sessions, statusFilter, serviceFilter, patientFilter, reminderFilter, billingFilter, currentMonth]);
 
   const selectedPatientName = useMemo(() => {
     if (patientFilter === "all") return null;
@@ -3489,9 +3491,9 @@ const Agenda = () => {
               <span className="inline-flex items-center gap-2">
                 <Filter className="h-3.5 w-3.5" />
                 Filtros
-                {(serviceFilter !== "all" || patientFilter !== "all" || reminderFilter || billingFilter) && (
+                {(serviceFilter !== "all" || patientFilter !== "all" || reminderFilter || billingFilter || statusFilter !== "all") && (
                   <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] text-accent-foreground">
-                    {(serviceFilter !== "all" ? 1 : 0) + (patientFilter !== "all" ? 1 : 0) + (reminderFilter ? 1 : 0) + (billingFilter ? 1 : 0)}
+                    {(serviceFilter !== "all" ? 1 : 0) + (patientFilter !== "all" ? 1 : 0) + (reminderFilter ? 1 : 0) + (billingFilter ? 1 : 0) + (statusFilter !== "all" ? 1 : 0)}
                   </span>
                 )}
               </span>
@@ -3568,6 +3570,46 @@ const Agenda = () => {
               )}
             </div>
           </div>
+
+          {/* Filtro por status — chips coloridos */}
+          <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+              <button
+                onClick={() => setStatusFilter("all")}
+                className={cn(
+                  "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                  statusFilter === "all"
+                    ? "bg-accent text-accent-foreground border-accent"
+                    : "bg-background text-muted-foreground border-border hover:bg-muted"
+                )}
+              >
+                Todos os status
+              </button>
+              {(Object.keys(statusLabel) as Status[]).map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(statusFilter === st ? "all" : st)}
+                  className={cn(
+                    "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                    statusFilter === st
+                      ? statusClass[st]
+                      : "bg-background text-muted-foreground border-border hover:bg-muted"
+                  )}
+                >
+                  {statusLabel[st]}
+                </button>
+              ))}
+              {statusFilter !== "all" && (
+                <button
+                  onClick={() => setStatusFilter("all")}
+                  className="shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold border border-border text-muted-foreground hover:bg-muted"
+                >
+                  Limpar
+                </button>
+              )}
+            </div>
+          </div>
+
 
           {/* Filtros: paciente + mês/ano */}
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">

@@ -31,3 +31,6 @@
 ## Confirmação do WhatsApp e pagamentos
 - [x] Atalho para editar o telefone do paciente na confirmação (cobrança, RPD e lembrete)
 - [x] Botão para desfazer baixa (voltar sessão/plano para pendente) no Financeiro
+
+## Filtro por status na Agenda
+- [x] Chips de filtro por status (Agendada, Confirmada, Realizada, Falta, Remarcada, Cancelada) com contagem no botão de filtros do mobile
