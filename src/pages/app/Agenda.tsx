@@ -2695,6 +2695,15 @@ const Agenda = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {statusSaveState[s.id] === "saving" && (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-label="Salvando status" />
+              )}
+              {statusSaveState[s.id] === "saved" && (
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-label="Status salvo" />
+              )}
+              {statusSaveState[s.id] === "error" && (
+                <AlertCircle className="h-4 w-4 text-destructive" aria-label="Erro ao salvar status" />
+              )}
             </div>
           )}
           {isMobile ? (
