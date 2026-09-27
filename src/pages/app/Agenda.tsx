@@ -1502,11 +1502,28 @@ const Agenda = () => {
     await preserveScroll(async () => { load(true); loadPending(true); });
   };
 
+  // Feedback visual imediato do salvamento de status por sessão: saving → saved | error.
+  const [statusSaveState, setStatusSaveState] = useState<Record<string, "saving" | "saved" | "error">>({});
+  const statusSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const setStatusSave = (id: string, state: "saving" | "saved" | "error" | null) => {
+    setStatusSaveState((m) => {
+      const next = { ...m };
+      if (state === null) delete next[id]; else next[id] = state;
+      return next;
+    });
+    if (statusSaveTimers.current[id]) clearTimeout(statusSaveTimers.current[id]);
+    if (state === "saved" || state === "error") {
+      statusSaveTimers.current[id] = setTimeout(() => setStatusSave(id, null), 2500);
+    }
+  };
+
   const updateStatus = async (id: string, status: Status) => {
     const prev = sessions;
     setSessions((list) => list.map((x) => (x.id === id ? { ...x, status } : x)));
+    setStatusSave(id, "saving");
     const { error } = await supabase.from("sessions").update({ status }).eq("id", id);
-    if (error) { setSessions(prev); return toast.error("Erro ao atualizar"); }
+    if (error) { setSessions(prev); setStatusSave(id, "error"); return toast.error("Erro ao atualizar"); }
+    setStatusSave(id, "saved");
     notifySessionDataChanged();
     if (status === "cancelled") { deleteSessionFromGcal(id); } else { syncSessionToGcal(id); }
     toast.success(`Marcada como ${statusLabel[status].toLowerCase()}`);
