@@ -1502,11 +1502,28 @@ const Agenda = () => {
     await preserveScroll(async () => { load(true); loadPending(true); });
   };
 
+  // Feedback visual imediato do salvamento de status por sessão: saving → saved | error.
+  const [statusSaveState, setStatusSaveState] = useState<Record<string, "saving" | "saved" | "error">>({});
+  const statusSaveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const setStatusSave = (id: string, state: "saving" | "saved" | "error" | null) => {
+    setStatusSaveState((m) => {
+      const next = { ...m };
+      if (state === null) delete next[id]; else next[id] = state;
+      return next;
+    });
+    if (statusSaveTimers.current[id]) clearTimeout(statusSaveTimers.current[id]);
+    if (state === "saved" || state === "error") {
+      statusSaveTimers.current[id] = setTimeout(() => setStatusSave(id, null), 2500);
+    }
+  };
+
   const updateStatus = async (id: string, status: Status) => {
     const prev = sessions;
     setSessions((list) => list.map((x) => (x.id === id ? { ...x, status } : x)));
+    setStatusSave(id, "saving");
     const { error } = await supabase.from("sessions").update({ status }).eq("id", id);
-    if (error) { setSessions(prev); return toast.error("Erro ao atualizar"); }
+    if (error) { setSessions(prev); setStatusSave(id, "error"); return toast.error("Erro ao atualizar"); }
+    setStatusSave(id, "saved");
     notifySessionDataChanged();
     if (status === "cancelled") { deleteSessionFromGcal(id); } else { syncSessionToGcal(id); }
     toast.success(`Marcada como ${statusLabel[status].toLowerCase()}`);
@@ -2655,12 +2672,18 @@ const Agenda = () => {
           </div>
           {/* Seletor de status rápido por evento */}
           {(
-            <div onClick={(e) => e.stopPropagation()} className="shrink-0">
-              <Select value={s.status} onValueChange={(v) => updateStatus(s.id, v as Status)}>
+            <div onClick={(e) => e.stopPropagation()} className="shrink-0 flex items-center gap-1.5">
+              <Select value={s.status} onValueChange={(v) => updateStatus(s.id, v as Status)} disabled={statusSaveState[s.id] === "saving"}>
                 <SelectTrigger
                   aria-label={`Status da sessão ${format(new Date(s.scheduled_at), "HH:mm")}`}
                   onClick={(e) => e.stopPropagation()}
-                  className={cn("h-8 w-[8.5rem] gap-1 text-[11px] font-medium", compact && "h-7 w-[7.5rem]", isMobile && "w-[6.5rem]")}
+                  className={cn(
+                    "h-8 w-[8.5rem] gap-1 text-[11px] font-medium transition-colors",
+                    compact && "h-7 w-[7.5rem]",
+                    isMobile && "w-[6.5rem]",
+                    statusSaveState[s.id] === "saved" && "border-emerald-500 text-emerald-700",
+                    statusSaveState[s.id] === "error" && "border-destructive text-destructive"
+                  )}
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -2672,6 +2695,15 @@ const Agenda = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {statusSaveState[s.id] === "saving" && (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-label="Salvando status" />
+              )}
+              {statusSaveState[s.id] === "saved" && (
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-label="Status salvo" />
+              )}
+              {statusSaveState[s.id] === "error" && (
+                <AlertCircle className="h-4 w-4 text-destructive" aria-label="Erro ao salvar status" />
+              )}
             </div>
           )}
           {isMobile ? (
