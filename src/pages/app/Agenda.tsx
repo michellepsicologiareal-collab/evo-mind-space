@@ -12,7 +12,7 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText, Rows3,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, ChevronDown, Bell,
-  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save, Minimize2, Maximize2, Eye,
+  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save, Minimize2, Maximize2, Eye, History,
 } from "lucide-react";
 import { SessionReadView } from "@/components/app/SessionReadView";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
@@ -1517,13 +1517,38 @@ const Agenda = () => {
     }
   };
 
+  // Registra cada mudança de status no histórico da sessão (fire-and-forget).
+  const logStatusChange = (sessionId: string, patientId: string | null, fromStatus: Status | null, toStatus: Status) => {
+    if (!user) return;
+    void supabase.from("session_status_logs").insert({
+      user_id: user.id, session_id: sessionId, patient_id: patientId,
+      from_status: fromStatus, to_status: toStatus,
+    }).then(({ error }) => { if (error) console.warn("status log", error); });
+  };
+
+  // Histórico de status por sessão.
+  const [historySession, setHistorySession] = useState<Session | null>(null);
+  const [historyLogs, setHistoryLogs] = useState<{ id: string; from_status: string | null; to_status: string; changed_at: string }[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const openStatusHistory = async (s: Session) => {
+    setHistorySession(s);
+    setHistoryLoading(true);
+    const { data } = await supabase.from("session_status_logs")
+      .select("id, from_status, to_status, changed_at")
+      .eq("session_id", s.id).order("changed_at", { ascending: false });
+    setHistoryLogs(data ?? []);
+    setHistoryLoading(false);
+  };
+
   const updateStatus = async (id: string, status: Status) => {
     const prev = sessions;
+    const target = sessions.find((x) => x.id === id);
     setSessions((list) => list.map((x) => (x.id === id ? { ...x, status } : x)));
     setStatusSave(id, "saving");
     const { error } = await supabase.from("sessions").update({ status }).eq("id", id);
     if (error) { setSessions(prev); setStatusSave(id, "error"); return toast.error("Erro ao atualizar"); }
     setStatusSave(id, "saved");
+    if (target && target.status !== status) logStatusChange(id, target.patient_id, target.status, status);
     notifySessionDataChanged();
     if (status === "cancelled") { deleteSessionFromGcal(id); } else { syncSessionToGcal(id); }
     toast.success(`Marcada como ${statusLabel[status].toLowerCase()}`);
@@ -1546,6 +1571,7 @@ const Agenda = () => {
     setBulkSaving(false);
     if (error) return toast.error("Erro ao atualizar");
     setBulkPending(null);
+    targets.forEach((t) => { if (t.status !== status) logStatusChange(t.id, t.patient_id, t.status, status); });
     if (status === "cancelled") ids.forEach((id) => deleteSessionFromGcal(id));
     else ids.forEach((id) => syncSessionToGcal(id));
     notifySessionDataChanged();
@@ -2552,6 +2578,9 @@ const Agenda = () => {
         <button onClick={() => { setSheetOpen(false); openEdit(s); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
           <Pencil className="h-4 w-4 text-primary" /> Editar sessão
         </button>
+        <button onClick={() => { setSheetOpen(false); void openStatusHistory(s); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
+          <History className="h-4 w-4 text-primary" /> Histórico de status
+        </button>
         {!isSupervisionCard && (
           <button onClick={() => { setSheetOpen(false); copyConfirmationLink(s); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
             <Link2 className="h-4 w-4 text-primary" /> Enviar confirmação no WhatsApp
@@ -2735,6 +2764,7 @@ const Agenda = () => {
                   <DropdownMenuItem onClick={() => setReadOpen(true)}><Eye className="h-4 w-4" /> Visualizar sessão</DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /> Editar sessão</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void openStatusHistory(s)}><History className="h-4 w-4" /> Histórico de status</DropdownMenuItem>
                 {!isSupervisionCard && (
                   <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar confirmação no WhatsApp</DropdownMenuItem>
                 )}
@@ -4323,6 +4353,40 @@ const Agenda = () => {
       </div>
 
       {/* "Sessões do Mês" foi movido para o módulo Financeiro (menu Financeiro). */}
+
+      {/* ── Histórico de status da sessão ── */}
+      <Dialog open={!!historySession} onOpenChange={(v) => { if (!v) setHistorySession(null); }}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md mx-auto p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl flex items-center gap-2">
+              <History className="h-5 w-5 text-primary" /> Histórico de status
+            </DialogTitle>
+            <DialogDescription>
+              {historySession && `${format(new Date(historySession.scheduled_at), "dd/MM/yyyy 'às' HH:mm")} · ${historySession.patient_name || "Sessão"}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[50vh] overflow-y-auto">
+            {historyLoading ? (
+              <div className="flex items-center justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+            ) : historyLogs.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">Nenhuma mudança de status registrada ainda para esta sessão.</p>
+            ) : (
+              <ul className="space-y-2 py-1">
+                {historyLogs.map((log) => (
+                  <li key={log.id} className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5">
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">{log.from_status ? statusLabel[log.from_status as Status] ?? log.from_status : "—"}</span>
+                      <span className="mx-1.5 text-muted-foreground">→</span>
+                      <span className="font-medium text-foreground">{statusLabel[log.to_status as Status] ?? log.to_status}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">{format(new Date(log.changed_at), "dd/MM/yyyy HH:mm")}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Edit Session Dialog ── */}
       <Dialog open={editOpen} onOpenChange={(v) => { if (!v) { editGuard.guardClose(() => setEditOpen(false), () => setEditOpen(false)); } else { setEditOpen(true); } }}>
