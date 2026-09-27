@@ -4354,6 +4354,40 @@ const Agenda = () => {
 
       {/* "Sessões do Mês" foi movido para o módulo Financeiro (menu Financeiro). */}
 
+      {/* ── Histórico de status da sessão ── */}
+      <Dialog open={!!historySession} onOpenChange={(v) => { if (!v) setHistorySession(null); }}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md mx-auto p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl flex items-center gap-2">
+              <History className="h-5 w-5 text-primary" /> Histórico de status
+            </DialogTitle>
+            <DialogDescription>
+              {historySession && `${format(new Date(historySession.scheduled_at), "dd/MM/yyyy 'às' HH:mm")} · ${historySession.patient_name || "Sessão"}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[50vh] overflow-y-auto">
+            {historyLoading ? (
+              <div className="flex items-center justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+            ) : historyLogs.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">Nenhuma mudança de status registrada ainda para esta sessão.</p>
+            ) : (
+              <ul className="space-y-2 py-1">
+                {historyLogs.map((log) => (
+                  <li key={log.id} className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5">
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">{log.from_status ? statusLabel[log.from_status as Status] ?? log.from_status : "—"}</span>
+                      <span className="mx-1.5 text-muted-foreground">→</span>
+                      <span className="font-medium text-foreground">{statusLabel[log.to_status as Status] ?? log.to_status}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">{format(new Date(log.changed_at), "dd/MM/yyyy HH:mm")}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* ── Edit Session Dialog ── */}
       <Dialog open={editOpen} onOpenChange={(v) => { if (!v) { editGuard.guardClose(() => setEditOpen(false), () => setEditOpen(false)); } else { setEditOpen(true); } }}>
         <DialogContent className="inset-0 w-auto max-w-none h-[100dvh] max-h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 p-0 gap-0 grid grid-rows-[auto_minmax(0,1fr)] overflow-hidden" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
