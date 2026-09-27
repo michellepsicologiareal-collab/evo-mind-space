@@ -2672,12 +2672,18 @@ const Agenda = () => {
           </div>
           {/* Seletor de status rápido por evento */}
           {(
-            <div onClick={(e) => e.stopPropagation()} className="shrink-0">
-              <Select value={s.status} onValueChange={(v) => updateStatus(s.id, v as Status)}>
+            <div onClick={(e) => e.stopPropagation()} className="shrink-0 flex items-center gap-1.5">
+              <Select value={s.status} onValueChange={(v) => updateStatus(s.id, v as Status)} disabled={statusSaveState[s.id] === "saving"}>
                 <SelectTrigger
                   aria-label={`Status da sessão ${format(new Date(s.scheduled_at), "HH:mm")}`}
                   onClick={(e) => e.stopPropagation()}
-                  className={cn("h-8 w-[8.5rem] gap-1 text-[11px] font-medium", compact && "h-7 w-[7.5rem]", isMobile && "w-[6.5rem]")}
+                  className={cn(
+                    "h-8 w-[8.5rem] gap-1 text-[11px] font-medium transition-colors",
+                    compact && "h-7 w-[7.5rem]",
+                    isMobile && "w-[6.5rem]",
+                    statusSaveState[s.id] === "saved" && "border-emerald-500 text-emerald-700",
+                    statusSaveState[s.id] === "error" && "border-destructive text-destructive"
+                  )}
                 >
                   <SelectValue />
                 </SelectTrigger>
