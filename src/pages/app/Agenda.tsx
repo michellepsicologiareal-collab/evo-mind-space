@@ -12,7 +12,7 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText, Rows3,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, ChevronDown, Bell,
-  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save, Minimize2, Maximize2, Eye,
+  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save, Minimize2, Maximize2, Eye, History,
 } from "lucide-react";
 import { SessionReadView } from "@/components/app/SessionReadView";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
@@ -1517,13 +1517,38 @@ const Agenda = () => {
     }
   };
 
+  // Registra cada mudança de status no histórico da sessão (fire-and-forget).
+  const logStatusChange = (sessionId: string, patientId: string | null, fromStatus: Status | null, toStatus: Status) => {
+    if (!user) return;
+    void supabase.from("session_status_logs").insert({
+      user_id: user.id, session_id: sessionId, patient_id: patientId,
+      from_status: fromStatus, to_status: toStatus,
+    }).then(({ error }) => { if (error) console.warn("status log", error); });
+  };
+
+  // Histórico de status por sessão.
+  const [historySession, setHistorySession] = useState<Session | null>(null);
+  const [historyLogs, setHistoryLogs] = useState<{ id: string; from_status: string | null; to_status: string; changed_at: string }[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const openStatusHistory = async (s: Session) => {
+    setHistorySession(s);
+    setHistoryLoading(true);
+    const { data } = await supabase.from("session_status_logs")
+      .select("id, from_status, to_status, changed_at")
+      .eq("session_id", s.id).order("changed_at", { ascending: false });
+    setHistoryLogs(data ?? []);
+    setHistoryLoading(false);
+  };
+
   const updateStatus = async (id: string, status: Status) => {
     const prev = sessions;
+    const target = sessions.find((x) => x.id === id);
     setSessions((list) => list.map((x) => (x.id === id ? { ...x, status } : x)));
     setStatusSave(id, "saving");
     const { error } = await supabase.from("sessions").update({ status }).eq("id", id);
     if (error) { setSessions(prev); setStatusSave(id, "error"); return toast.error("Erro ao atualizar"); }
     setStatusSave(id, "saved");
+    if (target && target.status !== status) logStatusChange(id, target.patient_id, target.status, status);
     notifySessionDataChanged();
     if (status === "cancelled") { deleteSessionFromGcal(id); } else { syncSessionToGcal(id); }
     toast.success(`Marcada como ${statusLabel[status].toLowerCase()}`);
@@ -1546,6 +1571,7 @@ const Agenda = () => {
     setBulkSaving(false);
     if (error) return toast.error("Erro ao atualizar");
     setBulkPending(null);
+    targets.forEach((t) => { if (t.status !== status) logStatusChange(t.id, t.patient_id, t.status, status); });
     if (status === "cancelled") ids.forEach((id) => deleteSessionFromGcal(id));
     else ids.forEach((id) => syncSessionToGcal(id));
     notifySessionDataChanged();
@@ -2552,6 +2578,9 @@ const Agenda = () => {
         <button onClick={() => { setSheetOpen(false); openEdit(s); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
           <Pencil className="h-4 w-4 text-primary" /> Editar sessão
         </button>
+        <button onClick={() => { setSheetOpen(false); void openStatusHistory(s); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
+          <History className="h-4 w-4 text-primary" /> Histórico de status
+        </button>
         {!isSupervisionCard && (
           <button onClick={() => { setSheetOpen(false); copyConfirmationLink(s); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
             <Link2 className="h-4 w-4 text-primary" /> Enviar confirmação no WhatsApp
@@ -2735,6 +2764,7 @@ const Agenda = () => {
                   <DropdownMenuItem onClick={() => setReadOpen(true)}><Eye className="h-4 w-4" /> Visualizar sessão</DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /> Editar sessão</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void openStatusHistory(s)}><History className="h-4 w-4" /> Histórico de status</DropdownMenuItem>
                 {!isSupervisionCard && (
                   <DropdownMenuItem onClick={() => copyConfirmationLink(s)}><Link2 className="h-4 w-4" /> Enviar confirmação no WhatsApp</DropdownMenuItem>
                 )}
