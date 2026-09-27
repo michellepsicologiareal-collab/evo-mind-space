@@ -1946,6 +1946,54 @@ export type Database = {
           },
         ]
       }
+      session_status_logs: {
+        Row: {
+          changed_at: string
+          created_at: string
+          from_status: string | null
+          id: string
+          patient_id: string | null
+          session_id: string
+          to_status: string
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          patient_id?: string | null
+          session_id: string
+          to_status: string
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          patient_id?: string | null
+          session_id?: string
+          to_status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_status_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_status_logs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessions: {
         Row: {
           billing_sent_at: string | null
