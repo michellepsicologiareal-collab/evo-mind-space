@@ -4356,7 +4356,7 @@ const Agenda = () => {
 
       {/* ── Histórico de status da sessão ── */}
       <Dialog open={!!historySession} onOpenChange={(v) => { if (!v) setHistorySession(null); }}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-md mx-auto p-4 sm:p-6">
+        <DialogContent className="w-full max-w-md mx-auto p-4 sm:p-6 max-sm:fixed max-sm:bottom-0 max-sm:top-auto max-sm:left-0 max-sm:right-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-t-2xl max-sm:rounded-b-none max-sm:border-b-0 max-sm:w-full max-sm:max-h-[85dvh] max-sm:data-[state=open]:slide-in-from-bottom max-sm:data-[state=closed]:slide-out-to-bottom">
           <DialogHeader>
             <DialogTitle className="font-display text-xl flex items-center gap-2">
               <History className="h-5 w-5 text-primary" /> Histórico de status
