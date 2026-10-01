@@ -4367,11 +4367,28 @@ const Agenda = () => {
               {historySession && `${format(new Date(historySession.scheduled_at), "dd/MM/yyyy 'às' HH:mm")} · ${historySession.patient_name || "Sessão"}`}
             </DialogDescription>
           </DialogHeader>
+          <div className="flex flex-wrap gap-2">
+            {([["all", "Todo o período"], ["7", "Últimos 7 dias"], ["30", "Últimos 30 dias"], ["90", "Últimos 90 dias"]] as const).map(([key, label]) => (
+              <Button
+                key={key}
+                type="button"
+                size="sm"
+                variant={historyPeriod === key ? "secondary" : "outline"}
+                className="h-8 text-xs"
+                aria-pressed={historyPeriod === key}
+                onClick={() => setHistoryPeriod(key)}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
           <div className="max-h-[50vh] overflow-y-auto">
             {historyLoading ? (
               <div className="flex items-center justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
             ) : historyLogs.length === 0 ? (
               <p className="text-sm text-muted-foreground py-6 text-center">Nenhuma mudança de status registrada ainda para esta sessão.</p>
+            ) : historyFiltered.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">Nenhuma mudança de status no período selecionado.</p>
             ) : (
               <ul className="space-y-2 py-1">
                 {historyLogs.map((log) => (
