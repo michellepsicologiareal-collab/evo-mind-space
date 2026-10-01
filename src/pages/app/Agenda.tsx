@@ -1530,8 +1530,10 @@ const Agenda = () => {
   const [historySession, setHistorySession] = useState<Session | null>(null);
   const [historyLogs, setHistoryLogs] = useState<{ id: string; from_status: string | null; to_status: string; changed_at: string }[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyPeriod, setHistoryPeriod] = useState<"all" | "7" | "30" | "90">("all");
   const openStatusHistory = async (s: Session) => {
     setHistorySession(s);
+    setHistoryPeriod("all");
     setHistoryLoading(true);
     const { data } = await supabase.from("session_status_logs")
       .select("id, from_status, to_status, changed_at")
