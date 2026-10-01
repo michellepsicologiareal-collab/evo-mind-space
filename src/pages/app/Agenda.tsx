@@ -1530,8 +1530,10 @@ const Agenda = () => {
   const [historySession, setHistorySession] = useState<Session | null>(null);
   const [historyLogs, setHistoryLogs] = useState<{ id: string; from_status: string | null; to_status: string; changed_at: string }[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyPeriod, setHistoryPeriod] = useState<"all" | "7" | "30" | "90">("all");
   const openStatusHistory = async (s: Session) => {
     setHistorySession(s);
+    setHistoryPeriod("all");
     setHistoryLoading(true);
     const { data } = await supabase.from("session_status_logs")
       .select("id, from_status, to_status, changed_at")
@@ -1539,6 +1541,11 @@ const Agenda = () => {
     setHistoryLogs(data ?? []);
     setHistoryLoading(false);
   };
+  const historyFiltered = useMemo(() => {
+    if (historyPeriod === "all") return historyLogs;
+    const cutoff = Date.now() - Number(historyPeriod) * 24 * 60 * 60 * 1000;
+    return historyLogs.filter((log) => new Date(log.changed_at).getTime() >= cutoff);
+  }, [historyLogs, historyPeriod]);
 
   const updateStatus = async (id: string, status: Status) => {
     const prev = sessions;
@@ -4365,14 +4372,31 @@ const Agenda = () => {
               {historySession && `${format(new Date(historySession.scheduled_at), "dd/MM/yyyy 'às' HH:mm")} · ${historySession.patient_name || "Sessão"}`}
             </DialogDescription>
           </DialogHeader>
+          <div className="flex flex-wrap gap-2">
+            {([["all", "Todo o período"], ["7", "Últimos 7 dias"], ["30", "Últimos 30 dias"], ["90", "Últimos 90 dias"]] as const).map(([key, label]) => (
+              <Button
+                key={key}
+                type="button"
+                size="sm"
+                variant={historyPeriod === key ? "secondary" : "outline"}
+                className="h-8 text-xs"
+                aria-pressed={historyPeriod === key}
+                onClick={() => setHistoryPeriod(key)}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
           <div className="max-h-[50vh] overflow-y-auto">
             {historyLoading ? (
               <div className="flex items-center justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
             ) : historyLogs.length === 0 ? (
               <p className="text-sm text-muted-foreground py-6 text-center">Nenhuma mudança de status registrada ainda para esta sessão.</p>
+            ) : historyFiltered.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">Nenhuma mudança de status no período selecionado.</p>
             ) : (
               <ul className="space-y-2 py-1">
-                {historyLogs.map((log) => (
+                {historyFiltered.map((log) => (
                   <li key={log.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl border border-border px-3 py-2.5">
                     <div className="text-sm min-w-0">
                       <span className="text-muted-foreground">{log.from_status ? statusLabel[log.from_status as Status] ?? log.from_status : "—"}</span>
