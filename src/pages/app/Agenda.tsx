@@ -203,6 +203,28 @@ const PILL_BASE = "inline-flex items-center text-[11px] font-display font-semibo
 const PILL_COMPACT = "inline-flex items-center text-[10px] font-display font-semibold px-1.5 py-0.5 rounded-[40px] border whitespace-nowrap";
 const ICON_TAG = "inline-flex items-center justify-center h-5 w-5 rounded-full shrink-0";
 
+// Menu "Status do dia": aplica o mesmo status a todas as sessões de um dia específico.
+const DayBulkStatusMenu = ({ targets, onPick }: { targets: Session[]; onPick: (st: Status) => void }) => {
+  if (targets.length === 0) return null;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="h-8 px-2.5 rounded-[40px] border-primary/30 text-primary hover:bg-accent/10 hover:text-accent font-display font-semibold text-xs shrink-0 gap-1.5">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Status<span className="hidden sm:inline"> do dia</span> ({targets.length})
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {(Object.keys(statusLabel) as Status[]).map((st) => (
+          <DropdownMenuItem key={st} onClick={() => onPick(st)}>
+            {statusLabel[st]}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
 type ClinicalRecordPresence = {
   hasContent: boolean;
   summary: string;
@@ -4022,16 +4044,19 @@ const Agenda = () => {
 
                     {/* Day detail */}
                      <div className="min-w-0 rounded-2xl bg-card border border-border shadow-card p-3 sm:p-4">
-                       <div className="flex min-w-0 items-center justify-between gap-2 mb-4">
-                         <div className="min-w-0">
-                           <p className="truncate font-display text-lg font-semibold capitalize">
+                      <div className="flex min-w-0 items-center justify-between gap-2 mb-4">
+                        <div className="min-w-0">
+                          <p className="truncate font-display text-lg font-semibold capitalize">
                             {format(selectedDate, "EEEE", { locale: ptBR })}
                           </p>
                           <p className="text-sm text-muted-foreground">{format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}</p>
                         </div>
-                        <Button variant="accent" size="sm" className="rounded-[40px] font-display font-semibold" onClick={() => openNew(selectedDate)}>
-                          <Plus className="h-3.5 w-3.5" /> Nova
-                        </Button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <DayBulkStatusMenu targets={selectedDaySessions} onPick={(st) => updateStatusBulk(selectedDaySessions, st)} />
+                          <Button variant="accent" size="sm" className="rounded-[40px] font-display font-semibold" onClick={() => openNew(selectedDate)}>
+                            <Plus className="h-3.5 w-3.5" /> Nova
+                          </Button>
+                        </div>
                       </div>
                       {selectedDayTimeline.length === 0 ? (
                         <div className="py-8 text-center text-muted-foreground">
@@ -4151,9 +4176,12 @@ const Agenda = () => {
                       <p className="font-display text-sm font-semibold capitalize text-foreground truncate">
                         {format(selectedDate, "EEEE, dd 'de' MMM", { locale: ptBR })}
                       </p>
-                      <Button variant="accent" size="sm" className="h-8 px-3 rounded-[40px] font-display font-semibold text-xs" onClick={() => openNew(selectedDate)}>
-                        <Plus className="h-3.5 w-3.5" /> Nova
-                      </Button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <DayBulkStatusMenu targets={selectedDaySessions} onPick={(st) => updateStatusBulk(selectedDaySessions, st)} />
+                        <Button variant="accent" size="sm" className="h-8 px-3 rounded-[40px] font-display font-semibold text-xs" onClick={() => openNew(selectedDate)}>
+                          <Plus className="h-3.5 w-3.5" /> Nova
+                        </Button>
+                      </div>
                     </div>
 
                     {/* Linha do tempo do dia (sessões + compromissos pessoais) */}
@@ -4206,9 +4234,12 @@ const Agenda = () => {
                             <p className={cn("font-display font-semibold capitalize text-sm sm:text-base truncate", isToday ? "text-accent" : "text-foreground")}>
                               {format(day, "EEEE", { locale: ptBR })}, {format(day, "dd/MM")}
                             </p>
-                            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-accent shrink-0 px-2" onClick={() => openNew(day)}>
-                              <Plus className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">adicionar</span>
-                            </Button>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <DayBulkStatusMenu targets={items} onPick={(st) => updateStatusBulk(items, st)} />
+                              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-accent shrink-0 px-2" onClick={() => openNew(day)}>
+                                <Plus className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">adicionar</span>
+                              </Button>
+                            </div>
                           </div>
                           {/* Sessions rows */}
                           {items.length === 0 ? (
