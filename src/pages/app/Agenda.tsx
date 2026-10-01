@@ -4396,7 +4396,7 @@ const Agenda = () => {
               <p className="text-sm text-muted-foreground py-6 text-center">Nenhuma mudança de status no período selecionado.</p>
             ) : (
               <ul className="space-y-2 py-1">
-                {historyLogs.map((log) => (
+                {historyFiltered.map((log) => (
                   <li key={log.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl border border-border px-3 py-2.5">
                     <div className="text-sm min-w-0">
                       <span className="text-muted-foreground">{log.from_status ? statusLabel[log.from_status as Status] ?? log.from_status : "—"}</span>
