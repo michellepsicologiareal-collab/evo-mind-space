@@ -203,6 +203,28 @@ const PILL_BASE = "inline-flex items-center text-[11px] font-display font-semibo
 const PILL_COMPACT = "inline-flex items-center text-[10px] font-display font-semibold px-1.5 py-0.5 rounded-[40px] border whitespace-nowrap";
 const ICON_TAG = "inline-flex items-center justify-center h-5 w-5 rounded-full shrink-0";
 
+// Menu "Status do dia": aplica o mesmo status a todas as sessões de um dia específico.
+const DayBulkStatusMenu = ({ targets, onPick }: { targets: Session[]; onPick: (st: Status) => void }) => {
+  if (targets.length === 0) return null;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="h-8 px-2.5 rounded-[40px] border-primary/30 text-primary hover:bg-accent/10 hover:text-accent font-display font-semibold text-xs shrink-0 gap-1.5">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Status<span className="hidden sm:inline"> do dia</span> ({targets.length})
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {(Object.keys(statusLabel) as Status[]).map((st) => (
+          <DropdownMenuItem key={st} onClick={() => onPick(st)}>
+            {statusLabel[st]}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
 type ClinicalRecordPresence = {
   hasContent: boolean;
   summary: string;
