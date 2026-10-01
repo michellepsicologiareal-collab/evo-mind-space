@@ -1541,6 +1541,11 @@ const Agenda = () => {
     setHistoryLogs(data ?? []);
     setHistoryLoading(false);
   };
+  const historyFiltered = useMemo(() => {
+    if (historyPeriod === "all") return historyLogs;
+    const cutoff = Date.now() - Number(historyPeriod) * 24 * 60 * 60 * 1000;
+    return historyLogs.filter((log) => new Date(log.changed_at).getTime() >= cutoff);
+  }, [historyLogs, historyPeriod]);
 
   const updateStatus = async (id: string, status: Status) => {
     const prev = sessions;
