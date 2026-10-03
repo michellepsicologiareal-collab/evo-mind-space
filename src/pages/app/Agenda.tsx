@@ -1592,6 +1592,27 @@ const Agenda = () => {
     if (targets.length === 0) return;
     setBulkPending({ targets, status, context });
   };
+  // Modo de seleção por dia: marca sessões individuais e aplica status em lote (com confirmação).
+  const [selectDayKey, setSelectDayKey] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const toggleDaySelectMode = (dayKey: string, daySessions: Session[]) => {
+    if (selectDayKey === dayKey) {
+      setSelectDayKey(null);
+      setSelectedIds(new Set());
+    } else {
+      setSelectDayKey(dayKey);
+      // Ao entrar no modo, todas as sessões do dia começam selecionadas.
+      setSelectedIds(new Set(daySessions.map((s) => s.id)));
+    }
+  };
+  const toggleSessionSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
   const confirmStatusBulk = async () => {
     if (!bulkPending) return;
     const { targets, status } = bulkPending;
