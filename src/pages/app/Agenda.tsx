@@ -12,7 +12,7 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText, Rows3,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, ChevronDown, Bell,
-  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save, Minimize2, Maximize2, Eye, History,
+  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save, Minimize2, Maximize2, Eye, History, ListChecks,
 } from "lucide-react";
 import { SessionReadView } from "@/components/app/SessionReadView";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
@@ -39,6 +39,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -1585,11 +1586,32 @@ const Agenda = () => {
   };
 
   // Aplica o mesmo status a todas as sessões visíveis no período atual (dia/semana/mês).
-  const [bulkPending, setBulkPending] = useState<{ targets: Session[]; status: Status } | null>(null);
+  const [bulkPending, setBulkPending] = useState<{ targets: Session[]; status: Status; context?: string } | null>(null);
   const [bulkSaving, setBulkSaving] = useState(false);
-  const updateStatusBulk = (targets: Session[], status: Status) => {
+  const updateStatusBulk = (targets: Session[], status: Status, context?: string) => {
     if (targets.length === 0) return;
-    setBulkPending({ targets, status });
+    setBulkPending({ targets, status, context });
+  };
+  // Modo de seleção por dia: marca sessões individuais e aplica status em lote (com confirmação).
+  const [selectDayKey, setSelectDayKey] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const toggleDaySelectMode = (dayKey: string, daySessions: Session[]) => {
+    if (selectDayKey === dayKey) {
+      setSelectDayKey(null);
+      setSelectedIds(new Set());
+    } else {
+      setSelectDayKey(dayKey);
+      // Ao entrar no modo, todas as sessões do dia começam selecionadas.
+      setSelectedIds(new Set(daySessions.map((s) => s.id)));
+    }
+  };
+  const toggleSessionSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
   const confirmStatusBulk = async () => {
     if (!bulkPending) return;
@@ -1600,6 +1622,8 @@ const Agenda = () => {
     setBulkSaving(false);
     if (error) return toast.error("Erro ao atualizar");
     setBulkPending(null);
+    setSelectDayKey(null);
+    setSelectedIds(new Set());
     targets.forEach((t) => { if (t.status !== status) logStatusChange(t.id, t.patient_id, t.status, status); });
     if (status === "cancelled") ids.forEach((id) => deleteSessionFromGcal(id));
     else ids.forEach((id) => syncSessionToGcal(id));
@@ -3212,6 +3236,75 @@ const Agenda = () => {
     );
   };
 
+  // ── Seleção de sessões do dia (status em lote, sempre com confirmação) ──
+  const renderDaySelectionButton = (dayKey: string, daySessions: Session[]) => (
+    <Button
+      variant="outline"
+      size="sm"
+      aria-pressed={selectDayKey === dayKey}
+      className={cn(
+        "h-8 px-2.5 rounded-[40px] font-display font-semibold text-xs shrink-0 gap-1.5 border-primary/30 text-primary hover:bg-accent/10 hover:text-accent",
+        selectDayKey === dayKey && "bg-primary/10",
+      )}
+      onClick={() => toggleDaySelectMode(dayKey, daySessions)}
+    >
+      <ListChecks className="h-3.5 w-3.5" />
+      {selectDayKey === dayKey ? "Cancelar" : "Selecionar"}
+    </Button>
+  );
+
+  const renderDaySelectionBar = (dayKey: string, daySessions: Session[]) => {
+    if (selectDayKey !== dayKey || daySessions.length === 0) return null;
+    const allSelected = selectedIds.size === daySessions.length;
+    return (
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 px-3 py-2">
+        <Checkbox
+          checked={allSelected ? true : selectedIds.size > 0 ? "indeterminate" : false}
+          onCheckedChange={() =>
+            setSelectedIds(allSelected ? new Set() : new Set(daySessions.map((s) => s.id)))
+          }
+          aria-label="Selecionar todas as sessões do dia"
+        />
+        <span className="text-xs font-display font-semibold text-primary">
+          {selectedIds.size} de {daySessions.length} selecionadas
+        </span>
+        <div className="flex-1" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="accent" size="sm" disabled={selectedIds.size === 0} className="h-8 rounded-[40px] font-display font-semibold text-xs gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Alterar status ({selectedIds.size})
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {(Object.keys(statusLabel) as Status[]).map((st) => (
+              <DropdownMenuItem key={st} onClick={() => updateStatusBulk(daySessions.filter((s) => selectedIds.has(s.id)), st, "selecionadas do dia")}>
+                {statusLabel[st]}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
+
+  const renderDaySessionItem = (s: Session, selecting: boolean) =>
+    selecting ? (
+      <div key={s.id} className="flex items-start gap-1">
+        <div className="pl-1 pt-3 shrink-0">
+          <Checkbox
+            checked={selectedIds.has(s.id)}
+            onCheckedChange={() => toggleSessionSelected(s.id)}
+            aria-label={`Selecionar sessão das ${format(new Date(s.scheduled_at), "HH:mm")}`}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <SessionCard s={s} compact={dense} />
+        </div>
+      </div>
+    ) : (
+      <SessionCard key={s.id} s={s} compact={dense} />
+    );
+
   return (
     <div className="min-w-0 space-y-6 overflow-x-clip animate-fade-up">
       <HelpCard
@@ -3972,7 +4065,7 @@ const Agenda = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           {(Object.keys(statusLabel) as Status[]).map((st) => (
-                            <DropdownMenuItem key={st} onClick={() => updateStatusBulk(bulkTargets, st)}>
+                            <DropdownMenuItem key={st} onClick={() => updateStatusBulk(bulkTargets, st, viewTab === "day" ? "do dia" : viewTab === "week" ? "da semana" : "do mês")}>
                               {statusLabel[st]}
                             </DropdownMenuItem>
                           ))}
@@ -4052,12 +4145,14 @@ const Agenda = () => {
                           <p className="text-sm text-muted-foreground">{format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}</p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <DayBulkStatusMenu targets={selectedDaySessions} onPick={(st) => updateStatusBulk(selectedDaySessions, st)} />
+                          <DayBulkStatusMenu targets={selectedDaySessions} onPick={(st) => updateStatusBulk(selectedDaySessions, st, "do dia")} />
+                          {renderDaySelectionButton("month-day", selectedDaySessions)}
                           <Button variant="accent" size="sm" className="rounded-[40px] font-display font-semibold" onClick={() => openNew(selectedDate)}>
                             <Plus className="h-3.5 w-3.5" /> Nova
                           </Button>
                         </div>
                       </div>
+                      {renderDaySelectionBar("month-day", selectedDaySessions)}
                       {selectedDayTimeline.length === 0 ? (
                         <div className="py-8 text-center text-muted-foreground">
                           <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-30" />
@@ -4074,7 +4169,7 @@ const Agenda = () => {
                         <div className="space-y-2 max-h-[50vh] overflow-y-auto">
                           {dayWindow.visible.map((item) =>
                             item.kind === "session"
-                              ? <SessionCard key={item.session!.id} s={item.session!} compact={dense} />
+                              ? renderDaySessionItem(item.session!, selectDayKey === "month-day")
                               : <PersonalEventCard key={`pe-${item.event!.id}-${item.at}`} event={item.event!} compact onClick={() => openPersonalEvent(item.event!)} />
                           )}
                           {dayWindow.hasMore && (
@@ -4177,12 +4272,14 @@ const Agenda = () => {
                         {format(selectedDate, "EEEE, dd 'de' MMM", { locale: ptBR })}
                       </p>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <DayBulkStatusMenu targets={selectedDaySessions} onPick={(st) => updateStatusBulk(selectedDaySessions, st)} />
+                        <DayBulkStatusMenu targets={selectedDaySessions} onPick={(st) => updateStatusBulk(selectedDaySessions, st, "do dia")} />
+                        {renderDaySelectionButton("week-day", selectedDaySessions)}
                         <Button variant="accent" size="sm" className="h-8 px-3 rounded-[40px] font-display font-semibold text-xs" onClick={() => openNew(selectedDate)}>
                           <Plus className="h-3.5 w-3.5" /> Nova
                         </Button>
                       </div>
                     </div>
+                    {renderDaySelectionBar("week-day", selectedDaySessions)}
 
                     {/* Linha do tempo do dia (sessões + compromissos pessoais) */}
                     {selectedDayTimeline.length === 0 ? (
@@ -4196,7 +4293,7 @@ const Agenda = () => {
                       <div className="space-y-2">
                         {dayWindow.visible.map((item) =>
                           item.kind === "session"
-                            ? <SessionCard key={item.session!.id} s={item.session!} compact={dense} />
+                            ? renderDaySessionItem(item.session!, selectDayKey === "week-day")
                             : <PersonalEventCard key={`pe-${item.event!.id}-${item.at}`} event={item.event!} compact onClick={() => openPersonalEvent(item.event!)} />
                         )}
                         {dayWindow.hasMore && (
@@ -4235,12 +4332,14 @@ const Agenda = () => {
                               {format(day, "EEEE", { locale: ptBR })}, {format(day, "dd/MM")}
                             </p>
                             <div className="flex items-center gap-1 shrink-0">
-                              <DayBulkStatusMenu targets={items} onPick={(st) => updateStatusBulk(items, st)} />
+                              <DayBulkStatusMenu targets={items} onPick={(st) => updateStatusBulk(items, st, "do dia")} />
+                              {renderDaySelectionButton(`wk-${format(day, "yyyy-MM-dd")}`, items)}
                               <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-accent shrink-0 px-2" onClick={() => openNew(day)}>
                                 <Plus className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">adicionar</span>
                               </Button>
                             </div>
                           </div>
+                          {renderDaySelectionBar(`wk-${format(day, "yyyy-MM-dd")}`, items)}
                           {/* Sessions rows */}
                           {items.length === 0 ? (
                             <button onClick={() => openNew(day)} className="w-full text-sm text-muted-foreground/50 hover:text-accent py-4 transition-colors text-center">
@@ -4253,12 +4352,25 @@ const Agenda = () => {
                                 const svcName = s.service_id
                                   ? services.find(sv => sv.id === s.service_id)?.name
                                   : (isSupervisionRow ? null : "Atendimento clínico");
+                                const selectingRow = selectDayKey === `wk-${format(day, "yyyy-MM-dd")}`;
                                 return (
                                   <div
                                     key={s.id}
-                                    onClick={() => openEdit(s)}
-                                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 hover:bg-secondary/30 cursor-pointer transition-colors group"
+                                    onClick={() => (selectingRow ? toggleSessionSelected(s.id) : openEdit(s))}
+                                    className={cn(
+                                      "flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 hover:bg-secondary/30 cursor-pointer transition-colors group",
+                                      selectingRow && selectedIds.has(s.id) && "bg-primary/5",
+                                    )}
                                   >
+                                    {selectingRow && (
+                                      <Checkbox
+                                        className="shrink-0"
+                                        checked={selectedIds.has(s.id)}
+                                        onCheckedChange={() => toggleSessionSelected(s.id)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        aria-label={`Selecionar sessão das ${format(new Date(s.scheduled_at), "HH:mm")}`}
+                                      />
+                                    )}
                                     {/* Time */}
                                     <span className="font-display text-xs sm:text-sm font-semibold text-primary w-10 sm:w-12 shrink-0">
                                       {format(new Date(s.scheduled_at), "HH:mm")}
@@ -4362,9 +4474,13 @@ const Agenda = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
+                    <div className="flex justify-end">
+                      {renderDaySelectionButton("day-view", selectedDaySessions)}
+                    </div>
+                    {renderDaySelectionBar("day-view", selectedDaySessions)}
                     {dayWindow.visible.map((item) =>
                       item.kind === "session"
-                        ? <SessionCard key={item.session!.id} s={item.session!} compact={dense} />
+                        ? renderDaySessionItem(item.session!, selectDayKey === "day-view")
                         : <PersonalEventCard key={`pe-${item.event!.id}-${item.at}`} event={item.event!} onClick={() => openPersonalEvent(item.event!)} />
                     )}
                     {dayWindow.hasMore && (
@@ -5205,9 +5321,9 @@ const Agenda = () => {
       <Dialog open={!!bulkPending} onOpenChange={(o) => { if (!o && !bulkSaving) setBulkPending(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Alterar status em todas</DialogTitle>
+            <DialogTitle>Alterar status em lote</DialogTitle>
             <DialogDescription>
-              {bulkPending && `Marcar ${bulkPending.targets.length} sessão(ões) como "${statusLabel[bulkPending.status]}"?`}
+              {bulkPending && `Marcar ${bulkPending.targets.length} sessão(ões)${bulkPending.context ? ` — ${bulkPending.context}` : ""} como "${statusLabel[bulkPending.status]}"?`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
