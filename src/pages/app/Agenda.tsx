@@ -4065,7 +4065,7 @@ const Agenda = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           {(Object.keys(statusLabel) as Status[]).map((st) => (
-                            <DropdownMenuItem key={st} onClick={() => updateStatusBulk(bulkTargets, st)}>
+                            <DropdownMenuItem key={st} onClick={() => updateStatusBulk(bulkTargets, st, viewTab === "day" ? "do dia" : viewTab === "week" ? "da semana" : "do mês")}>
                               {statusLabel[st]}
                             </DropdownMenuItem>
                           ))}
@@ -4332,12 +4332,14 @@ const Agenda = () => {
                               {format(day, "EEEE", { locale: ptBR })}, {format(day, "dd/MM")}
                             </p>
                             <div className="flex items-center gap-1 shrink-0">
-                              <DayBulkStatusMenu targets={items} onPick={(st) => updateStatusBulk(items, st)} />
+                              <DayBulkStatusMenu targets={items} onPick={(st) => updateStatusBulk(items, st, "do dia")} />
+                              {renderDaySelectionButton(`wk-${format(day, "yyyy-MM-dd")}`, items)}
                               <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-accent shrink-0 px-2" onClick={() => openNew(day)}>
                                 <Plus className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">adicionar</span>
                               </Button>
                             </div>
                           </div>
+                          {renderDaySelectionBar(`wk-${format(day, "yyyy-MM-dd")}`, items)}
                           {/* Sessions rows */}
                           {items.length === 0 ? (
                             <button onClick={() => openNew(day)} className="w-full text-sm text-muted-foreground/50 hover:text-accent py-4 transition-colors text-center">
@@ -4350,12 +4352,25 @@ const Agenda = () => {
                                 const svcName = s.service_id
                                   ? services.find(sv => sv.id === s.service_id)?.name
                                   : (isSupervisionRow ? null : "Atendimento clínico");
+                                const selectingRow = selectDayKey === `wk-${format(day, "yyyy-MM-dd")}`;
                                 return (
                                   <div
                                     key={s.id}
-                                    onClick={() => openEdit(s)}
-                                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 hover:bg-secondary/30 cursor-pointer transition-colors group"
+                                    onClick={() => (selectingRow ? toggleSessionSelected(s.id) : openEdit(s))}
+                                    className={cn(
+                                      "flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 hover:bg-secondary/30 cursor-pointer transition-colors group",
+                                      selectingRow && selectedIds.has(s.id) && "bg-primary/5",
+                                    )}
                                   >
+                                    {selectingRow && (
+                                      <Checkbox
+                                        className="shrink-0"
+                                        checked={selectedIds.has(s.id)}
+                                        onCheckedChange={() => toggleSessionSelected(s.id)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        aria-label={`Selecionar sessão das ${format(new Date(s.scheduled_at), "HH:mm")}`}
+                                      />
+                                    )}
                                     {/* Time */}
                                     <span className="font-display text-xs sm:text-sm font-semibold text-primary w-10 sm:w-12 shrink-0">
                                       {format(new Date(s.scheduled_at), "HH:mm")}
@@ -4459,9 +4474,13 @@ const Agenda = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
+                    <div className="flex justify-end">
+                      {renderDaySelectionButton("day-view", selectedDaySessions)}
+                    </div>
+                    {renderDaySelectionBar("day-view", selectedDaySessions)}
                     {dayWindow.visible.map((item) =>
                       item.kind === "session"
-                        ? <SessionCard key={item.session!.id} s={item.session!} compact={dense} />
+                        ? renderDaySessionItem(item.session!, selectDayKey === "day-view")
                         : <PersonalEventCard key={`pe-${item.event!.id}-${item.at}`} event={item.event!} onClick={() => openPersonalEvent(item.event!)} />
                     )}
                     {dayWindow.hasMore && (
@@ -5302,9 +5321,9 @@ const Agenda = () => {
       <Dialog open={!!bulkPending} onOpenChange={(o) => { if (!o && !bulkSaving) setBulkPending(null); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Alterar status em todas</DialogTitle>
+            <DialogTitle>Alterar status em lote</DialogTitle>
             <DialogDescription>
-              {bulkPending && `Marcar ${bulkPending.targets.length} sessão(ões) como "${statusLabel[bulkPending.status]}"?`}
+              {bulkPending && `Marcar ${bulkPending.targets.length} sessão(ões)${bulkPending.context ? ` — ${bulkPending.context}` : ""} como "${statusLabel[bulkPending.status]}"?`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
