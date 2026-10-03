@@ -1586,11 +1586,11 @@ const Agenda = () => {
   };
 
   // Aplica o mesmo status a todas as sessões visíveis no período atual (dia/semana/mês).
-  const [bulkPending, setBulkPending] = useState<{ targets: Session[]; status: Status } | null>(null);
+  const [bulkPending, setBulkPending] = useState<{ targets: Session[]; status: Status; context?: string } | null>(null);
   const [bulkSaving, setBulkSaving] = useState(false);
-  const updateStatusBulk = (targets: Session[], status: Status) => {
+  const updateStatusBulk = (targets: Session[], status: Status, context?: string) => {
     if (targets.length === 0) return;
-    setBulkPending({ targets, status });
+    setBulkPending({ targets, status, context });
   };
   const confirmStatusBulk = async () => {
     if (!bulkPending) return;
@@ -1601,6 +1601,8 @@ const Agenda = () => {
     setBulkSaving(false);
     if (error) return toast.error("Erro ao atualizar");
     setBulkPending(null);
+    setSelectDayKey(null);
+    setSelectedIds(new Set());
     targets.forEach((t) => { if (t.status !== status) logStatusChange(t.id, t.patient_id, t.status, status); });
     if (status === "cancelled") ids.forEach((id) => deleteSessionFromGcal(id));
     else ids.forEach((id) => syncSessionToGcal(id));
