@@ -3236,6 +3236,75 @@ const Agenda = () => {
     );
   };
 
+  // ── Seleção de sessões do dia (status em lote, sempre com confirmação) ──
+  const renderDaySelectionButton = (dayKey: string, daySessions: Session[]) => (
+    <Button
+      variant="outline"
+      size="sm"
+      aria-pressed={selectDayKey === dayKey}
+      className={cn(
+        "h-8 px-2.5 rounded-[40px] font-display font-semibold text-xs shrink-0 gap-1.5 border-primary/30 text-primary hover:bg-accent/10 hover:text-accent",
+        selectDayKey === dayKey && "bg-primary/10",
+      )}
+      onClick={() => toggleDaySelectMode(dayKey, daySessions)}
+    >
+      <ListChecks className="h-3.5 w-3.5" />
+      {selectDayKey === dayKey ? "Cancelar" : "Selecionar"}
+    </Button>
+  );
+
+  const renderDaySelectionBar = (dayKey: string, daySessions: Session[]) => {
+    if (selectDayKey !== dayKey || daySessions.length === 0) return null;
+    const allSelected = selectedIds.size === daySessions.length;
+    return (
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 px-3 py-2">
+        <Checkbox
+          checked={allSelected ? true : selectedIds.size > 0 ? "indeterminate" : false}
+          onCheckedChange={() =>
+            setSelectedIds(allSelected ? new Set() : new Set(daySessions.map((s) => s.id)))
+          }
+          aria-label="Selecionar todas as sessões do dia"
+        />
+        <span className="text-xs font-display font-semibold text-primary">
+          {selectedIds.size} de {daySessions.length} selecionadas
+        </span>
+        <div className="flex-1" />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="accent" size="sm" disabled={selectedIds.size === 0} className="h-8 rounded-[40px] font-display font-semibold text-xs gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Alterar status ({selectedIds.size})
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {(Object.keys(statusLabel) as Status[]).map((st) => (
+              <DropdownMenuItem key={st} onClick={() => updateStatusBulk(daySessions.filter((s) => selectedIds.has(s.id)), st, "selecionadas do dia")}>
+                {statusLabel[st]}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
+
+  const renderDaySessionItem = (s: Session, selecting: boolean) =>
+    selecting ? (
+      <div key={s.id} className="flex items-start gap-1">
+        <div className="pl-1 pt-3 shrink-0">
+          <Checkbox
+            checked={selectedIds.has(s.id)}
+            onCheckedChange={() => toggleSessionSelected(s.id)}
+            aria-label={`Selecionar sessão das ${format(new Date(s.scheduled_at), "HH:mm")}`}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <SessionCard s={s} compact={dense} />
+        </div>
+      </div>
+    ) : (
+      <SessionCard key={s.id} s={s} compact={dense} />
+    );
+
   return (
     <div className="min-w-0 space-y-6 overflow-x-clip animate-fade-up">
       <HelpCard
