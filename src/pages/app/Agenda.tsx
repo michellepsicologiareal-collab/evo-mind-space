@@ -12,7 +12,7 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText, Rows3,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, ChevronDown, Bell,
-  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save, Minimize2, Maximize2, Eye, History, ListChecks,
+  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save, Minimize2, Maximize2, Eye, History, ListChecks, Undo2,
 } from "lucide-react";
 import { SessionReadView } from "@/components/app/SessionReadView";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
@@ -4097,6 +4097,20 @@ const Agenda = () => {
                       </DropdownMenu>
                     );
                   })()}
+
+                  {/* Desfaz a última alteração de status em lote, restaurando os status anteriores */}
+                  {lastBulkUndo && lastBulkUndo.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={undoSaving}
+                      onClick={undoLastBulk}
+                      className="h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold shrink-0 gap-1.5 border-amber-500/40 text-amber-700 hover:bg-amber-500/10"
+                    >
+                      {undoSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Undo2 className="h-3.5 w-3.5" />}
+                      Desfazer em lote ({lastBulkUndo.length})
+                    </Button>
+                  )}
                 </div>
               );
             })()}
