@@ -4145,12 +4145,14 @@ const Agenda = () => {
                           <p className="text-sm text-muted-foreground">{format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}</p>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <DayBulkStatusMenu targets={selectedDaySessions} onPick={(st) => updateStatusBulk(selectedDaySessions, st)} />
+                          <DayBulkStatusMenu targets={selectedDaySessions} onPick={(st) => updateStatusBulk(selectedDaySessions, st, "do dia")} />
+                          {renderDaySelectionButton("month-day", selectedDaySessions)}
                           <Button variant="accent" size="sm" className="rounded-[40px] font-display font-semibold" onClick={() => openNew(selectedDate)}>
                             <Plus className="h-3.5 w-3.5" /> Nova
                           </Button>
                         </div>
                       </div>
+                      {renderDaySelectionBar("month-day", selectedDaySessions)}
                       {selectedDayTimeline.length === 0 ? (
                         <div className="py-8 text-center text-muted-foreground">
                           <CalendarIcon className="h-10 w-10 mx-auto mb-2 opacity-30" />
@@ -4167,7 +4169,7 @@ const Agenda = () => {
                         <div className="space-y-2 max-h-[50vh] overflow-y-auto">
                           {dayWindow.visible.map((item) =>
                             item.kind === "session"
-                              ? <SessionCard key={item.session!.id} s={item.session!} compact={dense} />
+                              ? renderDaySessionItem(item.session!, selectDayKey === "month-day")
                               : <PersonalEventCard key={`pe-${item.event!.id}-${item.at}`} event={item.event!} compact onClick={() => openPersonalEvent(item.event!)} />
                           )}
                           {dayWindow.hasMore && (
@@ -4270,12 +4272,14 @@ const Agenda = () => {
                         {format(selectedDate, "EEEE, dd 'de' MMM", { locale: ptBR })}
                       </p>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <DayBulkStatusMenu targets={selectedDaySessions} onPick={(st) => updateStatusBulk(selectedDaySessions, st)} />
+                        <DayBulkStatusMenu targets={selectedDaySessions} onPick={(st) => updateStatusBulk(selectedDaySessions, st, "do dia")} />
+                        {renderDaySelectionButton("week-day", selectedDaySessions)}
                         <Button variant="accent" size="sm" className="h-8 px-3 rounded-[40px] font-display font-semibold text-xs" onClick={() => openNew(selectedDate)}>
                           <Plus className="h-3.5 w-3.5" /> Nova
                         </Button>
                       </div>
                     </div>
+                    {renderDaySelectionBar("week-day", selectedDaySessions)}
 
                     {/* Linha do tempo do dia (sessões + compromissos pessoais) */}
                     {selectedDayTimeline.length === 0 ? (
@@ -4289,7 +4293,7 @@ const Agenda = () => {
                       <div className="space-y-2">
                         {dayWindow.visible.map((item) =>
                           item.kind === "session"
-                            ? <SessionCard key={item.session!.id} s={item.session!} compact={dense} />
+                            ? renderDaySessionItem(item.session!, selectDayKey === "week-day")
                             : <PersonalEventCard key={`pe-${item.event!.id}-${item.at}`} event={item.event!} compact onClick={() => openPersonalEvent(item.event!)} />
                         )}
                         {dayWindow.hasMore && (
