@@ -5149,7 +5149,14 @@ const Agenda = () => {
           <DialogHeader>
             <DialogTitle className="font-display text-xl">Remarcar sessão de pacote</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              Esta sessão faz parte de um pacote recorrente. Como deseja remarcar?
+              {editForm.date && editForm.time ? (
+                <>
+                  Nova data: <span className="font-semibold text-foreground">{format(parse(editForm.date, "yyyy-MM-dd", new Date()), "dd/MM/yyyy")} às {editForm.time}</span>.
+                  {" "}Esta sessão faz parte de um pacote recorrente. Como deseja remarcar?
+                </>
+              ) : (
+                "Esta sessão faz parte de um pacote recorrente. Como deseja remarcar?"
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
