@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
+import { SelfcareReminderWatcher } from "@/components/app/SelfcareReminders";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -244,6 +245,7 @@ export const AppLayout = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
+      <SelfcareReminderWatcher />
       {/* Linha dourada absoluta no topo da tela */}
       <div className="fixed top-0 inset-x-0 z-[45] gold-bar pointer-events-none" />
 
