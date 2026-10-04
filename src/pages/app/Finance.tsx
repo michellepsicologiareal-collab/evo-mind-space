@@ -2618,6 +2618,7 @@ const Finance = () => {
 
           const totalPagoCards = allGroups.reduce((s, g) => s + g.pago, 0);
           const totalPendenteCards = allGroups.reduce((s, g) => s + g.emAberto, 0);
+          const totalPrevistoCards = allGroups.reduce((s, g) => s + g.previsto, 0);
           const paymentCounts = {
             all: allGroups.length,
             paid: allGroups.filter((g) => g.pendingCount === 0 && g.paidCount > 0).length,
