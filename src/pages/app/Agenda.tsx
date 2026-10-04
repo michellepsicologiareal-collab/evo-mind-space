@@ -1614,20 +1614,28 @@ const Agenda = () => {
     });
   };
   // Guarda o status anterior de cada sessão da última alteração em lote, para permitir desfazer.
-  const [lastBulkUndo, setLastBulkUndo] = useState<{ id: string; patient_id: string; prev: Status; next: Status }[] | null>(null);
+  type BulkUndoSnapshot = { id: string; patient_id: string; prev: Status; next: Status }[];
+  const [lastBulkUndo, setLastBulkUndo] = useState<BulkUndoSnapshot | null>(null);
   const [undoSaving, setUndoSaving] = useState(false);
-  const undoLastBulk = async () => {
-    if (!lastBulkUndo || undoSaving) return;
+  const undoSavingRef = useRef(false);
+  // Recebe o snapshot explicitamente (o aviso/toast passa o lote exato que acabou de ser aplicado),
+  // evitando ler um estado desatualizado do render anterior.
+  const undoLastBulk = async (snapshot?: BulkUndoSnapshot | null) => {
+    const target = snapshot ?? lastBulkUndo;
+    if (!target || target.length === 0 || undoSavingRef.current) return;
+    undoSavingRef.current = true;
     setUndoSaving(true);
     let failed = false;
-    for (const item of lastBulkUndo) {
+    for (const item of target) {
       const { error } = await supabase.from("sessions").update({ status: item.prev }).eq("id", item.id);
       if (error) { failed = true; break; }
       if (item.prev !== item.next) logStatusChange(item.id, item.patient_id, item.next, item.prev);
     }
+    undoSavingRef.current = false;
     setUndoSaving(false);
     if (failed) return toast.error("Não foi possível desfazer todas as alterações");
-    setLastBulkUndo(null);
+    // Só limpa o botão persistente se ele ainda se refere a este mesmo lote.
+    setLastBulkUndo((cur) => (cur === target ? null : cur));
     notifySessionDataChanged();
     toast.success("Alteração em lote desfeita — status anteriores restaurados");
     await preserveScroll(async () => { load(true); loadPending(true); });
@@ -1648,10 +1656,11 @@ const Agenda = () => {
     else ids.forEach((id) => syncSessionToGcal(id));
     notifySessionDataChanged();
     // Snapshot dos status anteriores para permitir desfazer esta alteração em lote.
-    setLastBulkUndo(targets.map((t) => ({ id: t.id, patient_id: t.patient_id, prev: t.status, next: status })));
+    const snapshot: BulkUndoSnapshot = targets.map((t) => ({ id: t.id, patient_id: t.patient_id, prev: t.status, next: status }));
+    setLastBulkUndo(snapshot);
     toast.success(`${ids.length} sessão(ões) marcadas como ${statusLabel[status].toLowerCase()}`, {
       duration: 8000,
-      action: { label: "Desfazer", onClick: () => undoLastBulk() },
+      action: { label: "Desfazer", onClick: () => undoLastBulk(snapshot) },
     });
     await preserveScroll(async () => { load(true); loadPending(true); });
   };
@@ -4104,7 +4113,7 @@ const Agenda = () => {
                       variant="outline"
                       size="sm"
                       disabled={undoSaving}
-                      onClick={undoLastBulk}
+                      onClick={() => undoLastBulk()}
                       className="h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold shrink-0 gap-1.5 border-amber-500/40 text-amber-700 hover:bg-amber-500/10"
                     >
                       {undoSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Undo2 className="h-3.5 w-3.5" />}
