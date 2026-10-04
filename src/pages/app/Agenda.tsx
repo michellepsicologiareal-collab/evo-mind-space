@@ -12,7 +12,7 @@ import {
   Check, X, RotateCcw, Trash2, Link2, CheckCircle2, GraduationCap,
   MessageCircle, Pencil, Filter, Users, ArrowUpDown, User, DollarSign, FileText, Rows3,
   Video, MapPin, CalendarDays, CalendarRange, CalendarCheck, RefreshCw, ChevronDown, Bell,
-  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save, Minimize2, Maximize2, Eye, History, ListChecks,
+  ClipboardList, HeartPulse, Target, AlertCircle, Wallet, NotebookPen, Save, Minimize2, Maximize2, Eye, History, ListChecks, Undo2,
 } from "lucide-react";
 import { SessionReadView } from "@/components/app/SessionReadView";
 import { HomeworkPlanForm, type HomeworkPlanFormTask } from "@/components/app/HomeworkPlanForm";
@@ -1613,6 +1613,25 @@ const Agenda = () => {
       return next;
     });
   };
+  // Guarda o status anterior de cada sessão da última alteração em lote, para permitir desfazer.
+  const [lastBulkUndo, setLastBulkUndo] = useState<{ id: string; patient_id: string; prev: Status; next: Status }[] | null>(null);
+  const [undoSaving, setUndoSaving] = useState(false);
+  const undoLastBulk = async () => {
+    if (!lastBulkUndo || undoSaving) return;
+    setUndoSaving(true);
+    let failed = false;
+    for (const item of lastBulkUndo) {
+      const { error } = await supabase.from("sessions").update({ status: item.prev }).eq("id", item.id);
+      if (error) { failed = true; break; }
+      if (item.prev !== item.next) logStatusChange(item.id, item.patient_id, item.next, item.prev);
+    }
+    setUndoSaving(false);
+    if (failed) return toast.error("Não foi possível desfazer todas as alterações");
+    setLastBulkUndo(null);
+    notifySessionDataChanged();
+    toast.success("Alteração em lote desfeita — status anteriores restaurados");
+    await preserveScroll(async () => { load(true); loadPending(true); });
+  };
   const confirmStatusBulk = async () => {
     if (!bulkPending) return;
     const { targets, status } = bulkPending;
@@ -1628,7 +1647,12 @@ const Agenda = () => {
     if (status === "cancelled") ids.forEach((id) => deleteSessionFromGcal(id));
     else ids.forEach((id) => syncSessionToGcal(id));
     notifySessionDataChanged();
-    toast.success(`${ids.length} sessão(ões) marcadas como ${statusLabel[status].toLowerCase()}`);
+    // Snapshot dos status anteriores para permitir desfazer esta alteração em lote.
+    setLastBulkUndo(targets.map((t) => ({ id: t.id, patient_id: t.patient_id, prev: t.status, next: status })));
+    toast.success(`${ids.length} sessão(ões) marcadas como ${statusLabel[status].toLowerCase()}`, {
+      duration: 8000,
+      action: { label: "Desfazer", onClick: () => undoLastBulk() },
+    });
     await preserveScroll(async () => { load(true); loadPending(true); });
   };
 
@@ -4073,6 +4097,20 @@ const Agenda = () => {
                       </DropdownMenu>
                     );
                   })()}
+
+                  {/* Desfaz a última alteração de status em lote, restaurando os status anteriores */}
+                  {lastBulkUndo && lastBulkUndo.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={undoSaving}
+                      onClick={undoLastBulk}
+                      className="h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold shrink-0 gap-1.5 border-amber-500/40 text-amber-700 hover:bg-amber-500/10"
+                    >
+                      {undoSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Undo2 className="h-3.5 w-3.5" />}
+                      Desfazer em lote ({lastBulkUndo.length})
+                    </Button>
+                  )}
                 </div>
               );
             })()}
