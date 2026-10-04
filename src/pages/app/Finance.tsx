@@ -2618,6 +2618,7 @@ const Finance = () => {
 
           const totalPagoCards = allGroups.reduce((s, g) => s + g.pago, 0);
           const totalPendenteCards = allGroups.reduce((s, g) => s + g.emAberto, 0);
+          const totalPrevistoCards = allGroups.reduce((s, g) => s + g.previsto, 0);
           const paymentCounts = {
             all: allGroups.length,
             paid: allGroups.filter((g) => g.pendingCount === 0 && g.paidCount > 0).length,
@@ -2732,6 +2733,9 @@ const Finance = () => {
                 </span>
                 <span className="text-muted-foreground">
                   Em aberto <strong className="text-destructive tabular-nums">{formatBRL(totalPendenteCards)}</strong>
+                </span>
+                <span className="text-muted-foreground" title="Valor das sessões futuras já agendadas (somente sessão avulsa)">
+                  Previsto <strong className="text-foreground tabular-nums">{formatBRL(totalPrevistoCards)}</strong>
                 </span>
               </div>
 
