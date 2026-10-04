@@ -1695,6 +1695,39 @@ export type Database = {
         }
         Relationships: []
       }
+      selfcare_reminders: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          frequency: string
+          include_checkin: boolean
+          remind_time: string
+          updated_at: string
+          user_id: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          frequency?: string
+          include_checkin?: boolean
+          remind_time?: string
+          updated_at?: string
+          user_id: string
+          weekday?: number
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          frequency?: string
+          include_checkin?: boolean
+          remind_time?: string
+          updated_at?: string
+          user_id?: string
+          weekday?: number
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           created_at: string
