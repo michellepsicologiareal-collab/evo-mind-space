@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TherapistRpd } from "@/components/app/TherapistRpd";
 
 /* ── Constants ── */
 const pleaseItems = [
@@ -528,7 +529,7 @@ const Autocuidado = () => {
         <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">
           Espaço de Autocuidado
         </h1>
-        <p className="mt-2 text-muted-foreground">Check-in diário · Protocolo PLEASE · Monitoramento emocional</p>
+        <p className="mt-2 text-muted-foreground">Check-in diário · Protocolo PLEASE · Monitoramento emocional · Meu RPD</p>
         <p className="mt-4 text-lg text-foreground/80 font-medium">Como você está hoje?</p>
       </header>
 
@@ -1032,6 +1033,9 @@ const Autocuidado = () => {
         ) : null}
       </section>
 
+
+
+      <TherapistRpd />
 
       {/* ── PLEASE Check-in ── */}
       <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8">

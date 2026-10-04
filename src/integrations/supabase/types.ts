@@ -2450,6 +2450,57 @@ export type Database = {
           },
         ]
       }
+      therapist_rpd_records: {
+        Row: {
+          automatic_thought: string | null
+          behavior: string | null
+          cognitive_distortion: string | null
+          created_at: string
+          crenca_pensamento_final: number | null
+          crenca_pensamento_inicial: number | null
+          emotion: string | null
+          id: string
+          intensidade_emocao_final: Json | null
+          intensidade_emocao_inicial: Json | null
+          rational_response: string | null
+          situation: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          automatic_thought?: string | null
+          behavior?: string | null
+          cognitive_distortion?: string | null
+          created_at?: string
+          crenca_pensamento_final?: number | null
+          crenca_pensamento_inicial?: number | null
+          emotion?: string | null
+          id?: string
+          intensidade_emocao_final?: Json | null
+          intensidade_emocao_inicial?: Json | null
+          rational_response?: string | null
+          situation?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          automatic_thought?: string | null
+          behavior?: string | null
+          cognitive_distortion?: string | null
+          created_at?: string
+          crenca_pensamento_final?: number | null
+          crenca_pensamento_inicial?: number | null
+          emotion?: string | null
+          id?: string
+          intensidade_emocao_final?: Json | null
+          intensidade_emocao_inicial?: Json | null
+          rational_response?: string | null
+          situation?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       therapist_triggers: {
         Row: {
           checked_at: string
