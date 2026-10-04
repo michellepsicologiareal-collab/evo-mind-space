@@ -34,6 +34,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -560,6 +562,8 @@ const Agenda = () => {
 
   // Edit session
   const [editOpen, setEditOpen] = useState(false);
+  const [editDatePickerOpen, setEditDatePickerOpen] = useState(false);
+  const [editCalendarMonth, setEditCalendarMonth] = useState(new Date());
   const [editSessionId, setEditSessionId] = useState<string | null>(null);
   const [editReadOpen, setEditReadOpen] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
@@ -2086,6 +2090,8 @@ const Agenda = () => {
     setEditSessionId(s.id);
     setEditProgressId(null);
     const scheduledDate = new Date(s.scheduled_at);
+    setEditCalendarMonth(startOfMonth(scheduledDate));
+    setEditDatePickerOpen(false);
     setEditFormRaw({
       status: s.status, payment_status: s.payment_status,
       payment_method: (s as any).payment_method ?? "none",
@@ -4700,8 +4706,59 @@ const Agenda = () => {
             {/* Data e horário */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Data</Label>
-                <Input type="date" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} />
+                <Label htmlFor="edit-session-date">Data</Label>
+                <Popover open={editDatePickerOpen} onOpenChange={setEditDatePickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="edit-session-date"
+                      type="button"
+                      variant="outline"
+                      className="w-full min-w-0 justify-between font-normal text-left px-3"
+                      aria-label="Alterar data da sessão"
+                    >
+                      <span>{editForm.date ? format(parse(editForm.date, "yyyy-MM-dd", new Date()), "dd/MM/yyyy") : "Escolher data"}</span>
+                      <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] p-2 pointer-events-auto" align="start">
+                    <div className="flex items-center gap-2 px-1 pt-1">
+                      <select
+                        aria-label="Mês da sessão"
+                        value={editCalendarMonth.getMonth()}
+                        onChange={(e) => setEditCalendarMonth(new Date(editCalendarMonth.getFullYear(), Number(e.target.value), 1))}
+                        className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                      >
+                        {Array.from({ length: 12 }, (_, month) => (
+                          <option key={month} value={month}>{format(new Date(2024, month, 1), "MMMM", { locale: ptBR })}</option>
+                        ))}
+                      </select>
+                      <select
+                        aria-label="Ano da sessão"
+                        value={editCalendarMonth.getFullYear()}
+                        onChange={(e) => setEditCalendarMonth(new Date(Number(e.target.value), editCalendarMonth.getMonth(), 1))}
+                        className="h-9 w-20 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+                      >
+                        {Array.from({ length: 101 }, (_, index) => 2000 + index).map((year) => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <Calendar
+                      mode="single"
+                      selected={editForm.date ? parse(editForm.date, "yyyy-MM-dd", new Date()) : undefined}
+                      month={editCalendarMonth}
+                      onMonthChange={setEditCalendarMonth}
+                      onSelect={(date) => {
+                        if (date) {
+                          setEditForm({ ...editForm, date: format(date, "yyyy-MM-dd") });
+                          setEditDatePickerOpen(false);
+                        }
+                      }}
+                      locale={ptBR}
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
                 <Label>Horário</Label>
