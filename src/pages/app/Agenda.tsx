@@ -34,6 +34,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -4700,8 +4702,35 @@ const Agenda = () => {
             {/* Data e horário */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Data</Label>
-                <Input type="date" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} />
+                <Label htmlFor="edit-session-date">Data</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="edit-session-date"
+                      type="button"
+                      variant="outline"
+                      className="w-full min-w-0 justify-between font-normal text-left px-3"
+                      aria-label="Alterar data da sessão"
+                    >
+                      <span>{editForm.date ? format(parse(editForm.date, "yyyy-MM-dd", new Date()), "dd/MM/yyyy") : "Escolher data"}</span>
+                      <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] p-0 pointer-events-auto" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={editForm.date ? parse(editForm.date, "yyyy-MM-dd", new Date()) : undefined}
+                      defaultMonth={editForm.date ? parse(editForm.date, "yyyy-MM-dd", new Date()) : new Date()}
+                      onSelect={(date) => {
+                        if (date) setEditForm({ ...editForm, date: format(date, "yyyy-MM-dd") });
+                      }}
+                      captionLayout="dropdown-buttons"
+                      fromYear={2000}
+                      toYear={2100}
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
                 <Label>Horário</Label>
