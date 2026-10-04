@@ -24,6 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TherapistRpd } from "@/components/app/TherapistRpd";
+import { SelfcareReminderSettings } from "@/components/app/SelfcareReminders";
 
 /* ── Constants ── */
 const pleaseItems = [
@@ -1036,6 +1037,7 @@ const Autocuidado = () => {
 
 
       <TherapistRpd />
+      <SelfcareReminderSettings />
 
       {/* ── PLEASE Check-in ── */}
       <section className="rounded-2xl bg-card border border-border shadow-card p-6 md:p-8">
