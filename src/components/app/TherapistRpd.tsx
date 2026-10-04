@@ -54,6 +54,8 @@ export function TherapistRpd() {
     };
   }), [records]);
   const distortions = useMemo(() => aggregateDistortions(records).slice(0, 6), [records]);
+  const hasBeliefScores = series.some((point) => point.before != null || point.after != null);
+  const hasEmotionScores = series.some((point) => point.emotionBefore != null || point.emotionAfter != null);
 
   const startNew = () => { setEditingId(null); setForm(emptyRpdForm()); setOpen(true); };
   const startEdit = (row: RecordRow) => { setEditingId(row.id); setForm(fromRpdRecord(row)); setOpen(true); };
@@ -124,7 +126,7 @@ export function TherapistRpd() {
             <div className="min-w-0 space-y-2">
               <h3 className="font-display font-semibold text-foreground">Crença no pensamento</h3>
               <p className="text-xs text-muted-foreground">Antes e depois de cada registro · 0 a 100%</p>
-              <div className="h-52 w-full" role="img" aria-label="Gráfico de crença no pensamento antes e depois">
+              {hasBeliefScores ? <div className="h-52 w-full" role="img" aria-label="Gráfico de crença no pensamento antes e depois">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={series} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
                     <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
@@ -135,13 +137,13 @@ export function TherapistRpd() {
                     <Line name="Depois" type="monotone" dataKey="after" stroke="hsl(var(--moss))" strokeWidth={2} dot={{ r: 4 }} connectNulls />
                   </LineChart>
                 </ResponsiveContainer>
-              </div>
-              <p className="text-xs text-muted-foreground"><span className="text-accent">●</span> Antes <span className="ml-3 text-moss">●</span> Depois</p>
+              </div> : <p className="rounded-lg border border-dashed border-border p-5 text-sm text-muted-foreground">Marque a crença antes ou depois no RPD para acompanhar aqui.</p>}
+              {hasBeliefScores && <p className="text-xs text-muted-foreground"><span className="text-accent">●</span> Antes <span className="ml-3 text-moss">●</span> Depois</p>}
             </div>
             <div className="min-w-0 space-y-2">
               <h3 className="font-display font-semibold text-foreground">Intensidade das emoções</h3>
               <p className="text-xs text-muted-foreground">Média das emoções marcadas em cada RPD · 0 a 100%</p>
-              <div className="h-52 w-full" role="img" aria-label="Gráfico de intensidade das emoções antes e depois">
+              {hasEmotionScores ? <div className="h-52 w-full" role="img" aria-label="Gráfico de intensidade das emoções antes e depois">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={series} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
                     <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
@@ -152,8 +154,8 @@ export function TherapistRpd() {
                     <Line name="Depois" type="monotone" dataKey="emotionAfter" stroke="hsl(var(--moss))" strokeWidth={2} dot={{ r: 4 }} connectNulls />
                   </LineChart>
                 </ResponsiveContainer>
-              </div>
-              <p className="text-xs text-muted-foreground"><span className="text-accent">●</span> Antes <span className="ml-3 text-moss">●</span> Depois</p>
+              </div> : <p className="rounded-lg border border-dashed border-border p-5 text-sm text-muted-foreground">Marque a intensidade de uma emoção no RPD para acompanhar aqui.</p>}
+              {hasEmotionScores && <p className="text-xs text-muted-foreground"><span className="text-accent">●</span> Antes <span className="ml-3 text-moss">●</span> Depois</p>}
             </div>
           </div>
           <div className="space-y-2">

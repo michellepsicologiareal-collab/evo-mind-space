@@ -36,4 +36,4 @@
 - [x] Chips de filtro por status (Agendada, Confirmada, Realizada, Falta, Remarcada, Cancelada) com contagem no botão de filtros do mobile
 
 ## Autocuidado
-- [ ] RPD privado do terapeuta com edição, histórico e gráficos de evolução
+- [x] RPD privado do terapeuta com edição, histórico e gráficos de evolução
