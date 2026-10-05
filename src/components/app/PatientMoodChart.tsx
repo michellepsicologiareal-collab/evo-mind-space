@@ -159,7 +159,7 @@ export const PatientMoodChart = ({ patientId }: Props) => {
       try {
         const { data, error: err } = await (supabase as any)
           .from("patient_progress")
-          .select("id, recorded_at, mood_score, note, wellbeing_score, wellbeing_source, patient_context, clinical_observation, attention_flag, data_model")
+          .select("id, recorded_at, mood_score, note, wellbeing_score, wellbeing_source, patient_context, clinical_observation, attention_flag, data_model, filled_by")
           .eq("patient_id", patientId)
           .order("recorded_at", { ascending: true });
         if (cancelled) return;
@@ -241,7 +241,7 @@ export const PatientMoodChart = ({ patientId }: Props) => {
   };
   for (const r of v2Rows) {
     const e = ensure(r.recorded_at);
-    if (r.wellbeing_source === "patient_self_report") e.paciente = Number(r.wellbeing_score);
+    if ((r as any).filled_by === "patient") e.paciente = Number(r.wellbeing_score);
     else e.terapeuta = Number(r.wellbeing_score);
   }
   for (const r of rpdRows) ensure(r.created_at).rpd.push(r);
