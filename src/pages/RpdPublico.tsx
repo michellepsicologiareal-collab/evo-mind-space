@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Loader2, X, Lock, ClipboardList, CheckCircle2, History, PenLine, TrendingUp, Smile } from "lucide-react";
+import { Loader2, X, Lock, ClipboardList, CheckCircle2, History, PenLine, TrendingUp, Smile, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -179,8 +179,8 @@ const RpdPublico = () => {
         {tab === "home" ? (
           <div className="grid gap-3 sm:grid-cols-2">
             {([
-              { id: "form" as const, emoji: "🧠", title: "Registro de Pensamentos (RPD)", text: "Algo mexeu com você? Registre a situação, o pensamento e o que sentiu.", cta: "Fazer meu RPD" },
-              { id: "mood" as const, emoji: "😊", title: "Meu humor", text: "Como você está hoje? Dê uma nota de 0 a 10 e marque suas emoções.", cta: "Registrar meu humor" },
+              { id: "form" as const, Icon: Brain, title: "Registro de Pensamentos (RPD)", text: "Algo mexeu com você? Registre a situação, o pensamento e o que sentiu.", cta: "Fazer meu RPD" },
+              { id: "mood" as const, Icon: Smile, title: "Meu humor", text: "Como você está hoje? Dê uma nota de 0 a 10 e marque suas emoções.", cta: "Registrar meu humor" },
             ]).map((c) => (
               <button
                 key={c.id}
@@ -189,7 +189,7 @@ const RpdPublico = () => {
                 className="bg-white rounded-[14px] p-5 text-left space-y-2 border-2 transition-transform active:scale-[0.98] hover:-translate-y-0.5"
                 style={{ borderColor: `${G}55`, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
               >
-                <span className="text-4xl block">{c.emoji}</span>
+                <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: `${G}1A` }}><c.Icon className="h-6 w-6" style={{ color: G }} /></span>
                 <span className="block font-display text-lg font-bold" style={{ color: INK }}>{c.title}</span>
                 <span className="block text-[13px]" style={{ color: MUTED }}>{c.text}</span>
                 <span className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold mt-1" style={{ background: G, color: "#fff" }}>{c.cta} →</span>
