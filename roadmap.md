@@ -42,4 +42,4 @@
 - [x] Clicar no "Previsto total do mês" mostra Pago + Em aberto por paciente
 
 ## Humor e RPD do paciente
-- [ ] Paciente registra o próprio humor numa tela junto com o RPD, cruzado com o registro do terapeuta (aguardando detalhes da usuária)
+- [x] Paciente registra humor (nota, emoções, texto) no link do RPD; prontuário cruza com o registro da terapeuta e RPDs
