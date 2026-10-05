@@ -15,6 +15,8 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis
 import { supabase } from "@/integrations/supabase/client";
 
 
+type RpdLite = { created_at: string; automatic_thought: string | null; emotion: string | null; filled_by: string };
+
 interface Props {
   patientId: string;
   patientName?: string;
@@ -43,6 +45,7 @@ const sourceLabel = (s: string | null) =>
 
 export const PatientMoodChart = ({ patientId }: Props) => {
   const [rows, setRows] = useState<ProgressRow[]>([]);
+  const [rpdRows, setRpdRows] = useState<RpdLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -162,6 +165,12 @@ export const PatientMoodChart = ({ patientId }: Props) => {
         if (cancelled) return;
         if (err) throw err;
         setRows((data as ProgressRow[]) ?? []);
+        const { data: rpd } = await (supabase as any)
+          .from("tcc_records")
+          .select("created_at, automatic_thought, emotion, filled_by")
+          .eq("patient_id", patientId)
+          .order("created_at", { ascending: true });
+        if (!cancelled) setRpdRows((rpd as RpdLite[]) ?? []);
       } catch (e: any) {
         if (cancelled) return;
         console.error("[PatientMoodChart] load failed:", e);
@@ -221,11 +230,23 @@ export const PatientMoodChart = ({ patientId }: Props) => {
   }
 
 
-  const chartData = v2Rows.map((r) => ({
-    name: format(new Date(r.recorded_at), "dd/MM"),
-    score: Number(r.wellbeing_score),
-    source: r.wellbeing_source,
-  }));
+  // Cruzamento por dia: humor do paciente × registro da terapeuta × RPDs
+  const byDay = new Map<string, { day: string; name: string; paciente?: number; terapeuta?: number; rpd: RpdLite[] }>();
+  const dayOf = (iso: string) => format(new Date(iso), "yyyy-MM-dd");
+  const ensure = (iso: string) => {
+    const k = dayOf(iso);
+    let e = byDay.get(k);
+    if (!e) { e = { day: k, name: format(new Date(iso), "dd/MM"), rpd: [] }; byDay.set(k, e); }
+    return e;
+  };
+  for (const r of v2Rows) {
+    const e = ensure(r.recorded_at);
+    if (r.wellbeing_source === "patient_self_report") e.paciente = Number(r.wellbeing_score);
+    else e.terapeuta = Number(r.wellbeing_score);
+  }
+  for (const r of rpdRows) ensure(r.created_at).rpd.push(r);
+  const crossDays = Array.from(byDay.values()).sort((a, b) => a.day.localeCompare(b.day));
+  const chartData = crossDays.filter((d) => d.paciente != null || d.terapeuta != null);
 
   const v2Scores = v2Rows.map((r) => Number(r.wellbeing_score));
   const avg = v2Scores.length ? v2Scores.reduce((a, b) => a + b, 0) / v2Scores.length : 0;
@@ -354,11 +375,52 @@ export const PatientMoodChart = ({ patientId }: Props) => {
                     borderRadius: 8,
                     fontSize: 12,
                   }}
-                  formatter={(value: number) => [`${value}/10 ${moodEmoji(value)}`, "Bem-estar"]}
+                  formatter={(value: number, key: string) => [`${value}/10 ${moodEmoji(value)}`, key === "paciente" ? "Paciente" : "Terapeuta"]}
                 />
-                <Area type="monotone" dataKey="score" stroke="hsl(var(--accent))" strokeWidth={2} fill="url(#wbGradient)" />
+                <Area type="monotone" dataKey="terapeuta" name="Terapeuta" connectNulls stroke="hsl(var(--accent))" strokeWidth={2} fill="url(#wbGradient)" />
+                <Line type="monotone" dataKey="paciente" name="Paciente" connectNulls stroke="hsl(var(--lilac))" strokeWidth={2} dot={{ r: 3 }} />
               </AreaChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      <div className="flex gap-4 text-xs text-muted-foreground -mt-2">
+        <span className="flex items-center gap-1"><span className="h-2 w-4 rounded bg-accent" /> Seu registro</span>
+        <span className="flex items-center gap-1"><span className="h-2 w-4 rounded bg-lilac" /> Paciente (link do RPD)</span>
+      </div>
+
+      {crossDays.some((d) => d.paciente != null || d.rpd.length) && (
+        <div className="rounded-xl border border-border bg-card p-3">
+          <p className="text-xs uppercase text-muted-foreground mb-2">Cruzamento por dia</p>
+          <div className="divide-y">
+            {[...crossDays].reverse().slice(0, 30).map((d) => {
+              const diff = d.paciente != null && d.terapeuta != null ? d.paciente - d.terapeuta : null;
+              return (
+                <div key={d.day} className="py-2 text-sm">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <span className="font-medium text-foreground">{format(new Date(d.day + "T12:00"), "dd/MM/yyyy")}</span>
+                    <span className="text-muted-foreground">Paciente: <strong className="text-foreground">{d.paciente ?? "—"}</strong></span>
+                    <span className="text-muted-foreground">Você: <strong className="text-foreground">{d.terapeuta ?? "—"}</strong></span>
+                    {diff != null && Math.abs(diff) >= 3 && (
+                      <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                        Diferença de {Math.abs(diff)} pontos
+                      </span>
+                    )}
+                    {d.rpd.length > 0 && (
+                      <span className="rounded-full bg-lilac/30 px-2 py-0.5 text-[11px] font-semibold text-foreground">
+                        {d.rpd.length} RPD
+                      </span>
+                    )}
+                  </div>
+                  {d.rpd.map((r, i) => (r.automatic_thought || r.emotion) && (
+                    <p key={i} className="mt-1 text-xs text-muted-foreground break-words">
+                      {r.filled_by === "patient" ? "Paciente" : "Sessão"}: {[r.automatic_thought, r.emotion].filter(Boolean).join(" · ")}
+                    </p>
+                  ))}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

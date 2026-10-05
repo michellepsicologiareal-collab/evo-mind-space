@@ -15,6 +15,13 @@
       "when": 1791140378847,
       "tag": "0001_selfcare_reminders",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791207249830,
+      "tag": "0002_patient_mood_by_rpd_token",
+      "breakpoints": true
     }
   ]
 }

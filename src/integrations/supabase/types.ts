@@ -2991,6 +2991,16 @@ export type Database = {
       }
       is_supervisor_of: { Args: { _supervisee_id: string }; Returns: boolean }
       link_supervisee_by_email: { Args: { _email: string }; Returns: string }
+      list_mood_by_token: {
+        Args: { _password: string; _token: string }
+        Returns: {
+          emotions: Json
+          id: string
+          patient_context: string
+          recorded_at: string
+          wellbeing_score: number
+        }[]
+      }
       list_my_supervisees: {
         Args: never
         Returns: {
@@ -3105,6 +3115,16 @@ export type Database = {
           _token: string
         }
         Returns: undefined
+      }
+      submit_mood_by_token: {
+        Args: {
+          _emotions: string[]
+          _note: string
+          _password: string
+          _score: number
+          _token: string
+        }
+        Returns: string
       }
       submit_rpd_by_token: {
         Args: { _password: string; _payload: Json; _token: string }
