@@ -15,6 +15,8 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis
 import { supabase } from "@/integrations/supabase/client";
 
 
+type RpdLite = { created_at: string; automatic_thought: string | null; emotion: string | null; filled_by: string };
+
 interface Props {
   patientId: string;
   patientName?: string;
@@ -43,6 +45,7 @@ const sourceLabel = (s: string | null) =>
 
 export const PatientMoodChart = ({ patientId }: Props) => {
   const [rows, setRows] = useState<ProgressRow[]>([]);
+  const [rpdRows, setRpdRows] = useState<RpdLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
