@@ -191,7 +191,17 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
   const sendWhatsApp = () => {
     if (!publicLink) return;
     const phone = normalizePhoneForWhatsApp(patientInfo?.phone);
-    const msg = `Olá! Use este link para registrar seus pensamentos (RPD) durante a semana: ${publicLink}${linkPassword.trim() ? `\n\nSenha: ${linkPassword.trim()}` : ""}`;
+    const msg = [
+      `Olá! Tudo bem?`,
+      ``,
+      `Este link é do seu RPD (Registro de Pensamentos), uma ferramenta da terapia que ajuda a perceber a relação entre as situações do dia a dia, os pensamentos e as emoções. Sempre que algo mexer com você, registre ali: o que aconteceu, o que passou pela sua cabeça e o que você sentiu. Assim conseguimos trabalhar melhor o que você vive nas sessões.`,
+      ``,
+      `No mesmo link você também encontra "Meu humor": uma nota de 0 a 10 para o seu dia, suas emoções e um espaço livre para escrever. Isso ajuda a acompanhar sua evolução semana a semana, junto com os registros de pensamento.`,
+      ``,
+      `Acesse aqui: ${publicLink}`,
+      ``,
+      `Preencha no seu ritmo — mesmo registros simples ajudam muito. Qualquer dúvida, me chame por aqui.`,
+    ].join("\n") + (linkPassword.trim() ? `\n\nSenha: ${linkPassword.trim()}` : "");
     const url = phone
       ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
       : `https://wa.me/?text=${encodeURIComponent(msg)}`;

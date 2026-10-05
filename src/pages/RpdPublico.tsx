@@ -172,9 +172,22 @@ const RpdPublico = () => {
             {info?.patient_name} · Psicóloga: {info?.therapist_name}{info?.therapist_crp ? ` · CRP ${info.therapist_crp}` : ""}
           </p>
           <p style={{ fontSize: 13, color: MUTED }}>
-            Use este espaço para entender uma situação que mexeu com você. Não precisa preencher perfeitamente: registre o que você percebeu naquele momento.
+            Este é o seu espaço para acompanhar o que você sente e pensa durante a semana.
           </p>
         </div>
+
+        {tab === "home" && (
+          <div className="bg-white rounded-[10px] p-4 sm:p-6 space-y-2" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)", borderLeft: `3px solid ${G}` }}>
+            <p className="font-display text-[15px] font-bold" style={{ color: INK }}>O que é o RPD?</p>
+            <p style={{ fontSize: 13, color: MUTED }}>
+              RPD significa Registro de Pensamentos. É uma ferramenta da terapia que ajuda a perceber como as situações do dia a dia, os pensamentos e as emoções se conectam: o que aconteceu, o que passou pela sua cabeça na hora e o que você sentiu. Não precisa preencher perfeitamente — registre o que você percebeu naquele momento.
+            </p>
+            <p className="font-display text-[15px] font-bold pt-1" style={{ color: INK }}>E o "Meu humor"?</p>
+            <p style={{ fontSize: 13, color: MUTED }}>
+              No mesmo link você também pode avaliar como está se sentindo: uma nota de 0 a 10 para o dia, as emoções que mais apareceram e um espaço livre para escrever. Juntando o humor com os registros de pensamento, sua psicóloga acompanha sua evolução semana a semana.
+            </p>
+          </div>
+        )}
 
         {tab === "home" ? (
           <div className="grid gap-3 sm:grid-cols-2">
