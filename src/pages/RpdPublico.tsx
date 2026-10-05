@@ -24,7 +24,7 @@ const RpdPublico = () => {
   const [pwdError, setPwdError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<RpdFormState>(emptyRpdForm());
-  const [tab, setTab] = useState<"mood" | "form" | "list" | "evo">("form");
+  const [tab, setTab] = useState<"home" | "mood" | "form" | "list" | "evo">("home");
   const [records, setRecords] = useState<RpdReadRecord[]>([]);
   const [loadingRecords, setLoadingRecords] = useState(false);
 
@@ -127,10 +127,10 @@ const RpdPublico = () => {
           <Button
             variant="outline"
             className="mt-5 w-full sm:w-auto min-h-12"
-            onClick={() => { setForm(emptyRpdForm()); setState("ready"); window.scrollTo({ top: 0 }); }}
+            onClick={() => { setForm(emptyRpdForm()); setTab("home"); setState("ready"); window.scrollTo({ top: 0 }); }}
 
           >
-            Registrar outro
+            Voltar ao início
           </Button>
           <Button
             variant="ghost"
@@ -176,6 +176,30 @@ const RpdPublico = () => {
           </p>
         </div>
 
+        {tab === "home" ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {([
+              { id: "form" as const, emoji: "🧠", title: "Registro de Pensamentos (RPD)", text: "Algo mexeu com você? Registre a situação, o pensamento e o que sentiu.", cta: "Fazer meu RPD" },
+              { id: "mood" as const, emoji: "😊", title: "Meu humor", text: "Como você está hoje? Dê uma nota de 0 a 10 e marque suas emoções.", cta: "Registrar meu humor" },
+            ]).map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => { setTab(c.id); window.scrollTo({ top: 0 }); }}
+                className="bg-white rounded-[14px] p-5 text-left space-y-2 border-2 transition-transform active:scale-[0.98] hover:-translate-y-0.5"
+                style={{ borderColor: `${G}55`, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
+              >
+                <span className="text-4xl block">{c.emoji}</span>
+                <span className="block font-display text-lg font-bold" style={{ color: INK }}>{c.title}</span>
+                <span className="block text-[13px]" style={{ color: MUTED }}>{c.text}</span>
+                <span className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold mt-1" style={{ background: G, color: "#fff" }}>{c.cta} →</span>
+              </button>
+            ))}
+            <button type="button" onClick={() => setTab("list")} className="sm:col-span-2 min-h-11 text-sm font-semibold underline" style={{ color: MUTED }}>
+              Ver meus registros e minha evolução
+            </button>
+          </div>
+        ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-[10px] bg-white p-1" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
           {([
             { id: "form" as const, label: "Novo registro", Icon: PenLine },
@@ -196,8 +220,9 @@ const RpdPublico = () => {
             </button>
           ))}
         </div>
+        )}
 
-        {tab === "mood" ? (
+        {tab === "home" ? null : tab === "mood" ? (
           <PatientMoodSelfReport token={token as string} password={password} accent={G} ink={INK} muted={MUTED} />
         ) : tab === "form" ? (
           <RpdForm value={form} onChange={setForm} accent={G} />

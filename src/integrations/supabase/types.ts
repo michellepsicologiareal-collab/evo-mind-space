@@ -1138,6 +1138,7 @@ export type Database = {
           data_model: Database["public"]["Enums"]["progress_data_model"]
           emotions: Json | null
           engagement: number | null
+          filled_by: string
           id: string
           mood_score: number | null
           note: string | null
@@ -1163,6 +1164,7 @@ export type Database = {
           data_model?: Database["public"]["Enums"]["progress_data_model"]
           emotions?: Json | null
           engagement?: number | null
+          filled_by?: string
           id?: string
           mood_score?: number | null
           note?: string | null
@@ -1188,6 +1190,7 @@ export type Database = {
           data_model?: Database["public"]["Enums"]["progress_data_model"]
           emotions?: Json | null
           engagement?: number | null
+          filled_by?: string
           id?: string
           mood_score?: number | null
           note?: string | null
