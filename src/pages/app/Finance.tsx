@@ -2737,6 +2737,9 @@ const Finance = () => {
                 <span className="text-muted-foreground" title="Valor das sessões futuras já agendadas (somente sessão avulsa)">
                   Previsto <strong className="text-foreground tabular-nums">{formatBRL(totalPrevistoCards)}</strong>
                 </span>
+                <span className="text-muted-foreground" title="Total previsto do mês = Em aberto + Pago">
+                  Previsto total do mês <strong className="text-primary tabular-nums">{formatBRL(totalPendenteCards + totalPagoCards)}</strong>
+                </span>
               </div>
 
               {/* Cards/filtros clicáveis */}
