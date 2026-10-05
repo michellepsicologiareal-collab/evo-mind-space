@@ -2690,7 +2690,7 @@ const Agenda = () => {
         )}
         {!isSupervisionCard && s.patient_id && (
           <>
-            <div className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">RPD</div>
+            <div className="px-4 pt-3 pb-1 text-xs font-semibold text-foreground/70">RPD</div>
             <button onClick={() => { setSheetOpen(false); setRpdOpen(true); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
               <NotebookPen className="h-4 w-4 text-primary" /> Ver registros RPD
             </button>
@@ -2699,7 +2699,7 @@ const Agenda = () => {
             </button>
           </>
         )}
-        <div className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Status da sessão</div>
+        <div className="px-4 pt-3 pb-1 text-xs font-semibold text-foreground/70">Status da sessão</div>
         <button onClick={() => { setSheetOpen(false); updateStatus(s.id, "completed"); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm">
           <Check className="h-4 w-4 text-emerald-600" /> Realizada
         </button>
@@ -2714,7 +2714,7 @@ const Agenda = () => {
         </button>
         {!isSupervisionCard && (
           <>
-            <div className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Pagamento</div>
+            <div className="px-4 pt-3 pb-1 text-xs font-semibold text-foreground/70">Pagamento</div>
             <button onClick={() => { setSheetOpen(false); updatePaymentStatus(s.id, "paid"); }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-muted text-left text-sm text-emerald-700">
               <Check className="h-4 w-4" /> Marcar como pago
             </button>
@@ -3065,24 +3065,24 @@ const Agenda = () => {
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1 space-y-1.5">
                 {planning.carried && (
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-semibold">
+                  <p className="text-xs font-semibold text-foreground/70">
                     Planejado na sessão anterior
                   </p>
                 )}
                 {planning.objetivo && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                    <p className="text-xs font-semibold text-foreground/70 flex items-center gap-1">
                       <Target className="h-3 w-3" /> Objetivo da próxima sessão
                     </p>
-                    <p className="text-xs text-foreground/85 mt-0.5 break-words whitespace-pre-line line-clamp-2">{planning.objetivo}</p>
+                    <p className="text-[15px] leading-[1.5] text-foreground/85 mt-0.5 break-words whitespace-pre-line line-clamp-2">{planning.objetivo}</p>
                   </div>
                 )}
                 {planning.retomar && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1">
+                    <p className="text-xs font-semibold text-foreground/70 flex items-center gap-1">
                       <RotateCcw className="h-3 w-3" /> Retomar / Continuidade
                     </p>
-                    <p className="text-xs text-foreground/85 mt-0.5 break-words whitespace-pre-line line-clamp-2">{planning.retomar}</p>
+                    <p className="text-[15px] leading-[1.5] text-foreground/85 mt-0.5 break-words whitespace-pre-line line-clamp-2">{planning.retomar}</p>
                   </div>
                 )}
               </div>
@@ -3102,10 +3102,10 @@ const Agenda = () => {
         {/* Contexto clínico rápido: combinado / próximo passo da sessão anterior */}
         {!compact && prevPlan && (
           <div className="mt-2 rounded-lg border border-primary/15 bg-primary/[0.04] px-2.5 py-1.5">
-            <p className="text-[10px] uppercase tracking-wider text-primary/80 font-semibold flex items-center gap-1">
+            <p className="text-xs font-semibold text-primary/90 flex items-center gap-1">
               <Target className="h-3 w-3" /> Combinado / próximo passo
             </p>
-            <p className="text-xs text-foreground/85 line-clamp-2 mt-0.5 break-words">{prevPlan}</p>
+            <p className="text-[15px] leading-[1.5] text-foreground/85 line-clamp-2 mt-0.5 break-words">{prevPlan}</p>
           </div>
         )}
 
@@ -3254,24 +3254,24 @@ const Agenda = () => {
               </SheetHeader>
               <div className="space-y-4">
                 {planning.carried && (
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-semibold">
+                  <p className="text-xs font-semibold text-foreground/70">
                     Planejado na sessão anterior
                   </p>
                 )}
                 {planning.objetivo && (
                   <div className="rounded-lg border border-border bg-muted/40 p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1 mb-1">
+                    <p className="text-xs font-semibold text-foreground/70 flex items-center gap-1 mb-1">
                       <Target className="h-3 w-3" /> Objetivo da próxima sessão
                     </p>
-                    <p className="text-sm text-foreground/90 break-words whitespace-pre-line">{planning.objetivo}</p>
+                    <p className="text-[15px] leading-[1.5] text-foreground/90 break-words whitespace-pre-line">{planning.objetivo}</p>
                   </div>
                 )}
                 {planning.retomar && (
                   <div className="rounded-lg border border-border bg-muted/40 p-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1 mb-1">
+                    <p className="text-xs font-semibold text-foreground/70 flex items-center gap-1 mb-1">
                       <RotateCcw className="h-3 w-3" /> Retomar / Continuidade
                     </p>
-                    <p className="text-sm text-foreground/90 break-words whitespace-pre-line">{planning.retomar}</p>
+                    <p className="text-[15px] leading-[1.5] text-foreground/90 break-words whitespace-pre-line">{planning.retomar}</p>
                   </div>
                 )}
                 {!planning.objetivo && !planning.retomar && (
@@ -3384,7 +3384,7 @@ const Agenda = () => {
             <CalendarIcon className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Clínica</p>
+            <p className="text-sm font-semibold text-foreground/70">Clínica</p>
             <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-foreground">Agenda</h1>
             <p className="mt-1.5 hidden sm:block text-sm md:text-base text-muted-foreground max-w-2xl">Visualize e organize seus atendimentos. Sessões marcadas aqui viram lembretes para o paciente, entradas no Google Calendar e linhas no Financeiro.</p>
           </div>
@@ -3702,7 +3702,7 @@ const Agenda = () => {
                 <User className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Paciente selecionado</p>
+                <p className="text-xs font-semibold text-foreground/70">Paciente selecionado</p>
                 <p className="font-display text-base font-semibold text-foreground truncate">{selectedPatientName}</p>
               </div>
               <button
@@ -4153,7 +4153,7 @@ const Agenda = () => {
                      <div className="min-w-0 rounded-2xl bg-card border border-border shadow-card p-2.5 sm:p-4">
                       <div className="grid grid-cols-7 gap-1 mb-2">
                         {WEEKDAY_NAMES.map((d) => (
-                          <div key={d} className="text-center text-[11px] uppercase tracking-wider text-muted-foreground font-medium py-1">{d}</div>
+                          <div key={d} className="text-center text-[11px] font-medium text-foreground/70 py-1">{d}</div>
                         ))}
                       </div>
                       <div className="grid grid-cols-7 gap-1">
@@ -4313,7 +4313,7 @@ const Agenda = () => {
                             )}
                             aria-label={format(day, "EEEE dd/MM", { locale: ptBR })}
                           >
-                            <span className="text-[10px] font-display font-semibold uppercase tracking-wide opacity-80">
+                            <span className="text-[11px] font-medium opacity-80">
                               {format(day, "EEEEEE", { locale: ptBR })}
                             </span>
                             <span className="text-base font-display font-bold leading-none">
@@ -5163,7 +5163,7 @@ const Agenda = () => {
                 {pkg && (
                   <>
                     <div className="pt-2 border-t border-border">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                      <p className="text-xs font-semibold text-foreground/70 mb-1">
                         Sequência (pacote de {pkg.total} sessões)
                       </p>
                       <p className="text-[11px] text-muted-foreground leading-snug">
@@ -5322,11 +5322,11 @@ const Agenda = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-center">
-                    <p className="text-xs uppercase tracking-wider text-emerald-600 mb-1">Total Pago</p>
+                    <p className="text-xs font-medium text-emerald-700 mb-1">Total Pago</p>
                     <p className="font-display text-xl font-bold text-emerald-700">R$ {drawerFinancials.totalPaid.toFixed(2)}</p>
                   </div>
                   <div className="rounded-xl bg-accent/10 border border-accent/30 p-4 text-center">
-                    <p className="text-xs uppercase tracking-wider text-accent mb-1">Total Pendente</p>
+                    <p className="text-xs font-medium text-accent mb-1">Total Pendente</p>
                     <p className="font-display text-xl font-bold text-accent">R$ {drawerFinancials.totalPending.toFixed(2)}</p>
                   </div>
                 </div>
@@ -5412,21 +5412,21 @@ const Agenda = () => {
                       { label: "Categoria", value: drawerPatientData.category === "individual" ? "Individual" : drawerPatientData.category === "couple" ? "Casal" : drawerPatientData.category },
                     ].map((item) => (
                       <div key={item.label} className="rounded-xl bg-muted/50 border border-border p-3">
-                        <p className="text-xs uppercase tracking-wider text-muted-foreground mb-0.5">{item.label}</p>
+                        <p className="text-xs font-medium text-foreground/70 mb-0.5">{item.label}</p>
                         <p className="text-sm text-foreground">{item.value || "—"}</p>
                       </div>
                     ))}
                   </div>
                   {drawerPatientData.notes && (
                     <div className="rounded-xl bg-muted/50 border border-border p-3">
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Observações</p>
-                      <p className="text-sm text-foreground whitespace-pre-wrap">{drawerPatientData.notes}</p>
+                      <p className="text-xs font-medium text-foreground/70 mb-1">Observações</p>
+                      <p className="text-[15px] leading-[1.5] text-foreground whitespace-pre-wrap">{drawerPatientData.notes}</p>
                     </div>
                   )}
                   {drawerPatientData.chief_complaint && (
                     <div className="rounded-xl bg-muted/50 border border-border p-3">
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Queixa principal</p>
-                      <p className="text-sm text-foreground whitespace-pre-wrap">{drawerPatientData.chief_complaint}</p>
+                      <p className="text-xs font-medium text-foreground/70 mb-1">Queixa principal</p>
+                      <p className="text-[15px] leading-[1.5] text-foreground whitespace-pre-wrap">{drawerPatientData.chief_complaint}</p>
                     </div>
                   )}
                 </div>
@@ -5566,7 +5566,7 @@ const Agenda = () => {
               }}
             />
             <div className="rounded-xl border border-border/60 bg-secondary/30 p-3">
-              <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">Mensagem</p>
+              <p className="mb-1 text-xs font-medium text-foreground/70">Mensagem</p>
               <p className="whitespace-pre-wrap text-sm text-foreground max-h-48 overflow-y-auto">{waSendConfirm?.message}</p>
             </div>
           </div>
