@@ -331,6 +331,7 @@ const Finance = () => {
   const [reminderHistoryPlan, setReminderHistoryPlan] = useState<{ key: string; name: string } | null>(null);
   const [auditOpen, setAuditOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [totalBreakdownOpen, setTotalBreakdownOpen] = useState(false);
   // Texto editável da cobrança na tela de conferência
   const [draftMessage, setDraftMessage] = useState("");
   const [sendingBillingKey, setSendingBillingKey] = useState<string | null>(null);
@@ -2737,9 +2738,44 @@ const Finance = () => {
                 <span className="text-muted-foreground" title="Valor das sessões futuras já agendadas (somente sessão avulsa)">
                   Previsto <strong className="text-foreground tabular-nums">{formatBRL(totalPrevistoCards)}</strong>
                 </span>
-                <span className="text-muted-foreground" title="Total previsto do mês = Em aberto + Pago">
+                <button
+                  type="button"
+                  onClick={() => setTotalBreakdownOpen(true)}
+                  className="text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-foreground"
+                  title="Ver o que compõe o total (Pago + Em aberto)"
+                >
                   Previsto total do mês <strong className="text-primary tabular-nums">{formatBRL(totalPendenteCards + totalPagoCards)}</strong>
-                </span>
+                </button>
+                <Dialog open={totalBreakdownOpen} onOpenChange={setTotalBreakdownOpen}>
+                  <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>Previsto total do mês</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                      <div className="rounded-xl bg-muted/50 p-2"><div className="text-xs text-muted-foreground">Pago</div><strong className="text-moss tabular-nums">{formatBRL(totalPagoCards)}</strong></div>
+                      <div className="rounded-xl bg-muted/50 p-2"><div className="text-xs text-muted-foreground">Em aberto</div><strong className="text-destructive tabular-nums">{formatBRL(totalPendenteCards)}</strong></div>
+                      <div className="rounded-xl bg-muted/50 p-2"><div className="text-xs text-muted-foreground">Total</div><strong className="text-primary tabular-nums">{formatBRL(totalPagoCards + totalPendenteCards)}</strong></div>
+                    </div>
+                    <div className="divide-y rounded-xl border">
+                      {allGroups.filter((g) => g.pago > 0 || g.emAberto > 0).sort((a, b) => (b.pago + b.emAberto) - (a.pago + a.emAberto)).map((g) => (
+                        <div key={g.key} className="flex items-center justify-between gap-3 p-3 text-sm">
+                          <div className="min-w-0">
+                            <div className="truncate font-medium">{g.name}</div>
+                            <div className="text-xs text-muted-foreground">{g.isPlan ? "Plano" : "Avulsa"}</div>
+                          </div>
+                          <div className="shrink-0 text-right text-xs tabular-nums">
+                            <div className="text-moss">Pago {formatBRL(g.pago)}</div>
+                            <div className="text-destructive">Em aberto {formatBRL(g.emAberto)}</div>
+                            <div className="font-semibold text-foreground">{formatBRL(g.pago + g.emAberto)}</div>
+                          </div>
+                        </div>
+                      ))}
+                      {allGroups.every((g) => g.pago <= 0 && g.emAberto <= 0) && (
+                        <p className="p-4 text-center text-sm text-muted-foreground">Nenhum valor pago ou em aberto neste mês ainda.</p>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
 
               {/* Cards/filtros clicáveis */}

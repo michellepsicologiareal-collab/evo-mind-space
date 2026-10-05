@@ -37,3 +37,9 @@
 
 ## Autocuidado
 - [x] RPD privado do terapeuta com edição, histórico e gráficos de evolução
+
+## Financeiro
+- [x] Clicar no "Previsto total do mês" mostra Pago + Em aberto por paciente
+
+## Humor e RPD do paciente
+- [ ] Paciente registra o próprio humor numa tela junto com o RPD, cruzado com o registro do terapeuta (aguardando detalhes da usuária)
