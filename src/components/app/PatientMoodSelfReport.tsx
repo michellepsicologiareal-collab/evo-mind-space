@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Angry, Frown, Annoyed, Meh, Smile, Laugh, type LucideIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 const EMOTIONS = ["Ansiedade", "Tristeza", "Raiva", "Culpa", "Vergonha", "Medo", "Calma", "Alegria", "Esperança", "Gratidão"];
-const FACES = ["😣", "😣", "😟", "😟", "😕", "😐", "🙂", "🙂", "😊", "😄", "😄"];
+const FACES: LucideIcon[] = [Angry, Angry, Frown, Frown, Annoyed, Meh, Smile, Smile, Smile, Laugh, Laugh];
+const Face = ({ n, className, color }: { n: number; className?: string; color?: string }) => { const I = FACES[n] ?? Smile; return <I className={className} style={{ color }} />; };
 
 type MoodRow = { id: string; recorded_at: string; wellbeing_score: number; emotions: string[] | null; patient_context: string | null };
 
@@ -60,7 +61,7 @@ export const PatientMoodSelfReport = ({ token, password, accent, ink, muted }: P
               className="min-h-12 rounded-[8px] border text-sm font-semibold flex flex-col items-center justify-center"
               style={score === n ? { background: accent, color: "#fff", borderColor: accent } : { color: ink, borderColor: "rgba(0,0,0,0.1)" }}
             >
-              <span className="text-base leading-none">{FACES[n]}</span>{n}
+              <Face n={n} className="h-4 w-4 mb-0.5" />{n}
             </button>
           ))}
         </div>
@@ -95,7 +96,7 @@ export const PatientMoodSelfReport = ({ token, password, accent, ink, muted }: P
           <p className="text-[13px] font-semibold" style={{ color: ink }}>Meus registros de humor</p>
           {rows.map((r) => (
             <div key={r.id} className="flex items-start gap-3 border-t pt-2 text-[13px]" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-              <span className="text-xl">{FACES[r.wellbeing_score] ?? "🙂"}</span>
+              <Face n={r.wellbeing_score} className="h-5 w-5 shrink-0 mt-0.5" color={accent} />
               <div className="min-w-0 flex-1">
                 <p style={{ color: ink }}><strong>{r.wellbeing_score}/10</strong> · {format(new Date(r.recorded_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</p>
                 {!!r.emotions?.length && <p style={{ color: muted }}>{r.emotions.join(" · ")}</p>}

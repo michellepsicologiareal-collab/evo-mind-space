@@ -3,7 +3,7 @@ import { logClinicalAccess } from "@/utils/auditLog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight, Link2, Copy, MessageCircle, User, Ban, Pencil, TrendingUp, BarChart3 } from "lucide-react";
+import { Plus, Loader2, Trash2, ClipboardList, ChevronDown, ChevronRight, Link2, Copy, MessageCircle, User, Ban, RefreshCw, Pencil, TrendingUp, BarChart3 } from "lucide-react";
 import { RpdEvolutionPanel } from "@/components/app/RpdEvolutionPanel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
@@ -165,6 +165,22 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
     loadInvites();
   };
 
+
+  const renewInvite = async (inv: { id: string; token: string; password: string | null }) => {
+    setRevoking(inv.id);
+    const days = Number(linkDays) || 30;
+    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+    const { error } = await (supabase as any)
+      .from("rpd_invites")
+      .update({ expires_at: expiresAt, revoked_at: null })
+      .eq("id", inv.id);
+    setRevoking(null);
+    if (error) return toast.error("Não foi possível renovar o link.");
+    setPublicLink(`${window.location.origin}/rpd/${inv.token}`);
+    setLinkPassword(inv.password ?? "");
+    toast.success(`Link renovado por ${days} dias · mesmo endereço, registros mantidos`);
+    loadInvites();
+  };
 
   const copyLink = async () => {
     if (!publicLink) return;
@@ -583,6 +599,16 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                           {inv.password ? " · com senha" : ""}
                         </p>
                       </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={revoking === inv.id}
+                          onClick={() => renewInvite(inv)}
+                          title={`Renovar por ${Number(linkDays) || 30} dias mantendo o mesmo link`}
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" /> Renovar
+                        </Button>
                       {active ? (
                         <Button
                           variant="ghost"
@@ -596,6 +622,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
                       ) : (
                         <span className="text-[11px] shrink-0" style={{ color: MUTED }}>inativo</span>
                       )}
+                      </div>
                     </li>
                   );
                 })}
