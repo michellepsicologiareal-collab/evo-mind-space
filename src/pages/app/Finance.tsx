@@ -3215,6 +3215,7 @@ const Finance = () => {
                   { icon: CheckCircle2, label: "Pago", text: "Total recebido do paciente referente às sessões ou ao plano." },
                   { icon: Clock, label: "Em aberto", text: "Valor que ainda não foi pago pelo paciente." },
                   { icon: CalendarClock, label: "Previsto", text: "Valor das sessões futuras já agendadas (somente para sessão avulsa)." },
+                  { icon: Wallet, label: "Previsto total do mês", text: "Soma de Pago + Em aberto — tudo que está previsto para o mês." },
                   { icon: MessageCircle, label: "Pagamento × Cobrança", text: "O selo de pagamento (Pago/Parcial/Pendente) indica o que já foi recebido. O selo de cobrança indica o andamento do pedido enviado ao paciente." },
                 ].map((l) => {
                   const Icon = l.icon;
