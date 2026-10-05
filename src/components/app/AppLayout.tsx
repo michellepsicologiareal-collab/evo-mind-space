@@ -157,11 +157,11 @@ export const AppLayout = () => {
   );
 
   const sidebarSections: { label: string; routes: string[] }[] = [
-    { label: "COMECE POR AQUI", routes: ["/app/comece-por-aqui"] },
-    { label: "PRINCIPAL", routes: ["/app", "/app/pacientes", "/app/agenda", "/app/humor", "/app/autocuidado"] },
-    { label: "GESTÃO", routes: ["/app/financeiro", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
-    { label: "SUPERVISÃO", routes: ["/app/supervisao", "/app/plano-desenvolvimento"] },
-    { label: "CONFIGURAÇÕES", routes: ["/app/perfil", "/app/suporte"] },
+    { label: "Comece por aqui", routes: ["/app/comece-por-aqui"] },
+    { label: "Principal", routes: ["/app", "/app/pacientes", "/app/agenda", "/app/humor", "/app/autocuidado"] },
+    { label: "Gestão", routes: ["/app/financeiro", "/app/anamneses", "/app/contrato-modelo", "/app/contratos"] },
+    { label: "Supervisão", routes: ["/app/supervisao", "/app/plano-desenvolvimento"] },
+    { label: "Configurações", routes: ["/app/perfil", "/app/suporte"] },
   ];
 
 
@@ -179,7 +179,7 @@ export const AppLayout = () => {
           if (items.length === 0) return null;
           return (
             <div key={sec.label} className="space-y-1">
-              <div className="px-3.5 pt-5 pb-2 font-display font-semibold text-[9px] uppercase text-[hsl(var(--nav-muted))]/70" style={{ letterSpacing: "0.16em" }}>
+              <div className="px-3.5 pt-5 pb-2 font-semibold text-[11px] text-[hsl(var(--nav-muted))]/90">
                 {sec.label}
               </div>
               {items.map((item) => renderNavLink(item))}
@@ -193,7 +193,7 @@ export const AppLayout = () => {
             <div className="pt-4 pb-2">
               <div className="flex items-center gap-2 px-4">
                 <div className="h-px flex-1 bg-[hsl(var(--admin-accent))]/20" />
-                <span className="text-[10px] uppercase tracking-widest font-semibold text-[hsl(var(--admin-accent))]/60">
+                <span className="text-[11px] font-semibold text-[hsl(var(--admin-accent))]/80">
                   Administração
                 </span>
                 <div className="h-px flex-1 bg-[hsl(var(--admin-accent))]/20" />
