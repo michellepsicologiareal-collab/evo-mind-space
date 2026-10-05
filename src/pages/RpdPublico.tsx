@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Loader2, X, Lock, ClipboardList, CheckCircle2, History, PenLine, TrendingUp } from "lucide-react";
+import { Loader2, X, Lock, ClipboardList, CheckCircle2, History, PenLine, TrendingUp, Smile } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RpdForm } from "@/components/app/RpdForm";
 import { RpdRecordsRead, type RpdReadRecord } from "@/components/app/RpdRecordsRead";
 import { RpdEvolutionPanel } from "@/components/app/RpdEvolutionPanel";
+import { PatientMoodSelfReport } from "@/components/app/PatientMoodSelfReport";
 import { emptyRpdForm, toRpdPayload, hasRpdContent, type RpdFormState } from "@/lib/rpd";
 import { toast } from "sonner";
 import logoImg from "@/assets/logo-psireal.png";
@@ -23,7 +24,7 @@ const RpdPublico = () => {
   const [pwdError, setPwdError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<RpdFormState>(emptyRpdForm());
-  const [tab, setTab] = useState<"form" | "list" | "evo">("form");
+  const [tab, setTab] = useState<"mood" | "form" | "list" | "evo">("form");
   const [records, setRecords] = useState<RpdReadRecord[]>([]);
   const [loadingRecords, setLoadingRecords] = useState(false);
 
@@ -175,9 +176,10 @@ const RpdPublico = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 rounded-[10px] bg-white p-1" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 rounded-[10px] bg-white p-1" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
           {([
             { id: "form" as const, label: "Novo registro", Icon: PenLine },
+            { id: "mood" as const, label: "Meu humor", Icon: Smile },
             { id: "list" as const, label: `Meus registros${records.length ? ` (${records.length})` : ""}`, Icon: History },
             { id: "evo" as const, label: "Minha evolução", Icon: TrendingUp },
           ]).map(({ id, label, Icon }) => (
@@ -195,7 +197,9 @@ const RpdPublico = () => {
           ))}
         </div>
 
-        {tab === "form" ? (
+        {tab === "mood" ? (
+          <PatientMoodSelfReport token={token as string} password={password} accent={G} ink={INK} muted={MUTED} />
+        ) : tab === "form" ? (
           <RpdForm value={form} onChange={setForm} accent={G} />
         ) : loadingRecords ? (
           <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto" style={{ color: G }} /></div>
