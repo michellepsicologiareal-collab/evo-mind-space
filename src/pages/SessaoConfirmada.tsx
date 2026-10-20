@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toZonedTime } from "date-fns-tz";
-import { Check, Loader2, Download, Calendar } from "lucide-react";
+import { Check, Loader2, Download, Calendar, Smartphone, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logoImg from "@/assets/logo-psireal.png";
 
@@ -18,6 +18,7 @@ interface SessionData {
   therapist_name: string | null;
   meeting_link?: string | null;
   clinic_address?: string | null;
+  pix_key?: string | null;
 }
 
 function buildICS(session: SessionData): string {
