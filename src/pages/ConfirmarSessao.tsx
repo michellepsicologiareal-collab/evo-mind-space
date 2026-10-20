@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toZonedTime } from "date-fns-tz";
-import { Check, X, Loader2, CalendarCheck } from "lucide-react";
+import { Check, X, Loader2, CalendarCheck, Smartphone, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logoImg from "@/assets/logo-psireal.png";
 
@@ -16,6 +16,7 @@ interface SessionData {
   patient_name: string;
   modality: string | null;
   therapist_name: string | null;
+  pix_key?: string | null;
 }
 
 type PageState = "loading" | "ready" | "cancelled" | "already" | "error";
