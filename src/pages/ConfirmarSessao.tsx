@@ -113,6 +113,32 @@ const ConfirmarSessao = () => {
               às {format(zonedDate, "HH:mm")}?
             </p>
 
+            {session.pix_key && (
+              <div className="mt-6 rounded-xl bg-muted/40 border border-border p-4 text-left">
+                <div className="flex items-center gap-2 mb-1">
+                  <Smartphone className="h-4 w-4 text-accent" />
+                  <p className="text-sm font-medium text-foreground">Pagamento via PIX</p>
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Chave PIX de {session.therapist_name?.split(" ")[0] ?? "sua psicóloga"}:
+                </p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-sm text-foreground bg-background rounded-lg px-3 py-2 border border-border break-all select-all">
+                    {session.pix_key}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 gap-1.5"
+                    onClick={copyPix}
+                  >
+                    {pixCopied ? <Check className="h-4 w-4 text-moss" /> : <Copy className="h-4 w-4" />}
+                    {pixCopied ? "Copiada!" : "Copiar"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <div className="mt-8 flex flex-col gap-3">
               <Button
                 variant="accent"
