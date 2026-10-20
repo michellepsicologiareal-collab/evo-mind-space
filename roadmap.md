@@ -40,6 +40,8 @@
 
 ## Financeiro
 - [x] Clicar no "Previsto total do mês" mostra Pago + Em aberto por paciente
+- [ ] Adicionar painel por paciente com resumo, sessões, cobranças e histórico financeiro
+- [ ] Verificar abertura e consulta do painel com dados reais
 
 ## Humor e RPD do paciente
 - [x] Paciente registra humor (nota, emoções, texto) no link do RPD; prontuário cruza com o registro da terapeuta e RPDs
