@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toZonedTime } from "date-fns-tz";
-import { Check, X, Loader2, CalendarCheck } from "lucide-react";
+import { Check, X, Loader2, CalendarCheck, Smartphone, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logoImg from "@/assets/logo-psireal.png";
 
@@ -16,6 +16,7 @@ interface SessionData {
   patient_name: string;
   modality: string | null;
   therapist_name: string | null;
+  pix_key?: string | null;
 }
 
 type PageState = "loading" | "ready" | "cancelled" | "already" | "error";
@@ -26,6 +27,18 @@ const ConfirmarSessao = () => {
   const [session, setSession] = useState<SessionData | null>(null);
   const [state, setState] = useState<PageState>("loading");
   const [submitting, setSubmitting] = useState(false);
+  const [pixCopied, setPixCopied] = useState(false);
+
+  const copyPix = async () => {
+    if (!session?.pix_key) return;
+    try {
+      await navigator.clipboard.writeText(session.pix_key);
+      setPixCopied(true);
+      setTimeout(() => setPixCopied(false), 2500);
+    } catch {
+      // clipboard indisponível — o paciente ainda vê a chave na tela
+    }
+  };
 
   useEffect(() => {
     document.title = "Confirmação de Sessão — Psi Real";
@@ -99,6 +112,32 @@ const ConfirmarSessao = () => {
             <p className="text-lg text-accent font-semibold">
               às {format(zonedDate, "HH:mm")}?
             </p>
+
+            {session.pix_key && (
+              <div className="mt-6 rounded-xl bg-muted/40 border border-border p-4 text-left">
+                <div className="flex items-center gap-2 mb-1">
+                  <Smartphone className="h-4 w-4 text-accent" />
+                  <p className="text-sm font-medium text-foreground">Pagamento via PIX</p>
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Chave PIX de {session.therapist_name?.split(" ")[0] ?? "sua psicóloga"}:
+                </p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-sm text-foreground bg-background rounded-lg px-3 py-2 border border-border break-all select-all">
+                    {session.pix_key}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 gap-1.5"
+                    onClick={copyPix}
+                  >
+                    {pixCopied ? <Check className="h-4 w-4 text-moss" /> : <Copy className="h-4 w-4" />}
+                    {pixCopied ? "Copiada!" : "Copiar"}
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <div className="mt-8 flex flex-col gap-3">
               <Button
