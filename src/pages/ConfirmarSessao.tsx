@@ -27,6 +27,18 @@ const ConfirmarSessao = () => {
   const [session, setSession] = useState<SessionData | null>(null);
   const [state, setState] = useState<PageState>("loading");
   const [submitting, setSubmitting] = useState(false);
+  const [pixCopied, setPixCopied] = useState(false);
+
+  const copyPix = async () => {
+    if (!session?.pix_key) return;
+    try {
+      await navigator.clipboard.writeText(session.pix_key);
+      setPixCopied(true);
+      setTimeout(() => setPixCopied(false), 2500);
+    } catch {
+      // clipboard indisponível — o paciente ainda vê a chave na tela
+    }
+  };
 
   useEffect(() => {
     document.title = "Confirmação de Sessão — Psi Real";
