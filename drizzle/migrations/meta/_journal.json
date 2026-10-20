@@ -29,6 +29,13 @@
       "when": 1791207953940,
       "tag": "0003_patient_progress_filled_by",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792509286734,
+      "tag": "0004_add_pix_key_to_session_token",
+      "breakpoints": true
     }
   ]
 }

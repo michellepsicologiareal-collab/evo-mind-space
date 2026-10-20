@@ -2966,6 +2966,7 @@ export type Database = {
           meeting_link: string
           modality: string
           patient_name: string
+          pix_key: string
           scheduled_at: string
           status: string
           therapist_name: string
