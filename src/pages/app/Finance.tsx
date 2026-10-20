@@ -434,6 +434,13 @@ const Finance = () => {
   const recordPaymentChange = async (ids: string[], action: "paid" | "undone") => {
     if (!user || ids.length === 0) return;
     const all = [...rawRows, ...planRowsAll];
+    const missingIds = ids.filter((id) => !all.some((r) => r.id === id));
+    if (missingIds.length > 0) {
+      const { data } = await supabase.from("sessions")
+        .select("id, scheduled_at, price, patient:patients!sessions_patient_id_fkey(id, full_name)")
+        .eq("user_id", user.id).in("id", missingIds);
+      all.push(...((data ?? []) as unknown as Row[]));
+    }
     const picked = ids.map((id) => all.find((r) => r.id === id)).filter(Boolean) as Row[];
     const patientId = picked[0]?.patient?.id ?? null;
     const amount = picked.reduce((sum, r) => sum + Number(r.price ?? 0), 0);
