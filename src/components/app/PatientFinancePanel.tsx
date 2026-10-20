@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { ListSkeleton } from "@/components/app/Skeletons";
 import { BillingBadge } from "@/components/app/BillingBadge";
 import PatientWhatsAppLog from "@/components/app/PatientWhatsAppLog";
-import { computeBillingStatus, isPlanNotes } from "@/lib/billing";
+import { computeBillingStatus, isPlanNotes, planGroupIdOf } from "@/lib/billing";
 import { patientFinanceColumns, summarizePatientFinance, type PatientFinanceSession } from "@/lib/patientFinance";
 import { paymentChangeLabel } from "@/lib/paymentAudit";
 
@@ -22,7 +22,7 @@ interface Props {
   patient: { id: string; name: string } | null;
   month: Date;
   onClose: () => void;
-  onManage: (session: PatientFinanceSession) => void;
+  onManage: (session: PatientFinanceSession, sessions: PatientFinanceSession[]) => void;
   onChart: (id: string) => void;
 }
 
@@ -61,7 +61,11 @@ export function PatientFinancePanel({ patient, month, onClose, onManage, onChart
   const periodRows = sessions.filter((s) => inPeriod(s.scheduled_at) && !s.is_expense);
   const totals = summarizePatientFinance(periodRows);
   const shown = periodRows.filter((s) => filter === "all" || (s.status !== "cancelled" && s.payment_status === filter));
-  const monthOptions = useMemo(() => Array.from(new Set([format(month, "yyyy-MM"), ...sessions.map((s) => format(new Date(s.scheduled_at), "yyyy-MM"))])).sort().reverse(), [sessions, month]);
+  const manage = (session: PatientFinanceSession) => {
+    const planId = isPlanNotes(session.notes) ? planGroupIdOf(session.notes) : null;
+    const group = planId ? sessions.filter((s) => s.patient?.id === session.patient?.id && isPlanNotes(s.notes) && planGroupIdOf(s.notes) === planId && !s.is_expense) : [session];
+    onManage(session, group);
+  };
   const history = changes.filter((c) => period === "all" || format(new Date(c.created_at), "yyyy-MM") === format(month, "yyyy-MM"));
 
   return <Sheet open={Boolean(patient)} onOpenChange={(open) => { if (!open) onClose(); }}>
