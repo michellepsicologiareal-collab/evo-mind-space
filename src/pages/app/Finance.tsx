@@ -120,7 +120,9 @@ import {
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { PageIntro } from "@/components/app/PageIntro";
-import { PatientSessionHistory } from "@/components/app/PatientSessionHistory";
+import { PatientFinancePanel } from "@/components/app/PatientFinancePanel";
+import { PatientFinanceOverview } from "@/components/app/PatientFinanceOverview";
+import { summarizePatientFinance } from "@/lib/patientFinance";
 import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
 import { logWhatsAppMessage } from "@/lib/whatsappLog";
 import { logPaymentChange, type PaymentChangeAction } from "@/lib/paymentAudit";
@@ -2106,6 +2108,14 @@ const Finance = () => {
         </div>
       </header>
 
+      <PatientFinanceOverview
+        patients={patientOptions}
+        sessions={rawRows}
+        month={monthCursor}
+        loading={loading}
+        onOpen={setFinanceHistory}
+      />
+
 
       {/* Drawer lateral com pacientes por faixa de honorários */}
       <Sheet open={feeBandOpen !== null} onOpenChange={(o) => !o && setFeeBandOpen(null)}>
@@ -3557,40 +3567,29 @@ const Finance = () => {
 
       {/* Histórico financeiro do paciente — permanece dentro do contexto do Financeiro */}
 
-      <Sheet open={!!financeHistory} onOpenChange={(open) => { if (!open) setFinanceHistory(null); }}>
-        <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
-          <SheetHeader className="text-left">
-            <SheetTitle className="font-display">Histórico financeiro</SheetTitle>
-            <SheetDescription>
-              {financeHistory?.name ?? ""} · resumo, sessões, pagamentos e Receita Saúde
-            </SheetDescription>
-          </SheetHeader>
-
-          {financeHistory && (
-            <div className="mt-4 space-y-4">
-              <PatientSessionHistory
-                patientId={financeHistory.id}
-                patientName={financeHistory.name}
-              />
-
-              <div className="pt-2 border-t border-border/60 flex flex-col sm:flex-row gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="sm:ml-auto focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  onClick={() => {
-                    const id = financeHistory.id;
-                    setFinanceHistory(null);
-                    navigate(`/app/pacientes?patient=${id}`);
-                  }}
-                >
-                  Abrir ficha do paciente
-                </Button>
-              </div>
-            </div>
-          )}
-        </SheetContent>
-      </Sheet>
+      <PatientFinancePanel
+        patient={financeHistory}
+        month={monthCursor}
+        onClose={() => setFinanceHistory(null)}
+        onChart={(id) => { setFinanceHistory(null); navigate(`/app/pacientes?patient=${id}`); }}
+        onManage={(session, sessions) => {
+          const summary = summarizePatientFinance(sessions);
+          const isPlan = isPlanNotes(session.notes);
+          setFinanceHistory(null);
+          openSettle({
+            key: `${session.patient?.id ?? session.id}::${isPlan ? `plan-${planGroupIdOf(session.notes) ?? session.id}` : "avulsa"}`,
+            name: session.patient?.full_name ?? "Paciente",
+            patientId: session.patient?.id ?? null,
+            isPlan,
+            planValue: sessions.reduce((sum, s) => sum + (s.status === "cancelled" ? 0 : Number(s.price ?? 0)), 0),
+            pago: summary.paid,
+            emAberto: summary.pending,
+            planSessions: sessions.filter((s) => s.status !== "cancelled").length,
+            unitPrice: Number(session.price ?? 0),
+            sessions,
+          });
+        }}
+      />
 
       {/* Pagamentos atrasados — mesma regra do indicador do Painel */}
       <Sheet
