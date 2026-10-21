@@ -7,6 +7,7 @@ import { toZonedTime } from "date-fns-tz";
 import { Check, Loader2, Download, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFreshPublicPage } from "@/hooks/useFreshPublicPage";
+import { fetchSessionByToken } from "@/lib/publicSessionToken";
 import logoImg from "@/assets/logo-psireal.png";
 
 interface SessionData {
@@ -75,13 +76,16 @@ const SessaoConfirmada = () => {
 
   useEffect(() => {
     if (!token) { setError(true); setLoading(false); return; }
+    let alive = true;
     const load = async () => {
-      const { data, error: err } = await supabase.rpc("get_session_by_token", { _token: token });
-      if (err || !data || (data as any[]).length === 0) { setError(true); setLoading(false); return; }
-      setSession((data as any[])[0]);
+      const res = await fetchSessionByToken(token);
+      if (!alive) return;
+      if (res.kind !== "found") { setError(true); setLoading(false); return; }
+      setSession(res.row);
       setLoading(false);
     };
     load();
+    return () => { alive = false; };
   }, [token]);
 
   const downloadICS = () => {
