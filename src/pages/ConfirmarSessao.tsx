@@ -92,7 +92,7 @@ const ConfirmarSessao = () => {
             <p className="mt-3 text-muted-foreground text-base">
               Você confirma sua sessão para
             </p>
-            <p className="mt-2 font-display text-xl font-semibold text-foreground capitalize">
+            <p className="mt-2 font-display text-xl font-semibold text-foreground first-letter:uppercase">
               {format(zonedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
             </p>
             <p className="text-lg text-accent font-semibold">
