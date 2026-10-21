@@ -129,7 +129,7 @@ const SessaoConfirmada = () => {
             <div className="mt-4 rounded-xl bg-muted/40 p-4 text-left space-y-1.5">
               <p className="text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">📅 Data:</span>{" "}
-                <span className="capitalize">{format(zonedDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+                <span className="inline-block first-letter:uppercase">{format(zonedDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
               </p>
               <p className="text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">🕐 Horário:</span>{" "}
