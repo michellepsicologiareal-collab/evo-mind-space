@@ -6,6 +6,7 @@ import { ptBR } from "date-fns/locale";
 import { toZonedTime } from "date-fns-tz";
 import { Check, X, Loader2, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useFreshPublicPage } from "@/hooks/useFreshPublicPage";
 import logoImg from "@/assets/logo-psireal.png";
 
 interface SessionData {
@@ -21,6 +22,7 @@ interface SessionData {
 type PageState = "loading" | "ready" | "cancelled" | "already" | "error";
 
 const ConfirmarSessao = () => {
+  useFreshPublicPage();
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const [session, setSession] = useState<SessionData | null>(null);
