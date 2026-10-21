@@ -7,6 +7,8 @@ import { toZonedTime } from "date-fns-tz";
 import { Check, X, Loader2, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFreshPublicPage } from "@/hooks/useFreshPublicPage";
+import { fetchSessionByToken } from "@/lib/publicSessionToken";
+import { toast } from "sonner";
 import logoImg from "@/assets/logo-psireal.png";
 
 interface SessionData {
@@ -19,7 +21,7 @@ interface SessionData {
   therapist_name: string | null;
 }
 
-type PageState = "loading" | "ready" | "cancelled" | "already" | "error";
+type PageState = "loading" | "ready" | "cancelled" | "already" | "error" | "network";
 
 const ConfirmarSessao = () => {
   useFreshPublicPage();
@@ -28,6 +30,7 @@ const ConfirmarSessao = () => {
   const [session, setSession] = useState<SessionData | null>(null);
   const [state, setState] = useState<PageState>("loading");
   const [submitting, setSubmitting] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   useEffect(() => {
     document.title = "Confirmação de Sessão — Psi Real";
     return () => { document.title = "Psi Real — Gestão Inteligente para Psicólogos"; };
@@ -35,10 +38,14 @@ const ConfirmarSessao = () => {
 
   useEffect(() => {
     if (!token) { setState("error"); return; }
+    let alive = true;
+    setState("loading");
     const load = async () => {
-      const { data, error } = await supabase.rpc("get_session_by_token", { _token: token });
-      if (error || !data || (data as any[]).length === 0) { setState("error"); return; }
-      const row = (data as any[])[0];
+      const res = await fetchSessionByToken(token);
+      if (!alive) return;
+      if (res.kind === "network") { setState("network"); return; }
+      if (res.kind === "not_found") { setState("error"); return; }
+      const row = res.row;
       setSession(row);
       if (row.status === "confirmed") {
         navigate(`/sessao-confirmada/${token}`, { replace: true });
@@ -49,14 +56,28 @@ const ConfirmarSessao = () => {
       }
     };
     load();
-  }, [token, navigate]);
+    return () => { alive = false; };
+  }, [token, navigate, reloadKey]);
 
   const respond = async (confirm: boolean) => {
     if (!token) return;
     setSubmitting(true);
-    const { data, error } = await supabase.rpc("respond_to_confirmation", { _token: token, _confirm: confirm });
+    let result: { data: any; error: any } = { data: null, error: null };
+    for (let i = 0; i < 3; i++) {
+      try {
+        result = await supabase.rpc("respond_to_confirmation", { _token: token, _confirm: confirm });
+        if (!result.error) break;
+      } catch (e) {
+        result = { data: null, error: e };
+      }
+      await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+    }
     setSubmitting(false);
-    if (error) { setState("error"); return; }
+    const { data, error } = result;
+    if (error) {
+      toast.error("Sem conexão no momento. Verifique a internet e toque em “Sim, confirmo” novamente.");
+      return;
+    }
     if (data === "already_responded") { setState("already"); return; }
     if (confirm) {
       navigate(`/sessao-confirmada/${token}`, { replace: true });
@@ -133,6 +154,17 @@ const ConfirmarSessao = () => {
             <CalendarCheck className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
             <h2 className="font-display text-xl font-bold text-foreground">Sessão já respondida</h2>
             <p className="mt-2 text-muted-foreground">Esta confirmação já foi processada anteriormente.</p>
+          </div>
+        )}
+
+        {state === "network" && (
+          <div className="py-8">
+            <Loader2 className="h-10 w-10 mx-auto text-muted-foreground/40 mb-4" />
+            <h2 className="font-display text-xl font-bold text-foreground">Conexão instável</h2>
+            <p className="mt-2 text-muted-foreground">Não conseguimos carregar sua sessão agora. Seu link continua válido.</p>
+            <Button variant="accent" className="mt-6 min-h-[48px] w-full" onClick={() => setReloadKey((k) => k + 1)}>
+              Tentar novamente
+            </Button>
           </div>
         )}
 
