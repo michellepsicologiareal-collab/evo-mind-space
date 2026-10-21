@@ -60,6 +60,8 @@ export function PatientFinancePanel({ patient, month, onClose, onManage, onChart
   const inPeriod = (date: string) => period === "all" || format(new Date(date), "yyyy-MM") === format(month, "yyyy-MM");
   const periodRows = sessions.filter((s) => inPeriod(s.scheduled_at) && !s.is_expense);
   const totals = summarizePatientFinance(periodRows);
+  const paidRows = periodRows.filter((s) => s.status !== "cancelled" && s.payment_status === "paid");
+  const pendingRows = periodRows.filter((s) => s.status !== "cancelled" && s.payment_status === "pending");
   const shown = periodRows.filter((s) => filter === "all" || (s.status !== "cancelled" && s.payment_status === filter));
   const manage = (session: PatientFinanceSession) => {
     const planId = isPlanNotes(session.notes) ? planGroupIdOf(session.notes) : null;
