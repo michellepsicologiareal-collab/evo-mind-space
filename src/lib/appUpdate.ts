@@ -53,7 +53,7 @@ function normalize(urls: string[]): string {
     })
     // Apenas assets gerados pelo build. Scripts injetados pelo navegador ou
     // por webviews mobile não fazem parte da versão publicada.
-    .filter((p) => /\/assets\/[^/]+\.(js|mjs|css)$/.test(p))
+    .filter((p) => /\/assets\/[^/]+\.(js|mjs)$/.test(p))
     .sort()
     .join("|");
 }
