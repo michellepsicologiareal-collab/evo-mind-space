@@ -13,17 +13,19 @@ const APPLIED_SIGNATURE_KEY = "psireal:last-applied-signature";
 const UPDATE_LOCK_KEY = "psireal:update-lock";
 const UPDATE_LOCK_MS = 5 * 60 * 1000;
 
-/** Assinatura dos scripts/estilos carregados na aba atual. */
+/**
+ * Assinatura da versão carregada na aba atual: apenas o script de entrada do
+ * build. Estilos e pré-carregamentos de telas abertas depois (carregamento sob
+ * demanda) são adicionados à página em tempo de execução e não podem entrar na
+ * comparação, senão toda página pareceria desatualizada.
+ */
 export function currentBuildSignature(): string {
   const urls: string[] = [];
   document.querySelectorAll<HTMLScriptElement>("script[src]").forEach((el) => urls.push(el.src));
-  document
-    .querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"], link[rel="modulepreload"]')
-    .forEach((el) => urls.push(el.href));
   return normalize(urls);
 }
 
-/** Assinatura dos assets do index.html publicado agora (sem cache). */
+/** Assinatura do script de entrada do index.html publicado agora (sem cache). */
 export async function remoteBuildSignature(): Promise<string | null> {
   try {
     const res = await fetch(`/index.html?_=${Date.now()}`, {
@@ -32,11 +34,9 @@ export async function remoteBuildSignature(): Promise<string | null> {
     });
     if (!res.ok) return null;
     const html = await res.text();
-    const urls = Array.from(html.matchAll(/(?:src|href)="([^"]+)"/g))
-      .map((m) => m[1])
-      .filter((u) => /\.(js|mjs|css)(\?|$)/.test(u));
-    if (!urls.length) return null;
-    return normalize(urls);
+    const urls = Array.from(html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)).map((m) => m[1]);
+    const sig = normalize(urls);
+    return sig || null;
   } catch {
     return null;
   }
