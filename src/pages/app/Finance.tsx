@@ -121,7 +121,6 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { PageIntro } from "@/components/app/PageIntro";
 import { PatientFinancePanel } from "@/components/app/PatientFinancePanel";
-import { PatientFinanceOverview } from "@/components/app/PatientFinanceOverview";
 import { summarizePatientFinance } from "@/lib/patientFinance";
 import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
 import { logWhatsAppMessage } from "@/lib/whatsappLog";
@@ -2115,13 +2114,6 @@ const Finance = () => {
         </div>
       </header>
 
-      <PatientFinanceOverview
-        patients={patientOptions}
-        sessions={rawRows}
-        month={monthCursor}
-        loading={loading}
-        onOpen={setFinanceHistory}
-      />
 
 
       {/* Drawer lateral com pacientes por faixa de honorários */}
@@ -2688,7 +2680,7 @@ const Finance = () => {
               {/* Topo */}
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                 <h2 className="w-full font-display text-xl font-semibold tracking-tight md:w-auto md:text-2xl">
-                  Financeiro · Sessões do Mês
+                  Pacientes ativos no mês
                 </h2>
                 <div className="grid w-full grid-cols-4 gap-2 lg:ml-auto lg:flex lg:w-auto lg:items-center">
                   <div className="col-span-4 grid grid-cols-[36px_minmax(0,1fr)_36px] items-center sm:col-span-2 lg:flex">
@@ -3261,6 +3253,19 @@ const Finance = () => {
                               Ver detalhes
                               <ChevronRight className="h-3.5 w-3.5" />
                             </Button>
+                            {g.patientId && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => { e.stopPropagation(); setFinanceHistory({ id: g.patientId!, name: g.name }); }}
+                                className="h-10 w-full justify-center gap-1.5 text-xs sm:h-8 sm:w-auto lg:self-end"
+                                aria-label={`Abrir painel financeiro completo de ${g.name}`}
+                              >
+                                <Wallet className="h-3.5 w-3.5" />
+                                Painel do paciente
+                              </Button>
+                            )}
 
                           </div>
                         </div>
