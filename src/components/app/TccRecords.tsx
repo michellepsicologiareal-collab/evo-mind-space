@@ -8,6 +8,7 @@ import { RpdEvolutionPanel } from "@/components/app/RpdEvolutionPanel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { compactToken } from "@/lib/publicSessionToken";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -147,7 +148,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       toast.error("Não foi possível gerar o link.");
       return;
     }
-    setPublicLink(`${window.location.origin}/rpd/${data.token}`);
+    setPublicLink(`${window.location.origin}/rpd/${compactToken(data.token)}`);
     toast.success(`Link gerado · válido por ${days} dias`);
     loadInvites();
   };
@@ -176,7 +177,7 @@ export const TccRecords = ({ patientId, readOnly = false }: Props) => {
       .eq("id", inv.id);
     setRevoking(null);
     if (error) return toast.error("Não foi possível renovar o link.");
-    setPublicLink(`${window.location.origin}/rpd/${inv.token}`);
+    setPublicLink(`${window.location.origin}/rpd/${compactToken(inv.token)}`);
     setLinkPassword(inv.password ?? "");
     toast.success(`Link renovado por ${days} dias · mesmo endereço, registros mantidos`);
     loadInvites();

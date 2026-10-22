@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Loader2, X, Lock, ClipboardList, CheckCircle2, History, PenLine, TrendingUp, Smile, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { expandToken } from "@/lib/publicSessionToken";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RpdForm } from "@/components/app/RpdForm";
@@ -17,7 +18,8 @@ const INK = "#1A1A2E";
 const MUTED = "#6B7280";
 
 const RpdPublico = () => {
-  const { token } = useParams<{ token: string }>();
+  const { token: rawToken } = useParams<{ token: string }>();
+  const token = expandToken(rawToken);
   const [state, setState] = useState<"loading" | "password" | "ready" | "error" | "done">("loading");
   const [info, setInfo] = useState<any>(null);
   const [password, setPassword] = useState("");

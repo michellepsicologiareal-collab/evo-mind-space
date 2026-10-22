@@ -32,6 +32,7 @@ import {
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { compactToken } from "@/lib/publicSessionToken";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
@@ -1807,7 +1808,7 @@ const Agenda = () => {
       const { error } = await supabase.from("sessions").update({ confirmation_token: token }).eq("id", s.id);
       if (error) { toast.error("Erro ao gerar link"); return; }
     }
-    const url = `${window.location.origin}/confirmar-sessao/${token}`;
+    const url = `${window.location.origin}/confirmar-sessao/${compactToken(token)}`;
     const isOnline = ((s as any).modality || "").toLowerCase() === "online";
     const patient = patients.find((p) => p.id === s.patient_id);
     let extra = "";
@@ -2047,7 +2048,7 @@ const Agenda = () => {
       return;
     }
 
-    const link = `${window.location.origin}/rpd/${data.token}`;
+    const link = `${window.location.origin}/rpd/${compactToken(data.token)}`;
     const msg = [
       `Olá! Tudo bem?`,
       ``,

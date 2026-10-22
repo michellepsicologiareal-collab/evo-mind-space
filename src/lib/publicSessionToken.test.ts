@@ -26,3 +26,17 @@ describe("fetchSessionByToken", () => {
     expect((await fetchSessionByToken("t", 1)).kind).toBe("not_found");
   });
 });
+
+import { compactToken, expandToken } from "./publicSessionToken";
+describe("links públicos sem formato de chave PIX", () => {
+  const uuid = "ebae0db9-744b-4a3a-b45a-3165fcca1691";
+  it("novo link não contém hífens", () => {
+    expect(compactToken(uuid)).toBe("ebae0db9744b4a3ab45a3165fcca1691");
+  });
+  it("link novo volta ao token original", () => {
+    expect(expandToken("ebae0db9744b4a3ab45a3165fcca1691")).toBe(uuid);
+  });
+  it("link antigo com hífens continua igual", () => {
+    expect(expandToken(uuid)).toBe(uuid);
+  });
+});

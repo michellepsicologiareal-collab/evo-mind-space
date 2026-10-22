@@ -7,7 +7,7 @@ import { toZonedTime } from "date-fns-tz";
 import { Check, Loader2, Download, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFreshPublicPage } from "@/hooks/useFreshPublicPage";
-import { fetchSessionByToken } from "@/lib/publicSessionToken";
+import { fetchSessionByToken, expandToken } from "@/lib/publicSessionToken";
 import logoImg from "@/assets/logo-psireal.png";
 
 interface SessionData {
@@ -65,7 +65,8 @@ function googleCalUrl(session: SessionData): string {
 
 const SessaoConfirmada = () => {
   useFreshPublicPage();
-  const { token } = useParams<{ token: string }>();
+  const { token: rawToken } = useParams<{ token: string }>();
+  const token = expandToken(rawToken);
   const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);

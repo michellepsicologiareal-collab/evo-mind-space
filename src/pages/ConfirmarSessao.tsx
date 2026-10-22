@@ -7,7 +7,7 @@ import { toZonedTime } from "date-fns-tz";
 import { Check, X, Loader2, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFreshPublicPage } from "@/hooks/useFreshPublicPage";
-import { fetchSessionByToken } from "@/lib/publicSessionToken";
+import { fetchSessionByToken, expandToken } from "@/lib/publicSessionToken";
 import { toast } from "sonner";
 import logoImg from "@/assets/logo-psireal.png";
 
@@ -25,7 +25,8 @@ type PageState = "loading" | "ready" | "cancelled" | "already" | "error" | "netw
 
 const ConfirmarSessao = () => {
   useFreshPublicPage();
-  const { token } = useParams<{ token: string }>();
+  const { token: rawToken } = useParams<{ token: string }>();
+  const token = expandToken(rawToken);
   const navigate = useNavigate();
   const [session, setSession] = useState<SessionData | null>(null);
   const [state, setState] = useState<PageState>("loading");
