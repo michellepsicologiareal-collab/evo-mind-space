@@ -27,3 +27,19 @@ export async function fetchSessionByToken(token: string, attempts = 4): Promise<
   }
   return { kind: "network" };
 }
+
+/**
+ * Links públicos usam o token sem hífens: um UUID com hífens tem o mesmo
+ * formato de uma chave PIX aleatória e o WhatsApp oferece "copiar chave Pix"
+ * em vez de abrir o link. Links antigos (com hífens) continuam funcionando.
+ */
+export const compactToken = (token: string) => token.replace(/-/g, "").toLowerCase();
+
+export const expandToken = (raw?: string | null): string | undefined => {
+  if (!raw) return undefined;
+  const t = raw.trim().toLowerCase();
+  if (/^[0-9a-f]{32}$/.test(t)) {
+    return `${t.slice(0, 8)}-${t.slice(8, 12)}-${t.slice(12, 16)}-${t.slice(16, 20)}-${t.slice(20)}`;
+  }
+  return t;
+};

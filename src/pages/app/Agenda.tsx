@@ -1807,7 +1807,7 @@ const Agenda = () => {
       const { error } = await supabase.from("sessions").update({ confirmation_token: token }).eq("id", s.id);
       if (error) { toast.error("Erro ao gerar link"); return; }
     }
-    const url = `${window.location.origin}/confirmar-sessao/${token}`;
+    const url = `${window.location.origin}/confirmar-sessao/${compactToken(token)}`;
     const isOnline = ((s as any).modality || "").toLowerCase() === "online";
     const patient = patients.find((p) => p.id === s.patient_id);
     let extra = "";
@@ -2047,7 +2047,7 @@ const Agenda = () => {
       return;
     }
 
-    const link = `${window.location.origin}/rpd/${data.token}`;
+    const link = `${window.location.origin}/rpd/${compactToken(data.token)}`;
     const msg = [
       `Olá! Tudo bem?`,
       ``,

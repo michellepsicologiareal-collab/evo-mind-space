@@ -65,7 +65,8 @@ function googleCalUrl(session: SessionData): string {
 
 const SessaoConfirmada = () => {
   useFreshPublicPage();
-  const { token } = useParams<{ token: string }>();
+  const { token: rawToken } = useParams<{ token: string }>();
+  const token = expandToken(rawToken);
   const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);

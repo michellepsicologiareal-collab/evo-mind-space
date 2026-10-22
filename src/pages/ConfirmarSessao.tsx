@@ -25,7 +25,8 @@ type PageState = "loading" | "ready" | "cancelled" | "already" | "error" | "netw
 
 const ConfirmarSessao = () => {
   useFreshPublicPage();
-  const { token } = useParams<{ token: string }>();
+  const { token: rawToken } = useParams<{ token: string }>();
+  const token = expandToken(rawToken);
   const navigate = useNavigate();
   const [session, setSession] = useState<SessionData | null>(null);
   const [state, setState] = useState<PageState>("loading");
