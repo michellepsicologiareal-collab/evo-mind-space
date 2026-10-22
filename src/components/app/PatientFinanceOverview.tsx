@@ -21,9 +21,14 @@ export function PatientFinanceOverview({ patients, sessions, month, loading, onO
   const [limit, setLimit] = useState(8);
   const entries = useMemo(() => {
     const grouped = new Map<string, PatientFinanceSession[]>();
-    sessions.forEach((s) => { if (s.patient) grouped.set(s.patient.id, [...(grouped.get(s.patient.id) ?? []), s]); });
+    const monthKey = `${month.getFullYear()}-${month.getMonth()}`;
+    sessions.forEach((s) => {
+      const d = new Date(s.scheduled_at);
+      if (!s.patient || s.is_expense || s.status === "cancelled" || `${d.getFullYear()}-${d.getMonth()}` !== monthKey) return;
+      grouped.set(s.patient.id, [...(grouped.get(s.patient.id) ?? []), s]);
+    });
     const normalize = (name: string) => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    return patients.filter((p) => normalize(p.name).includes(normalize(query.trim()))).map((p) => ({ ...p, sessions: grouped.get(p.id) ?? [], summary: summarizePatientFinance(grouped.get(p.id) ?? []) }));
+    return patients.filter((p) => grouped.has(p.id) && normalize(p.name).includes(normalize(query.trim()))).map((p) => ({ ...p, sessions: grouped.get(p.id)!, summary: summarizePatientFinance(grouped.get(p.id)!) }));
   }, [patients, sessions, query]);
   return <section aria-label="Painel financeiro por paciente" className="space-y-4 border-y border-border py-6">
     <div className="flex flex-wrap items-center justify-between gap-4">
