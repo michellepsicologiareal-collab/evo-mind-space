@@ -36,6 +36,13 @@
       "when": 1792509286734,
       "tag": "0004_add_pix_key_to_session_token",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792679111110,
+      "tag": "0005_add_confirmation_to_responsible",
+      "breakpoints": true
     }
   ]
 }
