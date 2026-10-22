@@ -106,6 +106,7 @@ interface Patient {
   has_financial_responsible: boolean;
   financial_responsible_name: string | null;
   financial_responsible_phone: string | null;
+  confirmation_to_responsible: boolean;
   homework_token?: string | null;
   clinic_address?: string | null;
 }
@@ -1151,7 +1152,7 @@ const Agenda = () => {
     const [mapped, pRes, svRes] = await Promise.all([
       fetchMonthSessions(currentMonth),
       cachedQuery(`patients:agenda:${user.id}`, async () =>
-        await supabase.from("patients").select("id, full_name, session_price, phone, has_financial_responsible, financial_responsible_name, financial_responsible_phone, homework_token, clinic_address").eq("user_id", user.id).eq("is_active", true).order("full_name")
+        await supabase.from("patients").select("id, full_name, session_price, phone, has_financial_responsible, financial_responsible_name, financial_responsible_phone, confirmation_to_responsible, homework_token, clinic_address").eq("user_id", user.id).eq("is_active", true).order("full_name")
       ),
       cachedQuery(`services:agenda:${user.id}`, async () =>
         await (supabase as any).from("services").select("id, name, price, is_active").eq("user_id", user.id).eq("is_active", true).order("name")
@@ -1834,7 +1835,7 @@ const Agenda = () => {
     const message = `Olá, por favor, entre para confirmar sua sessão de terapia🤎\n\n${url}${extra}`;
 
     let phoneNumber = "";
-    if (patient?.has_financial_responsible && patient.financial_responsible_phone) {
+    if (patient?.has_financial_responsible && patient.confirmation_to_responsible !== false && patient.financial_responsible_phone) {
       phoneNumber = normalizePhoneForWhatsApp(patient.financial_responsible_phone) ?? "";
     } else if (patient?.phone) {
       phoneNumber = normalizePhoneForWhatsApp(patient.phone) ?? "";
