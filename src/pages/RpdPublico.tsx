@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Loader2, X, Lock, ClipboardList, CheckCircle2, History, PenLine, TrendingUp, Smile, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { expandToken } from "@/lib/publicSessionToken";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RpdForm } from "@/components/app/RpdForm";

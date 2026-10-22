@@ -32,6 +32,7 @@ import {
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { compactToken } from "@/lib/publicSessionToken";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";

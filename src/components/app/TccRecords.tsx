@@ -8,6 +8,7 @@ import { RpdEvolutionPanel } from "@/components/app/RpdEvolutionPanel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { compactToken } from "@/lib/publicSessionToken";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
