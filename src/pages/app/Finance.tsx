@@ -2752,8 +2752,17 @@ const Finance = () => {
                 <span className="text-muted-foreground">
                   Em aberto <strong className="text-destructive tabular-nums">{formatBRL(totalPendenteCards)}</strong>
                 </span>
-                <span className="text-muted-foreground" title="Valor das sessões futuras já agendadas (somente sessão avulsa)">
-                  Previsto <strong className="text-foreground tabular-nums">{formatBRL(totalPrevistoCards)}</strong>
+                <span className="text-muted-foreground" title="Sessões previstas no mês (não canceladas): futuras e realizadas">
+                  Previsto <strong className="text-foreground tabular-nums">{formatBRL(totalPrevisto)}</strong>
+                </span>
+                <span className="text-muted-foreground" title="Sessões realizadas (concluídas) no período">
+                  Realizado <strong className="text-foreground tabular-nums">{formatBRL(totalReceitaRealizada)}</strong>
+                </span>
+                <span className="text-muted-foreground" title="Pagamentos confirmados no período, pela data do pagamento">
+                  Recebido <strong className="text-moss font-semibold tabular-nums">{formatBRL(totalRecebido)}</strong>
+                </span>
+                <span className="text-muted-foreground hidden sm:inline" title="Valor das sessões futuras já agendadas (somente sessão avulsa)">
+                  Previsto avulso futuro <strong className="text-foreground tabular-nums">{formatBRL(totalPrevistoCards)}</strong>
                 </span>
                 <button
                   type="button"
