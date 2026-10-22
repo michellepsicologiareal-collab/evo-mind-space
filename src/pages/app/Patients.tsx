@@ -256,6 +256,7 @@ interface Patient {
   has_financial_responsible: boolean;
   financial_responsible_name: string | null;
   financial_responsible_phone: string | null;
+  confirmation_to_responsible: boolean;
   treatment_start_date: string | null;
   treatment_end_date: string | null;
   has_psychiatrist: boolean;
@@ -541,8 +542,8 @@ const Patients = () => {
   );
 
   const DRAFT_KEY = "rascunho_novo_paciente";
-  type FormState = { full_name: string; email: string; phone: string; phone_ddi: string; birth_date: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "adolescente" | "avaliacao" | "casal" | "crianca" | "grupo" | "individual" | "sessao_breve" | "supervisao"; modality: "presencial" | "online"; clinic_address: string; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string };
-  const emptyForm: FormState = { full_name: "", email: "", phone: "", phone_ddi: "+55", birth_date: "", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", modality: "presencial", clinic_address: "", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55", treatment_start_date: "", treatment_end_date: "", has_psychiatrist: false, psychiatrist_name: "", psychiatrist_phone: "", psychiatrist_phone_ddi: "+55", medications: "" };
+  type FormState = { full_name: string; email: string; phone: string; phone_ddi: string; birth_date: string; notes: string; session_price: string; chief_complaint: string; treatment_plan: string; anamnesis: string; category: "adolescente" | "avaliacao" | "casal" | "crianca" | "grupo" | "individual" | "sessao_breve" | "supervisao"; modality: "presencial" | "online"; clinic_address: string; has_financial_responsible: boolean; financial_responsible_name: string; financial_responsible_phone: string; financial_responsible_ddi: string; confirmation_to_responsible: boolean; treatment_start_date: string; treatment_end_date: string; has_psychiatrist: boolean; psychiatrist_name: string; psychiatrist_phone: string; psychiatrist_phone_ddi: string; medications: string };
+  const emptyForm: FormState = { full_name: "", email: "", phone: "", phone_ddi: "+55", birth_date: "", notes: "", session_price: "", chief_complaint: "", treatment_plan: "", anamnesis: "", category: "individual", modality: "presencial", clinic_address: "", has_financial_responsible: false, financial_responsible_name: "", financial_responsible_phone: "", financial_responsible_ddi: "+55", confirmation_to_responsible: true, treatment_start_date: "", treatment_end_date: "", has_psychiatrist: false, psychiatrist_name: "", psychiatrist_phone: "", psychiatrist_phone_ddi: "+55", medications: "" };
   const [form, setFormRaw] = useState<FormState>(emptyForm);
   const [draftRestored, setDraftRestored] = useState(false);
   const setForm = useCallback((v: typeof emptyForm | ((prev: typeof emptyForm) => typeof emptyForm)) => { patientGuard.markDirty(); setFormRaw(v); }, [patientGuard.markDirty]);
@@ -874,6 +875,7 @@ const Patients = () => {
       financial_responsible_name: p.financial_responsible_name ?? "",
       financial_responsible_phone: frLocalPhone,
       financial_responsible_ddi: frDdi,
+      confirmation_to_responsible: p.confirmation_to_responsible ?? true,
       treatment_start_date: p.treatment_start_date ?? "",
       treatment_end_date: p.treatment_end_date ?? "",
       has_psychiatrist: p.has_psychiatrist ?? false,
@@ -914,6 +916,7 @@ const Patients = () => {
       financial_responsible_phone: form.has_financial_responsible && form.financial_responsible_phone
         ? `${form.financial_responsible_ddi || "+55"} ${form.financial_responsible_phone}`.trim()
         : null,
+      confirmation_to_responsible: form.has_financial_responsible ? form.confirmation_to_responsible : false,
       treatment_start_date: form.treatment_start_date || null,
       treatment_end_date: form.treatment_end_date || null,
       has_psychiatrist: form.has_psychiatrist,
@@ -2054,6 +2057,9 @@ const Patients = () => {
                               <p className="mt-1 text-sm text-foreground break-words">
                                 {[p.financial_responsible_name, p.financial_responsible_phone].filter(Boolean).join(" · ") || "Sim"}
                               </p>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                Confirmação de agenda: {p.confirmation_to_responsible ? "vai para o responsável" : "vai para o paciente"}
+                              </p>
                             </div>
                           )}
                         </div>
@@ -2360,6 +2366,21 @@ const Patients = () => {
                       />
                       <Input id="fr_phone" className="flex-1" placeholder="11 99988-7766" value={form.financial_responsible_phone} onChange={(e) => setForm({ ...form, financial_responsible_phone: e.target.value })} />
                     </div>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 p-3">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="confirmation_to_responsible" className="text-sm font-medium">Enviar confirmação de agenda para o responsável?</Label>
+                      <p className="text-xs text-muted-foreground">
+                        {form.confirmation_to_responsible
+                          ? "Sim — a confirmação de sessão vai para o responsável financeiro."
+                          : "Não — a confirmação de sessão vai direto para o paciente."}
+                      </p>
+                    </div>
+                    <Switch
+                      id="confirmation_to_responsible"
+                      checked={form.confirmation_to_responsible}
+                      onCheckedChange={(checked) => setForm({ ...form, confirmation_to_responsible: checked })}
+                    />
                   </div>
                 </div>
               )}

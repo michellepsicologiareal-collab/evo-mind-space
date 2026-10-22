@@ -1216,6 +1216,7 @@ export type Database = {
           category: Database["public"]["Enums"]["patient_category"]
           chief_complaint: string | null
           clinic_address: string | null
+          confirmation_to_responsible: boolean
           created_at: string
           deleted_at: string | null
           email: string | null
@@ -1248,6 +1249,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["patient_category"]
           chief_complaint?: string | null
           clinic_address?: string | null
+          confirmation_to_responsible?: boolean
           created_at?: string
           deleted_at?: string | null
           email?: string | null
@@ -1280,6 +1282,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["patient_category"]
           chief_complaint?: string | null
           clinic_address?: string | null
+          confirmation_to_responsible?: boolean
           created_at?: string
           deleted_at?: string | null
           email?: string | null

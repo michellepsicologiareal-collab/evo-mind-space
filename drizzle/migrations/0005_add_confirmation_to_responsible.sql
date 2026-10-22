@@ -1,0 +1,2 @@
+ALTER TABLE public.patients ADD COLUMN confirmation_to_responsible boolean NOT NULL DEFAULT true;
+COMMENT ON COLUMN public.patients.confirmation_to_responsible IS 'Se true e houver responsável financeiro, a confirmação de agenda vai para o responsável; se false, vai para o paciente.';
