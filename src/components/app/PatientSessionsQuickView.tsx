@@ -56,7 +56,10 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 const monthKeyOf = (d: Date) => format(d, "yyyy-MM");
-const monthLabelOf = (d: Date) => format(d, "MMMM 'de' yyyy", { locale: ptBR });
+const monthLabelOf = (d: Date) => {
+  const s = format(d, "MMMM 'de' yyyy", { locale: ptBR });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
 
 const ATTENTION_LABEL: Record<string, string> = {
   watch: "Atenção",
@@ -726,7 +729,7 @@ export const PatientSessionsQuickView = ({
           <div className="space-y-4">
             {monthGroups.map((g) => (
               <div key={g.key}>
-                <p className="text-xs font-display font-semibold text-foreground/80 capitalize mb-1.5">{g.label}</p>
+                <p className="text-xs font-display font-semibold text-foreground/80 mb-1.5">{g.label}</p>
                 <div className="space-y-2">
             {g.items.map((s) => {
 
