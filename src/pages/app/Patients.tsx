@@ -418,6 +418,7 @@ const Patients = () => {
   // Mantém os params durante a navegação para que o botão "voltar" do
   // navegador (e retornos de subtelas como Agenda/Formulações/etc.) reabram
   // a mesma ficha na mesma aba.
+  const urlHydratedRef = useRef(false);
   useEffect(() => {
     if (!patients.length) return;
     const pid = searchParams.get("patient");
@@ -426,6 +427,7 @@ const Patients = () => {
     if (pid) {
       const target = patients.find((x) => x.id === pid);
       if (target && selectedPatient?.id !== pid) setSelectedPatient(target);
+      if (target) urlHydratedRef.current = true;
       const nextTab = tab && VALID_TABS.includes(tab) ? tab : "overview";
       if (selectedTab !== nextTab) setSelectedTab(nextTab);
       if (focus === "receita-saude") setFocusReceitaSaude(true);
@@ -478,7 +480,7 @@ const Patients = () => {
         next.set("tab", selectedTab);
         setSearchParams(next, { replace: true });
       }
-    } else if (currentPid || currentTab) {
+    } else if ((currentPid || currentTab) && patients.length && (!currentPid || !patients.some((x) => x.id === currentPid) || urlHydratedRef.current)) {
       const next = new URLSearchParams(searchParams);
       next.delete("patient");
       next.delete("tab");
