@@ -166,9 +166,12 @@ export const SessionTimeline = ({ patientId, onNavigate }: Props) => {
                   setSelectedKey(s.key);
                   if (!s.hasRecord) return;
                   onNavigate?.();
-                  navigate(
-                    `/app/registro-sessao?patient=${patientId}${s.sessionId ? `&session=${s.sessionId}` : ""}`,
-                  );
+                  if (s.sessionId) {
+                    // Abre a mesma ficha de sessão da Agenda (?edit=<sessionId>).
+                    navigate(`/app/agenda?patient=${patientId}&edit=${s.sessionId}`);
+                  } else {
+                    navigate(`/app/agenda?patient=${patientId}&month=${s.key}`);
+                  }
                 }}
                 aria-label={`Abrir sessão de ${s.month}`}
                 className={`flex flex-col items-center text-center w-28 sm:w-32 shrink-0 rounded-xl px-1 py-1 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selectedKey === s.key ? "bg-muted" : ""}`}
@@ -224,9 +227,7 @@ export const SessionTimeline = ({ patientId, onNavigate }: Props) => {
               className="w-full sm:w-auto"
               onClick={() => {
                 onNavigate?.();
-                navigate(
-                  `/app/registro-sessao?patient=${patientId}${selected.sessionId ? `&session=${selected.sessionId}` : ""}`,
-                );
+                navigate(`/app/agenda?patient=${patientId}&month=${selected.key}&novo=1`);
               }}
             >
               <CalendarPlus className="h-4 w-4 mr-2" /> Nova sessão
