@@ -19,9 +19,30 @@ interface Step {
   count: number;
   sessionId: string | null;
   hasRecord: boolean;
+  statusSummary: [string, number][];
 }
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+const STATUS_ORDER = ["completed", "confirmed", "scheduled", "rescheduled", "no_show", "cancelled"];
+
+const STATUS_LABEL: Record<string, string> = {
+  scheduled: "Agendada",
+  confirmed: "Confirmada",
+  completed: "Realizada",
+  no_show: "Falta",
+  rescheduled: "Remarcada",
+  cancelled: "Cancelada",
+};
+
+const STATUS_TEXT: Record<string, string> = {
+  scheduled: "text-sky-700",
+  confirmed: "text-emerald-700",
+  completed: "text-teal-700",
+  no_show: "text-destructive",
+  rescheduled: "text-amber-700",
+  cancelled: "text-muted-foreground",
+};
 
 const pickLabel = (themes: string[], count: number) => {
   const freq = new Map<string, number>();
@@ -57,15 +78,16 @@ export const SessionTimeline = ({ patientId, onNavigate }: Props) => {
           .eq("patient_id", patientId),
       ]);
 
-      const buckets = new Map<string, { date: Date; themes: string[]; count: number; sessionId: string | null; sessionAt: number; hasRecord: boolean }>();
-      const add = (raw: string | null | undefined, themes: unknown, sessionId: string | null = null, hasRecord = false) => {
+      const buckets = new Map<string, { date: Date; themes: string[]; count: number; sessionId: string | null; sessionAt: number; hasRecord: boolean; statuses: Record<string, number> }>();
+      const add = (raw: string | null | undefined, themes: unknown, sessionId: string | null = null, hasRecord = false, status: string | null = null) => {
         if (!raw) return;
         const d = typeof raw === "string" ? parseISO(raw) : new Date(raw);
         if (Number.isNaN(d.getTime())) return;
         const key = format(d, "yyyy-MM");
-        const b = buckets.get(key) ?? { date: d, themes: [], count: 0, sessionId: null, sessionAt: -Infinity, hasRecord: false };
+        const b = buckets.get(key) ?? { date: d, themes: [], count: 0, sessionId: null, sessionAt: -Infinity, hasRecord: false, statuses: {} };
         b.count += 1;
         if (hasRecord) b.hasRecord = true;
+        if (status) b.statuses[status] = (b.statuses[status] ?? 0) + 1;
         if (sessionId && d.getTime() > b.sessionAt) {
           b.sessionId = sessionId;
           b.sessionAt = d.getTime();
@@ -86,7 +108,7 @@ export const SessionTimeline = ({ patientId, onNavigate }: Props) => {
       });
 
       (sessRes.data ?? []).forEach((s: any) =>
-        add(s.scheduled_at, themeBySession.get(s.id) ?? [], s.id, recordedSessions.has(s.id)),
+        add(s.scheduled_at, themeBySession.get(s.id) ?? [], s.id, recordedSessions.has(s.id), s.status ?? null),
       );
 
       // registros sem sessão vinculada
@@ -106,6 +128,9 @@ export const SessionTimeline = ({ patientId, onNavigate }: Props) => {
           count: b.count,
           sessionId: b.sessionId,
           hasRecord: b.hasRecord,
+          statusSummary: STATUS_ORDER.filter((st) => (b.statuses[st] ?? 0) > 0).map(
+            (st) => [st, b.statuses[st]] as [string, number],
+          ),
         }));
 
       setSteps(list);
@@ -148,11 +173,34 @@ export const SessionTimeline = ({ patientId, onNavigate }: Props) => {
                 aria-label={`Abrir sessão de ${s.month}`}
                 className={`flex flex-col items-center text-center w-28 sm:w-32 shrink-0 rounded-xl px-1 py-1 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selectedKey === s.key ? "bg-muted" : ""}`}
               >
-                <div className="h-7 w-7 rounded-full bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center">
+                <div
+                  className="h-7 w-7 rounded-full text-primary-foreground text-xs font-semibold flex items-center justify-center shrink-0"
+                  style={{
+                    background:
+                      s.statusSummary.length === 1 &&
+                      s.statusSummary[0][0] === "completed" &&
+                      s.statusSummary[0][1] === s.count
+                        ? "hsl(var(--moss))"
+                        : "hsl(var(--primary))",
+                  }}
+                >
                   {i + 1}
                 </div>
                 <p className="mt-2 text-xs font-display font-semibold text-foreground">{s.month}</p>
                 <p className="text-[11px] text-muted-foreground leading-snug">{s.label}</p>
+                {s.statusSummary.length > 0 && (
+                  <div className="mt-0.5 space-y-px">
+                    {s.statusSummary.map(([st, n]) => (
+                      <p
+                        key={st}
+                        className={`text-[10px] leading-snug font-medium ${STATUS_TEXT[st] ?? "text-muted-foreground"}`}
+                      >
+                        {n} {(STATUS_LABEL[st] ?? st).toLowerCase()}
+                        {n > 1 ? "s" : ""}
+                      </p>
+                    ))}
+                  </div>
+                )}
                 {!s.hasRecord && (
                   <p className="text-[10px] text-amber-700 leading-snug mt-0.5">Sem registro</p>
                 )}

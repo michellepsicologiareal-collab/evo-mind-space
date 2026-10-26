@@ -46,6 +46,18 @@ const SESSION_STATUS_LABEL: Record<string, string> = {
   rescheduled: "Remarcada",
 };
 
+const STATUS_BADGE: Record<string, string> = {
+  scheduled: "bg-sky-50 text-sky-700",
+  confirmed: "bg-emerald-50 text-emerald-700",
+  completed: "bg-teal-50 text-teal-700",
+  no_show: "bg-destructive/15 text-destructive",
+  rescheduled: "bg-amber-100 text-amber-800",
+  cancelled: "bg-muted text-muted-foreground",
+};
+
+const monthKeyOf = (d: Date) => format(d, "yyyy-MM");
+const monthLabelOf = (d: Date) => format(d, "MMMM 'de' yyyy", { locale: ptBR });
+
 const ATTENTION_LABEL: Record<string, string> = {
   watch: "Atenção",
   urgent: "Atenção urgente",
@@ -370,6 +382,16 @@ export const PatientSessionsQuickView = ({
       (a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
     );
   }
+
+  // Agrupa as sessões por mês, preservando a ordem do recorte escolhido
+  const monthGroups: { key: string; label: string; items: typeof filteredAgenda }[] = [];
+  filteredAgenda.forEach((s) => {
+    const d = new Date(s.scheduled_at);
+    const key = monthKeyOf(d);
+    const last = monthGroups[monthGroups.length - 1];
+    if (last && last.key === key) last.items.push(s);
+    else monthGroups.push({ key, label: monthLabelOf(d), items: [s] });
+  });
 
 
 
@@ -701,8 +723,12 @@ export const PatientSessionsQuickView = ({
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {filteredAgenda.map((s) => {
+          <div className="space-y-4">
+            {monthGroups.map((g) => (
+              <div key={g.key}>
+                <p className="text-xs font-display font-semibold text-foreground/80 capitalize mb-1.5">{g.label}</p>
+                <div className="space-y-2">
+            {g.items.map((s) => {
 
               const rec = recordsBySession[s.id] ?? null;
               const open = !!expandedSession[s.id];
@@ -722,11 +748,19 @@ export const PatientSessionsQuickView = ({
                       <p className="text-sm font-medium text-foreground truncate">
                         {format(dt, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                       </p>
-                      <p className="text-[11px] text-muted-foreground capitalize truncate">
-                        {SESSION_STATUS_LABEL[s.status] ?? s.status}
-                        {s.modality ? ` · ${s.modality}` : ""}
-                        {s.duration_minutes != null ? ` · ${s.duration_minutes} min` : ""}
-                      </p>
+                      <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-medium shrink-0 ${STATUS_BADGE[s.status] ?? "bg-muted text-muted-foreground"}`}
+                        >
+                          {SESSION_STATUS_LABEL[s.status] ?? s.status}
+                        </span>
+                        {s.modality && (
+                          <span className="text-[11px] text-muted-foreground capitalize truncate">{s.modality}</span>
+                        )}
+                        {s.duration_minutes != null && (
+                          <span className="text-[11px] text-muted-foreground">{s.duration_minutes} min</span>
+                        )}
+                      </div>
                     </div>
                     <span className="flex items-center gap-2 shrink-0">
                       <span
@@ -825,6 +859,9 @@ export const PatientSessionsQuickView = ({
                 </div>
               );
             })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
