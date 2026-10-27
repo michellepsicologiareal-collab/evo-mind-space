@@ -380,6 +380,7 @@ const Patients = () => {
   const [editing, setEditing] = useState<Patient | null>(null);
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
+  const [typeFilter, setTypeFilter] = useState<"all" | "clinical" | "supervisao">("all");
   const [formulFilter, setFormulFilter] = useState<"all" | "with" | "without">("all");
   const [onlyNoNext, setOnlyNoNext] = useState(false);
   // Filtro vindo do Painel (Atenção necessária) via ?filter=
@@ -1020,6 +1021,8 @@ const Patients = () => {
 
   const activeCount = patients.filter((p) => p.is_active).length;
   const inactiveCount = patients.length - activeCount;
+  const supervisionCount = patients.filter((p) => p.category === "supervisao").length;
+  const clinicalCount = patients.length - supervisionCount;
 
   const buildWhatsAppUrl = (p: Patient) => {
     // Use financial responsible phone if available
@@ -1055,6 +1058,11 @@ const Patients = () => {
   };
 
   const filtered = patients
+    .filter((p) => {
+      // Separa atendimento clínico de casos de supervisão
+      if (typeFilter === "supervisao") return p.category === "supervisao";
+      if (typeFilter === "clinical") return p.category !== "supervisao";
+    })
     .filter((p) => {
       // When filtering by formulation (with/without), always restrict to active patients
       if (formulFilter !== "all") return p.is_active;
