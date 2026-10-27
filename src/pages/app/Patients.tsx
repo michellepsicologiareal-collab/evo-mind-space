@@ -1455,19 +1455,6 @@ const Patients = () => {
                 );
               })}
             </div>
-          </div>
-
-          {/* Busca */}
-          <div className="relative w-full lg:w-[320px] shrink-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: C.muted }} />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar paciente por nome ou telefone..."
-              className="pl-9 h-10 w-full border-0 focus-visible:ring-1 focus-visible:ring-[#9B72D3]"
-              style={{ background: "hsl(var(--muted))", borderRadius: 10, fontSize: 13 }}
-            />
-          </div>
         </div>
 
         {/* Filtros ativos */}
