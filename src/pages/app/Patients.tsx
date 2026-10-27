@@ -1060,9 +1060,7 @@ const Patients = () => {
   const filtered = patients
     .filter((p) => {
       // Separa atendimento clínico de casos de supervisão
-      if (typeFilter === "supervisao") return p.category === "supervisao";
-      if (typeFilter === "clinical") return p.category !== "supervisao";
-      return true;
+      return matchesPatientTypeFilter(p.category, typeFilter);
     })
     .filter((p) => {
       // When filtering by formulation (with/without), always restrict to active patients
