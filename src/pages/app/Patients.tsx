@@ -1392,24 +1392,37 @@ const Patients = () => {
               })}
             </div>
 
-            {/* Pills: formulação */}
+            {/* Pills: formulação + tipo de atendimento (clínico / supervisão) */}
             <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto no-scrollbar">
               {([
-                { k: "all", label: "Todos", formul: "all", status: "all" },
-                { k: "with", label: "Com Formulação", formul: "with", status: "active" },
-                { k: "without", label: "Sem Formulação", formul: "without", status: "active" },
-              ] as const).map((pill) => {
-                const isActive = pill.k === "all"
-                  ? statusFilter === "all" && formulFilter === "all"
-                  : formulFilter === pill.k;
+                { k: "todos", label: "Todos", kind: "reset" as const, n: undefined as number | undefined },
+                { k: "with", label: "Com Formulação", kind: "formul" as const, n: undefined as number | undefined },
+                { k: "without", label: "Sem Formulação", kind: "formul" as const, n: undefined as number | undefined },
+                { k: "clinical", label: "Atendimento Clínico", kind: "type" as const, n: clinicalCount },
+                { k: "supervisao", label: "Supervisão", kind: "type" as const, n: supervisionCount },
+              ]).map((pill) => {
+                const isActive =
+                  pill.kind === "reset"
+                    ? statusFilter === "all" && formulFilter === "all" && typeFilter === "all"
+                    : pill.kind === "formul"
+                    ? formulFilter === pill.k
+                    : typeFilter === pill.k;
                 return (
                   <button
                     key={pill.k}
                     type="button"
                     onClick={() => {
-                      setStatusFilter(pill.status as typeof statusFilter);
-                      setFormulFilter(pill.formul as typeof formulFilter);
                       setOnlyNoNext(false);
+                      if (pill.kind === "reset") {
+                        setStatusFilter("all");
+                        setFormulFilter("all");
+                        setTypeFilter("all");
+                      } else if (pill.kind === "formul") {
+                        setStatusFilter("active");
+                        setFormulFilter(pill.k as typeof formulFilter);
+                      } else {
+                        setTypeFilter(pill.k as typeof typeFilter);
+                      }
                     }}
                     className="shrink-0 whitespace-nowrap transition-colors"
                     style={{
@@ -1423,37 +1436,9 @@ const Patients = () => {
                     }}
                   >
                     {pill.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Pills: atendimento clínico / supervisão */}
-            <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto no-scrollbar">
-              {([
-                { k: "all", label: "Todos", n: patients.length },
-                { k: "clinical", label: "Atendimento Clínico", n: clinicalCount },
-                { k: "supervisao", label: "Supervisão", n: supervisionCount },
-              ] as const).map((pill) => {
-                const isActive = typeFilter === pill.k;
-                return (
-                  <button
-                    key={pill.k}
-                    type="button"
-                    onClick={() => setTypeFilter(pill.k as typeof typeFilter)}
-                    className="shrink-0 whitespace-nowrap transition-colors"
-                    style={{
-                      background: isActive ? C.purpleSoft : "transparent",
-                      border: `1px solid ${isActive ? "hsl(var(--primary) / 0.35)" : C.border}`,
-                      color: isActive ? C.purpleInk : C.muted,
-                      fontWeight: isActive ? 600 : 500,
-                      fontSize: 12.5,
-                      padding: "6px 12px",
-                      borderRadius: 40,
-                    }}
-                  >
-                    {pill.label}
-                    <span style={{ fontSize: 11, fontWeight: 600, color: isActive ? C.purple : C.muted, marginLeft: 4 }}>({pill.n})</span>
+                    {pill.n != null && (
+                      <span style={{ fontSize: 11, fontWeight: 600, color: isActive ? C.purple : C.muted, marginLeft: 4 }}>({pill.n})</span>
+                    )}
                   </button>
                 );
               })}
