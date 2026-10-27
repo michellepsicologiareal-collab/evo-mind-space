@@ -42,6 +42,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
+import { matchesPatientTypeFilter } from "@/utils/patientTypeFilter";
 import { PageIntro } from "@/components/app/PageIntro";
 import { PlanoTratamentoHub } from "@/components/app/PlanoTratamentoHub";
 
@@ -380,6 +381,7 @@ const Patients = () => {
   const [editing, setEditing] = useState<Patient | null>(null);
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
+  const [typeFilter, setTypeFilter] = useState<"all" | "clinical" | "supervisao">("all");
   const [formulFilter, setFormulFilter] = useState<"all" | "with" | "without">("all");
   const [onlyNoNext, setOnlyNoNext] = useState(false);
   // Filtro vindo do Painel (Atenção necessária) via ?filter=
@@ -1020,6 +1022,8 @@ const Patients = () => {
 
   const activeCount = patients.filter((p) => p.is_active).length;
   const inactiveCount = patients.length - activeCount;
+  const supervisionCount = patients.filter((p) => p.category === "supervisao").length;
+  const clinicalCount = patients.length - supervisionCount;
 
   const buildWhatsAppUrl = (p: Patient) => {
     // Use financial responsible phone if available
@@ -1055,6 +1059,10 @@ const Patients = () => {
   };
 
   const filtered = patients
+    .filter((p) => {
+      // Separa atendimento clínico de casos de supervisão
+      return matchesPatientTypeFilter(p.category, typeFilter);
+    })
     .filter((p) => {
       // When filtering by formulation (with/without), always restrict to active patients
       if (formulFilter !== "all") return p.is_active;
@@ -1383,24 +1391,37 @@ const Patients = () => {
               })}
             </div>
 
-            {/* Pills: formulação */}
+            {/* Pills: formulação + tipo de atendimento (clínico / supervisão) */}
             <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto no-scrollbar">
               {([
-                { k: "all", label: "Todos", formul: "all", status: "all" },
-                { k: "with", label: "Com Formulação", formul: "with", status: "active" },
-                { k: "without", label: "Sem Formulação", formul: "without", status: "active" },
-              ] as const).map((pill) => {
-                const isActive = pill.k === "all"
-                  ? statusFilter === "all" && formulFilter === "all"
-                  : formulFilter === pill.k;
+                { k: "todos", label: "Todos", kind: "reset" as const, n: undefined as number | undefined },
+                { k: "with", label: "Com Formulação", kind: "formul" as const, n: undefined as number | undefined },
+                { k: "without", label: "Sem Formulação", kind: "formul" as const, n: undefined as number | undefined },
+                { k: "clinical", label: "Atendimento Clínico", kind: "type" as const, n: clinicalCount },
+                { k: "supervisao", label: "Supervisão", kind: "type" as const, n: supervisionCount },
+              ]).map((pill) => {
+                const isActive =
+                  pill.kind === "reset"
+                    ? statusFilter === "all" && formulFilter === "all" && typeFilter === "all"
+                    : pill.kind === "formul"
+                    ? formulFilter === pill.k
+                    : typeFilter === pill.k;
                 return (
                   <button
                     key={pill.k}
                     type="button"
                     onClick={() => {
-                      setStatusFilter(pill.status as typeof statusFilter);
-                      setFormulFilter(pill.formul as typeof formulFilter);
                       setOnlyNoNext(false);
+                      if (pill.kind === "reset") {
+                        setStatusFilter("all");
+                        setFormulFilter("all");
+                        setTypeFilter("all");
+                      } else if (pill.kind === "formul") {
+                        setStatusFilter("active");
+                        setFormulFilter(pill.k as typeof formulFilter);
+                      } else {
+                        setTypeFilter(pill.k as typeof typeFilter);
+                      }
                     }}
                     className="shrink-0 whitespace-nowrap transition-colors"
                     style={{
@@ -1414,6 +1435,9 @@ const Patients = () => {
                     }}
                   >
                     {pill.label}
+                    {pill.n != null && (
+                      <span style={{ fontSize: 11, fontWeight: 600, color: isActive ? C.purple : C.muted, marginLeft: 4 }}>({pill.n})</span>
+                    )}
                   </button>
                 );
               })}
