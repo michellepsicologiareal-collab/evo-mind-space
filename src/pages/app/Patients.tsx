@@ -1357,10 +1357,10 @@ const Patients = () => {
         style={{ background: C.pageBg }}
       >
         <div
-          className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+          className="flex flex-col gap-3"
           style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "10px 12px", boxShadow: "0 1px 2px rgba(23,21,47,0.04)" }}
         >
-          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {/* Tabs: Ativos / Inativos */}
             <div className="flex items-center gap-1 shrink-0" style={{ background: "hsl(var(--muted))", borderRadius: 10, padding: 3 }}>
               {([
