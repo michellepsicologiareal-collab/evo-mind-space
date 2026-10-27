@@ -1391,8 +1391,21 @@ const Patients = () => {
               })}
             </div>
 
-            {/* Pills: formulação + tipo de atendimento (clínico / supervisão) */}
-            <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto no-scrollbar">
+            {/* Busca */}
+            <div className="relative w-full sm:flex-1 sm:max-w-[360px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: C.muted }} />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar paciente por nome ou telefone..."
+                className="pl-9 h-10 w-full border-0 focus-visible:ring-1 focus-visible:ring-[#9B72D3]"
+                style={{ background: "hsl(var(--muted))", borderRadius: 10, fontSize: 13 }}
+              />
+            </div>
+          </div>
+
+          {/* Pills: formulação + tipo de atendimento (clínico / supervisão) */}
+          <div className="flex flex-wrap items-center gap-1.5">
               {([
                 { k: "todos", label: "Todos", kind: "reset" as const, n: undefined as number | undefined },
                 { k: "with", label: "Com Formulação", kind: "formul" as const, n: undefined as number | undefined },
