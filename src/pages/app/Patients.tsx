@@ -1357,10 +1357,10 @@ const Patients = () => {
         style={{ background: C.pageBg }}
       >
         <div
-          className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+          className="flex flex-col gap-3"
           style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "10px 12px", boxShadow: "0 1px 2px rgba(23,21,47,0.04)" }}
         >
-          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {/* Tabs: Ativos / Inativos */}
             <div className="flex items-center gap-1 shrink-0" style={{ background: "hsl(var(--muted))", borderRadius: 10, padding: 3 }}>
               {([
@@ -1391,8 +1391,21 @@ const Patients = () => {
               })}
             </div>
 
-            {/* Pills: formulação + tipo de atendimento (clínico / supervisão) */}
-            <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto no-scrollbar">
+            {/* Busca */}
+            <div className="relative w-full sm:flex-1 sm:max-w-[360px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: C.muted }} />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar paciente por nome ou telefone..."
+                className="pl-9 h-10 w-full border-0 focus-visible:ring-1 focus-visible:ring-[#9B72D3]"
+                style={{ background: "hsl(var(--muted))", borderRadius: 10, fontSize: 13 }}
+              />
+            </div>
+          </div>
+
+          {/* Pills: formulação + tipo de atendimento (clínico / supervisão) */}
+          <div className="flex flex-wrap items-center gap-1.5">
               {([
                 { k: "todos", label: "Todos", kind: "reset" as const, n: undefined as number | undefined },
                 { k: "with", label: "Com Formulação", kind: "formul" as const, n: undefined as number | undefined },
@@ -1442,19 +1455,6 @@ const Patients = () => {
                 );
               })}
             </div>
-          </div>
-
-          {/* Busca */}
-          <div className="relative w-full lg:w-[320px] shrink-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: C.muted }} />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar paciente por nome ou telefone..."
-              className="pl-9 h-10 w-full border-0 focus-visible:ring-1 focus-visible:ring-[#9B72D3]"
-              style={{ background: "hsl(var(--muted))", borderRadius: 10, fontSize: 13 }}
-            />
-          </div>
         </div>
 
         {/* Filtros ativos */}
