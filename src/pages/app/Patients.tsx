@@ -1427,6 +1427,37 @@ const Patients = () => {
                 );
               })}
             </div>
+
+            {/* Pills: atendimento clínico / supervisão */}
+            <div className="flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto no-scrollbar">
+              {([
+                { k: "all", label: "Todos", n: patients.length },
+                { k: "clinical", label: "Atendimento Clínico", n: clinicalCount },
+                { k: "supervisao", label: "Supervisão", n: supervisionCount },
+              ] as const).map((pill) => {
+                const isActive = typeFilter === pill.k;
+                return (
+                  <button
+                    key={pill.k}
+                    type="button"
+                    onClick={() => setTypeFilter(pill.k as typeof typeFilter)}
+                    className="shrink-0 whitespace-nowrap transition-colors"
+                    style={{
+                      background: isActive ? C.purpleSoft : "transparent",
+                      border: `1px solid ${isActive ? "hsl(var(--primary) / 0.35)" : C.border}`,
+                      color: isActive ? C.purpleInk : C.muted,
+                      fontWeight: isActive ? 600 : 500,
+                      fontSize: 12.5,
+                      padding: "6px 12px",
+                      borderRadius: 40,
+                    }}
+                  >
+                    {pill.label}
+                    <span style={{ fontSize: 11, fontWeight: 600, color: isActive ? C.purple : C.muted, marginLeft: 4 }}>({pill.n})</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Busca */}
