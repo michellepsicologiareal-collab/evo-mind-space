@@ -42,6 +42,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useUnsavedGuard } from "@/hooks/useUnsavedGuard";
 import { UnsavedGuardDialog } from "@/components/app/UnsavedGuardDialog";
 import { preserveScroll, keepScroll } from "@/lib/preserveScroll";
+import { matchesPatientTypeFilter } from "@/utils/patientTypeFilter";
 import { PageIntro } from "@/components/app/PageIntro";
 import { PlanoTratamentoHub } from "@/components/app/PlanoTratamentoHub";
 
