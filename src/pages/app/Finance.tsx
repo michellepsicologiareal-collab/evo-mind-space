@@ -3046,8 +3046,9 @@ const Finance = () => {
                         className={`inline-flex min-w-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors sm:text-sm ${
                           billingFilter === t.key
                             ? "border-primary/30 bg-primary/10 font-semibold text-primary"
-                            : "border-transparent text-muted-foreground hover:bg-secondary hover:text-foreground"
+                            : "border-border bg-secondary/40 text-muted-foreground hover:bg-secondary hover:text-foreground"
                         }`}
+
                       >
                         <span className="truncate">{t.label}</span>
                         <span className="shrink-0 tabular-nums text-[10px] opacity-70 sm:text-xs">{t.count}</span>
