@@ -3868,6 +3868,7 @@ const Agenda = () => {
               <ChevronDown className={cn("h-4 w-4 transition-transform", filtersOpen && "rotate-180")} />
             </button>
           )}
+
           {/* ── Filtros ── */}
           <div className={cn("overflow-hidden rounded-2xl border border-border bg-card shadow-card", isMobile && !filtersOpen && "hidden")}>
             <div className="hidden items-center gap-2 border-b border-border/70 bg-muted/30 px-4 py-2 sm:flex">
