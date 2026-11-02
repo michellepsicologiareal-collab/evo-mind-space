@@ -3693,224 +3693,8 @@ const Agenda = () => {
         </div>
       </header>
 
-      {/* ── ZONA SUPERIOR: Calendar + day sessions ── */}
-      <div className="space-y-4 pb-5" style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
-        <div className="space-y-4">
-
-          {/* Patient banner */}
-          {selectedPatientName && (
-            <div className="flex items-center gap-2.5 rounded-2xl bg-primary/8 border border-primary/20 px-4 py-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                <User className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-foreground/70">Paciente selecionado</p>
-                <p className="font-display text-base font-semibold text-foreground truncate">{selectedPatientName}</p>
-              </div>
-              <button
-                onClick={() => setPatientFilter("all")}
-                className="ml-auto shrink-0 inline-flex items-center gap-1 text-xs font-display font-semibold text-primary hover:underline"
-              >
-                <X className="h-3.5 w-3.5" /> Limpar filtro
-              </button>
-            </div>
-          )}
-
-          {/* Toggle de filtros — apenas mobile */}
-          {isMobile && (
-            <button
-              type="button"
-              onClick={() => setFiltersOpen((v) => !v)}
-              className="flex w-full items-center justify-between rounded-full border border-border bg-card px-4 py-2 text-xs font-display font-semibold text-muted-foreground"
-            >
-              <span className="inline-flex items-center gap-2">
-                <Filter className="h-3.5 w-3.5" />
-                Filtros
-                {(serviceFilter !== "all" || patientFilter !== "all" || reminderFilter || billingFilter || statusFilter !== "all") && (
-                  <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] text-accent-foreground">
-                    {(serviceFilter !== "all" ? 1 : 0) + (patientFilter !== "all" ? 1 : 0) + (reminderFilter ? 1 : 0) + (billingFilter ? 1 : 0) + (statusFilter !== "all" ? 1 : 0)}
-                  </span>
-                )}
-              </span>
-              <ChevronDown className={cn("h-4 w-4 transition-transform", filtersOpen && "rotate-180")} />
-            </button>
-          )}
-
-          <div className={cn("space-y-4", isMobile && !filtersOpen && "hidden")}>
-          {/* Service filter — rolagem horizontal em uma linha */}
-          <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
-            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-              <button
-                onClick={() => setServiceFilter("all")}
-                className={cn(
-                  "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
-                  serviceFilter === "all"
-                    ? "bg-accent text-accent-foreground border-accent"
-                    : "bg-background text-muted-foreground border-border hover:bg-muted"
-                )}
-              >
-                Todos
-              </button>
-              {services.map((svc) => (
-                <button
-                  key={svc.id}
-                  onClick={() => setServiceFilter(svc.id)}
-                  className={cn(
-                    "shrink-0 max-w-[60vw] truncate whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border sm:max-w-none",
-                    serviceFilter === svc.id
-                      ? "bg-accent text-accent-foreground border-accent"
-                      : "bg-background text-muted-foreground border-border hover:bg-muted"
-                  )}
-                >
-                  {svc.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Filtros de comunicação: lembrete / cobrança */}
-          <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
-            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-              <button
-                onClick={() => setReminderFilter((v) => !v)}
-                className={cn(
-                  "shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
-                  reminderFilter
-                    ? "bg-sky-100 text-sky-800 border-sky-300"
-                    : "bg-background text-muted-foreground border-border hover:bg-muted"
-                )}
-              >
-                <Bell className="h-3.5 w-3.5" />
-                Lembrete enviado
-              </button>
-              <button
-                onClick={() => setBillingFilter((v) => !v)}
-                className={cn(
-                  "shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
-                  billingFilter
-                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                    : "bg-background text-muted-foreground border-border hover:bg-muted"
-                )}
-              >
-                <DollarSign className="h-3.5 w-3.5" />
-                Cobrança enviada
-              </button>
-              {(reminderFilter || billingFilter) && (
-                <button
-                  onClick={() => { setReminderFilter(false); setBillingFilter(false); }}
-                  className="shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold border border-border text-muted-foreground hover:bg-muted"
-                >
-                  Limpar
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Filtro por status — chips coloridos */}
-          <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
-            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-              <button
-                onClick={() => setStatusFilter("all")}
-                className={cn(
-                  "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
-                  statusFilter === "all"
-                    ? "bg-accent text-accent-foreground border-accent"
-                    : "bg-background text-muted-foreground border-border hover:bg-muted"
-                )}
-              >
-                Todos os status
-              </button>
-              {(Object.keys(statusLabel) as Status[]).map((st) => (
-                <button
-                  key={st}
-                  onClick={() => setStatusFilter(statusFilter === st ? "all" : st)}
-                  className={cn(
-                    "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
-                    statusFilter === st
-                      ? statusClass[st]
-                      : "bg-background text-muted-foreground border-border hover:bg-muted"
-                  )}
-                >
-                  {statusLabel[st]}
-                </button>
-              ))}
-              {statusFilter !== "all" && (
-                <button
-                  onClick={() => setStatusFilter("all")}
-                  className="shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold border border-border text-muted-foreground hover:bg-muted"
-                >
-                  Limpar
-                </button>
-              )}
-            </div>
-          </div>
-
-
-          {/* Filtros: paciente + mês/ano */}
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-            {patients.length > 0 && (
-              <div className="col-span-2 flex min-w-0 items-center gap-2">
-                <Select value={patientFilter} onValueChange={setPatientFilter}>
-                  <SelectTrigger className="h-9 min-w-0 flex-1 rounded-full text-xs font-display font-semibold sm:w-72 sm:flex-none">
-                    <SelectValue placeholder="Filtrar por paciente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os pacientes</SelectItem>
-                    {patients.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {patientFilter !== "all" && (
-                  <button
-                    onClick={() => setPatientFilter("all")}
-                    className="shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold border border-border text-muted-foreground hover:bg-muted"
-                  >
-                    Limpar
-                  </button>
-                )}
-              </div>
-            )}
-            <Select
-              value={String(currentMonth.getMonth() + 1)}
-              onValueChange={(v) => {
-                const newMonth = new Date(currentMonth.getFullYear(), Number(v) - 1, 1);
-                goToMonth(newMonth);
-              }}
-            >
-              <SelectTrigger disabled={loading} className="h-9 w-full min-w-0 rounded-full text-xs font-display font-semibold sm:w-40">
-                <SelectValue placeholder="Mês" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 12 }, (_, i) => (
-                  <SelectItem key={i + 1} value={String(i + 1)}>
-                    {format(new Date(2024, i, 1), "MMMM", { locale: ptBR })}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={String(currentMonth.getFullYear())}
-              onValueChange={(v) => {
-                const newMonth = new Date(Number(v), currentMonth.getMonth(), 1);
-                goToMonth(newMonth);
-              }}
-            >
-              <SelectTrigger disabled={loading} className="h-9 w-full min-w-0 rounded-full text-xs font-display font-semibold sm:w-24">
-                <SelectValue placeholder="Ano" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 11 }, (_, i) => {
-                  const year = new Date().getFullYear() - 5 + i;
-                  return <SelectItem key={year} value={String(year)}>{year}</SelectItem>;
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-          </div>
-
-
-
+      {/* ── Painel do período (topo) ── */}
+      <div className="mt-3 sm:mt-4">
           {/* ── Resumo do período (segue o dia/mês selecionado) ── */}
           {(() => {
             const summary = agendaSummary;
@@ -4040,6 +3824,239 @@ const Agenda = () => {
             );
 
           })()}
+      </div>
+
+      {/* ── ZONA SUPERIOR: Calendar + day sessions ── */}
+      <div className="space-y-4 pb-5" style={{ borderBottom: "0.5px solid hsl(var(--border))" }}>
+        <div className="space-y-4">
+
+          {/* Patient banner */}
+          {selectedPatientName && (
+            <div className="flex items-center gap-2.5 rounded-2xl bg-primary/8 border border-primary/20 px-4 py-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <User className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-foreground/70">Paciente selecionado</p>
+                <p className="font-display text-base font-semibold text-foreground truncate">{selectedPatientName}</p>
+              </div>
+              <button
+                onClick={() => setPatientFilter("all")}
+                className="ml-auto shrink-0 inline-flex items-center gap-1 text-xs font-display font-semibold text-primary hover:underline"
+              >
+                <X className="h-3.5 w-3.5" /> Limpar filtro
+              </button>
+            </div>
+          )}
+
+          {/* Toggle de filtros — apenas mobile */}
+          {isMobile && (
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((v) => !v)}
+              className="flex w-full items-center justify-between rounded-full border border-border bg-card px-4 py-2 text-xs font-display font-semibold text-muted-foreground"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Filter className="h-3.5 w-3.5" />
+                Filtros
+                {(serviceFilter !== "all" || patientFilter !== "all" || reminderFilter || billingFilter || statusFilter !== "all") && (
+                  <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] text-accent-foreground">
+                    {(serviceFilter !== "all" ? 1 : 0) + (patientFilter !== "all" ? 1 : 0) + (reminderFilter ? 1 : 0) + (billingFilter ? 1 : 0) + (statusFilter !== "all" ? 1 : 0)}
+                  </span>
+                )}
+              </span>
+              <ChevronDown className={cn("h-4 w-4 transition-transform", filtersOpen && "rotate-180")} />
+            </button>
+          )}
+
+          {/* ── Filtros ── */}
+          <div className={cn("overflow-hidden rounded-2xl border border-border bg-card shadow-card", isMobile && !filtersOpen && "hidden")}>
+            <div className="hidden items-center gap-2 border-b border-border/70 bg-muted/30 px-4 py-2 sm:flex">
+              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+              <p className="text-[11px] font-display font-semibold text-muted-foreground">Filtros</p>
+            </div>
+
+            <div className="border-b border-border/70 px-3 py-3 sm:px-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <span className="shrink-0 text-[11px] font-semibold text-muted-foreground sm:w-32">Período</span>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  {patients.length > 0 && (
+                    <Select value={patientFilter} onValueChange={setPatientFilter}>
+                      <SelectTrigger className="h-9 w-full min-w-0 rounded-full text-xs font-display font-semibold sm:w-60">
+                        <SelectValue placeholder="Filtrar por paciente" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os pacientes</SelectItem>
+                        {patients.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <Select
+                    value={String(currentMonth.getMonth() + 1)}
+                    onValueChange={(v) => {
+                      const newMonth = new Date(currentMonth.getFullYear(), Number(v) - 1, 1);
+                      goToMonth(newMonth);
+                    }}
+                  >
+                    <SelectTrigger disabled={loading} className="h-9 w-full min-w-0 rounded-full text-xs font-display font-semibold sm:w-36">
+                      <SelectValue placeholder="Mês" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <SelectItem key={i + 1} value={String(i + 1)}>
+                          {format(new Date(2024, i, 1), "MMMM", { locale: ptBR })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={String(currentMonth.getFullYear())}
+                    onValueChange={(v) => {
+                      const newMonth = new Date(Number(v), currentMonth.getMonth(), 1);
+                      goToMonth(newMonth);
+                    }}
+                  >
+                    <SelectTrigger disabled={loading} className="h-9 w-full min-w-0 rounded-full text-xs font-display font-semibold sm:w-24">
+                      <SelectValue placeholder="Ano" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 11 }, (_, i) => {
+                        const year = new Date().getFullYear() - 5 + i;
+                        return <SelectItem key={year} value={String(year)}>{year}</SelectItem>;
+                      })}
+                    </SelectContent>
+                  </Select>
+                  {patientFilter !== "all" && (
+                    <button
+                      onClick={() => setPatientFilter("all")}
+                      className="shrink-0 px-3 py-1.5 rounded-full text-xs font-display font-semibold border border-border text-muted-foreground hover:bg-muted"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="border-b border-border/70 px-3 py-3 sm:px-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <span className="shrink-0 text-[11px] font-semibold text-muted-foreground sm:w-32">Tipo de atendimento</span>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => setServiceFilter("all")}
+                    className={cn(
+                      "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                      serviceFilter === "all"
+                        ? "bg-accent text-accent-foreground border-accent"
+                        : "bg-background text-muted-foreground border-border hover:bg-muted"
+                    )}
+                  >
+                    Todos
+                  </button>
+                  {services.map((svc) => (
+                    <button
+                      key={svc.id}
+                      onClick={() => setServiceFilter(svc.id)}
+                      className={cn(
+                        "shrink-0 max-w-[78vw] truncate whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border sm:max-w-none",
+                        serviceFilter === svc.id
+                          ? "bg-accent text-accent-foreground border-accent"
+                          : "bg-background text-muted-foreground border-border hover:bg-muted"
+                      )}
+                    >
+                      {svc.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="border-b border-border/70 px-3 py-3 sm:px-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <span className="shrink-0 text-[11px] font-semibold text-muted-foreground sm:w-32">Status</span>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => setStatusFilter("all")}
+                    className={cn(
+                      "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                      statusFilter === "all"
+                        ? "bg-accent text-accent-foreground border-accent"
+                        : "bg-background text-muted-foreground border-border hover:bg-muted"
+                    )}
+                  >
+                    Todos os status
+                  </button>
+                  {(Object.keys(statusLabel) as Status[]).map((st) => (
+                    <button
+                      key={st}
+                      onClick={() => setStatusFilter(statusFilter === st ? "all" : st)}
+                      className={cn(
+                        "shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                        statusFilter === st
+                          ? statusClass[st]
+                          : "bg-background text-muted-foreground border-border hover:bg-muted"
+                      )}
+                    >
+                      {statusLabel[st]}
+                    </button>
+                  ))}
+                  {statusFilter !== "all" && (
+                    <button
+                      onClick={() => setStatusFilter("all")}
+                      className="shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold border border-border text-muted-foreground hover:bg-muted"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="px-3 py-3 sm:px-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <span className="shrink-0 text-[11px] font-semibold text-muted-foreground sm:w-32">Comunicação</span>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => setReminderFilter((v) => !v)}
+                    className={cn(
+                      "shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                      reminderFilter
+                        ? "bg-sky-100 text-sky-800 border-sky-300"
+                        : "bg-background text-muted-foreground border-border hover:bg-muted"
+                    )}
+                  >
+                    <Bell className="h-3.5 w-3.5" />
+                    Lembrete enviado
+                  </button>
+                  <button
+                    onClick={() => setBillingFilter((v) => !v)}
+                    className={cn(
+                      "shrink-0 inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border",
+                      billingFilter
+                        ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                        : "bg-background text-muted-foreground border-border hover:bg-muted"
+                    )}
+                  >
+                    <DollarSign className="h-3.5 w-3.5" />
+                    Cobrança enviada
+                  </button>
+                  {(reminderFilter || billingFilter) && (
+                    <button
+                      onClick={() => { setReminderFilter(false); setBillingFilter(false); }}
+                      className="shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold border border-border text-muted-foreground hover:bg-muted"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+
 
           <Tabs value={viewTab} onValueChange={setViewTab}>
             {/* Cabeçalho unificado: visão + navegação de data + nova sessão */}
