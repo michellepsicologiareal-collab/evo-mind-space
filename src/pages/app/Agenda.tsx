@@ -3960,7 +3960,7 @@ const Agenda = () => {
                       key={svc.id}
                       onClick={() => setServiceFilter(svc.id)}
                       className={cn(
-                        "shrink-0 max-w-[60vw] truncate whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border sm:max-w-none",
+                        "shrink-0 max-w-[78vw] truncate whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-display font-semibold transition-colors border sm:max-w-none",
                         serviceFilter === svc.id
                           ? "bg-accent text-accent-foreground border-accent"
                           : "bg-background text-muted-foreground border-border hover:bg-muted"
