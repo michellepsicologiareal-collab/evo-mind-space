@@ -3025,10 +3025,11 @@ const Finance = () => {
                               : "text-muted-foreground"
                           }`}
                         >
-                          {option.key === "paid" && <CheckCircle2 className="hidden h-3.5 w-3.5 shrink-0 text-moss sm:block" />}
-                          {option.key === "pending" && <Clock className="hidden h-3.5 w-3.5 shrink-0 text-accent sm:block" />}
+                          {option.key === "paid" && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-moss" />}
+                          {option.key === "pending" && <Clock className="h-3.5 w-3.5 shrink-0 text-accent" />}
+
                           <span className="truncate">{option.label}</span>
-                          <span className="shrink-0 tabular-nums text-[10px] opacity-70 sm:text-xs">{option.count}</span>
+                          <span className="shrink-0 tabular-nums text-xs opacity-60 sm:text-sm">{option.count}</span>
                         </Button>
                       ))}
                     </div>
@@ -3051,7 +3052,7 @@ const Finance = () => {
 
                       >
                         <span className="truncate">{t.label}</span>
-                        <span className="shrink-0 tabular-nums text-[10px] opacity-70 sm:text-xs">{t.count}</span>
+                        <span className="shrink-0 tabular-nums text-xs opacity-60 sm:text-sm">{t.count}</span>
                       </button>
                     ))}
                   </div>
