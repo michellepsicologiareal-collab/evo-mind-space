@@ -2653,7 +2653,7 @@ const Agenda = () => {
     }
   }, [weekStart]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const SessionCard = ({ s, compact = false }: { s: Session; compact?: boolean }) => {
+  const SessionCard = ({ s, compact = false, showDate = false }: { s: Session; compact?: boolean; showDate?: boolean }) => {
     const isSupervisionCard = s.session_type === "supervision";
     const [sheetOpen, setSheetOpen] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
@@ -2781,7 +2781,11 @@ const Agenda = () => {
         <div className="flex min-w-0 items-start justify-between gap-2">
           <div className="flex flex-1 items-center gap-x-2 gap-y-1 min-w-0 flex-wrap pr-1">
             <p className="shrink-0 font-display text-sm font-semibold text-foreground">
-              <span className="sm:hidden">{format(new Date(s.scheduled_at), "dd/MM")} · </span>
+              {showDate ? (
+                <span className="capitalize">{format(new Date(s.scheduled_at), "EEE dd/MM", { locale: ptBR })} · </span>
+              ) : (
+                <span className="sm:hidden">{format(new Date(s.scheduled_at), "dd/MM")} · </span>
+              )}
               {format(new Date(s.scheduled_at), "HH:mm")}
             </p>
             {(() => {
@@ -4339,7 +4343,7 @@ const Agenda = () => {
                           </p>
                         ) : (
                           <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                            {monthSessionsWindow.visible.map((s) => <SessionCard key={s.id} s={s} compact={dense} />)}
+                            {monthSessionsWindow.visible.map((s) => <SessionCard key={s.id} s={s} compact={dense} showDate />)}
                             {monthSessionsWindow.hasMore && (
                               <div ref={monthSessionsWindow.sentinelRef} className="py-2 text-center text-xs text-muted-foreground">
                                 Carregando mais sessões…
