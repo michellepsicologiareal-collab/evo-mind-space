@@ -1715,10 +1715,27 @@ const Agenda = () => {
     ]);
 
     if (includeFinancial) {
+      const current = sessions.find((s) => s.id === deleteSessionId) as any;
+      const gid = isPlanNotes(current?.notes) ? planGroupIdOf(current?.notes) : null;
       // Delete the session row entirely (removes from agenda + finance)
       const { error } = await supabase.from("sessions").delete().eq("id", deleteSessionId);
       if (error) { setDeleting(false); toast.error("Erro ao excluir"); return; }
-      toast.success("Sessão e lançamento financeiro excluídos");
+      if (gid && current?.patient_id) {
+        // Pacote: o valor da sessão excluída sai do total e o pacote passa a ter uma sessão a menos
+        const { data: sibs } = await supabase
+          .from("sessions")
+          .select("id, notes, scheduled_at")
+          .eq("patient_id", current.patient_id)
+          .ilike("notes", `%[${gid}]%`)
+          .order("scheduled_at", { ascending: true });
+        const list = sibs ?? [];
+        await Promise.all(list.map((s, i) =>
+          supabase.from("sessions").update({ notes: renumberPlanNotes(s.notes || "", i + 1, list.length) }).eq("id", s.id)
+        ));
+        toast.success(`Sessão excluída — pacote ajustado para ${list.length} sessão(ões)`);
+      } else {
+        toast.success("Sessão e lançamento financeiro excluídos");
+      }
     } else {
       // Cancel the session (removes from agenda but keeps financial record)
       const { error } = await supabase.from("sessions").update({ status: "cancelled" as any }).eq("id", deleteSessionId);
