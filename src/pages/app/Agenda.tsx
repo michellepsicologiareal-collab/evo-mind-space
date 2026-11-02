@@ -4085,7 +4085,7 @@ const Agenda = () => {
                     <TabsTrigger value="month" className="h-7 min-w-0 px-1.5 rounded-[40px] text-xs font-display font-semibold text-muted-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:px-2.5"><CalendarDays className="h-3.5 w-3.5 mr-1 inline shrink-0" /> Mês</TabsTrigger>
                   </TabsList>
 
-                  <div className="flex w-full items-center gap-1 min-w-0 sm:flex-1">
+                  <div className="flex w-full items-center gap-1 sm:flex-1">
                     <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Anterior" onClick={goPrev}>
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -4093,8 +4093,8 @@ const Agenda = () => {
                     <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Próximo" onClick={goNext}>
                       <ChevronRight className="h-4 w-4" />
                     </Button>
-                    <Button variant="outline" size="sm" className="h-8 px-2.5 text-xs rounded-[40px] font-display font-semibold bg-primary/5 border-primary/25 text-primary hover:bg-primary/10 hover:text-primary shrink-0" onClick={resetToToday}>
-                      Redefinir para hoje
+                    <Button variant="outline" size="sm" title="Redefinir para hoje" aria-label="Redefinir para hoje" className="h-8 px-3 text-xs rounded-[40px] font-display font-semibold bg-primary/5 border-primary/25 text-primary hover:bg-primary/10 hover:text-primary shrink-0" onClick={resetToToday}>
+                      Hoje
                     </Button>
 
                   </div>
