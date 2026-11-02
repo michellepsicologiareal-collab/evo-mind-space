@@ -74,7 +74,7 @@ export function PatientSessionPlans({ patientId }: { patientId: string }) {
     const nd = addDays(new Date(last.scheduled_at), 7);
     setBusy("add");
     const { data, error } = await supabase.from("sessions").insert({
-      ...rest, scheduled_at: nd.toISOString(), status: "scheduled", payment_status: last.payment_status === "paid" && isPlanNotes(last.notes) ? "pending" : "pending",
+      ...rest, scheduled_at: nd.toISOString(), status: "scheduled", payment_status: "pending",
       payment_due_date: rest.payment_due_date ?? format(nd, "yyyy-MM-dd"),
     } as any).select("*").single();
     if (error || !data) { toast.error("Erro ao incluir sessão"); setBusy(null); return; }
