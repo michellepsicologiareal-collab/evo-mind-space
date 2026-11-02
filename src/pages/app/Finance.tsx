@@ -2980,68 +2980,90 @@ const Finance = () => {
                 </SheetContent>
               </Sheet>
 
-              {/* Busca rápida por situação do pagamento */}
-              <div className="mt-5 flex flex-col gap-3 rounded-xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2">
-                  <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                  <span className="text-sm font-medium">Localizar por pagamento</span>
+              {/* Filtros da lista: busca por nome, situação do pagamento e tipo de cobrança */}
+              <div className="mt-5 rounded-2xl border border-border bg-card p-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="relative min-w-0 sm:max-w-sm sm:flex-1">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                    <Input
+                      value={billingSearch}
+                      onChange={(event) => setBillingSearch(event.target.value)}
+                      placeholder="Buscar paciente por nome"
+                      aria-label="Buscar paciente por nome na lista de cobranças"
+                      className="h-10 pl-9 pr-9 text-sm"
+                    />
+                    {billingSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setBillingSearch("")}
+                        aria-label="Limpar busca por nome"
+                        className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex min-w-0 items-center gap-2 sm:justify-end">
+                    <span className="shrink-0 text-xs text-muted-foreground">Situação do pagamento</span>
+                    <div className="grid min-w-0 grid-cols-3 rounded-lg bg-secondary/70 p-1" role="group" aria-label="Filtrar por situação do pagamento">
+                      {([
+                        { key: "all" as const, label: "Todos", count: paymentCounts.all },
+                        { key: "paid" as const, label: "Pagos", count: paymentCounts.paid },
+                        { key: "pending" as const, label: "Pendentes", count: paymentCounts.pending },
+                      ]).map((option) => (
+                        <Button
+                          key={option.key}
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          aria-pressed={paymentView === option.key}
+                          onClick={() => setPaymentView(option.key)}
+                          className={`h-9 min-w-0 gap-1 px-2 text-xs sm:gap-1.5 sm:px-3 sm:text-sm ${
+                            paymentView === option.key
+                              ? "bg-card text-foreground shadow-sm hover:bg-card"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {option.key === "paid" && <CheckCircle2 className="hidden h-3.5 w-3.5 shrink-0 text-moss sm:block" />}
+                          {option.key === "pending" && <Clock className="hidden h-3.5 w-3.5 shrink-0 text-accent sm:block" />}
+                          <span className="truncate">{option.label}</span>
+                          <span className="shrink-0 tabular-nums text-[10px] opacity-70 sm:text-xs">{option.count}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="grid min-w-0 grid-cols-3 rounded-lg bg-secondary/70 p-1" aria-label="Filtrar por situação do pagamento">
-                  {([
-                    { key: "all" as const, label: "Todos", count: paymentCounts.all },
-                    { key: "paid" as const, label: "Pagos", count: paymentCounts.paid },
-                    { key: "pending" as const, label: "Pendentes", count: paymentCounts.pending },
-                  ]).map((option) => (
-                    <Button
-                      key={option.key}
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      aria-pressed={paymentView === option.key}
-                      onClick={() => setPaymentView(option.key)}
-                      className={`h-9 min-w-0 gap-1 px-1 text-[11px] sm:gap-1.5 sm:px-3 sm:text-sm ${
-                        paymentView === option.key
-                          ? "bg-card text-foreground shadow-sm hover:bg-card"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {option.key === "paid" && <CheckCircle2 className="hidden h-3.5 w-3.5 shrink-0 text-moss sm:block" />}
-                      {option.key === "pending" && <Clock className="hidden h-3.5 w-3.5 shrink-0 text-accent sm:block" />}
-                      <span className="truncate">{option.label}</span>
-                      <span className="shrink-0 tabular-nums text-[10px] opacity-70 sm:text-xs">{option.count}</span>
-                    </Button>
-                  ))}
+
+                <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 flex-wrap items-center gap-1">
+                    {tabs.map((t) => (
+                      <button
+                        key={t.key}
+                        type="button"
+                        onClick={() => setBillingFilter(t.key)}
+                        aria-pressed={billingFilter === t.key}
+                        className={`inline-flex min-w-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors sm:text-sm ${
+                          billingFilter === t.key
+                            ? "border-primary/30 bg-primary/10 font-semibold text-primary"
+                            : "border-transparent text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        }`}
+                      >
+                        <span className="truncate">{t.label}</span>
+                        <span className="shrink-0 tabular-nums text-[10px] opacity-70 sm:text-xs">{t.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCardSort(cardSort === "date" ? "patient" : "date")}
+                    className="inline-flex h-9 w-full shrink-0 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs text-foreground/80 hover:bg-secondary sm:w-auto sm:text-sm"
+                  >
+                    Ordenar: {cardSort === "date" ? "Data" : "Paciente"}
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </div>
 
-              {/* Abas + ordenação */}
-              <div className="mt-4 flex flex-col gap-3 border-b border-border sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-                <div className="grid w-full grid-cols-2 gap-x-3 gap-y-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-4">
-                  {tabs.map((t) => (
-                    <button
-                      key={t.key}
-                      type="button"
-                      onClick={() => setBillingFilter(t.key)}
-                      aria-pressed={billingFilter === t.key}
-                      className={`min-w-0 pb-2 text-left text-xs transition-colors border-b-2 sm:-mb-px sm:whitespace-nowrap sm:text-sm ${
-                        billingFilter === t.key
-                          ? "border-primary text-primary font-semibold"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setCardSort(cardSort === "date" ? "patient" : "date")}
-                  className="mb-2 inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground/80 hover:bg-secondary sm:min-h-0 sm:w-auto sm:rounded-full"
-                >
-                  Ordenar: {cardSort === "date" ? "Data" : "Paciente"}
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </button>
-              </div>
 
               {loading ? (
                 <div className="mt-4"><ListSkeleton count={5} /></div>
@@ -3049,18 +3071,21 @@ const Finance = () => {
                 <div className="mt-4 rounded-2xl border border-dashed border-border bg-card p-10 md:p-14 text-center">
                   <Wallet className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" aria-hidden="true" />
                   <p className="font-display text-lg font-medium text-foreground/80">
-                    Nenhuma cobrança neste filtro 🌿
+                    {billingSearch.trim() ? "Nenhum paciente com esse nome" : "Nenhuma cobrança neste filtro 🌿"}
                   </p>
                   <p className="text-sm mt-1 text-muted-foreground max-w-md mx-auto">
-                    Ajuste os filtros ou selecione outro período para visualizar as cobranças.
+                    {billingSearch.trim()
+                      ? "Confira a grafia ou limpe a busca para ver a lista completa."
+                      : "Ajuste os filtros ou selecione outro período para visualizar as cobranças."}
                   </p>
-                  {(billingFilter !== "all" || paymentView !== "all" || patientFilter !== "all" || receitaSaudeFilter !== "all" || fortnightFilter !== "all") && (
+                  {(billingFilter !== "all" || paymentView !== "all" || patientFilter !== "all" || receitaSaudeFilter !== "all" || fortnightFilter !== "all" || billingSearch !== "") && (
                     <Button
                       variant="outline"
                       size="sm"
                       className="mt-5 h-10 min-h-11"
-                      onClick={() => { setBillingFilter("all"); setPaymentView("all"); setPatientFilter("all"); setReceitaSaudeFilter("all"); setFortnightFilter("all"); }}
+                      onClick={() => { setBillingFilter("all"); setPaymentView("all"); setPatientFilter("all"); setReceitaSaudeFilter("all"); setFortnightFilter("all"); setBillingSearch(""); }}
                     >
+
                       Limpar filtros
                     </Button>
                   )}
