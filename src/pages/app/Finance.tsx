@@ -3019,7 +3019,7 @@ const Finance = () => {
                           size="sm"
                           aria-pressed={paymentView === option.key}
                           onClick={() => setPaymentView(option.key)}
-                          className={`h-9 min-w-0 gap-1 px-2 text-xs sm:gap-1.5 sm:px-3 sm:text-sm ${
+                          className={`h-9 min-w-0 gap-1 px-1.5 text-xs sm:gap-1.5 sm:px-3 sm:text-sm ${
                             paymentView === option.key
                               ? "bg-card text-foreground shadow-sm hover:bg-card"
                               : "text-muted-foreground"
@@ -3030,7 +3030,7 @@ const Finance = () => {
 
 
                           <span className="truncate">{option.label}</span>
-                          <span className="shrink-0 tabular-nums text-xs opacity-60 sm:text-sm">{option.count}</span>
+                          <span className="shrink-0 tabular-nums text-[11px] opacity-60 sm:text-sm">{option.count}</span>
                         </Button>
                       ))}
                     </div>
