@@ -60,7 +60,7 @@ import { logWhatsAppMessage } from "@/lib/whatsappLog";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { WhatsAppNumberPreview } from "@/components/app/WhatsAppNumberPreview";
 import { computeAgendaSummary } from "@/utils/agendaSummary";
-import { computeBillingStatus, type BillingInput } from "@/lib/billing";
+import { computeBillingStatus, isPlanNotes, planGroupIdOf, renumberPlanNotes, type BillingInput } from "@/lib/billing";
 import { BillingBadge } from "@/components/app/BillingBadge";
 import { CalendarSkeleton, ListSkeleton, MetricSkeleton } from "@/components/app/Skeletons";
 
@@ -5193,7 +5193,7 @@ const Agenda = () => {
                   <DollarSign className="h-4 w-4 text-destructive shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm text-destructive">Excluir sessão + lançamento financeiro</p>
-                    <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso, eventos vinculados e o lançamento financeiro</p>
+                    <p className="text-xs text-muted-foreground leading-snug break-words">{pkg ? "Remove a sessão e tira o valor dela do pacote (fica com uma sessão a menos)" : "Remove a sessão, progresso, eventos vinculados e o lançamento financeiro"}</p>
                   </div>
                 </Button>
                 {pkg && (
