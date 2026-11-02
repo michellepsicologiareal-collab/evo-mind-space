@@ -309,6 +309,9 @@ const Finance = () => {
     try { localStorage.setItem(PAYMENT_VIEW_KEY, paymentView); } catch { /* ignora */ }
   }, [paymentView]);
   const [cardSort, setCardSort] = useState<"date" | "patient">("date");
+  // Busca por nome dentro da lista de cobranças (não altera valores nem regras)
+  const [billingSearch, setBillingSearch] = useState("");
+
   const notifiedIdsRef = useRef<Set<string>>(new Set());
   const billingNotifiedRef = useRef<Set<string>>(new Set());
   const billingSectionRef = useRef<HTMLElement | null>(null);
@@ -2629,20 +2632,31 @@ const Finance = () => {
           const totalPagoCards = allGroups.reduce((s, g) => s + g.pago, 0);
           const totalPendenteCards = allGroups.reduce((s, g) => s + g.emAberto, 0);
           const totalPrevistoCards = allGroups.reduce((s, g) => s + g.previsto, 0);
+
+          // Busca por nome: vale só para a lista de cobranças e ignora acentos e maiúsculas.
+          const stripAccents = (value: string) =>
+            value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+          const nameQuery = stripAccents(billingSearch.trim());
+          const searchedGroups = nameQuery
+            ? allGroups.filter((g) => stripAccents(g.name).includes(nameQuery))
+            : allGroups;
+
           const paymentCounts = {
-            all: allGroups.length,
-            paid: allGroups.filter((g) => g.pendingCount === 0 && g.paidCount > 0).length,
-            pending: allGroups.filter((g) => g.pendingCount > 0).length,
+            all: searchedGroups.length,
+            paid: searchedGroups.filter((g) => g.pendingCount === 0 && g.paidCount > 0).length,
+            pending: searchedGroups.filter((g) => g.pendingCount > 0).length,
           };
 
           const counts = {
-            enviada: allGroups.filter((g) => g.billing.status === "enviada").length,
-            perto: allGroups.filter((g) => g.billing.status === "perto").length,
-            vencida: allGroups.filter((g) => g.billing.status === "vencida").length,
-            a_enviar: allGroups.filter((g) => g.billing.status === "a_enviar").length,
+            all: searchedGroups.length,
+            enviada: searchedGroups.filter((g) => g.billing.status === "enviada").length,
+            perto: searchedGroups.filter((g) => g.billing.status === "perto").length,
+            vencida: searchedGroups.filter((g) => g.billing.status === "vencida").length,
+            a_enviar: searchedGroups.filter((g) => g.billing.status === "a_enviar").length,
           };
 
-          const groups = allGroups
+          const groups = searchedGroups
+
             .filter((g) => {
               if (paymentView === "paid" && (g.pendingCount > 0 || g.paidCount === 0)) return false;
               if (paymentView === "pending" && g.pendingCount === 0) return false;
@@ -2668,12 +2682,13 @@ const Finance = () => {
           ];
 
           const tabs = [
-            { key: "all" as const, label: "Todos" },
-            { key: "enviada" as const, label: "Cobrança enviada" },
-            { key: "perto" as const, label: "Perto do vencimento" },
-            { key: "vencida" as const, label: "Vencidas" },
-            { key: "a_enviar" as const, label: "A enviar" },
+            { key: "all" as const, label: "Todos", count: counts.all },
+            { key: "enviada" as const, label: "Cobrança enviada", count: counts.enviada },
+            { key: "perto" as const, label: "Perto do vencimento", count: counts.perto },
+            { key: "vencida" as const, label: "Vencidas", count: counts.vencida },
+            { key: "a_enviar" as const, label: "A enviar", count: counts.a_enviar },
           ];
+
 
           return (
             <>
