@@ -3943,7 +3943,7 @@ const Agenda = () => {
             <div className="border-b border-border/70 px-3 py-3 sm:px-4">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                 <span className="shrink-0 text-[11px] font-semibold text-muted-foreground sm:w-32">Tipo de atendimento</span>
-                <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar sm:flex-wrap sm:overflow-visible">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <button
                     onClick={() => setServiceFilter("all")}
                     className={cn(
@@ -3976,7 +3976,7 @@ const Agenda = () => {
             <div className="border-b border-border/70 px-3 py-3 sm:px-4">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                 <span className="shrink-0 text-[11px] font-semibold text-muted-foreground sm:w-32">Status</span>
-                <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar sm:flex-wrap sm:overflow-visible">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <button
                     onClick={() => setStatusFilter("all")}
                     className={cn(
@@ -4017,7 +4017,7 @@ const Agenda = () => {
             <div className="px-3 py-3 sm:px-4">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                 <span className="shrink-0 text-[11px] font-semibold text-muted-foreground sm:w-32">Comunicação</span>
-                <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar sm:flex-wrap sm:overflow-visible">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <button
                     onClick={() => setReminderFilter((v) => !v)}
                     className={cn(
