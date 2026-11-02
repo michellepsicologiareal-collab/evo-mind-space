@@ -539,6 +539,7 @@ const Agenda = () => {
     recurrence: "single" as "single" | "recurring",
     recurrence_count: 4, recurrence_interval: "weekly" as "weekly" | "biweekly",
     payment_plan: "per_session" as "per_session" | "single_payment",
+    custom_dates: {} as Record<number, string>,
     payment_due_date: "" as string,
     service_id: "" as string,
     modality: "presencial" as "presencial" | "online",
@@ -1442,7 +1443,10 @@ const Agenda = () => {
 
     const sessionsToInsert = [];
     for (let i = 0; i < totalSessions; i++) {
-      const scheduledAt = addDays(baseDate, i * intervalDays);
+      const custom = isRecurring ? form.custom_dates?.[i] : undefined;
+      const scheduledAt = custom
+        ? parse(`${custom} ${parsed.data.time}`, "yyyy-MM-dd HH:mm", new Date())
+        : addDays(baseDate, i * intervalDays);
       const planLabel = isRecurring
         ? `Plano ${totalSessions} sessões (${i + 1}/${totalSessions})${isSinglePayment ? ` — Pgto único [${groupId}]` : " — Pgto por sessão"}`
         : null;
@@ -3631,8 +3635,10 @@ const Agenda = () => {
                       const unitPrice = form.price ? Number(form.price) : (patient?.session_price ?? 0);
                       const total = unitPrice * form.recurrence_count;
                       const dates = Array.from({ length: form.recurrence_count }, (_, i) => {
-                        const d = addDays(parse(`${form.date} ${form.time}`, "yyyy-MM-dd HH:mm", new Date()), i * (form.recurrence_interval === "biweekly" ? 14 : 7));
-                        return format(d, "dd/MM");
+                        const custom = form.custom_dates?.[i];
+                        return custom
+                          ? parse(custom, "yyyy-MM-dd", new Date())
+                          : addDays(parse(`${form.date} ${form.time}`, "yyyy-MM-dd HH:mm", new Date()), i * (form.recurrence_interval === "biweekly" ? 14 : 7));
                       });
                       return (
                         <div className="rounded-lg bg-card border border-border p-3 text-sm space-y-1.5">
@@ -3642,7 +3648,32 @@ const Agenda = () => {
                               ? `💳 1 lançamento financeiro de R$ ${total.toFixed(2)}`
                               : `💳 ${form.recurrence_count}x R$ ${unitPrice.toFixed(2)}`}
                           </p>
-                          <p className="text-xs text-muted-foreground">📅 {dates.join(", ")}</p>
+                          <p className="text-xs text-muted-foreground">📅 Toque em uma data para trocar o dia:</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {dates.map((d, i) => (
+                              <Popover key={i}>
+                                <PopoverTrigger asChild>
+                                  <button type="button" className={cn("rounded-md border px-2 py-1 text-xs font-medium hover:bg-muted", form.custom_dates?.[i] ? "border-accent text-accent" : "border-border text-foreground")}>
+                                    {format(d, "dd/MM")}
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={d}
+                                    defaultMonth={d}
+                                    locale={ptBR}
+                                    onSelect={(nd) => {
+                                      if (!nd) return;
+                                      setForm((f) => ({ ...f, custom_dates: { ...(f.custom_dates || {}), [i]: format(nd, "yyyy-MM-dd") } }));
+                                    }}
+                                    initialFocus
+                                    className={cn("p-3 pointer-events-auto")}
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            ))}
+                          </div>
                         </div>
                       );
                     })()}
