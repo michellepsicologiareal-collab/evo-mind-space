@@ -60,7 +60,7 @@ import { logWhatsAppMessage } from "@/lib/whatsappLog";
 import { normalizePhoneForWhatsApp } from "@/utils/phoneNormalize";
 import { WhatsAppNumberPreview } from "@/components/app/WhatsAppNumberPreview";
 import { computeAgendaSummary } from "@/utils/agendaSummary";
-import { computeBillingStatus, type BillingInput } from "@/lib/billing";
+import { computeBillingStatus, isPlanNotes, planGroupIdOf, renumberPlanNotes, type BillingInput } from "@/lib/billing";
 import { BillingBadge } from "@/components/app/BillingBadge";
 import { CalendarSkeleton, ListSkeleton, MetricSkeleton } from "@/components/app/Skeletons";
 
@@ -1715,10 +1715,27 @@ const Agenda = () => {
     ]);
 
     if (includeFinancial) {
+      const current = sessions.find((s) => s.id === deleteSessionId) as any;
+      const gid = isPlanNotes(current?.notes) ? planGroupIdOf(current?.notes) : null;
       // Delete the session row entirely (removes from agenda + finance)
       const { error } = await supabase.from("sessions").delete().eq("id", deleteSessionId);
       if (error) { setDeleting(false); toast.error("Erro ao excluir"); return; }
-      toast.success("Sessão e lançamento financeiro excluídos");
+      if (gid && current?.patient_id) {
+        // Pacote: o valor da sessão excluída sai do total e o pacote passa a ter uma sessão a menos
+        const { data: sibs } = await supabase
+          .from("sessions")
+          .select("id, notes, scheduled_at")
+          .eq("patient_id", current.patient_id)
+          .ilike("notes", `%[${gid}]%`)
+          .order("scheduled_at", { ascending: true });
+        const list = sibs ?? [];
+        await Promise.all(list.map((s, i) =>
+          supabase.from("sessions").update({ notes: renumberPlanNotes(s.notes || "", i + 1, list.length) }).eq("id", s.id)
+        ));
+        toast.success(`Sessão excluída — pacote ajustado para ${list.length} sessão(ões)`);
+      } else {
+        toast.success("Sessão e lançamento financeiro excluídos");
+      }
     } else {
       // Cancel the session (removes from agenda but keeps financial record)
       const { error } = await supabase.from("sessions").update({ status: "cancelled" as any }).eq("id", deleteSessionId);
@@ -5176,7 +5193,7 @@ const Agenda = () => {
                   <DollarSign className="h-4 w-4 text-destructive shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm text-destructive">Excluir sessão + lançamento financeiro</p>
-                    <p className="text-xs text-muted-foreground leading-snug break-words">Remove a sessão, progresso, eventos vinculados e o lançamento financeiro</p>
+                    <p className="text-xs text-muted-foreground leading-snug break-words">{pkg ? "Remove a sessão e tira o valor dela do pacote (fica com uma sessão a menos)" : "Remove a sessão, progresso, eventos vinculados e o lançamento financeiro"}</p>
                   </div>
                 </Button>
                 {pkg && (
