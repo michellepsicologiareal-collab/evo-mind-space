@@ -117,3 +117,9 @@ export const isForecastCharge = (r: ChargeRow): boolean =>
   r.payment_status === "pending" &&
   !isPlanNotes(r.notes) &&
   (r.status === "scheduled" || r.status === "confirmed");
+
+/** Reescreve a numeração de um pacote nas notas: "Plano 4 sessões (2/4)" → "Plano 3 sessões (2/3)". */
+export const renumberPlanNotes = (notes: string, index: number, total: number): string =>
+  notes
+    .replace(/Plano \d+ sess(ões|ão|oes|ao)/i, `Plano ${total} ${total === 1 ? "sessão" : "sessões"}`)
+    .replace(/\(\d+\/\d+\)/, `(${index}/${total})`);
