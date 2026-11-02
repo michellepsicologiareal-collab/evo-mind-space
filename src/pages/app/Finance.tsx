@@ -3005,7 +3005,7 @@ const Finance = () => {
                   </div>
                   <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-end sm:gap-2">
                     <span className="shrink-0 text-xs text-muted-foreground">Situação do pagamento</span>
-                    <div className="grid w-full min-w-0 grid-cols-3 rounded-lg bg-secondary/70 p-1 sm:w-auto" role="group" aria-label="Filtrar por situação do pagamento">
+                    <div className="grid w-full min-w-0 grid-cols-3 rounded-lg bg-secondary/70 p-1 max-[370px]:grid-cols-1 sm:w-auto" role="group" aria-label="Filtrar por situação do pagamento">
 
                       {([
                         { key: "all" as const, label: "Todos", count: paymentCounts.all },
