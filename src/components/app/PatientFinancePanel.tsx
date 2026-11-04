@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowUpRight, CalendarDays, CheckCircle2, Clock, FileText, History, MessageCircle, Receipt, Wallet } from "lucide-react";
+import { ArrowUpRight, CalendarDays, CheckCircle2, Clock, FileText, History, Loader2, MessageCircle, Receipt, Wallet } from "lucide-react";
+import { toast } from "sonner";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { sessionDateUpdate } from "@/lib/sessionDate";
+import { notifySessionDataChanged } from "@/lib/dataEvents";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -24,9 +29,10 @@ interface Props {
   onClose: () => void;
   onManage: (session: PatientFinanceSession, sessions: PatientFinanceSession[]) => void;
   onChart: (id: string) => void;
+  onSessionChanged: () => void;
 }
 
-export function PatientFinancePanel({ patient, month, onClose, onManage, onChart }: Props) {
+export function PatientFinancePanel({ patient, month, onClose, onManage, onChart, onSessionChanged }: Props) {
   const { user } = useAuth();
   const [sessions, setSessions] = useState<PatientFinanceSession[]>([]);
   const [changes, setChanges] = useState<Change[]>([]);
@@ -36,12 +42,40 @@ export function PatientFinancePanel({ patient, month, onClose, onManage, onChart
   const [tab, setTab] = useState("sessions");
   const [filter, setFilter] = useState("all");
   const [retry, setRetry] = useState(0);
+  const [editingDate, setEditingDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  const [savingDate, setSavingDate] = useState(false);
+  const [dateError, setDateError] = useState(false);
+
+  const saveDate = async (session: PatientFinanceSession) => {
+    if (!user || !patient || !selectedDate || savingDate) return;
+    setSavingDate(true);
+    setDateError(false);
+    try {
+      const update = sessionDateUpdate(session.scheduled_at, selectedDate);
+      const { data, error: saveError } = await supabase.from("sessions")
+        .update(update).eq("id", session.id).eq("patient_id", patient.id).eq("user_id", user.id)
+        .select("id, scheduled_at").single();
+      if (saveError || !data) throw saveError ?? new Error("Session not updated");
+      setSessions((rows) => rows.map((row) => row.id === data.id ? { ...row, scheduled_at: data.scheduled_at } : row));
+      setEditingDate(null);
+      notifySessionDataChanged();
+      onSessionChanged();
+      toast.success(`Data alterada para ${format(new Date(data.scheduled_at), "dd/MM/yyyy")}`);
+    } catch {
+      setDateError(true);
+      toast.error("Não foi possível alterar a data. Tente novamente.");
+    } finally {
+      setSavingDate(false);
+    }
+  };
 
   useEffect(() => {
     if (!patient || !user) return;
     let active = true;
     setLoading(true);
     setError(false);
+    setEditingDate(null);
     setPeriod("month"); setTab("sessions"); setFilter("all");
     (async () => {
       const [rows, logs] = await Promise.all([
@@ -121,7 +155,27 @@ export function PatientFinancePanel({ patient, month, onClose, onManage, onChart
               ].filter((g) => g.rows.length > 0).map((g) => <section key={g.key} className="space-y-3">
                 <div className="flex items-center justify-between gap-3"><h4 className={`text-sm font-semibold ${g.tone}`}>{g.title} · {g.rows.length}</h4><span className={`text-sm font-semibold tabular-nums ${g.tone}`}>{money(g.rows.reduce((t, s) => t + Number(s.price ?? 0), 0))}</span></div>
                 {g.rows.map((s) => <div key={s.id} className="rounded-2xl border border-border bg-card p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><p className="font-semibold">{format(new Date(s.scheduled_at), "dd/MM/yyyy · HH:mm")}</p><p className="mt-1 text-sm text-foreground/75">{s.service?.name ?? (isPlanNotes(s.notes) ? "Plano de Atendimento" : "Sessão avulsa")} · {statusLabels[s.status] ?? s.status}</p></div><div className="text-right"><p className="font-semibold tabular-nums">{money(Number(s.price ?? 0))}</p><span className={`text-xs font-medium ${s.status === "cancelled" ? "text-muted-foreground" : s.payment_status === "paid" ? "text-moss" : "text-destructive"}`}>{s.status === "cancelled" ? "Cancelada" : s.payment_status === "paid" ? "Pago" : "Pendente"}</span></div></div>
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3"><p className="text-xs text-foreground/75">{s.paid_at ? `Pago em ${format(new Date(s.paid_at), "dd/MM/yyyy")}` : s.payment_due_date ? `Vencimento ${s.payment_due_date.split("-").reverse().join("/")}` : "Sem vencimento definido"}{s.payment_method ? ` · ${{ pix: "PIX", card: "Cartão", cash: "Dinheiro" }[s.payment_method]}` : ""}{s.receita_saude_status ? ` · Receita Saúde ${s.receita_saude_status === "issued" ? "emitida" : "a emitir"}` : ""}</p><Button variant="outline" size="sm" onClick={() => manage(s)}><Wallet /> Pagamento e cobrança</Button></div>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3"><p className="text-xs text-foreground/75">{s.paid_at ? `Pago em ${format(new Date(s.paid_at), "dd/MM/yyyy")}` : s.payment_due_date ? `Vencimento ${s.payment_due_date.split("-").reverse().join("/")}` : "Sem vencimento definido"}{s.payment_method ? ` · ${{ pix: "PIX", card: "Cartão", cash: "Dinheiro" }[s.payment_method]}` : ""}{s.receita_saude_status ? ` · Receita Saúde ${s.receita_saude_status === "issued" ? "emitida" : "a emitir"}` : ""}</p>
+                    <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                      <Popover open={editingDate === s.id} onOpenChange={(open) => {
+                        if (savingDate) return;
+                        setEditingDate(open ? s.id : null);
+                        setSelectedDate(open ? new Date(s.scheduled_at) : undefined);
+                        setDateError(false);
+                      }}>
+                        <PopoverTrigger asChild><Button variant="outline" size="sm" className="w-full sm:w-auto" disabled={savingDate}><CalendarDays /> Alterar data</Button></PopoverTrigger>
+                        <PopoverContent className="w-auto max-w-[calc(100vw-16px)] p-0 pointer-events-auto" align="start">
+                          <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} defaultMonth={new Date(s.scheduled_at)} locale={ptBR} initialFocus disabled={savingDate} className="p-3 pointer-events-auto" />
+                          <div className="space-y-3 border-t border-border p-3">
+                            <p className="text-sm text-muted-foreground">Horário mantido: {format(new Date(s.scheduled_at), "HH:mm")}</p>
+                            {dateError && <p role="alert" className="text-sm text-destructive">Não foi possível salvar. Tente novamente.</p>}
+                            <div className="flex justify-end gap-2"><Button variant="outline" size="sm" disabled={savingDate} onClick={() => setEditingDate(null)}>Cancelar</Button><Button variant="accent" size="sm" disabled={!selectedDate || savingDate} onClick={() => saveDate(s)}>{savingDate && <Loader2 className="h-4 w-4 animate-spin" />}{savingDate ? "Salvando…" : "Salvar data"}</Button></div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => manage(s)}><Wallet /> Pagamento e cobrança</Button>
+                    </div>
+                  </div>
                 </div>)}
               </section>)}
             </TabsContent>

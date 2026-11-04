@@ -40,6 +40,7 @@
 
 ## Financeiro
 - [x] Clicar no "Previsto total do mês" mostra Pago + Em aberto por paciente
+- [ ] Alterar data de uma sessão pelo painel financeiro e validar com sessão fictícia
 - [x] Adicionar painel por paciente com resumo, sessões, cobranças e histórico financeiro
 - [x] Verificar abertura e consulta do painel com dados reais
 
