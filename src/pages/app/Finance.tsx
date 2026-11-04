@@ -3664,6 +3664,7 @@ const Finance = () => {
         patient={financeHistory}
         month={monthCursor}
         onClose={() => setFinanceHistory(null)}
+        onSessionChanged={() => { void load(); }}
         onChart={(id) => { setFinanceHistory(null); navigate(`/app/pacientes?patient=${id}`); }}
         onManage={(session, sessions) => {
           const summary = summarizePatientFinance(sessions);
