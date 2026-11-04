@@ -3244,15 +3244,43 @@ const Finance = () => {
                                 {sendingBillingKey === g.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
                                 <span className="truncate">{alreadySent ? "Reenviar cobrança" : "Enviar cobrança"}</span>
                               </Button>
+                              {pay === "Pago" ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-11 min-w-0 gap-1.5 px-2 text-xs leading-tight sm:h-8 sm:px-3"
+                                disabled={settling}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const paidIds = g.sessions.filter((r) => r.payment_status === "paid").map((r) => r.id);
+                                  undoPayment(paidIds, `Pagamento de ${g.name} voltou para não pago`);
+                                }}
+                                aria-label={`Marcar pagamentos de ${g.name} como não pagos`}
+                              >
+                                <Undo2 className="h-3.5 w-3.5" />
+                                <span className="truncate">Marcar não pago</span>
+                              </Button>
+                              ) : (
                               <Button
                                 size="sm"
                                 className="h-11 min-w-0 gap-1.5 bg-moss px-2 text-xs leading-tight text-moss-foreground hover:bg-moss/90 sm:h-8 sm:px-3"
-                                disabled={pay === "Pago" || quickSettling === g.key}
+                                disabled={quickSettling === g.key}
                                 onClick={(e) => { e.stopPropagation(); quickSettle(g); }}
                                 aria-label={`Dar baixa nas sessões pendentes de ${g.name}`}
                               >
                                 {quickSettling === g.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
                                 <span className="truncate">{quickSettling === g.key ? "Dando baixa..." : "Dar baixa"}</span>
+                              </Button>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-11 min-w-0 gap-1.5 px-2 text-xs sm:h-8 sm:px-3"
+                                onClick={(e) => { e.stopPropagation(); openSettle(g); }}
+                                aria-label={`Ver todos os pagamentos de ${g.name}`}
+                              >
+                                <Wallet className="h-3.5 w-3.5" />
+                                Pagamentos
                               </Button>
                               <Button
                                 variant="outline"
