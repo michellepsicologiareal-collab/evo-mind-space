@@ -168,7 +168,7 @@ export const SessionTimeline = ({ patientId, onNavigate }: Props) => {
                   onNavigate?.();
                   if (s.sessionId) {
                     // Abre a mesma ficha de sessão da Agenda (?edit=<sessionId>).
-                    navigate(`/app/agenda?patient=${patientId}&edit=${s.sessionId}`);
+                    navigate(`/app/agenda?patient=${patientId}&month=${s.key}&edit=${s.sessionId}`);
                   } else {
                     navigate(`/app/agenda?patient=${patientId}&month=${s.key}`);
                   }

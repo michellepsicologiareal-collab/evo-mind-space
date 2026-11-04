@@ -46,7 +46,28 @@ export function PatientSessionPlans({ patientId }: { patientId: string }) {
       const key = planGroupIdOf(r.notes) ?? (r.notes?.match(/Plano \d+ sess\S*/)?.[0] ?? "outros");
       map.set(key, [...(map.get(key) ?? []), r]);
     }
-    return Array.from(map.entries())
+    // Séries sem id de grupo com o mesmo rótulo ("Plano 4 sessões") podem ser pacotes distintos:
+    // separa sempre que a numeração (i/N) recomeça ou o pacote atinge N sessões.
+    const entries: [string, Row[]][] = [];
+    for (const [key, list] of map.entries()) {
+      if (planGroupIdOf(list[0].notes)) { entries.push([key, list]); continue; }
+      const sorted = [...list].sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+      let chunk: Row[] = [];
+      let prevIdx = 0;
+      let n = 0;
+      const flush = () => { if (chunk.length) entries.push([`${key}#${entries.length}`, chunk]); chunk = []; prevIdx = 0; };
+      for (const r of sorted) {
+        const m = r.notes?.match(/\((\d+)\/(\d+)\)/);
+        const idx = m ? Number(m[1]) : prevIdx + 1;
+        const total = m ? Number(m[2]) : 0;
+        if (chunk.length && (idx <= prevIdx || (n > 0 && chunk.length >= n))) flush();
+        if (!chunk.length) n = total;
+        chunk.push(r);
+        prevIdx = idx;
+      }
+      flush();
+    }
+    return entries
       .map(([key, list]) => ({ key, list, hasGid: !!planGroupIdOf(list[0].notes), single: isPlanNotes(list[0].notes) }))
       .sort((a, b) => b.list[0].scheduled_at.localeCompare(a.list[0].scheduled_at));
   }, [rows]);
