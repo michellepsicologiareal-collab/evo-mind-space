@@ -29,3 +29,34 @@ export function summarizePatientFinance(sessions: PatientFinanceSession[]) {
   const forecast = sum(valid.filter(isForecastCharge));
   return { paid, pending, forecast, total: paid + pending, completed: valid.filter((s) => s.status === "completed").length, receipts: valid.filter((s) => s.receita_saude_status === "to_issue").length };
 }
+
+export interface PatientFinanceGroup {
+  key: string;
+  name: string;
+  rows: PatientFinanceSession[];
+  total: number;
+}
+
+/**
+ * Agrupa sessões por paciente (uma bloco por pessoa, em ordem alfabética),
+ * somando o total de cada paciente e ordenando as sessões pela data.
+ */
+export function groupSessionsByPatient(
+  sessions: PatientFinanceSession[]
+): PatientFinanceGroup[] {
+  const map = new Map<string, PatientFinanceGroup>();
+  for (const s of sessions) {
+    const key = s.patient?.id ?? s.patient?.full_name ?? "sem-paciente";
+    let group = map.get(key);
+    if (!group) {
+      group = { key, name: s.patient?.full_name ?? "Sem paciente", rows: [], total: 0 };
+      map.set(key, group);
+    }
+    group.rows.push(s);
+    group.total += Number(s.price ?? 0);
+  }
+  const groups = [...map.values()];
+  groups.sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }));
+  for (const g of groups) g.rows.sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+  return groups;
+}

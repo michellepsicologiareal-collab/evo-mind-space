@@ -121,7 +121,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { PageIntro } from "@/components/app/PageIntro";
 import { PatientFinancePanel } from "@/components/app/PatientFinancePanel";
-import { summarizePatientFinance } from "@/lib/patientFinance";
+import { summarizePatientFinance, groupSessionsByPatient } from "@/lib/patientFinance";
 import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
 import { logWhatsAppMessage } from "@/lib/whatsappLog";
 import { logPaymentChange, type PaymentChangeAction } from "@/lib/paymentAudit";
