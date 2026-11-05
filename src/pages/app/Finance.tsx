@@ -339,6 +339,11 @@ const Finance = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [totalBreakdownOpen, setTotalBreakdownOpen] = useState(false);
   const [itemList, setItemList] = useState<{ title: string; rows: Row[] } | null>(null);
+  // Lista clicável (Pago, Em aberto, Previsto...) agrupada por paciente, em ordem alfabética
+  const itemListGroups = useMemo(
+    () => groupSessionsByPatient((itemList?.rows ?? []) as any),
+    [itemList]
+  );
   // Texto editável da cobrança na tela de conferência
   const [draftMessage, setDraftMessage] = useState("");
   const [sendingBillingKey, setSendingBillingKey] = useState<string | null>(null);
