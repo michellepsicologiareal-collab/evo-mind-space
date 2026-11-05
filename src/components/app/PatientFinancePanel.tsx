@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { computeBillingStatus, isPlanNotes, planGroupIdOf, renumberPlanNotes } from "@/lib/billing";
 import { patientFinanceColumns, summarizePatientFinance, type PatientFinanceSession } from "@/lib/patientFinance";
-import { paymentChangeLabel } from "@/lib/paymentAudit";
+import { logPaymentChange, paymentChangeLabel } from "@/lib/paymentAudit";
 
 const money = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 const statusLabels: Record<string, string> = { completed: "Realizada", scheduled: "Agendada", confirmed: "Confirmada", cancelled: "Cancelada", no_show: "Falta", rescheduled: "Remarcada" };
@@ -52,6 +52,32 @@ export function PatientFinancePanel({ patient, month, onClose, onManage, onChart
   const [dateError, setDateError] = useState(false);
   const [toDelete, setToDelete] = useState<PatientFinanceSession | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [toPay, setToPay] = useState<PatientFinanceSession | null>(null);
+  const [payMethod, setPayMethod] = useState<"pix" | "card" | "cash">("card");
+  const [paying, setPaying] = useState(false);
+
+  const paySingle = async (session: PatientFinanceSession) => {
+    if (!user || !patient || paying) return;
+    setPaying(true);
+    try {
+      const paidAt = new Date().toISOString();
+      const { error: payError } = await supabase.from("sessions")
+        .update({ payment_status: "paid", payment_method: payMethod, paid_at: paidAt } as any)
+        .eq("id", session.id).eq("user_id", user.id);
+      if (payError) throw payError;
+      await logPaymentChange({ userId: user.id, patientId: patient.id, sessionIds: [session.id], action: "paid", amount: Number(session.price ?? 0), label: `Sessão ${format(new Date(session.scheduled_at), "dd/MM/yyyy")} · ${{ pix: "PIX", card: "Cartão", cash: "Dinheiro" }[payMethod]}` });
+      setSessions((prev) => prev.map((x) => x.id === session.id ? { ...x, payment_status: "paid", payment_method: payMethod, paid_at: paidAt } as PatientFinanceSession : x));
+      notifySessionDataChanged();
+      onSessionChanged?.();
+      setRetry((r) => r + 1);
+      toast.success("Sessão marcada como paga.");
+      setToPay(null);
+    } catch {
+      toast.error("Não foi possível registrar o pagamento. Tente novamente.");
+    } finally {
+      setPaying(false);
+    }
+  };
 
   const deleteSession = async (session: PatientFinanceSession) => {
     if (!user || !patient || deleting) return;
@@ -163,6 +189,30 @@ export function PatientFinancePanel({ patient, month, onClose, onManage, onChart
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+    <AlertDialog open={Boolean(toPay)} onOpenChange={(open) => { if (!open && !paying) setToPay(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Pagar só esta sessão?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {toPay && `${format(new Date(toPay.scheduled_at), "dd/MM/yyyy 'às' HH:mm")} · ${money(Number(toPay.price ?? 0))}. `}
+            Apenas esta sessão será marcada como paga; as demais do plano continuam em aberto.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Forma de pagamento</p>
+          <Select value={payMethod} onValueChange={(v) => setPayMethod(v as "pix" | "card" | "cash")}>
+            <SelectTrigger aria-label="Forma de pagamento"><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="card">Cartão</SelectItem><SelectItem value="pix">PIX</SelectItem><SelectItem value="cash">Dinheiro</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={paying}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction disabled={paying} onClick={(e) => { e.preventDefault(); if (toPay) void paySingle(toPay); }}>
+            {paying && <Loader2 className="h-4 w-4 animate-spin" />}Confirmar pagamento
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     <SheetContent className="flex w-full flex-col overflow-hidden p-0 sm:max-w-4xl">
       <SheetHeader className="shrink-0 border-b border-border bg-card px-5 pb-5 pt-7 text-left sm:px-8">
         <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary"><Wallet className="h-4 w-4" /> Painel financeiro do paciente</div>
@@ -231,6 +281,7 @@ export function PatientFinancePanel({ patient, month, onClose, onManage, onChart
                           </div>
                         </PopoverContent>
                       </Popover>
+                      {s.status !== "cancelled" && s.payment_status === "pending" && <Button variant="accent" size="sm" className="w-full sm:w-auto" onClick={() => { setPayMethod("card"); setToPay(s); }}><CheckCircle2 /> Pagar só esta sessão</Button>}
                       <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => manage(s)}><Wallet /> Pagamento e cobrança</Button>
                       <Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive sm:w-auto" onClick={() => setToDelete(s)}><Trash2 /> Excluir sessão</Button>
                     </div>
