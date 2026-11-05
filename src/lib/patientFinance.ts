@@ -56,6 +56,13 @@ export function groupSessionsByPatient(
     group.total += Number(s.price ?? 0);
   }
   const groups = [...map.values()];
+  // Nome exibido estável: o primeiro em ordem alfabética entre as variações do
+  // mesmo paciente, para a lista não depender da ordem das linhas.
+  for (const g of groups) {
+    const names = [...new Set(g.rows.map((s) => s.patient?.full_name).filter((n): n is string => !!n))]
+      .sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
+    if (names.length) g.name = names[0];
+  }
   groups.sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }));
   for (const g of groups) g.rows.sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
   return groups;
