@@ -3013,7 +3013,7 @@ const Finance = () => {
                       <button
                         key={t.key}
                         type="button"
-                        onClick={() => { setBillingFilter(t.key); if (t.key === "all") { setPaymentView("all"); setReceitaSaudeFilter("all"); setBillingSearch(""); } }}
+                        onClick={() => { setBillingFilter(t.key); if (t.key === "all") { setPaymentView("all"); setReceitaSaudeFilter("all"); setPatientFilter("all"); setFortnightFilter("all"); setBillingSearch(""); } }}
                         aria-pressed={billingFilter === t.key}
                         className={`inline-flex min-w-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors sm:text-sm ${
                           billingFilter === t.key
