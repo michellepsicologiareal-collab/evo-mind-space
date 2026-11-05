@@ -175,26 +175,6 @@ interface Row {
 const isRecurringSession = (notes: string | null): boolean =>
   !!notes && /Plano \d+ sess/.test(notes);
 
-// Groups the clickable summary rows (Pago, Em aberto, Recebido...) by patient:
-// one block per patient, alphabetical, with the patient's own subtotal on top.
-export const groupRowsByPatient = (rows: Row[]) => {
-  const map = new Map<string, { key: string; name: string; rows: Row[]; total: number }>();
-  for (const r of rows) {
-    const key = r.patient?.id ?? r.patient?.full_name ?? "sem-paciente";
-    let group = map.get(key);
-    if (!group) {
-      group = { key, name: r.patient?.full_name ?? "Sem paciente", rows: [], total: 0 };
-      map.set(key, group);
-    }
-    group.rows.push(r);
-    group.total += Number(r.price ?? 0);
-  }
-  const groups = [...map.values()];
-  groups.sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }));
-  for (const g of groups) g.rows.sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
-  return groups;
-};
-
 const getSeriesKey = (row: { notes: string | null; patient?: { id: string } | null }): string | null => {
   const notes = row.notes;
   if (!notes) return null;
