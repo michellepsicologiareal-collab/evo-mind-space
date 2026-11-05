@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { summarizePatientFinance, type PatientFinanceSession } from "./patientFinance";
+import { groupSessionsByPatient, summarizePatientFinance, type PatientFinanceSession } from "./patientFinance";
 
 const session = (values: Partial<PatientFinanceSession>): PatientFinanceSession => ({
   id: "session", scheduled_at: "2026-10-20T12:00:00Z", status: "completed", payment_status: "pending", price: 100,
