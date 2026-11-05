@@ -2788,11 +2788,11 @@ const Finance = () => {
                     <DialogHeader>
                       <DialogTitle>{itemList?.title} · {formatBRL((itemList?.rows ?? []).reduce((s, r) => s + Number(r.price ?? 0), 0))}</DialogTitle>
                       <p className="text-xs text-muted-foreground">
-                        {groupRowsByPatient(itemList?.rows ?? []).length} {groupRowsByPatient(itemList?.rows ?? []).length === 1 ? "paciente" : "pacientes"}
+                        {itemListGroups.length} {itemListGroups.length === 1 ? "paciente" : "pacientes"}
                       </p>
                     </DialogHeader>
                     <div className="space-y-3">
-                      {groupRowsByPatient(itemList?.rows ?? []).map((g) => (
+                      {itemListGroups.map((g) => (
                         <div key={g.key} className="overflow-hidden rounded-xl border">
                           <div className="flex items-center justify-between gap-3 bg-muted/50 px-3 py-2">
                             <div className="min-w-0">
