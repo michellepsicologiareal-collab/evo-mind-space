@@ -338,6 +338,7 @@ const Finance = () => {
   const [auditOpen, setAuditOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [totalBreakdownOpen, setTotalBreakdownOpen] = useState(false);
+  const [itemList, setItemList] = useState<{ title: string; rows: Row[] } | null>(null);
   // Texto editável da cobrança na tela de conferência
   const [draftMessage, setDraftMessage] = useState("");
   const [sendingBillingKey, setSendingBillingKey] = useState<string | null>(null);
@@ -2762,21 +2763,46 @@ const Finance = () => {
               </div>
 
               <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
-                <span className="text-muted-foreground">
+                <button type="button" className="text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-foreground" title="Ver quem pagou" onClick={() => setItemList({ title: "Pago", rows: allGroups.flatMap((g) => g.sessions).filter((r) => r.payment_status === "paid") })}>
                   Pago <strong className="text-moss tabular-nums">{formatBRL(totalPagoCards)}</strong>
-                </span>
-                <span className="text-muted-foreground">
+                </button>
+                <button type="button" className="text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-foreground" title="Ver pendências" onClick={() => setItemList({ title: "Em aberto", rows: allGroups.flatMap((g) => g.sessions).filter((r) => r.payment_status !== "paid" && isPendingCharge(r as any)) })}>
                   Em aberto <strong className="text-destructive tabular-nums">{formatBRL(totalPendenteCards)}</strong>
-                </span>
-                <span className="text-muted-foreground" title="Sessões previstas no mês (não canceladas): futuras e realizadas">
+                </button>
+                <button type="button" className="text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-foreground" title="Sessões previstas no mês (não canceladas)" onClick={() => setItemList({ title: "Previsto", rows: fortnightAllValid })}>
                   Previsto <strong className="text-foreground tabular-nums">{formatBRL(totalPrevisto)}</strong>
-                </span>
-                <span className="text-muted-foreground" title="Sessões realizadas (concluídas) no período">
+                </button>
+                <button type="button" className="text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-foreground" title="Sessões realizadas no período" onClick={() => setItemList({ title: "Realizado", rows: fortnightBillable })}>
                   Realizado <strong className="text-foreground tabular-nums">{formatBRL(totalReceitaRealizada)}</strong>
-                </span>
-                <span className="text-muted-foreground" title="Pagamentos confirmados no período, pela data do pagamento">
+                </button>
+                <button type="button" className="text-muted-foreground underline decoration-dotted underline-offset-4 hover:text-foreground" title="Pagamentos pela data do pagamento" onClick={() => setItemList({ title: "Recebido", rows: paidInPeriod })}>
                   Recebido <strong className="text-moss font-semibold tabular-nums">{formatBRL(totalRecebido)}</strong>
-                </span>
+                </button>
+                <Dialog open={!!itemList} onOpenChange={(o) => !o && setItemList(null)}>
+                  <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>{itemList?.title} · {formatBRL((itemList?.rows ?? []).reduce((s, r) => s + Number(r.price ?? 0), 0))}</DialogTitle>
+                    </DialogHeader>
+                    <div className="divide-y rounded-xl border">
+                      {[...(itemList?.rows ?? [])].sort((a, b) => (b.paid_at ?? b.scheduled_at).localeCompare(a.paid_at ?? a.scheduled_at)).map((r) => (
+                        <div key={r.id} className="flex items-center justify-between gap-3 p-3 text-sm">
+                          <div className="min-w-0">
+                            <div className="truncate font-medium">{r.patient?.full_name ?? "Sem paciente"}</div>
+                            <div className="text-xs text-muted-foreground">
+                              Sessão {new Date(r.scheduled_at).toLocaleDateString("pt-BR")}
+                              {r.payment_status === "paid" && r.paid_at ? ` · Pago em ${new Date(r.paid_at).toLocaleDateString("pt-BR")}` : r.payment_status === "paid" ? " · Pago" : " · Pendente"}
+                              {r.payment_method ? ` · ${r.payment_method === "pix" ? "PIX" : r.payment_method === "card" ? "Cartão" : "Dinheiro"}` : ""}
+                            </div>
+                          </div>
+                          <strong className="shrink-0 tabular-nums">{formatBRL(Number(r.price ?? 0))}</strong>
+                        </div>
+                      ))}
+                      {(itemList?.rows.length ?? 0) === 0 && (
+                        <p className="p-4 text-center text-sm text-muted-foreground">Nenhum registro neste mês.</p>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <span className="text-muted-foreground hidden sm:inline" title="Valor das sessões futuras já agendadas (somente sessão avulsa)">
                   Previsto avulso futuro <strong className="text-foreground tabular-nums">{formatBRL(totalPrevistoCards)}</strong>
                 </span>
