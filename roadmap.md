@@ -46,3 +46,6 @@
 
 ## Humor e RPD do paciente
 - [x] Paciente registra humor (nota, emoções, texto) no link do RPD; prontuário cruza com o registro da terapeuta e RPDs
+
+## Agrupamento por paciente nas listas do Financeiro
+- [x] Ao clicar em Pago, Em aberto, Previsto, Realizado ou Recebido, listar em blocos por paciente (nome, nº de sessões, subtotal), em ordem alfabética
