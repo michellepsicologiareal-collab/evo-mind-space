@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowUpRight, CalendarDays, CheckCircle2, Clock, FileText, History, Loader2, MessageCircle, Receipt, Wallet } from "lucide-react";
+import { ArrowUpRight, CalendarDays, CheckCircle2, Clock, FileText, History, Loader2, MessageCircle, Receipt, Trash2, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -16,7 +16,11 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { ListSkeleton } from "@/components/app/Skeletons";
 import { BillingBadge } from "@/components/app/BillingBadge";
 import PatientWhatsAppLog from "@/components/app/PatientWhatsAppLog";
-import { computeBillingStatus, isPlanNotes, planGroupIdOf } from "@/lib/billing";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { computeBillingStatus, isPlanNotes, planGroupIdOf, renumberPlanNotes } from "@/lib/billing";
 import { patientFinanceColumns, summarizePatientFinance, type PatientFinanceSession } from "@/lib/patientFinance";
 import { paymentChangeLabel } from "@/lib/paymentAudit";
 
@@ -46,6 +50,43 @@ export function PatientFinancePanel({ patient, month, onClose, onManage, onChart
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [savingDate, setSavingDate] = useState(false);
   const [dateError, setDateError] = useState(false);
+  const [toDelete, setToDelete] = useState<PatientFinanceSession | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteSession = async (session: PatientFinanceSession) => {
+    if (!user || !patient || deleting) return;
+    setDeleting(true);
+    try {
+      await Promise.all([
+        supabase.from("patient_progress").delete().eq("session_id", session.id),
+        supabase.from("session_gcal_events").delete().eq("session_id", session.id),
+        supabase.from("session_records").delete().eq("session_id", session.id),
+        supabase.from("session_evolutions").delete().eq("session_id", session.id),
+      ]);
+      const { error: delError } = await supabase.from("sessions").delete()
+        .eq("id", session.id).eq("patient_id", patient.id).eq("user_id", user.id);
+      if (delError) throw delError;
+      // Pacote: renumera as sessões restantes do mesmo plano (i/N)
+      const gid = isPlanNotes(session.notes) ? planGroupIdOf(session.notes) : null;
+      let rest: PatientFinanceSession[] = [];
+      if (gid) {
+        rest = sessions.filter((x) => x.id !== session.id && !x.is_expense && isPlanNotes(x.notes) && planGroupIdOf(x.notes) === gid)
+          .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
+        await Promise.all(rest.map((x, i) => supabase.from("sessions")
+          .update({ notes: renumberPlanNotes(x.notes || "", i + 1, rest.length) }).eq("id", x.id)));
+      }
+      setSessions((rows) => rows.filter((r) => r.id !== session.id));
+      setToDelete(null);
+      notifySessionDataChanged();
+      onSessionChanged();
+      setRetry((v) => v + 1);
+      toast.success(gid ? `Sessão excluída — pacote com ${rest.length} sessão(ões)` : "Sessão excluída");
+    } catch {
+      toast.error("Não foi possível excluir a sessão. Tente novamente.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const saveDate = async (session: PatientFinanceSession) => {
     if (!user || !patient || !selectedDate || savingDate) return;
@@ -105,6 +146,23 @@ export function PatientFinancePanel({ patient, month, onClose, onManage, onChart
   const history = changes.filter((c) => period === "all" || format(new Date(c.created_at), "yyyy-MM") === format(month, "yyyy-MM"));
 
   return <Sheet open={Boolean(patient)} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <AlertDialog open={Boolean(toDelete)} onOpenChange={(open) => { if (!open && !deleting) setToDelete(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir esta sessão?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {toDelete && `${format(new Date(toDelete.scheduled_at), "dd/MM/yyyy 'às' HH:mm")} · ${money(Number(toDelete.price ?? 0))}. `}
+            {toDelete && isPlanNotes(toDelete.notes) ? "O valor sai do plano e o pacote fica com uma sessão a menos." : "A sessão e seu valor serão removidos."} Essa ação não pode ser desfeita.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={(e) => { e.preventDefault(); if (toDelete) void deleteSession(toDelete); }}>
+            {deleting && <Loader2 className="h-4 w-4 animate-spin" />}Excluir
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     <SheetContent className="flex w-full flex-col overflow-hidden p-0 sm:max-w-4xl">
       <SheetHeader className="shrink-0 border-b border-border bg-card px-5 pb-5 pt-7 text-left sm:px-8">
         <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary"><Wallet className="h-4 w-4" /> Painel financeiro do paciente</div>
@@ -174,6 +232,7 @@ export function PatientFinancePanel({ patient, month, onClose, onManage, onChart
                         </PopoverContent>
                       </Popover>
                       <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => manage(s)}><Wallet /> Pagamento e cobrança</Button>
+                      <Button variant="outline" size="sm" className="w-full text-destructive hover:text-destructive sm:w-auto" onClick={() => setToDelete(s)}><Trash2 /> Excluir sessão</Button>
                     </div>
                   </div>
                 </div>)}
