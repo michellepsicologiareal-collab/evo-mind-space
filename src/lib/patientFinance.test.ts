@@ -33,13 +33,14 @@ describe("grouping the clickable summary by patient", () => {
     expect(groups[1].total).toBe(30);
   });
 
-  it("sorts a patient's sessions by session date and ignores accents and letter case", () => {
+  it("sorts a patient's sessions by session date, ignoring accents and letter case", () => {
     const groups = groupSessionsByPatient([
-      session({ id: "a2", patient: { id: "p1", full_name: "ANA PAULA" }, scheduled_at: "2026-11-18T12:00:00Z" }),
-      session({ id: "a1", patient: { id: "p1", full_name: "Ana paula" }, scheduled_at: "2026-11-04T12:00:00Z" }),
+      session({ id: "a2", patient: { id: "p1", full_name: "Ana Paula" }, scheduled_at: "2026-11-18T12:00:00Z" }),
+      session({ id: "a1", patient: { id: "p1", full_name: "Ana Paula" }, scheduled_at: "2026-11-04T12:00:00Z" }),
       session({ id: "b1", patient: { id: "p2", full_name: "Átila Nunes" } }),
+      session({ id: "c1", patient: { id: "p3", full_name: "beto" } }),
     ]);
-    expect(groups.map((g) => g.name)).toEqual(["Ana paula", "Átila Nunes"]);
+    expect(groups.map((g) => g.name)).toEqual(["Ana Paula", "Átila Nunes", "beto"]);
     expect(groups[0].rows.map((r) => r.id)).toEqual(["a1", "a2"]);
   });
 
