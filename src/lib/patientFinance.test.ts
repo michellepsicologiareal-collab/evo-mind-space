@@ -19,3 +19,34 @@ describe("patient financial summary", () => {
     expect(summarizePatientFinance([session({ status: "cancelled" }), session({ is_expense: true, payment_status: "paid" })]).total).toBe(0);
   });
 });
+
+describe("grouping the clickable summary by patient", () => {
+  it("puts every session of a patient in one block, alphabetically, with that patient's subtotal", () => {
+    const groups = groupSessionsByPatient([
+      session({ id: "t1", patient: { id: "p2", full_name: "Tassio Abreu de Souza" }, price: 30 }),
+      session({ id: "e1", patient: { id: "p1", full_name: "Eduardo Martinez Martin" }, price: 15 }),
+      session({ id: "e2", patient: { id: "p1", full_name: "Eduardo Martinez Martin" }, price: 15 }),
+    ]);
+    expect(groups.map((g) => g.name)).toEqual(["Eduardo Martinez Martin", "Tassio Abreu de Souza"]);
+    expect(groups[0].rows.map((r) => r.id)).toEqual(["e1", "e2"]);
+    expect(groups[0].total).toBe(30);
+    expect(groups[1].total).toBe(30);
+  });
+
+  it("sorts a patient's sessions by session date and ignores accents and letter case", () => {
+    const groups = groupSessionsByPatient([
+      session({ id: "a2", patient: { id: "p1", full_name: "ANA PAULA" }, scheduled_at: "2026-11-18T12:00:00Z" }),
+      session({ id: "a1", patient: { id: "p1", full_name: "Ana paula" }, scheduled_at: "2026-11-04T12:00:00Z" }),
+      session({ id: "b1", patient: { id: "p2", full_name: "Átila Nunes" } }),
+    ]);
+    expect(groups.map((g) => g.name)).toEqual(["Ana paula", "Átila Nunes"]);
+    expect(groups[0].rows.map((r) => r.id)).toEqual(["a1", "a2"]);
+  });
+
+  it("keeps sessions without a patient together under 'Sem paciente'", () => {
+    const groups = groupSessionsByPatient([session({ id: "x1" }), session({ id: "x2", price: 40 })]);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].name).toBe("Sem paciente");
+    expect(groups[0].total).toBe(140);
+  });
+});
