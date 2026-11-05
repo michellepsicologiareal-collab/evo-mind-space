@@ -545,7 +545,7 @@ const Finance = () => {
       .eq("user_id", user.id)
       .eq("payment_status", "paid")
       .neq("status", "cancelled")
-      .eq("is_expense", false)
+      .not("is_expense", "is", true)
       .gte("paid_at", monthStart.toISOString())
       .lte("paid_at", monthEnd.toISOString());
     setCashRows((cashData ?? []) as any);
