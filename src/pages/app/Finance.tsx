@@ -121,7 +121,7 @@ import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { PageIntro } from "@/components/app/PageIntro";
 import { PatientFinancePanel } from "@/components/app/PatientFinancePanel";
-import { summarizePatientFinance } from "@/lib/patientFinance";
+import { summarizePatientFinance, groupSessionsByPatient } from "@/lib/patientFinance";
 import { BillingAuditSheet } from "@/components/app/BillingAuditSheet";
 import { logWhatsAppMessage } from "@/lib/whatsappLog";
 import { logPaymentChange, type PaymentChangeAction } from "@/lib/paymentAudit";
@@ -339,6 +339,11 @@ const Finance = () => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [totalBreakdownOpen, setTotalBreakdownOpen] = useState(false);
   const [itemList, setItemList] = useState<{ title: string; rows: Row[] } | null>(null);
+  // Lista clicável (Pago, Em aberto, Previsto...) agrupada por paciente, em ordem alfabética
+  const itemListGroups = useMemo(
+    () => groupSessionsByPatient((itemList?.rows ?? []) as any),
+    [itemList]
+  );
   // Texto editável da cobrança na tela de conferência
   const [draftMessage, setDraftMessage] = useState("");
   const [sendingBillingKey, setSendingBillingKey] = useState<string | null>(null);
@@ -2782,19 +2787,34 @@ const Finance = () => {
                   <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
                     <DialogHeader>
                       <DialogTitle>{itemList?.title} · {formatBRL((itemList?.rows ?? []).reduce((s, r) => s + Number(r.price ?? 0), 0))}</DialogTitle>
+                      <p className="text-xs text-muted-foreground">
+                        {itemListGroups.length} {itemListGroups.length === 1 ? "paciente" : "pacientes"}
+                      </p>
                     </DialogHeader>
-                    <div className="divide-y rounded-xl border">
-                      {[...(itemList?.rows ?? [])].sort((a, b) => (b.paid_at ?? b.scheduled_at).localeCompare(a.paid_at ?? a.scheduled_at)).map((r) => (
-                        <div key={r.id} className="flex items-center justify-between gap-3 p-3 text-sm">
-                          <div className="min-w-0">
-                            <div className="truncate font-medium">{r.patient?.full_name ?? "Sem paciente"}</div>
-                            <div className="text-xs text-muted-foreground">
-                              Sessão {new Date(r.scheduled_at).toLocaleDateString("pt-BR")}
-                              {r.payment_status === "paid" && r.paid_at ? ` · Pago em ${new Date(r.paid_at).toLocaleDateString("pt-BR")}` : r.payment_status === "paid" ? " · Pago" : " · Pendente"}
-                              {r.payment_method ? ` · ${r.payment_method === "pix" ? "PIX" : r.payment_method === "card" ? "Cartão" : "Dinheiro"}` : ""}
+                    <div className="space-y-3">
+                      {itemListGroups.map((g) => (
+                        <div key={g.key} className="overflow-hidden rounded-xl border">
+                          <div className="flex items-center justify-between gap-3 bg-muted/50 px-3 py-2">
+                            <div className="min-w-0">
+                              <div className="truncate font-medium">{g.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {g.rows.length} {g.rows.length === 1 ? "sessão" : "sessões"}
+                              </div>
                             </div>
+                            <strong className="shrink-0 tabular-nums">{formatBRL(g.total)}</strong>
                           </div>
-                          <strong className="shrink-0 tabular-nums">{formatBRL(Number(r.price ?? 0))}</strong>
+                          <div className="divide-y">
+                            {g.rows.map((r) => (
+                              <div key={r.id} className="flex items-center justify-between gap-3 p-3 text-sm">
+                                <div className="min-w-0 text-xs text-muted-foreground">
+                                  Sessão {new Date(r.scheduled_at).toLocaleDateString("pt-BR")}
+                                  {r.payment_status === "paid" && r.paid_at ? ` · Pago em ${new Date(r.paid_at).toLocaleDateString("pt-BR")}` : r.payment_status === "paid" ? " · Pago" : " · Pendente"}
+                                  {r.payment_method ? ` · ${r.payment_method === "pix" ? "PIX" : r.payment_method === "card" ? "Cartão" : "Dinheiro"}` : ""}
+                                </div>
+                                <strong className="shrink-0 tabular-nums">{formatBRL(Number(r.price ?? 0))}</strong>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ))}
                       {(itemList?.rows.length ?? 0) === 0 && (
