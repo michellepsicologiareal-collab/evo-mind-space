@@ -237,6 +237,8 @@ const Finance = () => {
   // Todas as sessões (qualquer data) dos planos de atendimento ativos no mês —
   // usado para montar o card completo de cada plano, mesmo quando ele atravessa meses.
   const [planRowsAll, setPlanRowsAll] = useState<Row[]>([]);
+  // Caixa: sessões pagas cujo pagamento (paid_at) caiu no mês, de qualquer mês de agendamento.
+  const [cashRows, setCashRows] = useState<Row[]>([]);
   const [patientFilter, setPatientFilter] = useState<string>("all");
   const [patientPickerOpen, setPatientPickerOpen] = useState(false);
   // Cadastro completo de pacientes (fora da lixeira), em ordem alfabética — base do filtro.
@@ -537,6 +539,17 @@ const Finance = () => {
     const monthRows = (data ?? []) as any[];
     setRawRows(monthRows);
 
+    const { data: cashData } = await supabase
+      .from("sessions")
+      .select(selectCols)
+      .eq("user_id", user.id)
+      .eq("payment_status", "paid")
+      .neq("status", "cancelled")
+      .not("is_expense", "is", true)
+      .gte("paid_at", monthStart.toISOString())
+      .lte("paid_at", monthEnd.toISOString());
+    setCashRows((cashData ?? []) as any);
+
     // Planos de atendimento podem atravessar meses (ex.: "Plano 2 sessões (1/2)" em
     // agosto e "(2/2)" em setembro). Para o card mostrar o plano completo, buscamos
     // TODAS as sessões dos planos que têm ao menos uma sessão no mês — agrupadas
@@ -694,12 +707,12 @@ const Finance = () => {
   //    Um pagamento antecipado feito em mês diferente do agendamento é contado no mês do agendamento.
   const monthStartMs = monthStart.getTime();
   const monthEndMs = monthEnd.getTime();
-  const paidInPeriod = fortnightAllValid.filter(
-    (r) => r.payment_status === "paid" && r.paid_at && (() => {
-      const t = new Date(r.paid_at as string).getTime();
-      return t >= monthStartMs && t <= monthEndMs;
-    })()
-  );
+  const paidInPeriod = cashRows.filter((r) => {
+    if (patientFilter !== "all" && r.patient?.id !== patientFilter) return false;
+    if (fortnightFilter === "all") return true;
+    const day = new Date(r.paid_at as string).getDate();
+    return fortnightFilter === "first" ? day <= 15 : day > 15;
+  });
   const totalRecebido = paidInPeriod.reduce((s, r) => s + Number(r.price ?? 0), 0);
   const sessoesPagas = paidInPeriod.length;
 
@@ -770,7 +783,7 @@ const Finance = () => {
     // Recebido = TODA sessão do mês já paga (inclusive pagamento antecipado feito em
     // outro mês). Antes filtrávamos por paid_at dentro do mês, o que fazia sumir do
     // gráfico as sessões pagas adiantado — a receita prevista do mês ficava menor.
-    const recebidoBase = allValid.filter((r) => r.payment_status === "paid" && inPatient(r));
+    const recebidoBase = cashRows.filter((r) => inPatient(r));
     const aReceberBase = allValid.filter(
       (r) =>
         r.payment_status !== "paid" &&
@@ -810,7 +823,7 @@ const Finance = () => {
       totalRecebido: rec1 + rec2,
       totalAReceber: arec1 + arec2,
     };
-  }, [allValid, patientFilter, monthStartMs, monthEndMs, monthEnd]);
+  }, [allValid, cashRows, patientFilter, monthStartMs, monthEndMs, monthEnd]);
 
   // Detalhe da quinzena (clique no gráfico) — agrupa por paciente
   const [quinzenaDetail, setQuinzenaDetail] = useState<0 | 1 | null>(null);
