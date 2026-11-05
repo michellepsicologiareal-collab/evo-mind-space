@@ -2647,24 +2647,26 @@ const Finance = () => {
             pending: searchedGroups.filter((g) => g.pendingCount > 0).length,
           };
 
+          // Base comum: busca + pagamento + Receita Saúde. As contagens das abas
+          // usam essa mesma base, então "Todos" sempre bate com a lista exibida.
+          const baseGroups = searchedGroups.filter((g) => {
+            if (paymentView === "paid" && (g.pendingCount > 0 || g.paidCount === 0)) return false;
+            if (paymentView === "pending" && g.pendingCount === 0) return false;
+            if (receitaSaudeFilter === "to_issue") return g.receitaToIssue > 0;
+            if (receitaSaudeFilter === "issued") return g.receitaIssued > 0 && g.receitaToIssue === 0;
+            return true;
+          });
+
           const counts = {
-            all: searchedGroups.length,
-            enviada: searchedGroups.filter((g) => g.billing.status === "enviada").length,
-            perto: searchedGroups.filter((g) => g.billing.status === "perto").length,
-            vencida: searchedGroups.filter((g) => g.billing.status === "vencida").length,
-            a_enviar: searchedGroups.filter((g) => g.billing.status === "a_enviar").length,
+            all: baseGroups.length,
+            enviada: baseGroups.filter((g) => g.billing.status === "enviada").length,
+            perto: baseGroups.filter((g) => g.billing.status === "perto").length,
+            vencida: baseGroups.filter((g) => g.billing.status === "vencida").length,
+            a_enviar: baseGroups.filter((g) => g.billing.status === "a_enviar").length,
           };
 
-          const groups = searchedGroups
-
-            .filter((g) => {
-              if (paymentView === "paid" && (g.pendingCount > 0 || g.paidCount === 0)) return false;
-              if (paymentView === "pending" && g.pendingCount === 0) return false;
-              if (billingFilter !== "all" && g.billing.status !== billingFilter) return false;
-              if (receitaSaudeFilter === "to_issue") return g.receitaToIssue > 0;
-              if (receitaSaudeFilter === "issued") return g.receitaIssued > 0 && g.receitaToIssue === 0;
-              return true;
-            })
+          const groups = baseGroups
+            .filter((g) => billingFilter === "all" || g.billing.status === billingFilter)
             .sort((a, b) =>
               cardSort === "patient"
                 ? a.name.localeCompare(b.name, "pt-BR")
@@ -2674,12 +2676,6 @@ const Finance = () => {
           const payLabel = (g: (typeof allGroups)[number]) =>
             g.pendingCount === 0 ? (g.paidCount === 0 ? "—" : "Pago") : g.paidCount === 0 ? "Pendente" : "Parcial";
 
-          const filterCards = [
-            { key: "enviada" as const, label: "Cobrança enviada", hint: "Pacientes com cobrança já enviada", count: counts.enviada, icon: MessageCircle, tone: "border-orange-200 bg-orange-50/70 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/25" },
-            { key: "perto" as const, label: "Perto do vencimento", hint: `Próximos ${billingReminderDays} dias do vencimento`, count: counts.perto, icon: Clock, tone: "border-amber-200 bg-amber-50/70 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/25" },
-            { key: "vencida" as const, label: "Vencidas", hint: "Cobranças com prazo vencido", count: counts.vencida, icon: AlertTriangle, tone: "border-destructive/25 bg-destructive/10 text-destructive" },
-            { key: "a_enviar" as const, label: "A enviar", hint: "Pacientes que ainda não receberam cobrança", count: counts.a_enviar, icon: BellRing, tone: "border-border bg-secondary/50 text-foreground/80" },
-          ];
 
           const tabs = [
             { key: "all" as const, label: "Todos", count: counts.all },
@@ -2809,32 +2805,6 @@ const Finance = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
-              </div>
-
-              {/* Cards/filtros clicáveis */}
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-                {filterCards.map((c) => {
-                  const Icon = c.icon;
-                  const active = billingFilter === c.key;
-                  return (
-                    <button
-                      key={c.key}
-                      type="button"
-                      onClick={() => setBillingFilter(active ? "all" : c.key)}
-                      aria-pressed={active}
-                      className={`flex items-start gap-3 rounded-2xl border p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-soft ${c.tone} ${active ? "ring-2 ring-primary/50 ring-offset-2 ring-offset-background" : ""}`}
-                    >
-                      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-background/70">
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block font-display text-2xl font-semibold leading-none tabular-nums">{c.count}</span>
-                        <span className="mt-1.5 block text-xs font-medium leading-snug">{c.label}</span>
-                        <span className="mt-0.5 block text-[11px] leading-snug opacity-75">{c.hint}</span>
-                      </span>
-                    </button>
-                  );
-                })}
               </div>
 
               {/* Recebido x A receber por quinzena */}
@@ -3043,7 +3013,7 @@ const Finance = () => {
                       <button
                         key={t.key}
                         type="button"
-                        onClick={() => setBillingFilter(t.key)}
+                        onClick={() => { setBillingFilter(t.key); if (t.key === "all") { setPaymentView("all"); setReceitaSaudeFilter("all"); setPatientFilter("all"); setFortnightFilter("all"); setBillingSearch(""); } }}
                         aria-pressed={billingFilter === t.key}
                         className={`inline-flex min-w-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors sm:text-sm ${
                           billingFilter === t.key
